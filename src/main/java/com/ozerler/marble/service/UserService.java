@@ -38,7 +38,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<UserDto> getUsersPaged(int page, int size, String search, String sortField, String sortDir) {
+    public TabulatorResponse<UserDto> getUsersPaged(int page, int size, String search, String sortField, String sortDir,
+                                                    String roleName, Boolean enabled) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         if (StringUtils.isNotBlank(sortField)) {
             Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -49,7 +50,9 @@ public class UserService {
         int pageIndex = Math.max(0, page - 1);
         Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : 10, sort);
 
-        Page<User> userPage = userRepository.searchActiveUsers(search, pageable);
+        String normalizedSearch = StringUtils.isBlank(search) ? null : search.trim();
+        String normalizedRole = StringUtils.isBlank(roleName) ? null : roleName.trim();
+        Page<User> userPage = userRepository.searchActiveUsers(normalizedSearch, normalizedRole, enabled, pageable);
         List<UserDto> dtos = userPage.getContent().stream()
                 .map(UserDto::fromEntity)
                 .collect(Collectors.toList());

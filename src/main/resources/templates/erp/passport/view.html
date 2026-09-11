@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title != null ? title : 'Dijital Taş Pasaportu'}">Dijital Taş Pasaportu | Özerler Mermer</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" th:href="@{/fonts/inter-latin-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" th:href="@{/fonts/inter-latin-ext-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -120,7 +119,7 @@
 
         <!-- Action Links -->
         <div class="pt-2 flex flex-col gap-2">
-            <a th:href="@{/login}" class="w-full py-2.5 bg-amber-700 hover:bg-amber-600 text-white text-xs font-bold rounded-xl text-center shadow transition flex items-center justify-center gap-1.5">
+            <a th:href="@{/login}" class="w-full py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-xs font-bold rounded-xl text-center shadow transition flex items-center justify-center gap-1.5">
                 <i data-lucide="log-in" class="w-4 h-4"></i>
                 <span>ERP Sistemine Giriş</span>
             </a>

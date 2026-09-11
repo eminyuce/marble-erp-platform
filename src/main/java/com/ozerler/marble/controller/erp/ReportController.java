@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.common.TurkishAsciiFilename;
 import com.ozerler.marble.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Controller
@@ -30,7 +31,7 @@ public class ReportController {
     @GetMapping
     public String index(Model model) {
         // Collect preview data for all 6 reports
-        Map<String, ReportService.ReportData> reportsData = new HashMap<>();
+        Map<String, ReportService.ReportData> reportsData = new LinkedHashMap<>();
         for (ReportService.ReportType type : ReportService.ReportType.values()) {
             reportsData.put(type.name(), reportService.getReportData(type));
         }
@@ -54,22 +55,27 @@ public class ReportController {
             return ResponseEntity.badRequest().build();
         }
 
-        String safeFilename = type.name().toLowerCase() + "_rapor_" + LocalDate.now();
+        String safeFilename = TurkishAsciiFilename.toAsciiTurkishFilename(
+                type.getExportFilenameStem() + "_" + LocalDate.now());
 
         if ("csv".equalsIgnoreCase(format)) {
             byte[] csvBytes = reportService.generateCsvReport(type);
-            String filename = safeFilename + ".csv";
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + URLEncoder.encode(filename, StandardCharsets.UTF_8))
-                    .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
-                    .body(csvBytes);
-        } else {
-            byte[] excelBytes = reportService.generateExcelReport(type);
-            String filename = safeFilename + ".xlsx";
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + URLEncoder.encode(filename, StandardCharsets.UTF_8))
-                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                    .body(excelBytes);
+            return attachment(csvBytes, safeFilename + ".csv", MediaType.parseMediaType("text/csv; charset=UTF-8"));
         }
+
+        byte[] excelBytes = reportService.generateExcelReport(type);
+        return attachment(
+                excelBytes,
+                safeFilename + ".xlsx",
+                MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+    }
+
+    private ResponseEntity<byte[]> attachment(byte[] body, String filename, MediaType contentType) {
+        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + encodedFilename)
+                .contentType(contentType)
+                .body(body);
     }
 }

@@ -1,203 +1,30 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<header th:fragment="navbar" class="h-16 bg-white border-b border-slate-200 sticky top-0 z-30 flex items-center justify-between px-6 shadow-sm" x-data="{ megaMenuOpen: false }">
-    <div class="flex items-center gap-4">
-        <button id="sidebar-toggle" class="lg:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100">
-            <i data-lucide="menu" class="w-5 h-5"></i>
+<header th:fragment="navbar" class="admin-topbar">
+    <div class="admin-topbar-left">
+        <button type="button"
+                class="admin-menu-trigger"
+                id="adminMegaMenuOpen"
+                aria-controls="adminMegaMenu"
+                aria-expanded="false"
+                title="Menüyü aç"
+                data-label-open="Menüyü aç"
+                data-label-close="Menüyü kapat">
+            <i data-lucide="layout-grid" aria-hidden="true"></i>
+            <span class="admin-menu-trigger-label">Menüyü aç</span>
         </button>
-        <div class="flex items-center gap-3">
-            <span class="inline-flex items-center justify-center p-2 bg-gradient-to-br from-amber-700 to-amber-900 text-white rounded-xl shadow-md ring-1 ring-amber-600/30">
-                <i data-lucide="gem" class="w-5 h-5"></i>
-            </span>
-            <div class="hidden sm:block">
-                <h1 class="text-base font-extrabold text-slate-900 tracking-tight leading-tight flex items-center gap-2">
-                    <span>ÖZERLER MERMER ERP</span>
-                    <span class="px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-widest bg-amber-100 text-amber-900 rounded">Kurumsal</span>
-                </h1>
-                <p class="text-xs text-slate-500 font-medium">Ocaktan Şantiyeye Uçtan Uca Mermer Tedarik &amp; Maliyet Platformu</p>
-            </div>
-        </div>
-
-        <!-- Mega Menu Trigger Button -->
-        <div class="relative ml-4 hidden md:block">
-            <button @click="megaMenuOpen = !megaMenuOpen"
-                    @keydown.escape.window="megaMenuOpen = false"
-                    type="button"
-                    class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 shadow-sm transition">
-                <i data-lucide="layout-grid" class="w-4 h-4 text-amber-700"></i>
-                <span>Mega Menü</span>
-                <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': megaMenuOpen }"></i>
-            </button>
-
-            <!-- Mega Menu Dropdown Panel -->
-            <div x-show="megaMenuOpen"
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 translate-y-2"
-                 x-transition:enter-end="opacity-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100 translate-y-0"
-                 x-transition:leave-end="opacity-0 translate-y-2"
-                 @click.outside="megaMenuOpen = false"
-                 style="display: none;"
-                 class="absolute left-0 mt-3 w-[840px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 z-50">
-                
-                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-900">Operasyonel Modül Hızlı Geçiş</h4>
-                        <p class="text-xs text-slate-500">Tüm mermer üretim, stok, atölye ve maliyet süreçlerine anında erişin</p>
-                    </div>
-                    <span class="text-xs font-mono text-slate-400">Özerler ERP Enterprise</span>
-                </div>
-
-                <div class="grid grid-cols-4 gap-6">
-                    <!-- Column 1: Ocak & Blok -->
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700">
-                            <i data-lucide="mountain" class="w-4 h-4"></i>
-                            <span>1. Ocak &amp; Blok</span>
-                        </div>
-                        <ul class="space-y-1 text-xs">
-                            <li><a th:href="@{/blocks}" class="block p-2 rounded-lg hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition font-medium">Tüm Bloklar Listesi</a></li>
-                            <li><a th:href="@{/blocks/new}" class="block p-2 rounded-lg hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition font-medium">Yeni Blok Kabul / Giriş</a></li>
-                            <li><a th:href="@{/genealogy}" class="block p-2 rounded-lg hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition font-medium">Blok Soy Ağacı İzleme</a></li>
-                        </ul>
-                    </div>
-
-                    <!-- Column 2: Fabrika & Plaka -->
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-700">
-                            <i data-lucide="factory" class="w-4 h-4"></i>
-                            <span>2. Fabrika &amp; Kesim</span>
-                        </div>
-                        <ul class="space-y-1 text-xs">
-                            <li><a th:href="@{/production}" class="block p-2 rounded-lg hover:bg-amber-50 text-slate-700 hover:text-amber-900 transition font-medium">Katrak Kesim İşlemleri</a></li>
-                            <li><a th:href="@{/production/slabs}" class="block p-2 rounded-lg hover:bg-amber-50 text-slate-700 hover:text-amber-900 transition font-medium">Plaka Ambarı &amp; Barkod</a></li>
-                            <li><a th:href="@{/production/scrap}" class="block p-2 rounded-lg hover:bg-amber-50 text-slate-700 hover:text-amber-900 transition font-medium">10-Kodlu Fire Kayıtları</a></li>
-                        </ul>
-                    </div>
-
-                    <!-- Column 3: Atölye & Proje -->
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-rose-700">
-                            <i data-lucide="scissors" class="w-4 h-4"></i>
-                            <span>3. Atölye &amp; Şantiye</span>
-                        </div>
-                        <ul class="space-y-1 text-xs">
-                            <li><a th:href="@{/workshop}" class="block p-2 rounded-lg hover:bg-rose-50 text-slate-700 hover:text-rose-900 transition font-medium">Ebatlama İş Emirleri</a></li>
-                            <li><a th:href="@{/projects}" class="block p-2 rounded-lg hover:bg-rose-50 text-slate-700 hover:text-rose-900 transition font-medium">Şantiyeler &amp; WBS Ağacı</a></li>
-                            <li><a th:href="@{/projects/puantaj}" class="block p-2 rounded-lg hover:bg-rose-50 text-slate-700 hover:text-rose-900 transition font-medium">İşçilik Puantajı &amp; Sarf</a></li>
-                        </ul>
-                    </div>
-
-                    <!-- Column 4: Maliyet & Yönetim -->
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-700">
-                            <i data-lucide="calculator" class="w-4 h-4"></i>
-                            <span>4. Maliyet &amp; Sistem</span>
-                        </div>
-                        <ul class="space-y-1 text-xs">
-                            <li><a th:href="@{/costs}" class="block p-2 rounded-lg hover:bg-indigo-50 text-slate-700 hover:text-indigo-900 transition font-medium">Maliyet Muhasebesi (ABC)</a></li>
-                            <li><a th:href="@{/reports}" class="block p-2 rounded-lg bg-indigo-50/70 hover:bg-indigo-100 text-indigo-900 transition font-semibold flex items-center justify-between">
-                                <span>Rapor Merkezi</span>
-                                <span class="px-1.5 py-0.5 bg-indigo-200 text-indigo-800 text-[10px] rounded">XLSX</span>
-                            </a></li>
-                            <li>
-                                <a th:href="@{/admin/dashboard/systemhealth/}" class="block p-2 rounded-lg bg-emerald-50/70 hover:bg-emerald-100 text-emerald-900 transition font-semibold flex items-center justify-between">
-                                    <span class="flex items-center gap-1.5">
-                                        <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-600"></i>
-                                        <span>Sistem Sağlığı</span>
-                                    </span>
-                                    <span class="px-1.5 py-0.5 bg-emerald-200 text-emerald-800 text-[10px] rounded font-mono">UP</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a th:href="@{/admin/dashboard/oursitefeatures/}" class="block p-2 rounded-lg bg-amber-50/70 hover:bg-amber-100 text-amber-900 transition font-semibold flex items-center justify-between">
-                                    <span class="flex items-center gap-1.5">
-                                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-700"></i>
-                                        <span>Özellikler &amp; Yardım</span>
-                                    </span>
-                                    <span class="px-1.5 py-0.5 bg-amber-200 text-amber-900 text-[10px] rounded font-bold">12 Modül</span>
-                                </a>
-                            </li>
-                            <li sec:authorize="hasRole('ADMIN')">
-                                <a th:href="@{/admin/settings}" class="block p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition font-medium flex items-center gap-1.5">
-                                    <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-500"></i>
-                                    <span>Sistem Ayarları</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Footer strip of Mega Menu -->
-                <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50 -mx-6 -mb-6 p-4 rounded-b-2xl">
-                    <a th:href="@{/admin/dashboard/systemhealth/}" class="flex items-center gap-2 hover:text-slate-900 transition">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Sistem Sağlık Paneli: <strong class="text-slate-800 underline">UP (Port 81)</strong></span>
-                    </a>
-                    <div class="flex items-center gap-3">
-                        <a th:href="@{/admin/dashboard/oursitefeatures/}" class="text-amber-800 font-semibold hover:underline">Özellik Rehberi &rarr;</a>
-                        <a th:href="@{/admin/dashboard/systemhealth/}" class="text-emerald-700 font-semibold hover:underline">Sağlık Görünümü &rarr;</a>
-                        <a th:href="@{/health/}" target="_blank" class="hover:text-amber-700 font-mono text-[11px] underline">/health/ JSON</a>
-                    </div>
-                </div>
-            </div>
+        <div class="admin-topbar-title">
+            <span class="admin-topbar-panel">Özerler Mermer ERP</span>
+            <span class="admin-topbar-page" id="adminTopbarPage">Yönetim</span>
         </div>
     </div>
 
-    <!-- Right Side Actions & User Menu -->
-    <div class="flex items-center gap-3">
-        <!-- Site Features & Help Guide Button -->
-        <a th:href="@{/admin/dashboard/oursitefeatures/}"
-           class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-semibold rounded-lg border border-amber-200 transition shadow-sm"
-           title="Sistem Özellikleri ve Kullanıcı Rehberi">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-700"></i>
-            <span>Özellik Rehberi</span>
-        </a>
-
-        <!-- System Health Live Indicator Button -->
-        <a th:href="@{/admin/dashboard/systemhealth/}"
-           class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-lg border border-emerald-200 transition shadow-sm"
-           title="Sistem Sağlık Durumu ve Metrikleri">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            <span>Sağlık: UP</span>
-        </a>
-
-        <!-- Reports Direct Link -->
-        <a th:href="@{/reports}"
-           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-900 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition">
-            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
-            <span>Raporlar (Excel/CSV)</span>
-        </a>
-
-        <!-- QR / Traceback Link -->
-        <a th:href="@{/genealogy}" class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg border border-slate-200 transition">
-            <i data-lucide="scan-line" class="w-4 h-4 text-amber-700"></i>
-            <span>QR Pasaport</span>
-        </a>
-
-        <!-- Admin Settings Link -->
-        <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/settings}"
-           class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
-           title="Sistem Ayarları (2FA, reCAPTCHA, SMTP)">
-            <i data-lucide="settings" class="w-5 h-5"></i>
-        </a>
-
-        <!-- User Profile & Logout -->
-        <div class="flex items-center gap-3 pl-3 border-l border-slate-200" sec:authorize="isAuthenticated()">
-            <div class="text-right hidden sm:block">
-                <div class="text-sm font-bold text-slate-800" sec:authentication="name">admin</div>
-                <div class="text-[11px] text-amber-700 font-medium">
-                    <span sec:authorize="hasRole('ADMIN')">Yönetici (Admin)</span>
-                    <span sec:authorize="!hasRole('ADMIN')">Operasyon Personeli</span>
-                </div>
-            </div>
-            <form th:action="@{/logout}" method="post" class="inline">
-                <button type="submit" class="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Güvenli Çıkış Yap">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
-                </button>
-            </form>
-        </div>
+    <div class="admin-topbar-right" sec:authorize="isAuthenticated()">
+        <span class="admin-topbar-user" sec:authentication="name">admin</span>
+        <button type="submit" form="logoutForm" class="admin-topbar-logout" title="Güvenli Çıkış Yap">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>Çıkış Yap</span>
+        </button>
     </div>
 </header>
 </html>

@@ -1,8 +1,8 @@
 package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.dto.ProductionOrderDto;
+import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.enums.ScrapReasonCode;
 import com.ozerler.marble.service.ProductionService;
 import com.ozerler.marble.service.QuarryBlockService;
@@ -95,7 +95,7 @@ public class ProductionController {
 
     @GetMapping("/api/slabs")
     @ResponseBody
-    public TabulatorResponse<Slab> getSlabsData(
+    public TabulatorResponse<SlabDto> getSlabsData(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "search", required = false) String search,

@@ -21,24 +21,25 @@ function initUsersGrid() {
         },
         ajaxURLGenerator: function(url, config, params) {
             const searchVal = document.getElementById("search-input")?.value || "";
+            const filters = currentUserFilters();
             let sorterField = "";
             let sorterDir = "";
             if (params.sorters && params.sorters.length > 0) {
                 sorterField = params.sorters[0].field;
                 sorterDir = params.sorters[0].dir;
             }
-            return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}&sortField=${sorterField}&sortDir=${sorterDir}`;
+            let query = `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}&sortField=${sorterField}&sortDir=${sorterDir}`;
+            if (filters.role) {
+                query += `&role=${encodeURIComponent(filters.role)}`;
+            }
+            if (filters.enabled !== "") {
+                query += `&enabled=${encodeURIComponent(filters.enabled)}`;
+            }
+            return query;
         },
         ajaxResponse: function(url, params, response) {
-            if (response && Array.isArray(response.data)) {
-                response.data.forEach(item => {
-                    Object.keys(item).forEach(key => {
-                        const camel = key.replace(/_([a-z0-9])/g, (_, l) => l.toUpperCase());
-                        if (!(camel in item)) item[camel] = item[key];
-                    });
-                });
-            }
-            return response;
+            camelizeTabulatorRows(response);
+            return applyTabulatorTotal("users-table", response);
         },
         placeholder: "Kullanıcı kaydı bulunamadı.",
         columns: [
@@ -112,20 +113,29 @@ function initUsersGrid() {
         ]
     });
 
+    attachTabulatorPagingAnimation(usersTable);
+    bindGridSearch(usersTable, "search-input");
     usersTable.on("renderComplete", function() {
         if (window.lucide) window.lucide.createIcons();
+        if (window.htmx && usersTable.element) {
+            window.htmx.process(usersTable.element);
+        }
     });
+}
 
-    const searchInput = document.getElementById("search-input");
-    if (searchInput) {
-        let debounceTimer;
-        searchInput.addEventListener("input", () => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                usersTable.replaceData();
-            }, 300);
-        });
+function currentUserFilters() {
+    const root = document.querySelector("[data-users-filters]");
+    if (root && window.Alpine && typeof Alpine.$data === "function") {
+        const data = Alpine.$data(root);
+        return {
+            role: data.role || "",
+            enabled: data.enabled === undefined || data.enabled === null ? "" : String(data.enabled)
+        };
     }
+    return {
+        role: document.getElementById("filter-role")?.value || "",
+        enabled: document.getElementById("filter-enabled")?.value || ""
+    };
 }
 
 function reloadUsersGrid() {

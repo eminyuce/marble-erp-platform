@@ -35,20 +35,58 @@ public class ReportService {
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public enum ReportType {
-        QUARRY_BLOCKS("Ocak Blok Üretim ve Satış Raporu"),
-        FACTORY_SCRAP("Fabrika Katrak ve Fire Raporu"),
-        WORKSHOP_ORDERS("Atölye Ebatlama ve Kesim Raporu"),
-        SITE_INSTALLATION("Şantiye Proje ve İlerleme Raporu"),
-        COST_ACCOUNTING("Maliyet Muhasebesi ve Fiyatlandırma Raporu"),
-        SLABS_INVENTORY("Plaka Stok ve Kalite Dağılım Raporu");
+        QUARRY_BLOCKS(
+                "Ocak Blok Üretim ve Satış Raporu",
+                "Ocaklardan çıkan blokların ölçü, kantar tartımı ve durumunu listeler.",
+                "ocak_blokları"),
+        FACTORY_SCRAP(
+                "Fabrika Katrak ve Fire Raporu",
+                "Katrak kesimindeki 10 kodlu fire kayıtlarını ve kayıp alanları gösterir.",
+                "katrak_fire"),
+        WORKSHOP_ORDERS(
+                "Atölye Ebatlama ve Kesim Raporu",
+                "Atölye iş emirlerini, parça sayısını ve makine/operatör bilgisini verir.",
+                "kesim_emirleri"),
+        SITE_INSTALLATION(
+                "Şantiye Proje ve İlerleme Raporu",
+                "Projelerin sözleşme tutarı, gerçekleşen maliyet ve teslim durumunu özetler.",
+                "şantiye_projeleri"),
+        COST_ACCOUNTING(
+                "Maliyet Muhasebesi ve Fiyatlandırma Raporu",
+                "Masraf merkezlerinin bütçe, birim maliyet ve önerilen satış fiyatını gösterir.",
+                "maliyet_raporu"),
+        SLABS_INVENTORY(
+                "Plaka Stok ve Kalite Dağılım Raporu",
+                "Ambardaki plakaların ebat, yüzey, kalite ve birim maliyetini listeler.",
+                "plaka_stoğu");
 
         private final String title;
-        ReportType(String title) { this.title = title; }
-        public String getTitle() { return title; }
+        private final String description;
+        private final String exportFilenameStem;
+
+        ReportType(String title, String description, String exportFilenameStem) {
+            this.title = title;
+            this.description = description;
+            this.exportFilenameStem = exportFilenameStem;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public String getExportFilenameStem() {
+            return exportFilenameStem;
+        }
     }
 
     public static class ReportData {
+        public String key;
         public String title;
+        public String description;
         public String[] headers;
         public List<String[]> rows = new ArrayList<>();
     }
@@ -56,7 +94,9 @@ public class ReportService {
     @Transactional(readOnly = true)
     public ReportData getReportData(ReportType type) {
         ReportData data = new ReportData();
+        data.key = type.name();
         data.title = type.getTitle();
+        data.description = type.getDescription();
 
         switch (type) {
             case QUARRY_BLOCKS -> {

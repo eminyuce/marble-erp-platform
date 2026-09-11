@@ -185,11 +185,15 @@ class SecurityConfigTest {
 
         mockMvc.perform(get("/reports/export/QUARRY_BLOCKS").param("format", "csv"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", containsString("text/csv")));
+                .andExpect(header().string("Content-Type", containsString("text/csv")))
+                .andExpect(header().string("Content-Disposition", containsString("ocak_bloklari_")))
+                .andExpect(header().string("Content-Disposition", containsString(".csv")));
 
         mockMvc.perform(get("/reports/export/QUARRY_BLOCKS").param("format", "excel"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", containsString("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")));
+                .andExpect(header().string("Content-Type", containsString("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")))
+                .andExpect(header().string("Content-Disposition", containsString("ocak_bloklari_")))
+                .andExpect(header().string("Content-Disposition", containsString(".xlsx")));
     }
 
     @Test

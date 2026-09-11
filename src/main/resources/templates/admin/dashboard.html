@@ -19,12 +19,12 @@
         </div>
         <div class="flex items-center gap-2">
             <a th:href="@{/blocks/create}" hx-get="/blocks/create" hx-target="#modal-container"
-               class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer transition">
-                <i data-lucide="plus-circle" class="w-4 h-4 text-amber-400"></i>
+               class="px-3.5 py-2 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer transition">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-white"></i>
                 <span>Yeni Blok Girişi</span>
             </a>
             <a th:href="@{/production/create}" hx-get="/production/create" hx-target="#modal-container"
-               class="px-3.5 py-2 bg-amber-700 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer transition">
+               class="px-3.5 py-2 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer transition">
                 <i data-lucide="scissors" class="w-4 h-4"></i>
                 <span>Katrak Kesim Başlat</span>
             </a>
@@ -67,7 +67,7 @@
     </div>
 
     <!-- 6 Executive KPI Grid Cards (BRD Section 9.1) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 erp-kpi-grid">
         <!-- KPI 1: Physical Stock -->
         <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow transition border-l-4 border-l-blue-600">
             <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">

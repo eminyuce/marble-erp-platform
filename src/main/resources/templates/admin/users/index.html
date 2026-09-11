@@ -1,56 +1,65 @@
 <!DOCTYPE html>
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
 <head>
-    <title>Kullanıcı Yönetimi | Özerler Mermer ERP</title>
+    <title>Kullanıcılar | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-6">
+<div layout:fragment="content" class="erp-list-page" data-users-filters
+     x-data="{ role: '', enabled: '', density: 'compact' }"
+     :class="{ 'is-compact': density === 'compact' }">
 
-    <!-- Page Header & Actions -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-            <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Kullanıcı Yönetimi</h1>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Admin Modülü</span>
-            </div>
-            <p class="text-sm text-slate-500 mt-1">Sistem kullanıcıları, dinamik rol atamaları (RBAC), erişim kısıtlamaları ve şifre yönetimi.</p>
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Kullanıcılar')}"></div>
+            <h2 class="admin-page-title">Kullanıcılar</h2>
+            <p class="erp-list-lead">Yönetici ve operasyon hesaplarını arayın, rol veya duruma göre filtreleyin ve işlem menüsünden düzenleyin.</p>
         </div>
-        <div class="flex items-center gap-2">
-            <button onclick="usersTable.download('csv', 'kullanicilar.csv')"
-                    class="px-3 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition">
-                <i data-lucide="download" class="w-4 h-4"></i>
+        <div class="erp-list-header-actions">
+            <button type="button" onclick="downloadTableCsv(usersTable, 'kullanicilar.csv')" class="erp-btn-secondary">
+                <i data-lucide="download"></i>
                 <span>CSV İndir</span>
             </button>
-            <button hx-get="/admin/users/create" hx-target="#modal-container"
-                    class="px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer">
-                <i data-lucide="user-plus" class="w-4 h-4"></i>
-                <span>Yeni Kullanıcı Ekle</span>
+            <button type="button" hx-get="/admin/users/create" hx-target="#modal-container" class="erp-btn-primary">
+                <i data-lucide="plus"></i>
+                <span>Yeni kullanıcı tanımla</span>
             </button>
         </div>
     </div>
 
-    <!-- Table Container Card -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-        <!-- Search and Filter Bar -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="relative flex-1 max-w-md">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <i data-lucide="search" class="w-4 h-4"></i>
-                </span>
-                <input type="text" id="search-input"
-                       class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
-                       placeholder="Ad, soyad, e-posta veya kullanıcı adı ile ara...">
+    <div class="erp-toolbar">
+        <div th:replace="~{fragments/list-chrome :: search('Ad, soyad, e-posta veya kullanıcı adı', 'search-input')}"></div>
+        <input type="hidden" id="filter-role" x-model="role">
+        <input type="hidden" id="filter-enabled" x-model="enabled">
+
+        <div class="erp-quick" aria-label="Rol veya duruma göre daraltın">
+            <div class="erp-quick-row">
+                <span class="erp-quick-label">Kullanıcı Yetkileri</span>
+                <button type="button" class="erp-quick-chip" :class="{ 'is-active': role === '' }" @click="role = ''; $nextTick(() => reloadUsersGrid())">Tümü</button>
+                <button type="button" class="erp-quick-chip" :class="{ 'is-active': role === 'ROLE_ADMIN' }" @click="role = 'ROLE_ADMIN'; $nextTick(() => reloadUsersGrid())">Yönetici</button>
+                <button type="button" class="erp-quick-chip" :class="{ 'is-active': role === 'ROLE_USER' }" @click="role = 'ROLE_USER'; $nextTick(() => reloadUsersGrid())">Kullanıcı</button>
             </div>
-            <div class="text-xs text-slate-400 flex items-center gap-1">
-                <i data-lucide="table" class="w-3.5 h-3.5"></i>
-                <span>Tabulator 6 Sunucu Sayfalaması</span>
+            <div class="erp-quick-row">
+                <span class="erp-quick-label">Durum</span>
+                <button type="button" class="erp-quick-chip" :class="{ 'is-active': enabled === '' }" @click="enabled = ''; $nextTick(() => reloadUsersGrid())">Tümü</button>
+                <button type="button" class="erp-quick-chip" :class="{ 'is-active': enabled === 'true' }" @click="enabled = 'true'; $nextTick(() => reloadUsersGrid())">Aktif</button>
+                <button type="button" class="erp-quick-chip" :class="{ 'is-active': enabled === 'false' }" @click="enabled = 'false'; $nextTick(() => reloadUsersGrid())">Askıda</button>
             </div>
         </div>
-
-        <!-- Tabulator 6 Target Div -->
-        <div id="users-table"></div>
     </div>
 
+    <div class="erp-grid-chrome">
+        <span></span>
+        <fieldset class="erp-density">
+            <legend class="sr-only">Tablo yoğunluğu</legend>
+            <span class="erp-density-label">Yoğunluk</span>
+            <div class="erp-density-toggle">
+                <button type="button" class="erp-density-btn" :class="{ 'is-active': density === 'comfortable' }" @click="density = 'comfortable'">Rahat</button>
+                <button type="button" class="erp-density-btn" :class="{ 'is-active': density === 'compact' }" @click="density = 'compact'">Kompakt</button>
+            </div>
+        </fieldset>
+    </div>
+
+    <div th:replace="~{fragments/list-chrome :: gridShell('users-table')}"></div>
 </div>
 
 <th:block layout:fragment="scripts">

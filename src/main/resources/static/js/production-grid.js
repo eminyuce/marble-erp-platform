@@ -28,15 +28,8 @@ function initProductionGrid() {
             return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}&sortField=${sorterField}&sortDir=${sorterDir}`;
         },
         ajaxResponse: function(url, params, response) {
-            if (response && Array.isArray(response.data)) {
-                response.data.forEach(item => {
-                    Object.keys(item).forEach(key => {
-                        const camel = key.replace(/_([a-z0-9])/g, (_, l) => l.toUpperCase());
-                        if (!(camel in item)) item[camel] = item[key];
-                    });
-                });
-            }
-            return response;
+            camelizeTabulatorRows(response);
+            return applyTabulatorTotal("production-table", response);
         },
         placeholder: "Üretim emri kaydı bulunamadı.",
         columns: [
@@ -100,18 +93,11 @@ function initProductionGrid() {
         ]
     });
 
+    attachTabulatorPagingAnimation(productionTable);
+    bindGridSearch(productionTable, "search-input");
     productionTable.on("renderComplete", () => {
         if (window.lucide) window.lucide.createIcons();
     });
-
-    const searchInput = document.getElementById("search-input");
-    if (searchInput) {
-        let timer;
-        searchInput.addEventListener("input", () => {
-            clearTimeout(timer);
-            timer = setTimeout(() => productionTable.replaceData(), 300);
-        });
-    }
 }
 
 function reloadProductionGrid() {

@@ -14,11 +14,16 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    encoding: UTF-8
     locations: classpath:db/migration
 
 server:
   port: ${SERVER_PORT:8080}
   servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
     session:
       cookie:
         http-only: true

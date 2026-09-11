@@ -3,563 +3,253 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Sistem Özellikleri ve Kullanıcı Rehberi &bull; Özerler Mermer ERP</title>
+    <title>Sitenizin özellikleri &bull; Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-8" x-data="{
-    searchQuery: '',
-    activeTab: 'ALL',
-    faqOpen: null,
-    matches(category, title, desc, keywords) {
-        if (this.activeTab !== 'ALL' && this.activeTab !== category) return false;
-        if (!this.searchQuery) return true;
-        const q = this.searchQuery.toLowerCase();
-        return (title + ' ' + desc + ' ' + keywords).toLowerCase().includes(q);
-    }
-}">
+<div layout:fragment="content" class="osf-guide" data-osf-guide lang="tr">
 
-    <!-- Hero Header with Banner -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-amber-950 text-white p-8 sm:p-10 shadow-xl border border-white/10">
-        <!-- Background decorative ambient circles -->
-        <div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-amber-500/15 blur-3xl pointer-events-none"></div>
-        <div class="absolute -left-16 -bottom-16 w-80 h-80 rounded-full bg-blue-500/10 blur-3xl pointer-events-none"></div>
+    <header class="osf-guide__hero">
+        <p class="osf-guide__eyebrow">YÖNETİCİ REHBERİ</p>
+        <h1 class="osf-guide__title">Sitenizin özellikleri</h1>
+        <p class="osf-guide__lead">
+            Ocaktan şantiyeye kadar neleri yönetebileceğinizi küçük adımlarla öğrenin.
+            Her bölüm bir kitap sayfası gibi açılır; uzun sayfada aşağı kaydırmanız gerekmez.
+        </p>
+        <aside class="osf-guide__callout osf-guide__callout--tip" role="note" aria-label="İpucu">
+            <strong>İpucu:</strong> İçindekilerden bir başlık seçin veya alttaki
+            “Önceki / Sonraki sayfa” düğmeleriyle ilerleyin.
+        </aside>
+    </header>
 
-        <div class="relative z-10 max-w-4xl space-y-4">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold uppercase tracking-wider">
-                <i data-lucide="sparkles" class="w-4 h-4"></i>
-                <span>Kurumsal Özellikler &amp; Kullanıcı Eğitim Rehberi</span>
-            </div>
-            <h1 class="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
-                Özerler Mermer ERP Platformu Özellik Rehberi
-            </h1>
-            <p class="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
-                Ocaktan blok çıkarımından şantiyede montaja kadar fiziksel izlenebilirlik, 10-kodlu fire yönetimi, dinamik kalite çarpanlı maliyet muhasebesi ve dijital taş pasaportu modüllerinin eksiksiz kullanım kılavuzu.
-            </p>
+    <div class="osf-guide__layout">
+        <nav class="osf-guide__toc" aria-label="İçindekiler">
+            <h2 class="osf-guide__toc-title">İÇİNDEKİLER</h2>
 
-            <!-- Live Search Bar Inside Hero -->
-            <div class="pt-3 max-w-xl">
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                        <i data-lucide="search" class="w-4 h-4"></i>
-                    </div>
-                    <input type="text"
-                           x-model="searchQuery"
-                           placeholder="Modül veya özellik ara (örn: kantar, fire, katrak, nesting, excel, 2fa, puantaj)..."
-                           class="w-full pl-10 pr-4 py-3 bg-white/10 hover:bg-white/15 focus:bg-white text-white focus:text-slate-900 placeholder-slate-400 focus:placeholder-slate-500 border border-white/20 focus:border-amber-400 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-4 focus:ring-amber-500/30 transition shadow-inner">
+            <div class="osf-guide__progress" aria-live="polite">
+                <div class="osf-guide__progress-meta">
+                    <span>Sayfa</span>
+                    <span data-osf-progress-label>1 / 8</span>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Interactive 6-Step Marble Lifecycle Pipeline -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div class="flex items-center gap-2">
-                <i data-lucide="workflow" class="w-5 h-5 text-amber-700"></i>
-                <h3 class="text-sm font-bold text-slate-900">Uçtan Uca Operasyonel Mermer Akış Hattı</h3>
-            </div>
-            <span class="text-xs font-mono text-slate-400">Ocaktan Şantiyeye 6 Aşama</span>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-left space-y-1">
-                <div class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800">Aşama 1</div>
-                <div class="text-xs font-bold text-slate-900 flex items-center gap-1">
-                    <i data-lucide="mountain" class="w-3.5 h-3.5 text-emerald-600"></i>
-                    <span>Ocak &amp; Blok</span>
-                </div>
-                <p class="text-[11px] text-slate-600">3 Eksen ölçüm, kantar sapma &amp; transfer</p>
+                <progress class="osf-guide__progress-track" max="100" value="13" data-osf-progress-bar aria-label="Rehber ilerleme"></progress>
             </div>
 
-            <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-left space-y-1">
-                <div class="text-[10px] font-extrabold uppercase tracking-wider text-amber-800">Aşama 2</div>
-                <div class="text-xs font-bold text-slate-900 flex items-center gap-1">
-                    <i data-lucide="factory" class="w-3.5 h-3.5 text-amber-600"></i>
-                    <span>Katrak Kesim</span>
-                </div>
-                <p class="text-[11px] text-slate-600">ST &amp; katrak, lama aşınma, cila/yüzey</p>
+            <ol class="osf-guide__toc-list">
+                <li><a href="#osf-home" data-osf-toc-link data-osf-page="0" class="is-active" aria-current="page">1. Kokpit</a></li>
+                <li><a href="#osf-blocks" data-osf-toc-link data-osf-page="1" aria-current="false">2. Ocak ve bloklar</a></li>
+                <li><a href="#osf-production" data-osf-toc-link data-osf-page="2" aria-current="false">3. Katrak kesim</a></li>
+                <li><a href="#osf-slabs" data-osf-toc-link data-osf-page="3" aria-current="false">4. Plaka ambarı</a></li>
+                <li><a href="#osf-workshop" data-osf-toc-link data-osf-page="4" aria-current="false">5. Atölye</a></li>
+                <li><a href="#osf-projects" data-osf-toc-link data-osf-page="5" aria-current="false">6. Şantiye</a></li>
+                <li><a href="#osf-cost" data-osf-toc-link data-osf-page="6" aria-current="false">7. Maliyet ve rapor</a></li>
+                <li><a href="#osf-users" data-osf-toc-link data-osf-page="7" aria-current="false">8. Kullanıcılar</a></li>
+            </ol>
+        </nav>
+
+        <div class="osf-guide__stage">
+            <div class="osf-guide__content" data-osf-book aria-live="polite">
+
+                <section class="osf-guide__section is-active" id="osf-home" data-osf-section aria-labelledby="osf-home-title">
+                    <div class="osf-guide__section-label">SAYFA 1 / 8</div>
+                    <header class="osf-guide__section-head">
+                        <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="layout-dashboard"></i></span>
+                        <div>
+                            <h2 id="osf-home-title">Yönetici kokpiti</h2>
+                            <p>Günün stoğu, açık iş emirleri ve şantiye özetinin ilk bakışta göründüğü yer.</p>
+                        </div>
+                    </header>
+                    <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
+                    <ul class="osf-guide__list">
+                        <li>Blok, plaka ve iş emri özetlerini tek ekranda izleyin</li>
+                        <li>Menüden operasyon, proje ve yönetim sayfalarına geçin</li>
+                        <li>Sistem sağlığını ve kullanıcı hesaplarını buradan açın</li>
+                    </ul>
+                    <p class="osf-guide__where">
+                        Yönetim:
+                        <a th:href="@{/admin/dashboard}">Yönetici Kokpiti</a>
+                    </p>
+                </section>
+
+                <section class="osf-guide__section" id="osf-blocks" data-osf-section aria-labelledby="osf-blocks-title" hidden>
+                    <div class="osf-guide__section-label">SAYFA 2 / 8</div>
+                    <header class="osf-guide__section-head">
+                        <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="mountain"></i></span>
+                        <div>
+                            <h2 id="osf-blocks-title">Ocak ve blok kabul</h2>
+                            <p>Ocaktan çıkan bloğu ölçün, tartın ve fabrikaya sevk edin.</p>
+                        </div>
+                    </header>
+                    <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
+                    <ul class="osf-guide__list">
+                        <li>En, boy ve yükseklik ile hacim ve teorik tonaj hesaplayın</li>
+                        <li>Kantar tartımını girin; %5 sapmayı sarı alarmla görün</li>
+                        <li>Bloğu kendi fabrikasına maliyetsiz dahili transfer edin</li>
+                    </ul>
+                    <aside class="osf-guide__callout osf-guide__callout--note" role="note">
+                        <strong>Not:</strong> Kendi fabrikasına sevkte yapay iç kâr eklenmez; ocak bedeli ve nakliye hammadde maliyetine yazılır.
+                    </aside>
+                    <p class="osf-guide__where">
+                        Yönetim:
+                        <a th:href="@{/blocks}">Bloklar</a>
+                    </p>
+                </section>
+
+                <section class="osf-guide__section" id="osf-production" data-osf-section aria-labelledby="osf-production-title" hidden>
+                    <div class="osf-guide__section-label">SAYFA 3 / 8</div>
+                    <header class="osf-guide__section-head">
+                        <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="scissors"></i></span>
+                        <div>
+                            <h2 id="osf-production-title">Katrak kesim</h2>
+                            <p>Bloğu dilimleyin, yüzey işlemini atayın ve fireyi kodlayın.</p>
+                        </div>
+                    </header>
+                    <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
+                    <ul class="osf-guide__list">
+                        <li>Katrak veya ST kesim emri açın</li>
+                        <li>Cila, honlama veya fırçalama yüzey işlemi seçin</li>
+                        <li>Fireyi FR-01 … FR-10 kodlarıyla kaydedin</li>
+                    </ul>
+                    <aside class="osf-guide__callout osf-guide__callout--warn" role="note">
+                        <strong>Dikkat:</strong> Doğal çatlak (FR-02) ocak seleksiyonuna, operatör hatası (FR-05) işçilik performansına yazılır.
+                    </aside>
+                    <p class="osf-guide__where">
+                        Yönetim:
+                        <a th:href="@{/production}">Katrak Kesim</a>
+                    </p>
+                </section>
+
+                <section class="osf-guide__section" id="osf-slabs" data-osf-section aria-labelledby="osf-slabs-title" hidden>
+                    <div class="osf-guide__section-label">SAYFA 4 / 8</div>
+                    <header class="osf-guide__section-head">
+                        <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="layers"></i></span>
+                        <div>
+                            <h2 id="osf-slabs-title">Plaka ambarı</h2>
+                            <p>Her plakayı barkodlayın, kaliteleyin ve paletleyin.</p>
+                        </div>
+                    </header>
+                    <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
+                    <ul class="osf-guide__list">
+                        <li>Plakaya tekil kod ve QR etiket verin</li>
+                        <li>Kalite sınıfı, kalınlık ve parlaklık (gloss) kaydedin</li>
+                        <li>Stok durumunu AVAILABLE, RESERVED veya SHIPPED izleyin</li>
+                    </ul>
+                    <p class="osf-guide__where">
+                        Yönetim:
+                        <a th:href="@{/production/slabs}">Plaka Ambarı</a>
+                    </p>
+                </section>
+
+                <section class="osf-guide__section" id="osf-workshop" data-osf-section aria-labelledby="osf-workshop-title" hidden>
+                    <div class="osf-guide__section-label">SAYFA 5 / 8</div>
+                    <header class="osf-guide__section-head">
+                        <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="hammer"></i></span>
+                        <div>
+                            <h2 id="osf-workshop-title">Atölye ebatlama</h2>
+                            <p>Şantiye ölçüsüne göre plakayı kesin ve nesting firesini ayırın.</p>
+                        </div>
+                    </header>
+                    <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
+                    <ul class="osf-guide__list">
+                        <li>İş emri ile kaynak plakayı rezerve edin</li>
+                        <li>Köprü kesmede ebatlama ve pah/profil uygulayın</li>
+                        <li>Nesting artığını mozaik stoğuna aktarın</li>
+                    </ul>
+                    <aside class="osf-guide__callout osf-guide__callout--note" role="note">
+                        <strong>Not:</strong> Rezerve plaka başka projeye seçilemez. Emir bitince otomatik işlendi olur.
+                    </aside>
+                    <p class="osf-guide__where">
+                        Yönetim:
+                        <a th:href="@{/workshop}">Atölye</a>
+                    </p>
+                </section>
+
+                <section class="osf-guide__section" id="osf-projects" data-osf-section aria-labelledby="osf-projects-title" hidden>
+                    <div class="osf-guide__section-label">SAYFA 6 / 8</div>
+                    <header class="osf-guide__section-head">
+                        <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="building-2"></i></span>
+                        <div>
+                            <h2 id="osf-projects-title">Şantiye ve WBS</h2>
+                            <p>Projeyi mahal ağacına bölün; montaj ve sarfiyatı izleyin.</p>
+                        </div>
+                    </header>
+                    <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
+                    <ul class="osf-guide__list">
+                        <li>Blok → kat → mahal → oda kırılımında WBS oluşturun</li>
+                        <li>Planlanan m² ile fiili montajı karşılaştırın</li>
+                        <li>Kum, çimento ve yapıştırıcı sarfiyatını kaydedin</li>
+                    </ul>
+                    <p class="osf-guide__where">
+                        Yönetim:
+                        <a th:href="@{/projects}">Şantiyeler</a>
+                    </p>
+                </section>
+
+                <section class="osf-guide__section" id="osf-cost" data-osf-section aria-labelledby="osf-cost-title" hidden>
+                    <div class="osf-guide__section-label">SAYFA 7 / 8</div>
+                    <header class="osf-guide__section-head">
+                        <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="calculator"></i></span>
+                        <div>
+                            <h2 id="osf-cost-title">Maliyet, rapor ve soy ağacı</h2>
+                            <p>Kalite çarpanlı maliyet, Excel rapor ve taş pasaportu.</p>
+                        </div>
+                    </header>
+                    <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
+                    <ul class="osf-guide__list">
+                        <li>Extra / A / B / C kalite çarpanı ile birim maliyeti dağıtın</li>
+                        <li>Hedef kâr marjına göre satış fiyatı önerin</li>
+                        <li>Excel veya CSV rapor alın; QR ile ocağa kadar izleyin</li>
+                    </ul>
+                    <p class="osf-guide__where">
+                        Yönetim:
+                        <a th:href="@{/costs}">Maliyet</a>
+                        |
+                        <a th:href="@{/reports}">Rapor Merkezi</a>
+                        |
+                        <a th:href="@{/genealogy}">Soy Ağacı / QR</a>
+                    </p>
+                </section>
+
+                <section class="osf-guide__section" id="osf-users" data-osf-section aria-labelledby="osf-users-title" hidden>
+                    <div class="osf-guide__section-label">SAYFA 8 / 8</div>
+                    <header class="osf-guide__section-head">
+                        <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="users"></i></span>
+                        <div>
+                            <h2 id="osf-users-title">Kullanıcılar ve ayarlar</h2>
+                            <p>Hesap, rol, 2FA ve sistem sağlık izlemesi.</p>
+                        </div>
+                    </header>
+                    <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
+                    <ul class="osf-guide__list">
+                        <li>Yönetici ve operasyon hesaplarını tanımlayın</li>
+                        <li>SMTP, 2FA ve reCAPTCHA ayarlarını yönetin</li>
+                        <li>Veritabanı, bellek ve disk sağlığını izleyin</li>
+                    </ul>
+                    <p class="osf-guide__where">
+                        Yönetim:
+                        <a th:href="@{/admin/users}">Kullanıcılar</a>
+                        |
+                        <a th:href="@{/admin/settings}">Sistem Ayarları</a>
+                        |
+                        <a th:href="@{/admin/dashboard/systemhealth/}">Sistem Sağlığı</a>
+                    </p>
+                </section>
+
             </div>
 
-            <div class="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-left space-y-1">
-                <div class="text-[10px] font-extrabold uppercase tracking-wider text-blue-800">Aşama 3</div>
-                <div class="text-xs font-bold text-slate-900 flex items-center gap-1">
-                    <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-600"></i>
-                    <span>Plaka Ambarı</span>
-                </div>
-                <p class="text-[11px] text-slate-600">QR barkodlama, kalite seleksiyonu, palet</p>
-            </div>
-
-            <div class="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-left space-y-1">
-                <div class="text-[10px] font-extrabold uppercase tracking-wider text-rose-800">Aşama 4</div>
-                <div class="text-xs font-bold text-slate-900 flex items-center gap-1">
-                    <i data-lucide="scissors" class="w-3.5 h-3.5 text-rose-600"></i>
-                    <span>Atölye Kesim</span>
-                </div>
-                <p class="text-[11px] text-slate-600">İş emri, ebatlama nesting, mozaik ayırma</p>
-            </div>
-
-            <div class="p-3.5 rounded-2xl bg-cyan-50 border border-cyan-200 text-left space-y-1">
-                <div class="text-[10px] font-extrabold uppercase tracking-wider text-cyan-800">Aşama 5</div>
-                <div class="text-xs font-bold text-slate-900 flex items-center gap-1">
-                    <i data-lucide="building-2" class="w-3.5 h-3.5 text-cyan-600"></i>
-                    <span>Şantiye WBS</span>
-                </div>
-                <p class="text-[11px] text-slate-600">Mahal ağacı, montaj, sarfiyat &amp; puantaj</p>
-            </div>
-
-            <div class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-left space-y-1">
-                <div class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-800">Aşama 6</div>
-                <div class="text-xs font-bold text-slate-900 flex items-center gap-1">
-                    <i data-lucide="calculator" class="w-3.5 h-3.5 text-indigo-600"></i>
-                    <span>Maliyet &amp; Soy Ağacı</span>
-                </div>
-                <p class="text-[11px] text-slate-600">Dinamik çarpan, QR pasaport, kâr fiyatlama</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Category Filter Tabs -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 text-xs">
-        <button type="button" @click="activeTab = 'ALL'"
-                :class="activeTab === 'ALL' ? 'bg-amber-700 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                class="px-4 py-2 rounded-xl transition cursor-pointer flex-shrink-0">
-            Tüm Özellikler (12)
-        </button>
-        <button type="button" @click="activeTab = 'QUARRY_FACTORY'"
-                :class="activeTab === 'QUARRY_FACTORY' ? 'bg-amber-700 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                class="px-4 py-2 rounded-xl transition cursor-pointer flex-shrink-0 flex items-center gap-1.5">
-            <i data-lucide="mountain" class="w-3.5 h-3.5"></i>
-            <span>Ocak &amp; Fabrika</span>
-        </button>
-        <button type="button" @click="activeTab = 'WORKSHOP_SITE'"
-                :class="activeTab === 'WORKSHOP_SITE' ? 'bg-amber-700 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                class="px-4 py-2 rounded-xl transition cursor-pointer flex-shrink-0 flex items-center gap-1.5">
-            <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
-            <span>Atölye &amp; Şantiye</span>
-        </button>
-        <button type="button" @click="activeTab = 'COSTING'"
-                :class="activeTab === 'COSTING' ? 'bg-amber-700 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                class="px-4 py-2 rounded-xl transition cursor-pointer flex-shrink-0 flex items-center gap-1.5">
-            <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
-            <span>Maliyet &amp; Finans</span>
-        </button>
-        <button type="button" @click="activeTab = 'REPORTS_SYSTEM'"
-                :class="activeTab === 'REPORTS_SYSTEM' ? 'bg-amber-700 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                class="px-4 py-2 rounded-xl transition cursor-pointer flex-shrink-0 flex items-center gap-1.5">
-            <i data-lucide="settings" class="w-3.5 h-3.5"></i>
-            <span>Raporlar &amp; Sistem</span>
-        </button>
-    </div>
-
-    <!-- FEATURE SHOWCASE CARDS GRID -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <!-- 1. Ocak & Blok Kabul -->
-        <div x-show="matches('QUARRY_FACTORY', '1. Ocak & Blok Kabul Yönetimi', '3 eksenli hacim hesabı kantar tartımı teorik tonaj sapma kontrolü', 'quarry blok kantar hacim tonaj sapma')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800">Modül 01</span>
-                    <span class="p-2 bg-emerald-50 text-emerald-700 rounded-xl"><i data-lucide="mountain" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Ocak &amp; Blok Kabul Yönetimi</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Ocak kademelerinden çıkarılan blokların en, boy ve yükseklik ($m^3$) ölçümü yapılır. Taşın mermer türüne göre özgül ağırlığıyla teorik tonajı otomatik hesaplanır. Kantar tartım fişi girildiğinde %5 üzerindeki sapmalar sarı alarmla işaretlenir.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>Hacim:</strong> En &times; Boy &times; Yükseklik ($m^3$)</div>
-                    <div><strong>Teorik Ton:</strong> $m^3 \times \text{Özgül Ağırlık}$ (2.70 t/$m^3$)</div>
-                    <div><strong>Transfer:</strong> Fabrikaya maliyetsiz dahili sevk</div>
-                </div>
-            </div>
-            <a th:href="@{/blocks}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Blok Yönetimine Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 2. Fabrika Katrak & Plaka Üretimi -->
-        <div x-show="matches('QUARRY_FACTORY', '2. Fabrika Katrak & Plaka Kesim', 'Gangsaw ST kesim makineleri lama aşınması yüzey işlemleri', 'katrak gangsaw st kesim plaka cila honlama firçalama')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-800">Modül 02</span>
-                    <span class="p-2 bg-amber-50 text-amber-700 rounded-xl"><i data-lucide="factory" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Fabrika Katrak &amp; Kesim</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Blokların katrak veya ST makinelerine bağlanarak dilimlenmesi, makine saati, elmas lama aşınma payı ve kWh elektrik tüketimi bazında takip edilir. Kesilen plakalara epoksi, fileleme, cila, honlama veya fırçalama gibi yüzey işlemleri atanır.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>Yüzey İşlemleri:</strong> Polished, Honed, Brushed</div>
-                    <div><strong>Kalınlık:</strong> 2 cm, 3 cm vb. hassas kontrol</div>
-                    <div><strong>Amortisman:</strong> Bıçak &amp; makine saati yüklemesi</div>
-                </div>
-            </div>
-            <a th:href="@{/production}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Katrak Kesim Paneline Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 3. 10-Kodlu Fire & Hurda Yönetimi -->
-        <div x-show="matches('QUARRY_FACTORY', '3. 10-Kodlu Fire ve Hurda Yönetimi', 'FR-01 den FR-10 a kadar standardize edilmiş fire kodları analizi', 'fire hurda scrap fr01 fr02 fr10 zayiat talas kirilma')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-100 text-rose-800">Modül 03</span>
-                    <span class="p-2 bg-rose-50 text-rose-700 rounded-xl"><i data-lucide="alert-triangle" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">10-Kodlu Fire &amp; Hurda Analizi</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Sistemde her fire olayı `FR-01` (Talaş Kaybı) ile `FR-10` (Şantiye Kırığı) arasındaki 10 standart sebepten biriyle kaydedilir. Doğal taş kusuru ile operatör hatası ayrıştırılarak doğru maliyet merkezine yüklenir; kırık parçalar mozaik stoğuna aktarılır.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>FR-01:</strong> Kesim Talaş Kaybı (Standart plaka)</div>
-                    <div><strong>FR-02:</strong> Doğal Taş Çatlağı (Hammadde sapması)</div>
-                    <div><strong>FR-09:</strong> Nesting Artığı (Mozaik/Kırma Stoğu)</div>
-                </div>
-            </div>
-            <a th:href="@{/production/scrap}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Fire Kayıtlarına Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 4. Kalite Çarpanı ve Dinamik Maliyet -->
-        <div x-show="matches('COSTING', '4. Dinamik Kalite Çarpanı Maliyeti', 'Grade Multiplier algoritmasi extra A B C kaliteleri', 'grade multiplier carpan maliyet ekstra a kalite b c kalite formula')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-indigo-100 text-indigo-800">Modül 04</span>
-                    <span class="p-2 bg-indigo-50 text-indigo-700 rounded-xl"><i data-lucide="calculator" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Kalite Çarpanlı Dinamik Maliyet</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Bir bloktan çıkan tüm plakalar aynı maliyete sahip değildir. Sistem Grade Multiplier algoritması ile Extra ($1.30$), A ($1.15$), B ($1.00$) ve C ($0.65$) katsayılarını uygulayarak eşdeğer alan ($A_{eq}$) üzerinden gerçekçi birim maliyet üretir.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div>$A_{eq} = \sum (m_i^2 \times K_i)$ &rarr; <strong>Eşdeğer Alan</strong></div>
-                    <div>$C_{base} = \text{Maliyet} / A_{eq}$ &rarr; <strong>Baz Maliyet</strong></div>
-                    <div>$C_A = C_{base} \times 1.15 \quad C_C = C_{base} \times 0.65$</div>
-                </div>
-            </div>
-            <a th:href="@{/costs}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Maliyet Hesaplamasına Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 5. Plaka Barkodlama & Ambar -->
-        <div x-show="matches('QUARRY_FACTORY', '5. Plaka Barkodlama & Ambar', 'Tekil QR barkodlama plaka paletleme gloss level kalinlik', 'plaka barkod qr kod ambar paletleme stok gloss level')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-100 text-blue-800">Modül 05</span>
-                    <span class="p-2 bg-blue-50 text-blue-700 rounded-xl"><i data-lucide="layers" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Plaka Barkodlama &amp; Ambar</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Üretilen her plaka tekil bir barkod (`PLK-2026-...`) ile kimliklendirilir. Ebatları, kalınlığı, yüzey parlaklık seviyesi (Gloss Level), kalite sınıfı ve birim maliyeti etiketlenir. Plakalar paletlerde gruplanarak sevkiyata hazır hale getirilir.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>Durumlar:</strong> AVAILABLE, RESERVED, SHIPPED</div>
-                    <div><strong>Ebatlar:</strong> Net en &times; boy ve yüzey alanı ($m^2$)</div>
-                    <div><strong>Paletleme:</strong> İhracat kasalama ve ağırlık kontrolü</div>
-                </div>
-            </div>
-            <a th:href="@{/production/slabs}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Plaka Ambarına Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 6. Atölye & Ebatlama & Nesting -->
-        <div x-show="matches('WORKSHOP_SITE', '6. Atölye Ebatlama ve Nesting', 'Köprü kesme iş emirleri plaka rezervasyonu parça ebatlama', 'atolye ebatlama kopru kesme nesting reserve rezervasyon is emri')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-100 text-rose-800">Modül 06</span>
-                    <span class="p-2 bg-rose-50 text-rose-700 rounded-xl"><i data-lucide="scissors" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Atölye Ebatlama &amp; Nesting</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Şantiye projelerine özel ölçülü mermer kesimleri için iş emirleri oluşturulur. Kaynak plaka ambarda rezerve edilir ve köprü kesme tezgahında ebatlanır. 2D Nesting optimizasyonu ile plaka zayiatı minimize edilir, kalan parçalar mozaik stoğuna ayrılır.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>İş Emri:</strong> Kesim listesi, makine ve operatör</div>
-                    <div><strong>Rezervasyon:</strong> Rezerve plakanın mükerrer kesimini engelleme</div>
-                    <div><strong>Artık Takibi:</strong> FR-09 Nesting firesi maliyetleme</div>
-                </div>
-            </div>
-            <a th:href="@{/workshop}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Atölye İş Emirlerine Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 7. Şantiye WBS & Puantaj -->
-        <div x-show="matches('WORKSHOP_SITE', '7. Şantiye WBS Mahal Ağacı ve Puantaj', 'Blok kat mahal oda WBS agaci sarfiyat kum cimento yapistirici puantaj', 'santiye wbs mahal agaci kat oda montaj puantaj kum cimento yapistirici derz')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-cyan-100 text-cyan-800">Modül 07</span>
-                    <span class="p-2 bg-cyan-50 text-cyan-700 rounded-xl"><i data-lucide="building-2" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Şantiye WBS &amp; Puantaj Takibi</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Projeler Blok &rarr; Kat &rarr; Mahal &rarr; Oda kırılımında WBS ağacına ayrılır. Planlanan $m^2$ ile fiilen montajı biten $m^2$ karşılaştırılır. Kum, çimento, granit yapıştırıcı sarfiyatı ile usta puantaj saatleri anlık bütçe sapma grafiğiyle izlenir.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>WBS:</strong> Hiyerarşik mahal ve imalat ağacı</div>
-                    <div><strong>Sarfiyatlar:</strong> Kum, Çimento, Granit Yapıştırıcı, Derz</div>
-                    <div><strong>Puantaj:</strong> Usta/İşçi saatlik montaj maliyet yüklemesi</div>
-                </div>
-            </div>
-            <a th:href="@{/projects}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Şantiye Yönetimine Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 8. Maliyet Muhasebesi & Fiyatlama -->
-        <div x-show="matches('COSTING', '8. Maliyet Muhasebesi ve Akıllı Fiyatlama', '6 kademeli birim maliyet modeli ve hedef kar marji fiyatlama motoru', 'maliyet muhasebesi abc masraf merkezi kar marji fiyatlandirma 1365 tl')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-indigo-100 text-indigo-800">Modül 08</span>
-                    <span class="p-2 bg-indigo-50 text-indigo-700 rounded-xl"><i data-lucide="calculator" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Maliyet Muhasebesi &amp; Fiyatlama</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    6 masraf merkezi (CC-001 - CC-006) üzerinden hammadde, katrak kesim, yüzey işleme, atölye, fire ve genel gider yüklemeleri yapılır ($1,365$ TL/$m^2$ standart model). Akıllı fiyatlama motoru hedef kâr marjına göre satış fiyatı teklifi üretir.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>Standart Referans:</strong> $1,365.00$ TL/$m^2$</div>
-                    <div><strong>Fiyatlama Formülü:</strong> $\text{Fiyat} = \frac{\text{Maliyet}}{1 - \text{Marj}}$</div>
-                    <div><strong>Örnek:</strong> %35 marj ile $2,100.00$ TL/$m^2$ önerilen satış</div>
-                </div>
-            </div>
-            <a th:href="@{/costs}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Maliyet Kokpitine Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 9. Taşın Dijital Soy Ağacı & QR Pasaport -->
-        <div x-show="matches('COSTING', '9. Dijital Soy Ağacı ve Taş Pasaportu', 'Ocak aynasindan santiyeye kadar geriye dogru karantina kusur izleme ve mobil pasaport', 'soy agaci genealogy qr pasaport passport soyagaci izlenebilirlik karantina')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-800">Modül 09</span>
-                    <span class="p-2 bg-amber-50 text-amber-700 rounded-xl"><i data-lucide="git-branch" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Dijital Soy Ağacı &amp; QR Pasaport</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Şantiyede veya teslim edilen bir mermer parçası taratıldığında, hangi bloktan kesildiği, ocakta hangi aynadan çıktığı ve katrak parametreleri saniyeler içinde dökülür. Kusurlu bir blok tespit edildiğinde, o bloktan kesilen tüm plakalar anında karantinaya alınır.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>Geriye İzleme:</strong> Şantiye &rarr; Atölye &rarr; Katrak &rarr; Ocak</div>
-                    <div><strong>Mobil Pasaport:</strong> Mimar/müşteri için `/passport/{code}`</div>
-                    <div><strong>Karantina:</strong> Kusurlu blok plakalarını toplu dondurma</div>
-                </div>
-            </div>
-            <a th:href="@{/genealogy}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Soy Ağacı İzleyicisine Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 10. Kurumsal Rapor Merkezi -->
-        <div x-show="matches('REPORTS_SYSTEM', '10. Kurumsal Rapor Merkezi Excel CSV', '6 adet operasyonel rapor ve Apache POI Excel ile UTF8 BOM CSV ihraci', 'raporlar report excel csv xlsx ihrac export dokum')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-teal-100 text-teal-800">Modül 10</span>
-                    <span class="p-2 bg-teal-50 text-teal-700 rounded-xl"><i data-lucide="file-spreadsheet" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Rapor Merkezi (Excel &amp; CSV)</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Ocak Blokları, Katrak Fireleri, Atölye Kesim Emirleri, Şantiye İlerlemesi, Maliyet Muhasebesi ve Plaka Stokları olmak üzere 6 operasyonel rapor sunar. Apache POI ile mavi kurumsal başlıklı Excel (`.xlsx`) ve Türkçe uyumlu CSV formatında anında indirilir.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>6 Canlı Rapor:</strong> Tablolu önizleme ve anlık metrikler</div>
-                    <div><strong>Excel (.xlsx):</strong> Otomatik sütun genişliği &amp; stiller</div>
-                    <div><strong>CSV (.csv):</strong> UTF-8 BOM ile Excel'de sorunsuz Türkçe</div>
-                </div>
-            </div>
-            <a th:href="@{/reports}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Rapor Merkezine Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 11. Sistem & Güvenlik Ayarları -->
-        <div x-show="matches('REPORTS_SYSTEM', '11. Sistem ve Güvenlik Ayarları', '2FA iki faktorlu dogrulama Google reCAPTCHA SMTP posta sunucusu ve Sablon motoru', 'ayarlar settings 2fa recaptcha smtp posta email sablon template')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-200 text-slate-800">Modül 11</span>
-                    <span class="p-2 bg-slate-100 text-slate-700 rounded-xl"><i data-lucide="settings" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Sistem &amp; Güvenlik Ayarları</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Tüm kullanıcılar için tek tıkla 2FA zorunluluğu, Google reCAPTCHA bot koruması, kurumsal SMTP sunucu parametreleri ve canlı test e-postası gönderimi. Canlı değişkenli kurumsal E-Posta Şablon Motoru ile bildirim tasarımları özelleştirilir.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>2FA Güvenlik:</strong> E-Posta OTP doğrulama anahtarı</div>
-                    <div><strong>Google reCAPTCHA:</strong> Site Key ve Secret Key</div>
-                    <div><strong>Şablon Motoru:</strong> {{fullName}}, {{reason}} tokenleri</div>
-                </div>
-            </div>
-            <a th:href="@{/admin/settings}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Sistem Ayarlarına Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-        <!-- 12. Sistem Sağlık Gösterge Paneli -->
-        <div x-show="matches('REPORTS_SYSTEM', '12. Sistem Sağlık ve İzleme Kokpiti', 'Actuator health kontrolü port 81 calisma suresi veritabani pingi bellek disk', 'health saglik actuator uptime ping gecikme ram bellek disk port 81')"
-             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800">Modül 12</span>
-                    <span class="p-2 bg-emerald-50 text-emerald-700 rounded-xl"><i data-lucide="activity" class="w-5 h-5"></i></span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900">Sistem Sağlık Paneli (Port 81)</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    Spring Boot 4 Actuator entegrasyonu ile canlı sistem sağlığını, MySQL ping gecikmesini, JVM Heap bellek tüketimini ve disk boşluk oranını izler. 10 saniyelik otomatik yenileme ve harici Kubernetes/yük dengeleyiciler için `/health/` çıktısı sunar.
-                </p>
-                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 font-mono text-slate-700 border border-slate-100">
-                    <div><strong>Canlı URL:</strong> `/admin/dashboard/systemhealth/`</div>
-                    <div><strong>Metrikler:</strong> Uptime, MySQL Ping, RAM %, Disk %</div>
-                    <div><strong>JSON Çıktı:</strong> `/health/` açık monitoring uç noktası</div>
-                </div>
-            </div>
-            <a th:href="@{/admin/dashboard/systemhealth/}" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold text-center transition flex items-center justify-center gap-2">
-                <span>Sağlık Paneline Git</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-        </div>
-
-    </div>
-
-    <!-- Interactive FAQ & Business Logic Q&A Section -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-            <div>
-                <h2 class="text-lg font-black text-slate-900">Sık Sorulan Sorular &amp; Kritik İş Kuralları</h2>
-                <p class="text-xs text-slate-500 mt-0.5">Operasyonel mermer süreçlerinde sık karşılaşılan durumlar</p>
-            </div>
-            <span class="p-2 bg-amber-50 text-amber-700 rounded-xl">
-                <i data-lucide="help-circle" class="w-5 h-5"></i>
-            </span>
-        </div>
-
-        <div class="space-y-3">
-            <!-- FAQ Item 1 -->
-            <div class="border border-slate-200 rounded-2xl p-4 transition" :class="faqOpen === 1 ? 'bg-amber-50/40 border-amber-300' : 'bg-slate-50/50'">
-                <button type="button" @click="faqOpen = faqOpen === 1 ? null : 1" class="w-full text-left flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-slate-900 cursor-pointer">
-                    <span class="flex items-center gap-2">
-                        <i data-lucide="scale" class="w-4 h-4 text-amber-700"></i>
-                        <span>Blok kantar tartımında teorik tonaj ile kantar tonajı arasındaki fark %5'i geçerse ne olur?</span>
-                    </span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 transition-transform text-slate-500" :class="{ 'rotate-180': faqOpen === 1 }"></i>
+            <div class="osf-guide__pager">
+                <button type="button" class="osf-guide__pager-btn osf-guide__pager-btn--prev" data-osf-prev disabled>
+                    ← Önceki sayfa
                 </button>
-                <div x-show="faqOpen === 1" x-collapse class="mt-3 text-xs text-slate-600 leading-relaxed pl-6 border-l-2 border-amber-400">
-                    Sistem blok kabul esnasında kantar tartımı ile $m^3 \times \text{yoğunluk}$ teorik ağırlığını kıyaslar. Eğer sapma <strong>&plusmn;%5'i</strong> aşarsa kayıt engellenmez fakat blok sarı alarm statüsüne alınır. Bu durum ya kantar kalibrasyon hatasına ya da blok içinde gizli boşluk/çatlak/yoğunluk anomalisi olduğuna işaret eder ve ambar şefine uyarı verilir.
-                </div>
-            </div>
-
-            <!-- FAQ Item 2 -->
-            <div class="border border-slate-200 rounded-2xl p-4 transition" :class="faqOpen === 2 ? 'bg-amber-50/40 border-amber-300' : 'bg-slate-50/50'">
-                <button type="button" @click="faqOpen = faqOpen === 2 ? null : 2" class="w-full text-left flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-slate-900 cursor-pointer">
-                    <span class="flex items-center gap-2">
-                        <i data-lucide="split" class="w-4 h-4 text-rose-700"></i>
-                        <span>Bir blok kesilirken oluşan firelerin 10 koda göre ayrıştırılmasının faydası nedir?</span>
-                    </span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 transition-transform text-slate-500" :class="{ 'rotate-180': faqOpen === 2 }"></i>
+                <span class="osf-guide__pager-status" data-osf-progress-label>1 / 8</span>
+                <button type="button" class="osf-guide__pager-btn osf-guide__pager-btn--next" data-osf-next>
+                    Sonraki sayfa →
                 </button>
-                <div x-show="faqOpen === 2" x-collapse class="mt-3 text-xs text-slate-600 leading-relaxed pl-6 border-l-2 border-rose-400">
-                    Geleneksel fabrikalarda tüm fireler tek bir "zayiat" torbasına atılır ve maliyet şişer. Özerler ERP'de <strong>FR-01'den FR-10'a</strong> kadar olan kodlar sayesinde makine arızası (FR-03) bakım bütçesine, operatör hatası (FR-05) işçilik performansına, doğal çatlak (FR-02) ocak hammadde seleksiyonuna yazılır. Ebatlama nesting artıkları (FR-09) ise doğrudan mozaik stoğuna kaydedilerek geri kazanılır.
-                </div>
-            </div>
-
-            <!-- FAQ Item 3 -->
-            <div class="border border-slate-200 rounded-2xl p-4 transition" :class="faqOpen === 3 ? 'bg-amber-50/40 border-amber-300' : 'bg-slate-50/50'">
-                <button type="button" @click="faqOpen = faqOpen === 3 ? null : 3" class="w-full text-left flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-slate-900 cursor-pointer">
-                    <span class="flex items-center gap-2">
-                        <i data-lucide="percent" class="w-4 h-4 text-indigo-700"></i>
-                        <span>Grade Multiplier (Kalite Çarpanı) maliyet hesaplaması nasıl çalışır?</span>
-                    </span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 transition-transform text-slate-500" :class="{ 'rotate-180': faqOpen === 3 }"></i>
-                </button>
-                <div x-show="faqOpen === 3" x-collapse class="mt-3 text-xs text-slate-600 leading-relaxed pl-6 border-l-2 border-indigo-400">
-                    $150.000$ TL katrak maliyetinde 40 $m^2$ Extra/A kalite ($K=1.15$), 80 $m^2$ B kalite ($K=1.00$) ve 30 $m^2$ C kalite ($K=0.65$) plaka çıktığında: Toplam eşdeğer alan $145.50\text{ m}^2$ bulunur. Baz maliyet $1,030.93$ TL/$m^2$ olur. Böylece A kalite plakanın maliyeti $1,185.57$ TL/$m^2$, C kalite plakanın maliyeti ise $670.10$ TL/$m^2$ olarak atanır. Düşük kalite plakalar yüksek kaliteyi haksız yere pahalılaştırmaz.
-                </div>
-            </div>
-
-            <!-- FAQ Item 4 -->
-            <div class="border border-slate-200 rounded-2xl p-4 transition" :class="faqOpen === 4 ? 'bg-amber-50/40 border-amber-300' : 'bg-slate-50/50'">
-                <button type="button" @click="faqOpen = faqOpen === 4 ? null : 4" class="w-full text-left flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-slate-900 cursor-pointer">
-                    <span class="flex items-center gap-2">
-                        <i data-lucide="lock" class="w-4 h-4 text-emerald-700"></i>
-                        <span>Atölyede rezerve edilen plaka başka bir şantiyeye kullanılabilir mi?</span>
-                    </span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 transition-transform text-slate-500" :class="{ 'rotate-180': faqOpen === 4 }"></i>
-                </button>
-                <div x-show="faqOpen === 4" x-collapse class="mt-3 text-xs text-slate-600 leading-relaxed pl-6 border-l-2 border-emerald-400">
-                    Hayır. Bir iş emri için kaynak plaka seçildiğinde plaka durumu <strong>RESERVED</strong> (Rezerve) olur ve plaka rezervasyon kilidi aktifleşir. Başka bir operatör veya proje şefi bu plakayı seçemez veya satamaz. İş emri tamamlandığında plaka otomatik olarak <strong>PROCESSED</strong> (İşlendi) statüsüne çekilir.
-                </div>
             </div>
         </div>
     </div>
-
-    <!-- Quick Shortcuts & System Support Callout -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="p-6 rounded-3xl bg-slate-900 text-white border border-slate-800 space-y-3">
-            <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
-                <i data-lucide="terminal" class="w-4 h-4"></i>
-                <span>Geliştirici &amp; Yönetici Kısayolları</span>
-            </div>
-            <ul class="space-y-2 text-xs text-slate-300 font-mono">
-                <li class="flex items-center justify-between">
-                    <span class="text-slate-400">Sağlık Denetimi:</span>
-                    <a th:href="@{/health/}" target="_blank" class="text-emerald-400 hover:underline">/health/ (Port 81)</a>
-                </li>
-                <li class="flex items-center justify-between">
-                    <span class="text-slate-400">Sistem Sağlık Paneli:</span>
-                    <a th:href="@{/admin/dashboard/systemhealth/}" class="text-amber-300 hover:underline">/admin/dashboard/systemhealth/</a>
-                </li>
-                <li class="flex items-center justify-between">
-                    <span class="text-slate-400">Yönetici Giriş Portalı:</span>
-                    <a th:href="@{/account/adminlogin/}" class="text-blue-400 hover:underline">/account/adminlogin/</a>
-                </li>
-                <li class="flex items-center justify-between">
-                    <span class="text-slate-400">Excel / CSV Raporları:</span>
-                    <a th:href="@{/reports}" class="text-teal-300 hover:underline">/reports</a>
-                </li>
-            </ul>
-        </div>
-
-        <div class="p-6 rounded-3xl bg-gradient-to-br from-amber-800 to-amber-950 text-white border border-amber-700/50 space-y-3 flex flex-col justify-between">
-            <div class="space-y-2">
-                <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-200">
-                    <i data-lucide="info" class="w-4 h-4"></i>
-                    <span>Eğitim &amp; Destek Masası</span>
-                </div>
-                <h4 class="text-sm font-bold">Özerler Mermer ERP Eğitimi</h4>
-                <p class="text-xs text-amber-100/80 leading-relaxed">
-                    Yeni istihdam edilen ocak kantar personeli, katrak operatörleri ve şantiye şefleri bu rehberi inceleyerek 15 dakika içinde sisteme tam uyum sağlayabilir.
-                </p>
-            </div>
-            <div class="flex items-center justify-between text-xs text-amber-200 pt-2 border-t border-amber-700/40">
-                <span>Versiyon: 1.0.0 PRO</span>
-                <span>Özerler Mermer A.Ş. &copy; 2026</span>
-            </div>
-        </div>
-    </div>
-
 </div>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/osf-guide.js}"></script>
+</th:block>
 </body>
 </html>

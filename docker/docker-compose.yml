@@ -8,6 +8,7 @@ services:
       MYSQL_DATABASE: ${DB_NAME:-marble_erp}
       MYSQL_USER: ${DB_USERNAME:-marbleuser}
       MYSQL_PASSWORD: ${DB_PASSWORD:-marblepass}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
     ports:
       - "${DB_PORT:-3306}:3306"
     volumes:
@@ -32,7 +33,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      DB_URL: jdbc:mysql://mysql:3306/${DB_NAME:-marble_erp}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_URL: jdbc:mysql://mysql:3306/${DB_NAME:-marble_erp}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci
       DB_USERNAME: ${DB_USERNAME:-marbleuser}
       DB_PASSWORD: ${DB_PASSWORD:-marblepass}
       APP_UPLOAD_DIR: /app/uploads

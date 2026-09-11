@@ -4,15 +4,13 @@
     <title>Taşın Dijital Soy Ağacı | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-6">
+<div layout:fragment="content" class="erp-list-page space-y-6">
 
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-            <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Taşın Dijital Soy Ağacı &amp; Ters İzlenebilirlik</h1>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Dijital Pasaport</span>
-            </div>
-            <p class="text-sm text-slate-500 mt-1">Ocaktaki ham bloktan şantiyedeki son metrekare montaja kadar kesintisiz fiziksel ve mali soy ağacı zinciri.</p>
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Soy Ağacı')}"></div>
+            <h2 class="admin-page-title">Soy Ağacı</h2>
+            <p class="erp-list-lead">Blok, plaka veya parça kodu ile ocaktan şantiyeye izlenebilirlik zincirini görüntüleyin.</p>
         </div>
     </div>
 
@@ -28,8 +26,8 @@
                        class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition">
             </div>
             <button type="submit"
-                    class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition">
-                <i data-lucide="search" class="w-4 h-4 text-amber-400"></i>
+                    class="px-5 py-2 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-xs font-semibold rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="search" class="w-4 h-4 text-white"></i>
                 <span>Soy Ağacını Çıkar</span>
             </button>
         </form>
@@ -44,68 +42,65 @@
     <!-- Genealogy Visual Tree Render -->
     <div th:if="${tree != null}" class="space-y-4">
         <!-- Root Node: Quarry & Block -->
-        <div class="bg-slate-900 text-slate-100 rounded-2xl p-6 shadow-xl border border-slate-800 relative overflow-hidden">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div class="bg-white text-slate-800 rounded-2xl p-6 shadow-sm border border-[#d7e0e7] relative overflow-hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
                 <div class="flex items-center gap-3">
-                    <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400">
+                    <div class="p-3 bg-sky-50 border border-sky-200 rounded-xl text-[#2b6cb0]">
                         <i data-lucide="mountain" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <div class="text-xs font-semibold text-amber-400 uppercase tracking-wider">KAYNAK BLOK KİMLİĞİ</div>
-                        <h2 class="text-xl font-black text-white tracking-tight" th:text="${tree.title}">BLK-2026-00125</h2>
-                        <div class="text-xs text-slate-400 mt-0.5" th:text="${tree.subtitle}">Muğla Beyaz (Ekstra Beyaz Kristalize)</div>
+                        <div class="text-xs font-semibold text-[#0e7490] uppercase tracking-wider">KAYNAK BLOK KİMLİĞİ</div>
+                        <h2 class="text-xl font-black text-[#102a43] tracking-tight" th:text="${tree.title}">BLK-2026-00125</h2>
+                        <div class="text-xs text-slate-500 mt-0.5" th:text="${tree.subtitle}">Muğla Beyaz (Ekstra Beyaz Kristalize)</div>
                     </div>
                 </div>
                 <div class="text-right">
-                    <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                    <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 border border-emerald-200 text-emerald-700"
                           th:text="'● ' + ${tree.status}">
                         ● Fabrika Stoğunda
                     </div>
-                    <div class="text-xs text-slate-400 mt-1 font-mono" th:text="${tree.details}">
+                    <div class="text-xs text-slate-500 mt-1 font-mono" th:text="${tree.details}">
                         Ölçü: 180x290x150 cm | Ağırlık: 20.850 kg
                     </div>
                 </div>
             </div>
 
-            <!-- Defect / Crack Alert Banner (BRD Section 8.2 Scenario 2) -->
-            <div th:if="${tree.alert}" class="mt-4 p-3 bg-rose-500/20 border border-rose-500/40 rounded-xl text-rose-300 text-xs flex items-center gap-2">
-                <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-400 flex-shrink-0"></i>
+            <div th:if="${tree.alert}" class="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-center gap-2">
+                <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600 flex-shrink-0"></i>
                 <span th:text="${tree.alertMessage}">Bu blokta çatlak riski tespit edildi!</span>
             </div>
 
             <!-- Children Nodes: Production Orders -->
             <div class="mt-6 space-y-6">
-                <div th:each="orderNode : ${tree.children}" class="bg-slate-800/80 rounded-xl p-5 border border-slate-700/60 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <div th:each="orderNode : ${tree.children}" class="bg-[#f5f7fa] rounded-xl p-5 border border-[#d7e0e7] space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                         <div class="flex items-center gap-2">
-                            <i data-lucide="factory" class="w-4 h-4 text-amber-400"></i>
-                            <span class="font-bold text-white text-sm" th:text="${orderNode.title}">Katrak Kesim Emri</span>
-                            <span class="text-xs text-slate-400" th:text="'(' + ${orderNode.subtitle} + ')'">Katrak-01</span>
+                            <i data-lucide="factory" class="w-4 h-4 text-[#2b6cb0]"></i>
+                            <span class="font-bold text-[#102a43] text-sm" th:text="${orderNode.title}">Katrak Kesim Emri</span>
+                            <span class="text-xs text-slate-500" th:text="'(' + ${orderNode.subtitle} + ')'">Katrak-01</span>
                         </div>
-                        <div class="text-xs text-slate-400" th:text="${orderNode.details}">Operatör: Ahmet Kaya | Süre: 8.5 sa</div>
+                        <div class="text-xs text-slate-500" th:text="${orderNode.details}">Operatör: Ahmet Kaya | Süre: 8.5 sa</div>
                     </div>
 
-                    <!-- Level 3: Slabs produced -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div th:each="slabNode : ${orderNode.children}" class="bg-slate-900/90 rounded-lg p-3.5 border border-slate-700/80 space-y-2">
+                        <div th:each="slabNode : ${orderNode.children}" class="bg-white rounded-lg p-3.5 border border-[#d7e0e7] space-y-2">
                             <div class="flex items-center justify-between">
-                                <span class="font-mono text-xs font-bold text-amber-400" th:text="${slabNode.title}">SLB-2026-00851</span>
+                                <span class="font-mono text-xs font-bold text-[#0e7490]" th:text="${slabNode.title}">SLB-2026-00851</span>
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold"
-                                      th:classappend="${slabNode.alert ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}"
+                                      th:classappend="${slabNode.alert ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}"
                                       th:text="${slabNode.status}">SERBEST</span>
                             </div>
-                            <div class="text-[11px] text-slate-300" th:text="${slabNode.subtitle}">Cilalı - A Kalite</div>
-                            <div class="text-[10px] text-slate-400" th:text="${slabNode.details}">Ebat: 175x285 cm • 1.185,57 TL/m²</div>
+                            <div class="text-[11px] text-slate-600" th:text="${slabNode.subtitle}">Cilalı - A Kalite</div>
+                            <div class="text-[10px] text-slate-500" th:text="${slabNode.details}">Ebat: 175x285 cm • 1.185,57 TL/m²</div>
 
-                            <!-- Level 4: Dimensioned Cut Items from this slab -->
-                            <div th:if="${!#lists.isEmpty(slabNode.children)}" class="mt-2 pt-2 border-t border-slate-800 space-y-1">
-                                <div class="text-[10px] font-bold text-slate-400 uppercase">Ebatlı Mamuller (Atölye Kesimi):</div>
-                                <div th:each="itemNode : ${slabNode.children}" class="p-1.5 bg-slate-800/90 rounded text-[11px] text-slate-300 flex justify-between items-center">
+                            <div th:if="${!#lists.isEmpty(slabNode.children)}" class="mt-2 pt-2 border-t border-slate-100 space-y-1">
+                                <div class="text-[10px] font-bold text-slate-500 uppercase">Ebatlı Mamuller (Atölye Kesimi):</div>
+                                <div th:each="itemNode : ${slabNode.children}" class="p-1.5 bg-[#f5f7fa] rounded text-[11px] text-slate-700 flex justify-between items-center">
                                     <div>
-                                        <span class="font-mono text-cyan-400 font-bold" th:text="${itemNode.title}">ITM-00101</span>
-                                        <div class="text-[9px] text-slate-400" th:text="${itemNode.subtitle}">Hedef: Lobi Duvar</div>
+                                        <span class="font-mono text-[#0e7490] font-bold" th:text="${itemNode.title}">ITM-00101</span>
+                                        <div class="text-[9px] text-slate-500" th:text="${itemNode.subtitle}">Hedef: Lobi Duvar</div>
                                     </div>
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] bg-slate-700 text-slate-300" th:text="${itemNode.status}">HAZIR</span>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] bg-sky-50 text-sky-800" th:text="${itemNode.status}">HAZIR</span>
                                 </div>
                             </div>
                         </div>

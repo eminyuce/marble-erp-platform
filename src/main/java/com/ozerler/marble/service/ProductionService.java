@@ -1,6 +1,7 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.dto.ProductionOrderDto;
+import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.ProductionOrder;
@@ -237,7 +238,7 @@ public class ProductionService {
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<Slab> getSlabsPaged(int page, int size, String search, String sortField, String sortDir) {
+    public TabulatorResponse<SlabDto> getSlabsPaged(int page, int size, String search, String sortField, String sortDir) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         if (sortField != null && !sortField.isBlank()) {
             Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -248,7 +249,10 @@ public class ProductionService {
         Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
 
         Page<Slab> slabPage = slabRepository.searchSlabs(search, pageable);
-        return TabulatorResponse.of(slabPage.getContent(), slabPage.getTotalPages(), slabPage.getTotalElements());
+        List<SlabDto> dtos = slabPage.getContent().stream()
+                .map(SlabDto::fromEntity)
+                .toList();
+        return TabulatorResponse.of(dtos, slabPage.getTotalPages(), slabPage.getTotalElements());
     }
 
     @Transactional(readOnly = true)

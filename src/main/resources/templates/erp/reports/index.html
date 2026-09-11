@@ -3,142 +3,94 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Rapor Merkezi &bull; Özerler Mermer ERP</title>
+    <title>Raporlar | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-6" x-data="{ selectedReport: 'QUARRY_BLOCKS' }">
+<div layout:fragment="content" class="erp-list-page" x-data="{ selectedReport: 'QUARRY_BLOCKS' }">
 
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-        <div>
-            <div class="flex items-center gap-2">
-                <span class="p-2 bg-emerald-700 text-white rounded-xl shadow-sm">
-                    <i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-100"></i>
-                </span>
-                <div>
-                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">Rapor Merkezi ve Veri Dışa Aktarma</h1>
-                    <p class="text-xs text-slate-500 font-medium">Ocak, Katrak Kesim, Atölye, Şantiye, Maliyet ve Plaka Ambarı Operasyonel Raporları</p>
-                </div>
-            </div>
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Raporlar')}"></div>
+            <h2 class="admin-page-title">Raporlar</h2>
+            <p class="erp-list-lead">
+                Operasyon verilerini önizleyin ve Excel veya CSV olarak indirin.
+                Bir rapor kartına tıklayın; alttaki tabloda ilk kayıtlar görünür.
+            </p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="erp-list-header-actions">
             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-mono font-medium">
                 <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-500"></i>
                 <span th:text="${currentDate}">2026-09-11</span>
             </span>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">
-                <i data-lucide="file-check" class="w-4 h-4 text-emerald-600"></i>
-                <span>6 Rapor Hazır</span>
-            </span>
         </div>
     </div>
 
-    <!-- Quick Overview Stats -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <button @click="selectedReport = 'QUARRY_BLOCKS'"
-                :class="{ 'ring-2 ring-amber-600 bg-amber-50/70 border-amber-300': selectedReport === 'QUARRY_BLOCKS', 'bg-white border-slate-200 hover:border-slate-300': selectedReport !== 'QUARRY_BLOCKS' }"
-                class="p-3.5 rounded-2xl border text-left transition cursor-pointer shadow-sm">
-            <div class="flex items-center justify-between mb-1.5">
-                <i data-lucide="mountain" class="w-4 h-4 text-emerald-600"></i>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600" th:text="${reports['QUARRY_BLOCKS'].rows.size()}">0</span>
-            </div>
-            <div class="text-xs font-bold text-slate-800">Ocak &amp; Blok</div>
-            <div class="text-[10px] text-slate-500">Kantar &amp; Satış</div>
-        </button>
+    <aside class="erp-callout" role="note">
+        <i data-lucide="info"></i>
+        <p><strong>Nasıl kullanılır:</strong> İstediğiniz raporu seçin, tabloyu kontrol edin, ardından Excel veya CSV indirin. Dosya anında oluşur; ayrı bir kuyruk yoktur.</p>
+    </aside>
 
-        <button @click="selectedReport = 'FACTORY_SCRAP'"
-                :class="{ 'ring-2 ring-amber-600 bg-amber-50/70 border-amber-300': selectedReport === 'FACTORY_SCRAP', 'bg-white border-slate-200 hover:border-slate-300': selectedReport !== 'FACTORY_SCRAP' }"
-                class="p-3.5 rounded-2xl border text-left transition cursor-pointer shadow-sm">
-            <div class="flex items-center justify-between mb-1.5">
-                <i data-lucide="factory" class="w-4 h-4 text-amber-600"></i>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600" th:text="${reports['FACTORY_SCRAP'].rows.size()}">0</span>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        <button type="button" th:each="entry : ${reports}"
+                @click="selectedReport = $el.dataset.reportKey"
+                th:attr="data-report-key=${entry.key}"
+                :class="selectedReport === $el.dataset.reportKey
+                    ? 'ring-2 ring-[#2b6cb0] border-[#2b6cb0] bg-sky-50'
+                    : 'bg-white border-slate-200 hover:border-slate-300'"
+                class="p-4 rounded-2xl border text-left transition cursor-pointer shadow-sm">
+            <div class="flex items-start justify-between gap-2 mb-2">
+                <h3 class="text-sm font-bold text-slate-800" th:text="${entry.value.title}">Rapor</h3>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0"
+                      th:text="${entry.value.rows.size()} + ' kayıt'">0 kayıt</span>
             </div>
-            <div class="text-xs font-bold text-slate-800">Katrak &amp; Fire</div>
-            <div class="text-[10px] text-slate-500">10-Kodlu Analiz</div>
-        </button>
-
-        <button @click="selectedReport = 'WORKSHOP_ORDERS'"
-                :class="{ 'ring-2 ring-amber-600 bg-amber-50/70 border-amber-300': selectedReport === 'WORKSHOP_ORDERS', 'bg-white border-slate-200 hover:border-slate-300': selectedReport !== 'WORKSHOP_ORDERS' }"
-                class="p-3.5 rounded-2xl border text-left transition cursor-pointer shadow-sm">
-            <div class="flex items-center justify-between mb-1.5">
-                <i data-lucide="scissors" class="w-4 h-4 text-rose-600"></i>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600" th:text="${reports['WORKSHOP_ORDERS'].rows.size()}">0</span>
+            <p class="text-xs text-slate-500 leading-snug" th:text="${entry.value.description}">Açıklama</p>
+            <div class="mt-3 flex items-center gap-2">
+                <a th:href="@{/reports/export/{type}(type=${entry.key}, format='excel')}"
+                   class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold rounded-lg inline-flex items-center gap-1"
+                   onclick="event.stopPropagation()">
+                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                    Excel
+                </a>
+                <a th:href="@{/reports/export/{type}(type=${entry.key}, format='csv')}"
+                   class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-200 inline-flex items-center gap-1"
+                   onclick="event.stopPropagation()">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                    CSV
+                </a>
             </div>
-            <div class="text-xs font-bold text-slate-800">Atölye &amp; Nesting</div>
-            <div class="text-[10px] text-slate-500">Ebatlama Fire %</div>
-        </button>
-
-        <button @click="selectedReport = 'SITE_INSTALLATION'"
-                :class="{ 'ring-2 ring-amber-600 bg-amber-50/70 border-amber-300': selectedReport === 'SITE_INSTALLATION', 'bg-white border-slate-200 hover:border-slate-300': selectedReport !== 'SITE_INSTALLATION' }"
-                class="p-3.5 rounded-2xl border text-left transition cursor-pointer shadow-sm">
-            <div class="flex items-center justify-between mb-1.5">
-                <i data-lucide="building-2" class="w-4 h-4 text-cyan-600"></i>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600" th:text="${reports['SITE_INSTALLATION'].rows.size()}">0</span>
-            </div>
-            <div class="text-xs font-bold text-slate-800">Şantiye İlerleme</div>
-            <div class="text-[10px] text-slate-500">WBS &amp; Puantaj</div>
-        </button>
-
-        <button @click="selectedReport = 'COST_ACCOUNTING'"
-                :class="{ 'ring-2 ring-amber-600 bg-amber-50/70 border-amber-300': selectedReport === 'COST_ACCOUNTING', 'bg-white border-slate-200 hover:border-slate-300': selectedReport !== 'COST_ACCOUNTING' }"
-                class="p-3.5 rounded-2xl border text-left transition cursor-pointer shadow-sm">
-            <div class="flex items-center justify-between mb-1.5">
-                <i data-lucide="calculator" class="w-4 h-4 text-indigo-600"></i>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600" th:text="${reports['COST_ACCOUNTING'].rows.size()}">0</span>
-            </div>
-            <div class="text-xs font-bold text-slate-800">Maliyet Muhasebesi</div>
-            <div class="text-[10px] text-slate-500">ABC &amp; Fiyatlama</div>
-        </button>
-
-        <button @click="selectedReport = 'SLABS_INVENTORY'"
-                :class="{ 'ring-2 ring-amber-600 bg-amber-50/70 border-amber-300': selectedReport === 'SLABS_INVENTORY', 'bg-white border-slate-200 hover:border-slate-300': selectedReport !== 'SLABS_INVENTORY' }"
-                class="p-3.5 rounded-2xl border text-left transition cursor-pointer shadow-sm">
-            <div class="flex items-center justify-between mb-1.5">
-                <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600" th:text="${reports['SLABS_INVENTORY'].rows.size()}">0</span>
-            </div>
-            <div class="text-xs font-bold text-slate-800">Plaka Stokları</div>
-            <div class="text-[10px] text-slate-500">Kalite Dağılımı</div>
         </button>
     </div>
 
-    <!-- Active Report Card with Preview and Export Actions -->
     <div th:each="entry : ${reports}"
-         x-show="selectedReport === '[[${entry.key}]]'"
-         class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+         th:attr="x-show=|selectedReport === '${entry.key}'|"
+         x-cloak
+         class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
 
-        <!-- Report Toolbar -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-4 border-b border-slate-100">
             <div>
-                <span class="px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-100 text-slate-700 rounded-md" th:text="${entry.key}">KEY</span>
-                <h2 class="text-lg font-black text-slate-900 mt-1" th:text="${entry.value.title}">Rapor Başlığı</h2>
-                <p class="text-xs text-slate-500 mt-0.5">
-                    Toplam <span class="font-bold text-slate-800" th:text="${entry.value.rows.size()}">0</span> kayıt &bull; Excel ve CSV formatında anlık dışa aktarım
+                <h3 class="text-lg font-bold text-slate-900" th:text="${entry.value.title}">Rapor Başlığı</h3>
+                <p class="text-xs text-slate-500 mt-1" th:text="${entry.value.description}">Açıklama</p>
+                <p class="text-xs text-slate-500 mt-1">
+                    Önizleme: <span class="font-bold text-slate-800" th:text="${entry.value.rows.size()}">0</span> kayıt
                 </p>
             </div>
-
-            <!-- Export Buttons -->
-            <div class="flex items-center gap-3">
-                <!-- Excel (.xlsx) -->
+            <div class="flex items-center gap-2 shrink-0">
                 <a th:href="@{/reports/export/{type}(type=${entry.key}, format='excel')}"
-                   class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer group">
-                    <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200 group-hover:scale-110 transition-transform"></i>
-                    <span>Excel (.xlsx) İndir</span>
+                   class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-sm transition inline-flex items-center gap-2">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    <span>Excel (.xlsx) indir</span>
                 </a>
-
-                <!-- CSV (.csv) -->
                 <a th:href="@{/reports/export/{type}(type=${entry.key}, format='csv')}"
-                   class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition flex items-center gap-2 cursor-pointer group">
-                    <i data-lucide="file-text" class="w-4 h-4 text-slate-500 group-hover:scale-110 transition-transform"></i>
-                    <span>CSV (.csv) İndir</span>
+                   class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition inline-flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <span>CSV (.csv) indir</span>
                 </a>
             </div>
         </div>
 
-        <!-- Preview Table -->
-        <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-inner">
+        <div class="overflow-x-auto rounded-2xl border border-slate-200">
             <table class="w-full text-left text-xs text-slate-700">
-                <thead class="bg-slate-900 text-white uppercase text-[11px] tracking-wider font-bold">
+                <thead class="bg-gradient-to-b from-[#f4f8fc] to-[#e8f0f8] text-[#1a365d] uppercase text-[11px] tracking-wider font-bold">
                     <tr>
                         <th class="p-3.5 text-center w-12">#</th>
                         <th th:each="header : ${entry.value.headers}"
@@ -149,30 +101,18 @@
                 <tbody class="divide-y divide-slate-100">
                     <tr th:if="${#lists.isEmpty(entry.value.rows)}">
                         <td th:colspan="${entry.value.headers.length + 1}" class="p-8 text-center text-slate-400">
-                            Henüz bu kategoride gösterilecek kayıt bulunamadı.
+                            Bu raporda henüz kayıt yok. Veri oluşunca tablo ve indirme dosyası dolacaktır.
                         </td>
                     </tr>
                     <tr th:each="row, stat : ${entry.value.rows}" class="hover:bg-slate-50/80 transition">
                         <td class="p-3.5 text-center font-mono text-[11px] text-slate-400" th:text="${stat.count}">1</td>
                         <td th:each="col : ${row}"
-                            class="p-3.5 whitespace-nowrap"
+                            class="p-3.5 whitespace-nowrap text-slate-800"
                             th:text="${col}">Değer</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-
-        <!-- Table Footer Info -->
-        <div class="flex items-center justify-between text-xs text-slate-500 pt-2">
-            <div>
-                <span>Dışa aktarılan Excel dosyaları otomatik renkli başlıklar ve sütun genişlikleriyle biçimlendirilir.</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Apache POI 5.3.0 Motoru</span>
-            </div>
-        </div>
-
     </div>
 
 </div>

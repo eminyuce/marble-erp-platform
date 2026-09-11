@@ -28,31 +28,26 @@ function initBlocksGrid() {
             return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}&sortField=${sorterField}&sortDir=${sorterDir}`;
         },
         ajaxResponse: function(url, params, response) {
-            if (response && Array.isArray(response.data)) {
-                response.data.forEach(item => {
-                    Object.keys(item).forEach(key => {
-                        const camel = key.replace(/_([a-z0-9])/g, (_, l) => l.toUpperCase());
-                        if (!(camel in item)) item[camel] = item[key];
-                    });
-                });
-            }
-            return response;
+            camelizeTabulatorRows(response);
+            return applyTabulatorTotal("blocks-table", response);
         },
         placeholder: "Blok kaydı bulunamadı.",
         columns: [
             {
                 title: "Blok Kodu",
                 field: "blockCode",
+                minWidth: 160,
                 width: 170,
                 formatter: function(cell) {
                     const val = cell.getValue();
                     return `<div class="font-mono font-bold text-amber-900">${val}</div>`;
                 }
             },
-            { title: "Ocak", field: "quarryName", minWidth: 150 },
-            { title: "Taş Cinsi", field: "stoneType", minWidth: 130 },
+            { title: "Ocak", field: "quarryName", minWidth: 140 },
+            { title: "Taş Cinsi", field: "stoneType", minWidth: 120 },
             {
                 title: "Ebatlar (En x Boy x Yük.)",
+                minWidth: 190,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
                     return `${row.widthCm}x${row.lengthCm}x${row.heightCm} cm (${row.volumeM3} m³)`;
@@ -60,6 +55,7 @@ function initBlocksGrid() {
             },
             {
                 title: "Kantar (Fiili / Teorik)",
+                minWidth: 160,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
                     const dev = row.weightDeviationPct;
@@ -73,6 +69,7 @@ function initBlocksGrid() {
             {
                 title: "Kalite",
                 field: "qualityGrade",
+                minWidth: 80,
                 width: 90,
                 formatter: function(cell) {
                     const val = cell.getValue();
@@ -89,6 +86,7 @@ function initBlocksGrid() {
             {
                 title: "Durum",
                 field: "statusLabel",
+                minWidth: 140,
                 width: 150,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
@@ -103,6 +101,7 @@ function initBlocksGrid() {
             {
                 title: "Toplam Maliyet",
                 field: "totalCost",
+                minWidth: 130,
                 width: 140,
                 formatter: function(cell) {
                     return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
@@ -110,7 +109,8 @@ function initBlocksGrid() {
             },
             {
                 title: "İşlem",
-                width: 150,
+                minWidth: 130,
+                width: 140,
                 headerSort: false,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
@@ -126,18 +126,11 @@ function initBlocksGrid() {
         ]
     });
 
+    attachTabulatorPagingAnimation(blocksTable);
+    bindGridSearch(blocksTable, "search-input");
     blocksTable.on("renderComplete", () => {
         if (window.lucide) window.lucide.createIcons();
     });
-
-    const searchInput = document.getElementById("search-input");
-    if (searchInput) {
-        let timer;
-        searchInput.addEventListener("input", () => {
-            clearTimeout(timer);
-            timer = setTimeout(() => blocksTable.replaceData(), 300);
-        });
-    }
 }
 
 function reloadBlocksGrid() {

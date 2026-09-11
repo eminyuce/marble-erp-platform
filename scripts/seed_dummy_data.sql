@@ -64,7 +64,7 @@ INSERT IGNORE INTO pallets (id, pallet_code, warehouse_location, packaging_type,
 INSERT IGNORE INTO production_orders (id, order_no, block_id, machine_name, process_type, start_time, end_time, duration_hours, electricity_kwh, blade_wear_mm, operator_name, status, notes) VALUES
 (1, 'PRD-2026-00452', 1, 'Katrak-01 (80 Lamalı)', 'GANGSAW', '2026-09-03 08:00:00', '2026-09-03 16:30:00', 8.50, 420.00, 1.20, 'Ahmet Kaya', 'COMPLETED', '48 plaka üretildi, kesim firesi FR-01 olarak kaydedildi.'),
 (2, 'PRD-2026-00453', 2, 'Katrak-02 (100 Lamalı)', 'GANGSAW', '2026-09-04 07:30:00', '2026-09-04 17:00:00', 9.50, 490.00, 1.45, 'Ali Yıldız', 'COMPLETED', 'Afyon Şeker bloğundan 54 plaka elde edildi.'),
-(3, 'PRD-2026-00454', 4, 'ST Blok Kesme (Elmas Testere)', 'BLOCK_CUTTER', '2026-09-05 08:00:00', '2026-09-05 14:00:00', 6.00, 260.00, 0.85, 'Mehmet Can', 'COMPLETED', 'Denizli traverten kalın basamak şeritleri kesildi.'),
+(3, 'PRD-2026-00454', 4, 'ST Blok Kesme (Elmas Testere)', 'ST', '2026-09-05 08:00:00', '2026-09-05 14:00:00', 6.00, 260.00, 0.85, 'Mehmet Can', 'COMPLETED', 'Denizli traverten kalın basamak şeritleri kesildi.'),
 (4, 'PRD-2026-00455', 8, 'Katrak-01 (80 Lamalı)', 'GANGSAW', '2026-09-07 08:30:00', '2026-09-07 18:00:00', 9.50, 480.00, 1.35, 'Ahmet Kaya', 'COMPLETED', 'Rozaliya bloğu lamalara sarıldı; 42 plaka çıktı.'),
 (5, 'PRD-2026-00456', 9, 'Katrak-02 (100 Lamalı)', 'GANGSAW', '2026-09-09 08:00:00', NULL, NULL, 180.00, 0.50, 'Ali Yıldız', 'IN_PROGRESS', 'Kesim devam ediyor; saatte 18 cm ilerleme.');
 
@@ -148,12 +148,12 @@ INSERT IGNORE INTO site_consumptions (id, location_id, project_id, consumption_t
 -- 11. MALİYET MUHASEBESİ İŞLEMLERİ (Cost Transactions - ABC Allocation)
 -- ------------------------------------------------------------------------------
 INSERT IGNORE INTO cost_transactions (id, center_id, block_id, slab_id, project_id, expense_type, amount, allocation_key, description) VALUES
-(1, 1, 1, NULL, NULL, 'RAW_MATERIAL', 42000.00, 'DIRECT_BLOCK', 'BLK-2026-00125 Ocak ayna çıkarma ve kesim bedeli'),
+(1, 1, 1, NULL, NULL, 'DIRECT_RAW', 42000.00, 'DIRECT_BLOCK', 'BLK-2026-00125 Ocak ayna çıkarma ve kesim bedeli'),
 (2, 6, 1, NULL, NULL, 'LOGISTICS', 7200.00, 'FREIGHT_WEIGHT', 'Muğla Ocak - Fabrika tır nakliye bedeli'),
-(3, 2, 1, NULL, NULL, 'ENERGY', 4620.00, 'MACHINE_HOURS', 'Katrak 01 kesim elektrik sarfiyatı (8.5 saat)'),
-(4, 3, NULL, 1, NULL, 'CHEMICAL', 850.00, 'SURFACE_M2', 'Epoksi file ve kristal cila abrasiv tüketimi'),
-(5, 4, NULL, NULL, 1, 'LABOR', 12400.00, 'DIRECT_LABOR', 'Atölye köprü kesme ve lobi özel ebatlama işçiliği'),
-(6, 5, NULL, NULL, 1, 'INSTALLATION', 88000.00, 'PROJECT_WBS', 'X Residence Lobi yapıştırıcı ve montaj sarfiyatı');
+(3, 2, 1, NULL, NULL, 'ELECTRICITY', 4620.00, 'MACHINE_HOURS', 'Katrak 01 kesim elektrik sarfiyatı (8.5 saat)'),
+(4, 3, NULL, 1, NULL, 'CONSUMABLES', 850.00, 'SURFACE_M2', 'Epoksi file ve kristal cila abrasiv tüketimi'),
+(5, 4, NULL, NULL, 1, 'DIRECT_LABOR', 12400.00, 'DIRECT_LABOR', 'Atölye köprü kesme ve lobi özel ebatlama işçiliği'),
+(6, 5, NULL, NULL, 1, 'OVERHEAD', 88000.00, 'PROJECT_WBS', 'X Residence Lobi yapıştırıcı ve montaj sarfiyatı');
 
 -- ------------------------------------------------------------------------------
 -- 12. SEVKİYAT VE LOJİSTİK (Shipments)

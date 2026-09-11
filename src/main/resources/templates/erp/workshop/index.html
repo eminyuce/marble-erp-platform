@@ -4,42 +4,31 @@
     <title>Atölye &amp; Ebatlama İmalatı | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-6">
+<div layout:fragment="content" class="erp-list-page">
 
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-            <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Atölye &amp; Ebatlama İmalatı</h1>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Modül 3</span>
-            </div>
-            <p class="text-sm text-slate-500 mt-1">Köprü kesme, pah/profil, projeye bağlı kesim planı, yarı mamul/mamul dönüşümü ve ebatlama fireleri.</p>
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Atölye')}"></div>
+            <h2 class="admin-page-title">Atölye</h2>
+            <p class="erp-list-lead">Köprü kesme, pah/profil, projeye bağlı kesim planı ve ebatlama fireleri.</p>
         </div>
-        <div class="flex items-center gap-2">
-            <button hx-get="/workshop/create" hx-target="#modal-container"
-                    class="px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer">
-                <i data-lucide="scissors" class="w-4 h-4"></i>
-                <span>Yeni Ebatlama Emri</span>
+        <div class="erp-list-header-actions">
+            <button type="button" onclick="downloadTableCsv(workshopTable, 'kesim_emirleri.csv')" class="erp-btn-secondary">
+                <i data-lucide="download"></i>
+                <span>CSV İndir</span>
+            </button>
+            <button type="button" hx-get="/workshop/create" hx-target="#modal-container" class="erp-btn-primary">
+                <i data-lucide="scissors"></i>
+                <span>Yeni ebatlama emri</span>
             </button>
         </div>
     </div>
 
-    <!-- Table Container -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="relative flex-1 max-w-md">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <i data-lucide="search" class="w-4 h-4"></i>
-                </span>
-                <input type="text" id="workshop-search-input"
-                       class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
-                       placeholder="Kesim iş emri no veya proje adı ile ara...">
-            </div>
-            <div class="text-xs text-slate-400">Tabulator 6 Grid</div>
-        </div>
-
-        <div id="workshop-table"></div>
+    <div class="erp-toolbar">
+        <div th:replace="~{fragments/list-chrome :: search('Kesim iş emri no veya proje adı', 'workshop-search-input')}"></div>
     </div>
 
+    <div th:replace="~{fragments/list-chrome :: gridShell('workshop-table')}"></div>
 </div>
 
 <th:block layout:fragment="scripts">
@@ -56,6 +45,9 @@ document.addEventListener("DOMContentLoaded", () => {
         ajaxURLGenerator: function(url, config, params) {
             const searchVal = document.getElementById("workshop-search-input")?.value || "";
             return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
+        },
+        ajaxResponse: function(url, params, response) {
+            return applyTabulatorTotal("workshop-table", response);
         },
         columns: [
             {
@@ -97,18 +89,11 @@ document.addEventListener("DOMContentLoaded", () => {
         ]
     });
 
+    attachTabulatorPagingAnimation(workshopTable);
+    bindGridSearch(workshopTable, "workshop-search-input");
     workshopTable.on("renderComplete", () => {
         if (window.lucide) window.lucide.createIcons();
     });
-
-    const searchInput = document.getElementById("workshop-search-input");
-    if (searchInput) {
-        let timer;
-        searchInput.addEventListener("input", () => {
-            clearTimeout(timer);
-            timer = setTimeout(() => workshopTable.replaceData(), 300);
-        });
-    }
 });
 
 function reloadWorkshopGrid() {

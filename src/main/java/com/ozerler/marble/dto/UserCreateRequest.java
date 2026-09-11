@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -54,7 +55,8 @@ public class UserCreateRequest {
     @JsonAlias("enabled")
     private boolean enabled = true;
 
+    @Builder.Default
     @JsonProperty("roles")
     @JsonAlias("roles")
-    private Set<String> roles;
+    private Set<String> roles = new HashSet<>();
 }

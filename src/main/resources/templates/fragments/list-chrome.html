@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<nav th:fragment="breadcrumb(current)" class="admin-breadcrumb" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a th:href="@{/admin/dashboard}">
+                <i data-lucide="home"></i>
+                <span>Yönetim Ana Sayfa</span>
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page" th:text="${current}">Sayfa</li>
+    </ol>
+</nav>
+
+<form th:fragment="search(placeholder, inputId)" class="erp-search-form" role="search" onsubmit="return false;">
+    <div class="erp-search-field">
+        <span class="erp-search-icon" aria-hidden="true">
+            <i data-lucide="search"></i>
+        </span>
+        <label class="sr-only" th:for="${inputId}">Ara</label>
+        <input type="search"
+               class="erp-search-input"
+               th:id="${inputId}"
+               th:placeholder="${placeholder}"
+               autocomplete="off"
+               spellcheck="false">
+        <div class="erp-search-actions">
+            <button type="submit" class="erp-btn-primary erp-search-btn">
+                <i data-lucide="search"></i>
+                <span>Arama</span>
+            </button>
+        </div>
+    </div>
+</form>
+
+<div th:fragment="gridShell(tableId)" class="erp-grid-shell">
+    <div class="erp-grid-count">
+        <div class="erp-grid-count-inner">
+            <span class="erp-grid-count-badge" th:attr="data-grid-total=${tableId}">0</span>
+            <span class="erp-grid-count-label">Toplam Kayıt</span>
+        </div>
+    </div>
+    <div th:id="${tableId}"></div>
+</div>
+
+</html>
