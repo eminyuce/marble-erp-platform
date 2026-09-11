@@ -15,6 +15,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+server:
+  forward-headers-strategy: framework
+
 app:
   cors:
-    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:8080}
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:8080,http://127.0.0.1:8080}
+    allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.trycloudflare.com}

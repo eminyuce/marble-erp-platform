@@ -27,6 +27,14 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  tomcat:
+    use-relative-redirects: true
+    remoteip:
+      remote-ip-header: x-forwarded-for
+      protocol-header: x-forwarded-proto
+      host-header: x-forwarded-host
+      internal-proxies: "127\\.0\\.0\\.1|::1|0:0:0:0:0:0:0:1|10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|172\\.(1[6-9]|2\\d|3[0-1])\\.\\d{1,3}\\.\\d{1,3}"
   error:
     include-message: always
     include-exception: true
@@ -61,7 +69,8 @@ app:
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
   cors:
-    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:8080}
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:8080,http://127.0.0.1:8080}
+    allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.trycloudflare.com}
 
 springdoc:
   api-docs:

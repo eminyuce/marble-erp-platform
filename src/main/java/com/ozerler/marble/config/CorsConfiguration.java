@@ -3,6 +3,7 @@ package com.ozerler.marble.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.CorsRegistration;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
@@ -14,23 +15,38 @@ public class CorsConfiguration implements WebMvcConfigurer {
             "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
     };
 
-    @Value("${app.cors.allowed-origin}")
+    @Value("${app.cors.allowed-origin:}")
     private String allowedOrigin;
+
+    @Value("${app.cors.allowed-origin-pattern:}")
+    private String allowedOriginPattern;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins(parseAllowedOrigins())
+        CorsRegistration mapping = registry.addMapping("/**")
                 .allowedMethods(ALLOWED_METHODS)
                 .allowedHeaders("*")
                 .allowCredentials(true);
+
+        String[] origins = splitCsv(allowedOrigin);
+        if (origins.length > 0) {
+            mapping.allowedOrigins(origins);
+        }
+
+        String[] patterns = splitCsv(allowedOriginPattern);
+        if (patterns.length > 0) {
+            mapping.allowedOriginPatterns(patterns);
+        }
     }
 
-    private String[] parseAllowedOrigins() {
-        return Arrays.stream(allowedOrigin.split(","))
+    private static String[] splitCsv(String value) {
+        if (value == null || value.isBlank()) {
+            return new String[0];
+        }
+        return Arrays.stream(value.split(","))
                 .map(String::trim)
-                .filter(origin -> !origin.isEmpty())
-                .filter(origin -> !"*".equals(origin))
+                .filter(part -> !part.isEmpty())
+                .filter(part -> !"*".equals(part))
                 .toArray(String[]::new);
     }
 }
