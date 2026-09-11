@@ -65,4 +65,13 @@ public class DashboardController {
 
         return "admin/dashboard";
     }
+
+    /**
+     * Kullanıcı Yardım ve Sistem Özellikleri Rehberi (Site Features Guide)
+     */
+    @GetMapping({"/dashboard/oursitefeatures", "/dashboard/oursitefeatures/"})
+    public String ourSiteFeatures(Model model) {
+        model.addAttribute("currentSection", "oursitefeatures");
+        return "admin/site-features";
+    }
 }

@@ -157,6 +157,14 @@ class SecurityConfigTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.overallStatus").value("UP"))
                 .andExpect(jsonPath("$.appPort").value(81));
+
+        mockMvc.perform(get("/admin/dashboard/oursitefeatures/"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/site-features"));
+
+        mockMvc.perform(get("/admin/dashboard/oursitefeatures"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/site-features"));
     }
 
     @Test
