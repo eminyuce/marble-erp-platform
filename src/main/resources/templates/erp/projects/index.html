@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>Proje &amp; Şantiye Yönetimi | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Proje &amp; Şantiye Yönetimi</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-800">Modül 4</span>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">Mahal metraj ağacı (WBS), fiili sarfiyatlar, montaj puantajı ve bütçe sapma alarmları.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button hx-get="/projects/create" hx-target="#modal-container"
+                    class="px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Yeni Proje Oluştur</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="relative flex-1 max-w-md">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input type="text" id="project-search-input"
+                       class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+                       placeholder="Proje kodu, adı veya müşteri ile ara...">
+            </div>
+            <div class="text-xs text-slate-400">Tabulator 6 Grid</div>
+        </div>
+
+        <div id="projects-table"></div>
+    </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+let projectsTable;
+document.addEventListener("DOMContentLoaded", () => {
+    projectsTable = new Tabulator("#projects-table", {
+        layout: "fitColumns",
+        pagination: true,
+        paginationMode: "remote",
+        paginationSize: 10,
+        ajaxURL: "/projects/api/data",
+        ajaxConfig: { method: "GET", headers: { "Accept": "application/json" } },
+        ajaxURLGenerator: function(url, config, params) {
+            const searchVal = document.getElementById("project-search-input")?.value || "";
+            return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
+        },
+        columns: [
+            {
+                title: "Proje Kodu",
+                field: "projectCode",
+                width: 160,
+                formatter: function(cell) {
+                    return `<span class="font-mono font-bold text-amber-900">${cell.getValue()}</span>`;
+                }
+            },
+            {
+                title: "Proje Adı",
+                field: "name",
+                minWidth: 200,
+                formatter: function(cell) {
+                    const row = cell.getRow().getData();
+                    return `<div>
+                        <a href="/projects/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${row.name}</a>
+                        <div class="text-xs text-slate-500">${row.customerName}</div>
+                    </div>`;
+                }
+            },
+            {
+                title: "Sözleşme Bedeli",
+                field: "contractValue",
+                width: 150,
+                formatter: function(cell) {
+                    return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
+                }
+            },
+            {
+                title: "Gerçekleşen Maliyet",
+                field: "actualCost",
+                width: 160,
+                formatter: function(cell) {
+                    const row = cell.getRow().getData();
+                    const isOver = row.costVariance > 0;
+                    return `<div>
+                        <span class="font-bold ${isOver ? 'text-rose-700' : 'text-slate-800'}">${Number(cell.getValue()).toLocaleString('tr-TR')} TL</span>
+                        <div class="text-xs text-slate-500">Tahmini: ${Number(row.estimatedCost).toLocaleString('tr-TR')} TL</div>
+                    </div>`;
+                }
+            },
+            {
+                title: "Montaj İlerlemesi",
+                formatter: function(cell) {
+                    const row = cell.getRow().getData();
+                    const planned = row.totalPlannedAreaM2 || 0;
+                    const installed = row.totalInstalledAreaM2 || 0;
+                    const pct = planned > 0 ? ((installed / planned) * 100).toFixed(1) : 0;
+                    return `<div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span>${installed} / ${planned} m²</span>
+                            <span>%${pct}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5">
+                            <div class="bg-emerald-600 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>`;
+                }
+            },
+            {
+                title: "Durum",
+                field: "statusLabel",
+                width: 120,
+                formatter: function(cell) {
+                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">● ${cell.getValue()}</span>`;
+                }
+            },
+            {
+                title: "Detay",
+                width: 100,
+                headerSort: false,
+                formatter: function(cell) {
+                    const row = cell.getRow().getData();
+                    return `<a href="/projects/${row.id}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded">Mahaller &rarr;</a>`;
+                }
+            }
+        ]
+    });
+
+    projectsTable.on("renderComplete", () => {
+        if (window.lucide) window.lucide.createIcons();
+    });
+
+    const searchInput = document.getElementById("project-search-input");
+    if (searchInput) {
+        let timer;
+        searchInput.addEventListener("input", () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => projectsTable.replaceData(), 300);
+        });
+    }
+});
+
+function reloadProjectsGrid() {
+    if (projectsTable) projectsTable.replaceData();
+}
+</script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>Plaka Ambarı | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Plaka Ambarı &amp; Stok Takibi</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Fiziksel Stok</span>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">Ham, cilalı ve honlu plakalar, dinamik birim m² maliyetleri ve barkod etiketleri.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a th:href="@{/production}" class="px-3 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Katrak Emirlerine Dön</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="relative flex-1 max-w-md">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input type="text" id="slab-search-input"
+                       class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+                       placeholder="Plaka kodu veya blok kodu ile filtrele...">
+            </div>
+            <div class="text-xs text-slate-400">Tabulator 6 Grid</div>
+        </div>
+
+        <div id="slabs-table"></div>
+    </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+let slabsTable;
+document.addEventListener("DOMContentLoaded", () => {
+    slabsTable = new Tabulator("#slabs-table", {
+        layout: "fitColumns",
+        pagination: true,
+        paginationMode: "remote",
+        paginationSize: 10,
+        paginationSizeSelector: [10, 25, 50],
+        ajaxURL: "/production/api/slabs",
+        ajaxConfig: { method: "GET", headers: { "Accept": "application/json" } },
+        ajaxURLGenerator: function(url, config, params) {
+            const searchVal = document.getElementById("slab-search-input")?.value || "";
+            return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
+        },
+        columns: [
+            {
+                title: "Plaka Kodu",
+                field: "slabCode",
+                width: 180,
+                formatter: function(cell) {
+                    return `<span class="font-mono font-bold text-amber-900">${cell.getValue()}</span>`;
+                }
+            },
+            {
+                title: "Ebatlar (cm)",
+                formatter: function(cell) {
+                    const row = cell.getRow().getData();
+                    return `${row.thicknessCm} cm • ${row.widthCm}x${row.lengthCm} cm`;
+                }
+            },
+            {
+                title: "Net Alan",
+                field: "surfaceAreaM2",
+                width: 120,
+                formatter: function(cell) {
+                    return `<strong>${Number(cell.getValue()).toFixed(2)} m²</strong>`;
+                }
+            },
+            {
+                title: "Yüzey",
+                field: "surfaceFinish",
+                width: 110,
+                formatter: function(cell) {
+                    return `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 font-medium">${cell.getValue()}</span>`;
+                }
+            },
+            {
+                title: "Kalite",
+                field: "qualityGrade",
+                width: 90,
+                formatter: function(cell) {
+                    const val = cell.getValue();
+                    const color = val === 'A' ? 'bg-emerald-100 text-emerald-800' : (val === 'B' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800');
+                    return `<span class="px-2 py-0.5 rounded text-xs font-bold ${color}">${val}</span>`;
+                }
+            },
+            {
+                title: "Birim Maliyet (m²)",
+                field: "costPerM2",
+                width: 150,
+                formatter: function(cell) {
+                    return `<strong class="text-slate-800">${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
+                }
+            },
+            {
+                title: "Durum",
+                field: "status",
+                width: 130,
+                formatter: function(cell) {
+                    const val = cell.getValue();
+                    return `<span class="px-2 py-0.5 rounded-full text-xs font-semibold ${val === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">● ${val}</span>`;
+                }
+            },
+            {
+                title: "Pasaport",
+                width: 110,
+                headerSort: false,
+                formatter: function(cell) {
+                    const code = cell.getRow().getData().slabCode;
+                    return `<a href="/passport/${code}" target="_blank" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded flex items-center gap-1 w-max">
+                        <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> Pasaport
+                    </a>`;
+                }
+            }
+        ]
+    });
+
+    slabsTable.on("renderComplete", () => {
+        if (window.lucide) window.lucide.createIcons();
+    });
+
+    const searchInput = document.getElementById("slab-search-input");
+    if (searchInput) {
+        let timer;
+        searchInput.addEventListener("input", () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => slabsTable.replaceData(), 300);
+        });
+    }
+});
+</script>
+</th:block>
+</body>
+</html>

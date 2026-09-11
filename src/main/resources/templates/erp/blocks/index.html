@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>Ocak &amp; Blok Yönetimi | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6">
+
+    <!-- Page Header & Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Ocak &amp; Blok Yönetimi</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Modül 1 (MVP)</span>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">3 eksenli ölçüm, teorik hacim/tonaj, kantar gerçek tartımı, çatlak seleksiyonu ve dahili transfer.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="blocksTable.download('csv', 'bloklar.csv')"
+                    class="px-3 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>CSV İndir</span>
+            </button>
+            <button hx-get="/blocks/create" hx-target="#modal-container"
+                    class="px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Yeni Blok Kaydı</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Business Rule Info Banner -->
+    <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 flex items-start gap-3">
+        <i data-lucide="info" class="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5"></i>
+        <div>
+            <strong>Kritik İş Kuralı (Dış Satış vs Kendi Fabrikasına Sevk):</strong> Blok işlenmek üzere şirketin kendi fabrikasına gönderildiğinde şirket içi transfer yapılır. Ocak çıkarma bedeli + nakliye doğrudan fabrikanın hammadde giriş maliyetine aktarılır, yapay iç kâr marjı eklenmez.
+        </div>
+    </div>
+
+    <!-- Data Table Container -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="relative flex-1 max-w-md">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input type="text" id="search-input"
+                       class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+                       placeholder="Blok kodu, taş cinsi veya ocak adı ile filtrele...">
+            </div>
+            <div class="text-xs text-slate-400">Tabulator 6 Canlı Grid</div>
+        </div>
+
+        <div id="blocks-table"></div>
+    </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/blocks-grid.js}"></script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="cutModalContent" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <div class="flex items-center gap-2">
+                <i data-lucide="scissors" class="w-5 h-5 text-amber-700"></i>
+                <h3 class="text-base font-bold text-slate-800">Yeni Atölye Kesim &amp; Ebatlama Emri</h3>
+            </div>
+            <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form action="/workshop/create" method="post" hx-post="/workshop/create" hx-target="#modal-container"
+              class="p-6 overflow-y-auto space-y-4">
+
+            <div th:if="${errorMessage}" class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs" th:text="${errorMessage}">
+                Hata
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Kesilecek Plaka (Ambar)</label>
+                <select name="slabId" required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                    <option th:each="s : ${availableSlabs}" th:value="${s.id}"
+                            th:text="${s.slabCode + ' (' + s.surfaceFinish + ', ' + s.qualityGrade + ', ' + s.surfaceAreaM2 + ' m², ' + s.costPerM2 + ' TL/m²)'}"></option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Hedef Proje</label>
+                    <select name="projectId" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                        <option value="">-- Proje Seçiniz (Opsiyonel) --</option>
+                        <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Hedef Mahal / Konum</label>
+                    <input type="text" name="targetLocationDesc" value="Lobi Duvar Kaplama A Blok"
+                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                </div>
+            </div>
+
+            <!-- Target Dimensions -->
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                <label class="block text-xs font-semibold text-slate-700">Hedef Kesim Ölçüleri &amp; Adet</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[11px] text-slate-600 mb-1">Adet</label>
+                        <input type="number" name="piecesCount" value="4" min="1" required
+                               class="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded bg-white text-center font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-600 mb-1">En (cm)</label>
+                        <input type="number" name="targetWidthCm" value="80" required
+                               class="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-600 mb-1">Boy (cm)</label>
+                        <input type="number" name="targetLengthCm" value="120" required
+                               class="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded bg-white">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Makine (Köprü Kesme/CNC)</label>
+                    <input type="text" name="machineName" value="Köprü Kesme - CNC 01" required
+                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Operatör</label>
+                    <input type="text" name="operatorName" value="Mustafa Yılmaz" required
+                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kenar İşlemi (Pah / Kalibre)</label>
+                    <input type="text" name="edgeFinish" value="PAHLI_CILALI"
+                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Notlar</label>
+                    <input type="text" name="notes" value="Lobi kaplama projesi özel CNC köşe kesim"
+                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-lg">
+                    İptal
+                </button>
+                <button type="submit" class="px-5 py-2 bg-amber-700 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg shadow-sm">
+                    Ebatlamayı Başlat
+                </button>
+            </div>
+        </form>
+    </div>
+    <script>if (window.lucide) window.lucide.createIcons();</script>
+</div>
+
+<div th:fragment="cutModalSuccess" class="hidden">
+    <script>
+        closeModal();
+        reloadWorkshopGrid();
+    </script>
+</div>
+</html>

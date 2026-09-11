@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle + ' | Özerler Mermer ERP' : 'Özerler Mermer ERP'}">Özerler Mermer ERP</title>
+
+    <!-- Spring Security CSRF Meta Tags for HTMX & FilePond -->
+    <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf != null}"/>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS 4 -->
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+
+    <!-- Tabulator 6 CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
+
+    <!-- FilePond 4 CSS & Plugins -->
+    <link rel="stylesheet" href="https://unpkg.com/filepond@^4/dist/filepond.css">
+    <link rel="stylesheet" href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css">
+
+    <!-- HTMX 2 -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <!-- Alpine.js 3 -->
+    <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
+
+    <!-- Tabulator 6 JS -->
+    <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- FilePond 4 JS -->
+    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+    <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
+
+    <!-- App Scripts -->
+    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/editor-setup.js}"></script>
+    <script th:src="@{/js/filepond-setup.js}"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen flex antialiased">
+
+    <!-- Sidebar Fragment -->
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0">
+        <!-- Navbar Fragment -->
+        <div th:replace="~{layout/navbar :: navbar}"></div>
+
+        <!-- Page Content Body -->
+        <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div layout:fragment="content">
+                <!-- Page specific contents are injected here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Global Modal Dialog Container for HTMX -->
+    <div id="modal-container"></div>
+
+    <!-- Additional page-specific scripts block -->
+    <th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

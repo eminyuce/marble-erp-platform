@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: marble-erp-platform
+  profiles:
+    active: dev
+  thymeleaf:
+    cache: false
+    mode: HTML
+    encoding: UTF-8
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        max-age: 86400
+
+app:
+  upload:
+    dir: uploads
+  name: "Özerler Mermer ERP"
+  company: "Özerler Mermer A.Ş."
+  version: "1.0.0"
+
+logging:
+  level:
+    root: INFO
+    com.ozerler.marble: DEBUG
+    org.springframework.security: INFO

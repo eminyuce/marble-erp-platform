@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<header th:fragment="navbar" class="h-16 bg-white border-b border-slate-200 sticky top-0 z-30 flex items-center justify-between px-6 shadow-sm">
+    <div class="flex items-center gap-4">
+        <button id="sidebar-toggle" class="lg:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center p-1.5 bg-amber-700 text-white rounded-lg shadow-sm">
+                <i data-lucide="gem" class="w-5 h-5"></i>
+            </span>
+            <div class="hidden sm:block">
+                <h1 class="text-base font-bold text-slate-900 leading-tight">ÖZERLER MERMER ERP</h1>
+                <p class="text-xs text-slate-500 font-medium">Ocaktan Şantiyeye Uçtan Uca İzlenebilirlik</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Search & Actions -->
+    <div class="flex items-center gap-3">
+        <a th:href="@{/genealogy}" class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-md transition">
+            <i data-lucide="scan-line" class="w-4 h-4 text-amber-700"></i>
+            <span>QR / Barkod Sorgula</span>
+        </a>
+
+        <!-- User Dropdown & Profile -->
+        <div class="flex items-center gap-3 pl-3 border-l border-slate-200" sec:authorize="isAuthenticated()">
+            <div class="text-right hidden sm:block">
+                <div class="text-sm font-semibold text-slate-800" sec:authentication="name">admin</div>
+                <div class="text-xs text-amber-700 font-medium">
+                    <span sec:authorize="hasRole('ADMIN')">Sistem Yöneticisi</span>
+                    <span sec:authorize="!hasRole('ADMIN')">Kullanıcı</span>
+                </div>
+            </div>
+            <form th:action="@{/logout}" method="post" class="inline">
+                <button type="submit" class="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Çıkış Yap">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</header>
+</html>

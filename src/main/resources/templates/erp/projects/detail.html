@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${project.name} + ' | Özerler Mermer ERP'">Proje Detayı</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-center gap-2">
+                <a th:href="@{/projects}" class="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight" th:text="${project.name}">X Residence</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-800" th:text="${project.projectCode}">PROJ-2026-0042</span>
+            </div>
+            <p class="text-sm text-slate-500 mt-1" th:text="'Müşteri: ' + ${project.customerName}">Müşteri: ABC İnşaat A.Ş.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                Sözleşme: <span th:text="${#numbers.formatDecimal(project.contractValue, 1, 'POINT', 0, 'COMMA')}">12.400.000</span> TL
+            </span>
+        </div>
+    </div>
+
+    <!-- Variance Alert if Over Budget -->
+    <div th:if="${project.actualCost > project.estimatedCost}" class="p-4 rounded-xl bg-rose-50 border-l-4 border-rose-600 text-xs text-rose-900 flex items-start gap-3">
+        <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5"></i>
+        <div>
+            <strong class="font-bold">Bütçe Sapma Uyarısı:</strong> Bu projede fiili gerçekleşen maliyet (<span th:text="${#numbers.formatDecimal(project.actualCost, 1, 0)}">8.150.000</span> TL), planlanan tahmini maliyet bütçesini (<span th:text="${#numbers.formatDecimal(project.estimatedCost, 1, 0)}">7.800.000</span> TL) aşmıştır. Lütfen şantiye sarfiyatlarını ve fazla mesai puantajlarını inceleyiniz.
+        </div>
+    </div>
+
+    <!-- Two-Column Layout: WBS Location Tree & Site Consumptions -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Left Column: WBS Mahal Metraj Ağacı -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-bold text-slate-900">Mahal Bazlı Metraj Ağacı (WBS)</h3>
+                    <p class="text-xs text-slate-500">Planlanan vs gerçekleşen montaj alanı</p>
+                </div>
+            </div>
+
+            <!-- Locations List -->
+            <div class="space-y-3">
+                <div th:each="loc : ${locations}" class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <strong class="text-xs font-bold text-slate-800" th:text="${loc.locationName}">Lobi Duvar</strong>
+                            <div class="text-[11px] text-slate-500" th:text="${loc.stoneSpec}">Muğla Beyaz 80x120</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold"
+                              th:classappend="${loc.status == 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}"
+                              th:text="${loc.status}">DURUM</span>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] text-slate-600 font-semibold mb-1">
+                            <span><span th:text="${loc.installedAreaM2}">0</span> / <span th:text="${loc.plannedAreaM2}">0</span> m²</span>
+                            <span th:text="'%' + ${loc.getProgressPercentage()}">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-1.5">
+                            <div class="bg-amber-600 h-1.5 rounded-full" th:style="'width: ' + ${loc.getProgressPercentage()} + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(locations)}" class="py-6 text-center text-xs text-slate-400">
+                    Henüz mahal tanımlanmadı.
+                </div>
+            </div>
+
+            <!-- Quick Add Location Form -->
+            <form th:action="@{'/projects/' + ${project.id} + '/locations'}" method="post" class="pt-3 border-t border-slate-100 space-y-3">
+                <div class="text-xs font-bold text-slate-800">Yeni Mahal Ekle</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" name="locationName" placeholder="Mahal Adı (Örn: Koridorlar)" required
+                           class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+                    <input type="text" name="floorLevel" placeholder="Kat / Blok"
+                           class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" name="stoneSpec" placeholder="Taş Tanımı (Örn: Burdur Bej 60x60)"
+                           class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+                    <input type="number" step="0.1" name="plannedAreaM2" placeholder="Planlanan m²" required
+                           class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+                </div>
+                <button type="submit" class="w-full py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg">
+                    Mahal Kaydet
+                </button>
+            </form>
+        </div>
+
+        <!-- Right Column: Şantiye Sarfiyatları & İşçilik Puantajı -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-bold text-slate-900">Şantiye Sarfiyat &amp; Puantaj Fişleri</h3>
+                    <p class="text-xs text-slate-500">Doğal taş montajı, yapıştırıcı, derz ve usta işçiliği</p>
+                </div>
+            </div>
+
+            <div class="space-y-2 max-h-72 overflow-y-auto">
+                <div th:each="cons : ${consumptions}" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between text-xs">
+                    <div>
+                        <div class="font-semibold text-slate-800" th:text="${cons.itemName}">Granit Yapıştırıcı</div>
+                        <div class="text-[10px] text-slate-400" th:text="${cons.location.locationName} + ' • ' + ${cons.consumptionType}">Lobi • ADHESIVE</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-slate-900" th:text="${#numbers.formatDecimal(cons.totalCost, 1, 'POINT', 2, 'COMMA')} + ' TL'">88.000 TL</div>
+                        <div class="text-[10px] text-slate-500" th:text="${cons.quantity} + ' ' + ${cons.unit} + ' x ' + ${cons.unitCost} + ' TL'">400 TORBA</div>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(consumptions)}" class="py-6 text-center text-xs text-slate-400">
+                    Henüz sarfiyat girişi yapılmadı.
+                </div>
+            </div>
+
+            <!-- Quick Add Consumption Form -->
+            <form th:action="@{'/projects/' + ${project.id} + '/consumptions'}" method="post" class="pt-3 border-t border-slate-100 space-y-3">
+                <div class="text-xs font-bold text-slate-800">Sarfiyat / Puantaj Girişi</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <select name="locationId" required class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+                        <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.locationName}"></option>
+                    </select>
+                    <select name="consumptionType" required class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+                        <option th:each="t : ${consumptionTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
+                    </select>
+                </div>
+                <input type="text" name="itemName" placeholder="Açıklama / Malzeme (Örn: 1. Sınıf Usta Puantajı)" required
+                       class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+                <div class="grid grid-cols-3 gap-2">
+                    <input type="number" step="0.1" name="quantity" placeholder="Miktar" required
+                           class="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg">
+                    <input type="text" name="unit" placeholder="Birim (m2, torba, saat)" required value="SAAT"
+                           class="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg">
+                    <input type="number" step="0.1" name="unitCost" placeholder="Birim Fiyat" required
+                           class="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg">
+                </div>
+                <button type="submit" class="w-full py-1.5 bg-amber-700 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg">
+                    Sarfiyatı Kaydet
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

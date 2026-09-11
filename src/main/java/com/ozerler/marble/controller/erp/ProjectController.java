@@ -1,0 +1,103 @@
+package com.ozerler.marble.controller.erp;
+
+import com.ozerler.marble.dto.ProjectDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.enums.ConsumptionType;
+import com.ozerler.marble.service.ProjectSiteService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Controller
+@RequestMapping("/projects")
+@RequiredArgsConstructor
+public class ProjectController {
+
+    private final ProjectSiteService projectSiteService;
+
+    @GetMapping
+    public String projectsIndex() {
+        return "erp/projects/index";
+    }
+
+    @GetMapping("/api/data")
+    @ResponseBody
+    public TabulatorResponse<ProjectDto> getProjectsData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "sortField", required = false) String sortField,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
+
+        return projectSiteService.getProjectsPaged(page, size, search, sortField, sortDir);
+    }
+
+    @GetMapping("/create")
+    public String showCreateModal() {
+        return "erp/projects/form :: projectModalContent";
+    }
+
+    @PostMapping("/create")
+    public String createProject(@RequestParam("projectCode") String projectCode,
+                                @RequestParam("name") String name,
+                                @RequestParam("customerName") String customerName,
+                                @RequestParam("contractValue") BigDecimal contractValue,
+                                @RequestParam("estimatedCost") BigDecimal estimatedCost,
+                                @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                @RequestParam(value = "deliveryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
+                                @RequestParam(value = "notes", required = false) String notes,
+                                Model model) {
+
+        try {
+            projectSiteService.createProject(projectCode, name, customerName, contractValue, estimatedCost, startDate, deliveryDate, notes);
+            model.addAttribute("success", true);
+            model.addAttribute("message", "Proje başarıyla oluşturuldu.");
+            return "erp/projects/form :: projectModalSuccess";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Hata: " + e.getMessage());
+            return "erp/projects/form :: projectModalContent";
+        }
+    }
+
+    @GetMapping("/{id}")
+    public String projectDetail(@PathVariable("id") Long id, Model model) {
+        Project project = projectSiteService.getProjectById(id);
+        model.addAttribute("project", project);
+        model.addAttribute("locations", projectSiteService.getLocationsByProject(id));
+        model.addAttribute("consumptions", projectSiteService.getConsumptionsByProject(id));
+        model.addAttribute("consumptionTypes", ConsumptionType.values());
+        return "erp/projects/detail";
+    }
+
+    @PostMapping("/{id}/locations")
+    public String addLocation(@PathVariable("id") Long projectId,
+                              @RequestParam(value = "parentId", required = false) Long parentId,
+                              @RequestParam("locationName") String locationName,
+                              @RequestParam(value = "floorLevel", required = false) String floorLevel,
+                              @RequestParam(value = "stoneSpec", required = false) String stoneSpec,
+                              @RequestParam("plannedAreaM2") BigDecimal plannedAreaM2) {
+
+        projectSiteService.addLocation(projectId, parentId, locationName, floorLevel, stoneSpec, plannedAreaM2);
+        return "redirect:/projects/" + projectId;
+    }
+
+    @PostMapping("/{id}/consumptions")
+    public String recordConsumption(@PathVariable("id") Long projectId,
+                                    @RequestParam("locationId") Long locationId,
+                                    @RequestParam("consumptionType") ConsumptionType type,
+                                    @RequestParam("itemName") String itemName,
+                                    @RequestParam("quantity") BigDecimal quantity,
+                                    @RequestParam("unit") String unit,
+                                    @RequestParam("unitCost") BigDecimal unitCost,
+                                    @RequestParam(value = "notes", required = false) String notes) {
+
+        projectSiteService.recordConsumption(projectId, locationId, type, itemName, quantity, unit, unitCost, notes);
+        return "redirect:/projects/" + projectId;
+    }
+}

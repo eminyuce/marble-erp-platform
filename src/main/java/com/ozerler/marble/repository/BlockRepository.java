@@ -1,0 +1,35 @@
+package com.ozerler.marble.repository;
+
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.enums.BlockStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface BlockRepository extends JpaRepository<Block, Long> {
+
+    Optional<Block> findByBlockCode(String blockCode);
+
+    List<Block> findByStatus(BlockStatus status);
+
+    long countByStatus(BlockStatus status);
+
+    @Query("SELECT b FROM Block b WHERE " +
+           "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(b.stoneType) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(b.quarry.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Block> searchBlocks(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT SUM(b.actualWeightKg) FROM Block b WHERE b.status = 'FACTORY_STOCK'")
+    Double getTotalFactoryStockWeightKg();
+
+    @Query("SELECT COUNT(b) FROM Block b WHERE b.status = 'FACTORY_STOCK'")
+    long getCountFactoryStock();
+}
