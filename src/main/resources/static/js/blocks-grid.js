@@ -10,7 +10,7 @@ function initBlocksGrid() {
         responsiveLayout: "collapse",
         pagination: true,
         paginationMode: "remote",
-        paginationSize: 10,
+        paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
         paginationSizeSelector: [5, 10, 25, 50],
         ajaxURL: "/blocks/api/data",
         ajaxConfig: {
