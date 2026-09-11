@@ -83,11 +83,13 @@ function initProductionGrid() {
             },
             {
                 title: "İşlemler",
-                width: 100,
+                width: 120,
                 headerSort: false,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
-                    return `<a href="/genealogy?code=${row.orderNo}" class="p-1.5 text-slate-600 hover:text-amber-700 inline-block" title="Soy Ağacı"><i data-lucide="git-branch" class="w-4 h-4"></i></a>`;
+                    return gridActionsHtml([
+                        { icon: 'git-branch', label: 'Soy Ağacı', href: '/genealogy?code=' + row.orderNo }
+                    ]);
                 }
             }
         ]

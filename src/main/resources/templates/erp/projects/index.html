@@ -118,12 +118,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             },
             {
-                title: "Detay",
-                width: 100,
+                title: "İşlemler",
+                width: 120,
                 headerSort: false,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
-                    return `<a href="/projects/${row.id}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded">Mahaller &rarr;</a>`;
+                    return gridActionsHtml([
+                        { icon: 'eye', label: 'Detay', href: '/projects/' + row.id },
+                        { icon: 'map-pin', label: 'Mahaller', href: '/projects/' + row.id }
+                    ]);
                 }
             }
         ]

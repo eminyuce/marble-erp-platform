@@ -108,19 +108,18 @@ function initBlocksGrid() {
                 }
             },
             {
-                title: "İşlem",
-                minWidth: 130,
-                width: 140,
+                title: "İşlemler",
+                minWidth: 120,
+                width: 130,
                 headerSort: false,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
-                    let html = `<div class="flex items-center gap-1.5">`;
+                    const items = [];
+                    items.push({ icon: 'git-branch', label: 'Soy Ağacı', href: '/genealogy?code=' + row.blockCode });
                     if (row.status === 'QUARRY') {
-                        html += `<button onclick="transferBlock(${row.id})" class="px-2 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded text-xs font-medium transition">Fabrikaya Sevk</button>`;
+                        items.push({ icon: 'truck', label: 'Fabrikaya Sevk', onclick: 'transferBlock(' + row.id + ')' });
                     }
-                    html += `<a href="/genealogy?code=${row.blockCode}" class="p-1 text-slate-600 hover:text-amber-700" title="Soy Ağacı"><i data-lucide="git-branch" class="w-4 h-4"></i></a>`;
-                    html += `</div>`;
-                    return html;
+                    return gridActionsHtml(items);
                 }
             }
         ]

@@ -93,21 +93,16 @@ function initUsersGrid() {
             },
             {
                 title: "İşlemler",
-                width: 180,
+                width: 130,
                 headerSort: false,
                 formatter: function(cell) {
                     const id = cell.getRow().getData().id;
-                    return `<div class="flex items-center gap-1">
-                        <button hx-get="/admin/users/${id}/edit" hx-target="#modal-container" class="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded transition" title="Düzenle">
-                            <i data-lucide="edit-3" class="w-4 h-4"></i>
-                        </button>
-                        <button hx-get="/admin/users/${id}/reset-password" hx-target="#modal-container" class="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-slate-100 rounded transition" title="Şifre Sıfırla">
-                            <i data-lucide="key" class="w-4 h-4"></i>
-                        </button>
-                        <button onclick="deleteUser(${id})" class="p-1.5 text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded transition" title="Sil">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>`;
+                    return gridActionsHtml([
+                        { icon: 'edit-3', label: 'Düzenle', htmx: '/admin/users/' + id + '/edit' },
+                        { icon: 'key', label: 'Şifre Sıfırla', htmx: '/admin/users/' + id + '/reset-password' },
+                        { divider: true },
+                        { icon: 'trash-2', label: 'Sil', onclick: 'deleteUser(' + id + ')', danger: true }
+                    ]);
                 }
             }
         ]

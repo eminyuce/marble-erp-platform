@@ -111,6 +111,72 @@ function downloadTableCsv(table, filename) {
     table.download("csv", toAsciiTurkishFilename(filename));
 }
 
+function gridActionsHtml(items) {
+    var menu = items.map(function(item) {
+        if (item.divider) return '<hr class="grid-actions-divider">';
+        var cls = item.danger ? 'grid-actions-item grid-actions-item--danger' : 'grid-actions-item';
+        var tag = item.href ? 'a' : 'button';
+        var attrs = '';
+        if (item.href) attrs += ' href="' + item.href + '"';
+        if (item.target) attrs += ' target="' + item.target + '"';
+        if (item.onclick) attrs += ' onclick="' + item.onclick + '"';
+        if (item.htmx) attrs += ' hx-get="' + item.htmx + '" hx-target="#modal-container"';
+        return '<' + tag + ' class="' + cls + '"' + attrs + '>' +
+            '<i data-lucide="' + item.icon + '" class="w-4 h-4"></i> ' + item.label +
+            '</' + tag + '>';
+    }).join('');
+
+    return '<div class="grid-actions">' +
+        '<button onclick="toggleGridActions(event,this)" class="grid-actions-btn" type="button">' +
+            '<i data-lucide="settings" class="w-3.5 h-3.5"></i>' +
+            '<span>\u0130\u015flemler</span>' +
+            '<i data-lucide="chevron-down" class="w-3 h-3"></i>' +
+        '</button>' +
+        '<template class="grid-actions-tpl">' + menu + '</template>' +
+    '</div>';
+}
+
+function toggleGridActions(event, btn) {
+    event.stopPropagation();
+    event.preventDefault();
+    var portal = document.getElementById('grid-actions-portal');
+    var wasOpen = portal && portal._triggerBtn === btn;
+    if (portal) portal.remove();
+    if (wasOpen) return;
+
+    var tpl = btn.parentElement.querySelector('.grid-actions-tpl');
+    if (!tpl) return;
+
+    var menu = document.createElement('div');
+    menu.id = 'grid-actions-portal';
+    menu.className = 'grid-actions-portal';
+    menu.innerHTML = tpl.innerHTML;
+    menu._triggerBtn = btn;
+
+    var rect = btn.getBoundingClientRect();
+    var spaceBelow = window.innerHeight - rect.bottom;
+    var top = spaceBelow > 220 ? (rect.bottom + 4) : Math.max(8, rect.top - 8);
+    var right = window.innerWidth - rect.right;
+    menu.style.cssText = 'position:fixed;top:' + top + 'px;right:' + right + 'px;z-index:9999;';
+    if (spaceBelow <= 220) menu.style.transform = 'translateY(-100%)';
+
+    document.body.appendChild(menu);
+    if (window.lucide) lucide.createIcons({ nodes: [menu] });
+    if (window.htmx) htmx.process(menu);
+}
+
+document.addEventListener('click', function(e) {
+    var portal = document.getElementById('grid-actions-portal');
+    if (portal && !portal.contains(e.target) && !e.target.closest('.grid-actions-btn')) {
+        portal.remove();
+    }
+});
+
+document.addEventListener('scroll', function() {
+    var portal = document.getElementById('grid-actions-portal');
+    if (portal) portal.remove();
+}, true);
+
 function bindGridSearch(table, inputId) {
     const input = document.getElementById(inputId);
     if (!table || !input) {
