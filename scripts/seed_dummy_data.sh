@@ -12,7 +12,10 @@ DB_NAME="${DB_NAME:-marble_erp}"
 DB_HOST="${DB_HOST:-127.0.0.1}"
 DB_PORT="${DB_PORT:-3306}"
 SQL_FILE="${1:-scripts/seed_dummy_data.sql}"
-CONTAINER_NAME="marble-mysql"
+CONTAINER_NAME="marble-erp-mysql"
+if ! docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null | grep -q "true"; then
+    CONTAINER_NAME="marble-mysql"
+fi
 
 echo "======================================================================"
 echo "   Özerler Mermer ERP - Test & Demo Veri Yükleme Aracı (Seed Script)  "

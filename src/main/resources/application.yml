@@ -17,7 +17,7 @@ spring:
     locations: classpath:db/migration
 
 server:
-  port: 81
+  port: ${SERVER_PORT:8080}
   servlet:
     session:
       cookie:

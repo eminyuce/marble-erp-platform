@@ -40,10 +40,10 @@
                     <h1 class="text-2xl font-black text-slate-900 tracking-tight">Sistem Sağlık ve İzleme Kokpiti</h1>
                     <span class="px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 rounded-full border border-emerald-300 flex items-center gap-1.5">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                        <span th:text="${overallStatus}">UP</span>
+                        <span id="overall-status-badge" th:text="${overallStatus}">UP</span>
                     </span>
                 </div>
-                <p class="text-xs text-slate-500 font-medium">Spring Boot 4 Actuator Sağlık Göstergesi &bull; Port 81 &bull; /admin/dashboard/systemhealth/</p>
+                <p class="text-xs text-slate-500 font-medium">Spring Boot 4 Actuator Sağlık Göstergesi &bull; Port <span th:text="${appPort}">8080</span> &bull; /admin/dashboard/systemhealth/</p>
             </div>
         </div>
 
@@ -248,7 +248,7 @@
             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div class="flex items-center gap-2">
                     <i data-lucide="code-2" class="w-4 h-4 text-emerald-400"></i>
-                    <span class="text-xs font-mono font-bold text-slate-200">http://localhost:81/health/ JSON Çıktısı</span>
+                    <span class="text-xs font-mono font-bold text-slate-200">/health/ JSON Sağlık Çıktısı</span>
                 </div>
                 <button type="button"
                         @click="copyJson()"

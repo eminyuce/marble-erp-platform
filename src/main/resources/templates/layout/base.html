@@ -18,32 +18,12 @@
     <link rel="stylesheet" th:href="@{/css/app.css}">
 
     <!-- Tabulator 6 CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
+    <link rel="stylesheet" th:href="@{/vendor/tabulator/tabulator.min.css}">
 
     <!-- FilePond 4 CSS & Plugins -->
     <link rel="stylesheet" href="https://unpkg.com/filepond@^4/dist/filepond.css">
     <link rel="stylesheet" href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css">
 
-    <!-- HTMX 2 -->
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-
-    <!-- Alpine.js 3 -->
-    <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
-
-    <!-- Tabulator 6 JS -->
-    <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- FilePond 4 JS -->
-    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
-    <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
-
-    <!-- App Scripts -->
-    <script th:src="@{/js/app.js}"></script>
-    <script th:src="@{/js/editor-setup.js}"></script>
-    <script th:src="@{/js/filepond-setup.js}"></script>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans min-h-screen flex antialiased">
 
@@ -66,6 +46,20 @@
 
     <!-- Global Modal Dialog Container for HTMX -->
     <div id="modal-container"></div>
+
+    <!-- Core Vendor Libraries -->
+    <script th:src="@{/vendor/htmx.min.js}"></script>
+    <script th:src="@{/vendor/alpine-collapse.min.js}"></script>
+    <script th:src="@{/vendor/alpine.min.js}"></script>
+    <script th:src="@{/vendor/tabulator/tabulator.min.js}"></script>
+    <script th:src="@{/vendor/lucide.min.js}"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+    <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
+
+    <!-- Core App Scripts -->
+    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/editor-setup.js}"></script>
+    <script th:src="@{/js/filepond-setup.js}"></script>
 
     <!-- Additional page-specific scripts block -->
     <th:block layout:fragment="scripts"></th:block>

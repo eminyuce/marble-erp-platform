@@ -11,13 +11,16 @@ import java.util.Map;
 @RestController
 public class HealthCheckController {
 
+    @org.springframework.beans.factory.annotation.Value("${server.port:8080}")
+    private int serverPort;
+
     @GetMapping({"/health", "/health/"})
     public ResponseEntity<Map<String, Object>> getHealth() {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("status", "UP");
         body.put("service", "ozerler-marble-erp");
         body.put("version", "1.0.0");
-        body.put("port", 81);
+        body.put("port", serverPort);
         body.put("timestamp", Instant.now().toString());
 
         Map<String, Object> components = new LinkedHashMap<>();

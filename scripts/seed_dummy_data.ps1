@@ -4,8 +4,8 @@
 # ==============================================================================
 
 param (
-    [string]$DbUser = "marble_user",
-    [string]$DbPass = "marble_pass",
+    [string]$DbUser = "root",
+    [string]$DbPass = "rootpassword",
     [string]$DbName = "marble_erp",
     [string]$DbHost = "127.0.0.1",
     [int]$DbPort = 3306,
@@ -22,10 +22,14 @@ if (-not (Test-Path $SqlFile)) {
 }
 
 # 1. Check if Docker container is running
-$dockerContainer = "marble-mysql"
+$dockerContainer = "marble-erp-mysql"
 $isDockerRunning = $false
 try {
     $containerStatus = docker inspect -f '{{.State.Running}}' $dockerContainer 2>$null
+    if ($containerStatus -ne "true") {
+        $dockerContainer = "marble-mysql"
+        $containerStatus = docker inspect -f '{{.State.Running}}' $dockerContainer 2>$null
+    }
     if ($containerStatus -eq "true") {
         $isDockerRunning = $true
     }
@@ -37,7 +41,7 @@ if ($isDockerRunning) {
     Write-Host "[DOCKER DETECTED] Aktif MySQL konteyneri bulundu ($dockerContainer)." -ForegroundColor Green
     Write-Host "[IMPORTING] Veriler Docker konteynerine aktarılıyor..." -ForegroundColor Yellow
     
-    Get-Content $SqlFile -Raw -Encoding UTF8 | docker exec -i $dockerContainer mysql -u$DbUser -p$DbPass $DbName
+    Get-Content $SqlFile -Raw -Encoding UTF8 | docker exec -i $dockerContainer mysql -u $DbUser "-p$DbPass" $DbName
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "✔ Başarılı! Veriler $dockerContainer içerisindeki '$DbName' veritabanına aktarıldı." -ForegroundColor Green
@@ -50,13 +54,13 @@ if ($isDockerRunning) {
 # 2. Try Local MySQL CLI
 $mysqlCmd = Get-Command mysql -ErrorAction SilentlyContinue
 if ($mysqlCmd) {
-    Write-Host "[LOCAL MYSQL] Yerel MySQL CLI tespit edildi ($DbHost:$DbPort)." -ForegroundColor Cyan
+    Write-Host "[LOCAL MYSQL] Yerel MySQL CLI tespit edildi: $DbHost Port: $DbPort" -ForegroundColor Cyan
     Write-Host "[IMPORTING] Veriler aktarılıyor..." -ForegroundColor Yellow
     
     Get-Content $SqlFile -Raw -Encoding UTF8 | mysql --host=$DbHost --port=$DbPort -u$DbUser "-p$DbPass" $DbName
     
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "✔ Başarılı! Veriler $DbHost:$DbPort üzerindeki '$DbName' veritabanına aktarıldı." -ForegroundColor Green
+        Write-Host "✔ Başarılı! Veriler $DbHost / $DbPort üzerindeki '$DbName' veritabanına aktarıldı." -ForegroundColor Green
         exit 0
     } else {
         Write-Error "Yerel MySQL aktarımı başarısız oldu."

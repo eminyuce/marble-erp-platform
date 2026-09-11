@@ -48,7 +48,7 @@ INSERT INTO quarries (id, code, name, location, specific_gravity, license_no) VA
 INSERT INTO blocks (id, quarry_id, block_code, extraction_date, width_cm, length_cm, height_cm, volume_m3, theoretical_weight_kg, actual_weight_kg, weight_deviation_pct, stone_type, color_tone, quality_grade, crack_level, status, extraction_cost, transport_cost, total_cost, notes) VALUES
 (1, 1, 'BLK-2026-00125', '2026-09-01', 180, 290, 150, 7.830, 21141.00, 20850.00, -1.37, 'Muğla Beyaz', 'Ekstra Beyaz Kristalize', 'A', 0, 'FACTORY_STOCK', 42000.00, 7200.00, 49200.00, 'Homojen kristal yapıda, çatlaksız ayna bloğu.'),
 (2, 2, 'BLK-2026-00126', '2026-09-02', 170, 280, 140, 6.664, 18126.00, 18400.00, 1.51, 'Afyon Şeker', 'Açık Krem Damarlı', 'A', 1, 'SAWING', 38000.00, 6500.00, 44500.00, 'Kılcal yüzey çatlağı epoksi hattında telafi edilebilir.'),
-(3, 3, 'BLK-2026-00127', '2026-09-03', 190, 310, 160, 9.424, 25256.00, 25100.00, -0.62, 'Burdur Bej', 'Homojen Açık Bej', 'Extra', 0, 'QUARRY', 52000.00, 0.00, 52000.00, 'Ocak sahasında sevk bekliyor.');
+(3, 3, 'BLK-2026-00127', '2026-09-03', 190, 310, 160, 9.424, 25256.00, 25100.00, -0.62, 'Burdur Bej', 'Homojen Açık Bej', 'EXTRA', 0, 'QUARRY', 52000.00, 0.00, 52000.00, 'Ocak sahasında sevk bekliyor.');
 
 -- Seed Pallets
 INSERT INTO pallets (id, pallet_code, warehouse_location, packaging_type, qr_code_hash, status, gross_weight_kg) VALUES
@@ -57,7 +57,7 @@ INSERT INTO pallets (id, pallet_code, warehouse_location, packaging_type, qr_cod
 
 -- Seed Production Order
 INSERT INTO production_orders (id, order_no, block_id, machine_name, process_type, start_time, end_time, duration_hours, electricity_kwh, blade_wear_mm, operator_name, status, notes) VALUES
-(1, 'PRD-2026-00452', 1, 'Katrak-01 (80 Lamalı)', 'GANGSAW', '2026-09-03 08:00:00', '2026-09-03 16:30:00', 8.5, 420.00, 1.20, 'Ahmet Kaya', 'COMPLETED', '48 plaka üretildi, kesim firesi FR-01 olarak kaydedildi.');
+(1, 'PRD-2026-00452', 1, 'Katrak-01 (80 Lamalı)', 'GANGSAW', '2026-09-03 08:00:00', '2026-09-03 16:30:00', 8.5, 420.00, 1.20, 'Ahmet Kaya', 'COMPLETED', '48 plaka üretildi, kesim firesi FR_01 olarak kaydedildi.');
 
 -- Seed Slabs (Derived from BLK-2026-00125 and PRD-2026-00452)
 INSERT INTO slabs (id, slab_code, order_id, block_id, pallet_id, thickness_cm, width_cm, length_cm, surface_area_m2, surface_finish, quality_grade, gloss_level, cost_per_m2, status) VALUES
@@ -67,8 +67,8 @@ INSERT INTO slabs (id, slab_code, order_id, block_id, pallet_id, thickness_cm, w
 
 -- Seed Scrap Logs (10 Neden Kodlu Fire)
 INSERT INTO scrap_logs (id, scrap_code, order_id, block_id, slab_id, reason_code, scrap_weight_kg, scrap_area_m2, cost_impact, description, logged_by) VALUES
-(1, 'SCRAP-2026-0001', 1, 1, NULL, 'FR-01', 2100.00, 0.0000, 4200.00, '80 lama kesim talaş kaybı tozu ve çamuru.', 'Ahmet Kaya'),
-(2, 'SCRAP-2026-0002', 1, 1, NULL, 'FR-02', 450.00, 2.4500, 1850.00, 'Blok alt ayna gizli kılcal çatlağı nedeniyle 1 plaka kırımı.', 'Ahmet Kaya');
+(1, 'SCRAP-2026-0001', 1, 1, NULL, 'FR_01', 2100.00, 0.0000, 4200.00, '80 lama kesim talaş kaybı tozu ve çamuru.', 'Ahmet Kaya'),
+(2, 'SCRAP-2026-0002', 1, 1, NULL, 'FR_02', 450.00, 2.4500, 1850.00, 'Blok alt ayna gizli kılcal çatlağı nedeniyle 1 plaka kırımı.', 'Ahmet Kaya');
 
 -- Seed Projects
 INSERT INTO projects (id, project_code, name, customer_name, contract_value, estimated_cost, actual_cost, start_date, delivery_date, status, notes) VALUES
