@@ -11,11 +11,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
 @Service
 public class FileStorageService {
+
+    private static final String UPLOADS_PREFIX = "/uploads/";
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -30,39 +33,53 @@ public class FileStorageService {
                 Files.createDirectories(rootLocation);
             }
         } catch (IOException e) {
-            log.error("Could not initialize storage directory", e);
+            log.error("Could not initialize storage directory: {}", rootLocation, e);
+            throw new IllegalStateException("Depolama dizini başlatılamadı: " + rootLocation, e);
         }
     }
 
     public String storeFile(MultipartFile file) throws IOException {
+        Objects.requireNonNull(file, "Yüklenecek dosya null olamaz");
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("Cannot store empty file");
+            throw new IllegalArgumentException("Boş dosya kaydedilemez");
         }
 
         String originalFilename = file.getOriginalFilename();
-        String extension = "";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        if (originalFilename != null && originalFilename.contains("..")) {
+            throw new IllegalArgumentException("Geçersiz dosya yolu tespit edildi: " + originalFilename);
         }
 
-        String uniqueFilename = UUID.randomUUID().toString() + extension;
-        Path destination = this.rootLocation.resolve(uniqueFilename);
+        String extension = extractExtension(originalFilename);
+        String uniqueFilename = UUID.randomUUID() + extension;
+        Path destination = this.rootLocation.resolve(uniqueFilename).normalize().toAbsolutePath();
 
         Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
-        return "/uploads/" + uniqueFilename;
+        return UPLOADS_PREFIX + uniqueFilename;
     }
 
     public boolean deleteFile(String fileUrl) {
-        if (fileUrl == null || !fileUrl.startsWith("/uploads/")) {
+        if (fileUrl == null || !fileUrl.startsWith(UPLOADS_PREFIX)) {
             return false;
         }
-        String filename = fileUrl.replace("/uploads/", "");
-        Path file = this.rootLocation.resolve(filename);
+        String filename = fileUrl.substring(UPLOADS_PREFIX.length());
+        if (filename.contains("..")) {
+            log.warn("Invalid file deletion path rejected: {}", filename);
+            return false;
+        }
+
+        Path file = this.rootLocation.resolve(filename).normalize().toAbsolutePath();
         try {
             return Files.deleteIfExists(file);
         } catch (IOException e) {
             log.error("Failed to delete file: {}", filename, e);
             return false;
         }
+    }
+
+    private String extractExtension(String filename) {
+        if (filename != null && filename.contains(".")) {
+            return filename.substring(filename.lastIndexOf("."));
+        }
+        return "";
     }
 }

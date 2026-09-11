@@ -30,12 +30,21 @@ import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductionService {
+
+    private static final BigDecimal SQUARE_CENTIMETERS_PER_SQUARE_METER = new BigDecimal("10000");
+    private static final BigDecimal DEFAULT_THICKNESS_CM = new BigDecimal("2.0");
+    private static final BigDecimal DEFAULT_DURATION_HOURS = new BigDecimal("8.0");
+    private static final BigDecimal SCRAP_COST_IMPACT_RATE = new BigDecimal("0.10");
+    private static final String ORDER_STATUS_COMPLETED = "COMPLETED";
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int AREA_SCALE = 4;
+    private static final int COST_SCALE = 2;
 
     private final ProductionOrderRepository productionOrderRepository;
     private final BlockRepository blockRepository;
@@ -51,7 +60,7 @@ public class ProductionService {
         }
 
         int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : 10, sort);
+        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
 
         Page<ProductionOrder> orderPage = productionOrderRepository.searchOrders(search, pageable);
         List<ProductionOrderDto> dtos = orderPage.getContent().stream()
@@ -63,6 +72,7 @@ public class ProductionService {
 
     @Transactional(readOnly = true)
     public ProductionOrder getOrderById(Long id) {
+        Objects.requireNonNull(id, "Üretim emri ID boş olamaz");
         return productionOrderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Üretim emri bulunamadı: " + id));
     }
@@ -79,102 +89,137 @@ public class ProductionService {
                                             BigDecimal slabWidthCm, BigDecimal slabLengthCm, BigDecimal thicknessCm,
                                             ScrapReasonCode scrapReason, BigDecimal scrapWeightKg, String scrapNotes) {
 
+        Objects.requireNonNull(blockId, "Blok ID boş olamaz");
         Block block = blockRepository.findById(blockId)
                 .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
 
         block.setStatus(BlockStatus.SAWING);
         blockRepository.save(block);
 
-        LocalDateTime now = LocalDateTime.now();
-        ProductionOrder order = ProductionOrder.builder()
-                .orderNo(orderNo != null && !orderNo.isBlank() ? orderNo : "PRD-" + Year.now().getValue() + "-" + System.currentTimeMillis() % 100000)
-                .block(block)
-                .machineName(machineName)
-                .processType(ProcessType.GANGSAW)
-                .startTime(now.minusHours(durationHours != null ? durationHours.longValue() : 8))
-                .endTime(now)
-                .durationHours(durationHours != null ? durationHours : new BigDecimal("8.0"))
-                .electricityKwh(electricityKwh != null ? electricityKwh : BigDecimal.ZERO)
-                .bladeWearMm(bladeWearMm != null ? bladeWearMm : BigDecimal.ZERO)
-                .operatorName(operatorName)
-                .status("COMPLETED")
-                .notes(notes)
-                .build();
-
+        ProductionOrder order = buildProductionOrder(block, orderNo, machineName, durationHours, electricityKwh, bladeWearMm, operatorName, notes);
         order = productionOrderRepository.save(order);
 
-        // Calculate single slab area
-        BigDecimal width = slabWidthCm != null ? slabWidthCm : new BigDecimal(block.getWidthCm());
-        BigDecimal length = slabLengthCm != null ? slabLengthCm : new BigDecimal(block.getLengthCm());
-        BigDecimal thick = thicknessCm != null ? thicknessCm : new BigDecimal("2.0");
-        BigDecimal singleSlabAreaM2 = width.multiply(length).divide(new BigDecimal("10000"), 4, RoundingMode.HALF_UP);
+        BigDecimal effectiveWidth = slabWidthCm != null ? slabWidthCm : BigDecimal.valueOf(block.getWidthCm());
+        BigDecimal effectiveLength = slabLengthCm != null ? slabLengthCm : BigDecimal.valueOf(block.getLengthCm());
+        BigDecimal effectiveThickness = thicknessCm != null ? thicknessCm : DEFAULT_THICKNESS_CM;
+        BigDecimal singleSlabAreaM2 = calculateSingleSlabAreaM2(effectiveWidth, effectiveLength);
 
-        BigDecimal totalAreaA = singleSlabAreaM2.multiply(BigDecimal.valueOf(slabCountGradeA));
-        BigDecimal totalAreaB = singleSlabAreaM2.multiply(BigDecimal.valueOf(slabCountGradeB));
-        BigDecimal totalAreaC = singleSlabAreaM2.multiply(BigDecimal.valueOf(slabCountGradeC));
+        BigDecimal totalEquivalentArea = calculateTotalEquivalentArea(singleSlabAreaM2, slabCountGradeA, slabCountGradeB, slabCountGradeC);
 
-        // Grade Multipliers: Extra=1.30, A=1.15, B=1.00, C=0.65
-        BigDecimal eqAreaA = totalAreaA.multiply(QualityGrade.A.getMultiplier());
-        BigDecimal eqAreaB = totalAreaB.multiply(QualityGrade.B.getMultiplier());
-        BigDecimal eqAreaC = totalAreaC.multiply(QualityGrade.C.getMultiplier());
-        BigDecimal totalEquivalentArea = eqAreaA.add(eqAreaB).add(eqAreaC);
+        BigDecimal directExpenses = directCuttingExpense != null ? directCuttingExpense : BigDecimal.ZERO;
+        BigDecimal grandTotalProductionCost = block.getTotalCost().add(directExpenses);
+        BigDecimal baseCostPerM2 = calculateBaseCostPerM2(grandTotalProductionCost, totalEquivalentArea);
 
-        BigDecimal blockTotalCost = block.getTotalCost();
-        BigDecimal cuttingCosts = directCuttingExpense != null ? directCuttingExpense : BigDecimal.ZERO;
-        BigDecimal grandTotalProductionCost = blockTotalCost.add(cuttingCosts);
-
-        // C_base = Total Cost / Total Equivalent Area
-        BigDecimal baseCostPerM2 = totalEquivalentArea.compareTo(BigDecimal.ZERO) > 0
-                ? grandTotalProductionCost.divide(totalEquivalentArea, 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-
-        BigDecimal costPerM2A = baseCostPerM2.multiply(QualityGrade.A.getMultiplier()).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal costPerM2B = baseCostPerM2.multiply(QualityGrade.B.getMultiplier()).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal costPerM2C = baseCostPerM2.multiply(QualityGrade.C.getMultiplier()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal costPerM2A = baseCostPerM2.multiply(QualityGrade.A.getMultiplier()).setScale(COST_SCALE, RoundingMode.HALF_UP);
+        BigDecimal costPerM2B = baseCostPerM2.multiply(QualityGrade.B.getMultiplier()).setScale(COST_SCALE, RoundingMode.HALF_UP);
+        BigDecimal costPerM2C = baseCostPerM2.multiply(QualityGrade.C.getMultiplier()).setScale(COST_SCALE, RoundingMode.HALF_UP);
 
         List<Slab> createdSlabs = new ArrayList<>();
-        long seq = System.currentTimeMillis() % 10000;
+        long sequence = System.currentTimeMillis() % 10000;
 
-        // Generate Grade A Slabs
-        for (int i = 1; i <= slabCountGradeA; i++) {
-            createdSlabs.add(createSlabEntity(order, block, "SLB-" + Year.now().getValue() + "-" + (seq++),
-                    thick, width, length, singleSlabAreaM2, QualityGrade.A, costPerM2A));
-        }
-        // Generate Grade B Slabs
-        for (int i = 1; i <= slabCountGradeB; i++) {
-            createdSlabs.add(createSlabEntity(order, block, "SLB-" + Year.now().getValue() + "-" + (seq++),
-                    thick, width, length, singleSlabAreaM2, QualityGrade.B, costPerM2B));
-        }
-        // Generate Grade C Slabs
-        for (int i = 1; i <= slabCountGradeC; i++) {
-            createdSlabs.add(createSlabEntity(order, block, "SLB-" + Year.now().getValue() + "-" + (seq++),
-                    thick, width, length, singleSlabAreaM2, QualityGrade.C, costPerM2C));
-        }
+        createdSlabs.addAll(generateSlabsForGrade(order, block, slabCountGradeA, QualityGrade.A, effectiveThickness,
+                effectiveWidth, effectiveLength, singleSlabAreaM2, costPerM2A, sequence));
+        sequence += slabCountGradeA;
+
+        createdSlabs.addAll(generateSlabsForGrade(order, block, slabCountGradeB, QualityGrade.B, effectiveThickness,
+                effectiveWidth, effectiveLength, singleSlabAreaM2, costPerM2B, sequence));
+        sequence += slabCountGradeB;
+
+        createdSlabs.addAll(generateSlabsForGrade(order, block, slabCountGradeC, QualityGrade.C, effectiveThickness,
+                effectiveWidth, effectiveLength, singleSlabAreaM2, costPerM2C, sequence));
+        sequence += slabCountGradeC;
 
         slabRepository.saveAll(createdSlabs);
 
-        // Mandatory Scrap Logging
+        recordScrapIfApplicable(order, block, scrapReason, scrapWeightKg, directExpenses, scrapNotes, operatorName, sequence);
+
+        return order;
+    }
+
+    private ProductionOrder buildProductionOrder(Block block, String orderNo, String machineName,
+                                                 BigDecimal durationHours, BigDecimal electricityKwh,
+                                                 BigDecimal bladeWearMm, String operatorName, String notes) {
+        LocalDateTime now = LocalDateTime.now();
+        BigDecimal duration = durationHours != null ? durationHours : DEFAULT_DURATION_HOURS;
+        String resolvedOrderNo = (orderNo != null && !orderNo.isBlank())
+                ? orderNo
+                : String.format("PRD-%d-%d", Year.now().getValue(), System.currentTimeMillis() % 100000);
+
+        return ProductionOrder.builder()
+                .orderNo(resolvedOrderNo)
+                .block(block)
+                .machineName(machineName)
+                .processType(ProcessType.GANGSAW)
+                .startTime(now.minusHours(duration.longValue()))
+                .endTime(now)
+                .durationHours(duration)
+                .electricityKwh(electricityKwh != null ? electricityKwh : BigDecimal.ZERO)
+                .bladeWearMm(bladeWearMm != null ? bladeWearMm : BigDecimal.ZERO)
+                .operatorName(operatorName)
+                .status(ORDER_STATUS_COMPLETED)
+                .notes(notes)
+                .build();
+    }
+
+    private BigDecimal calculateSingleSlabAreaM2(BigDecimal widthCm, BigDecimal lengthCm) {
+        return widthCm.multiply(lengthCm).divide(SQUARE_CENTIMETERS_PER_SQUARE_METER, AREA_SCALE, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateTotalEquivalentArea(BigDecimal singleSlabAreaM2, int countA, int countB, int countC) {
+        BigDecimal totalAreaA = singleSlabAreaM2.multiply(BigDecimal.valueOf(countA));
+        BigDecimal totalAreaB = singleSlabAreaM2.multiply(BigDecimal.valueOf(countB));
+        BigDecimal totalAreaC = singleSlabAreaM2.multiply(BigDecimal.valueOf(countC));
+
+        BigDecimal eqAreaA = totalAreaA.multiply(QualityGrade.A.getMultiplier());
+        BigDecimal eqAreaB = totalAreaB.multiply(QualityGrade.B.getMultiplier());
+        BigDecimal eqAreaC = totalAreaC.multiply(QualityGrade.C.getMultiplier());
+
+        return eqAreaA.add(eqAreaB).add(eqAreaC);
+    }
+
+    private BigDecimal calculateBaseCostPerM2(BigDecimal totalProductionCost, BigDecimal totalEquivalentArea) {
+        if (totalEquivalentArea.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return totalProductionCost.divide(totalEquivalentArea, COST_SCALE, RoundingMode.HALF_UP);
+    }
+
+    private List<Slab> generateSlabsForGrade(ProductionOrder order, Block block, int count, QualityGrade grade,
+                                            BigDecimal thickness, BigDecimal width, BigDecimal length,
+                                            BigDecimal area, BigDecimal costPerM2, long baseSequence) {
+        List<Slab> slabs = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            String slabCode = String.format("SLB-%d-%d", Year.now().getValue(), baseSequence + i);
+            slabs.add(createSlabEntity(order, block, slabCode, thickness, width, length, area, grade, costPerM2));
+        }
+        return slabs;
+    }
+
+    private void recordScrapIfApplicable(ProductionOrder order, Block block, ScrapReasonCode scrapReason,
+                                        BigDecimal scrapWeightKg, BigDecimal directExpenses,
+                                        String scrapNotes, String operatorName, long sequence) {
         if (scrapReason != null && scrapWeightKg != null && scrapWeightKg.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal costImpact = directExpenses.multiply(SCRAP_COST_IMPACT_RATE).setScale(COST_SCALE, RoundingMode.HALF_UP);
+            String description = (scrapNotes != null && !scrapNotes.isBlank()) ? scrapNotes : scrapReason.getDescription();
+
             ScrapLog scrap = ScrapLog.builder()
-                    .scrapCode("SCRAP-" + Year.now().getValue() + "-" + (seq++))
+                    .scrapCode(String.format("SCRAP-%d-%d", Year.now().getValue(), sequence))
                     .productionOrder(order)
                     .block(block)
                     .reasonCode(scrapReason)
                     .scrapWeightKg(scrapWeightKg)
                     .scrapAreaM2(BigDecimal.ZERO)
-                    .costImpact(cuttingCosts.multiply(new BigDecimal("0.10")).setScale(2, RoundingMode.HALF_UP))
-                    .description(scrapNotes != null ? scrapNotes : scrapReason.getDescription())
+                    .costImpact(costImpact)
+                    .description(description)
                     .loggedBy(operatorName)
                     .build();
             scrapLogRepository.save(scrap);
         }
-
-        return order;
     }
 
     private Slab createSlabEntity(ProductionOrder order, Block block, String code,
-                                 BigDecimal thick, BigDecimal width, BigDecimal length,
-                                 BigDecimal area, QualityGrade grade, BigDecimal cost) {
+                                  BigDecimal thick, BigDecimal width, BigDecimal length,
+                                  BigDecimal area, QualityGrade grade, BigDecimal cost) {
         return Slab.builder()
                 .slabCode(code)
                 .productionOrder(order)
@@ -200,7 +245,7 @@ public class ProductionService {
         }
 
         int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : 10, sort);
+        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
 
         Page<Slab> slabPage = slabRepository.searchSlabs(search, pageable);
         return TabulatorResponse.of(slabPage.getContent(), slabPage.getTotalPages(), slabPage.getTotalElements());

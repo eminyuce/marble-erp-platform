@@ -22,11 +22,21 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProjectSiteService {
+
+    private static final BigDecimal PERCENT_DIVISOR = new BigDecimal("100");
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int CALCULATION_SCALE = 4;
+    private static final int RESULT_SCALE = 2;
+
+    private static final String LOCATION_STATUS_PLANNED = "PLANNED";
+    private static final String LOCATION_STATUS_IN_PROGRESS = "IN_PROGRESS";
+    private static final String LOCATION_STATUS_COMPLETED = "COMPLETED";
 
     private final ProjectRepository projectRepository;
     private final ProjectLocationRepository projectLocationRepository;
@@ -41,7 +51,7 @@ public class ProjectSiteService {
         }
 
         int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : 10, sort);
+        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
 
         Page<Project> projectPage = projectRepository.searchProjects(search, pageable);
         List<ProjectDto> dtos = projectPage.getContent().stream()
@@ -53,6 +63,7 @@ public class ProjectSiteService {
 
     @Transactional(readOnly = true)
     public Project getProjectById(Long id) {
+        Objects.requireNonNull(id, "Proje ID boş olamaz");
         return projectRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Proje bulunamadı: " + id));
     }
@@ -62,10 +73,13 @@ public class ProjectSiteService {
                                  BigDecimal contractValue, BigDecimal estimatedCost,
                                  LocalDate startDate, LocalDate deliveryDate, String notes) {
 
+        Objects.requireNonNull(projectCode, "Proje kodu boş olamaz");
+        Objects.requireNonNull(name, "Proje adı boş olamaz");
+
         Project project = Project.builder()
                 .projectCode(projectCode.trim())
                 .name(name.trim())
-                .customerName(customerName.trim())
+                .customerName(customerName != null ? customerName.trim() : "")
                 .contractValue(contractValue != null ? contractValue : BigDecimal.ZERO)
                 .estimatedCost(estimatedCost != null ? estimatedCost : BigDecimal.ZERO)
                 .actualCost(BigDecimal.ZERO)
@@ -81,6 +95,7 @@ public class ProjectSiteService {
     @Transactional
     public ProjectLocation addLocation(Long projectId, Long parentId, String locationName,
                                       String floorLevel, String stoneSpec, BigDecimal plannedAreaM2) {
+        Objects.requireNonNull(locationName, "Mahal adı boş olamaz");
         Project project = getProjectById(projectId);
         ProjectLocation parent = parentId != null ? projectLocationRepository.findById(parentId).orElse(null) : null;
 
@@ -92,7 +107,7 @@ public class ProjectSiteService {
                 .stoneSpec(stoneSpec)
                 .plannedAreaM2(plannedAreaM2 != null ? plannedAreaM2 : BigDecimal.ZERO)
                 .installedAreaM2(BigDecimal.ZERO)
-                .status("PLANNED")
+                .status(LOCATION_STATUS_PLANNED)
                 .build();
 
         return projectLocationRepository.save(location);
@@ -102,6 +117,10 @@ public class ProjectSiteService {
     public SiteConsumption recordConsumption(Long projectId, Long locationId,
                                             ConsumptionType type, String itemName,
                                             BigDecimal quantity, String unit, BigDecimal unitCost, String notes) {
+        Objects.requireNonNull(type, "Sarfiyat tipi boş olamaz");
+        Objects.requireNonNull(quantity, "Miktar boş olamaz");
+        Objects.requireNonNull(unitCost, "Birim maliyet boş olamaz");
+
         Project project = getProjectById(projectId);
         ProjectLocation location = projectLocationRepository.findById(locationId)
                 .orElseThrow(() -> new IllegalArgumentException("Mahal bulunamadı: " + locationId));
@@ -120,31 +139,46 @@ public class ProjectSiteService {
         consumption.calculateTotal();
         SiteConsumption saved = siteConsumptionRepository.save(consumption);
 
-        // Update location installation if stone
-        if (type == ConsumptionType.STONE) {
-            location.setInstalledAreaM2(location.getInstalledAreaM2().add(quantity));
-            if (location.getInstalledAreaM2().compareTo(location.getPlannedAreaM2()) >= 0) {
-                location.setStatus("COMPLETED");
-            } else {
-                location.setStatus("IN_PROGRESS");
-            }
-            projectLocationRepository.save(location);
-        }
-
-        // Add to project actual cost
-        project.setActualCost(project.getActualCost().add(saved.getTotalCost()));
-        projectRepository.save(project);
+        updateLocationProgressIfStone(location, type, quantity);
+        updateProjectActualCost(project, saved.getTotalCost());
 
         return saved;
     }
 
+    private void updateLocationProgressIfStone(ProjectLocation location, ConsumptionType type, BigDecimal quantity) {
+        if (type != ConsumptionType.STONE) {
+            return;
+        }
+        BigDecimal currentInstalled = location.getInstalledAreaM2() != null ? location.getInstalledAreaM2() : BigDecimal.ZERO;
+        BigDecimal newInstalled = currentInstalled.add(quantity);
+        location.setInstalledAreaM2(newInstalled);
+
+        BigDecimal plannedArea = location.getPlannedAreaM2() != null ? location.getPlannedAreaM2() : BigDecimal.ZERO;
+        if (newInstalled.compareTo(plannedArea) >= 0) {
+            location.setStatus(LOCATION_STATUS_COMPLETED);
+        } else {
+            location.setStatus(LOCATION_STATUS_IN_PROGRESS);
+        }
+        projectLocationRepository.save(location);
+    }
+
+    private void updateProjectActualCost(Project project, BigDecimal additionalCost) {
+        if (additionalCost != null && additionalCost.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal currentActual = project.getActualCost() != null ? project.getActualCost() : BigDecimal.ZERO;
+            project.setActualCost(currentActual.add(additionalCost));
+            projectRepository.save(project);
+        }
+    }
+
     @Transactional(readOnly = true)
     public List<ProjectLocation> getLocationsByProject(Long projectId) {
+        Objects.requireNonNull(projectId, "Proje ID boş olamaz");
         return projectLocationRepository.findByProjectId(projectId);
     }
 
     @Transactional(readOnly = true)
     public List<SiteConsumption> getConsumptionsByProject(Long projectId) {
+        Objects.requireNonNull(projectId, "Proje ID boş olamaz");
         return siteConsumptionRepository.findByProjectId(projectId);
     }
 
@@ -154,10 +188,16 @@ public class ProjectSiteService {
      */
     public BigDecimal calculateProductionRequirement(BigDecimal plannedArea, BigDecimal scrapPct,
                                                      BigDecimal availableStock, BigDecimal inProduction) {
-        BigDecimal factor = BigDecimal.ONE.add(scrapPct.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP));
-        BigDecimal grossRequirement = plannedArea.multiply(factor);
-        BigDecimal currentCoverage = availableStock.add(inProduction);
+        BigDecimal effectivePlanned = plannedArea != null ? plannedArea : BigDecimal.ZERO;
+        BigDecimal effectiveScrap = scrapPct != null ? scrapPct : BigDecimal.ZERO;
+        BigDecimal effectiveStock = availableStock != null ? availableStock : BigDecimal.ZERO;
+        BigDecimal effectiveInProduction = inProduction != null ? inProduction : BigDecimal.ZERO;
+
+        BigDecimal scrapFactor = BigDecimal.ONE.add(effectiveScrap.divide(PERCENT_DIVISOR, CALCULATION_SCALE, RoundingMode.HALF_UP));
+        BigDecimal grossRequirement = effectivePlanned.multiply(scrapFactor);
+        BigDecimal currentCoverage = effectiveStock.add(effectiveInProduction);
         BigDecimal shortfall = grossRequirement.subtract(currentCoverage);
-        return shortfall.compareTo(BigDecimal.ZERO) > 0 ? shortfall.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+
+        return shortfall.compareTo(BigDecimal.ZERO) > 0 ? shortfall.setScale(RESULT_SCALE, RoundingMode.HALF_UP) : BigDecimal.ZERO;
     }
 }

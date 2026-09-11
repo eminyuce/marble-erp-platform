@@ -19,11 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class QuarryBlockService {
+
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final BlockRepository blockRepository;
     private final QuarryRepository quarryRepository;
@@ -37,7 +40,7 @@ public class QuarryBlockService {
         }
 
         int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : 10, sort);
+        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
 
         Page<Block> blockPage = blockRepository.searchBlocks(search, pageable);
         List<BlockDto> dtos = blockPage.getContent().stream()
@@ -49,6 +52,7 @@ public class QuarryBlockService {
 
     @Transactional(readOnly = true)
     public Block getBlockById(Long id) {
+        Objects.requireNonNull(id, "Blok ID boş olamaz");
         return blockRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + id));
     }
@@ -59,6 +63,9 @@ public class QuarryBlockService {
                               BigDecimal actualWeightKg, String stoneType, String colorTone,
                               QualityGrade qualityGrade, int crackLevel,
                               BigDecimal extractionCost, String notes, String photoUrls) {
+
+        Objects.requireNonNull(quarryId, "Ocak ID boş olamaz");
+        Objects.requireNonNull(blockCode, "Blok numarası boş olamaz");
 
         Quarry quarry = quarryRepository.findById(quarryId)
                 .orElseThrow(() -> new IllegalArgumentException("Ocak bulunamadı: " + quarryId));
