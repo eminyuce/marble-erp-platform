@@ -1,169 +1,155 @@
-# Özerler Mermer ERP Platformu
+# Özerler Mermer ERP Platform
 
-> **Ocaktan Şantiyeye Uçtan Uca Fiziksel İzlenebilirlik, Fire Yönetimi ve Dinamik Maliyet Muhasebesi Karar Destek Sistemi**  
-> *Kurumsal Yazılım Şartnamesi (BRD / SRS) v1.0 Standardında Geliştirilmiştir.*
+> **Enterprise-grade, end-to-end physical traceability, 10-code scrap management, and dynamic Activity-Based Costing (ABC) platform for the natural stone industry.**
 
----
-
-## 🌟 Temel Felsefe & Sistem Mimarisi
-
-Özerler Mermer ERP, klasik bir depo stok takip yazılımı değildir. Doğal taş sektörünün kendine has dinamikleri göz önüne alınarak tasarlanmıştır:
-
-1. **Her Blok Biriciktir:** Ocak aynasından çıkarılan her bloğun 3 eksenli ölçümleri ($m^3$), teorik kantar formülü ile gerçek kantar tartımı karşılaştırılarak sapma analizi yapılır.
-2. **Dönüşüm Süreklidir:** Ham Blok ($m^3$, Ton) $\rightarrow$ Katrak $\rightarrow$ Plaka ($m^2$) $\rightarrow$ Cila/Pah $\rightarrow$ Atölye Kesimi $\rightarrow$ Ebatlı Mamul $\rightarrow$ Şantiye Montajı.
-3. **Kalite Katsayılı Dinamik Maliyet Dağıtımı:** Katraktan çıkan plakaların maliyeti düz metrekareye bölünmez; **Grade Multiplier Algoritması** ($K_{Extra}=1.30$, $K_A=1.15$, $K_B=1.00$, $K_C=0.65$) kullanılarak A, B, C kalite plakaların birim maliyetleri adilce hesaplanır.
-4. **10 Neden Kodlu Fire Analizi:** `FR-01` Kesim Talaşından `FR-10` Şantiye Montaj Kırımına kadar her fire kök neden koduyla kaydedilir.
-5. **Mahal Bazlı Metraj Ağacı (WBS) & Şantiye Puantajı:** Şantiyede harcanan granit yapıştırıcı, derz dolgu ve montaj ustası puantajı doğrudan projenin maliyet kartına işlenir.
-6. **Dijital Taş Pasaportu & Ters İzlenebilirlik:** QR kod okutulduğunda taşın hangi ocaktan, hangi katrak kesiminden ve hangi bloktan çıktığı saniyeler içinde görüntülenir; kılcal çatlak tespit edildiğinde aynı bloktan çıkan kardeş plakalar otomatik karantinaya alınır.
+[![Java](https://img.shields.io/badge/Java-24-orange.svg)](https://openjdk.org/projects/jdk/24/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.7-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Port](https://img.shields.io/badge/Port-81-blue.svg)](http://localhost:81)
+[![PMD](https://img.shields.io/badge/PMD-7.17.0%20(0%20Violations)-blueviolet.svg)](https://pmd.github.io/)
+[![JaCoCo](https://img.shields.io/badge/Coverage-JaCoCo%200.8.13-success.svg)](https://www.jacoco.org/)
+[![Database](https://img.shields.io/badge/Database-MySQL%208.4%20LTS-blue.svg)](https://www.mysql.com/)
 
 ---
 
-## 🛠️ Teknoloji Yığını (Tech Stack)
+## 🎯 Value Proposition
 
-| Katman | Teknoloji | Açıklama |
+**Özerler Mermer ERP** replaces generic inventory tools with domain-driven stone lifecycle management. From raw quarry block extraction ($m^3$, tonnage deviation analysis) through gangsaw cutting, resin/polishing lines, custom workshop sizing, and architectural site Work Breakdown Structures (WBS), every physical transformation is tracked with full bidirectional genealogy, dynamic grade-weighted pricing, and root-cause scrap telemetry.
+
+---
+
+## 🚀 Key Features
+
+- **Quarry Block Intelligence**: 3-axis dimensional measurement ($m^3$), theoretical vs. weighbridge scale variance tracking ($>5\%$ deviation alerts), and gangsaw dispatch workflows.
+- **Gangsaw & Grade Multiplier Costing**: Weighted allocation algorithm ($K_{Extra}=1.30$, $K_A=1.15$, $K_B=1.00$, $K_C=0.65$) distributing block cost based on realized surface quality.
+- **10-Reason Scrap Management**: Granular root-cause tracking from `FR-01` (Saw Dust) through `FR-10` (Site Installation Breakage) with real-time financial impact calculation.
+- **Genealogy & Digital Stone Passport**: Bidirectional lineage trees mapping final installation tiles back to source slabs, production orders, and extraction quarries via public QR-code URLs.
+- **Smart Pricing & Margin Guardrails**: Real-time margin simulation calculating standard cost, suggested selling price, and minimum floor price warnings.
+- **Enterprise System Settings & Security**: Database-backed dynamic controls for Two-Factor Authentication (2FA), Google reCAPTCHA v2/v3, dynamic SMTP dispatch, and customizable HTML email templates.
+- **Operational Report Center**: Multi-tab live reporting engine exporting 6 domain datasets to auto-formatted Excel (`.xlsx`) and UTF-8 BOM CSV (`.csv`).
+- **Structured JSON Observability**: Production-grade Logstash JSON logging over Logback with MDC diagnostic correlation (`traceId`, `userId`) and a dedicated `/admin/dashboard/systemhealth/` metric cockpit.
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technologies & Tools |
+| :--- | :--- |
+| **Backend Framework** | Java 24 (Eclipse Temurin 24.0.2), Spring Boot 4.0.7, Spring Security 7.x, Spring Data JPA |
+| **Persistence & Migration** | MySQL 8.4 LTS, Hibernate 7.x, Flyway 11.x, HikariCP |
+| **Frontend & UI/UX** | Thymeleaf 3, Tailwind CSS 4, HTMX 2, Alpine.js 3, Tabulator 6, Lucide Icons |
+| **Rich Editing & Uploads**| TipTap Editor, CodeMirror 6, FilePond 4 with client-side image optimization |
+| **Reporting & Utilities** | Apache POI 5.3.0, Apache Commons (`commons-lang3`, `commons-collections4 4.5.0`) |
+| **Logging & Telemetry** | SLF4J, Logback, `logstash-logback-encoder 8.0`, Spring Boot Actuator |
+| **Quality & Testing** | JUnit 5, Mockito, AssertJ, `maven-pmd-plugin 3.28.0` (PMD 7.17.0), `jacoco-maven-plugin 0.8.13` |
+| **Container & CI/CD** | Docker (Multi-stage Temurin 24), Docker Compose v2, GitHub Actions (SSH & GHCR) |
+
+---
+
+## 🏛️ Architecture & Design
+
+The platform adheres to **Layered Clean Architecture** and **Domain-Driven Design (DDD)** principles:
+
+- **Presentation Layer (`com.ozerler.marble.controller`)**: Dedicated controllers for Administrative operations, ERP domain modules, Public Digital Passports, and JSON REST endpoints.
+- **Data Transfer & Dual Mapping (`com.ozerler.marble.dto`)**: DTOs annotated with `@JsonProperty("snake_case")` paired with `@JsonAlias("camelCase")` and `@NotBlank(message = "Missing required field: {field_name}")` for complete client interoperability.
+- **Domain Service Layer (`com.ozerler.marble.service`)**: Encapsulates business logic, activity-based cost calculations, gangsaw transformations, and report synthesis.
+- **Persistence Layer (`com.ozerler.marble.repository`)**: Strongly typed Spring Data JPA repositories with parameterized native/HQL queries.
+- **Cross-Cutting Concerns (`com.ozerler.marble.config`, `common`)**: Centralized [Constants.java](src/main/java/com/ozerler/marble/common/Constants.java), Spring Security RBAC filter chains, structured logging converters, and global exception handlers.
+
+---
+
+## 🏁 Getting Started
+
+### Prerequisites
+- **JDK 24+** (Eclipse Temurin 24.0.2 recommended)
+- **Apache Maven 3.9+** (or bundled `./mvnw`)
+- **Docker & Docker Compose** (for containerized setup)
+- **Node.js 22+ & npm** (only if rebuilding frontend assets)
+
+### Environment Variables
+
+| Variable | Description | Default (Local) |
 | :--- | :--- | :--- |
-| **Backend** | **Spring Boot 3.4.x + Java 24** | Eclipse Temurin 24, ZGC, modern Spring Framework 6 |
-| **Güvenlik** | **Spring Security (RBAC)** | `SecurityFilterChain`, Form Login, Remember-Me, Method Security (`@PreAuthorize`) |
-| **Veritabanı** | **MySQL 8.4** | ACID güvenceli ilişkisel veri modeli |
-| **Migrasyon** | **Flyway** | Versiyonlanmış şema ve başlangıç tohum verileri |
-| **Şablon Motoru** | **Thymeleaf** | Modüler layout, fragmentler ve CSRF token entegrasyonu |
-| **Frontend Reaktivite**| **HTMX 2 + Alpine.js 3** | SPA hızında dinamik kısmi güncellemeler ve reaktif kontroller |
-| **CSS & Tasarım** | **Tailwind CSS 4** | `/frontend` dizininde derleme hattı (`@tailwindcss/cli`) |
-| **Veri Izgarası** | **Tabulator 6** | Sunucu taraflı sayfalama, filtreleme, sıralama ve CSV dışa aktarım |
-| **Zengin Metin / Kod**| **TipTap + CodeMirror 6** | Sekmeli/yan yana teknik şartname ve not düzenleyici |
-| **Dosya Yükleme** | **FilePond 4** | Sürükle-bırak fotoğraf yükleme, önizleme ve CSRF koruması |
-| **İkon Seti** | **Lucide Icons** | Vektörel kurumsal ikonlar |
-| **Konteyner** | **Docker & Docker Compose** | Çok aşamalı (multi-stage) Dockerfile ve sağlık kontrolleri |
+| `SERVER_PORT` | Application HTTP port | `81` |
+| `SPRING_PROFILES_ACTIVE` | Active Spring profile | `dev` |
+| `DB_HOST` | MySQL hostname | `localhost` |
+| `DB_PORT` | MySQL port | `3306` |
+| `DB_NAME` | Database schema name | `marble_erp` |
+| `DB_USER` | Database username | `marble_user` |
+| `DB_PASS` | Database password | `marble_pass` |
+
+### Step-by-Step Local Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/eminyuce/marble-erp-platform.git
+   cd marble-erp-platform
+   ```
+
+2. **Start Infrastructure Services (Docker):**
+   ```bash
+   docker compose -f docker/docker-compose.yml up -d mysql
+   ```
+
+3. **Compile, Check Quality & Run Tests:**
+   ```bash
+   # Validate PMD 7.x rules (0 violations enforced)
+   ./mvnw pmd:check
+
+   # Run test suite with JaCoCo coverage report
+   ./mvnw test
+   ```
+
+4. **Launch Application:**
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+   *Access the web application at `http://localhost:81`.*
 
 ---
 
-## 🔐 Kullanıcı Yönetimi & Varsayılan Kimlik Bilgileri
+## 🔑 Authentication & Default Credentials
 
-Sistemde Flyway ile tohumlanmış varsayılan yönetici hesabı bulunmaktadır:
+Seeded via Flyway migration ([V4__add_settings_and_admin_eimece.sql](src/main/resources/db/migration/V4__add_settings_and_admin_eimece.sql)):
 
-- **Giriş URL:** `http://localhost:8080/login`
-- **E-Posta:** `admin@example.com`
-- **Şifre:** `changeit`
-- **Roller:** `ROLE_ADMIN`, `ROLE_USER`, `ROLE_EXECUTIVE`
-
-### Rol Yetki Matrisi (RBAC):
-- `ROLE_ADMIN`: Tüm sistem ayarları, kullanıcı yönetimi, şifre sıfırlama, rol atama ve yetkilendirme.
-- `ROLE_QUARRY_CHIEF`: Ocak & Blok yönetimi, kantar tartımı, fabrika içi transfer.
-- `ROLE_FACTORY_MANAGER`: Fabrika katrak üretim emirleri, plaka çıkarımı ve fire takibi.
-- `ROLE_WORKSHOP_CHIEF`: Atölye köprü kesme, ebatlama iş emirleri ve mamul yönetimi.
-- `ROLE_SITE_ENGINEER`: Proje mahal ağacı (WBS), şantiye malzeme ve puantaj sarfiyat girişi.
-- `ROLE_FINANCE`: Aktivite Tabanlı Maliyetleme (CC-001..CC-006) ve marj analizi.
-- `ROLE_EXECUTIVE`: Genel Müdür canlı kokpiti, KPI kartları ve erken uyarı alarmları.
+- **Admin Login Portal:** `http://localhost:81/account/adminlogin/`
+- **Email:** `admin@eimece.test`
+- **Password:** `B2u5c8JB`
+- **Assigned Roles:** `ROLE_ADMIN`, `ROLE_USER`, `ROLE_EXECUTIVE`
 
 ---
 
-## 🚀 Yerel Geliştirme ve Çalıştırma
+## 📡 Usage & Key Endpoints
 
-### 1. Gereksinimler
-- **Java 24** (Eclipse Temurin önerilir)
-- **Node.js 22+** ve **npm**
-- **Docker & Docker Compose** (veya yerel MySQL 8.4)
-
-### 2. Adım Adım Kurulum
-
-#### A. Tailwind CSS Derleme
-```bash
-cd frontend
-npm install
-npm run build
-# Geliştirme esnasında anlık izleme için:
-# npm run dev
-cd ..
-```
-
-#### B. Docker Compose ile Tam Yığını Başlatma (Uygulama + MySQL 8.4)
-```bash
-docker compose -f docker/docker-compose.yml up -d --build
-```
-Uygulama `http://localhost:8080` adresinde ayağa kalkacaktır.
-
-#### C. Standart Maven ile Çalıştırma
-```bash
-# Projeyi derleme ve testleri koşturma
-./mvnw clean test
-
-# Uygulamayı başlatma
-./mvnw spring-boot:run
-```
+| Endpoint | Method | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `/health/` | `GET` | Public | JSON health check returning status `UP` and port `81` |
+| `/account/adminlogin/` | `GET` | Public | Glassmorphic admin sign-in portal |
+| `/admin/dashboard` | `GET` | `ROLE_ADMIN` | Executive operational cockpit and KPI summaries |
+| `/admin/dashboard/systemhealth/` | `GET` | `ROLE_ADMIN` | Live visual system telemetry (JVM Heap, DB ping, uptime) |
+| `/admin/dashboard/oursitefeatures/`| `GET` | Authenticated | Interactive user guide and ERP pipeline visual tour |
+| `/admin/settings` | `GET`/`POST` | `ROLE_ADMIN` | 2FA, reCAPTCHA, SMTP server, and Email template manager |
+| `/blocks` | `GET` | Authenticated | Tabulator-powered Quarry & Block management grid |
+| `/blocks/api/data` | `GET` | Authenticated | Remote paginated JSON feed for quarry blocks |
+| `/production` | `GET` | Authenticated | Factory gangsaw orders and scrap registry |
+| `/workshop` | `GET` | Authenticated | Custom bridge-cutting and dimensional order manager |
+| `/projects` | `GET` | Authenticated | Architectural installation projects and WBS metraj trees |
+| `/costs` | `GET` | `ROLE_FINANCE` | Multi-layer Activity-Based Costing & margin simulator |
+| `/reports` | `GET` | Authenticated | Operational Report Center (Quarry, Factory, Site, Cost) |
+| `/reports/export` | `GET` | Authenticated | Instant Excel (`.xlsx`) and CSV (`.csv`) export engine |
+| `/passport/{code}` | `GET` | Public | Digital Stone Passport & reverse genealogy by QR scan |
 
 ---
 
-## 🧪 Testler ve Doğrulama
+## 📜 Quality & Code Standards
 
-Sistem için yazılmış otomatik birim ve entegrasyon testleri:
-
-```bash
-./mvnw test
-```
-
-- **`UserServiceTest`**: Kullanıcı oluşturma, BCrypt şifreleme, tekil e-posta/kullanıcı adı kısıtı ve soft-delete doğrulaması.
-- **`CostAccountingServiceTest`**: Şartnamedeki (BRD 6.1) sayısal örneğin birebir matematiksel doğrulaması (150.000 TL blok maliyeti; 40 m² A, 80 m² B, 30 m² C $\rightarrow$ A Kalite: 1.185,57 TL/m², B Kalite: 1.030,93 TL/m², C Kalite: 670,10 TL/m²).
-- **`SecurityConfigTest`**: Yetkisiz erişimlerin login sayfasına yönlendirilmesi, `/admin/**` rotasının sadece `ROLE_ADMIN` tarafından erişilebilmesi ve açık dijital pasaport sayfası doğrulaması.
+- **Google Java Style**: Clean imports (no wildcard imports, zero fully qualified names).
+- **PMD 7.x Compliance**: Proactively validated against `maven-pmd-plugin:3.28.0` with **0 failures**.
+- **Dual DTO Serialization**: Full compatibility with both `snake_case` REST clients and `camelCase` data grids.
+- **Zero-Allocation Logging**: Parameterized Logstash JSON output with contextual MDC propagation.
 
 ---
 
-## 🚢 Canlı Sunucuya Dağıtım (Production CI/CD)
+## 📄 License
 
-Projede GitHub Actions iş akışı (`.github/workflows/deploy-production.yml`) yapılandırılmıştır:
-
-1. `main` dalına her `git push` yapıldığında tetiklenir.
-2. Dockerfile ile çok aşamalı üretim imajı derlenir ve GitHub Container Registry (`ghcr.io`) üzerine yüklenir.
-3. SSH üzerinden hedef Linux VPS / dedicated sunucuya bağlanır.
-4. `docker compose up -d --pull always` ile sıfır kesintiyle yeni konteyner sürümüne geçilir.
-5. `/actuator/health` üzerinden sağlık kontrolü (Healthcheck) yapılarak dağıtım onaylanır.
-
-### Gerekli GitHub Secrets Tanımları:
-- `SSH_HOST`: Sunucu IP veya hostname
-- `SSH_USER`: SSH kullanıcı adı (örn: `root` veya `deployer`)
-- `SSH_PRIVATE_KEY`: Sunucuya yetkili SSH özel anahtarı
-- `SSH_PORT`: SSH portu (varsayılan `22`)
-- `GITHUB_TOKEN`: Otomatik sağlanır (GHCR erişimi için)
-
----
-
-## 🏛️ Proje Dizin Mimarisi
-
-```
-marble-erp-platform/
-├── pom.xml                               # Maven bağımlılıkları (Spring Boot 3.4, Java 24)
-├── mvnw, mvnw.cmd                        # Maven Wrapper betikleri
-├── Makefile                              # Geliştirme kısayolları
-├── docker/
-│   ├── Dockerfile                        # Multi-stage Dockerfile (Temurin 24)
-│   └── docker-compose.yml                # Spring Boot + MySQL 8.4 + Volumes
-├── .github/workflows/
-│   └── deploy-production.yml             # SSH + Docker Compose CI/CD hattı
-├── frontend/
-│   ├── package.json                      # Tailwind CSS 4 araçları
-│   └── src/input.css                     # Tailwind kurumsal tema ve Tabulator stilleri
-└── src/
-    ├── main/
-    │   ├── java/com/ozerler/marble/
-    │   │   ├── config/                   # SecurityConfig, WebConfig
-    │   │   ├── controller/               # Auth, Admin, Quarry, Production, Costs, Passport
-    │   │   ├── dto/                      # TabulatorRequest/Response, DTOs
-    │   │   ├── model/                    # JPA Varlık Modelleri (User, Block, Slab, Scrap...)
-    │   │   ├── repository/               # Spring Data JPA Repository arayüzleri
-    │   │   ├── security/                 # CustomUserDetailsService, SecurityUtils
-    │   │   └── service/                  # İş kuralları ve algoritmalar
-    │   └── resources/
-    │       ├── application.yml           # Temel konfigürasyon
-    │       ├── application-dev.yml       # Geliştirme profili (MySQL 8.4)
-    │       ├── application-prod.yml      # Canlı ortam profili
-    │       ├── db/migration/             # Flyway V1, V2, V3 migrasyonları ve seed verileri
-    │       ├── static/                   # Derlenmiş CSS, JS (Tabulator, FilePond, TipTap)
-    │       └── templates/                # Thymeleaf şablonları ve HTMX fragmentleri
-    └── test/                             # Unit ve Security entegrasyon testleri
-```
-
----
-
-## 📜 Lisans & Telif Hakkı
-
-Özerler Mermer A.Ş. &copy; 2026. Tüm hakları saklıdır.
-Bu yazılım Özerler Mermer ERP Sistem Şartnamesi (BRD / SRS) uyarınca kurumsal kullanım için üretilmiştir.
+Copyright &copy; 2026 Özerler Mermer A.Ş. All rights reserved.  
+Internal Enterprise Resource Planning Platform developed to BRD/SRS v1.0 specifications.
