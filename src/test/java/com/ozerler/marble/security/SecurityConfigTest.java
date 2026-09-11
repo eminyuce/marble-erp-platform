@@ -143,6 +143,20 @@ class SecurityConfigTest {
         mockMvc.perform(get("/admin/settings"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/settings/index"));
+
+        mockMvc.perform(get("/admin/dashboard/systemhealth/"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/system-health"))
+                .andExpect(model().attributeExists("overallStatus", "uptime", "components", "rawJson"));
+
+        mockMvc.perform(get("/admin/dashboard/systemhealth"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/system-health"));
+
+        mockMvc.perform(get("/admin/dashboard/systemhealth/api"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.overallStatus").value("UP"))
+                .andExpect(jsonPath("$.appPort").value(81));
     }
 
     @Test

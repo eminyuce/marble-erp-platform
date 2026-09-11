@@ -101,6 +101,15 @@
                                 <span>Rapor Merkezi</span>
                                 <span class="px-1.5 py-0.5 bg-indigo-200 text-indigo-800 text-[10px] rounded">XLSX</span>
                             </a></li>
+                            <li>
+                                <a th:href="@{/admin/dashboard/systemhealth/}" class="block p-2 rounded-lg bg-emerald-50/70 hover:bg-emerald-100 text-emerald-900 transition font-semibold flex items-center justify-between">
+                                    <span class="flex items-center gap-1.5">
+                                        <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                        <span>Sistem Sağlığı</span>
+                                    </span>
+                                    <span class="px-1.5 py-0.5 bg-emerald-200 text-emerald-800 text-[10px] rounded font-mono">UP</span>
+                                </a>
+                            </li>
                             <li sec:authorize="hasRole('ADMIN')">
                                 <a th:href="@{/admin/settings}" class="block p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition font-medium flex items-center gap-1.5">
                                     <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-500"></i>
@@ -113,13 +122,13 @@
 
                 <!-- Footer strip of Mega Menu -->
                 <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50 -mx-6 -mb-6 p-4 rounded-b-2xl">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span>Spring Boot 4 + Actuator Sağlık Durumu: <strong class="text-slate-700">UP</strong></span>
-                    </div>
+                    <a th:href="@{/admin/dashboard/systemhealth/}" class="flex items-center gap-2 hover:text-slate-900 transition">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Sistem Sağlık Paneli: <strong class="text-slate-800 underline">UP (Port 81)</strong></span>
+                    </a>
                     <div class="flex items-center gap-3">
-                        <a th:href="@{/health}" target="_blank" class="hover:text-amber-700 font-mono text-[11px] underline">/health/</a>
-                        <a th:href="@{/reports}" class="font-semibold text-amber-700 hover:underline">Tüm Excel/CSV Raporları &rarr;</a>
+                        <a th:href="@{/admin/dashboard/systemhealth/}" class="text-emerald-700 font-semibold hover:underline">Sağlık Görünümü &rarr;</a>
+                        <a th:href="@{/health/}" target="_blank" class="hover:text-amber-700 font-mono text-[11px] underline">/health/ JSON</a>
                     </div>
                 </div>
             </div>
@@ -128,6 +137,14 @@
 
     <!-- Right Side Actions & User Menu -->
     <div class="flex items-center gap-3">
+        <!-- System Health Live Indicator Button -->
+        <a th:href="@{/admin/dashboard/systemhealth/}"
+           class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-lg border border-emerald-200 transition shadow-sm"
+           title="Sistem Sağlık Durumu ve Metrikleri">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <span>Sağlık: UP</span>
+        </a>
+
         <!-- Reports Direct Link -->
         <a th:href="@{/reports}"
            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-900 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition">

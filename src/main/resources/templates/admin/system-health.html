@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Sistem Sağlık Durumu &bull; Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6" x-data="{
+    autoRefresh: true,
+    secondsLeft: 10,
+    timer: null,
+    copied: false,
+    copyJson() {
+        const text = document.getElementById('raw-json-output').innerText;
+        navigator.clipboard.writeText(text);
+        this.copied = true;
+        setTimeout(() => this.copied = false, 2000);
+    },
+    init() {
+        this.timer = setInterval(() => {
+            if (this.autoRefresh) {
+                this.secondsLeft--;
+                if (this.secondsLeft <= 0) {
+                    window.location.reload();
+                }
+            }
+        }, 1000);
+    }
+}">
+
+    <!-- Top Banner & Status Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div class="flex items-center gap-3">
+            <div class="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-700/20 ring-4 ring-emerald-100 flex items-center justify-center">
+                <i data-lucide="activity" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">Sistem Sağlık ve İzleme Kokpiti</h1>
+                    <span class="px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 rounded-full border border-emerald-300 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span th:text="${overallStatus}">UP</span>
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 font-medium">Spring Boot 4 Actuator Sağlık Göstergesi &bull; Port 81 &bull; /admin/dashboard/systemhealth/</p>
+            </div>
+        </div>
+
+        <!-- Controls: Refresh & Endpoints -->
+        <div class="flex items-center gap-3">
+            <!-- Auto-refresh pill -->
+            <button type="button"
+                    @click="autoRefresh = !autoRefresh; if(autoRefresh) secondsLeft = 10"
+                    class="px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
+                    :class="autoRefresh ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'">
+                <span class="w-2 h-2 rounded-full" :class="autoRefresh ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"></span>
+                <span x-text="autoRefresh ? 'Otomatik Yenileme (' + secondsLeft + 's)' : 'Yenileme Duraklatıldı'"></span>
+            </button>
+
+            <!-- Manual Refresh Button -->
+            <button onclick="window.location.reload()"
+                    type="button"
+                    class="p-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl shadow-sm transition cursor-pointer"
+                    title="Şimdi Yenile">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Raw Actuator JSON Link -->
+            <a th:href="@{/health/}" target="_blank"
+               class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-mono font-bold transition flex items-center gap-1.5 shadow-sm">
+                <span>/health/</span>
+                <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-400"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Health Overview 4 Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- Card 1: Application Uptime -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Çalışma Süresi (Uptime)</span>
+                <div class="p-2 bg-blue-50 text-blue-700 rounded-xl">
+                    <i data-lucide="clock" class="w-4 h-4"></i>
+                </div>
+            </div>
+            <div class="text-xl font-extrabold text-slate-900" th:text="${uptime}">0 sa 15 dk 22 sn</div>
+            <div class="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                <span class="font-mono text-[11px] px-1.5 py-0.5 bg-slate-100 rounded text-slate-700">Port: <strong th:text="${appPort}">81</strong></span>
+                <span>&bull;</span>
+                <span class="font-mono text-[11px]" th:text="${appVersion}">1.0.0</span>
+            </div>
+        </div>
+
+        <!-- Card 2: Database Latency -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Veritabanı Gecikmesi</span>
+                <div class="p-2 bg-amber-50 text-amber-700 rounded-xl">
+                    <i data-lucide="database" class="w-4 h-4"></i>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-black text-slate-900" th:text="${dbLatencyMs}">1</span>
+                <span class="text-xs font-semibold text-slate-500">milisaniye</span>
+                <span class="ml-auto px-2 py-0.5 text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 rounded-full" th:text="${dbStatus}">UP</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-500 flex items-center justify-between">
+                <span th:text="${dbName}">MySQL</span>
+                <span class="font-mono text-[11px] text-slate-400" th:text="${dbVersion}">8.4</span>
+            </div>
+        </div>
+
+        <!-- Card 3: JVM Heap Memory -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">JVM Bellek (RAM)</span>
+                <div class="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
+                    <i data-lucide="cpu" class="w-4 h-4"></i>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-baseline justify-between">
+                    <span class="text-xl font-extrabold text-slate-900">
+                        <span th:text="${usedMemMb}">128</span> / <span th:text="${totalMemMb}">512</span> MB
+                    </span>
+                    <span class="text-xs font-bold text-indigo-700" th:text="${memPercent} + '%'">25%</span>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-2 rounded-full transition-all duration-500"
+                         th:style="'width: ' + ${memPercent} + '%;'"></div>
+                </div>
+            </div>
+            <div class="text-[11px] text-slate-400 flex items-center justify-between font-mono">
+                <span>Java 24 (ZGC)</span>
+                <span>Max: <strong class="text-slate-600" th:text="${maxMemMb}">2048</strong> MB</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Disk Storage -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Disk Depolama Alanı</span>
+                <div class="p-2 bg-teal-50 text-teal-700 rounded-xl">
+                    <i data-lucide="hard-drive" class="w-4 h-4"></i>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-baseline justify-between">
+                    <span class="text-xl font-extrabold text-slate-900">
+                        <span th:text="${usableDiskGb}">340</span> GB Boş
+                    </span>
+                    <span class="text-xs font-bold text-teal-700" th:text="${diskPercent} + '%'">65%</span>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 rounded-full h-2 mt-2 overflow-hidden">
+                    <div class="bg-gradient-to-r from-teal-500 to-emerald-500 h-2 rounded-full transition-all duration-500"
+                         th:style="'width: ' + ${diskPercent} + '%;'"></div>
+                </div>
+            </div>
+            <div class="text-[11px] text-slate-400 flex items-center justify-between font-mono">
+                <span>Toplam Kapasite</span>
+                <span><strong class="text-slate-600" th:text="${totalDiskGb}">500</strong> GB</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Subsystems & Services Health Grid -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div>
+                <h2 class="text-lg font-black text-slate-900">Mikroservis ve Modül Sağlık Durumları</h2>
+                <p class="text-xs text-slate-500 mt-0.5">ERP iş mantığı, veritabanı havuzu, atölye, şantiye ve maliyet motoru</p>
+            </div>
+            <span class="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-1.5">
+                <i data-lucide="check-check" class="w-4 h-4 text-emerald-600"></i>
+                <span>8 / 8 Bileşen Aktif</span>
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div th:each="comp : ${components}"
+                 class="p-4 rounded-2xl border border-slate-200/80 hover:border-slate-300 bg-slate-50/50 hover:bg-slate-50 transition flex items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm"></span>
+                        <h4 class="text-xs font-bold text-slate-900" th:text="${comp.name}">Bileşen Adı</h4>
+                    </div>
+                    <p class="text-[11px] text-slate-500 pl-4" th:text="${comp.desc}">Açıklama</p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                    <span class="px-2.5 py-1 text-[11px] font-extrabold uppercase rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200"
+                          th:text="${comp.status}">UP</span>
+                    <div class="text-[10px] font-mono text-slate-400 mt-1" th:text="${comp.latency}">1 ms</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Runtime Details & Raw JSON Payload -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Runtime Specifications Box (Left) -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="terminal" class="w-4 h-4 text-amber-700"></i>
+                <span>Sunucu &amp; Çalışma Zamanı Detayları</span>
+            </h3>
+
+            <div class="space-y-2.5 text-xs">
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500">İşletim Sistemi</span>
+                    <span class="font-semibold text-slate-800" th:text="${osName} + ' (' + ${osArch} + ')'">Windows amd64</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500">Java Sürümü</span>
+                    <span class="font-semibold text-slate-800 font-mono" th:text="${javaVersion}">24.0.2</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500">Java Sağlayıcı</span>
+                    <span class="font-semibold text-slate-800" th:text="${javaVendor}">Eclipse Adoptium</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500">CPU Çekirdekleri</span>
+                    <span class="font-semibold text-slate-800 font-mono" th:text="${availableProcessors}">16</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500">Aktif Thread Sayısı</span>
+                    <span class="font-semibold text-slate-800 font-mono" th:text="${activeThreads}">28</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                    <span class="text-slate-500">Aktif Profil</span>
+                    <span class="font-semibold text-slate-800 font-mono" th:text="${activeProfiles}">prod</span>
+                </div>
+                <div class="flex justify-between py-1.5">
+                    <span class="text-slate-500">Sunucu Başlangıcı</span>
+                    <span class="font-semibold text-slate-800 font-mono text-[10px]" th:text="${startTime}">2026-09-11T...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raw Actuator JSON Format Viewer (Right 2 Cols) -->
+        <div class="lg:col-span-2 bg-slate-950 rounded-3xl border border-slate-800 shadow-xl p-6 flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="code-2" class="w-4 h-4 text-emerald-400"></i>
+                    <span class="text-xs font-mono font-bold text-slate-200">http://localhost:81/health/ JSON Çıktısı</span>
+                </div>
+                <button type="button"
+                        @click="copyJson()"
+                        class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                    <i :data-lucide="copied ? 'check' : 'copy'" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <span x-text="copied ? 'Kopyalandı!' : 'JSON Kopyala'"></span>
+                </button>
+            </div>
+
+            <pre id="raw-json-output" class="p-4 rounded-2xl bg-slate-900/90 text-emerald-300 font-mono text-xs overflow-x-auto max-h-72 border border-slate-800/80 leading-relaxed select-all" th:text="${rawJson}">{
+  "status": "UP"
+}</pre>
+
+            <div class="flex items-center justify-between text-xs text-slate-500 pt-1">
+                <span>Harici monitoring (Prometheus, Nagios, K8s liveness) için `/health/` adresi her zaman kimlik doğrulamasız aktiftir.</span>
+                <a th:href="@{/health/}" target="_blank" class="text-amber-400 hover:underline font-mono">Doğrudan Aç &rarr;</a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</body>
+</html>

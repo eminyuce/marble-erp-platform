@@ -65,8 +65,8 @@ public class SecurityConfig {
                     "/health",
                     "/actuator/**"
                 ).permitAll()
-                // Admin area strictly restricted to ROLE_ADMIN
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Admin area strictly restricted to ROLE_ADMIN & ROLE_EXECUTIVE
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "EXECUTIVE")
                 // All other operations require authentication
                 .anyRequest().authenticated()
             )
