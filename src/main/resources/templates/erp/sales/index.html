@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>Satış Siparişleri | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page">
+
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Satışlar')}"></div>
+            <h2 class="admin-page-title">Satış Siparişleri</h2>
+            <p class="erp-list-lead">Müşteri yönetimi, satış siparişleri, faturalama ve alacak takibi.</p>
+        </div>
+        <div class="erp-list-header-actions">
+            <button type="button" onclick="downloadTableCsv(salesTable, 'satislar.csv')" class="erp-btn-secondary">
+                <i data-lucide="download"></i>
+                <span>CSV İndir</span>
+            </button>
+            <button type="button" hx-get="/sales/create" hx-target="#modal-container" class="erp-btn-primary">
+                <i data-lucide="plus"></i>
+                <span>Yeni sipariş</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="erp-toolbar">
+        <div th:replace="~{fragments/list-chrome :: search('Sipariş no, müşteri adı', 'sales-search-input')}"></div>
+    </div>
+
+    <div th:replace="~{fragments/list-chrome :: gridShell('sales-table')}"></div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+let salesTable;
+document.addEventListener("DOMContentLoaded", () => {
+    salesTable = new Tabulator("#sales-table", {
+        layout: "fitColumns",
+        pagination: true,
+        paginationMode: "remote",
+        paginationSize: 10,
+        ajaxURL: "/sales/api/data",
+        ajaxConfig: { method: "GET", headers: { "Accept": "application/json" } },
+        ajaxURLGenerator: function(url, config, params) {
+            const searchVal = document.getElementById("sales-search-input")?.value || "";
+            return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
+        },
+        ajaxResponse: function(url, params, response) {
+            camelizeTabulatorRows(response);
+            return applyTabulatorTotal("sales-table", response);
+        },
+        columns: [
+            {
+                title: "Sipariş No",
+                field: "orderNo",
+                width: 160,
+                formatter: function(cell) {
+                    return `<span class="font-mono font-bold text-amber-900">${cell.getValue()}</span>`;
+                }
+            },
+            {
+                title: "Müşteri",
+                field: "customerName",
+                minWidth: 200,
+                formatter: function(cell) {
+                    const row = cell.getRow().getData();
+                    return `<div>
+                        <a href="/sales/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${row.customerName}</a>
+                        <div class="text-xs text-slate-500">${row.customerType}</div>
+                    </div>`;
+                }
+            },
+            {
+                title: "Sipariş Tarihi",
+                field: "orderDate",
+                width: 130,
+                formatter: function(cell) {
+                    return `<span class="text-sm">${cell.getValue() || '—'}</span>`;
+                }
+            },
+            {
+                title: "Toplam Tutar",
+                field: "totalAmount",
+                width: 150,
+                formatter: function(cell) {
+                    return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
+                }
+            },
+            {
+                title: "Ödenen",
+                field: "paidAmount",
+                width: 130,
+                formatter: function(cell) {
+                    return `<span class="text-sm text-slate-600">${Number(cell.getValue()).toLocaleString('tr-TR')} TL</span>`;
+                }
+            },
+            {
+                title: "Durum",
+                field: "statusLabel",
+                width: 130,
+                formatter: function(cell) {
+                    const status = cell.getRow().getData().status;
+                    const colors = {
+                        'DRAFT': 'bg-slate-100 text-slate-700',
+                        'CONFIRMED': 'bg-blue-100 text-blue-800',
+                        'SHIPPED': 'bg-amber-100 text-amber-800',
+                        'DELIVERED': 'bg-emerald-100 text-emerald-800',
+                        'INVOICED': 'bg-green-100 text-green-800',
+                        'CANCELLED': 'bg-rose-100 text-rose-800'
+                    };
+                    const c = colors[status] || 'bg-slate-100 text-slate-700';
+                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${c}">● ${cell.getValue()}</span>`;
+                }
+            },
+            {
+                title: "Detay",
+                width: 90,
+                headerSort: false,
+                formatter: function(cell) {
+                    const row = cell.getRow().getData();
+                    return `<a href="/sales/${row.id}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded">Detay &rarr;</a>`;
+                }
+            }
+        ]
+    });
+
+    attachTabulatorPagingAnimation(salesTable);
+    bindGridSearch(salesTable, "sales-search-input");
+    salesTable.on("renderComplete", () => {
+        if (window.lucide) window.lucide.createIcons();
+    });
+});
+
+function reloadSalesGrid() {
+    if (salesTable) salesTable.replaceData();
+}
+</script>
+</th:block>
+</body>
+</html>

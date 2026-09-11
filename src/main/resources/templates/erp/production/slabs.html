@@ -122,6 +122,17 @@ document.addEventListener("DOMContentLoaded", () => {
                         <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> Pasaport
                     </a>`;
                 }
+            },
+            {
+                title: "Barkod",
+                width: 100,
+                headerSort: false,
+                formatter: function(cell) {
+                    const id = cell.getRow().getData().id;
+                    return `<a href="/production/slabs/${id}/label" target="_blank" class="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-semibold rounded flex items-center gap-1 w-max">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i> Barkod
+                    </a>`;
+                }
             }
         ]
     });

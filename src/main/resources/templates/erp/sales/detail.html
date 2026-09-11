@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${order.orderNo + ' | Özerler Mermer ERP'}">Sipariş Detay</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-center gap-2">
+                <a th:href="@{/sales}" class="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight" th:text="${order.customer.companyName}">Müşteri Adı</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-800" th:text="${order.orderNo}">SAT-001</span>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">
+                <span th:text="'Müşteri Tipi: ' + ${order.customer.customerType.label}">Tip</span> ·
+                <span th:text="'Sipariş: ' + ${order.orderDate}">Tarih</span> ·
+                <span th:text="'Durum: ' + ${order.status.label}">Durum</span>
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                Toplam: <span th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'POINT', 0, 'COMMA')}">0</span> TL
+            </span>
+            <span class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                Ödenen: <span th:text="${#numbers.formatDecimal(order.paidAmount, 1, 'POINT', 0, 'COMMA')}">0</span> TL
+            </span>
+        </div>
+    </div>
+
+    <!-- Confirm button -->
+    <div th:if="${order.status.name() == 'DRAFT'}" class="flex items-center gap-2">
+        <form th:action="@{'/sales/' + ${order.id} + '/confirm'}" method="post" style="display:inline">
+            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm">
+                <i data-lucide="check" class="w-4 h-4 inline-block mr-1"></i> Siparişi Onayla
+            </button>
+        </form>
+    </div>
+
+    <!-- Kalem Listesi -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 class="font-bold text-slate-900">Sipariş Kalemleri</h3>
+                <p class="text-xs text-slate-500">Satış siparişine eklenmiş ürün ve hizmet kalemleri</p>
+            </div>
+        </div>
+
+        <div th:if="${order.items.isEmpty()}" class="text-center text-sm text-slate-400 py-6">
+            <i data-lucide="package-open" class="w-8 h-8 mx-auto mb-2"></i>
+            Henüz kalem eklenmedi.
+        </div>
+
+        <div th:unless="${order.items.isEmpty()}" class="space-y-2">
+            <div th:each="item : ${order.items}" class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
+                <div>
+                    <strong class="text-xs font-bold text-slate-800" th:text="${item.description}">Ürün</strong>
+                    <div class="text-[11px] text-slate-500">
+                        <span th:if="${item.slab != null}" th:text="'Plaka: ' + ${item.slab.slabCode}">Plaka</span>
+                        <span th:if="${item.block != null}" th:text="'Blok: ' + ${item.block.blockCode}">Blok</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 text-xs text-slate-700">
+                    <span th:text="${#numbers.formatDecimal(item.quantity, 1, 2)} + ' ' + ${item.unit}">1 m2</span>
+                    <span>×</span>
+                    <span th:text="${#numbers.formatDecimal(item.unitPrice, 1, 'POINT', 0, 'COMMA')} + ' TL'">100 TL</span>
+                    <span class="font-bold text-slate-900" th:text="${#numbers.formatDecimal(item.lineTotal, 1, 'POINT', 0, 'COMMA')} + ' TL'">100 TL</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kalem Ekleme Formu -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900">Kalem Ekle</h3>
+        </div>
+        <form th:action="@{'/sales/' + ${order.id} + '/items'}" method="post" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Açıklama / Ürün</label>
+                    <input type="text" name="description" required placeholder="Burdur Bej 60x60 Cilalı Plaka"
+                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Miktar</label>
+                    <input type="number" step="0.01" name="quantity" required placeholder="10"
+                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Birim</label>
+                    <input type="text" name="unit" value="m2" placeholder="m2, adet, ton"
+                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Birim Fiyat (TL)</label>
+                    <input type="number" step="0.01" name="unitPrice" required placeholder="1500"
+                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                </div>
+            </div>
+            <button type="submit" class="px-5 py-2 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-xs font-semibold rounded-lg shadow-sm">
+                Kalemi Ekle
+            </button>
+        </form>
+    </div>
+
+</div>
+</body>
+</html>
