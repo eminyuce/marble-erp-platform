@@ -2,6 +2,8 @@ package com.ozerler.marble.service;
 
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.repository.*;
+import com.ozerler.marble.util.Csvs;
+import com.ozerler.marble.util.DateTimes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -16,7 +18,6 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,8 +32,6 @@ public class ReportService {
     private final ProjectRepository projectRepository;
     private final SlabRepository slabRepository;
     private final CostAccountingService costAccountingService;
-
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public enum ReportType {
         QUARRY_BLOCKS(
@@ -134,7 +133,7 @@ public class ReportService {
                 List<ScrapLog> scraps = scrapLogRepository.findAll();
                 for (ScrapLog s : scraps) {
                     data.rows.add(new String[]{
-                            s.getLoggedAt() != null ? s.getLoggedAt().format(DATE_FMT) : "",
+                            DateTimes.formatYearMonthDayHourMinute(s.getLoggedAt(), ""),
                             s.getBlock() != null ? s.getBlock().getBlockCode() : "-",
                             s.getReasonCode() != null ? s.getReasonCode().getCode() : "",
                             s.getReasonCode() != null ? s.getReasonCode().getTitle() : "",
@@ -156,7 +155,7 @@ public class ReportService {
                             o.getOperatorName() != null ? o.getOperatorName() : "-",
                             itemsCount + " adet",
                             o.getStatus() != null ? o.getStatus() : "",
-                            o.getCreatedAt() != null ? o.getCreatedAt().format(DATE_FMT) : "-"
+                            DateTimes.formatYearMonthDayHourMinute(o.getCreatedAt(), "-")
                     });
                 }
             }
@@ -295,7 +294,7 @@ public class ReportService {
 
         // Header line
         for (int i = 0; i < data.headers.length; i++) {
-            pw.print(escapeCsv(data.headers[i]));
+            pw.print(Csvs.escapeField(data.headers[i]));
             if (i < data.headers.length - 1) pw.print(";");
         }
         pw.println();
@@ -303,18 +302,12 @@ public class ReportService {
         // Rows
         for (String[] row : data.rows) {
             for (int i = 0; i < row.length; i++) {
-                pw.print(escapeCsv(row[i]));
+                pw.print(Csvs.escapeField(row[i]));
                 if (i < row.length - 1) pw.print(";");
             }
             pw.println();
         }
 
         return sw.toString().getBytes(StandardCharsets.UTF_8);
-    }
-
-    private String escapeCsv(String val) {
-        if (val == null) return "\"\"";
-        String s = val.replace("\"", "\"\"");
-        return "\"" + s + "\"";
     }
 }

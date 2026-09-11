@@ -3,6 +3,8 @@ package com.ozerler.marble.config;
 import com.ozerler.marble.service.RateLimitService;
 import com.ozerler.marble.service.RateLimitService.Tier;
 import com.ozerler.marble.service.SettingService;
+import com.ozerler.marble.util.ClientIps;
+import com.ozerler.marble.util.HttpRequests;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -80,7 +82,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
 
-        String clientIp = extractClientIp(request);
+        String clientIp = ClientIps.from(request);
         Tier tier = determineTier(request);
 
         if (!rateLimitService.isAllowed(clientIp, tier)) {
@@ -90,7 +92,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader("Retry-After", "60");
 
-            if (isJsonRequest(request)) {
+            if (HttpRequests.expectsJson(request)) {
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                 response.getWriter().write(JSON_RESPONSE);
@@ -112,27 +114,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return path.startsWith("/css/")
                 || path.startsWith("/js/")
                 || path.startsWith("/vendor/")
+                || path.startsWith("/fonts/")
                 || path.startsWith("/images/")
                 || path.startsWith("/uploads/")
                 || path.startsWith("/favicon.ico")
+                || path.startsWith("/error")
                 || path.startsWith("/actuator")
                 || path.startsWith("/health");
-    }
-
-    /**
-     * İstemci IP adresini çıkarır — reverse proxy arkasındaysa X-Forwarded-For başlığını kullanır.
-     */
-    private String extractClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            // İlk IP gerçek istemci adresidir
-            return xForwardedFor.split(",")[0].trim();
-        }
-        String xRealIp = request.getHeader("X-Real-IP");
-        if (xRealIp != null && !xRealIp.isBlank()) {
-            return xRealIp.trim();
-        }
-        return request.getRemoteAddr();
     }
 
     /**
@@ -162,17 +150,5 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         return Tier.GENERAL;
-    }
-
-    /**
-     * İstemcinin JSON yanıt beklediğini Accept başlığından kontrol eder.
-     */
-    private boolean isJsonRequest(HttpServletRequest request) {
-        String accept = request.getHeader("Accept");
-        if (accept != null && accept.contains(MediaType.APPLICATION_JSON_VALUE)) {
-            return true;
-        }
-        String xRequestedWith = request.getHeader("X-Requested-With");
-        return "XMLHttpRequest".equals(xRequestedWith);
     }
 }

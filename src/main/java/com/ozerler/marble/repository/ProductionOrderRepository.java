@@ -24,6 +24,9 @@ public interface ProductionOrderRepository extends JpaRepository<ProductionOrder
            "LOWER(p.block.blockCode) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<ProductionOrder> searchOrders(@Param("search") String search, Pageable pageable);
 
+    @Query("SELECT p FROM ProductionOrder p WHERE LOWER(p.orderNo) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<ProductionOrder> searchByOrderNo(@Param("query") String query, Pageable pageable);
+
     @Query("SELECT COUNT(p) FROM ProductionOrder p WHERE p.status = 'IN_PROGRESS'")
     long countActiveOrders();
 }

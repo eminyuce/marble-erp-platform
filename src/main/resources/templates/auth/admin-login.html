@@ -75,26 +75,28 @@
                 <div th:text="${successMessage}">Bilgi</div>
             </div>
 
-            <form th:action="@{/account/adminlogin/}" method="post" class="admin-login__form" autocomplete="on">
+            <form th:action="@{/account/adminlogin/}" method="post" class="admin-login__form" autocomplete="off">
                 <div class="mb-3">
                     <label for="username" class="form-label">E-Posta</label>
                     <div class="admin-login__input-wrap">
                         <i data-lucide="mail" class="admin-login__field-icon"></i>
-                        <input type="email" id="username" name="username" required autofocus placeholder="admin@example.com">
+                        <input type="email" id="username" name="username" required autofocus
+                               placeholder="e-posta adresiniz" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                     </div>
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Şifre</label>
                     <div class="admin-login__input-wrap">
                         <i data-lucide="lock" class="admin-login__field-icon"></i>
-                        <input type="password" id="password" name="password" required placeholder="••••••••">
+                        <input type="password" id="password" name="password" required
+                               placeholder="••••••••" autocomplete="new-password">
                         <button type="button" class="admin-login__toggle-password" id="togglePassword" aria-label="Şifreyi göster">
                             <i data-lucide="eye" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </div>
                 <label class="flex items-center gap-2 text-xs text-slate-600 mb-4 cursor-pointer">
-                    <input type="checkbox" name="remember-me" checked>
+                    <input type="checkbox" name="remember-me">
                     <span>Beni hatırla</span>
                 </label>
                 <button type="submit" class="admin-login__submit">
@@ -103,16 +105,15 @@
                 </button>
             </form>
 
-            <div class="admin-login__demo">
-                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tek tıkla doldur</div>
-                <button type="button" class="admin-login__demo-btn" data-email="admin@eimece.test" data-password="B2u5c8JB">
-                    <div class="text-xs font-bold text-cyan-800">admin@eimece.test</div>
-                    <div class="text-[11px] text-slate-500 font-mono">B2u5c8JB · Tam yetkili yönetici</div>
-                </button>
-                <button type="button" class="admin-login__demo-btn" data-email="admin@example.com" data-password="changeit">
-                    <div class="text-xs font-bold text-slate-700">admin@example.com</div>
-                    <div class="text-[11px] text-slate-500 font-mono">changeit · Yedek yönetici</div>
-                </button>
+            <div class="admin-login__meta">
+                <span>
+                    <i data-lucide="calendar" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                    Giriş Tarihi : <strong th:text="${loginDate}">—</strong>
+                </span>
+                <span>
+                    <i data-lucide="network" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                    IP Adresiniz : <strong th:text="${clientIp}">—</strong>
+                </span>
             </div>
         </section>
     </div>
@@ -126,12 +127,6 @@
             password.type = password.type === "password" ? "text" : "password";
         });
     }
-    document.querySelectorAll(".admin-login__demo-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            document.getElementById("username").value = btn.dataset.email;
-            document.getElementById("password").value = btn.dataset.password;
-        });
-    });
 </script>
 </body>
 </html>

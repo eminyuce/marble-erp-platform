@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${errorPage.status + ' ' + errorPage.title + ' | Özerler Mermer ERP'}">Hata | Özerler Mermer ERP</title>
+    <link rel="preload" th:href="@{/fonts/inter-latin-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" th:href="@{/fonts/inter-latin-ext-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script th:src="@{/vendor/lucide.min.js}"></script>
+</head>
+<body class="error-page" th:classappend="' error-page--' + ${errorPage.tone}">
+<div class="error-page__shell">
+    <header class="error-page__hero">
+        <p class="error-page__product">Özerler Mermer ERP</p>
+        <div class="error-page__badge">
+            <i th:attr="data-lucide=${errorPage.icon}" class="w-3.5 h-3.5"></i>
+            Geliştirici hata ayrıntısı
+        </div>
+        <div class="error-page__status-row">
+            <span class="error-page__code" th:text="${errorPage.status}">500</span>
+            <span class="error-page__reason" th:text="${errorPage.reason}">Internal Server Error</span>
+        </div>
+        <h1 class="error-page__title" th:text="${errorPage.title}">Sunucu hatası</h1>
+        <p class="error-page__lead" th:text="${errorPage.message}">Beklenmeyen bir sunucu hatası oluştu.</p>
+        <div class="error-page__actions">
+            <a class="error-page__btn error-page__btn--primary" th:href="@{/admin/dashboard}">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                Panele dön
+            </a>
+            <a class="error-page__btn" th:href="@{/}">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                Ana sayfa
+            </a>
+            <a class="error-page__btn" th:href="${errorPage.retryHref()}" th:if="${errorPage.path != '/error'}">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                Yeniden dene
+            </a>
+        </div>
+    </header>
+
+    <section class="error-page__panel">
+        <h2 class="error-page__panel-title">İstek bilgisi</h2>
+        <dl class="error-page__meta">
+            <div>
+                <dt>HTTP durumu</dt>
+                <dd th:text="${errorPage.status + ' ' + errorPage.reason}">500 Internal Server Error</dd>
+            </div>
+            <div>
+                <dt>İstek yolu</dt>
+                <dd><code th:text="${errorPage.path}">/admin/ornek</code></dd>
+            </div>
+            <div>
+                <dt>Yöntem</dt>
+                <dd th:text="${errorPage.method}">GET</dd>
+            </div>
+            <div th:if="${errorPage.hasQueryString()}">
+                <dt>Sorgu dizisi</dt>
+                <dd><code th:text="${errorPage.queryString}">q=1</code></dd>
+            </div>
+            <div>
+                <dt>Zaman</dt>
+                <dd th:text="${errorPage.timestamp}">2026-09-11 18:00</dd>
+            </div>
+            <div th:if="${errorPage.hasExceptionType()}">
+                <dt>İstisna</dt>
+                <dd><code th:text="${errorPage.exceptionType}">java.lang.IllegalStateException</code></dd>
+            </div>
+        </dl>
+
+        <details class="error-page__trace" open th:if="${errorPage.hasStackTrace()}">
+            <summary>
+                <span>Yığın izi</span>
+                <button type="button" class="error-page__copy" id="copyTrace" aria-label="Yığın izini kopyala">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    Kopyala
+                </button>
+            </summary>
+            <pre id="errorTrace" th:text="${errorPage.stackTrace}">stack</pre>
+        </details>
+        <p class="error-page__empty-trace" th:unless="${errorPage.hasStackTrace()}">
+            Bu durum için yığın izi yok (ör. eşleşmeyen rota). İstek yolu ve durum kodu genellikle yeterlidir.
+        </p>
+    </section>
+</div>
+<script>
+    lucide.createIcons();
+    const copy = document.getElementById("copyTrace");
+    const trace = document.getElementById("errorTrace");
+    if (copy && trace) {
+        copy.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            navigator.clipboard.writeText(trace.textContent || "").then(() => {
+                copy.lastChild.textContent = " Kopyalandı";
+                setTimeout(() => { copy.lastChild.textContent = " Kopyala"; }, 1600);
+            });
+        });
+    }
+</script>
+</body>
+</html>

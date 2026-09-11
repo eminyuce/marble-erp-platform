@@ -26,4 +26,8 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
            "LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(p.customerName) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Project> searchProjects(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT p FROM Project p WHERE LOWER(p.projectCode) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "OR LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Project> searchByCodeOrName(@Param("query") String query, Pageable pageable);
 }

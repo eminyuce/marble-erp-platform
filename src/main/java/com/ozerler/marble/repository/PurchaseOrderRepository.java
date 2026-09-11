@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
 
@@ -15,4 +17,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
            "(:search IS NULL OR LOWER(po.poNumber) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(po.supplier.companyName) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<PurchaseOrder> searchPurchaseOrders(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier WHERE LOWER(po.poNumber) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<PurchaseOrder> searchByPoNumber(@Param("query") String query, Pageable pageable);
 }

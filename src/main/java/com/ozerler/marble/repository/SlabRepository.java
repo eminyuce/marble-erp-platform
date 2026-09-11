@@ -30,6 +30,9 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
            "LOWER(s.block.stoneType) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Slab> searchSlabs(@Param("search") String search, Pageable pageable);
 
+    @Query("SELECT s FROM Slab s WHERE LOWER(s.slabCode) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Slab> searchBySlabCode(@Param("query") String query, Pageable pageable);
+
     @Query("SELECT COALESCE(SUM(s.surfaceAreaM2), 0) FROM Slab s WHERE s.status = :status")
     BigDecimal getTotalAreaByStatus(@Param("status") SlabStatus status);
 

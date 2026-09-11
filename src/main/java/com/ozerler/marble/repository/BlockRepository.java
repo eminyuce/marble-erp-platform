@@ -27,6 +27,9 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
            "LOWER(b.quarry.name) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Block> searchBlocks(@Param("search") String search, Pageable pageable);
 
+    @Query("SELECT b FROM Block b WHERE LOWER(b.blockCode) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Block> searchByBlockCode(@Param("query") String query, Pageable pageable);
+
     @Query("SELECT SUM(b.actualWeightKg) FROM Block b WHERE b.status = 'FACTORY_STOCK'")
     Double getTotalFactoryStockWeightKg();
 

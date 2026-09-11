@@ -7,6 +7,14 @@ spring:
     cache: false
     mode: HTML
     encoding: UTF-8
+  web:
+    error:
+      include-message: always
+      include-exception: true
+      include-stacktrace: always
+      include-binding-errors: always
+      whitelabel:
+        enabled: false
   servlet:
     multipart:
       max-file-size: 50MB
@@ -19,6 +27,13 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-exception: true
+    include-stacktrace: always
+    include-binding-errors: always
+    whitelabel:
+      enabled: false
   servlet:
     encoding:
       charset: UTF-8
@@ -34,7 +49,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
   endpoint:
     health:
       show-details: always
@@ -45,6 +60,15 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:8080}
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
 
 rate-limiting:
   login:
@@ -62,3 +86,11 @@ logging:
     root: INFO
     com.ozerler.marble: DEBUG
     org.springframework.security: INFO
+  async:
+    queue-capacity: 8192
+    high-water-mark-percent: 90
+    overflow-policy: DROP_LOW_PRIORITY
+    batch-size: 256
+    drain-timeout-millis: 5000
+    poll-timeout-millis: 100
+    include-caller-data: false

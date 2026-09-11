@@ -1,6 +1,7 @@
 package com.ozerler.marble.controller.admin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ozerler.marble.util.DateTimes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.info.BuildProperties;
@@ -20,6 +21,7 @@ import java.lang.management.RuntimeMXBean;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Statement;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
@@ -68,12 +70,7 @@ public class SystemHealthController {
         int port = 81;
 
         RuntimeMXBean runtimeMX = ManagementFactory.getRuntimeMXBean();
-        long uptimeMs = runtimeMX.getUptime();
-        long uptimeSec = uptimeMs / 1000;
-        long hours = uptimeSec / 3600;
-        long minutes = uptimeSec % 3600 / 60;
-        long seconds = uptimeSec % 60;
-        String formattedUptime = String.format("%d sa %02d dk %02d sn", hours, minutes, seconds);
+        String formattedUptime = DateTimes.formatUptime(Duration.ofMillis(runtimeMX.getUptime()));
 
         metrics.put("appName", appName);
         metrics.put("appVersion", version);

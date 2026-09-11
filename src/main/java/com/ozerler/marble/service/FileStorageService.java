@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.util.Filenames;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,11 +46,11 @@ public class FileStorageService {
         }
 
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename != null && originalFilename.contains("..")) {
+        if (Filenames.containsPathTraversal(originalFilename)) {
             throw new IllegalArgumentException("Geçersiz dosya yolu tespit edildi: " + originalFilename);
         }
 
-        String extension = extractExtension(originalFilename);
+        String extension = Filenames.extension(originalFilename);
         String uniqueFilename = UUID.randomUUID() + extension;
         Path destination = this.rootLocation.resolve(uniqueFilename).normalize().toAbsolutePath();
 
@@ -62,7 +63,7 @@ public class FileStorageService {
             return false;
         }
         String filename = fileUrl.substring(UPLOADS_PREFIX.length());
-        if (filename.contains("..")) {
+        if (Filenames.containsPathTraversal(filename)) {
             log.warn("Invalid file deletion path rejected: {}", filename);
             return false;
         }
@@ -74,12 +75,5 @@ public class FileStorageService {
             log.error("Failed to delete file: {}", filename, e);
             return false;
         }
-    }
-
-    private String extractExtension(String filename) {
-        if (filename != null && filename.contains(".")) {
-            return filename.substring(filename.lastIndexOf("."));
-        }
-        return "";
     }
 }

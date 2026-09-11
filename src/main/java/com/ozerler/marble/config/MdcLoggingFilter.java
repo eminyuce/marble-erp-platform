@@ -1,5 +1,6 @@
 package com.ozerler.marble.config;
 
+import com.ozerler.marble.util.ClientIps;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,7 +45,7 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
             response.setHeader(CORRELATION_ID_HEADER, correlationId);
 
             // 2. Resolve Client IP
-            String clientIp = resolveClientIp(request);
+            String clientIp = ClientIps.from(request);
             MDC.put(MDC_CLIENT_IP, clientIp);
 
             // 3. Request metadata
@@ -63,13 +64,5 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
             // Always clean up MDC to prevent thread-pool context leakage
             MDC.clear();
         }
-    }
-
-    private String resolveClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 }

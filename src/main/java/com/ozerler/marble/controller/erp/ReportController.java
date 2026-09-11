@@ -1,10 +1,10 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.common.TurkishAsciiFilename;
 import com.ozerler.marble.service.ReportService;
+import com.ozerler.marble.util.HttpDownloads;
+import com.ozerler.marble.util.TurkishAsciiFilename;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,8 +13,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -60,22 +58,13 @@ public class ReportController {
 
         if ("csv".equalsIgnoreCase(format)) {
             byte[] csvBytes = reportService.generateCsvReport(type);
-            return attachment(csvBytes, safeFilename + ".csv", MediaType.parseMediaType("text/csv; charset=UTF-8"));
+            return HttpDownloads.attachment(csvBytes, safeFilename + ".csv", MediaType.parseMediaType("text/csv; charset=UTF-8"));
         }
 
         byte[] excelBytes = reportService.generateExcelReport(type);
-        return attachment(
+        return HttpDownloads.attachment(
                 excelBytes,
                 safeFilename + ".xlsx",
                 MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-    }
-
-    private ResponseEntity<byte[]> attachment(byte[] body, String filename, MediaType contentType) {
-        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + encodedFilename)
-                .contentType(contentType)
-                .body(body);
     }
 }

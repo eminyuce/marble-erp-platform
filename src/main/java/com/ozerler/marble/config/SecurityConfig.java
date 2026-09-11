@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -45,6 +46,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .cors(Customizer.withDefaults())
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .authenticationProvider(authenticationProvider())
             .csrf(csrf -> csrf
@@ -57,9 +59,11 @@ public class SecurityConfig {
                     "/css/**",
                     "/js/**",
                     "/vendor/**",
+                    "/fonts/**",
                     "/images/**",
                     "/uploads/**",
                     "/favicon.ico",
+                    "/error",
                     "/login",
                     "/account/adminlogin/**",
                     "/account/adminlogin",
@@ -71,6 +75,12 @@ public class SecurityConfig {
                 ).permitAll()
                 // Admin area strictly restricted to ROLE_ADMIN & ROLE_EXECUTIVE
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "EXECUTIVE")
+                // OpenAPI / Swagger UI — authenticated admins only; disabled in prod via springdoc
+                .requestMatchers(
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html"
+                ).hasAnyRole("ADMIN", "EXECUTIVE")
                 // All other operations require authentication
                 .anyRequest().authenticated()
             )

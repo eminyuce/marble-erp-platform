@@ -1,4 +1,4 @@
-package com.ozerler.marble.common;
+package com.ozerler.marble.util;
 
 import java.util.Locale;
 

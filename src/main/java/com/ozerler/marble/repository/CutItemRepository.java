@@ -24,4 +24,7 @@ public interface CutItemRepository extends JpaRepository<CutItem, Long> {
            "(:search IS NULL OR LOWER(i.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(i.targetLocation) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<CutItem> searchItems(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT i FROM CutItem i WHERE LOWER(i.itemCode) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<CutItem> searchByItemCode(@Param("query") String query, Pageable pageable);
 }

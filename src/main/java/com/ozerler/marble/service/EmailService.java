@@ -2,6 +2,8 @@ package com.ozerler.marble.service;
 
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.repository.EmailTemplateRepository;
+import com.ozerler.marble.util.Ints;
+import com.ozerler.marble.util.Strings;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,31 +43,12 @@ public class EmailService {
         return templateRepository.save(template);
     }
 
-    /**
-     * Render template by replacing placeholders in subject and body.
-     */
     public String renderHtml(String templateHtml, Map<String, String> variables) {
-        if (templateHtml == null) return "";
-        String rendered = templateHtml;
-        if (variables != null) {
-            for (Map.Entry<String, String> entry : variables.entrySet()) {
-                String token = "{{" + entry.getKey() + "}}";
-                rendered = rendered.replace(token, entry.getValue() != null ? entry.getValue() : "");
-            }
-        }
-        return rendered;
+        return Strings.replacePlaceholders(templateHtml, variables);
     }
 
     public String renderSubject(String subjectTemplate, Map<String, String> variables) {
-        if (subjectTemplate == null) return "";
-        String rendered = subjectTemplate;
-        if (variables != null) {
-            for (Map.Entry<String, String> entry : variables.entrySet()) {
-                String token = "{{" + entry.getKey() + "}}";
-                rendered = rendered.replace(token, entry.getValue() != null ? entry.getValue() : "");
-            }
-        }
-        return rendered;
+        return Strings.replacePlaceholders(subjectTemplate, variables);
     }
 
     /**
@@ -74,11 +57,7 @@ public class EmailService {
     public JavaMailSender buildDynamicMailSender() {
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
         sender.setHost(settingService.getSetting("smtp.host", "smtp.office365.com"));
-        try {
-            sender.setPort(Integer.parseInt(settingService.getSetting("smtp.port", "587")));
-        } catch (NumberFormatException e) {
-            sender.setPort(587);
-        }
+        sender.setPort(Ints.parseOrDefault(settingService.getSetting("smtp.port", "587"), 587));
         sender.setUsername(settingService.getSetting("smtp.username", ""));
         sender.setPassword(settingService.getSetting("smtp.password", ""));
 

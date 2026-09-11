@@ -1,4 +1,4 @@
-package com.ozerler.marble.common;
+package com.ozerler.marble.util;
 
 import com.ozerler.marble.service.ReportService;
 import org.junit.jupiter.api.DisplayName;

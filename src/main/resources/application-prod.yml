@@ -17,3 +17,13 @@ spring:
 server:
   port: 81
   forward-headers-strategy: native
+
+app:
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:81}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
