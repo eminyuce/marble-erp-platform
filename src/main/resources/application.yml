@@ -17,13 +17,22 @@ spring:
     locations: classpath:db/migration
 
 server:
-  port: 8080
+  port: 81
   servlet:
     session:
       cookie:
         http-only: true
         same-site: lax
         max-age: 86400
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
 
 app:
   upload:

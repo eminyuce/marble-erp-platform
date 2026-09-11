@@ -37,12 +37,12 @@ USER marbleuser
 COPY --from=builder --chown=marbleuser:marbleuser /build/target/*.jar app.jar
 
 ENV SPRING_PROFILES_ACTIVE=prod \
-    SERVER_PORT=8080 \
+    SERVER_PORT=81 \
     APP_UPLOAD_DIR=/app/uploads
 
-EXPOSE 8080
+EXPOSE 81
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+  CMD curl -f http://localhost:81/health/ || exit 1
 
 ENTRYPOINT ["java", "-XX:+UseZGC", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]

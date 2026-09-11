@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Sistem Ayarları &bull; Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6" x-data="{
+    activeTab: 'security',
+    previewModalOpen: false,
+    previewSubject: '',
+    previewHtml: '',
+    previewKey: '',
+    editModalOpen: false,
+    editTemplateId: null,
+    editSubject: '',
+    editBodyHtml: '',
+    editIsActive: true,
+    async openPreview(key) {
+        this.previewKey = key;
+        const formData = new FormData();
+        formData.append('templateKey', key);
+        const resp = await fetch('/admin/settings/templates/preview', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('input[name=_csrf]') ? document.querySelector('input[name=_csrf]').value : ''
+            }
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            this.previewSubject = data.subject;
+            this.previewHtml = data.html;
+            this.previewModalOpen = true;
+        } else {
+            alert('Şablon önizleme yüklenemedi');
+        }
+    },
+    openEdit(id, subject, body, isActive) {
+        this.editTemplateId = id;
+        this.editSubject = subject;
+        this.editBodyHtml = body;
+        this.editIsActive = isActive;
+        this.editModalOpen = true;
+    }
+}">
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="p-2 bg-slate-900 text-white rounded-xl shadow-sm">
+                    <i data-lucide="settings" class="w-5 h-5 text-amber-400"></i>
+                </span>
+                <div>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">Sistem ve Güvenlik Ayarları</h1>
+                    <p class="text-xs text-slate-500 font-medium">İki Faktörlü Doğrulama (2FA), Google reCAPTCHA, SMTP ve E-Posta Şablon Motoru</p>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Port 81 Dinleniyor</span>
+            </span>
+            <a th:href="@{/health}" target="_blank" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-mono font-semibold transition">
+                /health/
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center gap-3">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
+        <span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${warningMessage}" class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium flex items-center gap-3">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0"></i>
+        <span th:text="${warningMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-center gap-3">
+        <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="flex items-center gap-2 border-b border-slate-200">
+        <button @click="activeTab = 'security'"
+                :class="{ 'border-amber-700 text-amber-900 bg-amber-50/50 font-bold': activeTab === 'security', 'border-transparent text-slate-500 hover:text-slate-800': activeTab !== 'security' }"
+                class="px-4 py-2.5 text-xs border-b-2 rounded-t-lg transition flex items-center gap-2 cursor-pointer">
+            <i data-lucide="shield" class="w-4 h-4"></i>
+            <span>1. Güvenlik &amp; 2FA / reCAPTCHA</span>
+        </button>
+
+        <button @click="activeTab = 'smtp'"
+                :class="{ 'border-amber-700 text-amber-900 bg-amber-50/50 font-bold': activeTab === 'smtp', 'border-transparent text-slate-500 hover:text-slate-800': activeTab !== 'smtp' }"
+                class="px-4 py-2.5 text-xs border-b-2 rounded-t-lg transition flex items-center gap-2 cursor-pointer">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+            <span>2. SMTP &amp; Posta Sunucusu</span>
+        </button>
+
+        <button @click="activeTab = 'templates'"
+                :class="{ 'border-amber-700 text-amber-900 bg-amber-50/50 font-bold': activeTab === 'templates', 'border-transparent text-slate-500 hover:text-slate-800': activeTab !== 'templates' }"
+                class="px-4 py-2.5 text-xs border-b-2 rounded-t-lg transition flex items-center gap-2 cursor-pointer">
+            <i data-lucide="file-code" class="w-4 h-4"></i>
+            <span>3. E-Posta Şablon Motoru</span>
+            <span class="px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px]" th:text="${templates.size()}">4</span>
+        </button>
+    </div>
+
+    <!-- MAIN FORM: Security & SMTP -->
+    <form th:action="@{/admin/settings/save}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <!-- TAB 1: Security (2FA & Google reCAPTCHA) -->
+        <div x-show="activeTab === 'security'" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- 2FA Box -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
+                                <i data-lucide="smartphone" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">İki Faktörlü Doğrulama (2FA)</h3>
+                                <p class="text-xs text-slate-500">Tüm kullanıcılar için giriş güvenliğini zorunlu kıl</p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 text-[11px] font-bold rounded-full"
+                              th:classappend="${settings['auth.2fa.enabled'] == 'true' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}"
+                              th:text="${settings['auth.2fa.enabled'] == 'true' ? 'AKTİF' : 'PASİF'}">
+                        </span>
+                    </div>
+
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Etkinleştirildiğinde; sistem kullanıcıları ve yöneticiler kullanıcı adı ve şifrelerini girdikten sonra kayıtlı e-posta adreslerine tek kullanımlık 6 haneli OTP kodu alacaktır.
+                    </p>
+
+                    <div class="pt-2 flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <label for="auth_2fa_enabled" class="text-xs font-semibold text-slate-800 cursor-pointer">
+                            Tüm kullanıcılar için 2FA doğrulamasını aktif et
+                        </label>
+                        <input type="checkbox"
+                               id="auth_2fa_enabled"
+                               name="auth.2fa.enabled"
+                               value="true"
+                               th:checked="${settings['auth.2fa.enabled'] == 'true'}"
+                               class="w-5 h-5 text-amber-700 rounded border-slate-300 focus:ring-amber-500">
+                    </div>
+                </div>
+
+                <!-- Google reCAPTCHA Box -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 text-blue-700 rounded-xl">
+                                <i data-lucide="bot" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Google reCAPTCHA v2 / v3</h3>
+                                <p class="text-xs text-slate-500">Bot saldırılarına ve brute-force denemelerine karşı koruma</p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 text-[11px] font-bold rounded-full"
+                              th:classappend="${settings['security.recaptcha.enabled'] == 'true' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}"
+                              th:text="${settings['security.recaptcha.enabled'] == 'true' ? 'AKTİF' : 'PASİF'}">
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <label for="recaptcha_enabled" class="text-xs font-semibold text-slate-800 cursor-pointer">
+                            Giriş sayfasında Google reCAPTCHA bot korumasını aç
+                        </label>
+                        <input type="checkbox"
+                               id="recaptcha_enabled"
+                               name="security.recaptcha.enabled"
+                               value="true"
+                               th:checked="${settings['security.recaptcha.enabled'] == 'true'}"
+                               class="w-5 h-5 text-amber-700 rounded border-slate-300 focus:ring-amber-500">
+                    </div>
+
+                    <div class="space-y-3 pt-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">reCAPTCHA Site Key (İstemci Anahtarı)</label>
+                            <input type="text"
+                                   name="security.recaptcha.site_key"
+                                   th:value="${settings['security.recaptcha.site_key']}"
+                                   placeholder="6Ld... (Google Console Site Key)"
+                                   class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">reCAPTCHA Secret Key (Gizli Anahtar)</label>
+                            <input type="password"
+                                   name="security.recaptcha.secret_key"
+                                   th:value="${settings['security.recaptcha.secret_key']}"
+                                   placeholder="••••••••••••••••••••••••••••••"
+                                   class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 font-mono">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Save Button -->
+            <div class="flex justify-end">
+                <button type="submit" class="px-6 py-2.5 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Güvenlik Ayarlarını Kaydet</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 2: SMTP Configuration -->
+        <div x-show="activeTab === 'smtp'" class="space-y-6" style="display: none;">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-emerald-50 text-emerald-700 rounded-xl">
+                            <i data-lucide="server" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900">Kurumsal SMTP Posta Sunucusu</h3>
+                            <p class="text-xs text-slate-500">OTP kodları, fire alarmları ve sevkiyat bildirimleri için posta aktarımı</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">TLS 1.3 / STARTTLS</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">SMTP Host (Sunucu Adresi)</label>
+                        <input type="text" name="smtp.host" th:value="${settings['smtp.host']}" required
+                               class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 font-mono">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">SMTP Port (Genelde 587 veya 465)</label>
+                        <input type="number" name="smtp.port" th:value="${settings['smtp.port']}" required
+                               class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 font-mono">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">SMTP Kullanıcı Adı</label>
+                        <input type="text" name="smtp.username" th:value="${settings['smtp.username']}"
+                               class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 font-mono">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">SMTP Şifre / App Password</label>
+                        <input type="password" name="smtp.password" th:value="${settings['smtp.password']}"
+                               class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 font-mono">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Gönderen E-Posta (From Address)</label>
+                        <input type="email" name="smtp.from_address" th:value="${settings['smtp.from_address']}" required
+                               class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Gönderen Başlığı (From Display Name)</label>
+                        <input type="text" name="smtp.from_name" th:value="${settings['smtp.from_name']}" required
+                               class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <input type="checkbox" id="smtp_auth" name="smtp.auth" value="true"
+                               th:checked="${settings['smtp.auth'] == 'true'}"
+                               class="w-4 h-4 text-amber-700 rounded border-slate-300 focus:ring-amber-500">
+                        <label for="smtp_auth" class="text-xs font-semibold text-slate-800 cursor-pointer">
+                            SMTP Kimlik Doğrulama Zorunlu (Auth = true)
+                        </label>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <input type="checkbox" id="smtp_tls" name="smtp.starttls.enable" value="true"
+                               th:checked="${settings['smtp.starttls.enable'] == 'true'}"
+                               class="w-4 h-4 text-amber-700 rounded border-slate-300 focus:ring-amber-500">
+                        <label for="smtp_tls" class="text-xs font-semibold text-slate-800 cursor-pointer">
+                            STARTTLS Şifrelemeyi Etkinleştir (STARTTLS = true)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                    <p class="text-xs text-slate-500">Ayarlar doğrudan veritabanında saklanır ve çalışma anında dinamik yüklenir.</p>
+                    <button type="submit" class="px-6 py-2.5 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>SMTP Ayarlarını Kaydet</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- SMTP Test Form (Independent) -->
+    <div x-show="activeTab === 'smtp'" class="bg-slate-50 rounded-2xl p-6 border border-slate-200 space-y-4" style="display: none;">
+        <div class="flex items-center gap-2">
+            <i data-lucide="send" class="w-4 h-4 text-amber-700"></i>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800">Canlı SMTP Test Gönderimi</h4>
+        </div>
+        <form th:action="@{/admin/settings/email-test}" method="post" class="flex flex-col sm:flex-row items-center gap-3">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <div class="relative flex-1 w-full">
+                <input type="email" name="testEmail" placeholder="test@sirketiniz.com" required
+                       class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-amber-500">
+            </div>
+            <select name="templateKey" class="w-full sm:w-64 px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-amber-500">
+                <option value="">Varsayılan Test Mesajı</option>
+                <option th:each="tpl : ${templates}" th:value="${tpl.templateKey}" th:text="${tpl.templateName}">Şablon</option>
+            </select>
+            <button type="submit" class="w-full sm:w-auto px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>Test Postası Gönder</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- TAB 3: Email Templates -->
+    <div x-show="activeTab === 'templates'" class="space-y-6" style="display: none;">
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">E-Posta Şablon Motoru (Email Template Engine)</h3>
+                    <p class="text-xs text-slate-500">Mermer operasyonları için otomatik dinamik değişkenli kurumsal e-posta tasarımları</p>
+                </div>
+                <span class="text-xs font-mono text-slate-400">Thymeleaf &amp; Token Değişkenleri</span>
+            </div>
+
+            <!-- Templates Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div th:each="tpl : ${templates}"
+                     class="p-5 rounded-2xl border border-slate-200 hover:border-amber-400 bg-slate-50/50 hover:bg-white transition flex flex-col justify-between space-y-4 group">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-200 text-slate-700" th:text="${tpl.templateKey}">KEY</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                  th:classappend="${tpl.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}"
+                                  th:text="${tpl.isActive ? 'Aktif' : 'Pasif'}">Aktif</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-900 group-hover:text-amber-800 transition" th:text="${tpl.templateName}">Şablon Başlığı</h4>
+                        <p class="text-xs text-slate-600 font-mono line-clamp-1 bg-white p-2 rounded-lg border border-slate-200">
+                            <strong>Konu:</strong> <span th:text="${tpl.subject}">Konu</span>
+                        </p>
+                        <div class="text-[11px] text-slate-500">
+                            <span class="font-semibold text-slate-700">Değişkenler:</span>
+                            <code class="text-amber-700 font-mono" th:text="${tpl.placeholders}">{{fullName}}</code>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-3 border-t border-slate-200">
+                        <button type="button"
+                                @click="openPreview([[${tpl.templateKey}]])"
+                                class="flex-1 py-1.5 px-3 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i data-lucide="eye" class="w-3.5 h-3.5 text-amber-700"></i>
+                            <span>Canlı Önizleme</span>
+                        </button>
+                        <button type="button"
+                                @click="openEdit([[${tpl.id}]], [[${tpl.subject}]], [[${tpl.bodyHtml}]], [[${tpl.isActive}]])"
+                                class="py-1.5 px-3 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            <span>Düzenle</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREVIEW MODAL -->
+    <div x-show="previewModalOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;"
+         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.outside="previewModalOpen = false" class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="mail-check" class="w-5 h-5 text-amber-400"></i>
+                    <span class="text-sm font-bold">E-Posta Şablon Canlı Önizleme</span>
+                    <span class="text-xs font-mono text-slate-400" x-text="previewKey"></span>
+                </div>
+                <button @click="previewModalOpen = false" class="text-slate-400 hover:text-white cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-100 bg-slate-50">
+                <div class="text-xs text-slate-500 font-semibold uppercase">Oluşturulan Konu:</div>
+                <div class="text-sm font-bold text-slate-800" x-text="previewSubject"></div>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-100">
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200" x-html="previewHtml"></div>
+            </div>
+            <div class="p-4 bg-white border-t border-slate-200 flex justify-end">
+                <button @click="previewModalOpen = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition cursor-pointer">
+                    Kapat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT MODAL -->
+    <div x-show="editModalOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         style="display: none;"
+         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.outside="editModalOpen = false" class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="edit" class="w-5 h-5 text-amber-400"></i>
+                    <span class="text-sm font-bold">E-Posta Şablonunu Güncelle</span>
+                </div>
+                <button @click="editModalOpen = false" class="text-slate-400 hover:text-white cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form :action="'/admin/settings/templates/' + editTemplateId + '/save'" method="post" class="flex flex-col flex-1 overflow-hidden">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <div class="p-6 space-y-4 overflow-y-auto flex-1">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">E-Posta Konu Başlığı</label>
+                        <input type="text" name="subject" x-model="editSubject" required
+                               class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">HTML Gövde İçeriği</label>
+                        <textarea name="bodyHtml" x-model="editBodyHtml" rows="12" required
+                                  class="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500"></textarea>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="edit_isActive" name="isActive" value="true" x-model="editIsActive"
+                               class="w-4 h-4 text-amber-700 rounded border-slate-300">
+                        <label for="edit_isActive" class="text-xs font-semibold text-slate-700 cursor-pointer">Şablonu Aktif Olarak İşaretle</label>
+                    </div>
+                </div>
+                <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+                    <button type="button" @click="editModalOpen = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold rounded-xl cursor-pointer">İptal</button>
+                    <button type="submit" class="px-5 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-xl shadow transition cursor-pointer">Değişiklikleri Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

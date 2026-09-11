@@ -8,6 +8,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class AuthController {
 
+    @GetMapping({"/account/adminlogin", "/account/adminlogin/"})
+    public String adminLoginPage(@RequestParam(value = "error", required = false) String error,
+                                 @RequestParam(value = "logout", required = false) String logout,
+                                 Model model) {
+        if (error != null) {
+            model.addAttribute("errorMessage", "Geçersiz yönetici e-posta adresi veya şifre.");
+        }
+        if (logout != null) {
+            model.addAttribute("successMessage", "Yönetici oturumu güvenli şekilde sonlandırıldı.");
+        }
+        model.addAttribute("isAdminPortal", true);
+        return "auth/admin-login";
+    }
+
     @GetMapping("/login")
     public String loginPage(@RequestParam(value = "error", required = false) String error,
                             @RequestParam(value = "logout", required = false) String logout,
@@ -18,7 +32,7 @@ public class AuthController {
         if (logout != null) {
             model.addAttribute("successMessage", "Başarıyla çıkış yapıldı.");
         }
-        return "auth/login";
+        return "auth/admin-login";
     }
 
     @GetMapping("/access-denied")

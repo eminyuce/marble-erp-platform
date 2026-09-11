@@ -15,5 +15,5 @@ spring:
     cache: true
 
 server:
-  port: 8080
+  port: 81
   forward-headers-strategy: native

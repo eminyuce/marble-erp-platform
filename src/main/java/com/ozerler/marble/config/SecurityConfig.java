@@ -30,8 +30,7 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(customUserDetailsService);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
@@ -47,7 +46,7 @@ public class SecurityConfig {
             .authenticationProvider(authenticationProvider())
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/actuator/**")
+                .ignoringRequestMatchers("/actuator/**", "/health/**", "/health")
             )
             .authorizeHttpRequests(auth -> auth
                 // Static assets & public endpoints
@@ -58,9 +57,13 @@ public class SecurityConfig {
                     "/uploads/**",
                     "/favicon.ico",
                     "/login",
+                    "/account/adminlogin/**",
+                    "/account/adminlogin",
                     "/access-denied",
                     "/passport/**",
-                    "/actuator/health"
+                    "/health/**",
+                    "/health",
+                    "/actuator/**"
                 ).permitAll()
                 // Admin area strictly restricted to ROLE_ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -68,17 +71,17 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/login")
+                .loginPage("/account/adminlogin/")
+                .loginProcessingUrl("/account/adminlogin/")
                 .defaultSuccessUrl("/admin/dashboard", true)
-                .failureUrl("/login?error=true")
+                .failureUrl("/account/adminlogin/?error=true")
                 .usernameParameter("username")
                 .passwordParameter("password")
                 .permitAll()
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout=true")
+                .logoutSuccessUrl("/account/adminlogin/?logout=true")
                 .deleteCookies("JSESSIONID", "remember-me")
                 .invalidateHttpSession(true)
                 .permitAll()

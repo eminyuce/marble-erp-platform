@@ -14,13 +14,18 @@
             <span>Yönetici Kokpiti</span>
         </a>
 
-        <!-- Admin Only: User Management -->
+        <!-- Admin Only: User Management & Settings -->
         <div sec:authorize="hasRole('ADMIN')">
             <div class="pt-4 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Yönetim</div>
             <a th:href="@{/admin/users}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
                 <i data-lucide="users" class="w-5 h-5 text-blue-400"></i>
                 <span>Kullanıcı Yönetimi</span>
+            </a>
+            <a th:href="@{/admin/settings}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
+                <i data-lucide="settings" class="w-5 h-5 text-slate-400"></i>
+                <span>Sistem Ayarları</span>
             </a>
         </div>
 
@@ -61,13 +66,20 @@
             <span>4. Proje &amp; Şantiye</span>
         </a>
 
-        <div class="pt-4 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mali &amp; Karar Destek</div>
+        <div class="pt-4 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mali &amp; Raporlama</div>
 
         <!-- 5. Dinamik Maliyet -->
         <a th:href="@{/costs}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
             <i data-lucide="calculator" class="w-5 h-5 text-emerald-400"></i>
             <span>Maliyet &amp; Fiyatlama</span>
+        </a>
+
+        <!-- 5b. Rapor Merkezi (Excel/CSV) -->
+        <a th:href="@{/reports}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
+            <i data-lucide="file-spreadsheet" class="w-5 h-5 text-teal-400"></i>
+            <span>Rapor Merkezi (Excel/CSV)</span>
         </a>
 
         <!-- 6. Soy Ağacı -->
@@ -81,7 +93,7 @@
     <div class="p-4 border-t border-slate-800 text-xs text-slate-500">
         <div class="flex items-center gap-2 mb-1">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-slate-300 font-medium">Bulut Çekirdek Aktif</span>
+            <span class="text-slate-300 font-medium">Port 81 Aktif</span>
         </div>
         <div>Özerler Mermer A.Ş. &copy; 2026</div>
     </div>
