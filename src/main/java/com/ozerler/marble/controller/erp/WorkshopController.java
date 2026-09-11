@@ -9,7 +9,12 @@ import com.ozerler.marble.service.WorkshopCutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 
@@ -40,10 +45,9 @@ public class WorkshopController {
     }
 
     @GetMapping("/create")
-    public String showCreateModal(Model model) {
-        model.addAttribute("availableSlabs", slabRepository.findByStatus(SlabStatus.AVAILABLE));
-        model.addAttribute("projects", projectRepository.findAll());
-        return "erp/workshop/cut-order-form :: cutModalContent";
+    public String showCreateForm(Model model) {
+        populateCutForm(model);
+        return "erp/workshop/cut-order-form";
     }
 
     @PostMapping("/create")
@@ -58,20 +62,25 @@ public class WorkshopController {
                                  @RequestParam(value = "edgeFinish", required = false) String edgeFinish,
                                  @RequestParam(value = "targetLocationDesc", required = false) String targetLocationDesc,
                                  @RequestParam(value = "notes", required = false) String notes,
-                                 Model model) {
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
 
         try {
             workshopCutService.createCutOrder(projectId, locationId, slabId, machineName, operatorName,
                     piecesCount, targetWidthCm, targetLengthCm, edgeFinish, targetLocationDesc, notes);
 
-            model.addAttribute("success", true);
-            model.addAttribute("message", "Ebatlama iş emri başarıyla tamamlandı.");
-            return "erp/workshop/cut-order-form :: cutModalSuccess";
+            redirectAttributes.addFlashAttribute("successMessage", "Ebatlama iş emri başarıyla tamamlandı.");
+            return "redirect:/workshop";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Hata: " + e.getMessage());
-            model.addAttribute("availableSlabs", slabRepository.findByStatus(SlabStatus.AVAILABLE));
-            model.addAttribute("projects", projectRepository.findAll());
-            return "erp/workshop/cut-order-form :: cutModalContent";
+            populateCutForm(model);
+            return "erp/workshop/cut-order-form";
         }
+    }
+
+    private void populateCutForm(Model model) {
+        model.addAttribute("availableSlabs", slabRepository.findByStatus(SlabStatus.AVAILABLE));
+        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("pageTitle", "Yeni Ebatlama Emri");
     }
 }

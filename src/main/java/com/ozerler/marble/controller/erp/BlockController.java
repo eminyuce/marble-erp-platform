@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -45,10 +46,9 @@ public class BlockController {
     }
 
     @GetMapping("/create")
-    public String showCreateModal(Model model) {
-        model.addAttribute("quarries", quarryBlockService.getAllQuarries());
-        model.addAttribute("qualityGrades", QualityGrade.values());
-        return "erp/blocks/form :: blockModalContent";
+    public String showCreateForm(Model model) {
+        populateBlockForm(model);
+        return "erp/blocks/form";
     }
 
     @PostMapping("/create")
@@ -66,19 +66,18 @@ public class BlockController {
                               @RequestParam("extractionCost") BigDecimal extractionCost,
                               @RequestParam(value = "notes", required = false) String notes,
                               @RequestParam(value = "photoUrls", required = false) String photoUrls,
-                              Model model) {
+                              Model model,
+                              RedirectAttributes redirectAttributes) {
 
         try {
             quarryBlockService.registerBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
                     actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls);
-            model.addAttribute("success", true);
-            model.addAttribute("message", "Ham blok başarıyla sisteme kaydedildi.");
-            return "erp/blocks/form :: blockModalSuccess";
+            redirectAttributes.addFlashAttribute("successMessage", "Ham blok başarıyla sisteme kaydedildi.");
+            return "redirect:/blocks";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Hata: " + e.getMessage());
-            model.addAttribute("quarries", quarryBlockService.getAllQuarries());
-            model.addAttribute("qualityGrades", QualityGrade.values());
-            return "erp/blocks/form :: blockModalContent";
+            populateBlockForm(model);
+            return "erp/blocks/form";
         }
     }
 
@@ -95,5 +94,11 @@ public class BlockController {
     public ResponseEntity<Void> sellBlock(@PathVariable("id") Long id) {
         quarryBlockService.sellBlockExternally(id);
         return ResponseEntity.ok().build();
+    }
+
+    private void populateBlockForm(Model model) {
+        model.addAttribute("quarries", quarryBlockService.getAllQuarries());
+        model.addAttribute("qualityGrades", QualityGrade.values());
+        model.addAttribute("pageTitle", "Yeni Blok Kaydı");
     }
 }

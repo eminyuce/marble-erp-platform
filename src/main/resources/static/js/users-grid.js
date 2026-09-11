@@ -98,8 +98,8 @@ function initUsersGrid() {
                 formatter: function(cell) {
                     const id = cell.getRow().getData().id;
                     return gridActionsHtml([
-                        { icon: 'edit-3', label: 'Düzenle', htmx: '/admin/users/' + id + '/edit' },
-                        { icon: 'key', label: 'Şifre Sıfırla', htmx: '/admin/users/' + id + '/reset-password' },
+                        { icon: 'edit-3', label: 'Düzenle', href: '/admin/users/' + id + '/edit' },
+                        { icon: 'key', label: 'Şifre Sıfırla', href: '/admin/users/' + id + '/reset-password' },
                         { divider: true },
                         { icon: 'trash-2', label: 'Sil', onclick: 'deleteUser(' + id + ')', danger: true }
                     ]);

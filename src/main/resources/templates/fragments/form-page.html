@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<nav th:fragment="breadcrumb(parentLabel, parentUrl, current)" class="admin-breadcrumb" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a th:href="@{/admin/dashboard}">
+                <i data-lucide="home"></i>
+                <span>Yönetim Ana Sayfa</span>
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a th:href="${parentUrl}" th:text="${parentLabel}">Liste</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page" th:text="${current}">Form</li>
+    </ol>
+</nav>
+
+<div th:fragment="heading(title, lead, entityRef, cancelHref)" class="erp-form-heading">
+    <div class="erp-form-heading-main">
+        <h2 class="admin-page-title" th:text="${title}">Kayıt</h2>
+        <p class="erp-list-lead" th:if="${lead}" th:text="${lead}">Açıklama</p>
+        <span class="erp-form-entity" th:if="${entityRef}" th:text="${entityRef}">Kayıt #0</span>
+    </div>
+    <a th:href="${cancelHref}" class="erp-btn-secondary erp-form-back">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span>Listeye dön</span>
+    </a>
+</div>
+
+<div th:fragment="section(title, hint)" class="erp-form-section-head">
+    <h3 class="erp-form-section-title" th:text="${title}">Bölüm</h3>
+    <p class="erp-form-hint" th:if="${hint}" th:text="${hint}">Yardım</p>
+</div>
+
+<div th:fragment="actions(cancelHref)" class="erp-form-actions">
+    <a th:href="${cancelHref}" class="erp-btn-secondary">
+        <i data-lucide="x" class="w-4 h-4"></i>
+        <span>İptal</span>
+    </a>
+    <button type="submit" class="erp-btn-primary">
+        <i data-lucide="save" class="w-4 h-4"></i>
+        <span>Kaydet</span>
+    </button>
+</div>
+
+</html>

@@ -9,7 +9,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -40,10 +46,9 @@ public class SalesController {
     }
 
     @GetMapping("/create")
-    public String showCreateModal(Model model) {
-        model.addAttribute("customers", salesService.getAllCustomers());
-        model.addAttribute("generatedOrderNo", "SAT-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999)));
-        return "erp/sales/form :: salesModalContent";
+    public String showCreateForm(Model model) {
+        populateSalesForm(model);
+        return "erp/sales/form";
     }
 
     @PostMapping("/create")
@@ -51,16 +56,17 @@ public class SalesController {
                               @RequestParam("customerId") Long customerId,
                               @RequestParam(value = "deliveryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
                               @RequestParam(value = "notes", required = false) String notes,
-                              Model model) {
+                              Model model,
+                              RedirectAttributes redirectAttributes) {
         try {
             SalesOrder order = salesService.createSalesOrder(orderNo, customerId, deliveryDate, notes);
-            model.addAttribute("success", true);
-            model.addAttribute("message", "Satış siparişi " + order.getOrderNo() + " başarıyla oluşturuldu.");
-            return "erp/sales/form :: salesModalSuccess";
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Satış siparişi " + order.getOrderNo() + " başarıyla oluşturuldu.");
+            return "redirect:/sales";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Hata: " + e.getMessage());
-            model.addAttribute("customers", salesService.getAllCustomers());
-            return "erp/sales/form :: salesModalContent";
+            populateSalesForm(model);
+            return "erp/sales/form";
         }
     }
 
@@ -87,5 +93,11 @@ public class SalesController {
     public String confirmOrder(@PathVariable("id") Long id) {
         salesService.confirmOrder(id);
         return "redirect:/sales/" + id;
+    }
+
+    private void populateSalesForm(Model model) {
+        model.addAttribute("customers", salesService.getAllCustomers());
+        model.addAttribute("generatedOrderNo", "SAT-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999)));
+        model.addAttribute("pageTitle", "Yeni Satış Siparişi");
     }
 }

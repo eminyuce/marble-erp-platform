@@ -9,7 +9,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -40,11 +46,9 @@ public class ProcurementController {
     }
 
     @GetMapping("/create")
-    public String showCreateModal(Model model) {
-        model.addAttribute("suppliers", procurementService.getAllSuppliers());
-        model.addAttribute("projects", procurementService.getAllProjects());
-        model.addAttribute("generatedPoNumber", "SIP-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999)));
-        return "erp/procurement/form :: procurementModalContent";
+    public String showCreateForm(Model model) {
+        populateProcurementForm(model);
+        return "erp/procurement/form";
     }
 
     @PostMapping("/create")
@@ -53,17 +57,17 @@ public class ProcurementController {
                               @RequestParam(value = "projectId", required = false) Long projectId,
                               @RequestParam(value = "expectedDelivery", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expectedDelivery,
                               @RequestParam(value = "notes", required = false) String notes,
-                              Model model) {
+                              Model model,
+                              RedirectAttributes redirectAttributes) {
         try {
             PurchaseOrder order = procurementService.createPurchaseOrder(poNumber, supplierId, projectId, expectedDelivery, notes);
-            model.addAttribute("success", true);
-            model.addAttribute("message", "Satın alma siparişi " + order.getPoNumber() + " başarıyla oluşturuldu.");
-            return "erp/procurement/form :: procurementModalSuccess";
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Satın alma siparişi " + order.getPoNumber() + " başarıyla oluşturuldu.");
+            return "redirect:/procurement";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Hata: " + e.getMessage());
-            model.addAttribute("suppliers", procurementService.getAllSuppliers());
-            model.addAttribute("projects", procurementService.getAllProjects());
-            return "erp/procurement/form :: procurementModalContent";
+            populateProcurementForm(model);
+            return "erp/procurement/form";
         }
     }
 
@@ -89,5 +93,12 @@ public class ProcurementController {
     public String confirmOrder(@PathVariable("id") Long id) {
         procurementService.updateStatus(id, PurchaseOrderStatus.CONFIRMED);
         return "redirect:/procurement/" + id;
+    }
+
+    private void populateProcurementForm(Model model) {
+        model.addAttribute("suppliers", procurementService.getAllSuppliers());
+        model.addAttribute("projects", procurementService.getAllProjects());
+        model.addAttribute("generatedPoNumber", "SIP-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999)));
+        model.addAttribute("pageTitle", "Yeni Satın Alma Siparişi");
     }
 }

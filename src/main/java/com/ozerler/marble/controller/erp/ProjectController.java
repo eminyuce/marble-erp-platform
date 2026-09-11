@@ -9,7 +9,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -39,8 +45,9 @@ public class ProjectController {
     }
 
     @GetMapping("/create")
-    public String showCreateModal() {
-        return "erp/projects/form :: projectModalContent";
+    public String showCreateForm(Model model) {
+        model.addAttribute("pageTitle", "Yeni Proje");
+        return "erp/projects/form";
     }
 
     @PostMapping("/create")
@@ -52,16 +59,17 @@ public class ProjectController {
                                 @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                 @RequestParam(value = "deliveryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
                                 @RequestParam(value = "notes", required = false) String notes,
-                                Model model) {
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
 
         try {
             projectSiteService.createProject(projectCode, name, customerName, contractValue, estimatedCost, startDate, deliveryDate, notes);
-            model.addAttribute("success", true);
-            model.addAttribute("message", "Proje başarıyla oluşturuldu.");
-            return "erp/projects/form :: projectModalSuccess";
+            redirectAttributes.addFlashAttribute("successMessage", "Proje başarıyla oluşturuldu.");
+            return "redirect:/projects";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Hata: " + e.getMessage());
-            return "erp/projects/form :: projectModalContent";
+            model.addAttribute("pageTitle", "Yeni Proje");
+            return "erp/projects/form";
         }
     }
 

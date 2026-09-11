@@ -17,10 +17,10 @@
     <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfada köprü kesme, pah/profil ve ebatlama iş emirlerini takip edersiniz.', '<strong>Yeni ebatlama emri</strong> butonu ile atölye kesim işlemi başlatabilirsiniz.', 'Üretilen mamul miktarını (adet ve m²) takip edebilirsiniz.', 'Soy ağacı bağlantısından parçaların izlenebilirlik zincirini görebilirsiniz.', '<strong>CSV İndir</strong> butonu ile tablo verilerini dışa aktarabilirsiniz.'} })}"></div>
 
     <div class="erp-toolbar">
-        <button type="button" hx-get="/workshop/create" hx-target="#modal-container" class="erp-btn-primary">
+        <a th:href="@{/workshop/create}" class="erp-btn-primary">
             <i data-lucide="scissors"></i>
             <span>Yeni ebatlama emri</span>
-        </button>
+        </a>
         <div th:replace="~{fragments/list-chrome :: search('Kesim iş emri no veya proje adı', 'workshop-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div x-data="{ exportOpen: false }" class="relative">

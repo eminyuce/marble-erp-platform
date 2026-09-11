@@ -6,7 +6,6 @@ import com.ozerler.marble.dto.UserCreateRequest;
 import com.ozerler.marble.dto.UserDto;
 import com.ozerler.marble.dto.UserUpdateRequest;
 import com.ozerler.marble.service.UserService;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +32,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private static final String USER_FORM_FRAGMENT = "admin/users/form :: userModalContent";
-    private static final String USER_SUCCESS_FRAGMENT = "admin/users/form :: userModalSuccess";
+    private static final String USER_FORM_VIEW = "admin/users/form";
+    private static final String RESET_PASSWORD_VIEW = "admin/users/reset-password";
 
     private final UserService userService;
 
@@ -57,33 +57,33 @@ public class UserController {
     }
 
     @GetMapping("/create")
-    public String showCreateModal(Model model) {
+    public String showCreateForm(Model model) {
         populateUserForm(model, new UserCreateRequest(), false, null, null);
-        return USER_FORM_FRAGMENT;
+        return USER_FORM_VIEW;
     }
 
     @PostMapping("/create")
     public String createUser(@Valid @ModelAttribute("userForm") UserCreateRequest form,
                              BindingResult bindingResult,
                              Model model,
-                             HttpServletResponse response) {
+                             RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             populateUserForm(model, form, false, bindingResult, null);
-            return USER_FORM_FRAGMENT;
+            return USER_FORM_VIEW;
         }
 
         try {
             userService.createUser(form);
-            response.setHeader("HX-Trigger", "userSaved");
-            return USER_SUCCESS_FRAGMENT;
+            redirectAttributes.addFlashAttribute("successMessage", "Kullanıcı başarıyla oluşturuldu.");
+            return "redirect:/admin/users";
         } catch (IllegalArgumentException e) {
             populateUserForm(model, form, false, bindingResult, e.getMessage());
-            return USER_FORM_FRAGMENT;
+            return USER_FORM_VIEW;
         }
     }
 
     @GetMapping("/{id}/edit")
-    public String showEditModal(@PathVariable("id") Long id, Model model) {
+    public String showEditForm(@PathVariable("id") Long id, Model model) {
         UserDto user = userService.getUserById(id);
         UserUpdateRequest form = UserUpdateRequest.builder()
                 .id(user.getId())
@@ -95,7 +95,7 @@ public class UserController {
                 .build();
 
         populateUserForm(model, form, true, null, null);
-        return USER_FORM_FRAGMENT;
+        return USER_FORM_VIEW;
     }
 
     @PostMapping("/{id}/edit")
@@ -103,20 +103,20 @@ public class UserController {
                              @Valid @ModelAttribute("userForm") UserUpdateRequest form,
                              BindingResult bindingResult,
                              Model model,
-                             HttpServletResponse response) {
+                             RedirectAttributes redirectAttributes) {
         form.setId(id);
         if (bindingResult.hasErrors()) {
             populateUserForm(model, form, true, bindingResult, null);
-            return USER_FORM_FRAGMENT;
+            return USER_FORM_VIEW;
         }
 
         try {
             userService.updateUser(form);
-            response.setHeader("HX-Trigger", "userSaved");
-            return USER_SUCCESS_FRAGMENT;
+            redirectAttributes.addFlashAttribute("successMessage", "Kullanıcı başarıyla güncellendi.");
+            return "redirect:/admin/users";
         } catch (IllegalArgumentException e) {
             populateUserForm(model, form, true, bindingResult, e.getMessage());
-            return USER_FORM_FRAGMENT;
+            return USER_FORM_VIEW;
         }
     }
 
@@ -128,12 +128,9 @@ public class UserController {
     }
 
     @GetMapping("/{id}/reset-password")
-    public String showResetPasswordModal(@PathVariable("id") Long id, Model model) {
-        UserDto user = userService.getUserById(id);
-        PasswordResetRequest form = PasswordResetRequest.builder().userId(user.getId()).build();
-        model.addAttribute("user", user);
-        model.addAttribute("passwordForm", form);
-        return "admin/users/reset-password :: resetPasswordModalContent";
+    public String showResetPasswordForm(@PathVariable("id") Long id, Model model) {
+        populateResetPasswordForm(model, id, null, null);
+        return RESET_PASSWORD_VIEW;
     }
 
     @PostMapping("/{id}/reset-password")
@@ -141,16 +138,16 @@ public class UserController {
                                 @Valid @ModelAttribute("passwordForm") PasswordResetRequest form,
                                 BindingResult bindingResult,
                                 Model model,
-                                HttpServletResponse response) {
+                                RedirectAttributes redirectAttributes) {
         form.setUserId(id);
         if (bindingResult.hasErrors()) {
-            model.addAttribute("user", userService.getUserById(id));
-            return "admin/users/reset-password :: resetPasswordModalContent";
+            populateResetPasswordForm(model, id, form, bindingResult);
+            return RESET_PASSWORD_VIEW;
         }
 
         userService.resetPassword(form);
-        response.setHeader("HX-Trigger", "userSaved");
-        return "admin/users/reset-password :: resetPasswordSuccess";
+        redirectAttributes.addFlashAttribute("successMessage", "Kullanıcı şifresi başarıyla güncellendi.");
+        return "redirect:/admin/users";
     }
 
     @PostMapping("/{id}/delete")
@@ -166,6 +163,16 @@ public class UserController {
         model.addAttribute("allRoles", userService.getAllRoles());
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("formErrors", collectFormErrors(bindingResult, extraError));
+        model.addAttribute("pageTitle", isEdit ? "Kullanıcı Düzenle" : "Yeni Kullanıcı");
+    }
+
+    private void populateResetPasswordForm(Model model, Long userId,
+                                           PasswordResetRequest form, BindingResult bindingResult) {
+        UserDto user = userService.getUserById(userId);
+        model.addAttribute("user", user);
+        model.addAttribute("passwordForm", form != null ? form : PasswordResetRequest.builder().userId(user.getId()).build());
+        model.addAttribute("formErrors", collectFormErrors(bindingResult, null));
+        model.addAttribute("pageTitle", "Şifre Sıfırla");
     }
 
     private List<String> collectFormErrors(BindingResult bindingResult, String extraError) {

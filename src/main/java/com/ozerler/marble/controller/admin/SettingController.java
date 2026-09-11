@@ -104,24 +104,28 @@ public class SettingController {
         return "redirect:/admin/settings";
     }
 
+    @GetMapping("/templates/{id}/edit")
+    public String editTemplate(@PathVariable("id") Long id, Model model) {
+        EmailTemplate template = emailService.getTemplateById(id);
+        model.addAttribute("template", template);
+        model.addAttribute("pageTitle", "Şablon Düzenle");
+        return "admin/settings/template-form";
+    }
+
     @PostMapping("/templates/{id}/save")
     public String updateTemplate(@PathVariable("id") Long id,
                                  @RequestParam("subject") String subject,
                                  @RequestParam("bodyHtml") String bodyHtml,
                                  @RequestParam(value = "isActive", defaultValue = "false") boolean isActive,
                                  RedirectAttributes redirectAttributes) {
-        emailService.getAllTemplates().stream()
-                .filter(t -> t.getId().equals(id))
-                .findFirst()
-                .ifPresent(t -> {
-                    t.setSubject(subject);
-                    t.setBodyHtml(bodyHtml);
-                    t.setIsActive(isActive);
-                    emailService.saveTemplate(t);
-                });
+        EmailTemplate template = emailService.getTemplateById(id);
+        template.setSubject(subject);
+        template.setBodyHtml(bodyHtml);
+        template.setIsActive(isActive);
+        emailService.saveTemplate(template);
 
         redirectAttributes.addFlashAttribute("successMessage", "E-Posta şablonu güncellendi.");
-        return "redirect:/admin/settings";
+        return "redirect:/admin/settings?tab=templates";
     }
 
     @PostMapping("/templates/preview")

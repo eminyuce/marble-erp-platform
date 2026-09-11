@@ -1,132 +1,122 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>Yeni Blok Kaydı | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
 
-<div th:fragment="blockModalContent" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
-        <!-- Header -->
-        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-            <div class="flex items-center gap-2">
-                <i data-lucide="mountain" class="w-5 h-5 text-amber-700"></i>
-                <h3 class="text-base font-bold text-slate-800">Yeni Ham Blok Giriş Kartı</h3>
-            </div>
-            <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-        </div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Bloklar', @{/blocks}, 'Yeni kayıt')}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        'Yeni ham blok giriş kartı',
+        'Ocak çıkışını, 3 eksenli ölçüleri, kantar tartımını ve kalite bilgilerini kaydedin.',
+        '',
+        @{/blocks})}"></div>
 
-        <!-- Form -->
-        <form action="/blocks/create" method="post" hx-post="/blocks/create" hx-target="#modal-container"
-              class="p-6 overflow-y-auto space-y-4">
+    <div class="erp-form-card">
+        <form th:action="@{/blocks/create}" method="post" class="erp-form">
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
 
-            <div th:if="${errorMessage}" class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs" th:text="${errorMessage}">
-                Hata
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Ocak Sahası</label>
-                    <select name="quarryId" required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500">
-                        <option th:each="q : ${quarries}" th:value="${q.id}" th:text="${q.name + ' (' + q.location + ')'}"></option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Blok Kodu</label>
-                    <input type="text" name="blockCode" placeholder="BLK-2026-00128" required
-                           class="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500">
-                </div>
-            </div>
-
-            <!-- Dimensions (Width x Length x Height) -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">3 Eksenli Geometrik Ölçüler (cm)</label>
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <input type="number" name="widthCm" placeholder="En (cm)" required value="180"
-                               class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Ocak sahası ve blok kodu')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="quarryId">Ocak sahası <span class="req">*</span></label>
+                            <select id="quarryId" name="quarryId" required class="erp-form-select">
+                                <option value="" disabled selected>Ocak seçin</option>
+                                <option th:each="q : ${quarries}" th:value="${q.id}" th:text="${q.name + ' (' + q.location + ')'}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="blockCode">Blok kodu <span class="req">*</span></label>
+                            <input id="blockCode" type="text" name="blockCode" required
+                                   class="erp-form-input" style="font-family:var(--font-mono);"
+                                   placeholder="BLK-2026-00128">
+                        </div>
                     </div>
-                    <div>
-                        <input type="number" name="lengthCm" placeholder="Boy (cm)" required value="290"
-                               class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Ölçü ve tartım', 'Santimetre cinsinden 3 eksen ve kantar kilosu')}"></div>
+                    <div class="erp-form-grid--3">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="widthCm">En (cm) <span class="req">*</span></label>
+                            <input id="widthCm" type="number" name="widthCm" required value="180" class="erp-form-input" placeholder="180">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="lengthCm">Boy (cm) <span class="req">*</span></label>
+                            <input id="lengthCm" type="number" name="lengthCm" required value="290" class="erp-form-input" placeholder="290">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="heightCm">Yükseklik (cm) <span class="req">*</span></label>
+                            <input id="heightCm" type="number" name="heightCm" required value="150" class="erp-form-input" placeholder="150">
+                        </div>
                     </div>
-                    <div>
-                        <input type="number" name="heightCm" placeholder="Yükseklik (cm)" required value="150"
-                               class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="actualWeightKg">Kantar tartımı (kg) <span class="req">*</span></label>
+                            <input id="actualWeightKg" type="number" step="0.01" name="actualWeightKg" required value="20850"
+                                   class="erp-form-input" placeholder="20850.00">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="extractionCost">Ocak çıkarma maliyeti (TL) <span class="req">*</span></label>
+                            <input id="extractionCost" type="number" step="0.01" name="extractionCost" required value="42000"
+                                   class="erp-form-input" placeholder="42000.00">
+                        </div>
                     </div>
-                </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kalite', 'Taş cinsi, sınıf ve çatlak seviyesi')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="stoneType">Taş cinsi ve seleksiyon <span class="req">*</span></label>
+                            <input id="stoneType" type="text" name="stoneType" required value="Muğla Beyaz"
+                                   class="erp-form-input" placeholder="Örn: Muğla Beyaz Kristal">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="qualityGrade">Kalite sınıfı</label>
+                            <select id="qualityGrade" name="qualityGrade" class="erp-form-select">
+                                <option th:each="g : ${qualityGrades}" th:value="${g.name()}" th:text="${g.label}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="crackLevel">Çatlak seviyesi</label>
+                            <select id="crackLevel" name="crackLevel" class="erp-form-select">
+                                <option value="0">0 — Çatlaksız (temiz)</option>
+                                <option value="1">1 — Yüzeysel kılcal</option>
+                                <option value="2">2 — Kritik / derin çatlak</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Görseller ve notlar', 'Dört cephe fotoğrafı ve jeolojik tanım')}"></div>
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="block-filepond">Blok 4 cephe fotoğrafları</label>
+                        <input type="file" id="block-filepond" name="file" class="filepond">
+                        <input type="hidden" id="photo-urls-input" name="photoUrls" value="">
+                    </div>
+                    <div class="erp-form-field">
+                        <label class="erp-form-label">Jeolojik ayna notları</label>
+                        <div id="dual-editor-container"></div>
+                        <input type="hidden" id="notes-hidden-input" name="notes" value="Ocak sahasında ayna A-2 seviyesinden homojen kristal blok çıkarımı.">
+                    </div>
+                </section>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kantar Gerçek Tartımı (kg)</label>
-                    <input type="number" step="0.01" name="actualWeightKg" placeholder="Örn: 20850.00" required value="20850"
-                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Taş Cinsi &amp; Seleksiyon</label>
-                    <input type="text" name="stoneType" placeholder="Örn: Muğla Beyaz Kristal" required value="Muğla Beyaz"
-                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kalite Sınıfı</label>
-                    <select name="qualityGrade" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
-                        <option th:each="g : ${qualityGrades}" th:value="${g.name()}" th:text="${g.label}"></option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Çatlak Seviyesi</label>
-                    <select name="crackLevel" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
-                        <option value="0">0 - Çatlaksız (Temiz)</option>
-                        <option value="1">1 - Yüzeysel Kılcal</option>
-                        <option value="2">2 - Kritik / Derin Çatlak</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Ocak Çıkarma Maliyeti (TL)</label>
-                    <input type="number" step="0.01" name="extractionCost" placeholder="42000.00" required value="42000"
-                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
-                </div>
-            </div>
-
-            <!-- FilePond 4 Drag and Drop Photo Upload -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Blok 4 Cephe Fotoğrafları (FilePond 4)</label>
-                <input type="file" id="block-filepond" name="file" class="filepond">
-                <input type="hidden" id="photo-urls-input" name="photoUrls" value="">
-            </div>
-
-            <!-- TipTap + CodeMirror Dual Editor for notes -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Jeolojik Ayna Notları &amp; Teknik Tanım</label>
-                <div id="dual-editor-container"></div>
-                <input type="hidden" id="notes-hidden-input" name="notes" value="Ocak sahasında ayna A-2 seviyesinden homojen kristal blok çıkarımı.">
-            </div>
-
-            <!-- Actions -->
-            <div class="pt-4 border-t border-slate-200 flex items-center justify-end gap-2">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-lg">
-                    İptal
-                </button>
-                <button type="submit" class="px-5 py-2 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-xs font-semibold rounded-lg shadow-sm">
-                    Bloğu Kaydet
-                </button>
-            </div>
+            <div th:replace="~{fragments/form-page :: actions(@{/blocks})}"></div>
         </form>
     </div>
-
-    <script>
-        initFilePond('#block-filepond', '#photo-urls-input');
-        initDualEditor('dual-editor-container', 'notes-hidden-input');
-        if (window.lucide) window.lucide.createIcons();
-    </script>
 </div>
 
-<div th:fragment="blockModalSuccess" class="hidden">
-    <script>
-        closeModal();
-        reloadBlocksGrid();
-    </script>
-</div>
+<th:block layout:fragment="scripts">
+<script>
+    initFilePond('#block-filepond', '#photo-urls-input');
+    initDualEditor('dual-editor-container', 'notes-hidden-input');
+</script>
+</th:block>
+</body>
 </html>

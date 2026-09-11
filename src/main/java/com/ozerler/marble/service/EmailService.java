@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.exception.ResourceNotFoundException;
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.repository.EmailTemplateRepository;
 import com.ozerler.marble.util.Ints;
@@ -36,6 +37,12 @@ public class EmailService {
     @Transactional(readOnly = true)
     public Optional<EmailTemplate> getTemplateByKey(String key) {
         return templateRepository.findByTemplateKey(key);
+    }
+
+    @Transactional(readOnly = true)
+    public EmailTemplate getTemplateById(Long id) {
+        return templateRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("E-posta şablonu", id));
     }
 
     @Transactional

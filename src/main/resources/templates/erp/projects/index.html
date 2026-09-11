@@ -17,10 +17,10 @@
     <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfada müşteri projelerini, şantiyeleri ve iş sahalarını yönetirsiniz.', 'Mahal metraj ağacı (WBS), fiili sarfiyatlar ve montaj puantajını görüntüleyebilirsiniz.', '<strong>Yeni proje oluştur</strong> butonu ile yeni proje/şantiye kaydı ekleyebilirsiniz.', 'Bütçe sapması ve maliyet analizlerini proje detay sayfasından takip edebilirsiniz.', '<strong>CSV İndir</strong> butonu ile tablo verilerini dışa aktarabilirsiniz.'} })}"></div>
 
     <div class="erp-toolbar">
-        <button type="button" hx-get="/projects/create" hx-target="#modal-container" class="erp-btn-primary">
+        <a th:href="@{/projects/create}" class="erp-btn-primary">
             <i data-lucide="plus"></i>
             <span>Yeni proje oluştur</span>
-        </button>
+        </a>
         <div th:replace="~{fragments/list-chrome :: search('Proje kodu, adı veya müşteri', 'project-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div x-data="{ exportOpen: false }" class="relative">

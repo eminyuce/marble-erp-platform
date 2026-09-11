@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 
@@ -51,10 +52,9 @@ public class ProductionController {
     }
 
     @GetMapping("/create")
-    public String showCreateModal(Model model) {
-        model.addAttribute("availableBlocks", quarryBlockService.getAvailableBlocksForProduction());
-        model.addAttribute("scrapReasons", ScrapReasonCode.values());
-        return "erp/production/order-form :: orderModalContent";
+    public String showCreateForm(Model model) {
+        populateProductionForm(model);
+        return "erp/production/order-form";
     }
 
     @PostMapping("/create")
@@ -76,7 +76,8 @@ public class ProductionController {
                                     @RequestParam(value = "scrapReason", required = false) ScrapReasonCode scrapReason,
                                     @RequestParam(value = "scrapWeightKg", required = false) BigDecimal scrapWeightKg,
                                     @RequestParam(value = "scrapNotes", required = false) String scrapNotes,
-                                    Model model) {
+                                    Model model,
+                                    RedirectAttributes redirectAttributes) {
 
         try {
             productionService.executeGangsawCut(blockId, orderNo, machineName, durationHours, electricityKwh,
@@ -84,14 +85,13 @@ public class ProductionController {
                     slabCountGradeA, slabCountGradeB, slabCountGradeC,
                     slabWidthCm, slabLengthCm, thicknessCm, scrapReason, scrapWeightKg, scrapNotes);
 
-            model.addAttribute("success", true);
-            model.addAttribute("message", "Katrak kesim emri tamamlandı ve plakalar dinamik kalite katsayılı maliyetle üretildi.");
-            return "erp/production/order-form :: orderModalSuccess";
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Katrak kesim emri tamamlandı ve plakalar dinamik kalite katsayılı maliyetle üretildi.");
+            return "redirect:/production";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Hata: " + e.getMessage());
-            model.addAttribute("availableBlocks", quarryBlockService.getAvailableBlocksForProduction());
-            model.addAttribute("scrapReasons", ScrapReasonCode.values());
-            return "erp/production/order-form :: orderModalContent";
+            populateProductionForm(model);
+            return "erp/production/order-form";
         }
     }
 
@@ -128,5 +128,11 @@ public class ProductionController {
                 ? slab.getBlock().getQuarry().getName() : "—");
 
         return "erp/production/slab-label";
+    }
+
+    private void populateProductionForm(Model model) {
+        model.addAttribute("availableBlocks", quarryBlockService.getAvailableBlocksForProduction());
+        model.addAttribute("scrapReasons", ScrapReasonCode.values());
+        model.addAttribute("pageTitle", "Yeni Kesim Emri");
     }
 }

@@ -21,4 +21,8 @@ public final class HttpRequests {
         }
         return XML_HTTP_REQUEST.equals(request.getHeader(REQUESTED_WITH_HEADER));
     }
+
+    public static boolean isHtmx(HttpServletRequest request) {
+        return request != null && "true".equalsIgnoreCase(request.getHeader("HX-Request"));
+    }
 }

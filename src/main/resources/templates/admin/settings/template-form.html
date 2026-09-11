@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>E-posta Şablonu Düzenle | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Sistem Ayarları', @{/admin/settings(tab='templates')}, 'Şablon düzenle')}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        'E-posta şablonunu düzenle',
+        ${template.templateName},
+        ${'Anahtar: ' + template.templateKey},
+        @{/admin/settings(tab='templates')})}"></div>
+
+    <div class="erp-form-card">
+        <form th:action="@{/admin/settings/templates/{id}/save(id=${template.id})}" method="post" class="erp-form">
+            <div class="erp-form-body">
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Konu ve durum', 'Alıcının göreceği başlık ve şablonun aktifliği')}"></div>
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="subject">E-posta konu başlığı <span class="req">*</span></label>
+                        <input id="subject" type="text" name="subject" th:value="${template.subject}" required
+                               class="erp-form-input" placeholder="Örn: {{fullName}} için sipariş güncellemesi">
+                    </div>
+                    <label class="erp-form-check" for="edit_isActive">
+                        <input type="checkbox" id="edit_isActive" name="isActive" value="true" th:checked="${template.isActive}">
+                        <span>Şablonu aktif olarak işaretle</span>
+                    </label>
+                    <p class="erp-form-hint" th:if="${template.placeholders}">
+                        Kullanılabilir değişkenler: <code th:text="${template.placeholders}">{{name}}</code>
+                    </p>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('İçerik', 'HTML gövde. Değişkenler çift süslü parantez ile yazılır.')}"></div>
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="bodyHtml">HTML gövde <span class="req">*</span></label>
+                        <textarea id="bodyHtml" name="bodyHtml" rows="16" required
+                                  class="erp-form-textarea" style="font-family:var(--font-mono); min-height:18rem;"
+                                  th:text="${template.bodyHtml}"></textarea>
+                    </div>
+                </section>
+            </div>
+
+            <div th:replace="~{fragments/form-page :: actions(@{/admin/settings(tab='templates')})}"></div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

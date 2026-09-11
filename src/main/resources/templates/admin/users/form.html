@@ -1,109 +1,111 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${(isEdit ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı') + ' | Özerler Mermer ERP'}">Kullanıcı</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
 
-<!-- Modal Content Fragment -->
-<div th:fragment="userModalContent" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-        <!-- Modal Header -->
-        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-            <h3 class="text-base font-bold text-slate-800" th:text="${isEdit ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Oluştur'}">
-                Kullanıcı Oluştur
-            </h3>
-            <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-        </div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Kullanıcılar', @{/admin/users}, ${isEdit ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        ${isEdit ? 'Kullanıcı düzenle' : 'Yeni kullanıcı'},
+        ${isEdit ? 'Kimlik, iletişim ve yetki bilgilerini güncelleyin. Değişiklikler kayıttan sonra hemen uygulanır.' : 'Sisteme yeni bir yönetici veya operasyon hesabı ekleyin.'},
+        ${isEdit ? 'Kayıt #' + userForm.id : ''},
+        @{/admin/users})}"></div>
 
-        <!-- Modal Body & Form -->
+    <div class="erp-form-card">
         <form th:object="${userForm}"
-              th:action="${isEdit ? '/admin/users/' + userForm.id + '/edit' : '/admin/users/create'}"
-              th:attr="hx-post=${isEdit ? '/admin/users/' + userForm.id + '/edit' : '/admin/users/create'}"
+              th:action="${isEdit} ? @{/admin/users/{id}/edit(id=${userForm.id})} : @{/admin/users/create}"
               method="post"
-              hx-target="#modal-container"
-              hx-swap="innerHTML"
-              class="p-6 overflow-y-auto space-y-4">
+              class="erp-form">
 
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <input type="hidden" th:if="${isEdit}" th:field="*{id}"/>
 
-            <div th:if="${formErrors != null and !formErrors.isEmpty()}" class="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 text-xs space-y-1">
-                <div th:each="err : ${formErrors}" th:text="${err}">Hata mesajı</div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Ad</label>
-                    <input type="text" th:field="*{firstName}" required
-                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+            <div class="erp-form-body">
+                <div th:if="${formErrors != null and !formErrors.isEmpty()}" class="erp-form-errors" role="alert">
+                    <div th:each="err : ${formErrors}" th:text="${err}">Hata mesajı</div>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Soyad</label>
-                    <input type="text" th:field="*{lastName}" required
-                           class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
-                </div>
-            </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">E-Posta</label>
-                <input type="email" th:field="*{email}" required
-                       class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
-            </div>
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Kişinin görünen adı ve hesap tanımlayıcısı')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="firstName">Ad <span class="req">*</span></label>
+                            <input id="firstName" type="text" th:field="*{firstName}" required autocomplete="given-name"
+                                   placeholder="Örn: Ahmet"
+                                   class="erp-form-input"
+                                   th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid'">
+                            <p th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}" class="erp-form-field-error"></p>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="lastName">Soyad <span class="req">*</span></label>
+                            <input id="lastName" type="text" th:field="*{lastName}" required autocomplete="family-name"
+                                   placeholder="Örn: Yılmaz"
+                                   class="erp-form-input"
+                                   th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid'">
+                            <p th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}" class="erp-form-field-error"></p>
+                        </div>
+                        <div class="erp-form-field erp-form-field--full" th:if="${!isEdit}">
+                            <label class="erp-form-label" for="username">Kullanıcı adı <span class="req">*</span></label>
+                            <input id="username" type="text" th:field="*{username}" required autocomplete="username"
+                                   placeholder="örnek.kullanici"
+                                   class="erp-form-input"
+                                   th:classappend="${#fields.hasErrors('username')} ? 'is-invalid'">
+                            <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="erp-form-field-error"></p>
+                            <p th:unless="${#fields.hasErrors('username')}" class="erp-form-hint">Girişte kullanılır; oluşturulduktan sonra değiştirilemez.</p>
+                        </div>
+                    </div>
+                </section>
 
-            <div th:if="${!isEdit}">
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Kullanıcı Adı</label>
-                <input type="text" th:field="*{username}" required
-                       class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
-            </div>
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('İletişim', 'Bildirimler ve giriş için e-posta adresi')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="email">E-posta <span class="req">*</span></label>
+                            <input id="email" type="email" th:field="*{email}" required autocomplete="email"
+                                   placeholder="ad.soyad@sirket.com"
+                                   class="erp-form-input"
+                                   th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                            <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="erp-form-field-error"></p>
+                        </div>
+                    </div>
+                </section>
 
-            <div th:if="${!isEdit}">
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Geçici Şifre</label>
-                <input type="password" th:field="*{password}" required
-                       class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                       placeholder="En az 6 karakter">
-            </div>
+                <section class="erp-form-section" th:if="${!isEdit}">
+                    <div th:replace="~{fragments/form-page :: section('Güvenlik', 'İlk giriş için geçici bir şifre belirleyin')}"></div>
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="password">Geçici şifre <span class="req">*</span></label>
+                        <input id="password" type="password" th:field="*{password}" required autocomplete="new-password"
+                               placeholder="En az 6 karakter"
+                               class="erp-form-input"
+                               th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'">
+                        <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="erp-form-field-error"></p>
+                        <p th:unless="${#fields.hasErrors('password')}" class="erp-form-hint">Kullanıcı ilk girişte bu şifreyi kullanır; daha sonra kendi şifresini belirleyebilir.</p>
+                    </div>
+                </section>
 
-            <!-- Roles Checklist -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-2">Roller &amp; Erişim Yetkileri</label>
-                <p class="text-[11px] text-slate-500 mb-2">Hesabın erişebileceği menü ve işlemleri seçin. Boş bırakılırsa standart kullanıcı rolü atanır.</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs max-h-48 overflow-y-auto">
-                    <label th:each="role : ${allRoles}" class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" th:field="*{roles}" th:value="${role.name}"
-                               class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
-                        <span class="text-slate-700" th:text="${role.description != null ? role.description : role.name}">Rol Tanımı</span>
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Yetki ve durum', 'Menü erişimi ve hesabın aktif olup olmadığı')}"></div>
+                    <div class="erp-form-field">
+                        <span class="erp-form-label">Roller</span>
+                        <p class="erp-form-hint">Boş bırakılırsa standart kullanıcı rolü atanır.</p>
+                        <div class="erp-form-roles">
+                            <label th:each="role : ${allRoles}" class="erp-form-check">
+                                <input type="checkbox" th:field="*{roles}" th:value="${role.name}">
+                                <span th:text="${role.description != null ? role.description : role.name}">Rol</span>
+                            </label>
+                        </div>
+                    </div>
+                    <label class="erp-form-check" for="user-enabled">
+                        <input type="checkbox" id="user-enabled" th:field="*{enabled}">
+                        <span>Kullanıcı hesabı aktif</span>
                     </label>
-                </div>
+                </section>
             </div>
 
-            <!-- Enabled Switch -->
-            <div class="flex items-center gap-2 pt-1">
-                <input type="checkbox" id="user-enabled" th:field="*{enabled}"
-                       class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                <label for="user-enabled" class="text-xs font-semibold text-slate-700 cursor-pointer">Kullanıcı Hesabı Aktif</label>
-            </div>
-
-            <!-- Modal Actions -->
-            <div class="pt-4 border-t border-slate-200 flex items-center justify-end gap-2">
-                <button type="button" onclick="closeModal()"
-                        class="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-lg transition">
-                    İptal
-                </button>
-                <button type="submit"
-                        class="px-4 py-2 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-xs font-semibold rounded-lg shadow-sm transition">
-                    Kaydet
-                </button>
-            </div>
+            <div th:replace="~{fragments/form-page :: actions(@{/admin/users})}"></div>
         </form>
     </div>
 </div>
-
-<!-- Success Fragment -->
-<div th:fragment="userModalSuccess" class="hidden">
-    <script>
-        closeModal();
-        if (typeof reloadUsersGrid === "function") {
-            reloadUsersGrid();
-        }
-    </script>
-</div>
+</body>
 </html>
