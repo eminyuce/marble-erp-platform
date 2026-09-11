@@ -21,6 +21,10 @@
 
     <div class="admin-topbar-right" sec:authorize="isAuthenticated()">
         <span class="admin-topbar-user" sec:authentication="name">admin</span>
+        <a th:href="@{/account/change-password}" class="admin-topbar-logout" title="Şifre Değiştir" style="text-decoration:none;">
+            <i data-lucide="key-round" class="w-4 h-4"></i>
+            <span>Şifre Değiştir</span>
+        </a>
         <button type="submit" form="logoutForm" class="admin-topbar-logout" title="Güvenli Çıkış Yap">
             <i data-lucide="log-out" class="w-4 h-4"></i>
             <span>Çıkış Yap</span>

@@ -154,6 +154,19 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
+    public void changeOwnPassword(String email, String currentPassword, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı: " + email));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Mevcut şifre hatalı");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     @Transactional(readOnly = true)
     public List<Role> getAllRoles() {
         return roleRepository.findAll();

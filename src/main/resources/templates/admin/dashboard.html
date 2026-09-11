@@ -1,242 +1,294 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
-    <title>Yönetici Kokpiti | Özerler Mermer ERP</title>
+    <title>Yönetici Paneli | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-6">
+<div layout:fragment="content" class="space-y-6"
+     x-data="{
+         search: '',
+         q() { return this.search.trim().toLowerCase(); },
+         m(kw) { const s = this.q(); return s === '' || kw.toLowerCase().includes(s); },
+         gv(...kws) { const s = this.q(); return s === '' || kws.some(k => k.toLowerCase().includes(s)); },
+         noResults() {
+             if (this.q() === '') return false;
+             const all = [
+                 'bloklar ocak blok kayıtları sevkiyat',
+                 'soy ağacı blok-plaka izlenebilirlik',
+                 'katrak kesim üretim emirleri kesim işlemleri',
+                 'plaka ambarı plaka stok kalite kayıtları',
+                 'atölye ebatlama yüzey işlemleri',
+                 'şantiyeler proje mahal yönetimi',
+                 'satış siparişleri müşteri faturalama',
+                 'satın alma tedarik siparişleri',
+                 'masraf merkezleri abc maliyet takibi',
+                 'raporlar excel csv',
+                 'kullanıcılar kullanıcı yetki yönetimi',
+                 'sistem ayarları güvenlik smtp genel',
+                 'roller yetkiler rol açıklamaları',
+                 'şifre değiştir güncelle'
+             ];
+             return !all.some(k => k.includes(this.q()));
+         }
+     }">
 
-    <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfa genel müdür kokpit ekranıdır; tesisin anlık operasyon verilerini özetler.', 'Üstteki alarm kartları kritik bütçe aşımı ve makine verim uyarılarını gösterir.', '6 KPI kartından stok, üretim, fire, ciro, proje ve kâr sapmasını izleyebilirsiniz.', 'Fire dağılımı tablosunda neden kodlu fire kök neden analizi yer alır.', 'Masraf merkezleri bölümünden ABC maliyet dağılımını takip edebilirsiniz.'} })}"></div>
+    <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu ana sayfadan ERP\'nin tüm modüllerine hızlıca erişebilirsiniz. Arama çubuğunu kullanarak modülleri filtreleyebilirsiniz.'} })}"></div>
 
-    <!-- Page Header & Quick Actions -->
+    <!-- Welcome Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-            <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Genel Müdür Canlı Kokpiti</h1>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1 animate-ping"></span> Canlı Veri
-                </span>
-            </div>
-            <p class="text-sm text-slate-500 mt-1">Fiziksel stok, makine verimliliği, neden kodlu fireler ve şantiye bütçe sapmaları.</p>
+            <p class="text-sm font-semibold text-[#2b6cb0] tracking-wide">Özerler Mermer</p>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-0.5">Yönetici Paneline Hoş Geldiniz</h1>
+            <p class="text-sm text-slate-500 mt-1">Tüm modüllere buradan hızlıca erişebilirsiniz.</p>
         </div>
-        <div class="flex items-center gap-2">
-            <a th:href="@{/blocks/create}" hx-get="/blocks/create" hx-target="#modal-container"
-               class="px-3.5 py-2 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer transition">
-                <i data-lucide="plus-circle" class="w-4 h-4 text-white"></i>
-                <span>Yeni Blok Girişi</span>
+        <a th:href="@{/admin/dashboard/oursitefeatures}"
+           class="px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2 cursor-pointer transition hover:shadow">
+            <i data-lucide="monitor" class="w-4 h-4 text-slate-500"></i>
+            <span>Sitemizin Özellikleri</span>
+        </a>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="relative max-w-xl">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+            <i data-lucide="search" class="w-4.5 h-4.5 text-slate-400"></i>
+        </div>
+        <input type="text"
+               x-model="search"
+               placeholder="Modül, sayfa veya işlem ara…"
+               class="w-full pl-10 pr-24 py-2.5 text-sm border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-[#2b6cb0]/20 focus:border-[#2b6cb0] outline-none transition placeholder:text-slate-400" />
+        <button type="button"
+                class="absolute inset-y-1 right-1 px-4 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-md flex items-center gap-1.5 transition">
+            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+            Ara
+        </button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- Ocak & Hammadde                                     -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div x-show="gv('bloklar ocak blok kayıtları sevkiyat','soy ağacı blok-plaka izlenebilirlik')" x-cloak>
+        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Ocak &amp; Hammadde</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+
+            <a th:href="@{/blocks}" x-show="m('bloklar ocak blok kayıtları sevkiyat')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                    <i data-lucide="box" class="w-5 h-5 text-amber-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Bloklar</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Ocak blok kayıtları ve sevkiyat</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
             </a>
-            <a th:href="@{/production/create}" hx-get="/production/create" hx-target="#modal-container"
-               class="px-3.5 py-2 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer transition">
-                <i data-lucide="scissors" class="w-4 h-4"></i>
-                <span>Katrak Kesim Başlat</span>
+
+            <a th:href="@{/genealogy}" x-show="m('soy ağacı blok-plaka izlenebilirlik')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                    <i data-lucide="git-branch" class="w-5 h-5 text-purple-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Soy Ağacı</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Blok-plaka izlenebilirlik</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
             </a>
+
         </div>
     </div>
 
-    <!-- Proactive Warning / Alarm Callouts (BRD Section 9.2) -->
-    <div class="space-y-3">
-        <div class="p-4 rounded-xl bg-rose-50 border-l-4 border-rose-600 shadow-sm flex items-start gap-3">
-            <div class="p-2 bg-rose-100 rounded-lg text-rose-700 mt-0.5">
-                <i data-lucide="alert-octagon" class="w-5 h-5"></i>
-            </div>
-            <div class="flex-1 text-sm">
-                <div class="font-bold text-rose-900 flex items-center gap-2">
-                    <span>🔴 KRİTİK ALARM 1: Proje Bütçe Aşımı Riski</span>
-                    <span class="text-xs px-2 py-0.5 bg-rose-200 text-rose-800 rounded font-mono">+%12.4 Aşım</span>
-                </div>
-                <p class="text-rose-800 mt-0.5">
-                    <strong>X Residence Lobi</strong> doğal taş maliyeti planlanan bütçeyi %12.4 aştı. Ana etken: Beklenmeyen şantiye kırılmaları (+40 m² ek sipariş) ve taşeron fazla mesai puantajı.
-                </p>
-            </div>
-            <a th:href="@{/projects/1}" class="text-xs font-semibold text-rose-900 underline hover:text-rose-700">İncele &rarr;</a>
-        </div>
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- Üretim                                              -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div x-show="gv('katrak kesim üretim emirleri kesim işlemleri','plaka ambarı plaka stok kalite kayıtları','atölye ebatlama yüzey işlemleri')" x-cloak>
+        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Üretim</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-        <div class="p-4 rounded-xl bg-amber-50 border-l-4 border-amber-600 shadow-sm flex items-start gap-3">
-            <div class="p-2 bg-amber-100 rounded-lg text-amber-700 mt-0.5">
-                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-            </div>
-            <div class="flex-1 text-sm">
-                <div class="font-bold text-amber-900 flex items-center gap-2">
-                    <span>🟠 UYARI ALARM 2: Makine Verim Düşüklüğü</span>
-                    <span class="text-xs px-2 py-0.5 bg-amber-200 text-amber-800 rounded font-mono">Katrak-02</span>
+            <a th:href="@{/production}" x-show="m('katrak kesim üretim emirleri kesim işlemleri')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <i data-lucide="factory" class="w-5 h-5 text-emerald-600"></i>
                 </div>
-                <p class="text-amber-800 mt-0.5">
-                    Katrak-02 makinesinin son 7 günlük kesim firesi <strong>%11.8</strong>'e yükseldi (Tesis ortalaması: %6.5). Kılavuz lama hizalama ve hidrolik gergi bakımı gerektiriyor.
-                </p>
-            </div>
-            <a th:href="@{/production}" class="text-xs font-semibold text-amber-900 underline hover:text-amber-700">İş Emri &rarr;</a>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Katrak Kesim</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Üretim emirleri ve kesim işlemleri</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
+
+            <a th:href="@{/production/slabs}" x-show="m('plaka ambarı plaka stok kalite kayıtları')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <i data-lucide="layers" class="w-5 h-5 text-blue-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Plaka Ambarı</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Plaka stok ve kalite kayıtları</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
+
+            <a th:href="@{/workshop}" x-show="m('atölye ebatlama yüzey işlemleri')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
+                    <i data-lucide="scissors" class="w-5 h-5 text-teal-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Atölye</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Ebatlama ve yüzey işlemleri</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
+
         </div>
     </div>
 
-    <!-- 6 Executive KPI Grid Cards (BRD Section 9.1) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 erp-kpi-grid">
-        <!-- KPI 1: Physical Stock -->
-        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow transition border-l-4 border-l-blue-600">
-            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-                <span>Fiziksel Plaka &amp; Blok Stoğu</span>
-                <span class="text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[10px] font-bold">Canlı Ambar</span>
-            </div>
-            <div class="text-2xl font-black text-slate-900" th:text="${#numbers.formatDecimal(totalSlabArea != null ? totalSlabArea : 12450.00, 1, 'POINT', 1, 'COMMA')} + ' m²'">
-                12.450 m²
-            </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                <span>Serbest: <strong class="text-emerald-700" th:text="${#numbers.formatDecimal(availableSlabArea != null ? availableSlabArea : 7820.00, 1, 1)} + ' m²'">7.820 m²</strong></span>
-                <span>Rezerve: <strong class="text-amber-700" th:text="${#numbers.formatDecimal(reservedSlabArea != null ? reservedSlabArea : 4630.00, 1, 1)} + ' m²'">4.630 m²</strong></span>
-            </div>
-            <div class="text-xs text-slate-400 mt-1">
-                Fabrika Blok: <span th:text="${factoryBlockCount}">42</span> Adet (<span th:text="${#numbers.formatDecimal(factoryBlockWeightTon, 1, 0)}">890</span> Ton)
-            </div>
-        </div>
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- Projeler & Satış                                    -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div x-show="gv('şantiyeler proje mahal yönetimi','satış siparişleri müşteri faturalama','satın alma tedarik siparişleri')" x-cloak>
+        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Projeler &amp; Satış</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-        <!-- KPI 2: Production Capacity -->
-        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow transition border-l-4 border-l-emerald-600">
-            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-                <span>Günlük Üretim &amp; Kapasite</span>
-                <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[10px] font-bold">%91 Verim</span>
-            </div>
-            <div class="text-2xl font-black text-slate-900">840 m² / Gün</div>
-            <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-3 gap-1 text-[11px] text-slate-600 text-center">
-                <div class="bg-slate-50 p-1 rounded">Katrak: <strong>380 m²</strong></div>
-                <div class="bg-slate-50 p-1 rounded">Cila: <strong>310 m²</strong></div>
-                <div class="bg-slate-50 p-1 rounded">Ebat: <strong>150 m²</strong></div>
-            </div>
-        </div>
+            <a th:href="@{/projects}" x-show="m('şantiyeler proje mahal yönetimi')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                    <i data-lucide="building-2" class="w-5 h-5 text-indigo-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Şantiyeler</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Proje ve mahal yönetimi</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
 
-        <!-- KPI 3: Monthly Scrap -->
-        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow transition border-l-4 border-l-amber-600">
-            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-                <span>Aylık Kümülatif Fire</span>
-                <span class="text-amber-700 bg-amber-50 px-2 py-0.5 rounded text-[10px] font-bold">Tolerans Sınırı</span>
-            </div>
-            <div class="text-2xl font-black text-amber-700">% 6.8</div>
-            <div class="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-600 flex justify-between items-center">
-                <span>Hedef: &le;%6.0</span>
-                <span>Mali Etki: <strong class="text-rose-700" th:text="${#numbers.formatDecimal(totalScrapImpact, 1, 'POINT', 0, 'COMMA')} + ' TL'">6.050 TL</strong></span>
-            </div>
-            <div class="text-xs text-slate-400 mt-1">En yüksek: FR-01 Kesim Talaşı (%3.8)</div>
-        </div>
+            <a th:href="@{/sales}" x-show="m('satış siparişleri müşteri faturalama')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center">
+                    <i data-lucide="shopping-cart" class="w-5 h-5 text-cyan-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Satış Siparişleri</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Müşteri siparişleri ve faturalama</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
 
-        <!-- KPI 4: Daily Sales & Invoicing -->
-        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow transition border-l-4 border-l-cyan-600">
-            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-                <span>Günlük Ciro / Sevkiyat</span>
-                <span class="text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded text-[10px] font-bold">Bugün</span>
-            </div>
-            <div class="text-2xl font-black text-slate-900">1.240.000 TL</div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                <span>Ay Sonu Tahmin: <strong>34.5M TL</strong></span>
-                <span>Tahsilat: <strong>%88</strong></span>
-            </div>
-        </div>
+            <a th:href="@{/procurement}" x-show="m('satın alma tedarik siparişleri')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
+                    <i data-lucide="truck" class="w-5 h-5 text-orange-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Satın Alma</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Tedarik siparişleri</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
 
-        <!-- KPI 5: Active Projects -->
-        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow transition border-l-4 border-l-indigo-600">
-            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-                <span>Aktif Şantiye &amp; Projeler</span>
-                <span class="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded text-[10px] font-bold" th:text="${activeProjectsCount} + ' Aktif'">1 Aktif</span>
-            </div>
-            <div class="text-2xl font-black text-slate-900">48.000 m² Metraj</div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                <span>Sevk Edilen: <strong>31.200 m²</strong></span>
-                <span>Kalan: <strong>16.800 m²</strong></span>
-            </div>
-        </div>
-
-        <!-- KPI 6: Profit Variance Alert -->
-        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow transition border-l-4 border-l-rose-600">
-            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-                <span>Riskli Proje Kâr Sapması</span>
-                <span class="text-rose-700 bg-rose-50 px-2 py-0.5 rounded text-[10px] font-bold">İnceleme</span>
-            </div>
-            <div class="text-2xl font-black text-rose-700">12.4M &rarr; 10.1M TL</div>
-            <div class="mt-3 pt-3 border-t border-slate-100 text-xs text-rose-800">
-                Net Kâr Sapması: <strong>-2.300.000 TL</strong> (İşçilik &amp; Metraj Aşımı)
-            </div>
         </div>
     </div>
 
-    <!-- Two Column Analysis: 10 Scrap Reasons Breakdown & Cost Centers (ABC) -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- 10 Neden Kodlu Fire Özeti Tablosu -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="font-bold text-slate-900">10 Neden Kodlu Fire Dağılımı</h3>
-                    <p class="text-xs text-slate-500">Kesim talaşı, çatlak ve montaj zayiatı kök neden analizi</p>
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- Maliyet & Raporlar                                  -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div x-show="gv('masraf merkezleri abc maliyet takibi','raporlar excel csv')" x-cloak>
+        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Maliyet &amp; Raporlar</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+
+            <a th:href="@{/costs}" x-show="m('masraf merkezleri abc maliyet takibi')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center">
+                    <i data-lucide="calculator" class="w-5 h-5 text-rose-600"></i>
                 </div>
-                <a th:href="@{/production}" class="text-xs font-semibold text-amber-700 hover:text-amber-800">Tümü &rarr;</a>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse">
-                    <thead>
-                        <tr class="border-b border-slate-200 text-slate-500 font-semibold uppercase text-[10px]">
-                            <th class="py-2">Neden Kodu</th>
-                            <th class="py-2">Kayıt Sayısı</th>
-                            <th class="py-2">Toplam Ağırlık</th>
-                            <th class="py-2 text-right">Maliyet Etkisi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <tr th:each="row : ${scrapSummary}">
-                            <td class="py-2.5 font-medium text-slate-800">
-                                <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded font-mono text-[11px]" th:text="${row[0]}">FR-01</span>
-                            </td>
-                            <td class="py-2.5 text-slate-600" th:text="${row[1]}">1</td>
-                            <td class="py-2.5 text-slate-600" th:text="${#numbers.formatDecimal(row[2], 1, 'POINT', 0, 'COMMA')} + ' kg'">2,100 kg</td>
-                            <td class="py-2.5 text-right font-semibold text-rose-700" th:text="${#numbers.formatDecimal(row[3], 1, 'POINT', 2, 'COMMA')} + ' TL'">4,200.00 TL</td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(scrapSummary)}">
-                            <td colspan="4" class="py-4 text-center text-slate-400">Henüz fire kaydı girilmedi.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Masraf Merkezleri</div>
+                    <div class="text-xs text-slate-500 mt-0.5">ABC maliyet takibi</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
+
+            <a th:href="@{/reports}" x-show="m('raporlar excel csv')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5 text-violet-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Raporlar</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Excel ve CSV raporları</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
+
         </div>
+    </div>
 
-        <!-- Aktivite Tabanlı Maliyetleme (ABC) Masraf Merkezleri Dağılımı -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="font-bold text-slate-900">Masraf Merkezleri Bütçe &amp; Gider Dağılımı (ABC)</h3>
-                    <p class="text-xs text-slate-500">CC-001 Ocak, CC-002 Katrak, CC-003 Cila, CC-004 Atölye, CC-005 Şantiye, CC-006 Nakliye</p>
-                </div>
-                <a th:href="@{/costs}" class="text-xs font-semibold text-amber-700 hover:text-amber-800">Detay &rarr;</a>
-            </div>
-            <div class="space-y-3">
-                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
-                    <div>
-                        <div class="font-semibold text-slate-800 text-xs">CC-001: Ocak &amp; Blok Çıkarma</div>
-                        <div class="text-[11px] text-slate-500">Ayna amortismanı, iş makineleri mazot ve dinamit</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs font-bold text-slate-900">42.000 TL</div>
-                        <div class="text-[10px] text-slate-400">Bütçe: 500.000 TL</div>
-                    </div>
-                </div>
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- Yönetim                                             -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div x-show="gv('kullanıcılar kullanıcı yetki yönetimi','sistem ayarları güvenlik smtp genel','roller yetkiler rol açıklamaları','şifre değiştir güncelle')" x-cloak>
+        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Yönetim</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
-                    <div>
-                        <div class="font-semibold text-slate-800 text-xs">CC-002: Fabrika Katrak &amp; Dilimleme</div>
-                        <div class="text-[11px] text-slate-500">80 lama soket aşınması, kwh elektrik ve su</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs font-bold text-slate-900">18.500 TL</div>
-                        <div class="text-[10px] text-slate-400">Bütçe: 450.000 TL</div>
-                    </div>
+            <a th:href="@{/admin/users}" x-show="m('kullanıcılar kullanıcı yetki yönetimi')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center">
+                    <i data-lucide="users" class="w-5 h-5 text-sky-600"></i>
                 </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Kullanıcılar</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Kullanıcı ve yetki yönetimi</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
 
-                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
-                    <div>
-                        <div class="font-semibold text-slate-800 text-xs">CC-005: Şantiye Montaj &amp; Malzeme</div>
-                        <div class="text-[11px] text-slate-500">Yapıştırıcı, derz kimyasalları ve montaj puantajı</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs font-bold text-slate-900">232.000 TL</div>
-                        <div class="text-[10px] text-slate-400">Bütçe: 600.000 TL</div>
-                    </div>
+            <a th:href="@{/admin/settings}" x-show="m('sistem ayarları güvenlik smtp genel')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <i data-lucide="settings" class="w-5 h-5 text-slate-600"></i>
                 </div>
-            </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Sistem Ayarları</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Güvenlik, SMTP ve genel ayarlar</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
+
+            <a th:href="@{/roles}" x-show="m('roller yetkiler rol açıklamaları')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                    <i data-lucide="shield" class="w-5 h-5 text-amber-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Roller ve Yetkiler</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Rol açıklamaları</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
+
+            <a th:href="@{/account/change-password}" x-show="m('şifre değiştir güncelle')"
+               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+                    <i data-lucide="key" class="w-5 h-5 text-red-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Şifre Değiştir</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Kendi şifreni güncelle</div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+            </a>
+
         </div>
+    </div>
+
+    <!-- No results -->
+    <div x-show="noResults()" x-cloak class="text-center py-10">
+        <i data-lucide="search-x" class="w-10 h-10 text-slate-300 mx-auto mb-3"></i>
+        <p class="text-sm text-slate-500">Aramanızla eşleşen modül bulunamadı.</p>
+        <button @click="search = ''" class="mt-2 text-sm text-[#2b6cb0] hover:underline font-semibold">Aramayı Temizle</button>
     </div>
 
 </div>

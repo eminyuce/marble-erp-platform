@@ -16,7 +16,15 @@
             <h2 class="admin-page-title">Kullanıcılar</h2>
             <p class="erp-list-lead">Yönetici ve operasyon hesaplarını arayın, rol veya duruma göre filtreleyin ve işlem menüsünden düzenleyin.</p>
         </div>
-        <div class="erp-list-header-actions">
+    </div>
+
+    <div class="erp-toolbar">
+        <button type="button" hx-get="/admin/users/create" hx-target="#modal-container" class="erp-btn-primary">
+            <i data-lucide="plus"></i>
+            <span>Yeni kullanıcı tanımla</span>
+        </button>
+        <div th:replace="~{fragments/list-chrome :: search('Ad, soyad, e-posta veya kullanıcı adı', 'search-input')}"></div>
+        <div class="erp-toolbar-actions">
             <div x-data="{ exportOpen: false }" class="relative">
                 <button @click="exportOpen = !exportOpen" type="button" class="erp-btn-secondary">
                     <i data-lucide="download"></i>
@@ -37,15 +45,7 @@
                     </button>
                 </div>
             </div>
-            <button type="button" hx-get="/admin/users/create" hx-target="#modal-container" class="erp-btn-primary">
-                <i data-lucide="plus"></i>
-                <span>Yeni kullanıcı tanımla</span>
-            </button>
         </div>
-    </div>
-
-    <div class="erp-toolbar">
-        <div th:replace="~{fragments/list-chrome :: search('Ad, soyad, e-posta veya kullanıcı adı', 'search-input')}"></div>
         <input type="hidden" id="filter-role" x-model="role">
         <input type="hidden" id="filter-enabled" x-model="enabled">
 

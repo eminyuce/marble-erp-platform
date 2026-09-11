@@ -49,6 +49,9 @@ public class SettingController {
         if (!toUpdate.containsKey("security.recaptcha.enabled")) {
             toUpdate.put("security.recaptcha.enabled", "false");
         }
+        if (!toUpdate.containsKey("security.rate_limiting.enabled")) {
+            toUpdate.put("security.rate_limiting.enabled", "false");
+        }
         if (!toUpdate.containsKey("smtp.auth")) {
             toUpdate.put("smtp.auth", "false");
         }

@@ -1277,7 +1277,11 @@ button.erp-btn-secondary {
 }
 
 .erp-toolbar {
-  padding: 14px 16px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
   background: #fff;
   border: 1px solid #d7dee8;
   border-radius: 12px;
@@ -1285,11 +1289,21 @@ button.erp-btn-secondary {
 }
 
 .erp-search-form {
-  margin: 0 0 0;
+  flex: 1 1 220px;
+  min-width: 180px;
+  margin: 0;
+}
+
+.erp-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 .erp-toolbar .erp-quick {
-  margin-top: 12px;
+  flex-basis: 100%;
+  margin-top: 4px;
 }
 
 .erp-search-field {
@@ -1917,4 +1931,44 @@ button.erp-btn-secondary {
   .osf-guide__content.is-turning .osf-guide__section.is-active {
     animation: none;
   }
+}
+
+/* -------------------------------------------------------------------------
+   Settings sidebar navigation (admin/settings)
+   ------------------------------------------------------------------------- */
+.settings-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 150ms ease;
+  background: transparent;
+  margin-bottom: 2px;
+}
+
+.settings-sidebar-item--idle {
+  color: #475569;
+}
+
+.settings-sidebar-item--idle:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.settings-sidebar-item--active {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f7ff 100%);
+  color: #1e4e8c;
+  font-weight: 700;
+  border-color: #bfdbfe;
+  box-shadow: inset 3px 0 0 #2b6cb0;
+}
+
+.settings-sidebar-item--active svg {
+  color: #2b6cb0;
 }

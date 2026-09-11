@@ -12,7 +12,26 @@
             <h2 class="admin-page-title">Katrak kesim</h2>
             <p class="erp-list-lead">Katrak dilimleme, yüzey işlemleri, kalite katsayılı maliyet ve 10 kodlu fire kaydı.</p>
         </div>
-        <div class="erp-list-header-actions">
+    </div>
+
+    <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfada katrak kesim (dilimleme) iş emirlerini görüntüler ve yönetirsiniz.', '<strong>Yeni kesim emri</strong> butonu ile iş emri oluşturabilirsiniz.', '<strong>Plaka Ambarı</strong> bağlantısından kesim sonucu oluşan plakalara ulaşabilirsiniz.', 'Kalite çarpanı: A=1.15, B=1.00, C=0.65 ile eşdeğer alan üzerinden birim maliyet dağıtılır.', '<strong>CSV İndir</strong> butonu ile tablo verilerini dışa aktarabilirsiniz.'} })}"></div>
+
+    <aside class="erp-callout" role="note">
+        <i data-lucide="sparkles"></i>
+        <p><strong>Kalite çarpanı:</strong> A kalite K=1.15, B kalite K=1.00, C kalite K=0.65 ile eşdeğer alan üzerinden birim maliyet dağıtılır.</p>
+    </aside>
+
+    <div class="erp-toolbar">
+        <button type="button" hx-get="/production/create" hx-target="#modal-container" class="erp-btn-primary">
+            <i data-lucide="plus"></i>
+            <span>Yeni kesim emri</span>
+        </button>
+        <div th:replace="~{fragments/list-chrome :: search('İş emri no, makine veya blok kodu', 'search-input')}"></div>
+        <div class="erp-toolbar-actions">
+            <a th:href="@{/production/slabs}" class="erp-btn-secondary">
+                <i data-lucide="layers"></i>
+                <span>Plaka Ambarı</span>
+            </a>
             <div x-data="{ exportOpen: false }" class="relative">
                 <button @click="exportOpen = !exportOpen" type="button" class="erp-btn-secondary">
                     <i data-lucide="download"></i>
@@ -33,26 +52,7 @@
                     </button>
                 </div>
             </div>
-            <a th:href="@{/production/slabs}" class="erp-btn-secondary">
-                <i data-lucide="layers"></i>
-                <span>Plaka Ambarı</span>
-            </a>
-            <button type="button" hx-get="/production/create" hx-target="#modal-container" class="erp-btn-primary">
-                <i data-lucide="plus"></i>
-                <span>Yeni kesim emri</span>
-            </button>
         </div>
-    </div>
-
-    <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfada katrak kesim (dilimleme) iş emirlerini görüntüler ve yönetirsiniz.', '<strong>Yeni kesim emri</strong> butonu ile iş emri oluşturabilirsiniz.', '<strong>Plaka Ambarı</strong> bağlantısından kesim sonucu oluşan plakalara ulaşabilirsiniz.', 'Kalite çarpanı: A=1.15, B=1.00, C=0.65 ile eşdeğer alan üzerinden birim maliyet dağıtılır.', '<strong>CSV İndir</strong> butonu ile tablo verilerini dışa aktarabilirsiniz.'} })}"></div>
-
-    <aside class="erp-callout" role="note">
-        <i data-lucide="sparkles"></i>
-        <p><strong>Kalite çarpanı:</strong> A kalite K=1.15, B kalite K=1.00, C kalite K=0.65 ile eşdeğer alan üzerinden birim maliyet dağıtılır.</p>
-    </aside>
-
-    <div class="erp-toolbar">
-        <div th:replace="~{fragments/list-chrome :: search('İş emri no, makine veya blok kodu', 'search-input')}"></div>
     </div>
 
     <div th:replace="~{fragments/list-chrome :: gridShell('production-table')}"></div>

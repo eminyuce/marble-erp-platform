@@ -46,6 +46,17 @@ app:
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
 
+rate-limiting:
+  login:
+    max-requests: 5
+    window-seconds: 60
+  form:
+    max-requests: 10
+    window-seconds: 60
+  general:
+    max-requests: 60
+    window-seconds: 60
+
 logging:
   level:
     root: INFO

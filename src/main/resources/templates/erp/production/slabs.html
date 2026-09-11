@@ -12,7 +12,17 @@
             <h2 class="admin-page-title">Plaka ambarı</h2>
             <p class="erp-list-lead">Ham, cilalı ve honlu plakalar, birim m² maliyetleri ve barkod etiketleri.</p>
         </div>
-        <div class="erp-list-header-actions">
+    </div>
+
+    <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfada kesim sonucu oluşan ham, cilalı ve honlu mermer plakalarını görüntülersiniz.', 'Plaka kodu veya blok koduna göre arama yapabilirsiniz.', 'İşlemler menüsünden <strong>pasaport belgesi</strong> oluşturabilir, <strong>barkod yazdırabilir</strong> ve <strong>soy ağacını</strong> takip edebilirsiniz.', 'Birim m² maliyetleri, yüzey işlemi ve kalite derecesi bilgilerine erişebilirsiniz.', '<strong>CSV İndir</strong> butonu ile tablo verilerini dışa aktarabilirsiniz.'} })}"></div>
+
+    <div class="erp-toolbar">
+        <a th:href="@{/production}" class="erp-btn-secondary">
+            <i data-lucide="arrow-left"></i>
+            <span>Katrak emirleri</span>
+        </a>
+        <div th:replace="~{fragments/list-chrome :: search('Plaka kodu veya blok kodu', 'slab-search-input')}"></div>
+        <div class="erp-toolbar-actions">
             <div x-data="{ exportOpen: false }" class="relative">
                 <button @click="exportOpen = !exportOpen" type="button" class="erp-btn-secondary">
                     <i data-lucide="download"></i>
@@ -33,17 +43,7 @@
                     </button>
                 </div>
             </div>
-            <a th:href="@{/production}" class="erp-btn-secondary">
-                <i data-lucide="arrow-left"></i>
-                <span>Katrak emirleri</span>
-            </a>
         </div>
-    </div>
-
-    <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfada kesim sonucu oluşan ham, cilalı ve honlu mermer plakalarını görüntülersiniz.', 'Plaka kodu veya blok koduna göre arama yapabilirsiniz.', 'İşlemler menüsünden <strong>pasaport belgesi</strong> oluşturabilir, <strong>barkod yazdırabilir</strong> ve <strong>soy ağacını</strong> takip edebilirsiniz.', 'Birim m² maliyetleri, yüzey işlemi ve kalite derecesi bilgilerine erişebilirsiniz.', '<strong>CSV İndir</strong> butonu ile tablo verilerini dışa aktarabilirsiniz.'} })}"></div>
-
-    <div class="erp-toolbar">
-        <div th:replace="~{fragments/list-chrome :: search('Plaka kodu veya blok kodu', 'slab-search-input')}"></div>
     </div>
 
     <div th:replace="~{fragments/list-chrome :: gridShell('slabs-table')}"></div>

@@ -97,6 +97,20 @@
                     </div>
                 </section>
 
+                <section class="admin-mega-card admin-mega-card--system" data-mega-group="system">
+                    <header class="admin-mega-card-head">
+                        <span class="admin-mega-card-icon"><i data-lucide="activity" aria-hidden="true"></i></span>
+                        <h3 class="admin-mega-card-title">Sistem</h3>
+                        <span class="admin-mega-count">1</span>
+                    </header>
+                    <div class="admin-mega-card-body">
+                        <a class="admin-mega-item" th:href="@{/admin/dashboard/systemhealth/}" data-search="sağlık health actuator izleme" title="Sistem Sağlığı">
+                            <i data-lucide="heart-pulse" aria-hidden="true"></i>
+                            <span>Sistem Sağlığı</span>
+                        </a>
+                    </div>
+                </section>
+
                 <section class="admin-mega-card admin-mega-card--sales" data-mega-group="projects">
                     <header class="admin-mega-card-head">
                         <span class="admin-mega-card-icon"><i data-lucide="building-2" aria-hidden="true"></i></span>
@@ -135,31 +149,21 @@
                     <header class="admin-mega-card-head">
                         <span class="admin-mega-card-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
                         <h3 class="admin-mega-card-title">Yönetim</h3>
-                        <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">2</span>
-                        <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">1</span>
+                        <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">3</span>
+                        <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">2</span>
                     </header>
                     <div class="admin-mega-card-body">
                         <a class="admin-mega-item" th:href="@{/admin/users}" sec:authorize="hasRole('ADMIN')" data-search="kullanıcı rbac rol şifre" title="Kullanıcılar">
                             <i data-lucide="users" aria-hidden="true"></i>
                             <span>Kullanıcılar</span>
                         </a>
+                        <a class="admin-mega-item" th:href="@{/roles}" data-search="rol yetki izin roller yetkiler permission" title="Roller ve Yetkiler">
+                            <i data-lucide="shield" aria-hidden="true"></i>
+                            <span>Roller ve Yetkiler</span>
+                        </a>
                         <a class="admin-mega-item" th:href="@{/admin/settings}" data-search="ayar smtp 2fa recaptcha sistem" title="Sistem Ayarları">
                             <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
                             <span>Sistem Ayarları</span>
-                        </a>
-                    </div>
-                </section>
-
-                <section class="admin-mega-card admin-mega-card--system" data-mega-group="system">
-                    <header class="admin-mega-card-head">
-                        <span class="admin-mega-card-icon"><i data-lucide="activity" aria-hidden="true"></i></span>
-                        <h3 class="admin-mega-card-title">Sistem</h3>
-                        <span class="admin-mega-count">1</span>
-                    </header>
-                    <div class="admin-mega-card-body">
-                        <a class="admin-mega-item" th:href="@{/admin/dashboard/systemhealth/}" data-search="sağlık health actuator izleme" title="Sistem Sağlığı">
-                            <i data-lucide="heart-pulse" aria-hidden="true"></i>
-                            <span>Sistem Sağlığı</span>
                         </a>
                     </div>
                 </section>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Roller ve Yetkiler | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page">
+
+    <div th:replace="~{fragments/help-accordion :: help(items=${ {
+        'Bu sayfada sistemde tanımlı tüm rolleri ve her rolün yetkilerini görebilirsiniz.',
+        'Her kart bir rolü temsil eder; açıklamada o role sahip kullanıcının neler yapabileceği listelenmiştir.',
+        'Yeni bir rol atamak veya mevcut rolleri değiştirmek için <strong>Kullanıcılar</strong> sayfasına gidin.',
+        'Rolleriniz hakkında sorularınız varsa sistem yöneticinize başvurun.'
+    } })}"></div>
+
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Roller ve Yetkiler')}"></div>
+            <h2 class="admin-page-title">Roller ve Yetkiler</h2>
+            <p class="erp-list-lead">
+                Sistemde tanımlı kullanıcı rollerini, her rolün açıklamasını ve erişim yetkilerini inceleyin.
+            </p>
+        </div>
+    </div>
+
+    <!-- Role Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mt-6">
+
+        <!-- ADMIN -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-100 text-amber-700">
+                    <i data-lucide="shield-check" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Sistem Yöneticisi</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800">ADMIN</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Tam yetkili yönetici hesabı</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Tüm modüllere ve ayarlara tam erişim. Kullanıcı yönetimi, sistem yapılandırması, raporlama ve güvenlik ayarları.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Kullanıcı ekleme, düzenleme ve silme</li>
+                    <li>Rol atama ve yetki yapılandırması</li>
+                    <li>Sistem ayarları ve SMTP / 2FA / reCAPTCHA yönetimi</li>
+                    <li>Tüm modüllere tam erişim</li>
+                    <li>Sistem sağlığı izleme</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- EXECUTIVE -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-violet-100 text-violet-700">
+                    <i data-lucide="crown" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Üst Yönetim</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-violet-100 text-violet-800">EXECUTIVE</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Genel Müdür / Şirket Ortağı</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Tüm operasyon verilerine ve raporlara okuma erişimi. Finansal özet, proje durumu ve üretim performans göstergeleri.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Yönetici kokpiti ve KPI takibi</li>
+                    <li>Tüm operasyon ve proje verilerine okuma erişimi</li>
+                    <li>Finansal raporlar ve maliyet analizi</li>
+                    <li>Üretim performans göstergeleri</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- FACTORY_MANAGER -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-blue-700">
+                    <i data-lucide="factory" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Fabrika Müdürü</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-100 text-blue-800">FACTORY_MANAGER</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Fabrika operasyonları yöneticisi</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Fabrika operasyonları, üretim emirleri, plaka ambarı, kalite kontrol ve iş emri yönetimi.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Üretim (katrak kesim) iş emirleri yönetimi</li>
+                    <li>Plaka ambarı stok takibi</li>
+                    <li>Kalite kontrol ve fire kaydı</li>
+                    <li>Atölye operasyonlarını izleme</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- QUARRY_CHIEF -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-stone-200 text-stone-700">
+                    <i data-lucide="mountain" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Ocak Şefi</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-stone-200 text-stone-800">QUARRY_CHIEF</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Ocak Şefi / Formeni</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Ocak operasyonları, blok çıkarma, blok kayıt ve sevkiyat işlemleri.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Blok kayıt ve ölçüm girişi</li>
+                    <li>Kantar tartım verisi girişi</li>
+                    <li>Blok sevkiyat ve transfer işlemleri</li>
+                    <li>Ocak stok takibi</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SITE_ENGINEER -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-cyan-100 text-cyan-700">
+                    <i data-lucide="hard-hat" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Şantiye Mühendisi</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-cyan-100 text-cyan-800">SITE_ENGINEER</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Şantiye Şefi / Metraj Mühendisi</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Proje sahası operasyonları, montaj takibi, mahal yönetimi ve saha raporları.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Şantiye proje ve WBS yönetimi</li>
+                    <li>Mahal bazlı montaj takibi</li>
+                    <li>Sarfiyat kaydı (kum, çimento, yapıştırıcı)</li>
+                    <li>Saha raporları oluşturma</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- WORKSHOP_CHIEF -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-100 text-orange-700">
+                    <i data-lucide="hammer" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Atölye Şefi</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-orange-100 text-orange-800">WORKSHOP_CHIEF</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Atölye kesim ve ebatlama sorumlusu</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Atölye kesim emirleri, ebatlama, yüzey işlemleri ve fire kaydı.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Ebatlama iş emirleri yönetimi</li>
+                    <li>Köprü kesme ve pah/profil işlemleri</li>
+                    <li>Nesting ve yüzey işlemi atama</li>
+                    <li>Fire kaydı ve mozaik stok aktarımı</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- OPERATOR -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-100 text-teal-700">
+                    <i data-lucide="cog" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Operatör</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-teal-100 text-teal-800">OPERATOR</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Makine operatörü</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Günlük üretim işlemleri, makine operasyonu ve veri girişi.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Günlük üretim verisi girişi</li>
+                    <li>Makine çalışma kaydı</li>
+                    <li>Kesim ve yüzey işlemi uygulama</li>
+                    <li>Fire bildirim ve kayıt</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- FINANCE -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700">
+                    <i data-lucide="banknote" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Muhasebe / Finans</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">FINANCE</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Maliyet &amp; Finans Uzmanı</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Maliyet hesaplamaları, faturalama, alacak/borç takibi ve finansal raporlar.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Kalite çarpanlı maliyet dağıtımı</li>
+                    <li>Hedef kâr marjına göre fiyatlama</li>
+                    <li>Masraf merkezi bazlı raporlama</li>
+                    <li>Excel / CSV finansal rapor çıktıları</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SALES -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-pink-100 text-pink-700">
+                    <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Satış Temsilcisi</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-pink-100 text-pink-800">SALES</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Satış &amp; İhracat Sorumlusu</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Müşteri yönetimi, satış siparişleri, teklif hazırlama ve sipariş takibi.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Müşteri kayıt ve iletişim yönetimi</li>
+                    <li>Satış siparişi oluşturma ve takip</li>
+                    <li>Teklif hazırlama ve onay süreci</li>
+                    <li>Sipariş sevkiyat durumu izleme</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- QC -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700">
+                    <i data-lucide="scan-search" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Kalite Kontrol Uzmanı</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-100 text-indigo-800">QC</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Kalite kontrol ve denetim sorumlusu</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Plaka kalite sınıflandırması, parlaklık ölçümü, fire nedeni analizi ve izlenebilirlik denetimi.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Extra / A / B / C kalite sınıfı atama</li>
+                    <li>Parlaklık (gloss) ve kalınlık ölçümü</li>
+                    <li>Fire nedeni kod analizi (FR-01 … FR-10)</li>
+                    <li>QR / pasaport izlenebilirlik denetimi</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- USER -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 text-slate-600">
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900">Standart Kullanıcı</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700">USER</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Temel erişim düzeyi</p>
+                </div>
+            </div>
+            <div class="px-5 pb-5">
+                <p class="text-xs text-slate-600 mb-2">Temel sistem erişimi. Kendi profilini görüntüleme ve şifre değiştirme.</p>
+                <ul class="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li>Kendi profil bilgilerini görüntüleme</li>
+                    <li>Şifre değiştirme</li>
+                    <li>Atanmış modüllere sınırlı okuma erişimi</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer info -->
+    <div class="mt-8 mb-4 p-4 bg-sky-50 border border-sky-200 rounded-xl">
+        <div class="flex items-start gap-3">
+            <i data-lucide="info" class="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5"></i>
+            <div class="text-xs text-sky-800 space-y-1">
+                <p class="font-semibold">Rol değişikliği nasıl yapılır?</p>
+                <p>Kullanıcı rollerini yalnızca <strong>Sistem Yöneticisi (ADMIN)</strong> rolüne sahip kullanıcılar değiştirebilir.
+                   Rol atamak veya güncellemek için
+                   <a th:href="@{/admin/users}" class="underline font-medium text-sky-700 hover:text-sky-900">Kullanıcılar</a>
+                   sayfasına gidin.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.lucide) lucide.createIcons();
+        });
+    </script>
+</th:block>
+</body>
+</html>
