@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <!-- Read application name and active profiles from Spring Environment -->
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="marble-erp-platform"/>
+    <springProperty scope="context" name="activeProfile" source="spring.profiles.active" defaultValue="default"/>
+
+    <!-- Structured JSON Console Appender -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Custom static fields included in every JSON log entry -->
+            <customFields>{"app_name":"${appName}","environment":"${activeProfile}"}</customFields>
+
+            <!-- Timestamp formatting (ISO-8601 UTC) -->
+            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSS'Z'</timestampPattern>
+            <timeZone>UTC</timeZone>
+
+            <!-- Include all MDC entries directly in root JSON object (userId, correlationId, etc.) -->
+            <includeMdc>true</includeMdc>
+
+            <!-- Logger name formatting -->
+            <shortenedLoggerNameLength>36</shortenedLoggerNameLength>
+
+            <!-- Stack trace configuration -->
+            <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                <maxLength>4096</maxLength>
+                <shortenedClassNameLength>25</shortenedClassNameLength>
+                <rootCauseFirst>true</rootCauseFirst>
+            </throwableConverter>
+        </encoder>
+    </appender>
+
+    <!-- Application Loggers -->
+    <logger name="com.ozerler.marble" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.hibernate" level="WARN"/>
+
+    <!-- Root Logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE_JSON"/>
+    </root>
+
+</configuration>
