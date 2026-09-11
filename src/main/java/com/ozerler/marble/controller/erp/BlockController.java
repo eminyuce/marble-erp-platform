@@ -2,7 +2,6 @@ package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.dto.BlockDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.service.QuarryBlockService;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +9,12 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

@@ -17,6 +17,7 @@ import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.ScrapLogRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -157,10 +158,10 @@ public class WorkshopCutService {
                                           int piecesCount, BigDecimal targetWidthCm, BigDecimal targetLengthCm,
                                           BigDecimal itemArea, BigDecimal unitCost,
                                           String edgeFinish, String targetLocationDesc) {
-        String finish = (edgeFinish != null && !edgeFinish.isBlank()) ? edgeFinish : DEFAULT_EDGE_FINISH;
-        String resolvedLocation = (targetLocationDesc != null && !targetLocationDesc.isBlank())
+        String finish = StringUtils.isNotBlank(edgeFinish) ? edgeFinish : DEFAULT_EDGE_FINISH;
+        String resolvedLocation = StringUtils.isNotBlank(targetLocationDesc)
                 ? targetLocationDesc
-                : (location != null ? location.getLocationName() : DEFAULT_TARGET_LOCATION);
+                : location != null ? location.getLocationName() : DEFAULT_TARGET_LOCATION;
 
         List<CutItem> items = new ArrayList<>(piecesCount);
         long sequence = System.currentTimeMillis() % 10000;

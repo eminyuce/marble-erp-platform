@@ -2,7 +2,6 @@ package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.enums.ScrapReasonCode;
 import com.ozerler.marble.service.ProductionService;
@@ -10,7 +9,11 @@ import com.ozerler.marble.service.QuarryBlockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
 

@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.PasswordResetRequest;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.dto.UserCreateRequest;
@@ -10,6 +11,8 @@ import com.ozerler.marble.model.User;
 import com.ozerler.marble.repository.RoleRepository;
 import com.ozerler.marble.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +26,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Service managing user lifecycle, authentication credentials, and role assignments.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -34,7 +40,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public TabulatorResponse<UserDto> getUsersPaged(int page, int size, String search, String sortField, String sortDir) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
-        if (sortField != null && !sortField.isBlank()) {
+        if (StringUtils.isNotBlank(sortField)) {
             Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
             sort = Sort.by(dir, sortField);
         }
@@ -68,13 +74,13 @@ public class UserService {
         }
 
         Set<Role> roles = new HashSet<>();
-        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+        if (CollectionUtils.isNotEmpty(request.getRoles())) {
             for (String roleName : request.getRoles()) {
                 roleRepository.findByName(roleName).ifPresent(roles::add);
             }
         }
         if (roles.isEmpty()) {
-            roleRepository.findByName("ROLE_USER").ifPresent(roles::add);
+            roleRepository.findByName(Constants.ROLE_USER).ifPresent(roles::add);
         }
 
         User user = User.builder()
@@ -108,7 +114,7 @@ public class UserService {
         user.setLastName(request.getLastName().trim());
         user.setEnabled(request.isEnabled());
 
-        if (request.getRoles() != null) {
+        if (CollectionUtils.isNotEmpty(request.getRoles())) {
             Set<Role> roles = new HashSet<>();
             for (String roleName : request.getRoles()) {
                 roleRepository.findByName(roleName).ifPresent(roles::add);

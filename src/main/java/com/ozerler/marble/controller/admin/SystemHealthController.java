@@ -71,7 +71,7 @@ public class SystemHealthController {
         long uptimeMs = runtimeMX.getUptime();
         long uptimeSec = uptimeMs / 1000;
         long hours = uptimeSec / 3600;
-        long minutes = (uptimeSec % 3600) / 60;
+        long minutes = uptimeSec % 3600 / 60;
         long seconds = uptimeSec % 60;
         String formattedUptime = String.format("%d sa %02d dk %02d sn", hours, minutes, seconds);
 
@@ -93,7 +93,7 @@ public class SystemHealthController {
         long usedMemMb = usedMemBytes / (1024 * 1024);
         long totalMemMb = totalMemBytes / (1024 * 1024);
         long maxMemMb = maxMemBytes / (1024 * 1024);
-        int memPercent = (int) Math.round(((double) usedMemBytes / totalMemBytes) * 100);
+        int memPercent = (int) Math.round((double) usedMemBytes / totalMemBytes * 100);
 
         metrics.put("javaVersion", System.getProperty("java.version", "24"));
         metrics.put("javaVendor", System.getProperty("java.vendor", "Eclipse Adoptium"));
@@ -141,7 +141,7 @@ public class SystemHealthController {
 
         long totalDiskGb = totalDiskBytes / (1024 * 1024 * 1024);
         long usableDiskGb = usableDiskBytes / (1024 * 1024 * 1024);
-        int diskPercent = totalDiskBytes > 0 ? (int) Math.round(((double) usedDiskBytes / totalDiskBytes) * 100) : 0;
+        int diskPercent = totalDiskBytes > 0 ? (int) Math.round((double) usedDiskBytes / totalDiskBytes * 100) : 0;
 
         metrics.put("diskStatus", "UP");
         metrics.put("totalDiskGb", totalDiskGb);

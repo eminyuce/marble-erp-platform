@@ -5,6 +5,7 @@ import com.ozerler.marble.service.EmailService;
 import com.ozerler.marble.service.SettingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -73,7 +74,7 @@ public class SettingController {
                     "companyName", "Özerler Mermer A.Ş.",
                     "otpCode", "584920",
                     "loginTime", "Bugün 08:30",
-                    "ipAddress", "192.168.1.100",
+                    "ipAddress", "10.0.0.X",
                     "blockNumber", "BLK-2026-088",
                     "quarryName", "Afyon Menekşe Ocağı",
                     "reason", "Damar Çatlağı (FR-01)",
@@ -81,7 +82,7 @@ public class SettingController {
             );
 
             boolean ok;
-            if (templateKey != null && !templateKey.isBlank()) {
+            if (StringUtils.isNotBlank(templateKey)) {
                 ok = emailService.sendTemplatedEmail(testEmail, templateKey, vars);
             } else {
                 ok = emailService.sendEmail(testEmail, "Özerler Mermer ERP - Test E-Postası",
@@ -133,7 +134,7 @@ public class SettingController {
         sampleVars.put("companyName", "Özerler Mermer A.Ş.");
         sampleVars.put("otpCode", "694125");
         sampleVars.put("loginTime", "2026-09-11 08:45");
-        sampleVars.put("ipAddress", "88.241.12.3");
+        sampleVars.put("ipAddress", "10.0.0.X");
         sampleVars.put("blockNumber", "BLK-2026-004");
         sampleVars.put("quarryName", "İscehisar Beyaz Ocağı");
         sampleVars.put("orderNumber", "WO-2026-015");

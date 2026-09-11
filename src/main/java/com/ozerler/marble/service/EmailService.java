@@ -2,7 +2,6 @@ package com.ozerler.marble.service;
 
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.repository.EmailTemplateRepository;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
