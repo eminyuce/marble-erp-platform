@@ -4,6 +4,8 @@ import com.ozerler.marble.model.SystemSetting;
 import com.ozerler.marble.repository.SystemSettingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ public class SettingService {
 
     private final SystemSettingRepository settingRepository;
 
+    @Cacheable(value = "settings", key = "'allSettingsMap'")
     @Transactional(readOnly = true)
     public Map<String, String> getAllSettingsAsMap() {
         List<SystemSetting> all = settingRepository.findAll();
@@ -34,11 +37,17 @@ public class SettingService {
         return settingRepository.findAll();
     }
 
+    @Cacheable(value = "settings", key = "#key")
     @Transactional(readOnly = true)
-    public String getSetting(String key, String defaultValue) {
+    public String getSettingValue(String key) {
         return settingRepository.findByKey(key)
                 .map(SystemSetting::getValue)
-                .orElse(defaultValue);
+                .orElse(null);
+    }
+
+    public String getSetting(String key, String defaultValue) {
+        String val = getSettingValue(key);
+        return val != null ? val : defaultValue;
     }
 
     @Transactional(readOnly = true)
@@ -47,6 +56,7 @@ public class SettingService {
         return "true".equalsIgnoreCase(val) || "1".equals(val);
     }
 
+    @CacheEvict(value = "settings", allEntries = true)
     @Transactional
     public void saveSetting(String key, String value, String category, String description) {
         Optional<SystemSetting> existing = settingRepository.findByKey(key);
@@ -67,6 +77,7 @@ public class SettingService {
         log.info("System setting saved: {} = {}", key, key.toLowerCase().contains("password") ? "******" : value);
     }
 
+    @CacheEvict(value = "settings", allEntries = true)
     @Transactional
     public void updateSettings(Map<String, String> settings) {
         settings.forEach((k, v) -> {

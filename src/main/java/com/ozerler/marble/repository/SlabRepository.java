@@ -4,6 +4,7 @@ import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.enums.SlabStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,6 +25,14 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
 
     List<Slab> findByStatus(SlabStatus status);
 
+    @Query("SELECT s FROM Slab s JOIN FETCH s.block b JOIN FETCH b.quarry WHERE s.id = :id")
+    Optional<Slab> findByIdWithBlockAndQuarry(@Param("id") Long id);
+
+    @EntityGraph(attributePaths = {"block"})
+    @Query("SELECT s FROM Slab s ORDER BY s.id DESC")
+    List<Slab> findAllWithBlock();
+
+    @EntityGraph(attributePaths = {"block", "productionOrder", "pallet"})
     @Query("SELECT s FROM Slab s WHERE " +
            "(:search IS NULL OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(s.block.blockCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +

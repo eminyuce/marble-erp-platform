@@ -8,6 +8,8 @@ import com.ozerler.marble.util.Strings;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -34,6 +36,7 @@ public class EmailService {
         return templateRepository.findAll();
     }
 
+    @Cacheable(value = "emailTemplates", key = "#key")
     @Transactional(readOnly = true)
     public Optional<EmailTemplate> getTemplateByKey(String key) {
         return templateRepository.findByTemplateKey(key);
@@ -45,6 +48,7 @@ public class EmailService {
                 .orElseThrow(() -> new ResourceNotFoundException("E-posta şablonu", id));
     }
 
+    @CacheEvict(value = "emailTemplates", allEntries = true)
     @Transactional
     public EmailTemplate saveTemplate(EmailTemplate template) {
         return templateRepository.save(template);

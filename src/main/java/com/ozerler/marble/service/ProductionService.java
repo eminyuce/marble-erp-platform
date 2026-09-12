@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.TabulatorResponse;
@@ -31,7 +32,9 @@ import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,11 +67,32 @@ public class ProductionService {
         Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
 
         Page<ProductionOrder> orderPage = productionOrderRepository.searchOrders(search, pageable);
-        List<ProductionOrderDto> dtos = orderPage.getContent().stream()
-                .map(ProductionOrderDto::fromEntity)
-                .collect(Collectors.toList());
+        return TabulatorResponse.of(
+                toOrderDtos(orderPage.getContent()),
+                orderPage.getTotalPages(),
+                orderPage.getTotalElements());
+    }
 
-        return TabulatorResponse.of(dtos, orderPage.getTotalPages(), orderPage.getTotalElements());
+    private List<ProductionOrderDto> toOrderDtos(List<ProductionOrder> orders) {
+        Map<Long, OrderChildAggregate> metricsByOrderId = loadSlabMetrics(orders);
+        return orders.stream()
+                .map(order -> {
+                    OrderChildAggregate metrics = metricsByOrderId.get(order.getId());
+                    return ProductionOrderDto.fromEntity(
+                            order,
+                            OrderChildAggregate.itemCountOrZero(metrics),
+                            OrderChildAggregate.totalAreaOrZero(metrics));
+                })
+                .toList();
+    }
+
+    private Map<Long, OrderChildAggregate> loadSlabMetrics(List<ProductionOrder> orders) {
+        if (orders.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> orderIds = orders.stream().map(ProductionOrder::getId).toList();
+        return productionOrderRepository.aggregateSlabMetrics(orderIds).stream()
+                .collect(Collectors.toMap(OrderChildAggregate::getParentId, Function.identity()));
     }
 
     @Transactional(readOnly = true)

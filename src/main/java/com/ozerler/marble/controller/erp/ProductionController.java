@@ -114,7 +114,7 @@ public class ProductionController {
 
     @GetMapping("/slabs/{id}/label")
     public String slabLabel(@PathVariable("id") Long id, Model model) {
-        Slab slab = slabRepository.findById(id)
+        Slab slab = slabRepository.findByIdWithBlockAndQuarry(id)
                 .orElseThrow(() -> new EntityNotFoundException("Plaka bulunamadı: " + id));
 
         String passportUrl = "http://localhost:8080/passport/" + slab.getSlabCode();

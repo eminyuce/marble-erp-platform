@@ -4,6 +4,7 @@ import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.enums.BlockStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,10 +18,19 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     Optional<Block> findByBlockCode(String blockCode);
 
+    @EntityGraph(attributePaths = {"quarry"})
+    @Query("SELECT b FROM Block b WHERE b.id = :id")
+    Optional<Block> findByIdWithQuarry(@Param("id") Long id);
+
+    @EntityGraph(attributePaths = {"quarry"})
+    @Query("SELECT b FROM Block b ORDER BY b.id DESC")
+    List<Block> findAllWithQuarry();
+
     List<Block> findByStatus(BlockStatus status);
 
     long countByStatus(BlockStatus status);
 
+    @EntityGraph(attributePaths = {"quarry"})
     @Query("SELECT b FROM Block b WHERE " +
            "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(b.stoneType) LIKE LOWER(CONCAT('%', :search, '%')) OR " +

@@ -1,6 +1,7 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.dto.CutOrderDto;
+import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.CutItem;
 import com.ozerler.marble.model.CutOrder;
@@ -31,7 +32,9 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -67,11 +70,32 @@ public class WorkshopCutService {
         Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
 
         Page<CutOrder> orderPage = cutOrderRepository.searchCutOrders(search, pageable);
-        List<CutOrderDto> dtos = orderPage.getContent().stream()
-                .map(CutOrderDto::fromEntity)
-                .collect(Collectors.toList());
+        return TabulatorResponse.of(
+                toCutOrderDtos(orderPage.getContent()),
+                orderPage.getTotalPages(),
+                orderPage.getTotalElements());
+    }
 
-        return TabulatorResponse.of(dtos, orderPage.getTotalPages(), orderPage.getTotalElements());
+    private List<CutOrderDto> toCutOrderDtos(List<CutOrder> orders) {
+        Map<Long, OrderChildAggregate> metricsByOrderId = loadItemMetrics(orders);
+        return orders.stream()
+                .map(order -> {
+                    OrderChildAggregate metrics = metricsByOrderId.get(order.getId());
+                    return CutOrderDto.fromEntity(
+                            order,
+                            OrderChildAggregate.itemCountOrZero(metrics),
+                            OrderChildAggregate.totalAreaOrZero(metrics));
+                })
+                .toList();
+    }
+
+    private Map<Long, OrderChildAggregate> loadItemMetrics(List<CutOrder> orders) {
+        if (orders.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> orderIds = orders.stream().map(CutOrder::getId).toList();
+        return cutOrderRepository.aggregateItemMetrics(orderIds).stream()
+                .collect(Collectors.toMap(OrderChildAggregate::getParentId, Function.identity()));
     }
 
     @Transactional(readOnly = true)

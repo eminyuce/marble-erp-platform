@@ -4,6 +4,7 @@ import com.ozerler.marble.model.ScrapLog;
 import com.ozerler.marble.model.enums.ScrapReasonCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -22,6 +23,10 @@ public interface ScrapLogRepository extends JpaRepository<ScrapLog, Long> {
     List<ScrapLog> findByBlockId(Long blockId);
 
     List<ScrapLog> findByProductionOrderId(Long orderId);
+
+    @EntityGraph(attributePaths = {"block"})
+    @Query("SELECT s FROM ScrapLog s ORDER BY s.loggedAt DESC")
+    List<ScrapLog> findAllWithBlock();
 
     @Query("SELECT s.reasonCode, COUNT(s), COALESCE(SUM(s.scrapWeightKg), 0), COALESCE(SUM(s.costImpact), 0) " +
            "FROM ScrapLog s GROUP BY s.reasonCode")

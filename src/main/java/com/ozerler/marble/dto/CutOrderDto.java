@@ -69,12 +69,10 @@ public class CutOrderDto {
     private String notes;
 
     public static CutOrderDto fromEntity(CutOrder c) {
-        BigDecimal area = c.getItems() != null ?
-                c.getItems().stream()
-                        .map(i -> i.getAreaM2() != null ? i.getAreaM2() : BigDecimal.ZERO)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                : BigDecimal.ZERO;
+        return fromEntity(c, 0, BigDecimal.ZERO);
+    }
 
+    public static CutOrderDto fromEntity(CutOrder c, int itemCount, BigDecimal totalAreaM2) {
         return CutOrderDto.builder()
                 .id(c.getId())
                 .cutOrderNo(c.getCutOrderNo())
@@ -85,8 +83,8 @@ public class CutOrderDto {
                 .operatorName(c.getOperatorName())
                 .plannedStart(c.getPlannedStart())
                 .status(c.getStatus())
-                .itemCount(c.getItems() != null ? c.getItems().size() : 0)
-                .totalAreaM2(area)
+                .itemCount(itemCount)
+                .totalAreaM2(totalAreaM2 != null ? totalAreaM2 : BigDecimal.ZERO)
                 .notes(c.getNotes())
                 .build();
     }

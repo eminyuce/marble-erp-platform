@@ -1,5 +1,9 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.dto.CutOrderDto;
+import com.ozerler.marble.dto.OrderChildAggregate;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.CutOrder;
 import com.ozerler.marble.repository.CutItemRepository;
 import com.ozerler.marble.repository.CutOrderRepository;
 import com.ozerler.marble.repository.ProjectLocationRepository;
@@ -12,10 +16,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class WorkshopCutServiceTest {
@@ -71,5 +81,44 @@ class WorkshopCutServiceTest {
         assertThatThrownBy(() -> workshopCutService.getCutOrderById(null))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("ID");
+    }
+
+    @Test
+    @DisplayName("getCutOrdersPaged maps database item aggregates instead of loading child collections")
+    void getCutOrdersPaged_UsesDatabaseAggregates() {
+        CutOrder order = CutOrder.builder()
+                .id(9L)
+                .cutOrderNo("CO-2026-009")
+                .machineName("Köprü-01")
+                .status("COMPLETED")
+                .build();
+        when(cutOrderRepository.searchCutOrders(any(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(order)));
+        when(cutOrderRepository.aggregateItemMetrics(List.of(9L)))
+                .thenReturn(List.of(new OrderChildAggregate() {
+                    @Override
+                    public Long getParentId() {
+                        return 9L;
+                    }
+
+                    @Override
+                    public Long getItemCount() {
+                        return 4L;
+                    }
+
+                    @Override
+                    public BigDecimal getTotalArea() {
+                        return new BigDecimal("6.2500");
+                    }
+                }));
+
+        TabulatorResponse<CutOrderDto> response = workshopCutService.getCutOrdersPaged(1, 10, null, null, null);
+
+        assertThat(response.getData()).hasSize(1);
+        CutOrderDto dto = response.getData().getFirst();
+        assertThat(dto.getCutOrderNo()).isEqualTo("CO-2026-009");
+        assertThat(dto.getItemCount()).isEqualTo(4);
+        assertThat(dto.getTotalAreaM2()).isEqualByComparingTo("6.2500");
+        assertThat(order.getItems()).isEmpty();
     }
 }

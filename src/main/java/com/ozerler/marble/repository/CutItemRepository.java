@@ -20,6 +20,8 @@ public interface CutItemRepository extends JpaRepository<CutItem, Long> {
 
     List<CutItem> findBySourceSlabId(Long slabId);
 
+    List<CutItem> findBySourceSlabIdIn(java.util.Collection<Long> slabIds);
+
     @Query("SELECT i FROM CutItem i WHERE " +
            "(:search IS NULL OR LOWER(i.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(i.targetLocation) LIKE LOWER(CONCAT('%', :search, '%')))")

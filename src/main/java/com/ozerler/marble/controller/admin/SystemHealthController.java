@@ -35,7 +35,7 @@ public class SystemHealthController {
     private final DataSource dataSource;
     private final Environment environment;
     private final Optional<BuildProperties> buildProperties;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @GetMapping({"", "/"})
     public String systemHealthPage(Model model) {
@@ -44,7 +44,7 @@ public class SystemHealthController {
         model.addAttribute("currentSection", "systemhealth");
 
         try {
-            String jsonFormatted = objectMapper.writerWithDefaultPrettyPrinter()
+            String jsonFormatted = OBJECT_MAPPER.writerWithDefaultPrettyPrinter()
                     .writeValueAsString(healthData.get("healthJsonMap"));
             model.addAttribute("rawJson", jsonFormatted);
         } catch (Exception e) {

@@ -109,6 +109,7 @@ public class QuarryBlockService {
         return blockRepository.save(block);
     }
 
+    @org.springframework.cache.annotation.Cacheable("quarries")
     @Transactional(readOnly = true)
     public List<Quarry> getAllQuarries() {
         return quarryRepository.findAll();

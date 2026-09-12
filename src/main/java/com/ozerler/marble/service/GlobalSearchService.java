@@ -19,14 +19,19 @@ import com.ozerler.marble.repository.UserRepository;
 import com.ozerler.marble.util.Strings;
 import com.ozerler.marble.util.Urls;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,7 +54,9 @@ public class GlobalSearchService {
     private final CutItemRepository cutItemRepository;
     private final QuarryRepository quarryRepository;
 
-    @Transactional(readOnly = true)
+    @Qualifier("searchTaskExecutor")
+    private final AsyncTaskExecutor searchTaskExecutor;
+
     public GlobalSearchResponse search(String rawQuery) {
         String query = rawQuery == null ? "" : rawQuery.trim();
         if (query.length() < MIN_QUERY_LENGTH) {
@@ -57,20 +64,24 @@ public class GlobalSearchService {
         }
 
         Pageable limit = PageRequest.of(0, PER_TYPE_LIMIT);
-        List<GlobalSearchHit> hits = new ArrayList<>();
-        hits.addAll(searchBlocks(query, limit));
-        hits.addAll(searchProjects(query, limit));
-        hits.addAll(searchSlabs(query, limit));
-        hits.addAll(searchProductionOrders(query, limit));
-        hits.addAll(searchCutOrders(query, limit));
-        hits.addAll(searchSalesOrders(query, limit));
-        hits.addAll(searchPurchaseOrders(query, limit));
-        hits.addAll(searchUsers(query, limit));
-        hits.addAll(searchCustomers(query, limit));
-        hits.addAll(searchSuppliers(query, limit));
-        hits.addAll(searchCostCenters(query, limit));
-        hits.addAll(searchCutItems(query, limit));
-        hits.addAll(searchQuarries(query, limit));
+        List<GlobalSearchHit> hits = List.of(
+                        supplyAsync(() -> searchBlocks(query, limit)),
+                        supplyAsync(() -> searchProjects(query, limit)),
+                        supplyAsync(() -> searchSlabs(query, limit)),
+                        supplyAsync(() -> searchProductionOrders(query, limit)),
+                        supplyAsync(() -> searchCutOrders(query, limit)),
+                        supplyAsync(() -> searchSalesOrders(query, limit)),
+                        supplyAsync(() -> searchPurchaseOrders(query, limit)),
+                        supplyAsync(() -> searchUsers(query, limit)),
+                        supplyAsync(() -> searchCustomers(query, limit)),
+                        supplyAsync(() -> searchSuppliers(query, limit)),
+                        supplyAsync(() -> searchCostCenters(query, limit)),
+                        supplyAsync(() -> searchCutItems(query, limit)),
+                        supplyAsync(() -> searchQuarries(query, limit)))
+                .stream()
+                .map(this::joinHits)
+                .flatMap(List::stream)
+                .collect(Collectors.toCollection(ArrayList::new));
 
         hits.sort(Comparator.comparingInt(GlobalSearchHit::getScore).reversed()
                 .thenComparing(GlobalSearchHit::getTitle, String.CASE_INSENSITIVE_ORDER));
@@ -80,6 +91,22 @@ public class GlobalSearchService {
                 .total(hits.size())
                 .results(hits)
                 .build();
+    }
+
+    private CompletableFuture<List<GlobalSearchHit>> supplyAsync(Supplier<List<GlobalSearchHit>> search) {
+        return CompletableFuture.supplyAsync(search, searchTaskExecutor);
+    }
+
+    private List<GlobalSearchHit> joinHits(CompletableFuture<List<GlobalSearchHit>> future) {
+        try {
+            return future.join();
+        } catch (CompletionException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            throw new IllegalStateException("Global arama sorgusu başarısız oldu", cause);
+        }
     }
 
     private List<GlobalSearchHit> searchBlocks(String query, Pageable limit) {

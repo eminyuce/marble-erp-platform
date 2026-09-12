@@ -7,7 +7,8 @@ import com.ozerler.marble.util.DateTimes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,7 +101,7 @@ public class ReportService {
         switch (type) {
             case QUARRY_BLOCKS -> {
                 data.headers = new String[]{"Blok Kodu", "Ocak", "Kalite", "Hacim (m³)", "Teorik Tonaj", "Kantar Tonajı", "Sapma %", "Durum", "Taş Türü"};
-                List<Block> blocks = blockRepository.findAll();
+                List<Block> blocks = blockRepository.findAllWithQuarry();
                 for (Block b : blocks) {
                     String varianceStr = "0.00%";
                     if (b.getWeightDeviationPct() != null) {
@@ -130,7 +131,7 @@ public class ReportService {
             }
             case FACTORY_SCRAP -> {
                 data.headers = new String[]{"Kayıt Tarihi", "Blok Kodu", "Fire Kodu", "Fire Sebebi", "Fire Alanı (m²)", "Kayıt Yapan"};
-                List<ScrapLog> scraps = scrapLogRepository.findAll();
+                List<ScrapLog> scraps = scrapLogRepository.findAllWithBlock();
                 for (ScrapLog s : scraps) {
                     data.rows.add(new String[]{
                             DateTimes.formatYearMonthDayHourMinute(s.getLoggedAt(), ""),
@@ -144,7 +145,7 @@ public class ReportService {
             }
             case WORKSHOP_ORDERS -> {
                 data.headers = new String[]{"İş Emri No", "Proje", "Makine", "Operatör", "Parça Sayısı", "Durum", "Kayıt Tarihi"};
-                List<CutOrder> orders = cutOrderRepository.findAll();
+                List<CutOrder> orders = cutOrderRepository.findAllWithProject();
                 for (CutOrder o : orders) {
                     String siteName = o.getProject() != null ? o.getProject().getName() : "-";
                     String itemsCount = String.valueOf(o.getItems() != null ? o.getItems().size() : 0);
@@ -193,7 +194,7 @@ public class ReportService {
             }
             case SLABS_INVENTORY -> {
                 data.headers = new String[]{"Plaka Barkodu", "Kaynak Blok", "Ebat (GxY)", "Kalınlık", "Yüzey İşlem", "Kalite Sınıfı", "Birim Maliyet (TL/m²)", "Durum"};
-                List<Slab> slabs = slabRepository.findAll();
+                List<Slab> slabs = slabRepository.findAllWithBlock();
                 for (Slab sl : slabs) {
                     String dims = (sl.getWidthCm() != null ? sl.getWidthCm() : 0) + "x" + (sl.getLengthCm() != null ? sl.getLengthCm() : 0) + " cm";
                     data.rows.add(new String[]{
@@ -215,8 +216,12 @@ public class ReportService {
     public byte[] generateExcelReport(ReportType type) throws IOException {
         ReportData data = getReportData(type);
 
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        SXSSFWorkbook workbook = new SXSSFWorkbook(100);
+        try (workbook; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Rapor");
+            if (sheet instanceof SXSSFSheet sxSheet) {
+                sxSheet.trackAllColumnsForAutoSizing();
+            }
 
             // Title row styling
             Font titleFont = workbook.createFont();
@@ -281,6 +286,8 @@ public class ReportService {
 
             workbook.write(out);
             return out.toByteArray();
+        } finally {
+            workbook.dispose();
         }
     }
 

@@ -34,6 +34,7 @@ public class CostAccountingService {
     private final CostCenterRepository costCenterRepository;
     private final CostTransactionRepository costTransactionRepository;
 
+    @org.springframework.cache.annotation.Cacheable("costCenters")
     @Transactional(readOnly = true)
     public List<CostCenter> getAllCostCenters() {
         return costCenterRepository.findAll();

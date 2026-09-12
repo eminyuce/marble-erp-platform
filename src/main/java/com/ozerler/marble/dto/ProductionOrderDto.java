@@ -93,12 +93,10 @@ public class ProductionOrderDto {
     private String notes;
 
     public static ProductionOrderDto fromEntity(ProductionOrder p) {
-        BigDecimal totalArea = p.getSlabs() != null ?
-                p.getSlabs().stream()
-                        .map(s -> s.getSurfaceAreaM2() != null ? s.getSurfaceAreaM2() : BigDecimal.ZERO)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                : BigDecimal.ZERO;
+        return fromEntity(p, 0, BigDecimal.ZERO);
+    }
 
+    public static ProductionOrderDto fromEntity(ProductionOrder p, int slabCount, BigDecimal totalSlabAreaM2) {
         return ProductionOrderDto.builder()
                 .id(p.getId())
                 .orderNo(p.getOrderNo())
@@ -115,8 +113,8 @@ public class ProductionOrderDto {
                 .bladeWearMm(p.getBladeWearMm())
                 .operatorName(p.getOperatorName())
                 .status(p.getStatus())
-                .slabCount(p.getSlabs() != null ? p.getSlabs().size() : 0)
-                .totalSlabAreaM2(totalArea)
+                .slabCount(slabCount)
+                .totalSlabAreaM2(totalSlabAreaM2 != null ? totalSlabAreaM2 : BigDecimal.ZERO)
                 .notes(p.getNotes())
                 .build();
     }

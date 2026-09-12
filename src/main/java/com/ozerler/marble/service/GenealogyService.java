@@ -15,9 +15,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,20 +40,36 @@ public class GenealogyService {
     @Transactional(readOnly = true)
     public GenealogyNodeDto buildTreeForBlock(Long blockId) {
         Objects.requireNonNull(blockId, "Blok ID boş olamaz");
-        Block block = blockRepository.findById(blockId)
+        Block block = blockRepository.findByIdWithQuarry(blockId)
                 .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
 
         GenealogyNodeDto rootNode = buildBlockNode(block);
 
         List<ProductionOrder> orders = productionOrderRepository.findByBlockId(block.getId());
+        if (orders.isEmpty()) {
+            return rootNode;
+        }
+
+        List<Slab> allSlabs = slabRepository.findByBlockId(block.getId());
+        Map<Long, List<Slab>> slabsByOrderId = allSlabs.stream()
+                .filter(s -> s.getProductionOrder() != null)
+                .collect(Collectors.groupingBy(s -> s.getProductionOrder().getId()));
+
+        List<Long> slabIds = allSlabs.stream().map(Slab::getId).toList();
+        Map<Long, List<CutItem>> itemsBySlabId = slabIds.isEmpty()
+                ? Collections.emptyMap()
+                : cutItemRepository.findBySourceSlabIdIn(slabIds).stream()
+                        .filter(i -> i.getSourceSlab() != null)
+                        .collect(Collectors.groupingBy(i -> i.getSourceSlab().getId()));
+
         for (ProductionOrder order : orders) {
             GenealogyNodeDto orderNode = buildProductionOrderNode(order);
 
-            List<Slab> slabs = slabRepository.findByProductionOrderId(order.getId());
+            List<Slab> slabs = slabsByOrderId.getOrDefault(order.getId(), Collections.emptyList());
             for (Slab slab : slabs) {
                 GenealogyNodeDto slabNode = buildSlabNode(slab);
 
-                List<CutItem> items = cutItemRepository.findBySourceSlabId(slab.getId());
+                List<CutItem> items = itemsBySlabId.getOrDefault(slab.getId(), Collections.emptyList());
                 for (CutItem item : items) {
                     slabNode.getChildren().add(buildCutItemNode(item));
                 }
