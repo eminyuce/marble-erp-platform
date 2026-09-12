@@ -1071,7 +1071,6 @@ button.erp-btn-primary {
 
 .tabulator.is-paging .tabulator-tableholder {
   opacity: 0.4;
-  transform: translateY(6px);
 }
 
 @keyframes tabulator-row-in {

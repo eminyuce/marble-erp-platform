@@ -54,9 +54,7 @@
 let salesTable;
 document.addEventListener("DOMContentLoaded", () => {
     salesTable = new Tabulator("#sales-table", {
-        layout: "fitColumns",
-        responsiveLayout: "collapse",
-        responsiveLayoutCollapseStartOpen: false,
+        ...erpGridDefaults(),
         pagination: true,
         paginationMode: "remote",
         paginationSize: window.ERP_GRID_PAGE_SIZE || 25,

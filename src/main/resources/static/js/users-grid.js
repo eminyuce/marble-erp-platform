@@ -6,9 +6,7 @@ function initUsersGrid() {
     if (!tableElement) return;
 
     usersTable = new Tabulator("#users-table", {
-        layout: "fitColumns",
-        responsiveLayout: "collapse",
-        responsiveLayoutCollapseStartOpen: false,
+        ...erpGridDefaults(),
         pagination: true,
         paginationMode: "remote",
         paginationSize: window.ERP_GRID_PAGE_SIZE || 25,

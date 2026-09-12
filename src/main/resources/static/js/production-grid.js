@@ -6,9 +6,7 @@ function initProductionGrid() {
     if (!tableElement) return;
 
     productionTable = new Tabulator("#production-table", {
-        layout: "fitColumns",
-        responsiveLayout: "collapse",
-        responsiveLayoutCollapseStartOpen: false,
+        ...erpGridDefaults(),
         pagination: true,
         paginationMode: "remote",
         paginationSize: window.ERP_GRID_PAGE_SIZE || 25,

@@ -49,6 +49,16 @@ function closeModal() {
     }
 }
 
+function erpGridDefaults() {
+    return {
+        layout: "fitColumns",
+        autoResize: false,
+        renderVertical: "basic",
+        responsiveLayout: "collapse",
+        responsiveLayoutCollapseStartOpen: false
+    };
+}
+
 function attachTabulatorPagingAnimation(table) {
     if (!table || !table.element) {
         return;
@@ -62,6 +72,16 @@ function attachTabulatorPagingAnimation(table) {
     });
     table.on("dataLoadError", () => {
         root.classList.remove("is-paging");
+    });
+
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(() => {
+            if (table.element && document.body.contains(table.element)) {
+                table.redraw(true);
+            }
+        }, 200);
     });
 }
 

@@ -6,9 +6,7 @@ function initBlocksGrid() {
     if (!tableElement) return;
 
     blocksTable = new Tabulator("#blocks-table", {
-        layout: "fitColumns",
-        responsiveLayout: "collapse",
-        responsiveLayoutCollapseStartOpen: false,
+        ...erpGridDefaults(),
         pagination: true,
         paginationMode: "remote",
         paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
