@@ -124,4 +124,8 @@ public class SalesService {
         order.setStatus(SalesOrderStatus.CONFIRMED);
         salesOrderRepository.save(order);
     }
+
+    public String generateOrderNo() {
+        return "SAT-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999));
+    }
 }

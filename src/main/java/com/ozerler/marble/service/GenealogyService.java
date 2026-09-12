@@ -182,4 +182,15 @@ public class GenealogyService {
                 .qrCode(item.getItemCode())
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public List<Block> getAllBlocks() {
+        return blockRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<GenealogyNodeDto> getDefaultTree() {
+        return blockRepository.findAll().stream().findFirst()
+                .map(block -> buildTreeForBlock(block.getId()));
+    }
 }

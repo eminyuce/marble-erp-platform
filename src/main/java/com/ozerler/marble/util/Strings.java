@@ -2,10 +2,15 @@ package com.ozerler.marble.util;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class Strings {
 
     private static final Locale TURKISH = Locale.forLanguageTag("tr");
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile(
+            "\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\}|\\$\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}"
+    );
 
     private Strings() {
     }
@@ -33,12 +38,34 @@ public final class Strings {
         if (variables == null || variables.isEmpty()) {
             return template;
         }
-        String rendered = template;
-        for (Map.Entry<String, String> entry : variables.entrySet()) {
-            String replacement = entry.getValue() == null ? "" : entry.getValue();
-            rendered = rendered.replace("{{" + entry.getKey() + "}}", replacement);
+
+        Matcher matcher = PLACEHOLDER_PATTERN.matcher(template);
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            String key = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+            String replacement = resolveVariable(key, variables);
+            if (replacement == null) {
+                replacement = "";
+            }
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
-        return rendered;
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
+    public static String resolveVariable(String key, Map<String, String> variables) {
+        if (key == null || variables == null) {
+            return null;
+        }
+        if (variables.containsKey(key)) {
+            return variables.get(key);
+        }
+        for (Map.Entry<String, String> entry : variables.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(key)) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     public static boolean isPresent(String value) {

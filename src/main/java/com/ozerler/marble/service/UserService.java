@@ -11,6 +11,7 @@ import com.ozerler.marble.model.User;
 import com.ozerler.marble.repository.RoleRepository;
 import com.ozerler.marble.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,11 +33,13 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Transactional(readOnly = true)
     public TabulatorResponse<UserDto> getUsersPaged(int page, int size, String search, String sortField, String sortDir,
@@ -98,6 +102,20 @@ public class UserService {
                 .build();
 
         User saved = userRepository.save(user);
+
+        try {
+            Map<String, String> welcomeVars = Map.of(
+                    "fullName", saved.getFirstName() + " " + saved.getLastName(),
+                    "email", saved.getEmail(),
+                    "username", saved.getUsername(),
+                    "loginUrl", "http://localhost:81/account/adminlogin/",
+                    "companyName", "Özerler Mermer A.Ş."
+            );
+            emailService.sendTemplatedEmail(saved.getEmail(), "USER_WELCOME", welcomeVars);
+        } catch (Exception ex) {
+            log.warn("Could not dispatch welcome email to {}: {}", saved.getEmail(), ex.getMessage());
+        }
+
         return UserDto.fromEntity(saved);
     }
 
@@ -143,6 +161,18 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı: " + request.getUserId()));
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+
+        try {
+            Map<String, String> resetVars = Map.of(
+                    "fullName", user.getFirstName() + " " + user.getLastName(),
+                    "temporaryPassword", request.getNewPassword(),
+                    "email", user.getEmail(),
+                    "companyName", "Özerler Mermer A.Ş."
+            );
+            emailService.sendTemplatedEmail(user.getEmail(), "PASSWORD_RESET", resetVars);
+        } catch (Exception ex) {
+            log.warn("Could not dispatch password reset email to {}: {}", user.getEmail(), ex.getMessage());
+        }
     }
 
     @Transactional

@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.admin;
 
+import com.ozerler.marble.dto.EmailPreviewDto;
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.service.EmailService;
 import com.ozerler.marble.service.SettingService;
@@ -72,26 +73,7 @@ public class SettingController {
                                 @RequestParam(value = "templateKey", required = false) String templateKey,
                                 RedirectAttributes redirectAttributes) {
         try {
-            Map<String, String> vars = Map.of(
-                    "fullName", "Yönetici Kullanıcı",
-                    "companyName", "Özerler Mermer A.Ş.",
-                    "otpCode", "584920",
-                    "loginTime", "Bugün 08:30",
-                    "ipAddress", "10.0.0.X",
-                    "blockNumber", "BLK-2026-088",
-                    "quarryName", "Afyon Menekşe Ocağı",
-                    "reason", "Damar Çatlağı (FR-01)",
-                    "scrapM2", "14.80 m²"
-            );
-
-            boolean ok;
-            if (StringUtils.isNotBlank(templateKey)) {
-                ok = emailService.sendTemplatedEmail(testEmail, templateKey, vars);
-            } else {
-                ok = emailService.sendEmail(testEmail, "Özerler Mermer ERP - Test E-Postası",
-                        "<h2 style='color:#0284c7;'>Özerler Mermer ERP Test Bildirimi</h2><p>SMTP yapılandırması başarıyla test edildi.</p>");
-            }
-
+            boolean ok = emailService.sendTestEmail(testEmail, templateKey);
             if (ok) {
                 redirectAttributes.addFlashAttribute("successMessage", "Test e-postası başarıyla gönderildi: " + testEmail);
             } else {
@@ -101,7 +83,7 @@ public class SettingController {
             log.error("Test email dispatch error", e);
             redirectAttributes.addFlashAttribute("errorMessage", "Test e-postası gönderilemedi: " + e.getMessage());
         }
-        return "redirect:/admin/settings";
+        return "redirect:/admin/settings?tab=smtp";
     }
 
     @GetMapping("/templates/{id}/edit")
@@ -118,46 +100,21 @@ public class SettingController {
                                  @RequestParam("bodyHtml") String bodyHtml,
                                  @RequestParam(value = "isActive", defaultValue = "false") boolean isActive,
                                  RedirectAttributes redirectAttributes) {
-        EmailTemplate template = emailService.getTemplateById(id);
-        template.setSubject(subject);
-        template.setBodyHtml(bodyHtml);
-        template.setIsActive(isActive);
-        emailService.saveTemplate(template);
-
-        redirectAttributes.addFlashAttribute("successMessage", "E-Posta şablonu güncellendi.");
+        try {
+            emailService.updateTemplate(id, subject, bodyHtml, isActive);
+            redirectAttributes.addFlashAttribute("successMessage", "E-Posta şablonu başarıyla güncellendi.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/admin/settings/templates/" + id + "/edit";
+        }
         return "redirect:/admin/settings?tab=templates";
     }
 
     @PostMapping("/templates/preview")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> previewTemplate(@RequestParam("templateKey") String templateKey) {
-        var opt = emailService.getTemplateByKey(templateKey);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        EmailTemplate t = opt.get();
-        Map<String, String> sampleVars = new HashMap<>();
-        sampleVars.put("fullName", "Ahmet Yılmaz");
-        sampleVars.put("companyName", "Özerler Mermer A.Ş.");
-        sampleVars.put("otpCode", "694125");
-        sampleVars.put("loginTime", "2026-09-11 08:45");
-        sampleVars.put("ipAddress", "10.0.0.X");
-        sampleVars.put("blockNumber", "BLK-2026-004");
-        sampleVars.put("quarryName", "İscehisar Beyaz Ocağı");
-        sampleVars.put("orderNumber", "WO-2026-015");
-        sampleVars.put("siteName", "Hilton Bomonti Rezidans");
-        sampleVars.put("completedM2", "145.00 m²");
-        sampleVars.put("reason", "FR-01 (Damar Çatlağı)");
-        sampleVars.put("scrapM2", "18.5 m²");
-
-        String renderedSubject = emailService.renderSubject(t.getSubject(), sampleVars);
-        String renderedHtml = emailService.renderHtml(t.getBodyHtml(), sampleVars);
-
-        return ResponseEntity.ok(Map.of(
-                "subject", renderedSubject,
-                "html", renderedHtml,
-                "rawSubject", t.getSubject(),
-                "rawHtml", t.getBodyHtml()
-        ));
+    public ResponseEntity<EmailPreviewDto> previewTemplate(@RequestParam("templateKey") String templateKey) {
+        return emailService.previewTemplate(templateKey)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

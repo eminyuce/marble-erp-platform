@@ -125,4 +125,8 @@ public class ProcurementService {
         order.setStatus(newStatus);
         purchaseOrderRepository.save(order);
     }
+
+    public String generatePoNumber() {
+        return "SIP-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999));
+    }
 }

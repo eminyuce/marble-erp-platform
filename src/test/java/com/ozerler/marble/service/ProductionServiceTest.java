@@ -42,13 +42,15 @@ class ProductionServiceTest {
     private SlabRepository slabRepository;
     @Mock
     private ScrapLogRepository scrapLogRepository;
+    @Mock
+    private BarcodeService barcodeService;
 
     private ProductionService productionService;
 
     @BeforeEach
     void setUp() {
         productionService = new ProductionService(
-                productionOrderRepository, blockRepository, slabRepository, scrapLogRepository);
+                productionOrderRepository, blockRepository, slabRepository, scrapLogRepository, barcodeService);
     }
 
     @Test

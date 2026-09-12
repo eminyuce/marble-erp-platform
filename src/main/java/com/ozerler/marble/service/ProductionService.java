@@ -3,6 +3,7 @@ package com.ozerler.marble.service;
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.SlabDto;
+import com.ozerler.marble.dto.SlabLabelDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.ProductionOrder;
@@ -18,6 +19,7 @@ import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.ScrapLogRepository;
 import com.ozerler.marble.repository.SlabRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -54,6 +56,7 @@ public class ProductionService {
     private final BlockRepository blockRepository;
     private final SlabRepository slabRepository;
     private final ScrapLogRepository scrapLogRepository;
+    private final BarcodeService barcodeService;
 
     @Transactional(readOnly = true)
     public TabulatorResponse<ProductionOrderDto> getOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
@@ -287,5 +290,33 @@ public class ProductionService {
     @Transactional(readOnly = true)
     public List<Object[]> getScrapSummary() {
         return scrapLogRepository.getScrapSummaryByReason();
+    }
+
+    @Transactional(readOnly = true)
+    public SlabLabelDto getSlabLabelData(Long id, String passportBaseUrl) {
+        Slab slab = slabRepository.findByIdWithBlockAndQuarry(id)
+                .orElseThrow(() -> new EntityNotFoundException("Plaka bulunamadı: " + id));
+
+        String baseUrl = passportBaseUrl != null && !passportBaseUrl.isBlank()
+                ? passportBaseUrl
+                : "http://localhost:8080/passport/";
+        if (!baseUrl.endsWith("/")) {
+            baseUrl += "/";
+        }
+        String passportUrl = baseUrl + slab.getSlabCode();
+        String qrCodeBase64 = barcodeService.generateQrCodeBase64(passportUrl);
+
+        String blockCode = slab.getBlock() != null ? slab.getBlock().getBlockCode() : "—";
+        String stoneType = slab.getBlock() != null ? slab.getBlock().getStoneType() : "—";
+        String quarryName = slab.getBlock() != null && slab.getBlock().getQuarry() != null
+                ? slab.getBlock().getQuarry().getName() : "—";
+
+        return SlabLabelDto.builder()
+                .slab(slab)
+                .qrCodeBase64(qrCodeBase64)
+                .blockCode(blockCode)
+                .stoneType(stoneType)
+                .quarryName(quarryName)
+                .build();
     }
 }

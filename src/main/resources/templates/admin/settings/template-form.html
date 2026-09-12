@@ -13,6 +13,8 @@
         ${'Anahtar: ' + template.templateKey},
         @{/admin/settings(tab='templates')})}"></div>
 
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
+
     <div class="erp-form-card">
         <form th:action="@{/admin/settings/templates/{id}/save(id=${template.id})}" method="post" class="erp-form">
             <div class="erp-form-body">
@@ -21,15 +23,16 @@
                     <div class="erp-form-field">
                         <label class="erp-form-label" for="subject">E-posta konu başlığı <span class="req">*</span></label>
                         <input id="subject" type="text" name="subject" th:value="${template.subject}" required
-                               class="erp-form-input" placeholder="Örn: {{fullName}} için sipariş güncellemesi">
+                                class="erp-form-input" placeholder="Örn: {{fullName}} için sipariş güncellemesi">
                     </div>
                     <label class="erp-form-check" for="edit_isActive">
                         <input type="checkbox" id="edit_isActive" name="isActive" value="true" th:checked="${template.isActive}">
                         <span>Şablonu aktif olarak işaretle</span>
                     </label>
-                    <p class="erp-form-hint" th:if="${template.placeholders}">
-                        Kullanılabilir değişkenler: <code th:text="${template.placeholders}">{{name}}</code>
-                    </p>
+                    <div class="erp-form-hint space-y-1" th:if="${template.placeholders}">
+                        <p>Kullanılabilir değişkenler: <code class="font-mono text-amber-700 font-bold" th:text="${template.placeholders}">{{name}}</code></p>
+                        <p class="text-xs text-slate-500">Hem <code>{{degisken}}</code> hem de <code>${degisken}</code> yazımı desteklenir. Ham HTML için <code>{{{degisken}}}</code> kullanabilirsiniz.</p>
+                    </div>
                 </section>
 
                 <section class="erp-form-section">

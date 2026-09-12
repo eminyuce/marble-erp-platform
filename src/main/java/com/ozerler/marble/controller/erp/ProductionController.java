@@ -2,14 +2,11 @@ package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.SlabDto;
+import com.ozerler.marble.dto.SlabLabelDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.enums.ScrapReasonCode;
-import com.ozerler.marble.repository.SlabRepository;
-import com.ozerler.marble.service.BarcodeService;
 import com.ozerler.marble.service.ProductionService;
 import com.ozerler.marble.service.QuarryBlockService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,8 +27,6 @@ public class ProductionController {
 
     private final ProductionService productionService;
     private final QuarryBlockService quarryBlockService;
-    private final BarcodeService barcodeService;
-    private final SlabRepository slabRepository;
 
     @GetMapping
     public String productionIndex(Model model) {
@@ -114,18 +109,13 @@ public class ProductionController {
 
     @GetMapping("/slabs/{id}/label")
     public String slabLabel(@PathVariable("id") Long id, Model model) {
-        Slab slab = slabRepository.findByIdWithBlockAndQuarry(id)
-                .orElseThrow(() -> new EntityNotFoundException("Plaka bulunamadı: " + id));
+        SlabLabelDto label = productionService.getSlabLabelData(id, "http://localhost:8080/passport/");
 
-        String passportUrl = "http://localhost:8080/passport/" + slab.getSlabCode();
-        String qrCodeBase64 = barcodeService.generateQrCodeBase64(passportUrl);
-
-        model.addAttribute("slab", slab);
-        model.addAttribute("qrCodeBase64", qrCodeBase64);
-        model.addAttribute("blockCode", slab.getBlock() != null ? slab.getBlock().getBlockCode() : "—");
-        model.addAttribute("stoneType", slab.getBlock() != null ? slab.getBlock().getStoneType() : "—");
-        model.addAttribute("quarryName", slab.getBlock() != null && slab.getBlock().getQuarry() != null
-                ? slab.getBlock().getQuarry().getName() : "—");
+        model.addAttribute("slab", label.getSlab());
+        model.addAttribute("qrCodeBase64", label.getQrCodeBase64());
+        model.addAttribute("blockCode", label.getBlockCode());
+        model.addAttribute("stoneType", label.getStoneType());
+        model.addAttribute("quarryName", label.getQuarryName());
 
         return "erp/production/slab-label";
     }

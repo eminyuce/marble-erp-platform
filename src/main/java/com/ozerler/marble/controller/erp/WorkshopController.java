@@ -2,9 +2,6 @@ package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.enums.SlabStatus;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.service.WorkshopCutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -24,8 +21,6 @@ import java.math.BigDecimal;
 public class WorkshopController {
 
     private final WorkshopCutService workshopCutService;
-    private final SlabRepository slabRepository;
-    private final ProjectRepository projectRepository;
 
     @GetMapping
     public String workshopIndex() {
@@ -79,8 +74,8 @@ public class WorkshopController {
     }
 
     private void populateCutForm(Model model) {
-        model.addAttribute("availableSlabs", slabRepository.findByStatus(SlabStatus.AVAILABLE));
-        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("availableSlabs", workshopCutService.getAvailableSlabs());
+        model.addAttribute("projects", workshopCutService.getAllProjects());
         model.addAttribute("pageTitle", "Yeni Ebatlama Emri");
     }
 }

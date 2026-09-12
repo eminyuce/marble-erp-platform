@@ -230,4 +230,14 @@ public class WorkshopCutService {
             scrapLogRepository.save(scrap);
         }
     }
+
+    @Transactional(readOnly = true)
+    public List<Slab> getAvailableSlabs() {
+        return slabRepository.findByStatus(SlabStatus.AVAILABLE);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Project> getAllProjects() {
+        return projectRepository.findAll();
+    }
 }

@@ -98,7 +98,7 @@ public class ProcurementController {
     private void populateProcurementForm(Model model) {
         model.addAttribute("suppliers", procurementService.getAllSuppliers());
         model.addAttribute("projects", procurementService.getAllProjects());
-        model.addAttribute("generatedPoNumber", "SIP-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999)));
+        model.addAttribute("generatedPoNumber", procurementService.generatePoNumber());
         model.addAttribute("pageTitle", "Yeni Satın Alma Siparişi");
     }
 }

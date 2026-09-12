@@ -1,7 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.dto.GenealogyNodeDto;
-import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.service.GenealogyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -18,14 +17,13 @@ import java.util.Optional;
 public class GenealogyController {
 
     private final GenealogyService genealogyService;
-    private final BlockRepository blockRepository;
 
     @GetMapping
     public String genealogyIndex(@RequestParam(value = "code", required = false) String code,
                                  @RequestParam(value = "blockId", required = false) Long blockId,
                                  Model model) {
 
-        model.addAttribute("allBlocks", blockRepository.findAll());
+        model.addAttribute("allBlocks", genealogyService.getAllBlocks());
 
         GenealogyNodeDto tree = null;
         if (code != null && !code.isBlank()) {
@@ -38,8 +36,8 @@ public class GenealogyController {
             }
         } else if (blockId != null) {
             tree = genealogyService.buildTreeForBlock(blockId);
-        } else if (!blockRepository.findAll().isEmpty()) {
-            tree = genealogyService.buildTreeForBlock(blockRepository.findAll().get(0).getId());
+        } else {
+            tree = genealogyService.getDefaultTree().orElse(null);
         }
 
         model.addAttribute("tree", tree);

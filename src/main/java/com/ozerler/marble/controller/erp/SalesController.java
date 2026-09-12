@@ -97,7 +97,7 @@ public class SalesController {
 
     private void populateSalesForm(Model model) {
         model.addAttribute("customers", salesService.getAllCustomers());
-        model.addAttribute("generatedOrderNo", "SAT-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999)));
+        model.addAttribute("generatedOrderNo", salesService.generateOrderNo());
         model.addAttribute("pageTitle", "Yeni Satış Siparişi");
     }
 }
