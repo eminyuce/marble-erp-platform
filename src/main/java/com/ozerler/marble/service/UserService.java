@@ -40,6 +40,17 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     @Transactional(readOnly = true)
     public TabulatorResponse<UserDto> getUsersPaged(int page, int size, String search, String sortField, String sortDir,
@@ -67,17 +78,17 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserDto getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.user.not_found", id)));
         return UserDto.fromEntity(user);
     }
 
     @Transactional
     public UserDto createUser(UserCreateRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("Bu kullanıcı adı zaten kullanımda: " + request.getUsername());
+            throw new IllegalArgumentException(getMessage("error.user.username.exists", request.getUsername()));
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Bu e-posta adresi zaten kayıtlı: " + request.getEmail());
+            throw new IllegalArgumentException(getMessage("error.user.email.exists", request.getEmail()));
         }
 
         Set<Role> roles = new HashSet<>();
@@ -109,7 +120,7 @@ public class UserService {
                     "email", saved.getEmail(),
                     "username", saved.getUsername(),
                     "loginUrl", "http://localhost:81/account/adminlogin/",
-                    "companyName", "Özerler Mermer A.Ş."
+                    "companyName", getMessage("common.company_name")
             );
             emailService.sendTemplatedEmail(saved.getEmail(), "USER_WELCOME", welcomeVars);
         } catch (Exception ex) {
@@ -122,11 +133,11 @@ public class UserService {
     @Transactional
     public UserDto updateUser(UserUpdateRequest request) {
         User user = userRepository.findById(request.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı: " + request.getId()));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.user.not_found", request.getId())));
 
         userRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
             if (!existing.getId().equals(user.getId())) {
-                throw new IllegalArgumentException("Bu e-posta adresi başka bir kullanıcıya ait: " + request.getEmail());
+                throw new IllegalArgumentException(getMessage("error.user.email.belongs_to_other", request.getEmail()));
             }
         });
 
@@ -150,7 +161,7 @@ public class UserService {
     @Transactional
     public void toggleUserStatus(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.user.not_found", id)));
         user.setEnabled(!user.isEnabled());
         userRepository.save(user);
     }
@@ -158,7 +169,7 @@ public class UserService {
     @Transactional
     public void resetPassword(PasswordResetRequest request) {
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı: " + request.getUserId()));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.user.not_found", request.getUserId())));
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
@@ -167,7 +178,7 @@ public class UserService {
                     "fullName", user.getFirstName() + " " + user.getLastName(),
                     "temporaryPassword", request.getNewPassword(),
                     "email", user.getEmail(),
-                    "companyName", "Özerler Mermer A.Ş."
+                    "companyName", getMessage("common.company_name")
             );
             emailService.sendTemplatedEmail(user.getEmail(), "PASSWORD_RESET", resetVars);
         } catch (Exception ex) {
@@ -178,7 +189,7 @@ public class UserService {
     @Transactional
     public void softDeleteUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.user.not_found", id)));
         user.setDeleted(true);
         user.setEnabled(false);
         userRepository.save(user);
@@ -187,10 +198,10 @@ public class UserService {
     @Transactional
     public void changeOwnPassword(String email, String currentPassword, String newPassword) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı: " + email));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.user.not_found", email)));
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Mevcut şifre hatalı");
+            throw new IllegalArgumentException(getMessage("error.user.password.incorrect"));
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));

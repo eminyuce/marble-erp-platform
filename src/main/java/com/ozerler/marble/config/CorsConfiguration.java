@@ -1,5 +1,6 @@
 package com.ozerler.marble.config;
 
+import com.ozerler.marble.common.Constants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -11,9 +12,7 @@ import java.util.Arrays;
 @Configuration
 public class CorsConfiguration implements WebMvcConfigurer {
 
-    private static final String[] ALLOWED_METHODS = {
-            "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
-    };
+    private static final String[] ALLOWED_METHODS = Constants.ALLOWED_CORS_METHODS;
 
     @Value("${app.cors.allowed-origin:}")
     private String allowedOrigin;

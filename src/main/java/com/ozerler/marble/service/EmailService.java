@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.EmailPreviewDto;
 import com.ozerler.marble.exception.ResourceNotFoundException;
 import com.ozerler.marble.model.EmailTemplate;
@@ -38,13 +39,22 @@ import java.util.regex.Pattern;
 @Slf4j
 public class EmailService {
 
-    private static final Pattern ADVANCED_PLACEHOLDER_PATTERN = Pattern.compile(
-            "(\\{\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\}\\})|(\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\})|(\\$\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\})"
-    );
+    private static final Pattern ADVANCED_PLACEHOLDER_PATTERN = Constants.PATTERN_ADVANCED_PLACEHOLDER;
 
     private final EmailTemplateRepository templateRepository;
     private final SettingService settingService;
     private final Optional<JavaMailSender> mailSender;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     @Transactional(readOnly = true)
     public List<EmailTemplate> getAllTemplates() {
@@ -63,7 +73,7 @@ public class EmailService {
     @Transactional(readOnly = true)
     public EmailTemplate getTemplateById(Long id) {
         return templateRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("E-posta şablonu", id));
+                .orElseThrow(() -> new ResourceNotFoundException("EmailTemplate", id));
     }
 
     @CacheEvict(value = "emailTemplates", allEntries = true)
@@ -78,10 +88,10 @@ public class EmailService {
     @Transactional
     public EmailTemplate updateTemplate(Long id, String subject, String bodyHtml, boolean isActive) {
         if (StringUtils.isBlank(subject)) {
-            throw new IllegalArgumentException("E-posta konu başlığı boş bırakılamaz.");
+            throw new IllegalArgumentException(getMessage("error.email.subject.required"));
         }
         if (StringUtils.isBlank(bodyHtml)) {
-            throw new IllegalArgumentException("E-posta HTML gövdesi boş bırakılamaz.");
+            throw new IllegalArgumentException(getMessage("error.email.body.required"));
         }
 
         validateTemplateSyntax(subject);
@@ -181,7 +191,7 @@ public class EmailService {
         while ((pos = text.indexOf("{{", pos)) != -1) {
             int closePos = text.indexOf("}}", pos + 2);
             if (closePos == -1) {
-                throw new IllegalArgumentException("Şablon sözdizimi hatası: Kapatılmamış '{{' ayracı bulundu.");
+                throw new IllegalArgumentException(getMessage("error.email.syntax.unclosed_curly"));
             }
             pos = closePos + 2;
         }
@@ -191,7 +201,7 @@ public class EmailService {
         while ((pos = text.indexOf("${", pos)) != -1) {
             int closePos = text.indexOf("}", pos + 2);
             if (closePos == -1) {
-                throw new IllegalArgumentException("Şablon sözdizimi hatası: Kapatılmamış '${' ayracı bulundu.");
+                throw new IllegalArgumentException(getMessage("error.email.syntax.unclosed_dollar"));
             }
             pos = closePos + 1;
         }
@@ -231,11 +241,11 @@ public class EmailService {
         Map<String, String> sampleVars = new HashMap<>();
 
         // User & Account
-        sampleVars.put("fullName", "Ahmet Yılmaz");
+        sampleVars.put("fullName", getMessage("admin.settings.email.sample.fullname"));
         sampleVars.put("email", "ahmet.yilmaz@ozerler.test");
         sampleVars.put("username", "ayilmaz");
-        sampleVars.put("temporaryPassword", "Özerler*2026!Pass");
-        sampleVars.put("companyName", "Özerler Mermer A.Ş.");
+        sampleVars.put("temporaryPassword", "Ozerler*2026!Pass");
+        sampleVars.put("companyName", getMessage("common.company_name"));
         sampleVars.put("loginUrl", "http://localhost:81/account/adminlogin/");
         sampleVars.put("loginTime", "2026-09-12 10:15");
         sampleVars.put("ipAddress", "192.168.1.105");
@@ -244,11 +254,11 @@ public class EmailService {
         // Factory, Quarry & Blocks
         sampleVars.put("blockCode", "BLK-2026-004");
         sampleVars.put("blockNumber", "BLK-2026-004");
-        sampleVars.put("quarryName", "İscehisar Beyaz Ocağı");
+        sampleVars.put("quarryName", "Iscehisar Beyaz Ocagi");
         sampleVars.put("affectedCount", "12");
         sampleVars.put("orderNumber", "WO-2026-015");
-        sampleVars.put("reason", "FR-01 (Damar Çatlağı)");
-        sampleVars.put("scrapM2", "18.50 m²");
+        sampleVars.put("reason", "FR-01 (Damar Catlagi)");
+        sampleVars.put("scrapM2", "18.50 m2");
 
         // Projects & Site
         sampleVars.put("projectName", "Hilton Bomonti Rezidans");
@@ -257,7 +267,7 @@ public class EmailService {
         sampleVars.put("plannedArea", "350.00");
         sampleVars.put("availableStock", "210.00");
         sampleVars.put("shortfall", "140.00");
-        sampleVars.put("completedM2", "145.00 m²");
+        sampleVars.put("completedM2", "145.00 m2");
 
         return sampleVars;
     }
@@ -270,10 +280,10 @@ public class EmailService {
             Map<String, String> sampleVars = getDefaultSampleVariables();
             return sendTemplatedEmail(testEmail, templateKey.trim(), sampleVars);
         } else {
-            String defaultSubject = "Özerler Mermer ERP - Test E-Postası";
-            String defaultHtml = "<h2 style='color:#0284c7;'>Özerler Mermer ERP Test Bildirimi</h2>" +
-                    "<p>SMTP posta sunucu yapılandırması başarıyla test edildi.</p>" +
-                    "<p style='color:#64748b; font-size:12px;'>Zaman damgası: " + LocalDateTime.now() + "</p>";
+            String defaultSubject = getMessage("admin.settings.email.test.subject");
+            String defaultHtml = "<h2 style='color:#0284c7;'>" + getMessage("admin.settings.email.test.heading") + "</h2>" +
+                    "<p>" + getMessage("admin.settings.email.test.body") + "</p>" +
+                    "<p style='color:#64748b; font-size:12px;'>" + getMessage("admin.settings.email.test.timestamp", LocalDateTime.now()) + "</p>";
             return sendEmail(testEmail, defaultSubject, defaultHtml);
         }
     }
@@ -312,7 +322,7 @@ public class EmailService {
      */
     public boolean sendEmail(String to, String subject, String bodyHtml) {
         String from = settingService.getSetting("smtp.from_address", settingService.getSetting("mail.smtp.from", "info@ozerlermermer.com"));
-        String senderName = settingService.getSetting("smtp.from_name", "Özerler Mermer ERP");
+        String senderName = settingService.getSetting("smtp.from_name", getMessage("system.health.app_name"));
 
         log.info("Sending email to: '{}', Subject: '{}'", to, subject);
 

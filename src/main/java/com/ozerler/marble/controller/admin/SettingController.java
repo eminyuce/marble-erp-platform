@@ -1,12 +1,19 @@
 package com.ozerler.marble.controller.admin;
 
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.EmailPreviewDto;
 import com.ozerler.marble.model.EmailTemplate;
+import com.ozerler.marble.model.response.BackEndResponse;
+import com.ozerler.marble.model.response.ServiceStatus;
+import com.ozerler.marble.model.response.Status;
 import com.ozerler.marble.service.EmailService;
 import com.ozerler.marble.service.SettingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -16,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Controller
@@ -23,10 +31,11 @@ import java.util.Map;
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 @Slf4j
-public class SettingController {
+public class SettingController extends AbstractController {
 
     private final SettingService settingService;
     private final EmailService emailService;
+    private final MessageSource messageSource;
 
     @GetMapping
     public String index(Model model) {
@@ -41,6 +50,7 @@ public class SettingController {
 
     @PostMapping("/save")
     public String saveSettings(@RequestParam Map<String, String> params,
+                               Locale locale,
                                RedirectAttributes redirectAttributes) {
         // Handle boolean checkboxes that are absent when unchecked
         Map<String, String> toUpdate = new HashMap<>(params);
@@ -64,33 +74,38 @@ public class SettingController {
         toUpdate.remove("_csrf");
 
         settingService.updateSettings(toUpdate);
-        redirectAttributes.addFlashAttribute("successMessage", "Sistem yapılandırma ayarları başarıyla kaydedildi.");
+        redirectAttributes.addFlashAttribute("successMessage",
+                messageSource.getMessage("admin.settings.save.success", null, locale));
         return "redirect:/admin/settings";
     }
 
     @PostMapping("/email-test")
     public String sendTestEmail(@RequestParam("testEmail") String testEmail,
                                 @RequestParam(value = "templateKey", required = false) String templateKey,
+                                Locale locale,
                                 RedirectAttributes redirectAttributes) {
         try {
             boolean ok = emailService.sendTestEmail(testEmail, templateKey);
             if (ok) {
-                redirectAttributes.addFlashAttribute("successMessage", "Test e-postası başarıyla gönderildi: " + testEmail);
+                redirectAttributes.addFlashAttribute("successMessage",
+                        messageSource.getMessage("admin.settings.email.test.success", new Object[]{testEmail}, locale));
             } else {
-                redirectAttributes.addFlashAttribute("warningMessage", "Test e-postası hazırlandı fakat SMTP sunucu bağlantısı zaman aşımına uğradı (Log kaydedildi).");
+                redirectAttributes.addFlashAttribute("warningMessage",
+                        messageSource.getMessage("admin.settings.email.test.warning", null, locale));
             }
         } catch (Exception e) {
             log.error("Test email dispatch error", e);
-            redirectAttributes.addFlashAttribute("errorMessage", "Test e-postası gönderilemedi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("admin.settings.email.test.error", new Object[]{e.getMessage()}, locale));
         }
         return "redirect:/admin/settings?tab=smtp";
     }
 
     @GetMapping("/templates/{id}/edit")
-    public String editTemplate(@PathVariable("id") Long id, Model model) {
+    public String editTemplate(@PathVariable("id") Long id, Locale locale, Model model) {
         EmailTemplate template = emailService.getTemplateById(id);
         model.addAttribute("template", template);
-        model.addAttribute("pageTitle", "Şablon Düzenle");
+        model.addAttribute("pageTitle", messageSource.getMessage("admin.settings.template.title.edit", null, locale));
         return "admin/settings/template-form";
     }
 
@@ -99,10 +114,12 @@ public class SettingController {
                                  @RequestParam("subject") String subject,
                                  @RequestParam("bodyHtml") String bodyHtml,
                                  @RequestParam(value = "isActive", defaultValue = "false") boolean isActive,
+                                 Locale locale,
                                  RedirectAttributes redirectAttributes) {
         try {
             emailService.updateTemplate(id, subject, bodyHtml, isActive);
-            redirectAttributes.addFlashAttribute("successMessage", "E-Posta şablonu başarıyla güncellendi.");
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("admin.settings.template.save.success", null, locale));
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/admin/settings/templates/" + id + "/edit";
@@ -111,10 +128,36 @@ public class SettingController {
     }
 
     @PostMapping("/templates/preview")
-    @ResponseBody
-    public ResponseEntity<EmailPreviewDto> previewTemplate(@RequestParam("templateKey") String templateKey) {
-        return emailService.previewTemplate(templateKey)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public @ResponseBody BackEndResponse previewTemplate(@RequestParam("templateKey") String templateKey) {
+        BackEndResponse ber = new BackEndResponse();
+        ServiceStatus serviceStatus = new ServiceStatus();
+        Status status = new Status();
+        status.setErrorCode(Constants.NO_ERR);
+
+        try {
+            log.info("Previewing email template for key '{}'", templateKey);
+            var previewOpt = emailService.previewTemplate(templateKey);
+            if (previewOpt.isPresent()) {
+                HttpHeaders responseHeaders = new HttpHeaders();
+                ResponseEntity<EmailPreviewDto> resp = new ResponseEntity<>(previewOpt.get(), responseHeaders, HttpStatus.OK);
+                ber.setResponse(resp);
+                serviceStatus.setHttpStatus(HttpStatus.OK);
+                status.setMessage("Preview template successful");
+                serviceStatus.setStatus(status);
+                ber.setServiceStatus(serviceStatus);
+            } else {
+                serviceStatus.setHttpStatus(HttpStatus.NOT_FOUND);
+                status.setErrorCode(Constants.ERR_NOT_FOUND);
+                status.setMessage("Template not found for key " + templateKey);
+                status.addError("Not found");
+                serviceStatus.setStatus(status);
+                ber.setServiceStatus(serviceStatus);
+            }
+        } catch (Exception e) {
+            log.error("A serious error occurred in previewTemplate '{}'", templateKey, e);
+            ber = buildFatalResponse(ber, serviceStatus, status, "previewTemplate", Constants.ERR_FATAL);
+        }
+
+        return ber;
     }
 }

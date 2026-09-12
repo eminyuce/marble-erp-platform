@@ -17,17 +17,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ChangePasswordRequest {
 
-    @NotBlank(message = "Mevcut şifre boş bırakılamaz")
+    @NotBlank(message = "{validation.password.current.required}")
     private String currentPassword;
 
-    @NotBlank(message = "Yeni şifre boş bırakılamaz")
-    @Size(min = 6, message = "Şifre en az 6 karakterden oluşmalıdır")
+    @NotBlank(message = "{validation.password.new.required}")
+    @Size(min = 6, message = "{validation.password.size}")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
-            message = "Şifre en az bir büyük harf, bir küçük harf ve bir sayı içermelidir"
+            message = "{validation.password.pattern}"
     )
     private String newPassword;
 
-    @NotBlank(message = "Şifre onayı boş bırakılamaz")
+    @NotBlank(message = "{validation.password.confirm.required}")
     private String confirmPassword;
 }

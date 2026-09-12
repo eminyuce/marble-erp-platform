@@ -22,30 +22,30 @@ import java.util.Set;
 @AllArgsConstructor
 public class UserCreateRequest {
 
-    @NotBlank(message = "Missing required field: username")
-    @Size(min = 3, max = 50, message = "Kullanıcı adı 3 ile 50 karakter arasında olmalıdır")
+    @NotBlank(message = "{validation.user.username.required}")
+    @Size(min = 3, max = 50, message = "{validation.user.username.size}")
     @JsonProperty("username")
     @JsonAlias("username")
     private String username;
 
-    @NotBlank(message = "Missing required field: email")
-    @Email(message = "Geçerli bir e-posta adresi giriniz")
+    @NotBlank(message = "{validation.user.email.required}")
+    @Email(message = "{validation.user.email.invalid}")
     @JsonProperty("email")
     @JsonAlias("email")
     private String email;
 
-    @NotBlank(message = "Missing required field: password")
-    @Size(min = 6, message = "Şifre en az 6 karakter olmalıdır")
+    @NotBlank(message = "{validation.user.password.required}")
+    @Size(min = 6, message = "{validation.user.password.size}")
     @JsonProperty("password")
     @JsonAlias("password")
     private String password;
 
-    @NotBlank(message = "Missing required field: first_name")
+    @NotBlank(message = "{validation.user.firstname.required}")
     @JsonProperty("first_name")
     @JsonAlias("firstName")
     private String firstName;
 
-    @NotBlank(message = "Missing required field: last_name")
+    @NotBlank(message = "{validation.user.lastname.required}")
     @JsonProperty("last_name")
     @JsonAlias("lastName")
     private String lastName;

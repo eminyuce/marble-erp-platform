@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -9,13 +10,13 @@ import java.util.Map;
 @Service
 public class PricingService {
 
-    public static final BigDecimal DEFAULT_STANDARD_COST_PER_M2 = new BigDecimal("1365.00");
-    public static final BigDecimal DEFAULT_TARGET_MARGIN_PCT = new BigDecimal("30.00");
-    public static final BigDecimal MINIMUM_ACCEPTABLE_MARGIN_PCT = new BigDecimal("22.0");
-    private static final BigDecimal PERCENT_DIVISOR = new BigDecimal("100");
-    private static final int CURRENCY_SCALE = 2;
-    private static final int PERCENT_SCALE = 1;
-    private static final int CALCULATION_SCALE = 4;
+    public static final BigDecimal DEFAULT_STANDARD_COST_PER_M2 = Constants.DEFAULT_STANDARD_COST_PER_M2;
+    public static final BigDecimal DEFAULT_TARGET_MARGIN_PCT = Constants.DEFAULT_TARGET_MARGIN_PCT;
+    public static final BigDecimal MINIMUM_ACCEPTABLE_MARGIN_PCT = Constants.MINIMUM_ACCEPTABLE_MARGIN_PCT;
+    private static final BigDecimal PERCENT_DIVISOR = Constants.PERCENT_DIVISOR;
+    private static final int CURRENCY_SCALE = Constants.CURRENCY_SCALE;
+    private static final int PERCENT_SCALE = Constants.PERCENT_SCALE;
+    private static final int CALCULATION_SCALE = Constants.CALCULATION_SCALE;
 
     /**
      * Immutable result holding pricing simulation output

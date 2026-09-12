@@ -26,6 +26,7 @@ import java.time.LocalDate;
 public class ProcurementController {
 
     private final ProcurementService procurementService;
+    private final org.springframework.context.MessageSource messageSource;
 
     @GetMapping
     public String procurementIndex(Model model) {
@@ -46,8 +47,8 @@ public class ProcurementController {
     }
 
     @GetMapping("/create")
-    public String showCreateForm(Model model) {
-        populateProcurementForm(model);
+    public String showCreateForm(Model model, java.util.Locale locale) {
+        populateProcurementForm(model, locale);
         return "erp/procurement/form";
     }
 
@@ -58,15 +59,17 @@ public class ProcurementController {
                               @RequestParam(value = "expectedDelivery", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expectedDelivery,
                               @RequestParam(value = "notes", required = false) String notes,
                               Model model,
-                              RedirectAttributes redirectAttributes) {
+                              RedirectAttributes redirectAttributes,
+                              java.util.Locale locale) {
         try {
             PurchaseOrder order = procurementService.createPurchaseOrder(poNumber, supplierId, projectId, expectedDelivery, notes);
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Satın alma siparişi " + order.getPoNumber() + " başarıyla oluşturuldu.");
+                    messageSource.getMessage("erp.procurement.create.success", new Object[]{order.getPoNumber()}, locale));
             return "redirect:/procurement";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Hata: " + e.getMessage());
-            populateProcurementForm(model);
+            model.addAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            populateProcurementForm(model, locale);
             return "erp/procurement/form";
         }
     }
@@ -95,10 +98,10 @@ public class ProcurementController {
         return "redirect:/procurement/" + id;
     }
 
-    private void populateProcurementForm(Model model) {
+    private void populateProcurementForm(Model model, java.util.Locale locale) {
         model.addAttribute("suppliers", procurementService.getAllSuppliers());
         model.addAttribute("projects", procurementService.getAllProjects());
         model.addAttribute("generatedPoNumber", procurementService.generatePoNumber());
-        model.addAttribute("pageTitle", "Yeni Satın Alma Siparişi");
+        model.addAttribute("pageTitle", messageSource.getMessage("erp.procurement.title.create", null, locale));
     }
 }

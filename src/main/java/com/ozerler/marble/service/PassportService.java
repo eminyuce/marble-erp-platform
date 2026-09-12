@@ -26,6 +26,17 @@ public class PassportService {
     private final SlabRepository slabRepository;
     private final BlockRepository blockRepository;
     private final CutItemRepository cutItemRepository;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     @Transactional(readOnly = true)
     public PassportResult getPassportByCode(String code) {
@@ -33,7 +44,7 @@ public class PassportService {
             return PassportResult.builder()
                     .found(false)
                     .type("NONE")
-                    .errorMessage("Geçersiz veya boş QR pasaport kodu.")
+                    .errorMessage(getMessage("passport.error.invalid_code"))
                     .build();
         }
 
@@ -45,7 +56,7 @@ public class PassportService {
                     .found(true)
                     .type("PALLET")
                     .pallet(pallet.get())
-                    .title("Palet Pasaportu: " + pallet.get().getPalletCode())
+                    .title(getMessage("passport.title.pallet", pallet.get().getPalletCode()))
                     .build();
         }
 
@@ -55,7 +66,7 @@ public class PassportService {
                     .found(true)
                     .type("SLAB")
                     .slab(slab.get())
-                    .title("Plaka Pasaportu: " + slab.get().getSlabCode())
+                    .title(getMessage("passport.title.slab", slab.get().getSlabCode()))
                     .build();
         }
 
@@ -65,7 +76,7 @@ public class PassportService {
                     .found(true)
                     .type("ITEM")
                     .item(item.get())
-                    .title("Ebatlı Mamul Pasaportu: " + item.get().getItemCode())
+                    .title(getMessage("passport.title.item", item.get().getItemCode()))
                     .build();
         }
 
@@ -75,14 +86,14 @@ public class PassportService {
                     .found(true)
                     .type("BLOCK")
                     .block(block.get())
-                    .title("Blok Kimlik Kartı: " + block.get().getBlockCode())
+                    .title(getMessage("passport.title.block", block.get().getBlockCode()))
                     .build();
         }
 
         return PassportResult.builder()
                 .found(false)
                 .type("NONE")
-                .errorMessage("Aradığınız QR koduna ait doğal taş kaydı bulunamadı: " + code)
+                .errorMessage(getMessage("passport.error.not_found", code))
                 .build();
     }
 }

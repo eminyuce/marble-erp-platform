@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.SalesOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Block;
@@ -30,12 +31,21 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SalesService {
 
-    private static final int DEFAULT_PAGE_SIZE = 10;
-
     private final SalesOrderRepository salesOrderRepository;
     private final CustomerRepository customerRepository;
     private final SlabRepository slabRepository;
     private final BlockRepository blockRepository;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     @Transactional(readOnly = true)
     public TabulatorResponse<SalesOrderDto> getSalesOrdersPaged(int page, int size,
@@ -47,7 +57,7 @@ public class SalesService {
         }
 
         int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
+        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
 
         Page<SalesOrder> orderPage = salesOrderRepository.searchSalesOrders(search, pageable);
         List<SalesOrderDto> dtos = orderPage.getContent().stream()
@@ -64,17 +74,17 @@ public class SalesService {
 
     @Transactional(readOnly = true)
     public SalesOrder getOrderById(Long id) {
-        Objects.requireNonNull(id, "Sipariş ID boş olamaz");
+        Objects.requireNonNull(id, getMessage("error.sales_order.id.required"));
         return salesOrderRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Sipariş bulunamadı: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.sales_order.not_found", id)));
     }
 
     @Transactional
     public SalesOrder createSalesOrder(String orderNo, Long customerId, LocalDate deliveryDate, String notes) {
-        Objects.requireNonNull(customerId, "Müşteri seçilmelidir");
+        Objects.requireNonNull(customerId, getMessage("error.customer.required"));
 
         Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new IllegalArgumentException("Müşteri bulunamadı: " + customerId));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.customer.not_found", customerId)));
 
         SalesOrder order = SalesOrder.builder()
                 .orderNo(orderNo != null ? orderNo.trim() : "SAT-" + System.currentTimeMillis())

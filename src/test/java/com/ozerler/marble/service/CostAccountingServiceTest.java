@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CostAccountingServiceTest {
 
-    private final CostAccountingService costService = new CostAccountingService(null, null);
+    private final CostAccountingService costService = new CostAccountingService(null, null, null);
 
     @Test
     @DisplayName("Verify Grade Multiplier Algorithm matches BRD Section 6.1 exact numeric results")

@@ -33,49 +33,38 @@ public class ReportService {
     private final ProjectRepository projectRepository;
     private final SlabRepository slabRepository;
     private final CostAccountingService costAccountingService;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     public enum ReportType {
-        QUARRY_BLOCKS(
-                "Ocak Blok Üretim ve Satış Raporu",
-                "Ocaklardan çıkan blokların ölçü, kantar tartımı ve durumunu listeler.",
-                "ocak_blokları"),
-        FACTORY_SCRAP(
-                "Fabrika Katrak ve Fire Raporu",
-                "Katrak kesimindeki 10 kodlu fire kayıtlarını ve kayıp alanları gösterir.",
-                "katrak_fire"),
-        WORKSHOP_ORDERS(
-                "Atölye Ebatlama ve Kesim Raporu",
-                "Atölye iş emirlerini, parça sayısını ve makine/operatör bilgisini verir.",
-                "kesim_emirleri"),
-        SITE_INSTALLATION(
-                "Şantiye Proje ve İlerleme Raporu",
-                "Projelerin sözleşme tutarı, gerçekleşen maliyet ve teslim durumunu özetler.",
-                "şantiye_projeleri"),
-        COST_ACCOUNTING(
-                "Maliyet Muhasebesi ve Fiyatlandırma Raporu",
-                "Masraf merkezlerinin bütçe, birim maliyet ve önerilen satış fiyatını gösterir.",
-                "maliyet_raporu"),
-        SLABS_INVENTORY(
-                "Plaka Stok ve Kalite Dağılım Raporu",
-                "Ambardaki plakaların ebat, yüzey, kalite ve birim maliyetini listeler.",
-                "plaka_stoğu");
+        QUARRY_BLOCKS("ocak_bloklari"),
+        FACTORY_SCRAP("katrak_fire"),
+        WORKSHOP_ORDERS("kesim_emirleri"),
+        SITE_INSTALLATION("santiye_projeleri"),
+        COST_ACCOUNTING("maliyet_raporu"),
+        SLABS_INVENTORY("plaka_stogu");
 
-        private final String title;
-        private final String description;
         private final String exportFilenameStem;
 
-        ReportType(String title, String description, String exportFilenameStem) {
-            this.title = title;
-            this.description = description;
+        ReportType(String exportFilenameStem) {
             this.exportFilenameStem = exportFilenameStem;
         }
 
         public String getTitle() {
-            return title;
+            return com.ozerler.marble.util.MessageUtils.getMessage("report." + name().toLowerCase() + ".title");
         }
 
         public String getDescription() {
-            return description;
+            return com.ozerler.marble.util.MessageUtils.getMessage("report." + name().toLowerCase() + ".desc");
         }
 
         public String getExportFilenameStem() {
@@ -100,7 +89,17 @@ public class ReportService {
 
         switch (type) {
             case QUARRY_BLOCKS -> {
-                data.headers = new String[]{"Blok Kodu", "Ocak", "Kalite", "Hacim (m³)", "Teorik Tonaj", "Kantar Tonajı", "Sapma %", "Durum", "Taş Türü"};
+                data.headers = new String[]{
+                        getMessage("report.header.block_code"),
+                        getMessage("report.header.quarry"),
+                        getMessage("report.header.quality"),
+                        getMessage("report.header.volume"),
+                        getMessage("report.header.theoretical_tonnage"),
+                        getMessage("report.header.actual_tonnage"),
+                        getMessage("report.header.deviation"),
+                        getMessage("report.header.status"),
+                        getMessage("report.header.stone_type")
+                };
                 List<Block> blocks = blockRepository.findAllWithQuarry();
                 for (Block b : blocks) {
                     String varianceStr = "0.00%";
@@ -115,7 +114,7 @@ public class ReportService {
                     if (b.getActualWeightKg() != null) {
                         actualTon = b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString();
                     }
-                    String stoneType = b.getStoneType() != null ? b.getStoneType() : "Klasik Bej";
+                    String stoneType = b.getStoneType() != null ? b.getStoneType() : getMessage("common.default_stone_type");
                     data.rows.add(new String[]{
                             b.getBlockCode() != null ? b.getBlockCode() : "",
                             b.getQuarry() != null ? b.getQuarry().getName() : "",
@@ -130,7 +129,14 @@ public class ReportService {
                 }
             }
             case FACTORY_SCRAP -> {
-                data.headers = new String[]{"Kayıt Tarihi", "Blok Kodu", "Fire Kodu", "Fire Sebebi", "Fire Alanı (m²)", "Kayıt Yapan"};
+                data.headers = new String[]{
+                        getMessage("report.header.logged_at"),
+                        getMessage("report.header.block_code"),
+                        getMessage("report.header.scrap_code"),
+                        getMessage("report.header.scrap_reason"),
+                        getMessage("report.header.scrap_area"),
+                        getMessage("report.header.logged_by")
+                };
                 List<ScrapLog> scraps = scrapLogRepository.findAllWithBlock();
                 for (ScrapLog s : scraps) {
                     data.rows.add(new String[]{
@@ -139,12 +145,20 @@ public class ReportService {
                             s.getReasonCode() != null ? s.getReasonCode().getCode() : "",
                             s.getReasonCode() != null ? s.getReasonCode().getTitle() : "",
                             s.getScrapAreaM2() != null ? s.getScrapAreaM2().toString() : "0.00",
-                            s.getLoggedBy() != null ? s.getLoggedBy() : "Sistem"
+                            s.getLoggedBy() != null ? s.getLoggedBy() : getMessage("common.system")
                     });
                 }
             }
             case WORKSHOP_ORDERS -> {
-                data.headers = new String[]{"İş Emri No", "Proje", "Makine", "Operatör", "Parça Sayısı", "Durum", "Kayıt Tarihi"};
+                data.headers = new String[]{
+                        getMessage("report.header.order_no"),
+                        getMessage("report.header.project"),
+                        getMessage("report.header.machine"),
+                        getMessage("report.header.operator"),
+                        getMessage("report.header.pieces_count"),
+                        getMessage("report.header.status"),
+                        getMessage("report.header.logged_at")
+                };
                 List<CutOrder> orders = cutOrderRepository.findAllWithProject();
                 for (CutOrder o : orders) {
                     String siteName = o.getProject() != null ? o.getProject().getName() : "-";
@@ -154,14 +168,23 @@ public class ReportService {
                             siteName,
                             o.getMachineName() != null ? o.getMachineName() : "-",
                             o.getOperatorName() != null ? o.getOperatorName() : "-",
-                            itemsCount + " adet",
+                            getMessage("common.unit.pieces", itemsCount),
                             o.getStatus() != null ? o.getStatus() : "",
                             DateTimes.formatYearMonthDayHourMinute(o.getCreatedAt(), "-")
                     });
                 }
             }
             case SITE_INSTALLATION -> {
-                data.headers = new String[]{"Proje Kodu", "Proje Adı", "Müşteri / Şirket", "Sözleşme Tutarı", "Gerçekleşen Maliyet", "Başlangıç", "Teslim", "Durum"};
+                data.headers = new String[]{
+                        getMessage("report.header.project_code"),
+                        getMessage("report.header.project_name"),
+                        getMessage("report.header.customer_company"),
+                        getMessage("report.header.contract_value"),
+                        getMessage("report.header.actual_cost"),
+                        getMessage("report.header.start_date"),
+                        getMessage("report.header.delivery_date"),
+                        getMessage("report.header.status")
+                };
                 List<Project> projects = projectRepository.findAll();
                 for (Project p : projects) {
                     data.rows.add(new String[]{
@@ -177,7 +200,14 @@ public class ReportService {
                 }
             }
             case COST_ACCOUNTING -> {
-                data.headers = new String[]{"Maliyet Merkezi", "Kod", "Açıklama", "Aylık Bütçe (TL)", "Referans Birim Maliyet (TL/m²)", "Önerilen Satış Fiyatı (%35 Kar)"};
+                data.headers = new String[]{
+                        getMessage("report.header.cost_center"),
+                        getMessage("report.header.code"),
+                        getMessage("report.header.description"),
+                        getMessage("report.header.monthly_budget"),
+                        getMessage("report.header.ref_unit_cost"),
+                        getMessage("report.header.suggested_price")
+                };
                 var centers = costAccountingService.getAllCostCenters();
                 for (var cc : centers) {
                     BigDecimal unitCost = new BigDecimal("1365.00");
@@ -193,7 +223,16 @@ public class ReportService {
                 }
             }
             case SLABS_INVENTORY -> {
-                data.headers = new String[]{"Plaka Barkodu", "Kaynak Blok", "Ebat (GxY)", "Kalınlık", "Yüzey İşlem", "Kalite Sınıfı", "Birim Maliyet (TL/m²)", "Durum"};
+                data.headers = new String[]{
+                        getMessage("report.header.slab_barcode"),
+                        getMessage("report.header.source_block"),
+                        getMessage("report.header.dimensions"),
+                        getMessage("report.header.thickness"),
+                        getMessage("report.header.surface_finish"),
+                        getMessage("report.header.quality_grade"),
+                        getMessage("report.header.unit_cost"),
+                        getMessage("report.header.status")
+                };
                 List<Slab> slabs = slabRepository.findAllWithBlock();
                 for (Slab sl : slabs) {
                     String dims = (sl.getWidthCm() != null ? sl.getWidthCm() : 0) + "x" + (sl.getLengthCm() != null ? sl.getLengthCm() : 0) + " cm";
@@ -218,7 +257,7 @@ public class ReportService {
 
         SXSSFWorkbook workbook = new SXSSFWorkbook(100);
         try (workbook; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet("Rapor");
+            Sheet sheet = workbook.createSheet(getMessage("report.sheet.name"));
             if (sheet instanceof SXSSFSheet sxSheet) {
                 sxSheet.trackAllColumnsForAutoSizing();
             }
@@ -234,7 +273,7 @@ public class ReportService {
 
             Row titleRow = sheet.createRow(0);
             Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellValue(data.title + " - Özerler Mermer ERP");
+            titleCell.setCellValue(data.title + " - " + getMessage("system.health.app_name"));
             titleCell.setCellStyle(titleStyle);
 
             // Header styling

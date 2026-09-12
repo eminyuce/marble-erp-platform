@@ -36,7 +36,7 @@ class EmailServiceTest {
 
     @BeforeEach
     void setUp() {
-        emailService = new EmailService(templateRepository, settingService, Optional.of(mailSender));
+        emailService = new EmailService(templateRepository, settingService, Optional.of(mailSender), null);
     }
 
     @Test

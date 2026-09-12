@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.PurchaseOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Project;
@@ -28,11 +29,22 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProcurementService {
 
-    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int DEFAULT_PAGE_SIZE = Constants.DEFAULT_PAGE_SIZE;
 
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final SupplierRepository supplierRepository;
     private final ProjectRepository projectRepository;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     @Transactional(readOnly = true)
     public TabulatorResponse<PurchaseOrderDto> getPurchaseOrdersPaged(int page, int size,
@@ -66,18 +78,18 @@ public class ProcurementService {
 
     @Transactional(readOnly = true)
     public PurchaseOrder getOrderById(Long id) {
-        Objects.requireNonNull(id, "Sipariş ID boş olamaz");
+        Objects.requireNonNull(id, getMessage("error.purchase_order.id.required"));
         return purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Satın alma siparişi bulunamadı: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.purchase_order.not_found", id)));
     }
 
     @Transactional
     public PurchaseOrder createPurchaseOrder(String poNumber, Long supplierId, Long projectId,
                                               LocalDate expectedDelivery, String notes) {
-        Objects.requireNonNull(supplierId, "Tedarikçi seçilmelidir");
+        Objects.requireNonNull(supplierId, getMessage("error.supplier.required"));
 
         Supplier supplier = supplierRepository.findById(supplierId)
-                .orElseThrow(() -> new IllegalArgumentException("Tedarikçi bulunamadı: " + supplierId));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.supplier.not_found", supplierId)));
 
         Project project = null;
         if (projectId != null) {

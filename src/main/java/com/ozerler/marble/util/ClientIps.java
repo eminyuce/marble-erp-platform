@@ -1,11 +1,12 @@
 package com.ozerler.marble.util;
 
+import com.ozerler.marble.common.Constants;
 import jakarta.servlet.http.HttpServletRequest;
 
 public final class ClientIps {
 
-    private static final String FORWARDED_FOR_HEADER = "X-Forwarded-For";
-    private static final String REAL_IP_HEADER = "X-Real-IP";
+    private static final String FORWARDED_FOR_HEADER = Constants.FORWARDED_FOR_HEADER;
+    private static final String REAL_IP_HEADER = Constants.REAL_IP_HEADER;
 
     private ClientIps() {
     }

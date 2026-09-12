@@ -15,10 +15,10 @@ public class SwaggerConfig {
     public OpenAPI marbleErpOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Özerler Mermer ERP API")
+                        .title("Ozerler Mermer ERP API")
                         .version("1.0")
                         .description("""
-                                REST and MVC endpoints for Özerler Mermer ERP — physical \
+                                REST and MVC endpoints for Ozerler Mermer ERP — physical \
                                 traceability, waste management, and dynamic cost accounting.
 
                                 Covered areas:
@@ -35,6 +35,6 @@ public class SwaggerConfig {
                                 • Digital stone passport, file uploads, and system health
                                 """)
                         .contact(new Contact()
-                                .name("Özerler Mermer A.Ş.")));
+                                .name("Ozerler Mermer A.S.")));
     }
 }

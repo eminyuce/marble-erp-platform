@@ -26,8 +26,9 @@
         });
         if (resp.ok) {
             const data = await resp.json();
-            this.previewSubject = data.subject;
-            this.previewHtml = data.html;
+            const preview = (data && data.response && data.response.body) ? data.response.body : data;
+            this.previewSubject = preview.subject;
+            this.previewHtml = preview.html;
             this.previewModalOpen = true;
         } else {
             alert('Şablon önizleme yüklenemedi');

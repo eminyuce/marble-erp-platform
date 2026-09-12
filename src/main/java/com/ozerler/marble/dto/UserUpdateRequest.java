@@ -25,18 +25,18 @@ public class UserUpdateRequest {
     @JsonAlias("id")
     private Long id;
 
-    @NotBlank(message = "Missing required field: email")
-    @Email(message = "Geçerli bir e-posta adresi giriniz")
+    @NotBlank(message = "{validation.user.email.required}")
+    @Email(message = "{validation.user.email.invalid}")
     @JsonProperty("email")
     @JsonAlias("email")
     private String email;
 
-    @NotBlank(message = "Missing required field: first_name")
+    @NotBlank(message = "{validation.user.firstname.required}")
     @JsonProperty("first_name")
     @JsonAlias("firstName")
     private String firstName;
 
-    @NotBlank(message = "Missing required field: last_name")
+    @NotBlank(message = "{validation.user.lastname.required}")
     @JsonProperty("last_name")
     @JsonAlias("lastName")
     private String lastName;

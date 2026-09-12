@@ -29,9 +29,10 @@
                      headers: { 'Accept': 'application/json' }
                  });
                  if (!resp.ok) throw new Error('search failed');
-                 const data = await resp.json();
-                 this.results = data.results || [];
-                 this.total = data.total || 0;
+                  const data = await resp.json();
+                  const payload = (data && data.response && data.response.body) ? data.response.body : data;
+                  this.results = payload.results || [];
+                  this.total = payload.total || 0;
              } catch (e) {
                  this.results = [];
                  this.total = 0;

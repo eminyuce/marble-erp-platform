@@ -7,6 +7,7 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.ozerler.marble.common.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -20,9 +21,20 @@ import java.util.Map;
  */
 @Service
 @Slf4j
+@lombok.RequiredArgsConstructor
 public class BarcodeService {
 
-    private static final int DEFAULT_SIZE = 250;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     /**
      * Generates a QR code image from the given text and returns it as a
@@ -50,7 +62,7 @@ public class BarcodeService {
             return Base64.getEncoder().encodeToString(out.toByteArray());
         } catch (WriterException | IOException e) {
             log.error("QR code generation failed for text: {}", text, e);
-            throw new RuntimeException("QR kodu oluşturulamadı", e);
+            throw new RuntimeException(getMessage("error.barcode.qr_failed"), e);
         }
     }
 
@@ -58,6 +70,6 @@ public class BarcodeService {
      * Convenience overload using the default 250×250 size.
      */
     public String generateQrCodeBase64(String text) {
-        return generateQrCodeBase64(text, DEFAULT_SIZE, DEFAULT_SIZE);
+        return generateQrCodeBase64(text, Constants.DEFAULT_QR_CODE_SIZE, Constants.DEFAULT_QR_CODE_SIZE);
     }
 }

@@ -6,6 +6,7 @@ import com.ozerler.marble.model.SalesOrder;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
 import com.ozerler.marble.service.SalesService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Locale;
 
 @Controller
 @RequestMapping("/sales")
@@ -26,6 +28,7 @@ import java.time.LocalDate;
 public class SalesController {
 
     private final SalesService salesService;
+    private final MessageSource messageSource;
 
     @GetMapping
     public String salesIndex(Model model) {
@@ -46,8 +49,8 @@ public class SalesController {
     }
 
     @GetMapping("/create")
-    public String showCreateForm(Model model) {
-        populateSalesForm(model);
+    public String showCreateForm(Locale locale, Model model) {
+        populateSalesForm(model, locale);
         return "erp/sales/form";
     }
 
@@ -56,16 +59,18 @@ public class SalesController {
                               @RequestParam("customerId") Long customerId,
                               @RequestParam(value = "deliveryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
                               @RequestParam(value = "notes", required = false) String notes,
+                              Locale locale,
                               Model model,
                               RedirectAttributes redirectAttributes) {
         try {
             SalesOrder order = salesService.createSalesOrder(orderNo, customerId, deliveryDate, notes);
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Satış siparişi " + order.getOrderNo() + " başarıyla oluşturuldu.");
+                    messageSource.getMessage("erp.sales.create.success", new Object[]{order.getOrderNo()}, locale));
             return "redirect:/sales";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Hata: " + e.getMessage());
-            populateSalesForm(model);
+            model.addAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            populateSalesForm(model, locale);
             return "erp/sales/form";
         }
     }
@@ -95,9 +100,9 @@ public class SalesController {
         return "redirect:/sales/" + id;
     }
 
-    private void populateSalesForm(Model model) {
+    private void populateSalesForm(Model model, Locale locale) {
         model.addAttribute("customers", salesService.getAllCustomers());
         model.addAttribute("generatedOrderNo", salesService.generateOrderNo());
-        model.addAttribute("pageTitle", "Yeni Satış Siparişi");
+        model.addAttribute("pageTitle", messageSource.getMessage("erp.sales.title.create", null, locale));
     }
 }

@@ -1,20 +1,22 @@
 package com.ozerler.marble.model.enums;
 
+import com.ozerler.marble.util.MessageUtils;
+
 public enum ProcessType {
-    GANGSAW("Katrak Dilimleme (80 Lama)"),
-    ST("Dikey Yarma (ST)"),
-    POLISHING("Cila Hattı (Epoksi & File)"),
-    HONING("Honlama"),
-    RESIN_LINE("Reçine / Fırın"),
-    BRIDGE_CUTTING("Köprü Kesme");
+    GANGSAW("enum.process_type.gangsaw"),
+    ST("enum.process_type.st"),
+    POLISHING("enum.process_type.polishing"),
+    HONING("enum.process_type.honing"),
+    RESIN_LINE("enum.process_type.resin_line"),
+    BRIDGE_CUTTING("enum.process_type.bridge_cutting");
 
-    private final String label;
+    private final String messageKey;
 
-    ProcessType(String label) {
-        this.label = label;
+    ProcessType(String messageKey) {
+        this.messageKey = messageKey;
     }
 
     public String getLabel() {
-        return label;
+        return MessageUtils.getMessage(messageKey);
     }
 }

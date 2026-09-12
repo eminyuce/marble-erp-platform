@@ -1,5 +1,7 @@
 package com.ozerler.marble.util;
 
+import com.ozerler.marble.common.Constants;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -7,10 +9,8 @@ import java.util.regex.Pattern;
 
 public final class Strings {
 
-    private static final Locale TURKISH = Locale.forLanguageTag("tr");
-    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile(
-            "\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\}|\\$\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}"
-    );
+    private static final Locale TURKISH = Constants.LOCALE_TR;
+    private static final Pattern PLACEHOLDER_PATTERN = Constants.PATTERN_TEMPLATE_PLACEHOLDER;
 
     private Strings() {
     }

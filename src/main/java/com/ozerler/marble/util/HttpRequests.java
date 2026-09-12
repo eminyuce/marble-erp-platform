@@ -1,12 +1,13 @@
 package com.ozerler.marble.util;
 
+import com.ozerler.marble.common.Constants;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
 
 public final class HttpRequests {
 
-    private static final String REQUESTED_WITH_HEADER = "X-Requested-With";
-    private static final String XML_HTTP_REQUEST = "XMLHttpRequest";
+    private static final String REQUESTED_WITH_HEADER = Constants.REQUESTED_WITH_HEADER;
+    private static final String XML_HTTP_REQUEST = Constants.XML_HTTP_REQUEST;
 
     private HttpRequests() {
     }
@@ -15,7 +16,7 @@ public final class HttpRequests {
         if (request == null) {
             return false;
         }
-        String accept = request.getHeader("Accept");
+        String accept = request.getHeader(Constants.HEADER_ACCEPT);
         if (accept != null && accept.contains(MediaType.APPLICATION_JSON_VALUE)) {
             return true;
         }
@@ -23,6 +24,6 @@ public final class HttpRequests {
     }
 
     public static boolean isHtmx(HttpServletRequest request) {
-        return request != null && "true".equalsIgnoreCase(request.getHeader("HX-Request"));
+        return request != null && "true".equalsIgnoreCase(request.getHeader(Constants.HEADER_HX_REQUEST));
     }
 }

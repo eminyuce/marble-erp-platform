@@ -1,5 +1,6 @@
 package com.ozerler.marble.config;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.util.ClientIps;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,12 +25,12 @@ import java.util.UUID;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class MdcLoggingFilter extends OncePerRequestFilter {
 
-    public static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
-    public static final String MDC_CORRELATION_ID = "correlationId";
-    public static final String MDC_USER_ID = "userId";
-    public static final String MDC_CLIENT_IP = "clientIp";
-    public static final String MDC_HTTP_METHOD = "httpMethod";
-    public static final String MDC_REQUEST_URI = "requestUri";
+    public static final String CORRELATION_ID_HEADER = Constants.CORRELATION_ID_HEADER;
+    public static final String MDC_CORRELATION_ID = Constants.MDC_CORRELATION_ID;
+    public static final String MDC_USER_ID = Constants.MDC_USER_ID;
+    public static final String MDC_CLIENT_IP = Constants.MDC_CLIENT_IP;
+    public static final String MDC_HTTP_METHOD = Constants.MDC_HTTP_METHOD;
+    public static final String MDC_REQUEST_URI = Constants.MDC_REQUEST_URI;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

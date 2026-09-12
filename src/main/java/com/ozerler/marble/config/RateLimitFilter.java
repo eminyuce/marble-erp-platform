@@ -1,5 +1,6 @@
 package com.ozerler.marble.config;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.service.RateLimitService;
 import com.ozerler.marble.service.RateLimitService.Tier;
 import com.ozerler.marble.service.SettingService;
@@ -31,45 +32,52 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimitService rateLimitService;
     private final SettingService settingService;
+    private final org.springframework.context.MessageSource messageSource;
 
-    private static final String SETTING_KEY = "security.rate_limiting.enabled";
+    private static final String SETTING_KEY = Constants.SETTING_KEY_RATE_LIMITING;
 
-    private static final String JSON_RESPONSE = """
-            {"error":"too_many_requests","message":"Çok fazla istek gönderdiniz. Lütfen bir süre bekleyip tekrar deneyin."}""";
+    private String buildJsonResponse(java.util.Locale locale) {
+        String msg = messageSource.getMessage("error.rate_limit.exceeded", null, locale);
+        return "{\"error\":\"too_many_requests\",\"message\":\"" + msg + "\"}";
+    }
 
-    private static final String HTML_RESPONSE = """
-            <!DOCTYPE html>
-            <html lang="tr">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>429 - Çok Fazla İstek</title>
-                <style>
-                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                           display: flex; align-items: center; justify-content: center;
-                           min-height: 100vh; margin: 0; background: #f8fafc; color: #334155; }
-                    .card { text-align: center; max-width: 480px; padding: 3rem 2rem;
-                            background: white; border-radius: 1rem; border: 1px solid #e2e8f0;
-                            box-shadow: 0 4px 6px -1px rgba(0,0,0,.1); }
-                    h1 { font-size: 4rem; color: #e11d48; margin: 0 0 .5rem; }
-                    h2 { font-size: 1.25rem; margin: 0 0 1rem; color: #1e293b; }
-                    p  { font-size: .875rem; line-height: 1.6; color: #64748b; }
-                    a  { display: inline-block; margin-top: 1.5rem; padding: .6rem 1.5rem;
-                         background: #2b6cb0; color: white; border-radius: .5rem;
-                         text-decoration: none; font-size: .875rem; font-weight: 600; }
-                    a:hover { background: #1e4e8c; }
-                </style>
-            </head>
-            <body>
-                <div class="card">
-                    <h1>429</h1>
-                    <h2>Çok Fazla İstek</h2>
-                    <p>Kısa süre içinde çok fazla istek gönderdiniz.<br>
-                       Lütfen bir süre bekleyip tekrar deneyin.</p>
-                    <a href="/">Ana Sayfaya Dön</a>
-                </div>
-            </body>
-            </html>""";
+    private String buildHtmlResponse(java.util.Locale locale) {
+        String title = messageSource.getMessage("error.http.429.title", null, locale);
+        String message = messageSource.getMessage("error.http.429.message", null, locale);
+        String homeBtn = messageSource.getMessage("common.button.home", null, locale);
+        return """
+                <!DOCTYPE html>
+                <html lang="%s">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>429 - %s</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                               display: flex; align-items: center; justify-content: center;
+                               min-height: 100vh; margin: 0; background: #f8fafc; color: #334155; }
+                        .card { text-align: center; max-width: 480px; padding: 3rem 2rem;
+                                background: white; border-radius: 1rem; border: 1px solid #e2e8f0;
+                                box-shadow: 0 4px 6px -1px rgba(0,0,0,.1); }
+                        h1 { font-size: 4rem; color: #e11d48; margin: 0 0 .5rem; }
+                        h2 { font-size: 1.25rem; margin: 0 0 1rem; color: #1e293b; }
+                        p  { font-size: .875rem; line-height: 1.6; color: #64748b; }
+                        a  { display: inline-block; margin-top: 1.5rem; padding: .6rem 1.5rem;
+                             background: #2b6cb0; color: white; border-radius: .5rem;
+                             text-decoration: none; font-size: .875rem; font-weight: 600; }
+                        a:hover { background: #1e4e8c; }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <h1>429</h1>
+                        <h2>%s</h2>
+                        <p>%s</p>
+                        <a href="/">%s</a>
+                    </div>
+                </body>
+                </html>""".formatted(locale.getLanguage(), title, title, message, homeBtn);
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -92,14 +100,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader("Retry-After", "60");
 
+            java.util.Locale locale = org.springframework.context.i18n.LocaleContextHolder.getLocale();
+            if (locale == null) {
+                locale = java.util.Locale.forLanguageTag("tr");
+            }
+
             if (HttpRequests.expectsJson(request)) {
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                response.getWriter().write(JSON_RESPONSE);
+                response.getWriter().write(buildJsonResponse(locale));
             } else {
                 response.setContentType(MediaType.TEXT_HTML_VALUE);
                 response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                response.getWriter().write(HTML_RESPONSE);
+                response.getWriter().write(buildHtmlResponse(locale));
             }
             return;
         }

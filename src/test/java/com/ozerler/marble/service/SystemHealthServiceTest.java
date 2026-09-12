@@ -45,7 +45,7 @@ class SystemHealthServiceTest {
         when(metaData.getDatabaseProductVersion()).thenReturn("2.3");
         when(statement.execute(anyString())).thenReturn(true);
 
-        systemHealthService = new SystemHealthService(dataSource, environment, Optional.empty());
+        systemHealthService = new SystemHealthService(dataSource, environment, Optional.empty(), null);
 
         Map<String, Object> metrics = systemHealthService.collectHealthMetrics();
 

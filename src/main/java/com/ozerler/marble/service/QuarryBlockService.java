@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.BlockDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Block;
@@ -26,10 +27,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class QuarryBlockService {
 
-    private static final int DEFAULT_PAGE_SIZE = 10;
-
     private final BlockRepository blockRepository;
     private final QuarryRepository quarryRepository;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     @Transactional(readOnly = true)
     public TabulatorResponse<BlockDto> getBlocksPaged(int page, int size, String search, String sortField, String sortDir) {
@@ -40,7 +50,7 @@ public class QuarryBlockService {
         }
 
         int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
+        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
 
         Page<Block> blockPage = blockRepository.searchBlocks(search, pageable);
         List<BlockDto> dtos = blockPage.getContent().stream()
@@ -52,9 +62,9 @@ public class QuarryBlockService {
 
     @Transactional(readOnly = true)
     public Block getBlockById(Long id) {
-        Objects.requireNonNull(id, "Blok ID boş olamaz");
+        Objects.requireNonNull(id, getMessage("error.block.id.required"));
         return blockRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.block.not_found", id)));
     }
 
     @Transactional
@@ -64,11 +74,11 @@ public class QuarryBlockService {
                               QualityGrade qualityGrade, int crackLevel,
                               BigDecimal extractionCost, String notes, String photoUrls) {
 
-        Objects.requireNonNull(quarryId, "Ocak ID boş olamaz");
-        Objects.requireNonNull(blockCode, "Blok numarası boş olamaz");
+        Objects.requireNonNull(quarryId, getMessage("error.quarry.id.required"));
+        Objects.requireNonNull(blockCode, getMessage("error.block.code.required"));
 
         Quarry quarry = quarryRepository.findById(quarryId)
-                .orElseThrow(() -> new IllegalArgumentException("Ocak bulunamadı: " + quarryId));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.quarry.not_found", quarryId)));
 
         Block block = Block.builder()
                 .quarry(quarry)

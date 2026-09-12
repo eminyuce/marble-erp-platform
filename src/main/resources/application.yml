@@ -3,11 +3,17 @@ spring:
     name: marble-erp-platform
   profiles:
     active: dev
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
   thymeleaf:
     cache: false
     mode: HTML
     encoding: UTF-8
   web:
+    locale: tr
+    locale-resolver: fixed
     resources:
       chain:
         cache: true

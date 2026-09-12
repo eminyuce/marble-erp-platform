@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.GenealogyNodeDto;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CutItem;
@@ -26,22 +27,30 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GenealogyService {
 
-    private static final int CRITICAL_CRACK_LEVEL_THRESHOLD = 1;
-    private static final String CRITICAL_CRACK_WARNING = "Kritik Seviye İç Çatlak Riski Tespit Edildi!";
-
     private final BlockRepository blockRepository;
     private final ProductionOrderRepository productionOrderRepository;
     private final SlabRepository slabRepository;
     private final CutItemRepository cutItemRepository;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     /**
      * Builds full digital stone genealogy tree starting from Quarry & Block (BRD Section 1.3)
      */
     @Transactional(readOnly = true)
     public GenealogyNodeDto buildTreeForBlock(Long blockId) {
-        Objects.requireNonNull(blockId, "Blok ID boş olamaz");
+        Objects.requireNonNull(blockId, getMessage("error.block.id.required"));
         Block block = blockRepository.findByIdWithQuarry(blockId)
-                .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.block.not_found", blockId)));
 
         GenealogyNodeDto rootNode = buildBlockNode(block);
 
@@ -114,33 +123,33 @@ public class GenealogyService {
     }
 
     private GenealogyNodeDto buildBlockNode(Block block) {
-        boolean hasCriticalCrack = block.getCrackLevel() > CRITICAL_CRACK_LEVEL_THRESHOLD;
-        String details = String.format("Ocak: %s | Ölçü: %dx%dx%d cm | Ağırlık: %,.0f kg | Kalite: %s",
+        boolean hasCriticalCrack = block.getCrackLevel() > Constants.CRITICAL_CRACK_LEVEL_THRESHOLD;
+        String details = getMessage("genealogy.node.block.details",
                 block.getQuarry().getName(), block.getWidthCm(), block.getLengthCm(), block.getHeightCm(),
-                block.getActualWeightKg(), block.getQualityGrade());
+                block.getActualWeightKg(), block.getQualityGrade().getLabel());
 
         return GenealogyNodeDto.builder()
                 .id("BLK-" + block.getId())
                 .type("BLOCK")
-                .title("Ham Blok: " + block.getBlockCode())
+                .title(getMessage("genealogy.node.block.title", block.getBlockCode()))
                 .subtitle(block.getStoneType() + " (" + block.getColorTone() + ")")
                 .details(details)
                 .status(block.getStatus().getLabel())
                 .qrCode("BLK-" + block.getBlockCode())
                 .alert(hasCriticalCrack)
-                .alertMessage(hasCriticalCrack ? CRITICAL_CRACK_WARNING : null)
+                .alertMessage(hasCriticalCrack ? getMessage("genealogy.node.block.crack_warning") : null)
                 .children(new ArrayList<>())
                 .build();
     }
 
     private GenealogyNodeDto buildProductionOrderNode(ProductionOrder order) {
-        String details = String.format("Operatör: %s | Süre: %s sa | Elektrik: %s kWh",
+        String details = getMessage("genealogy.node.production.details",
                 order.getOperatorName(), order.getDurationHours(), order.getElectricityKwh());
 
         return GenealogyNodeDto.builder()
                 .id("PRD-" + order.getId())
                 .type("PRODUCTION")
-                .title("Fabrika Kesim: " + order.getOrderNo())
+                .title(getMessage("genealogy.node.production.title", order.getOrderNo()))
                 .subtitle(order.getMachineName() + " (" + order.getProcessType().getLabel() + ")")
                 .details(details)
                 .status(order.getStatus())
@@ -150,14 +159,14 @@ public class GenealogyService {
     }
 
     private GenealogyNodeDto buildSlabNode(Slab slab) {
-        String details = String.format("Ebat: %sx%s cm (%s m²) | Maliyet: %,.2f TL/m²",
+        String details = getMessage("genealogy.node.slab.details",
                 slab.getWidthCm(), slab.getLengthCm(), slab.getSurfaceAreaM2(), slab.getCostPerM2());
         boolean isGradeC = slab.getQualityGrade() == QualityGrade.C;
 
         return GenealogyNodeDto.builder()
                 .id("SLB-" + slab.getId())
                 .type("SLAB")
-                .title("Plaka: " + slab.getSlabCode())
+                .title(getMessage("genealogy.node.slab.title", slab.getSlabCode()))
                 .subtitle(slab.getSurfaceFinish().getLabel() + " - " + slab.getQualityGrade().getLabel())
                 .details(details)
                 .status(slab.getStatus().getLabel())
@@ -168,15 +177,15 @@ public class GenealogyService {
     }
 
     private GenealogyNodeDto buildCutItemNode(CutItem item) {
-        String details = String.format("%sx%sx%s cm (%s m²) | İşlem: %s | Birim Maliyet: %,.2f TL",
+        String details = getMessage("genealogy.node.item.details",
                 item.getWidthCm(), item.getLengthCm(), item.getThicknessCm(), item.getAreaM2(),
                 item.getEdgeFinish(), item.getUnitCost());
 
         return GenealogyNodeDto.builder()
                 .id("ITM-" + item.getId())
                 .type("ITEM")
-                .title("Ebatlı Mamul: " + item.getItemCode())
-                .subtitle("Hedef: " + item.getTargetLocation())
+                .title(getMessage("genealogy.node.item.title", item.getItemCode()))
+                .subtitle(getMessage("genealogy.node.item.target", item.getTargetLocation()))
                 .details(details)
                 .status(item.getStatus())
                 .qrCode(item.getItemCode())

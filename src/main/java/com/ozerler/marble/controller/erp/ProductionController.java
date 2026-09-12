@@ -8,6 +8,7 @@ import com.ozerler.marble.model.enums.ScrapReasonCode;
 import com.ozerler.marble.service.ProductionService;
 import com.ozerler.marble.service.QuarryBlockService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.Locale;
 
 @Controller
 @RequestMapping("/production")
@@ -27,6 +29,7 @@ public class ProductionController {
 
     private final ProductionService productionService;
     private final QuarryBlockService quarryBlockService;
+    private final MessageSource messageSource;
 
     @GetMapping
     public String productionIndex(Model model) {
@@ -47,8 +50,8 @@ public class ProductionController {
     }
 
     @GetMapping("/create")
-    public String showCreateForm(Model model) {
-        populateProductionForm(model);
+    public String showCreateForm(Locale locale, Model model) {
+        populateProductionForm(model, locale);
         return "erp/production/order-form";
     }
 
@@ -71,6 +74,7 @@ public class ProductionController {
                                     @RequestParam(value = "scrapReason", required = false) ScrapReasonCode scrapReason,
                                     @RequestParam(value = "scrapWeightKg", required = false) BigDecimal scrapWeightKg,
                                     @RequestParam(value = "scrapNotes", required = false) String scrapNotes,
+                                    Locale locale,
                                     Model model,
                                     RedirectAttributes redirectAttributes) {
 
@@ -81,11 +85,12 @@ public class ProductionController {
                     slabWidthCm, slabLengthCm, thicknessCm, scrapReason, scrapWeightKg, scrapNotes);
 
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Katrak kesim emri tamamlandı ve plakalar dinamik kalite katsayılı maliyetle üretildi.");
+                    messageSource.getMessage("erp.production.gangsaw.cut.success", null, locale));
             return "redirect:/production";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Hata: " + e.getMessage());
-            populateProductionForm(model);
+            model.addAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            populateProductionForm(model, locale);
             return "erp/production/order-form";
         }
     }
@@ -120,9 +125,9 @@ public class ProductionController {
         return "erp/production/slab-label";
     }
 
-    private void populateProductionForm(Model model) {
+    private void populateProductionForm(Model model, Locale locale) {
         model.addAttribute("availableBlocks", quarryBlockService.getAvailableBlocksForProduction());
         model.addAttribute("scrapReasons", ScrapReasonCode.values());
-        model.addAttribute("pageTitle", "Yeni Kesim Emri");
+        model.addAttribute("pageTitle", messageSource.getMessage("erp.production.title.create", null, locale));
     }
 }

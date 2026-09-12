@@ -66,8 +66,9 @@ function attachTabulatorPagingAnimation(table) {
 }
 
 function camelizeTabulatorRows(response) {
-    if (response && Array.isArray(response.data)) {
-        response.data.forEach((item) => {
+    const target = (response && response.response && response.response.body) ? response.response.body : response;
+    if (target && Array.isArray(target.data)) {
+        target.data.forEach((item) => {
             Object.keys(item).forEach((key) => {
                 const camel = key.replace(/_([a-z0-9])/g, (_, letter) => letter.toUpperCase());
                 if (!(camel in item)) {
@@ -76,15 +77,16 @@ function camelizeTabulatorRows(response) {
             });
         });
     }
-    return response;
+    return target;
 }
 
 function applyTabulatorTotal(tableId, response) {
+    const target = (response && response.response && response.response.body) ? response.response.body : response;
     const badge = document.querySelector(`[data-grid-total="${tableId}"]`);
-    if (badge && response && typeof response.total === "number") {
-        badge.textContent = String(response.total);
+    if (badge && target && typeof target.total === "number") {
+        badge.textContent = String(target.total);
     }
-    return response;
+    return target;
 }
 
 function toAsciiTurkishFilename(filename) {

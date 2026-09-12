@@ -22,8 +22,8 @@ public class PasswordResetRequest {
     @JsonAlias("userId")
     private Long userId;
 
-    @NotBlank(message = "Missing required field: new_password")
-    @Size(min = 6, message = "Şifre en az 6 karakter olmalıdır")
+    @NotBlank(message = "{validation.user.new_password.required}")
+    @Size(min = 6, message = "{validation.user.password.size}")
     @JsonProperty("new_password")
     @JsonAlias("newPassword")
     private String newPassword;

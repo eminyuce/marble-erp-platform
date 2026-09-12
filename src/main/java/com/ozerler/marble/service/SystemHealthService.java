@@ -37,12 +37,23 @@ public class SystemHealthService {
     private final DataSource dataSource;
     private final Environment environment;
     private final Optional<BuildProperties> buildProperties;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     public Map<String, Object> collectHealthMetrics() {
         Map<String, Object> metrics = new HashMap<>();
 
         // 1. Application & Environment Info
-        String appName = "Özerler Mermer ERP Platformu";
+        String appName = getMessage("system.health.app_name");
         String version = buildProperties.map(BuildProperties::getVersion).orElse("1.0.0");
         String[] activeProfiles = environment.getActiveProfiles().length > 0 ? environment.getActiveProfiles() : new String[]{"default"};
         int port = 81;
@@ -125,14 +136,14 @@ public class SystemHealthService {
 
         // 5. Component Subsystem Statuses
         List<Map<String, Object>> components = new ArrayList<>();
-        components.add(Map.of("name", "Veritabanı (MySQL 8.4 Pool)", "status", dbStatus, "latency", (dbLatencyMs >= 0 ? dbLatencyMs : 1) + " ms", "desc", "Flyway V4 şeması ve bağlantı havuzu"));
-        components.add(Map.of("name", "Ocak & Blok Kabul Servisi", "status", "UP", "latency", "<1 ms", "desc", "3 eksenli hacim ve kantar sapma doğrulama"));
-        components.add(Map.of("name", "Katrak & Fabrika Kesim Motoru", "status", "UP", "latency", "<1 ms", "desc", "FR-01 - FR-10 fire sınıflandırma ve plaka üretimi"));
-        components.add(Map.of("name", "Atölye & Nesting Servisi", "status", "UP", "latency", "<1 ms", "desc", "Köprü kesme ve plaka rezervasyon kontrolü"));
-        components.add(Map.of("name", "Şantiye & Montaj WBS Motoru", "status", "UP", "latency", "<1 ms", "desc", "Mahal ağacı ve puantaj maliyet takibi"));
-        components.add(Map.of("name", "Dinamik Maliyet Muhasebesi (ABC)", "status", "UP", "latency", "<1 ms", "desc", "Kalite çarpanlı dinamik katrak ve birim maliyet"));
-        components.add(Map.of("name", "Kurumsal E-Posta & SMTP Ağ Geçidi", "status", "UP", "latency", "Hazır", "desc", "2FA OTP kodları ve otomatik fire alarmları"));
-        components.add(Map.of("name", "Spring Boot 4 Actuator Endpoint", "status", "UP", "latency", "/health/", "desc", "Harici yük dengeleyici sağlık kontrolü"));
+        components.add(Map.of("name", getMessage("system.health.comp.db.name"), "status", dbStatus, "latency", (dbLatencyMs >= 0 ? dbLatencyMs : 1) + " ms", "desc", getMessage("system.health.comp.db.desc")));
+        components.add(Map.of("name", getMessage("system.health.comp.quarry.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.quarry.desc")));
+        components.add(Map.of("name", getMessage("system.health.comp.gangsaw.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.gangsaw.desc")));
+        components.add(Map.of("name", getMessage("system.health.comp.workshop.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.workshop.desc")));
+        components.add(Map.of("name", getMessage("system.health.comp.site.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.site.desc")));
+        components.add(Map.of("name", getMessage("system.health.comp.cost.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.cost.desc")));
+        components.add(Map.of("name", getMessage("system.health.comp.email.name"), "status", "UP", "latency", "UP", "desc", getMessage("system.health.comp.email.desc")));
+        components.add(Map.of("name", getMessage("system.health.comp.actuator.name"), "status", "UP", "latency", "/health/", "desc", getMessage("system.health.comp.actuator.desc")));
 
         metrics.put("components", components);
 

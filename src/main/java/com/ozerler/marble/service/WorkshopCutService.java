@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.TabulatorResponse;
@@ -41,15 +42,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class WorkshopCutService {
 
-    private static final BigDecimal SQUARE_CENTIMETERS_PER_SQUARE_METER = new BigDecimal("10000");
-    private static final BigDecimal WORKSHOP_OVERHEAD_FACTOR = new BigDecimal("1.15");
-    private static final String DEFAULT_EDGE_FINISH = "PAHLI_CILALI";
-    private static final String DEFAULT_TARGET_LOCATION = "Genel";
-    private static final String ORDER_STATUS_COMPLETED = "COMPLETED";
-    private static final String ITEM_STATUS_READY = "READY";
-    private static final int DEFAULT_PAGE_SIZE = 10;
-    private static final int COST_SCALE = 2;
-    private static final int AREA_SCALE = 4;
+    private static final BigDecimal SQUARE_CENTIMETERS_PER_SQUARE_METER = Constants.SQUARE_CENTIMETERS_PER_SQUARE_METER;
+    private static final BigDecimal WORKSHOP_OVERHEAD_FACTOR = Constants.WORKSHOP_OVERHEAD_FACTOR;
+    private static final String DEFAULT_EDGE_FINISH = Constants.DEFAULT_EDGE_FINISH;
+    private static final String DEFAULT_TARGET_LOCATION = Constants.DEFAULT_TARGET_LOCATION;
+    private static final String ORDER_STATUS_COMPLETED = Constants.STATUS_COMPLETED;
+    private static final String ITEM_STATUS_READY = Constants.STATUS_READY;
+    private static final int DEFAULT_PAGE_SIZE = Constants.DEFAULT_PAGE_SIZE;
+    private static final int COST_SCALE = Constants.COST_SCALE;
+    private static final int AREA_SCALE = Constants.AREA_SCALE;
 
     private final CutOrderRepository cutOrderRepository;
     private final CutItemRepository cutItemRepository;
@@ -57,6 +58,17 @@ public class WorkshopCutService {
     private final ProjectRepository projectRepository;
     private final ProjectLocationRepository projectLocationRepository;
     private final ScrapLogRepository scrapLogRepository;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     @Transactional(readOnly = true)
     public TabulatorResponse<CutOrderDto> getCutOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
@@ -100,9 +112,9 @@ public class WorkshopCutService {
 
     @Transactional(readOnly = true)
     public CutOrder getCutOrderById(Long id) {
-        Objects.requireNonNull(id, "Kesim iş emri ID boş olamaz");
+        Objects.requireNonNull(id, getMessage("error.cut_order.id.required"));
         return cutOrderRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Kesim iş emri bulunamadı: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cut_order.not_found", id)));
     }
 
     @Transactional
@@ -112,17 +124,17 @@ public class WorkshopCutService {
                                    String edgeFinish, String targetLocationDesc, String notes) {
 
         if (piecesCount <= 0) {
-            throw new IllegalArgumentException("Parça adedi sıfırdan büyük olmalıdır");
+            throw new IllegalArgumentException(getMessage("error.cut_order.pieces.invalid"));
         }
         if (targetWidthCm == null || targetWidthCm.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Hedef genişlik sıfırdan büyük olmalıdır");
+            throw new IllegalArgumentException(getMessage("error.cut_order.width.invalid"));
         }
         if (targetLengthCm == null || targetLengthCm.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Hedef uzunluk sıfırdan büyük olmalıdır");
+            throw new IllegalArgumentException(getMessage("error.cut_order.length.invalid"));
         }
 
         Slab sourceSlab = slabRepository.findById(slabId)
-                .orElseThrow(() -> new IllegalArgumentException("Kaynak plaka bulunamadı: " + slabId));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.slab.not_found", slabId)));
 
         Project project = projectId != null ? projectRepository.findById(projectId).orElse(null) : null;
         ProjectLocation location = locationId != null ? projectLocationRepository.findById(locationId).orElse(null) : null;
@@ -148,7 +160,7 @@ public class WorkshopCutService {
 
     @Transactional(readOnly = true)
     public List<CutItem> getItemsByCutOrder(Long cutOrderId) {
-        Objects.requireNonNull(cutOrderId, "Kesim iş emri ID boş olamaz");
+        Objects.requireNonNull(cutOrderId, getMessage("error.cut_order.id.required"));
         return cutItemRepository.findByCutOrderId(cutOrderId);
     }
 
@@ -224,7 +236,7 @@ public class WorkshopCutService {
                     .reasonCode(ScrapReasonCode.FR_09)
                     .scrapAreaM2(scrapArea)
                     .costImpact(costImpact)
-                    .description("Atölye köprü kesmede sipariş ebatlarından artan kenar atığı.")
+                    .description(getMessage("erp.workshop.scrap.description"))
                     .loggedBy(operatorName)
                     .build();
             scrapLogRepository.save(scrap);

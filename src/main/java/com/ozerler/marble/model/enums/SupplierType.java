@@ -1,18 +1,20 @@
 package com.ozerler.marble.model.enums;
 
+import com.ozerler.marble.util.MessageUtils;
+
 public enum SupplierType {
-    CONSUMABLE("Sarf Malzeme"),
-    CHEMICAL("Yapı Kimyasalı"),
-    STONE("Doğal Taş"),
-    EQUIPMENT("Ekipman/Alet");
+    CONSUMABLE("enum.supplier_type.consumable"),
+    CHEMICAL("enum.supplier_type.chemical"),
+    STONE("enum.supplier_type.stone"),
+    EQUIPMENT("enum.supplier_type.equipment");
 
-    private final String label;
+    private final String messageKey;
 
-    SupplierType(String label) {
-        this.label = label;
+    SupplierType(String messageKey) {
+        this.messageKey = messageKey;
     }
 
     public String getLabel() {
-        return label;
+        return MessageUtils.getMessage(messageKey);
     }
 }

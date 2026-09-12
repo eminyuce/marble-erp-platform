@@ -1,21 +1,23 @@
 package com.ozerler.marble.model.enums;
 
+import com.ozerler.marble.util.MessageUtils;
+
 public enum ExpenseType {
-    DIRECT_RAW("Hammadde (Blok)"),
-    DIRECT_LABOR("Direkt İşçilik"),
-    ELECTRICITY("Elektrik / Enerji"),
-    CONSUMABLES("Sarf Malzemesi (Lama/Disk/Aşındırıcı)"),
-    LOGISTICS("Nakliye & Akaryakıt"),
-    DEPRECIATION("Makine Amortismanı"),
-    OVERHEAD("Genel Üretim Gideri (GÜG)");
+    DIRECT_RAW("enum.expense_type.direct_raw"),
+    DIRECT_LABOR("enum.expense_type.direct_labor"),
+    ELECTRICITY("enum.expense_type.electricity"),
+    CONSUMABLES("enum.expense_type.consumables"),
+    LOGISTICS("enum.expense_type.logistics"),
+    DEPRECIATION("enum.expense_type.depreciation"),
+    OVERHEAD("enum.expense_type.overhead");
 
-    private final String label;
+    private final String messageKey;
 
-    ExpenseType(String label) {
-        this.label = label;
+    ExpenseType(String messageKey) {
+        this.messageKey = messageKey;
     }
 
     public String getLabel() {
-        return label;
+        return MessageUtils.getMessage(messageKey);
     }
 }

@@ -17,11 +17,13 @@ import java.util.Optional;
 public class GenealogyController {
 
     private final GenealogyService genealogyService;
+    private final org.springframework.context.MessageSource messageSource;
 
     @GetMapping
     public String genealogyIndex(@RequestParam(value = "code", required = false) String code,
                                  @RequestParam(value = "blockId", required = false) Long blockId,
-                                 Model model) {
+                                 Model model,
+                                 java.util.Locale locale) {
 
         model.addAttribute("allBlocks", genealogyService.getAllBlocks());
 
@@ -32,7 +34,8 @@ public class GenealogyController {
                 tree = result.get();
                 model.addAttribute("searchedCode", code);
             } else {
-                model.addAttribute("errorMessage", "Aradığınız koda ait soy ağacı kaydı bulunamadı: " + code);
+                model.addAttribute("errorMessage",
+                        messageSource.getMessage("erp.genealogy.not_found", new Object[]{code}, locale));
             }
         } else if (blockId != null) {
             tree = genealogyService.buildTreeForBlock(blockId);

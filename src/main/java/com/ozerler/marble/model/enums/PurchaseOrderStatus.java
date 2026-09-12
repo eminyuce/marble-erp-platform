@@ -1,20 +1,22 @@
 package com.ozerler.marble.model.enums;
 
+import com.ozerler.marble.util.MessageUtils;
+
 public enum PurchaseOrderStatus {
-    DRAFT("Taslak"),
-    SENT("Gönderildi"),
-    CONFIRMED("Onaylandı"),
-    PARTIAL_DELIVERY("Kısmi Teslimat"),
-    DELIVERED("Teslim Alındı"),
-    CANCELLED("İptal");
+    DRAFT("enum.purchase_order_status.draft"),
+    SENT("enum.purchase_order_status.sent"),
+    CONFIRMED("enum.purchase_order_status.confirmed"),
+    PARTIAL_DELIVERY("enum.purchase_order_status.partial_delivery"),
+    DELIVERED("enum.purchase_order_status.delivered"),
+    CANCELLED("enum.purchase_order_status.cancelled");
 
-    private final String label;
+    private final String messageKey;
 
-    PurchaseOrderStatus(String label) {
-        this.label = label;
+    PurchaseOrderStatus(String messageKey) {
+        this.messageKey = messageKey;
     }
 
     public String getLabel() {
-        return label;
+        return MessageUtils.getMessage(messageKey);
     }
 }

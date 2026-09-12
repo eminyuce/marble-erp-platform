@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.SlabDto;
@@ -30,12 +31,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -43,20 +49,31 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductionService {
 
-    private static final BigDecimal SQUARE_CENTIMETERS_PER_SQUARE_METER = new BigDecimal("10000");
-    private static final BigDecimal DEFAULT_THICKNESS_CM = new BigDecimal("2.0");
-    private static final BigDecimal DEFAULT_DURATION_HOURS = new BigDecimal("8.0");
-    private static final BigDecimal SCRAP_COST_IMPACT_RATE = new BigDecimal("0.10");
-    private static final String ORDER_STATUS_COMPLETED = "COMPLETED";
-    private static final int DEFAULT_PAGE_SIZE = 10;
-    private static final int AREA_SCALE = 4;
-    private static final int COST_SCALE = 2;
+    private static final BigDecimal SQUARE_CENTIMETERS_PER_SQUARE_METER = Constants.SQUARE_CENTIMETERS_PER_SQUARE_METER;
+    private static final BigDecimal DEFAULT_THICKNESS_CM = Constants.DEFAULT_THICKNESS_CM;
+    private static final BigDecimal DEFAULT_DURATION_HOURS = Constants.DEFAULT_DURATION_HOURS;
+    private static final BigDecimal SCRAP_COST_IMPACT_RATE = Constants.SCRAP_COST_IMPACT_RATE;
+    private static final String ORDER_STATUS_COMPLETED = Constants.STATUS_COMPLETED;
+    private static final int DEFAULT_PAGE_SIZE = Constants.DEFAULT_PAGE_SIZE;
+    private static final int AREA_SCALE = Constants.AREA_SCALE;
+    private static final int COST_SCALE = Constants.COST_SCALE;
 
     private final ProductionOrderRepository productionOrderRepository;
     private final BlockRepository blockRepository;
     private final SlabRepository slabRepository;
     private final ScrapLogRepository scrapLogRepository;
     private final BarcodeService barcodeService;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     @Transactional(readOnly = true)
     public TabulatorResponse<ProductionOrderDto> getOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
@@ -100,9 +117,9 @@ public class ProductionService {
 
     @Transactional(readOnly = true)
     public ProductionOrder getOrderById(Long id) {
-        Objects.requireNonNull(id, "Üretim emri ID boş olamaz");
+        Objects.requireNonNull(id, getMessage("error.production.order.id.required"));
         return productionOrderRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Üretim emri bulunamadı: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.production.order.not_found", id)));
     }
 
     /**
@@ -117,9 +134,9 @@ public class ProductionService {
                                             BigDecimal slabWidthCm, BigDecimal slabLengthCm, BigDecimal thicknessCm,
                                             ScrapReasonCode scrapReason, BigDecimal scrapWeightKg, String scrapNotes) {
 
-        Objects.requireNonNull(blockId, "Blok ID boş olamaz");
+        Objects.requireNonNull(blockId, getMessage("error.block.id.required"));
         Block block = blockRepository.findById(blockId)
-                .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.block.not_found", blockId)));
 
         block.setStatus(BlockStatus.SAWING);
         blockRepository.save(block);
@@ -295,7 +312,7 @@ public class ProductionService {
     @Transactional(readOnly = true)
     public SlabLabelDto getSlabLabelData(Long id, String passportBaseUrl) {
         Slab slab = slabRepository.findByIdWithBlockAndQuarry(id)
-                .orElseThrow(() -> new EntityNotFoundException("Plaka bulunamadı: " + id));
+                .orElseThrow(() -> new EntityNotFoundException(getMessage("error.slab.entity_not_found", id)));
 
         String baseUrl = passportBaseUrl != null && !passportBaseUrl.isBlank()
                 ? passportBaseUrl

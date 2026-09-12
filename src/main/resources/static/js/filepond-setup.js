@@ -23,11 +23,20 @@ function initFilePond(inputSelector, hiddenTargetSelector) {
             headers: headers,
             process: {
                 onload: (response) => {
+                    let fileUrl = response;
+                    try {
+                        const parsed = typeof response === 'string' ? JSON.parse(response) : response;
+                        if (parsed && parsed.response && parsed.response.body) {
+                            fileUrl = parsed.response.body;
+                        }
+                    } catch (e) {
+                        // Keep raw response string
+                    }
                     const hiddenTarget = document.querySelector(hiddenTargetSelector);
                     if (hiddenTarget) {
-                        hiddenTarget.value = response;
+                        hiddenTarget.value = fileUrl;
                     }
-                    return response;
+                    return fileUrl;
                 }
             },
             revert: (uniqueFileId, load, error) => {

@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.ProjectDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Project;
@@ -29,18 +30,29 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProjectSiteService {
 
-    private static final BigDecimal PERCENT_DIVISOR = new BigDecimal("100");
-    private static final int DEFAULT_PAGE_SIZE = 10;
-    private static final int CALCULATION_SCALE = 4;
-    private static final int RESULT_SCALE = 2;
+    private static final BigDecimal PERCENT_DIVISOR = Constants.PERCENT_DIVISOR;
+    private static final int DEFAULT_PAGE_SIZE = Constants.DEFAULT_PAGE_SIZE;
+    private static final int CALCULATION_SCALE = Constants.CALCULATION_SCALE;
+    private static final int RESULT_SCALE = Constants.RESULT_SCALE;
 
-    private static final String LOCATION_STATUS_PLANNED = "PLANNED";
-    private static final String LOCATION_STATUS_IN_PROGRESS = "IN_PROGRESS";
-    private static final String LOCATION_STATUS_COMPLETED = "COMPLETED";
+    private static final String LOCATION_STATUS_PLANNED = Constants.STATUS_PLANNED;
+    private static final String LOCATION_STATUS_IN_PROGRESS = Constants.STATUS_IN_PROGRESS;
+    private static final String LOCATION_STATUS_COMPLETED = Constants.STATUS_COMPLETED;
 
     private final ProjectRepository projectRepository;
     private final ProjectLocationRepository projectLocationRepository;
     private final SiteConsumptionRepository siteConsumptionRepository;
+    private final org.springframework.context.MessageSource messageSource;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     @Transactional(readOnly = true)
     public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String sortField, String sortDir) {
@@ -63,9 +75,9 @@ public class ProjectSiteService {
 
     @Transactional(readOnly = true)
     public Project getProjectById(Long id) {
-        Objects.requireNonNull(id, "Proje ID boş olamaz");
+        Objects.requireNonNull(id, getMessage("error.project.id.required"));
         return projectRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Proje bulunamadı: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.project.not_found", id)));
     }
 
     @Transactional
@@ -73,8 +85,8 @@ public class ProjectSiteService {
                                  BigDecimal contractValue, BigDecimal estimatedCost,
                                  LocalDate startDate, LocalDate deliveryDate, String notes) {
 
-        Objects.requireNonNull(projectCode, "Proje kodu boş olamaz");
-        Objects.requireNonNull(name, "Proje adı boş olamaz");
+        Objects.requireNonNull(projectCode, getMessage("error.project.code.required"));
+        Objects.requireNonNull(name, getMessage("error.project.name.required"));
 
         Project project = Project.builder()
                 .projectCode(projectCode.trim())
@@ -95,7 +107,7 @@ public class ProjectSiteService {
     @Transactional
     public ProjectLocation addLocation(Long projectId, Long parentId, String locationName,
                                       String floorLevel, String stoneSpec, BigDecimal plannedAreaM2) {
-        Objects.requireNonNull(locationName, "Mahal adı boş olamaz");
+        Objects.requireNonNull(locationName, getMessage("error.location.name.required"));
         Project project = getProjectById(projectId);
         ProjectLocation parent = parentId != null ? projectLocationRepository.findById(parentId).orElse(null) : null;
 
@@ -117,13 +129,13 @@ public class ProjectSiteService {
     public SiteConsumption recordConsumption(Long projectId, Long locationId,
                                             ConsumptionType type, String itemName,
                                             BigDecimal quantity, String unit, BigDecimal unitCost, String notes) {
-        Objects.requireNonNull(type, "Sarfiyat tipi boş olamaz");
-        Objects.requireNonNull(quantity, "Miktar boş olamaz");
-        Objects.requireNonNull(unitCost, "Birim maliyet boş olamaz");
+        Objects.requireNonNull(type, getMessage("error.consumption.type.required"));
+        Objects.requireNonNull(quantity, getMessage("error.consumption.quantity.required"));
+        Objects.requireNonNull(unitCost, getMessage("error.consumption.unit_cost.required"));
 
         Project project = getProjectById(projectId);
         ProjectLocation location = projectLocationRepository.findById(locationId)
-                .orElseThrow(() -> new IllegalArgumentException("Mahal bulunamadı: " + locationId));
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.location.not_found", locationId)));
 
         SiteConsumption consumption = SiteConsumption.builder()
                 .project(project)
@@ -172,13 +184,13 @@ public class ProjectSiteService {
 
     @Transactional(readOnly = true)
     public List<ProjectLocation> getLocationsByProject(Long projectId) {
-        Objects.requireNonNull(projectId, "Proje ID boş olamaz");
+        Objects.requireNonNull(projectId, getMessage("error.project.id.required"));
         return projectLocationRepository.findByProjectId(projectId);
     }
 
     @Transactional(readOnly = true)
     public List<SiteConsumption> getConsumptionsByProject(Long projectId) {
-        Objects.requireNonNull(projectId, "Proje ID boş olamaz");
+        Objects.requireNonNull(projectId, getMessage("error.project.id.required"));
         return siteConsumptionRepository.findByProjectId(projectId);
     }
 

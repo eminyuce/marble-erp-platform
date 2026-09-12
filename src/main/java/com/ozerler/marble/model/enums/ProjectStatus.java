@@ -1,18 +1,20 @@
 package com.ozerler.marble.model.enums;
 
+import com.ozerler.marble.util.MessageUtils;
+
 public enum ProjectStatus {
-    PLANNED("Planlama Aşamasında"),
-    ACTIVE("Aktif İmalat & Montaj"),
-    ON_HOLD("Beklemede / Askıda"),
-    COMPLETED("Teslim Edildi / Tamamlandı");
+    PLANNED("enum.project_status.planned"),
+    ACTIVE("enum.project_status.active"),
+    ON_HOLD("enum.project_status.on_hold"),
+    COMPLETED("enum.project_status.completed");
 
-    private final String label;
+    private final String messageKey;
 
-    ProjectStatus(String label) {
-        this.label = label;
+    ProjectStatus(String messageKey) {
+        this.messageKey = messageKey;
     }
 
     public String getLabel() {
-        return label;
+        return MessageUtils.getMessage(messageKey);
     }
 }

@@ -94,12 +94,12 @@ class SecurityConfigTest {
     void healthCheck_publicAccess() throws Exception {
         mockMvc.perform(get("/health/"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.port").value(81));
+                .andExpect(jsonPath("$.response.body.status").value("UP"))
+                .andExpect(jsonPath("$.response.body.port").value(81));
 
         mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"));
+                .andExpect(jsonPath("$.response.body.status").value("UP"));
     }
 
     @Test
@@ -155,8 +155,8 @@ class SecurityConfigTest {
 
         mockMvc.perform(get("/admin/dashboard/systemhealth/api"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.overallStatus").value("UP"))
-                .andExpect(jsonPath("$.appPort").value(81));
+                .andExpect(jsonPath("$.response.body.overallStatus").value("UP"))
+                .andExpect(jsonPath("$.response.body.appPort").value(81));
 
         mockMvc.perform(get("/admin/dashboard/oursitefeatures/"))
                 .andExpect(status().isOk())

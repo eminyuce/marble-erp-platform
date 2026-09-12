@@ -6,6 +6,7 @@ import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.enums.ConsumptionType;
 import com.ozerler.marble.service.ProjectSiteService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Locale;
 
 @Controller
 @RequestMapping("/projects")
@@ -26,6 +28,7 @@ import java.time.LocalDate;
 public class ProjectController {
 
     private final ProjectSiteService projectSiteService;
+    private final MessageSource messageSource;
 
     @GetMapping
     public String projectsIndex() {
@@ -45,8 +48,8 @@ public class ProjectController {
     }
 
     @GetMapping("/create")
-    public String showCreateForm(Model model) {
-        model.addAttribute("pageTitle", "Yeni Proje");
+    public String showCreateForm(Locale locale, Model model) {
+        model.addAttribute("pageTitle", messageSource.getMessage("erp.project.title.create", null, locale));
         return "erp/projects/form";
     }
 
@@ -59,16 +62,19 @@ public class ProjectController {
                                 @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                 @RequestParam(value = "deliveryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
                                 @RequestParam(value = "notes", required = false) String notes,
+                                Locale locale,
                                 Model model,
                                 RedirectAttributes redirectAttributes) {
 
         try {
             projectSiteService.createProject(projectCode, name, customerName, contractValue, estimatedCost, startDate, deliveryDate, notes);
-            redirectAttributes.addFlashAttribute("successMessage", "Proje başarıyla oluşturuldu.");
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.project.create.success", null, locale));
             return "redirect:/projects";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Hata: " + e.getMessage());
-            model.addAttribute("pageTitle", "Yeni Proje");
+            model.addAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            model.addAttribute("pageTitle", messageSource.getMessage("erp.project.title.create", null, locale));
             return "erp/projects/form";
         }
     }

@@ -55,7 +55,7 @@ public class RateLimitService {
         }
 
         if (timestamps.size() >= config.getMaxRequests()) {
-            log.warn("Rate limit aşıldı — IP: {}, Tier: {}, Limit: {}/{} sn",
+            log.warn("Rate limit exceeded — IP: {}, Tier: {}, Limit: {}/{} s",
                     clientIp, tier.name(), config.getMaxRequests(), config.getWindowSeconds());
             return false;
         }
@@ -92,7 +92,7 @@ public class RateLimitService {
         }
 
         if (removedKeys > 0) {
-            log.debug("Rate limit temizliği: {} anahtar silindi, kalan: {}", removedKeys, requestLog.size());
+            log.debug("Rate limit cleanup: {} keys evicted, remaining: {}", removedKeys, requestLog.size());
         }
     }
 

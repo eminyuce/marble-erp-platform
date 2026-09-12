@@ -1,5 +1,7 @@
 package com.ozerler.marble.util;
 
+import com.ozerler.marble.common.Constants;
+
 import java.util.Locale;
 
 /**
@@ -7,7 +9,7 @@ import java.util.Locale;
  */
 public final class TurkishAsciiFilename {
 
-    private static final String FALLBACK_NAME = "indirilen";
+    private static final String FALLBACK_NAME = Constants.FALLBACK_DOWNLOAD_FILENAME;
 
     private TurkishAsciiFilename() {
     }

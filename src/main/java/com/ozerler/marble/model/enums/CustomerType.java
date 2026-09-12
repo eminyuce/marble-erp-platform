@@ -1,17 +1,19 @@
 package com.ozerler.marble.model.enums;
 
+import com.ozerler.marble.util.MessageUtils;
+
 public enum CustomerType {
-    MARBLE_APPLICATION("Mermer Uygulama"),
-    CONSTRUCTION("İnşaat Firması"),
-    DEALER("Bayi/Toptancı");
+    MARBLE_APPLICATION("enum.customer_type.marble_application"),
+    CONSTRUCTION("enum.customer_type.construction"),
+    DEALER("enum.customer_type.dealer");
 
-    private final String label;
+    private final String messageKey;
 
-    CustomerType(String label) {
-        this.label = label;
+    CustomerType(String messageKey) {
+        this.messageKey = messageKey;
     }
 
     public String getLabel() {
-        return label;
+        return MessageUtils.getMessage(messageKey);
     }
 }

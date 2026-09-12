@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.GlobalSearchHit;
 import com.ozerler.marble.dto.GlobalSearchResponse;
 import com.ozerler.marble.model.Block;
@@ -37,9 +38,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GlobalSearchService {
 
-    private static final int PER_TYPE_LIMIT = 5;
-    private static final int MIN_QUERY_LENGTH = 2;
-
     private final BlockRepository blockRepository;
     private final ProjectRepository projectRepository;
     private final SlabRepository slabRepository;
@@ -53,17 +51,28 @@ public class GlobalSearchService {
     private final CostCenterRepository costCenterRepository;
     private final CutItemRepository cutItemRepository;
     private final QuarryRepository quarryRepository;
+    private final org.springframework.context.MessageSource messageSource;
 
-    @Qualifier("searchTaskExecutor")
+    @Qualifier(Constants.SEARCH_EXECUTOR)
     private final AsyncTaskExecutor searchTaskExecutor;
+
+    private String getMessage(String code, Object... args) {
+        if (messageSource != null) {
+            try {
+                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+            } catch (Exception ignored) {
+            }
+        }
+        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+    }
 
     public GlobalSearchResponse search(String rawQuery) {
         String query = rawQuery == null ? "" : rawQuery.trim();
-        if (query.length() < MIN_QUERY_LENGTH) {
+        if (query.length() < Constants.SEARCH_MIN_QUERY_LENGTH) {
             return GlobalSearchResponse.empty(query);
         }
 
-        Pageable limit = PageRequest.of(0, PER_TYPE_LIMIT);
+        Pageable limit = PageRequest.of(0, Constants.SEARCH_PER_TYPE_LIMIT);
         List<GlobalSearchHit> hits = List.of(
                         supplyAsync(() -> searchBlocks(query, limit)),
                         supplyAsync(() -> searchProjects(query, limit)),
@@ -105,13 +114,13 @@ public class GlobalSearchService {
             if (cause instanceof RuntimeException runtimeException) {
                 throw runtimeException;
             }
-            throw new IllegalStateException("Global arama sorgusu başarısız oldu", cause);
+            throw new IllegalStateException(getMessage("error.search.failed"), cause);
         }
     }
 
     private List<GlobalSearchHit> searchBlocks(String query, Pageable limit) {
         return blockRepository.searchByBlockCode(query, limit).stream()
-                .map(block -> hit("BLOCK", "Blok", "box", block.getBlockCode(),
+                .map(block -> hit("BLOCK", getMessage("search.type.block"), "box", block.getBlockCode(),
                         Strings.joinDistinct(" · ", block.getStoneType(), statusLabel(block)),
                         "/genealogy?code=" + Urls.encode(block.getBlockCode()), query))
                 .toList();
@@ -119,7 +128,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchProjects(String query, Pageable limit) {
         return projectRepository.searchByCodeOrName(query, limit).stream()
-                .map(project -> hit("PROJECT", "Şantiye", "building-2",
+                .map(project -> hit("PROJECT", getMessage("search.type.project"), "building-2",
                         Strings.joinDistinct(" · ", project.getProjectCode(), project.getName()),
                         project.getCustomerName(),
                         "/projects/" + project.getId(), query))
@@ -128,7 +137,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchSlabs(String query, Pageable limit) {
         return slabRepository.searchBySlabCode(query, limit).stream()
-                .map(slab -> hit("SLAB", "Plaka", "layers", slab.getSlabCode(),
+                .map(slab -> hit("SLAB", getMessage("search.type.slab"), "layers", slab.getSlabCode(),
                         slab.getStatus() != null ? slab.getStatus().name() : null,
                         "/passport/" + Urls.encode(slab.getSlabCode()), query))
                 .toList();
@@ -136,7 +145,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchProductionOrders(String query, Pageable limit) {
         return productionOrderRepository.searchByOrderNo(query, limit).stream()
-                .map(order -> hit("PRODUCTION", "Kesim emri", "factory", order.getOrderNo(),
+                .map(order -> hit("PRODUCTION", getMessage("search.type.production"), "factory", order.getOrderNo(),
                         order.getMachineName(),
                         "/production", query))
                 .toList();
@@ -149,7 +158,7 @@ public class GlobalSearchService {
                             ? "/projects/" + order.getProject().getId()
                             : "/workshop";
                     String projectName = order.getProject() != null ? order.getProject().getName() : null;
-                    return hit("CUT_ORDER", "Atölye emri", "scissors", order.getCutOrderNo(),
+                    return hit("CUT_ORDER", getMessage("search.type.cut_order"), "scissors", order.getCutOrderNo(),
                             projectName, url, query);
                 })
                 .toList();
@@ -157,7 +166,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchSalesOrders(String query, Pageable limit) {
         return salesOrderRepository.searchByOrderNo(query, limit).stream()
-                .map(order -> hit("SALES", "Satış siparişi", "shopping-cart", order.getOrderNo(),
+                .map(order -> hit("SALES", getMessage("search.type.sales"), "shopping-cart", order.getOrderNo(),
                         order.getCustomer() != null ? order.getCustomer().getCompanyName() : null,
                         "/sales/" + order.getId(), query))
                 .toList();
@@ -165,7 +174,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchPurchaseOrders(String query, Pageable limit) {
         return purchaseOrderRepository.searchByPoNumber(query, limit).stream()
-                .map(order -> hit("PROCUREMENT", "Satın alma", "truck", order.getPoNumber(),
+                .map(order -> hit("PROCUREMENT", getMessage("search.type.procurement"), "truck", order.getPoNumber(),
                         order.getSupplier() != null ? order.getSupplier().getCompanyName() : null,
                         "/procurement/" + order.getId(), query))
                 .toList();
@@ -173,7 +182,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchUsers(String query, Pageable limit) {
         return userRepository.searchActiveUsers(query, null, null, limit).getContent().stream()
-                .map(user -> hit("USER", "Kullanıcı", "users", user.getFullName(),
+                .map(user -> hit("USER", getMessage("search.type.user"), "users", user.getFullName(),
                         Strings.joinDistinct(" · ", user.getUsername(), user.getEmail()),
                         "/admin/users/" + user.getId() + "/edit", query))
                 .toList();
@@ -181,7 +190,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchCustomers(String query, Pageable limit) {
         return customerRepository.searchByCodeOrName(query, limit).stream()
-                .map(customer -> hit("CUSTOMER", "Müşteri", "contact",
+                .map(customer -> hit("CUSTOMER", getMessage("search.type.customer"), "contact",
                         Strings.joinDistinct(" · ", customer.getCustomerCode(), customer.getCompanyName()),
                         customer.getContactPerson(),
                         "/sales", query))
@@ -190,7 +199,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchSuppliers(String query, Pageable limit) {
         return supplierRepository.searchByCodeOrName(query, limit).stream()
-                .map(supplier -> hit("SUPPLIER", "Tedarikçi", "warehouse",
+                .map(supplier -> hit("SUPPLIER", getMessage("search.type.supplier"), "warehouse",
                         Strings.joinDistinct(" · ", supplier.getSupplierCode(), supplier.getCompanyName()),
                         supplier.getContactPerson(),
                         "/procurement", query))
@@ -199,7 +208,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchCostCenters(String query, Pageable limit) {
         return costCenterRepository.searchByCodeOrName(query, limit).stream()
-                .map(center -> hit("COST_CENTER", "Masraf merkezi", "calculator",
+                .map(center -> hit("COST_CENTER", getMessage("search.type.cost_center"), "calculator",
                         Strings.joinDistinct(" · ", center.getCode(), center.getName()),
                         center.getDescription(),
                         "/costs", query))
@@ -208,7 +217,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchCutItems(String query, Pageable limit) {
         return cutItemRepository.searchByItemCode(query, limit).stream()
-                .map(item -> hit("CUT_ITEM", "Mamul", "square", item.getItemCode(),
+                .map(item -> hit("CUT_ITEM", getMessage("search.type.cut_item"), "square", item.getItemCode(),
                         item.getTargetLocation(),
                         "/genealogy?code=" + Urls.encode(item.getItemCode()), query))
                 .toList();
@@ -216,7 +225,7 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchQuarries(String query, Pageable limit) {
         return quarryRepository.searchByCodeOrName(query, limit).stream()
-                .map(quarry -> hit("QUARRY", "Ocak", "mountain",
+                .map(quarry -> hit("QUARRY", getMessage("search.type.quarry"), "mountain",
                         Strings.joinDistinct(" · ", quarry.getCode(), quarry.getName()),
                         quarry.getLocation(),
                         "/blocks", query))

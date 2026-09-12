@@ -1,19 +1,21 @@
 package com.ozerler.marble.model.enums;
 
+import com.ozerler.marble.util.MessageUtils;
+
 public enum SlabStatus {
-    AVAILABLE("Serbest Stok"),
-    RESERVED("Proje/Siparişe Rezerve"),
-    IN_CUTTING("Atölyede Kesimde"),
-    SCRAPPED("Fire / Kırık"),
-    INSTALLED("Şantiyede Monte Edildi");
+    AVAILABLE("enum.slab_status.available"),
+    RESERVED("enum.slab_status.reserved"),
+    IN_CUTTING("enum.slab_status.in_cutting"),
+    SCRAPPED("enum.slab_status.scrapped"),
+    INSTALLED("enum.slab_status.installed");
 
-    private final String label;
+    private final String messageKey;
 
-    SlabStatus(String label) {
-        this.label = label;
+    SlabStatus(String messageKey) {
+        this.messageKey = messageKey;
     }
 
     public String getLabel() {
-        return label;
+        return MessageUtils.getMessage(messageKey);
     }
 }
