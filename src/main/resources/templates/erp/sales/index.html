@@ -55,6 +55,8 @@ let salesTable;
 document.addEventListener("DOMContentLoaded", () => {
     salesTable = new Tabulator("#sales-table", {
         layout: "fitColumns",
+        responsiveLayout: "collapse",
+        responsiveLayoutCollapseStartOpen: false,
         pagination: true,
         paginationMode: "remote",
         paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
@@ -70,10 +72,12 @@ document.addEventListener("DOMContentLoaded", () => {
             return applyTabulatorTotal("sales-table", response);
         },
         columns: [
+            erpResponsiveCollapseColumn(),
             {
                 title: "Sipariş No",
                 field: "orderNo",
                 width: 160,
+                responsive: 0,
                 formatter: function(cell) {
                     return `<span class="font-mono font-bold text-amber-900">${cell.getValue()}</span>`;
                 }
@@ -136,6 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 title: "İşlemler",
                 width: 120,
                 headerSort: false,
+                responsive: 0,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
                     return gridActionsHtml([

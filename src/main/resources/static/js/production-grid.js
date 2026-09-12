@@ -8,6 +8,7 @@ function initProductionGrid() {
     productionTable = new Tabulator("#production-table", {
         layout: "fitColumns",
         responsiveLayout: "collapse",
+        responsiveLayoutCollapseStartOpen: false,
         pagination: true,
         paginationMode: "remote",
         paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
@@ -33,10 +34,12 @@ function initProductionGrid() {
         },
         placeholder: "Üretim emri kaydı bulunamadı.",
         columns: [
+            erpResponsiveCollapseColumn(),
             {
                 title: "İş Emri No",
                 field: "orderNo",
                 width: 170,
+                responsive: 0,
                 formatter: function(cell) {
                     return `<span class="font-mono font-bold text-amber-900">${cell.getValue()}</span>`;
                 }
@@ -85,6 +88,7 @@ function initProductionGrid() {
                 title: "İşlemler",
                 width: 120,
                 headerSort: false,
+                responsive: 0,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
                     return gridActionsHtml([

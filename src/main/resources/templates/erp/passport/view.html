@@ -2,7 +2,7 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title th:text="${title != null ? title : 'Dijital Taş Pasaportu'}">Dijital Taş Pasaportu | Özerler Mermer</title>
     <link rel="preload" th:href="@{/fonts/inter-latin-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" th:href="@{/fonts/inter-latin-ext-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
@@ -14,7 +14,7 @@
     <div class="max-w-md w-full bg-slate-800/90 backdrop-blur border border-slate-700 rounded-3xl p-6 shadow-2xl space-y-5">
 
         <!-- Top Header -->
-        <div class="flex items-center justify-between border-b border-slate-700/80 pb-4">
+        <div class="flex items-start justify-between gap-3 flex-wrap border-b border-slate-700/80 pb-4">
             <div class="flex items-center gap-2.5">
                 <div class="p-2 bg-amber-700 text-white rounded-xl shadow-md">
                     <i data-lucide="gem" class="w-5 h-5"></i>
@@ -32,19 +32,19 @@
         <!-- Pallet Passport -->
         <div th:if="${type == 'PALLET'}" class="space-y-4">
             <div class="p-4 bg-slate-900/80 rounded-2xl border border-slate-700/60 space-y-3">
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Palet / Paket Kodu</span>
                     <span class="font-mono font-bold text-amber-400 text-sm" th:text="${pallet.palletCode}">PAL-2026-00145</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Ambalaj Tipi</span>
                     <span class="font-semibold text-slate-200" th:text="${pallet.packagingType.label}">İhracat Ahşap Sandık</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Brüt Ağırlık</span>
                     <span class="font-semibold text-slate-200" th:text="${#numbers.formatDecimal(pallet.grossWeightKg, 1, 'POINT', 0, 'COMMA')} + ' kg'">4.850 kg</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Depo Konumu</span>
                     <span class="font-semibold text-slate-200" th:text="${pallet.warehouseLocation}">Ambar-A / Sehpa-04</span>
                 </div>
@@ -54,27 +54,27 @@
         <!-- Slab Passport -->
         <div th:if="${type == 'SLAB'}" class="space-y-4">
             <div class="p-4 bg-slate-900/80 rounded-2xl border border-slate-700/60 space-y-3">
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Plaka Kodu</span>
                     <span class="font-mono font-bold text-amber-400 text-sm" th:text="${slab.slabCode}">SLB-2026-00851</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Taş Cinsi &amp; Yüzey</span>
                     <span class="font-semibold text-slate-200" th:text="${slab.block.stoneType} + ' (' + ${slab.surfaceFinish.label} + ')'">Muğla Beyaz (Cilalı)</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Kalite Seleksiyonu</span>
                     <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400" th:text="${slab.qualityGrade.label}">A Kalite</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Net Ölçüler &amp; Alan</span>
                     <span class="font-semibold text-slate-200" th:text="${slab.thicknessCm} + ' cm • ' + ${slab.widthCm} + 'x' + ${slab.lengthCm} + ' cm (' + ${slab.surfaceAreaM2} + ' m²)'">2 cm (4.98 m²)</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Cila Parlaklığı</span>
                     <span class="font-semibold text-slate-200" th:text="${slab.glossLevel} + ' Gloss'">88 Gloss</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Kaynak Blok</span>
                     <span class="font-mono text-amber-400" th:text="${slab.block.blockCode}">BLK-2026-00125</span>
                 </div>
@@ -84,19 +84,19 @@
         <!-- Block Passport -->
         <div th:if="${type == 'BLOCK'}" class="space-y-4">
             <div class="p-4 bg-slate-900/80 rounded-2xl border border-slate-700/60 space-y-3">
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Blok Kodu</span>
                     <span class="font-mono font-bold text-amber-400 text-sm" th:text="${block.blockCode}">BLK-2026-00125</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Ocak Adı</span>
                     <span class="font-semibold text-slate-200" th:text="${block.quarry.name}">Yatağan Beyaz Ocağı</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Taş Cinsi</span>
                     <span class="font-semibold text-slate-200" th:text="${block.stoneType}">Muğla Beyaz</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
+                <div class="flex justify-between items-start gap-3 text-xs">
                     <span class="text-slate-400">Kantar Tartımı</span>
                     <span class="font-semibold text-slate-200" th:text="${#numbers.formatDecimal(block.actualWeightKg, 1, 'POINT', 0, 'COMMA')} + ' kg'">20.850 kg</span>
                 </div>

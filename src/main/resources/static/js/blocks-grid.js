@@ -8,6 +8,7 @@ function initBlocksGrid() {
     blocksTable = new Tabulator("#blocks-table", {
         layout: "fitColumns",
         responsiveLayout: "collapse",
+        responsiveLayoutCollapseStartOpen: false,
         pagination: true,
         paginationMode: "remote",
         paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
@@ -33,11 +34,13 @@ function initBlocksGrid() {
         },
         placeholder: "Blok kaydı bulunamadı.",
         columns: [
+            erpResponsiveCollapseColumn(),
             {
                 title: "Blok Kodu",
                 field: "blockCode",
                 minWidth: 160,
                 width: 170,
+                responsive: 0,
                 formatter: function(cell) {
                     const val = cell.getValue();
                     return `<div class="font-mono font-bold text-amber-900">${val}</div>`;
@@ -112,6 +115,7 @@ function initBlocksGrid() {
                 minWidth: 120,
                 width: 130,
                 headerSort: false,
+                responsive: 0,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
                     const items = [];

@@ -76,21 +76,34 @@
                     Önizleme: <span class="font-bold text-slate-800" th:text="${entry.value.rows.size()}">0</span> kayıt
                 </p>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
                 <a th:href="@{/reports/export/{type}(type=${entry.key}, format='excel')}"
-                   class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-sm transition inline-flex items-center gap-2">
+                   class="min-h-11 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-sm transition inline-flex items-center justify-center gap-2">
                     <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                     <span>Excel (.xlsx) indir</span>
                 </a>
                 <a th:href="@{/reports/export/{type}(type=${entry.key}, format='csv')}"
-                   class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition inline-flex items-center gap-2">
+                   class="min-h-11 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition inline-flex items-center justify-center gap-2">
                     <i data-lucide="file-text" class="w-4 h-4"></i>
                     <span>CSV (.csv) indir</span>
                 </a>
             </div>
         </div>
 
-        <div class="overflow-x-auto rounded-2xl border border-slate-200">
+        <div class="erp-report-cards">
+            <div th:if="${#lists.isEmpty(entry.value.rows)}" class="p-8 text-center text-slate-400 text-sm">
+                Bu raporda henüz kayıt yok. Veri oluşunca tablo ve indirme dosyası dolacaktır.
+            </div>
+            <article th:each="row, stat : ${entry.value.rows}" class="erp-report-card">
+                <header class="erp-report-card-index" th:text="'#' + ${stat.count}">#1</header>
+                <div th:each="col, colStat : ${row}" class="erp-report-card-row">
+                    <span class="erp-report-card-label" th:text="${entry.value.headers[colStat.index]}">Başlık</span>
+                    <span class="erp-report-card-value" th:text="${col}">Değer</span>
+                </div>
+            </article>
+        </div>
+
+        <div class="erp-report-table-wrap rounded-2xl border border-slate-200">
             <table class="w-full text-left text-xs text-slate-700">
                 <thead class="bg-gradient-to-b from-[#f4f8fc] to-[#e8f0f8] text-[#1a365d] uppercase text-[11px] tracking-wider font-bold">
                     <tr>

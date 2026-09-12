@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<header th:fragment="navbar" class="admin-topbar">
+<header th:fragment="navbar" class="admin-topbar"
+        x-data="{ mobileSearchOpen: false }"
+        :class="{ 'is-mobile-search-open': mobileSearchOpen }">
     <div class="admin-topbar-left">
         <button type="button"
                 class="admin-menu-trigger"
@@ -11,7 +13,7 @@
                 data-label-open="Menüyü aç"
                 data-label-close="Menüyü kapat">
             <i data-lucide="layout-grid" aria-hidden="true"></i>
-            <span class="admin-menu-trigger-label">Menüyü aç</span>
+            <span class="admin-menu-trigger-label">Menü</span>
         </button>
         <div class="admin-topbar-title">
             <span class="admin-topbar-panel">Özerler Mermer ERP</span>
@@ -20,7 +22,7 @@
     </div>
 
     <!-- Global Search in Top Menu with Tooltip Message -->
-    <div class="admin-topbar-search" sec:authorize="isAuthenticated()"
+    <div class="admin-topbar-search" id="adminTopbarSearch" sec:authorize="isAuthenticated()"
          x-data="{
              search: '',
              results: [],
@@ -200,6 +202,16 @@
     </div>
 
     <div class="admin-topbar-right" sec:authorize="isAuthenticated()">
+        <button type="button"
+                class="admin-topbar-search-toggle"
+                @click="mobileSearchOpen = !mobileSearchOpen; $nextTick(() => { if (mobileSearchOpen) $root.querySelector('.admin-topbar-search-input')?.focus(); })"
+                :aria-expanded="mobileSearchOpen.toString()"
+                aria-controls="adminTopbarSearch"
+                title="Ara"
+                aria-label="Sistemde ara">
+            <i data-lucide="search" class="w-4 h-4" x-show="!mobileSearchOpen"></i>
+            <i data-lucide="x" class="w-4 h-4" x-show="mobileSearchOpen" x-cloak></i>
+        </button>
         <span class="admin-topbar-user" sec:authentication="name">admin</span>
         <a th:href="@{/account/change-password}" class="admin-topbar-logout" title="Şifre Değiştir" style="text-decoration:none;">
             <i data-lucide="key-round" class="w-4 h-4"></i>

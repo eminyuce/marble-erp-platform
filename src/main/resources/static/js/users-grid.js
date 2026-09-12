@@ -8,6 +8,7 @@ function initUsersGrid() {
     usersTable = new Tabulator("#users-table", {
         layout: "fitColumns",
         responsiveLayout: "collapse",
+        responsiveLayoutCollapseStartOpen: false,
         pagination: true,
         paginationMode: "remote",
         paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
@@ -43,10 +44,12 @@ function initUsersGrid() {
         },
         placeholder: "Kullanıcı kaydı bulunamadı.",
         columns: [
+            erpResponsiveCollapseColumn(),
             { title: "ID", field: "id", width: 70, sorter: "number" },
             {
                 title: "Kullanıcı",
                 field: "username",
+                responsive: 0,
                 formatter: function(cell) {
                     const row = cell.getRow().getData();
                     return `<div>
@@ -95,6 +98,7 @@ function initUsersGrid() {
                 title: "İşlemler",
                 width: 130,
                 headerSort: false,
+                responsive: 0,
                 formatter: function(cell) {
                     const id = cell.getRow().getData().id;
                     return gridActionsHtml([

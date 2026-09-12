@@ -146,6 +146,21 @@ function exportDropdownHtml(tableVar, baseName) {
     '</div>';
 }
 
+function erpResponsiveCollapseColumn() {
+    return {
+        title: "",
+        formatter: "responsiveCollapse",
+        width: 46,
+        minWidth: 46,
+        hozAlign: "center",
+        headerHozAlign: "center",
+        resizable: false,
+        headerSort: false,
+        responsive: 0,
+        download: false
+    };
+}
+
 function gridActionsHtml(items) {
     var menu = items.map(function(item) {
         if (item.divider) return '<hr class="grid-actions-divider">';
@@ -188,12 +203,18 @@ function toggleGridActions(event, btn) {
     menu.innerHTML = tpl.innerHTML;
     menu._triggerBtn = btn;
 
-    var rect = btn.getBoundingClientRect();
-    var spaceBelow = window.innerHeight - rect.bottom;
-    var top = spaceBelow > 220 ? (rect.bottom + 4) : Math.max(8, rect.top - 8);
-    var right = window.innerWidth - rect.right;
-    menu.style.cssText = 'position:fixed;top:' + top + 'px;right:' + right + 'px;z-index:9999;';
-    if (spaceBelow <= 220) menu.style.transform = 'translateY(-100%)';
+    var isCompact = window.matchMedia('(max-width: 640px)').matches;
+    if (isCompact) {
+        menu.classList.add('grid-actions-portal--sheet');
+        menu.style.cssText = 'position:fixed;left:12px;right:12px;bottom:max(12px, env(safe-area-inset-bottom));top:auto;z-index:9999;';
+    } else {
+        var rect = btn.getBoundingClientRect();
+        var spaceBelow = window.innerHeight - rect.bottom;
+        var top = spaceBelow > 220 ? (rect.bottom + 4) : Math.max(8, rect.top - 8);
+        var right = window.innerWidth - rect.right;
+        menu.style.cssText = 'position:fixed;top:' + top + 'px;right:' + right + 'px;z-index:9999;';
+        if (spaceBelow <= 220) menu.style.transform = 'translateY(-100%)';
+    }
 
     document.body.appendChild(menu);
     if (window.lucide) lucide.createIcons({ nodes: [menu] });
