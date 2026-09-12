@@ -19,10 +19,6 @@
                 </div>
             </div>
             <div class="admin-mega-header-actions">
-                <a class="admin-mega-header-btn" th:href="@{/admin/settings}">
-                    <i data-lucide="user" aria-hidden="true"></i>
-                    Profil
-                </a>
                 <a class="admin-mega-header-btn" th:href="@{/admin/users}" sec:authorize="hasRole('ADMIN')">
                     <i data-lucide="users" aria-hidden="true"></i>
                     Kullanıcılar

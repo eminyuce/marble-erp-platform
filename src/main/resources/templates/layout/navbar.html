@@ -19,6 +19,186 @@
         </div>
     </div>
 
+    <!-- Global Search in Top Menu with Tooltip Message -->
+    <div class="admin-topbar-search" sec:authorize="isAuthenticated()"
+         x-data="{
+             search: '',
+             results: [],
+             total: 0,
+             loading: false,
+             isOpen: false,
+             showTooltip: false,
+             debounceTimer: null,
+             async runSearch() {
+                 const q = this.search.trim();
+                 if (q.length < 2) {
+                     this.results = [];
+                     this.total = 0;
+                     this.isOpen = false;
+                     return;
+                 }
+                 this.loading = true;
+                 this.isOpen = true;
+                 try {
+                     const resp = await fetch('/admin/dashboard/api/search?q=' + encodeURIComponent(q), {
+                         headers: { 'Accept': 'application/json' }
+                     });
+                     if (!resp.ok) throw new Error('Search failed');
+                     const data = await resp.json();
+                     const payload = (data && data.response && data.response.body) ? data.response.body : data;
+                     this.results = payload.results || [];
+                     this.total = payload.total || 0;
+                 } catch (e) {
+                     this.results = [];
+                     this.total = 0;
+                 } finally {
+                     this.loading = false;
+                     this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                 }
+             },
+             onInput() {
+                 clearTimeout(this.debounceTimer);
+                 if (this.search.trim().length < 2) {
+                     this.isOpen = false;
+                     this.results = [];
+                     this.total = 0;
+                     return;
+                 }
+                 this.debounceTimer = setTimeout(() => this.runSearch(), 250);
+             },
+             submitSearch() {
+                 const q = this.search.trim();
+                 if (q.length >= 2) {
+                     window.location.href = '/admin/dashboard?q=' + encodeURIComponent(q);
+                 }
+             },
+             clear() {
+                 this.search = '';
+                 this.results = [];
+                 this.total = 0;
+                 this.isOpen = false;
+             }
+         }"
+         @click.outside="isOpen = false; showTooltip = false"
+         @keydown.escape.window="isOpen = false; showTooltip = false">
+
+        <form class="admin-topbar-search-form" @submit.prevent="submitSearch()">
+            <div class="admin-topbar-search-box">
+                <i data-lucide="search" class="admin-topbar-search-icon" aria-hidden="true"></i>
+                <input type="search"
+                       x-model="search"
+                       @input="onInput()"
+                       @focus="if (search.trim().length >= 2) isOpen = true"
+                       placeholder="Tüm sistemde ara (blok, proje, sipariş, vb.)…"
+                       class="admin-topbar-search-input"
+                       title="Tüm kayıtlarda arama yapar: blok kodu, plaka, şantiye, sipariş no, müşteri, tedarikçi ve kullanıcı. En az 2 karakter yazın."
+                       aria-label="Tüm sistemde global arama"
+                       autocomplete="off" />
+
+                <!-- Clear button -->
+                <button type="button"
+                        x-show="search.length > 0"
+                        x-cloak
+                        @click="clear()"
+                        class="admin-topbar-search-clear"
+                        title="Aramayı Temizle"
+                        aria-label="Temizle">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+
+                <!-- Tooltip Trigger & Popup -->
+                <div class="admin-topbar-search-tooltip-wrap"
+                     @mouseenter="showTooltip = true"
+                     @mouseleave="showTooltip = false">
+                    <button type="button"
+                            class="admin-topbar-search-info-btn"
+                            @click="showTooltip = !showTooltip"
+                            aria-label="Arama hakkında bilgi"
+                            title="Arama İpucu">
+                        <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <!-- Tooltip Message Bubble -->
+                    <div x-show="showTooltip"
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-1"
+                         class="admin-topbar-search-tooltip-bubble"
+                         role="tooltip">
+                        <div class="admin-topbar-search-tooltip-title">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400 inline-block mr-1"></i>
+                            Global Arama
+                        </div>
+                        <div class="admin-topbar-search-tooltip-body">
+                            Tüm kayıtlarda arama yapar: blok kodu, plaka, şantiye, sipariş no, müşteri, tedarikçi ve kullanıcı.<br>
+                            <span class="text-amber-300 font-semibold">En az 2 karakter yazın;</span> sonuca tıklayınca ilgili kayda gidersiniz.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Live Search Dropdown -->
+        <div x-show="isOpen"
+             x-cloak
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+             class="admin-topbar-search-dropdown">
+
+            <!-- Loading State -->
+            <div x-show="loading" class="admin-topbar-search-loading">
+                <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[#2b6cb0]"></i>
+                <span>Aranıyor…</span>
+            </div>
+
+            <!-- Empty State -->
+            <div x-show="!loading && total === 0" class="admin-topbar-search-no-results">
+                <i data-lucide="search-x" class="w-6 h-6 text-slate-400 mb-1"></i>
+                <p class="text-xs text-slate-500 font-medium">Eşleşen kayıt bulunamadı.</p>
+                <p class="text-[11px] text-slate-400">Blok, plaka, şantiye veya kullanıcı adı deneyin.</p>
+            </div>
+
+            <!-- Results List -->
+            <div x-show="!loading && total > 0" class="admin-topbar-search-results">
+                <div class="admin-topbar-search-dropdown-header">
+                    <span class="text-xs font-semibold text-slate-500">Arama Sonuçları</span>
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#2b6cb0]" x-text="total + ' kayıt'"></span>
+                </div>
+                <div class="admin-topbar-search-items-list">
+                    <template x-for="hit in results" :key="hit.type + '-' + hit.url + '-' + hit.title">
+                        <a :href="hit.url"
+                           class="admin-topbar-search-item group">
+                            <div class="admin-topbar-search-item-icon">
+                                <i :data-lucide="hit.icon" class="w-4 h-4 text-slate-600"></i>
+                            </div>
+                            <div class="admin-topbar-search-item-content">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="admin-topbar-search-badge" x-text="hit.typeLabel"></span>
+                                    <span class="text-xs font-bold text-slate-800 group-hover:text-[#2b6cb0] truncate" x-text="hit.title"></span>
+                                </div>
+                                <div class="text-[11px] text-slate-500 truncate" x-text="hit.subtitle || ''"></div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition shrink-0"></i>
+                        </a>
+                    </template>
+                </div>
+                <div class="admin-topbar-search-dropdown-footer">
+                    <button type="button" @click="submitSearch()" class="admin-topbar-search-view-all">
+                        <span>Tüm sonuçları Yönetici Paneli'nde gör</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="admin-topbar-right" sec:authorize="isAuthenticated()">
         <span class="admin-topbar-user" sec:authentication="name">admin</span>
         <a th:href="@{/account/change-password}" class="admin-topbar-logout" title="Şifre Değiştir" style="text-decoration:none;">

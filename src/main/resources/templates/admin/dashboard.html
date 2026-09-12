@@ -14,6 +14,14 @@
          loading: false,
          searched: false,
          debounceTimer: null,
+         init() {
+             const urlParams = new URLSearchParams(window.location.search);
+             const q = urlParams.get('q');
+             if (q && q.trim().length >= 2) {
+                 this.search = q.trim();
+                 this.runSearch();
+             }
+         },
          async runSearch() {
              const q = this.search.trim();
              if (q.length < 2) {
