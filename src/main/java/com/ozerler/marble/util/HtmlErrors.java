@@ -15,14 +15,6 @@ import java.util.Map;
 
 public final class HtmlErrors {
 
-    private static final String NO_MESSAGE_AVAILABLE = Constants.ERROR_NO_MESSAGE_AVAILABLE;
-    private static final String UNKNOWN_PATH = Constants.ERROR_UNKNOWN_PATH;
-    private static final String DEFAULT_METHOD = Constants.DEFAULT_HTTP_METHOD;
-    private static final String TONE_CLIENT = Constants.ERROR_TONE_CLIENT;
-    private static final String TONE_FORBIDDEN = Constants.ERROR_TONE_FORBIDDEN;
-    private static final String TONE_MISSING = Constants.ERROR_TONE_MISSING;
-    private static final String TONE_SERVER = Constants.ERROR_TONE_SERVER;
-
     private HtmlErrors() {
     }
 
@@ -86,15 +78,15 @@ public final class HtmlErrors {
 
     public static String toneFor(int status) {
         if (status == 403) {
-            return TONE_FORBIDDEN;
+            return Constants.ERROR_TONE_FORBIDDEN;
         }
         if (status == 404) {
-            return TONE_MISSING;
+            return Constants.ERROR_TONE_MISSING;
         }
         if (status >= 500) {
-            return TONE_SERVER;
+            return Constants.ERROR_TONE_SERVER;
         }
-        return TONE_CLIENT;
+        return Constants.ERROR_TONE_CLIENT;
     }
 
     public static String messageFor(int status, String serverMessage) {
@@ -129,15 +121,15 @@ public final class HtmlErrors {
             return attributePath;
         }
         if (request == null) {
-            return UNKNOWN_PATH;
+            return Constants.ERROR_UNKNOWN_PATH;
         }
         String requestUri = request.getRequestURI();
-        return Strings.isPresent(requestUri) ? requestUri : UNKNOWN_PATH;
+        return Strings.isPresent(requestUri) ? requestUri : Constants.ERROR_UNKNOWN_PATH;
     }
 
     public static String methodOf(HttpServletRequest request) {
         if (request == null || !Strings.isPresent(request.getMethod())) {
-            return DEFAULT_METHOD;
+            return Constants.DEFAULT_HTTP_METHOD;
         }
         return request.getMethod();
     }
@@ -208,7 +200,7 @@ public final class HtmlErrors {
     }
 
     private static boolean isUsableMessage(String serverMessage) {
-        return Strings.isPresent(serverMessage) && !NO_MESSAGE_AVAILABLE.equalsIgnoreCase(serverMessage.trim());
+        return Strings.isPresent(serverMessage) && !Constants.ERROR_NO_MESSAGE_AVAILABLE.equalsIgnoreCase(serverMessage.trim());
     }
 
     private static String stringValue(Map<String, ?> attributes, String key) {

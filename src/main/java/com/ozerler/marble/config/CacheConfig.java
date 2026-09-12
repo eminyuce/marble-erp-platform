@@ -17,10 +17,6 @@ import java.util.List;
 @EnableCaching
 public class CacheConfig {
 
-    public static final String CACHE_SETTINGS = Constants.CACHE_SETTINGS;
-    public static final String CACHE_EMAIL_TEMPLATES = Constants.CACHE_EMAIL_TEMPLATES;
-    public static final String CACHE_QUARRIES = Constants.CACHE_QUARRIES;
-    public static final String CACHE_COST_CENTERS = Constants.CACHE_COST_CENTERS;
 
     @Bean
     public CacheManager cacheManager() {

@@ -6,9 +6,6 @@ import org.springframework.http.MediaType;
 
 public final class HttpRequests {
 
-    private static final String REQUESTED_WITH_HEADER = Constants.REQUESTED_WITH_HEADER;
-    private static final String XML_HTTP_REQUEST = Constants.XML_HTTP_REQUEST;
-
     private HttpRequests() {
     }
 
@@ -20,7 +17,7 @@ public final class HttpRequests {
         if (accept != null && accept.contains(MediaType.APPLICATION_JSON_VALUE)) {
             return true;
         }
-        return XML_HTTP_REQUEST.equals(request.getHeader(REQUESTED_WITH_HEADER));
+        return Constants.XML_HTTP_REQUEST.equals(request.getHeader(Constants.REQUESTED_WITH_HEADER));
     }
 
     public static boolean isHtmx(HttpServletRequest request) {

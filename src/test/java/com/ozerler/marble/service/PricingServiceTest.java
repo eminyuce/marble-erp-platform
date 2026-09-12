@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,8 +55,8 @@ class PricingServiceTest {
     void simulatePrice_NullInputs_UsesDomainDefaults() {
         Map<String, Object> result = pricingService.simulatePrice(null, null, null);
 
-        assertThat(result.get("unitCost")).isEqualTo(PricingService.DEFAULT_STANDARD_COST_PER_M2);
-        assertThat(result.get("targetMarginPct")).isEqualTo(PricingService.DEFAULT_TARGET_MARGIN_PCT);
+        assertThat(result.get("unitCost")).isEqualTo(Constants.DEFAULT_STANDARD_COST_PER_M2);
+        assertThat(result.get("targetMarginPct")).isEqualTo(Constants.DEFAULT_TARGET_MARGIN_PCT);
         assertThat(result.get("appliedDiscountPct")).isEqualTo(BigDecimal.ZERO);
     }
 }

@@ -2,21 +2,16 @@ package com.ozerler.marble.util;
 
 import com.ozerler.marble.common.Constants;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class Strings {
-
-    private static final Locale TURKISH = Constants.LOCALE_TR;
-    private static final Pattern PLACEHOLDER_PATTERN = Constants.PATTERN_TEMPLATE_PLACEHOLDER;
 
     private Strings() {
     }
 
     public static String lowerTurkish(String value) {
-        return value == null ? "" : value.toLowerCase(TURKISH);
+        return value == null ? "" : value.toLowerCase(Constants.LOCALE_TR);
     }
 
     public static String joinDistinct(String separator, String first, String second) {
@@ -39,7 +34,7 @@ public final class Strings {
             return template;
         }
 
-        Matcher matcher = PLACEHOLDER_PATTERN.matcher(template);
+        Matcher matcher = Constants.PATTERN_TEMPLATE_PLACEHOLDER.matcher(template);
         StringBuilder sb = new StringBuilder();
         while (matcher.find()) {
             String key = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);

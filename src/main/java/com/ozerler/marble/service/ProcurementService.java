@@ -29,8 +29,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProcurementService {
 
-    private static final int DEFAULT_PAGE_SIZE = Constants.DEFAULT_PAGE_SIZE;
-
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final SupplierRepository supplierRepository;
     private final ProjectRepository projectRepository;
@@ -56,7 +54,7 @@ public class ProcurementService {
         }
 
         int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
+        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
 
         Page<PurchaseOrder> orderPage = purchaseOrderRepository.searchPurchaseOrders(search, pageable);
         List<PurchaseOrderDto> dtos = orderPage.getContent().stream()

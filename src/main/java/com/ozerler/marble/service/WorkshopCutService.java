@@ -42,16 +42,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class WorkshopCutService {
 
-    private static final BigDecimal SQUARE_CENTIMETERS_PER_SQUARE_METER = Constants.SQUARE_CENTIMETERS_PER_SQUARE_METER;
-    private static final BigDecimal WORKSHOP_OVERHEAD_FACTOR = Constants.WORKSHOP_OVERHEAD_FACTOR;
-    private static final String DEFAULT_EDGE_FINISH = Constants.DEFAULT_EDGE_FINISH;
-    private static final String DEFAULT_TARGET_LOCATION = Constants.DEFAULT_TARGET_LOCATION;
-    private static final String ORDER_STATUS_COMPLETED = Constants.STATUS_COMPLETED;
-    private static final String ITEM_STATUS_READY = Constants.STATUS_READY;
-    private static final int DEFAULT_PAGE_SIZE = Constants.DEFAULT_PAGE_SIZE;
-    private static final int COST_SCALE = Constants.COST_SCALE;
-    private static final int AREA_SCALE = Constants.AREA_SCALE;
-
     private final CutOrderRepository cutOrderRepository;
     private final CutItemRepository cutItemRepository;
     private final SlabRepository slabRepository;
@@ -79,7 +69,7 @@ public class WorkshopCutService {
         }
 
         int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
+        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
 
         Page<CutOrder> orderPage = cutOrderRepository.searchCutOrders(search, pageable);
         return TabulatorResponse.of(
@@ -174,30 +164,30 @@ public class WorkshopCutService {
                 .machineName(machineName)
                 .operatorName(operatorName)
                 .plannedStart(LocalDate.now())
-                .status(ORDER_STATUS_COMPLETED)
+                .status(Constants.STATUS_COMPLETED)
                 .notes(notes)
                 .build();
     }
 
     private BigDecimal calculateItemArea(BigDecimal widthCm, BigDecimal lengthCm) {
-        return widthCm.multiply(lengthCm).divide(SQUARE_CENTIMETERS_PER_SQUARE_METER, AREA_SCALE, RoundingMode.HALF_UP);
+        return widthCm.multiply(lengthCm).divide(Constants.SQUARE_CENTIMETERS_PER_SQUARE_METER, Constants.AREA_SCALE, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateLoadedUnitCost(BigDecimal baseCostPerM2) {
         if (baseCostPerM2 == null) {
             return BigDecimal.ZERO;
         }
-        return baseCostPerM2.multiply(WORKSHOP_OVERHEAD_FACTOR).setScale(COST_SCALE, RoundingMode.HALF_UP);
+        return baseCostPerM2.multiply(Constants.WORKSHOP_OVERHEAD_FACTOR).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
     }
 
     private List<CutItem> generateCutItems(CutOrder order, Slab sourceSlab, ProjectLocation location,
                                           int piecesCount, BigDecimal targetWidthCm, BigDecimal targetLengthCm,
                                           BigDecimal itemArea, BigDecimal unitCost,
                                           String edgeFinish, String targetLocationDesc) {
-        String finish = StringUtils.isNotBlank(edgeFinish) ? edgeFinish : DEFAULT_EDGE_FINISH;
+        String finish = StringUtils.isNotBlank(edgeFinish) ? edgeFinish : Constants.DEFAULT_EDGE_FINISH;
         String resolvedLocation = StringUtils.isNotBlank(targetLocationDesc)
                 ? targetLocationDesc
-                : location != null ? location.getLocationName() : DEFAULT_TARGET_LOCATION;
+                : location != null ? location.getLocationName() : Constants.DEFAULT_TARGET_LOCATION;
 
         List<CutItem> items = new ArrayList<>(piecesCount);
         long sequence = System.currentTimeMillis() % 10000;
@@ -215,7 +205,7 @@ public class WorkshopCutService {
                     .edgeFinish(finish)
                     .unitCost(unitCost)
                     .targetLocation(resolvedLocation)
-                    .status(ITEM_STATUS_READY)
+                    .status(Constants.STATUS_READY)
                     .build();
             items.add(item);
         }
@@ -226,7 +216,7 @@ public class WorkshopCutService {
         BigDecimal scrapArea = sourceSlab.getSurfaceAreaM2().subtract(totalCutArea);
         if (scrapArea.compareTo(BigDecimal.ZERO) > 0) {
             long sequence = System.currentTimeMillis() % 10000;
-            BigDecimal costImpact = scrapArea.multiply(sourceSlab.getCostPerM2()).setScale(COST_SCALE, RoundingMode.HALF_UP);
+            BigDecimal costImpact = scrapArea.multiply(sourceSlab.getCostPerM2()).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
 
             ScrapLog scrap = ScrapLog.builder()
                     .scrapCode("SCRAP-W-" + sequence)

@@ -7,6 +7,7 @@ import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.util.ReentryGuard;
 import ch.qos.logback.core.util.ReentryGuardFactory;
+import com.ozerler.marble.common.Constants;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -30,24 +31,18 @@ public class AsyncLoggingAppender extends UnsynchronizedAppenderBase<ILoggingEve
 
     private static final CopyOnWriteArrayList<AsyncLoggingAppender> ACTIVE = new CopyOnWriteArrayList<>();
 
-    private static final int DEFAULT_QUEUE_CAPACITY = AsyncLoggingDefaults.QUEUE_CAPACITY;
-    private static final int DEFAULT_HIGH_WATER_MARK_PERCENT = AsyncLoggingDefaults.HIGH_WATER_MARK_PERCENT;
-    private static final int DEFAULT_BATCH_SIZE = AsyncLoggingDefaults.BATCH_SIZE;
-    private static final long DEFAULT_DRAIN_TIMEOUT_MILLIS = AsyncLoggingDefaults.DRAIN_TIMEOUT_MILLIS;
-    private static final long DEFAULT_POLL_TIMEOUT_MILLIS = AsyncLoggingDefaults.POLL_TIMEOUT_MILLIS;
-
     private final CopyOnWriteArrayList<Appender<ILoggingEvent>> nestedAppenders = new CopyOnWriteArrayList<>();
     private final AsyncLoggingMetrics metrics = new AsyncLoggingMetrics();
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final Object lifecycleLock = new Object();
 
-    private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
-    private int highWaterMarkPercent = DEFAULT_HIGH_WATER_MARK_PERCENT;
+    private int queueCapacity = Constants.ASYNC_LOGGING_QUEUE_CAPACITY;
+    private int highWaterMarkPercent = Constants.ASYNC_LOGGING_HIGH_WATER_MARK_PERCENT;
     private OverflowPolicy overflowPolicy = OverflowPolicy.DROP_LOW_PRIORITY;
-    private int batchSize = DEFAULT_BATCH_SIZE;
-    private long drainTimeoutMillis = DEFAULT_DRAIN_TIMEOUT_MILLIS;
-    private long pollTimeoutMillis = DEFAULT_POLL_TIMEOUT_MILLIS;
-    private boolean includeCallerData = AsyncLoggingDefaults.INCLUDE_CALLER_DATA;
+    private int batchSize = Constants.ASYNC_LOGGING_BATCH_SIZE;
+    private long drainTimeoutMillis = Constants.ASYNC_LOGGING_DRAIN_TIMEOUT_MILLIS;
+    private long pollTimeoutMillis = Constants.ASYNC_LOGGING_POLL_TIMEOUT_MILLIS;
+    private boolean includeCallerData = Constants.ASYNC_LOGGING_INCLUDE_CALLER_DATA;
 
     private volatile BlockingQueue<ILoggingEvent> queue;
     private volatile int highWaterMarkSize;

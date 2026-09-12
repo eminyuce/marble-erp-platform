@@ -39,8 +39,6 @@ import java.util.regex.Pattern;
 @Slf4j
 public class EmailService {
 
-    private static final Pattern ADVANCED_PLACEHOLDER_PATTERN = Constants.PATTERN_ADVANCED_PLACEHOLDER;
-
     private final EmailTemplateRepository templateRepository;
     private final SettingService settingService;
     private final Optional<JavaMailSender> mailSender;
@@ -132,7 +130,7 @@ public class EmailService {
             variables = Collections.emptyMap();
         }
 
-        Matcher matcher = ADVANCED_PLACEHOLDER_PATTERN.matcher(template);
+        Matcher matcher = Constants.PATTERN_ADVANCED_PLACEHOLDER.matcher(template);
         StringBuilder sb = new StringBuilder();
         int replacedCount = 0;
         int missingCount = 0;

@@ -42,9 +42,6 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class UserController extends AbstractController {
 
-    private static final String USER_FORM_VIEW = Constants.VIEW_USER_FORM;
-    private static final String RESET_PASSWORD_VIEW = Constants.VIEW_USER_RESET_PASSWORD;
-
     private final UserService userService;
     private final MessageSource messageSource;
 
@@ -70,7 +67,7 @@ public class UserController extends AbstractController {
     @GetMapping("/create")
     public String showCreateForm(Locale locale, Model model) {
         populateUserForm(model, new UserCreateRequest(), false, null, null, locale);
-        return USER_FORM_VIEW;
+        return Constants.VIEW_USER_FORM;
     }
 
     @PostMapping("/create")
@@ -81,7 +78,7 @@ public class UserController extends AbstractController {
                              RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             populateUserForm(model, form, false, bindingResult, null, locale);
-            return USER_FORM_VIEW;
+            return Constants.VIEW_USER_FORM;
         }
 
         try {
@@ -91,7 +88,7 @@ public class UserController extends AbstractController {
             return "redirect:/admin/users";
         } catch (IllegalArgumentException e) {
             populateUserForm(model, form, false, bindingResult, e.getMessage(), locale);
-            return USER_FORM_VIEW;
+            return Constants.VIEW_USER_FORM;
         }
     }
 
@@ -108,7 +105,7 @@ public class UserController extends AbstractController {
                 .build();
 
         populateUserForm(model, form, true, null, null, locale);
-        return USER_FORM_VIEW;
+        return Constants.VIEW_USER_FORM;
     }
 
     @PostMapping("/{id}/edit")
@@ -121,7 +118,7 @@ public class UserController extends AbstractController {
         form.setId(id);
         if (bindingResult.hasErrors()) {
             populateUserForm(model, form, true, bindingResult, null, locale);
-            return USER_FORM_VIEW;
+            return Constants.VIEW_USER_FORM;
         }
 
         try {
@@ -131,7 +128,7 @@ public class UserController extends AbstractController {
             return "redirect:/admin/users";
         } catch (IllegalArgumentException e) {
             populateUserForm(model, form, true, bindingResult, e.getMessage(), locale);
-            return USER_FORM_VIEW;
+            return Constants.VIEW_USER_FORM;
         }
     }
 
@@ -163,7 +160,7 @@ public class UserController extends AbstractController {
     @GetMapping("/{id}/reset-password")
     public String showResetPasswordForm(@PathVariable("id") Long id, Locale locale, Model model) {
         populateResetPasswordForm(model, id, null, null, locale);
-        return RESET_PASSWORD_VIEW;
+        return Constants.VIEW_USER_RESET_PASSWORD;
     }
 
     @PostMapping("/{id}/reset-password")
@@ -176,7 +173,7 @@ public class UserController extends AbstractController {
         form.setUserId(id);
         if (bindingResult.hasErrors()) {
             populateResetPasswordForm(model, id, form, bindingResult, locale);
-            return RESET_PASSWORD_VIEW;
+            return Constants.VIEW_USER_RESET_PASSWORD;
         }
 
         userService.resetPassword(form);

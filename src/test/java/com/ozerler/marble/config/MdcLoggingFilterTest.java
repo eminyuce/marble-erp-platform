@@ -1,5 +1,6 @@
 package com.ozerler.marble.config;
 
+import com.ozerler.marble.common.Constants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.AfterEach;
@@ -40,18 +41,18 @@ class MdcLoggingFilterTest {
 
         FilterChain filterChain = (req, res) -> {
             // Verify MDC entries are present during request execution
-            assertThat(MDC.get(MdcLoggingFilter.MDC_CORRELATION_ID)).isNotBlank();
-            assertThat(MDC.get(MdcLoggingFilter.MDC_HTTP_METHOD)).isEqualTo("GET");
-            assertThat(MDC.get(MdcLoggingFilter.MDC_REQUEST_URI)).isEqualTo("/api/test");
+            assertThat(MDC.get(Constants.MDC_CORRELATION_ID)).isNotBlank();
+            assertThat(MDC.get(Constants.MDC_HTTP_METHOD)).isEqualTo("GET");
+            assertThat(MDC.get(Constants.MDC_REQUEST_URI)).isEqualTo("/api/test");
         };
 
         filter.doFilterInternal(request, response, filterChain);
 
         // Verify response header contains X-Correlation-ID
-        assertThat(response.getHeader(MdcLoggingFilter.CORRELATION_ID_HEADER)).isNotBlank();
+        assertThat(response.getHeader(Constants.CORRELATION_ID_HEADER)).isNotBlank();
 
         // Verify MDC was cleaned up after request
-        assertThat(MDC.get(MdcLoggingFilter.MDC_CORRELATION_ID)).isNull();
+        assertThat(MDC.get(Constants.MDC_CORRELATION_ID)).isNull();
     }
 
     @Test
@@ -59,16 +60,16 @@ class MdcLoggingFilterTest {
     void doFilterInternal_PreservesExistingCorrelationId() throws ServletException, IOException {
         String existingCorrelationId = "custom-trace-id-12345";
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader(MdcLoggingFilter.CORRELATION_ID_HEADER, existingCorrelationId);
+        request.addHeader(Constants.CORRELATION_ID_HEADER, existingCorrelationId);
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         FilterChain filterChain = (req, res) -> {
-            assertThat(MDC.get(MdcLoggingFilter.MDC_CORRELATION_ID)).isEqualTo(existingCorrelationId);
+            assertThat(MDC.get(Constants.MDC_CORRELATION_ID)).isEqualTo(existingCorrelationId);
         };
 
         filter.doFilterInternal(request, response, filterChain);
 
-        assertThat(response.getHeader(MdcLoggingFilter.CORRELATION_ID_HEADER)).isEqualTo(existingCorrelationId);
-        assertThat(MDC.get(MdcLoggingFilter.MDC_CORRELATION_ID)).isNull();
+        assertThat(response.getHeader(Constants.CORRELATION_ID_HEADER)).isEqualTo(existingCorrelationId);
+        assertThat(MDC.get(Constants.MDC_CORRELATION_ID)).isNull();
     }
 }

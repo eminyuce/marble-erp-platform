@@ -25,39 +25,32 @@ import java.util.UUID;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class MdcLoggingFilter extends OncePerRequestFilter {
 
-    public static final String CORRELATION_ID_HEADER = Constants.CORRELATION_ID_HEADER;
-    public static final String MDC_CORRELATION_ID = Constants.MDC_CORRELATION_ID;
-    public static final String MDC_USER_ID = Constants.MDC_USER_ID;
-    public static final String MDC_CLIENT_IP = Constants.MDC_CLIENT_IP;
-    public static final String MDC_HTTP_METHOD = Constants.MDC_HTTP_METHOD;
-    public static final String MDC_REQUEST_URI = Constants.MDC_REQUEST_URI;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             // 1. Resolve or generate Correlation ID
-            String correlationId = request.getHeader(CORRELATION_ID_HEADER);
+            String correlationId = request.getHeader(Constants.CORRELATION_ID_HEADER);
             if (correlationId == null || correlationId.isBlank()) {
                 correlationId = UUID.randomUUID().toString();
             }
-            MDC.put(MDC_CORRELATION_ID, correlationId);
-            response.setHeader(CORRELATION_ID_HEADER, correlationId);
+            MDC.put(Constants.MDC_CORRELATION_ID, correlationId);
+            response.setHeader(Constants.CORRELATION_ID_HEADER, correlationId);
 
             // 2. Resolve Client IP
             String clientIp = ClientIps.from(request);
-            MDC.put(MDC_CLIENT_IP, clientIp);
+            MDC.put(Constants.MDC_CLIENT_IP, clientIp);
 
             // 3. Request metadata
-            MDC.put(MDC_HTTP_METHOD, request.getMethod());
-            MDC.put(MDC_REQUEST_URI, request.getRequestURI());
+            MDC.put(Constants.MDC_HTTP_METHOD, request.getMethod());
+            MDC.put(Constants.MDC_REQUEST_URI, request.getRequestURI());
 
             // 4. Resolve authenticated user if available
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.isAuthenticated()
                     && !"anonymousUser".equals(authentication.getPrincipal())) {
-                MDC.put(MDC_USER_ID, authentication.getName());
+                MDC.put(Constants.MDC_USER_ID, authentication.getName());
             }
 
             filterChain.doFilter(request, response);

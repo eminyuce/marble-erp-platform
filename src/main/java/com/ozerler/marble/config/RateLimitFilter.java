@@ -34,8 +34,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final SettingService settingService;
     private final org.springframework.context.MessageSource messageSource;
 
-    private static final String SETTING_KEY = Constants.SETTING_KEY_RATE_LIMITING;
-
     private String buildJsonResponse(java.util.Locale locale) {
         String msg = messageSource.getMessage("error.rate_limit.exceeded", null, locale);
         return "{\"error\":\"too_many_requests\",\"message\":\"" + msg + "\"}";
@@ -85,7 +83,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         // Rate limiting devre dışıysa doğrudan geç
-        if (!settingService.getBooleanSetting(SETTING_KEY, true)) {
+        if (!settingService.getBooleanSetting(Constants.SETTING_KEY_RATE_LIMITING, true)) {
             filterChain.doFilter(request, response);
             return;
         }

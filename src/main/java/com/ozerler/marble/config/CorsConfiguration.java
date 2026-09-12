@@ -12,8 +12,6 @@ import java.util.Arrays;
 @Configuration
 public class CorsConfiguration implements WebMvcConfigurer {
 
-    private static final String[] ALLOWED_METHODS = Constants.ALLOWED_CORS_METHODS;
-
     @Value("${app.cors.allowed-origin:}")
     private String allowedOrigin;
 
@@ -23,7 +21,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         CorsRegistration mapping = registry.addMapping("/**")
-                .allowedMethods(ALLOWED_METHODS)
+                .allowedMethods(Constants.ALLOWED_CORS_METHODS)
                 .allowedHeaders("*")
                 .allowCredentials(true);
 

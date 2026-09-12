@@ -30,15 +30,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProjectSiteService {
 
-    private static final BigDecimal PERCENT_DIVISOR = Constants.PERCENT_DIVISOR;
-    private static final int DEFAULT_PAGE_SIZE = Constants.DEFAULT_PAGE_SIZE;
-    private static final int CALCULATION_SCALE = Constants.CALCULATION_SCALE;
-    private static final int RESULT_SCALE = Constants.RESULT_SCALE;
-
-    private static final String LOCATION_STATUS_PLANNED = Constants.STATUS_PLANNED;
-    private static final String LOCATION_STATUS_IN_PROGRESS = Constants.STATUS_IN_PROGRESS;
-    private static final String LOCATION_STATUS_COMPLETED = Constants.STATUS_COMPLETED;
-
     private final ProjectRepository projectRepository;
     private final ProjectLocationRepository projectLocationRepository;
     private final SiteConsumptionRepository siteConsumptionRepository;
@@ -63,7 +54,7 @@ public class ProjectSiteService {
         }
 
         int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : DEFAULT_PAGE_SIZE, sort);
+        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
 
         Page<Project> projectPage = projectRepository.searchProjects(search, pageable);
         List<ProjectDto> dtos = projectPage.getContent().stream()
@@ -119,7 +110,7 @@ public class ProjectSiteService {
                 .stoneSpec(stoneSpec)
                 .plannedAreaM2(plannedAreaM2 != null ? plannedAreaM2 : BigDecimal.ZERO)
                 .installedAreaM2(BigDecimal.ZERO)
-                .status(LOCATION_STATUS_PLANNED)
+                .status(Constants.STATUS_PLANNED)
                 .build();
 
         return projectLocationRepository.save(location);
@@ -167,9 +158,9 @@ public class ProjectSiteService {
 
         BigDecimal plannedArea = location.getPlannedAreaM2() != null ? location.getPlannedAreaM2() : BigDecimal.ZERO;
         if (newInstalled.compareTo(plannedArea) >= 0) {
-            location.setStatus(LOCATION_STATUS_COMPLETED);
+            location.setStatus(Constants.STATUS_COMPLETED);
         } else {
-            location.setStatus(LOCATION_STATUS_IN_PROGRESS);
+            location.setStatus(Constants.STATUS_IN_PROGRESS);
         }
         projectLocationRepository.save(location);
     }
@@ -205,11 +196,11 @@ public class ProjectSiteService {
         BigDecimal effectiveStock = availableStock != null ? availableStock : BigDecimal.ZERO;
         BigDecimal effectiveInProduction = inProduction != null ? inProduction : BigDecimal.ZERO;
 
-        BigDecimal scrapFactor = BigDecimal.ONE.add(effectiveScrap.divide(PERCENT_DIVISOR, CALCULATION_SCALE, RoundingMode.HALF_UP));
+        BigDecimal scrapFactor = BigDecimal.ONE.add(effectiveScrap.divide(Constants.PERCENT_DIVISOR, Constants.CALCULATION_SCALE, RoundingMode.HALF_UP));
         BigDecimal grossRequirement = effectivePlanned.multiply(scrapFactor);
         BigDecimal currentCoverage = effectiveStock.add(effectiveInProduction);
         BigDecimal shortfall = grossRequirement.subtract(currentCoverage);
 
-        return shortfall.compareTo(BigDecimal.ZERO) > 0 ? shortfall.setScale(RESULT_SCALE, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+        return shortfall.compareTo(BigDecimal.ZERO) > 0 ? shortfall.setScale(Constants.RESULT_SCALE, RoundingMode.HALF_UP) : BigDecimal.ZERO;
     }
 }

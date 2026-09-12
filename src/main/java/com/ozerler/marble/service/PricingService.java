@@ -10,14 +10,6 @@ import java.util.Map;
 @Service
 public class PricingService {
 
-    public static final BigDecimal DEFAULT_STANDARD_COST_PER_M2 = Constants.DEFAULT_STANDARD_COST_PER_M2;
-    public static final BigDecimal DEFAULT_TARGET_MARGIN_PCT = Constants.DEFAULT_TARGET_MARGIN_PCT;
-    public static final BigDecimal MINIMUM_ACCEPTABLE_MARGIN_PCT = Constants.MINIMUM_ACCEPTABLE_MARGIN_PCT;
-    private static final BigDecimal PERCENT_DIVISOR = Constants.PERCENT_DIVISOR;
-    private static final int CURRENCY_SCALE = Constants.CURRENCY_SCALE;
-    private static final int PERCENT_SCALE = Constants.PERCENT_SCALE;
-    private static final int CALCULATION_SCALE = Constants.CALCULATION_SCALE;
-
     /**
      * Immutable result holding pricing simulation output
      */
@@ -56,15 +48,15 @@ public class PricingService {
      * Strongly typed domain simulation method adhering to clean code immutability
      */
     public PriceSimulationResult calculateSimulation(BigDecimal unitCost, BigDecimal targetMarginPct, BigDecimal discountPct) {
-        BigDecimal cost = unitCost != null ? unitCost : DEFAULT_STANDARD_COST_PER_M2;
-        BigDecimal margin = targetMarginPct != null ? targetMarginPct : DEFAULT_TARGET_MARGIN_PCT;
+        BigDecimal cost = unitCost != null ? unitCost : Constants.DEFAULT_STANDARD_COST_PER_M2;
+        BigDecimal margin = targetMarginPct != null ? targetMarginPct : Constants.DEFAULT_TARGET_MARGIN_PCT;
         BigDecimal discount = discountPct != null ? discountPct : BigDecimal.ZERO;
 
         BigDecimal basePrice = calculateBasePrice(cost, margin);
         BigDecimal netPrice = calculateDiscountedPrice(basePrice, discount);
         BigDecimal grossProfit = netPrice.subtract(cost);
         BigDecimal resultingMarginPct = calculateResultingMargin(netPrice, grossProfit);
-        boolean isMarginAlert = resultingMarginPct.compareTo(MINIMUM_ACCEPTABLE_MARGIN_PCT) < 0;
+        boolean isMarginAlert = resultingMarginPct.compareTo(Constants.MINIMUM_ACCEPTABLE_MARGIN_PCT) < 0;
 
         return new PriceSimulationResult(
                 cost,
@@ -79,25 +71,25 @@ public class PricingService {
     }
 
     private BigDecimal calculateBasePrice(BigDecimal cost, BigDecimal targetMarginPct) {
-        BigDecimal marginFraction = targetMarginPct.divide(PERCENT_DIVISOR, CALCULATION_SCALE, RoundingMode.HALF_UP);
+        BigDecimal marginFraction = targetMarginPct.divide(Constants.PERCENT_DIVISOR, Constants.CALCULATION_SCALE, RoundingMode.HALF_UP);
         BigDecimal divisor = BigDecimal.ONE.subtract(marginFraction);
         if (divisor.compareTo(BigDecimal.ZERO) <= 0) {
             return cost;
         }
-        return cost.divide(divisor, CURRENCY_SCALE, RoundingMode.HALF_UP);
+        return cost.divide(divisor, Constants.CURRENCY_SCALE, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateDiscountedPrice(BigDecimal basePrice, BigDecimal discountPct) {
-        BigDecimal discountFraction = discountPct.divide(PERCENT_DIVISOR, CALCULATION_SCALE, RoundingMode.HALF_UP);
-        return basePrice.multiply(BigDecimal.ONE.subtract(discountFraction)).setScale(CURRENCY_SCALE, RoundingMode.HALF_UP);
+        BigDecimal discountFraction = discountPct.divide(Constants.PERCENT_DIVISOR, Constants.CALCULATION_SCALE, RoundingMode.HALF_UP);
+        return basePrice.multiply(BigDecimal.ONE.subtract(discountFraction)).setScale(Constants.CURRENCY_SCALE, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateResultingMargin(BigDecimal netPrice, BigDecimal grossProfit) {
         if (netPrice.compareTo(BigDecimal.ZERO) <= 0) {
             return BigDecimal.ZERO;
         }
-        return grossProfit.divide(netPrice, CALCULATION_SCALE, RoundingMode.HALF_UP)
-                .multiply(PERCENT_DIVISOR)
-                .setScale(PERCENT_SCALE, RoundingMode.HALF_UP);
+        return grossProfit.divide(netPrice, Constants.CALCULATION_SCALE, RoundingMode.HALF_UP)
+                .multiply(Constants.PERCENT_DIVISOR)
+                .setScale(Constants.PERCENT_SCALE, RoundingMode.HALF_UP);
     }
 }

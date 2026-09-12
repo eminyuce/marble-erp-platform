@@ -9,14 +9,12 @@ import java.util.Locale;
  */
 public final class TurkishAsciiFilename {
 
-    private static final String FALLBACK_NAME = Constants.FALLBACK_DOWNLOAD_FILENAME;
-
     private TurkishAsciiFilename() {
     }
 
     public static String toAsciiTurkishFilename(String value) {
         if (value == null || value.isBlank()) {
-            return FALLBACK_NAME;
+            return Constants.FALLBACK_DOWNLOAD_FILENAME;
         }
 
         String ascii = value
@@ -30,6 +28,6 @@ public final class TurkishAsciiFilename {
                 .replaceAll("[^a-z0-9._-]+", "_")
                 .replaceAll("^_+|_+$", "");
 
-        return ascii.isEmpty() ? FALLBACK_NAME : ascii;
+        return ascii.isEmpty() ? Constants.FALLBACK_DOWNLOAD_FILENAME : ascii;
     }
 }
