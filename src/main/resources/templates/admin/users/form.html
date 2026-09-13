@@ -2,25 +2,25 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title th:text="${(isEdit ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı') + ' | Özerler Mermer ERP'}">Kullanıcı</title>
+    <title th:text="${((isEdit ?: false) ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı') + ' | Özerler Mermer ERP'}">Kullanıcı</title>
 </head>
 <body>
 <div layout:fragment="content" class="erp-form-page">
 
-    <div th:replace="~{fragments/form-page :: breadcrumb('Kullanıcılar', @{/admin/users}, ${isEdit ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Kullanıcılar', @{/admin/users}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
     <div th:replace="~{fragments/form-page :: heading(
-        ${isEdit ? 'Kullanıcı düzenle' : 'Yeni kullanıcı'},
-        ${isEdit ? 'Kimlik, iletişim ve yetki bilgilerini güncelleyin. Değişiklikler kayıttan sonra hemen uygulanır.' : 'Sisteme yeni bir yönetici veya operasyon hesabı ekleyin.'},
-        ${isEdit ? 'Kayıt #' + userForm.id : ''},
+        ${(isEdit ?: false) ? 'Kullanıcı düzenle' : 'Yeni kullanıcı'},
+        ${(isEdit ?: false) ? 'Kimlik, iletişim ve yetki bilgilerini güncelleyin. Değişiklikler kayıttan sonra hemen uygulanır.' : 'Sisteme yeni bir yönetici veya operasyon hesabı ekleyin.'},
+        ${(isEdit ?: false) ? 'Kayıt #' + userForm?.id : ''},
         @{/admin/users})}"></div>
 
     <div class="erp-form-card">
         <form th:object="${userForm}"
-              th:action="${isEdit} ? @{/admin/users/{id}/edit(id=${userForm.id})} : @{/admin/users/create}"
+              th:action="${(isEdit ?: false)} ? @{/admin/users/{id}/edit(id=${userForm.id})} : @{/admin/users/create}"
               method="post"
               class="erp-form">
 
-            <input type="hidden" th:if="${isEdit}" th:field="*{id}"/>
+            <input type="hidden" th:if="${isEdit ?: false}" th:field="*{id}"/>
 
             <div class="erp-form-body">
                 <div th:if="${formErrors != null and !formErrors.isEmpty()}" class="erp-form-errors" role="alert">
@@ -111,8 +111,8 @@
                     </label>
                 </section>
 
-                <div th:if="${isEdit}"
-                     th:replace="~{fragments/audit :: auditInfo(${userForm?.createdDate}, ${userForm?.updatedDate}, ${userForm?.addUserId}, ${userForm?.updateUserId})}"></div>
+                <div th:if="${(isEdit ?: false) and userForm != null and userForm.createdDate != null}"
+                     th:replace="~{fragments/audit :: auditInfo(${userForm.createdDate}, ${userForm.updatedDate}, ${userForm.addUserId}, ${userForm.updateUserId})}"></div>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/admin/users})}"></div>

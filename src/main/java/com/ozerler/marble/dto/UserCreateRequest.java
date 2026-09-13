@@ -59,4 +59,9 @@ public class UserCreateRequest {
     @JsonProperty("roles")
     @JsonAlias("roles")
     private Set<String> roles = new HashSet<>();
+
+    private java.time.LocalDateTime createdDate;
+    private java.time.LocalDateTime updatedDate;
+    private Long addUserId;
+    private Long updateUserId;
 }

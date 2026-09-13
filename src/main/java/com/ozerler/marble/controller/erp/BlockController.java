@@ -53,6 +53,7 @@ public class BlockController extends AbstractController {
 
     @GetMapping("/create")
     public String showCreateForm(Locale locale, Model model) {
+        model.addAttribute("isEdit", false);
         populateBlockForm(model, locale);
         return "erp/blocks/form";
     }

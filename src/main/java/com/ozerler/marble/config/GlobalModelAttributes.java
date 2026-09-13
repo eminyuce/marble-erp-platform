@@ -18,4 +18,9 @@ public class GlobalModelAttributes {
         int size = Ints.parseOrDefault(val, 25);
         return (size > 0 && size <= 100) ? size : 25;
     }
+
+    @ModelAttribute("isEdit")
+    public boolean defaultIsEdit() {
+        return false;
+    }
 }

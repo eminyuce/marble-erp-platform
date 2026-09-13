@@ -1274,17 +1274,19 @@ body.admin-login-page {
 
 .admin-login__input-wrap {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.admin-login__input-wrap svg,
-.admin-login__input-wrap .admin-login__field-icon {
+.admin-login__input-wrap > .admin-login__field-icon {
   position: absolute;
-  left: 12px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   width: 16px;
   height: 16px;
   color: var(--muted);
+  pointer-events: none;
 }
 
 .admin-login-page label.form-label {
@@ -1306,6 +1308,7 @@ body.admin-login-page {
   background: #f8fbfc;
   color: var(--ink);
   font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .admin-login-page input:focus {
@@ -1320,11 +1323,32 @@ body.admin-login-page {
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   border: 0;
+  border-radius: 8px;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  padding: 6px;
+  padding: 0;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  z-index: 2;
+}
+
+.admin-login__toggle-password:hover {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.admin-login__toggle-password svg {
+  position: static !important;
+  transform: none !important;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
 }
 
 .admin-login__submit {

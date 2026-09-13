@@ -126,7 +126,11 @@
     const toggle = document.getElementById("togglePassword");
     if (toggle && password) {
         toggle.addEventListener("click", () => {
-            password.type = password.type === "password" ? "text" : "password";
+            const isPassword = password.type === "password";
+            password.type = isPassword ? "text" : "password";
+            toggle.setAttribute("aria-label", isPassword ? "Şifreyi gizle" : "Şifreyi göster");
+            toggle.innerHTML = `<i data-lucide="${isPassword ? 'eye-off' : 'eye'}" class="w-4 h-4"></i>`;
+            lucide.createIcons();
         });
     }
 </script>

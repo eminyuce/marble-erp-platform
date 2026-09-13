@@ -2,20 +2,20 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title th:text="${(isEdit ? 'Blok Düzenle' : 'Yeni Blok Kaydı') + ' | Özerler Mermer ERP'}">Blok</title>
+    <title th:text="${((isEdit ?: false) ? 'Blok Düzenle' : 'Yeni Blok Kaydı') + ' | Özerler Mermer ERP'}">Blok</title>
 </head>
 <body>
 <div layout:fragment="content" class="erp-form-page">
 
-    <div th:replace="~{fragments/form-page :: breadcrumb('Bloklar', @{/blocks}, ${isEdit ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Bloklar', @{/blocks}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
     <div th:replace="~{fragments/form-page :: heading(
-        ${isEdit ? 'Blok bilgilerini düzenle' : 'Yeni ham blok giriş kartı'},
-        ${isEdit ? 'Ocak çıkışını, 3 eksenli ölçüleri, tartım ve kalite bilgilerini güncelleyin.' : 'Ocak çıkışını, 3 eksenli ölçüleri, kantar tartımını ve kalite bilgilerini kaydedin.'},
-        ${isEdit ? 'Blok #' + block.blockCode : ''},
+        ${(isEdit ?: false) ? 'Blok bilgilerini düzenle' : 'Yeni ham blok giriş kartı'},
+        ${(isEdit ?: false) ? 'Ocak çıkışını, 3 eksenli ölçüleri, tartım ve kalite bilgilerini güncelleyin.' : 'Ocak çıkışını, 3 eksenli ölçüleri, kantar tartımını ve kalite bilgilerini kaydedin.'},
+        ${(isEdit ?: false) ? 'Blok #' + block?.blockCode : ''},
         @{/blocks})}"></div>
 
     <div class="erp-form-card">
-        <form th:action="${isEdit} ? @{/blocks/{id}/edit(id=${block.id})} : @{/blocks/create}" method="post"
+        <form th:action="${(isEdit ?: false)} ? @{/blocks/{id}/edit(id=${block.id})} : @{/blocks/create}" method="post"
               class="erp-form">
             <div class="erp-form-body">
                 <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
@@ -26,7 +26,7 @@
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="quarryId">Ocak sahası <span class="req">*</span></label>
                             <select id="quarryId" name="quarryId" required class="erp-form-select">
-                                <option value="" disabled th:selected="${!isEdit}">Ocak seçin</option>
+                                <option value="" disabled th:selected="${!(isEdit ?: false)}">Ocak seçin</option>
                                 <option th:each="q : ${quarries}" th:value="${q.id}"
                                         th:selected="${isEdit and block != null and block.quarry != null and block.quarry.id == q.id}"
                                         th:text="${q.name + ' (' + q.location + ')'}"></option>
