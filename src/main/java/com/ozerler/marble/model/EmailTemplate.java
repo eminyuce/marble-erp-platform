@@ -29,8 +29,7 @@ public class EmailTemplate {
     @Column(name = "subject", nullable = false, length = 255)
     private String subject;
 
-    @Lob
-    @Column(name = "body_html", nullable = false, columnDefinition = "LONGTEXT")
+    @Column(name = "body_html", nullable = false, columnDefinition = "TEXT")
     private String bodyHtml;
 
     @Column(name = "placeholders", length = 500)

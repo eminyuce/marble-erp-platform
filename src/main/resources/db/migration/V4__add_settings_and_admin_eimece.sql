@@ -41,17 +41,19 @@ VALUES ('security.2fa.enabled', 'false', 'SECURITY', 'Tüm kullanıcılar için 
 -- Email Templates Table
 CREATE TABLE email_templates
 (
-    id           BIGSERIAL PRIMARY KEY,
-    template_key VARCHAR(50)  NOT NULL UNIQUE,
-    name         VARCHAR(100) NOT NULL,
-    subject      VARCHAR(200) NOT NULL,
-    body_html    TEXT         NOT NULL,
-    placeholders VARCHAR(255),
-    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id            BIGSERIAL PRIMARY KEY,
+    template_key  VARCHAR(80)  NOT NULL UNIQUE,
+    template_name VARCHAR(150) NOT NULL,
+    subject       VARCHAR(255) NOT NULL,
+    body_html     TEXT         NOT NULL,
+    placeholders  VARCHAR(500),
+    is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Seed Email Templates
-INSERT INTO email_templates (template_key, name, subject, body_html, placeholders)
+INSERT INTO email_templates (template_key, template_name, subject, body_html, placeholders)
 VALUES ('USER_WELCOME', 'Kullanıcı Hoş Geldiniz Bildirimi', 'Özerler Mermer ERP Sistemine Hoş Geldiniz',
         '<div style="font-family:sans-serif; padding:20px; color:#1e293b;">
           <h2 style="color:#b45309;">Özerler Mermer ERP Sistemine Hoş Geldiniz</h2>
