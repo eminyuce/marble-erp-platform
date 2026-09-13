@@ -41,7 +41,7 @@ public class HealthCheckController extends AbstractController {
             body.put("timestamp", Instant.now().toString());
 
             Map<String, Object> components = new LinkedHashMap<>();
-            components.put("db", Map.of("status", "UP", "database", "MySQL 8.4"));
+            components.put("db", Map.of("status", "UP", "database", "PostgreSQL 16"));
             components.put("quarryService", Map.of("status", "UP"));
             components.put("factoryService", Map.of("status", "UP"));
             components.put("costAccounting", Map.of("status", "UP"));

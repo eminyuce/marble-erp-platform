@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Özerler Mermer ERP Platformu - Local Run Script (Bash)
-# Starts MySQL via Docker Compose, then launches Spring Boot on port 8080
+# Starts PostgreSQL via Docker Compose, then launches Spring Boot on port 8080
 # ==============================================================================
 
 set -euo pipefail
 
-SKIP_MYSQL=0
+SKIP_POSTGRES=0
 DOCKER_ALL=0
 
 for arg in "$@"; do
     case "$arg" in
-        --skip-mysql) SKIP_MYSQL=1 ;;
+        --skip-postgres|--skip-mysql) SKIP_POSTGRES=1 ;;
         --docker-all) DOCKER_ALL=1 ;;
         -h|--help)
-            echo "Usage: $0 [--skip-mysql] [--docker-all]"
-            echo "  --skip-mysql   Do not start the MySQL container"
-            echo "  --docker-all   Run MySQL + app via Docker Compose on port 81"
+            echo "Usage: $0 [--skip-postgres] [--docker-all]"
+            echo "  --skip-postgres   Do not start the PostgreSQL container"
+            echo "  --docker-all      Run PostgreSQL + app via Docker Compose on port 81"
             exit 0
             ;;
         *)
@@ -29,32 +29,32 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 COMPOSE_FILE="$REPO_ROOT/docker/docker-compose.yml"
-MYSQL_CONTAINER="marble-erp-mysql"
+POSTGRES_CONTAINER="marble-erp-postgres"
 APP_PORT=8080
-MYSQL_WAIT_SECONDS=90
+POSTGRES_WAIT_SECONDS=90
 
 cd "$REPO_ROOT"
 
 echo "======================================================================"
-echo "   Özerler Mermer ERP - Local Development Runner                     "
+echo "   Özerler Mermer ERP - Local Development Runner (PostgreSQL)         "
 echo "======================================================================"
 echo "Repo: $REPO_ROOT"
 
-wait_mysql_healthy() {
+wait_postgres_healthy() {
     local elapsed=0
-    echo "[WAIT] Waiting for MySQL health ($MYSQL_CONTAINER)..."
-    while [ "$elapsed" -lt "$MYSQL_WAIT_SECONDS" ]; do
+    echo "[WAIT] Waiting for PostgreSQL health ($POSTGRES_CONTAINER)..."
+    while [ "$elapsed" -lt "$POSTGRES_WAIT_SECONDS" ]; do
         local health
-        health="$(docker inspect -f '{{.State.Health.Status}}' "$MYSQL_CONTAINER" 2>/dev/null || true)"
+        health="$(docker inspect -f '{{.State.Health.Status}}' "$POSTGRES_CONTAINER" 2>/dev/null || true)"
         if [ "$health" = "healthy" ]; then
-            echo "[OK] MySQL is ready."
+            echo "[OK] PostgreSQL is ready."
             return 0
         fi
         sleep 2
         elapsed=$((elapsed + 2))
         echo "  ... ${elapsed}s (status: ${health:-starting})"
     done
-    echo "MySQL did not become healthy within ${MYSQL_WAIT_SECONDS}s. Check: docker logs $MYSQL_CONTAINER" >&2
+    echo "PostgreSQL did not become healthy within ${POSTGRES_WAIT_SECONDS}s. Check: docker logs $POSTGRES_CONTAINER" >&2
     exit 1
 }
 
@@ -67,7 +67,7 @@ if [ "$DOCKER_ALL" -eq 1 ]; then
         echo "Docker was not found. Install and start Docker Desktop." >&2
         exit 1
     fi
-    echo "[DOCKER] Starting MySQL + application (port 81)..."
+    echo "[DOCKER] Starting PostgreSQL + application (port 81)..."
     docker compose -f "$COMPOSE_FILE" up -d --build
     echo ""
     echo "App:    http://localhost:81"
@@ -95,16 +95,16 @@ if [ ! -f "$REPO_ROOT/mvnw" ]; then
 fi
 chmod +x "$REPO_ROOT/mvnw"
 
-if [ "$SKIP_MYSQL" -eq 0 ]; then
+if [ "$SKIP_POSTGRES" -eq 0 ]; then
     if ! command -v docker >/dev/null 2>&1; then
-        echo "Docker was not found. Install Docker, or re-run with --skip-mysql." >&2
+        echo "Docker was not found. Install Docker, or re-run with --skip-postgres." >&2
         exit 1
     fi
-    echo "[DOCKER] Starting MySQL..."
-    docker compose -f "$COMPOSE_FILE" up -d mysql
-    wait_mysql_healthy
+    echo "[DOCKER] Starting PostgreSQL..."
+    docker compose -f "$COMPOSE_FILE" up -d postgres
+    wait_postgres_healthy
 else
-    echo "[SKIP] MySQL Docker step skipped."
+    echo "[SKIP] PostgreSQL Docker step skipped."
 fi
 
 echo ""

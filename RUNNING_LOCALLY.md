@@ -11,7 +11,7 @@ Ensure the following tools are installed on your workstation:
 | Dependency | Minimum Version | Notes |
 | :--- | :--- | :--- |
 | **Java Development Kit (JDK)** | **24+** | Recommended: [Eclipse Temurin 24](https://adoptium.net/) |
-| **Docker Desktop / Docker Engine** | **24.0+** | Required for running MySQL 8.4 container |
+| **Docker Desktop / Docker Engine** | **24.0+** | Required for running PostgreSQL 16 container |
 | **Node.js & npm** *(Optional)* | **22.x+** | Only needed if modifying Tailwind CSS in `frontend/` |
 | **Git** | Any modern version | Source code version control |
 
@@ -28,20 +28,20 @@ docker ps
 
 ## 2. Quick Start Options
 
-### Option A: Hybrid Run (Docker MySQL + Spring Boot Local) *(Recommended)*
+### Option A: Hybrid Run (Docker PostgreSQL + Spring Boot Local) *(Recommended)*
 
-This setup runs MySQL in Docker and executes the Spring Boot backend directly on your host machine, enabling hot reload and fast debugging.
+This setup runs PostgreSQL in Docker and executes the Spring Boot backend directly on your host machine, enabling hot reload and fast debugging.
 
 #### On Windows (PowerShell):
 ```powershell
-# 1. Start MySQL container and run the app
+# 1. Start PostgreSQL container and run the app
 .\scripts\run_local.ps1
 ```
 
 Or step-by-step manually:
 ```powershell
-# Start MySQL 8.4 database container
-docker compose -f docker/docker-compose.yml up -d mysql
+# Start PostgreSQL 16 database container
+docker compose -f docker/docker-compose.yml up -d postgres
 
 # Start Spring Boot application on port 8080 (dev profile)
 .\mvnw.cmd spring-boot:run
@@ -56,8 +56,8 @@ chmod +x scripts/run_local.sh
 
 Or step-by-step manually:
 ```bash
-# Start MySQL container
-docker compose -f docker/docker-compose.yml up -d mysql
+# Start PostgreSQL container
+docker compose -f docker/docker-compose.yml up -d postgres
 
 # Start Spring Boot application
 ./mvnw spring-boot:run
@@ -69,10 +69,10 @@ The application will start on **`http://localhost:8080`**.
 
 ### Option B: Full Stack in Docker Compose
 
-Run both the Spring Boot app and MySQL together in isolated containers.
+Run both the Spring Boot app and PostgreSQL together in isolated containers.
 
 ```bash
-# Start both MySQL and the application
+# Start both PostgreSQL and the application
 docker compose -f docker/docker-compose.yml up -d --build
 
 # View real-time container logs
@@ -175,7 +175,7 @@ $env:SERVER_PORT="8085"
 .\mvnw.cmd spring-boot:run
 ```
 
-### MySQL Connection Refused
+### PostgreSQL Connection Refused
 - Ensure Docker Desktop is running.
-- Verify container status with `docker ps` and ensure `marble-erp-mysql` is listed as `healthy`.
-- Check database logs: `docker logs marble-erp-mysql`.
+- Verify container status with `docker ps` and ensure `marble-erp-postgres` is listed as `healthy`.
+- Check database logs: `docker logs marble-erp-postgres`.

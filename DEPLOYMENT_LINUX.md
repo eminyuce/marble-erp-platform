@@ -14,15 +14,15 @@ This guide describes how to deploy the Özerler Mermer ERP platform to a product
           │ (HTTP :8080 or :81)
           ▼
  [Özerler Mermer ERP (Spring Boot 4 / Java 24)]
-          │ (TCP :3306)
+          │ (TCP :5432)
           ▼
-   [MySQL 8.4 Database Server]
+   [PostgreSQL 16 Database Server]
 ```
 
 ### Key Highlights
 - **Java Runtime**: OpenJDK 24 with Z Garbage Collector (`-XX:+UseZGC`).
 - **Web Server**: Nginx handling SSL (Let's Encrypt), static compression, rate limiting, and request routing.
-- **Data Persistence**: MySQL 8.4 UTF-8 (`utf8mb4_unicode_ci`) with automatic Flyway schema migrations on boot.
+- **Data Persistence**: PostgreSQL 16 UTF-8 with automatic Flyway schema migrations on boot.
 - **Localization**: System defaults to Turkish (`tr`) with externalized message bundles.
 
 ---
@@ -86,7 +86,6 @@ cat << 'EOF' > /opt/marble-erp/.env
 DB_NAME=marble_erp
 DB_USERNAME=marbleuser
 DB_PASSWORD=YOUR_STRONG_DB_PASSWORD_HERE
-DB_ROOT_PASSWORD=YOUR_STRONG_ROOT_PASSWORD_HERE
 APP_PORT=8080
 CORS_ALLOWED_ORIGIN=https://erp.ozerlermermer.com
 SERVER_PORT=8080
@@ -94,7 +93,7 @@ SPRING_PROFILES_ACTIVE=prod
 EOF
 ```
 > [!WARNING]
-> Replace `YOUR_STRONG_DB_PASSWORD_HERE` and `YOUR_STRONG_ROOT_PASSWORD_HERE` with secure generated passwords.
+> Replace `YOUR_STRONG_DB_PASSWORD_HERE` with a secure generated password.
 
 ### Step 3.3: Build & Launch Containers
 ```bash
@@ -114,29 +113,30 @@ docker compose -f docker/docker-compose.yml logs -f app
 
 If you prefer running directly on the bare-metal Linux host without Docker:
 
-### Step 4.1: Install OpenJDK 24 & MySQL 8.4
+### Step 4.1: Install OpenJDK 24 & PostgreSQL 16
 ```bash
 # Install OpenJDK 24 (via Eclipse Temurin)
 wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo tee /etc/apt/keyrings/adoptium.asc
 echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | sudo tee /etc/apt/sources.list.d/adoptium.list
 sudo apt update
-sudo apt install -y temurin-24-jdk mysql-server
+sudo apt install -y temurin-24-jdk postgresql postgresql-contrib
 
-# Secure MySQL installation
-sudo mysql_secure_installation
+# Enable and start PostgreSQL
+sudo systemctl enable --now postgresql
 ```
 
 ### Step 4.2: Initialize Production Database
 ```bash
-sudo mysql -u root -p
+sudo -u postgres psql
 ```
-Run within MySQL console:
+Run within the PostgreSQL console:
 ```sql
-CREATE DATABASE marble_erp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'marbleuser'@'127.0.0.1' IDENTIFIED BY 'YOUR_STRONG_DB_PASSWORD_HERE';
-GRANT ALL PRIVILEGES ON marble_erp.* TO 'marbleuser'@'127.0.0.1';
-FLUSH PRIVILEGES;
-EXIT;
+CREATE DATABASE marble_erp;
+CREATE USER marbleuser WITH ENCRYPTED PASSWORD 'YOUR_STRONG_DB_PASSWORD_HERE';
+GRANT ALL PRIVILEGES ON DATABASE marble_erp TO marbleuser;
+\c marble_erp
+GRANT ALL ON SCHEMA public TO marbleuser;
+\q
 ```
 
 ### Step 4.3: Create System User & Application Directory
@@ -166,8 +166,8 @@ Create `/etc/systemd/system/marble-erp.service`:
 ```ini
 [Unit]
 Description=Özerler Mermer ERP Platform
-After=syslog.target network.target mysql.service
-Wants=mysql.service
+After=syslog.target network.target postgresql.service
+Wants=postgresql.service
 
 [Service]
 Type=simple
@@ -177,7 +177,7 @@ WorkingDirectory=/opt/marble-erp
 
 Environment="SPRING_PROFILES_ACTIVE=prod"
 Environment="SERVER_PORT=8080"
-Environment="DB_URL=jdbc:mysql://127.0.0.1:3306/marble_erp?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci"
+Environment="DB_URL=jdbc:postgresql://127.0.0.1:5432/marble_erp"
 Environment="DB_USERNAME=marbleuser"
 Environment="DB_PASSWORD=YOUR_STRONG_DB_PASSWORD_HERE"
 Environment="APP_UPLOAD_DIR=/opt/marble-erp/uploads"
@@ -310,7 +310,7 @@ DATE="$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
 # Dump database
-mysqldump -u marbleuser -p'YOUR_STRONG_DB_PASSWORD_HERE' --single-transaction --quick --routines marble_erp | gzip > "$BACKUP_DIR/marble_erp_$DATE.sql.gz"
+PGPASSWORD='YOUR_STRONG_DB_PASSWORD_HERE' pg_dump -U marbleuser -h 127.0.0.1 -d marble_erp | gzip > "$BACKUP_DIR/marble_erp_$DATE.sql.gz"
 
 # Retain only last 14 days of backups
 find "$BACKUP_DIR" -type f -name "marble_erp_*.sql.gz" -mtime +14 -delete

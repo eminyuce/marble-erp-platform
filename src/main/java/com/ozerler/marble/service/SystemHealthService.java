@@ -89,8 +89,8 @@ public class SystemHealthService {
 
         // 3. Database Health & Latency
         long dbLatencyMs = -1;
-        String dbName = "MySQL";
-        String dbVersion = "8.4";
+        String dbName = "PostgreSQL";
+        String dbVersion = "16";
         String dbStatus = "UP";
 
         try {

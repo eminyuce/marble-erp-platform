@@ -14,13 +14,13 @@ VALUES (4, 1), -- ROLE_ADMIN
 -- System Settings Table
 CREATE TABLE system_settings
 (
-    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id            BIGSERIAL PRIMARY KEY,
     setting_key   VARCHAR(100) NOT NULL UNIQUE,
     setting_value TEXT,
     category      VARCHAR(50)  NOT NULL,
     description   VARCHAR(255),
-    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE INDEX idx_settings_key ON system_settings (setting_key);
 
@@ -41,14 +41,14 @@ VALUES ('security.2fa.enabled', 'false', 'SECURITY', 'Tüm kullanıcılar için 
 -- Email Templates Table
 CREATE TABLE email_templates
 (
-    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id           BIGSERIAL PRIMARY KEY,
     template_key VARCHAR(50)  NOT NULL UNIQUE,
     name         VARCHAR(100) NOT NULL,
     subject      VARCHAR(200) NOT NULL,
     body_html    TEXT         NOT NULL,
     placeholders VARCHAR(255),
     created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
 
 -- Seed Email Templates
 INSERT INTO email_templates (template_key, name, subject, body_html, placeholders)
@@ -99,3 +99,8 @@ VALUES ('USER_WELCOME', 'Kullanıcı Hoş Geldiniz Bildirimi', 'Özerler Mermer 
             <p style="margin:5px 0;"><strong>Açılması Gereken Üretim Emri:</strong> {{shortfall}} m²</p>
           </div>
         </div>', 'projectName, locationName, plannedArea, availableStock, shortfall');
+
+-- Synchronize sequences with inserted IDs
+SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1));
+SELECT setval(pg_get_serial_sequence('system_settings', 'id'), COALESCE((SELECT MAX(id) FROM system_settings), 1));
+SELECT setval(pg_get_serial_sequence('email_templates', 'id'), COALESCE((SELECT MAX(id) FROM email_templates), 1));

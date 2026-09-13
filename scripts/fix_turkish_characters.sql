@@ -1,7 +1,6 @@
--- Repair Turkish characters stored as '?' after latin1 / non-UTF-8 inserts.
--- Apply with: mysql --default-character-set=utf8mb4
-SET NAMES utf8mb4;
-SET CHARACTER SET utf8mb4;
+-- Repair Turkish characters stored with incorrect encoding
+-- Apply with: psql -U marbleuser -d marble_erp -f scripts/fix_turkish_characters.sql
+SET client_encoding = 'UTF8';
 
 -- Roles (V3 seed)
 UPDATE roles SET description = 'Sistem Yöneticisi - Tam Yetki' WHERE id = 1;

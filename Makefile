@@ -7,7 +7,7 @@ help:
 	@echo "  make run            - Run Spring Boot app locally"
 	@echo "  make tailwind-build - Compile Tailwind CSS 4 assets"
 	@echo "  make tailwind-watch - Watch and compile Tailwind CSS during development"
-	@echo "  make docker-up      - Start full stack (App + MySQL 8.4) via Docker Compose"
+	@echo "  make docker-up      - Start full stack (App + PostgreSQL 16) via Docker Compose"
 	@echo "  make docker-down    - Stop Docker Compose services"
 	@echo "  make clean          - Clean Maven target and temporary assets"
 

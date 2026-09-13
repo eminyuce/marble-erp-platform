@@ -123,3 +123,19 @@ VALUES (1, 1, 1, 'ADHESIVE', 'Yüksek Mukavemetli Granit Yapıştırıcı', 400.
         'Lobi zemin ve duvar montaj harcı'),
        (2, 1, 1, 'LABOR', '1. Sınıf Mermer Montaj Ustası', 320.00, 'SAAT', 450.00, 144000.00,
         'A Blok Lobi montaj işçilik puantajı');
+
+-- Synchronize sequences with inserted IDs
+SELECT setval(pg_get_serial_sequence('roles', 'id'), COALESCE((SELECT MAX(id) FROM roles), 1));
+SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1));
+SELECT setval(pg_get_serial_sequence('cost_centers', 'id'), COALESCE((SELECT MAX(id) FROM cost_centers), 1));
+SELECT setval(pg_get_serial_sequence('quarries', 'id'), COALESCE((SELECT MAX(id) FROM quarries), 1));
+SELECT setval(pg_get_serial_sequence('blocks', 'id'), COALESCE((SELECT MAX(id) FROM blocks), 1));
+SELECT setval(pg_get_serial_sequence('pallets', 'id'), COALESCE((SELECT MAX(id) FROM pallets), 1));
+SELECT setval(pg_get_serial_sequence('production_orders', 'id'), COALESCE((SELECT MAX(id) FROM production_orders), 1));
+SELECT setval(pg_get_serial_sequence('slabs', 'id'), COALESCE((SELECT MAX(id) FROM slabs), 1));
+SELECT setval(pg_get_serial_sequence('scrap_logs', 'id'), COALESCE((SELECT MAX(id) FROM scrap_logs), 1));
+SELECT setval(pg_get_serial_sequence('projects', 'id'), COALESCE((SELECT MAX(id) FROM projects), 1));
+SELECT setval(pg_get_serial_sequence('project_locations', 'id'), COALESCE((SELECT MAX(id) FROM project_locations), 1));
+SELECT setval(pg_get_serial_sequence('cut_orders', 'id'), COALESCE((SELECT MAX(id) FROM cut_orders), 1));
+SELECT setval(pg_get_serial_sequence('cut_items', 'id'), COALESCE((SELECT MAX(id) FROM cut_items), 1));
+SELECT setval(pg_get_serial_sequence('site_consumptions', 'id'), COALESCE((SELECT MAX(id) FROM site_consumptions), 1));

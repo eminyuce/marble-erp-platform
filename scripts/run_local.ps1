@@ -1,26 +1,31 @@
 # ==============================================================================
 # Ozerler Mermer ERP Platform - Local Run Script (PowerShell)
-# Starts MySQL via Docker Compose, then launches Spring Boot on port 8080
+# Starts PostgreSQL via Docker Compose, then launches Spring Boot on port 8080
 # ==============================================================================
 
 param (
+    [switch]$SkipPostgres,
     [switch]$SkipMysql,
     [switch]$DockerAll
 )
 
 $ErrorActionPreference = "Stop"
 
+if ($SkipMysql) {
+    $SkipPostgres = $true
+}
+
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
 $ComposeFile = Join-Path $RepoRoot "docker\docker-compose.yml"
-$MysqlContainer = "marble-erp-mysql"
+$PostgresContainer = "marble-erp-postgres"
 $AppPort = 8080
-$MysqlWaitSeconds = 90
+$PostgresWaitSeconds = 90
 
 Set-Location $RepoRoot
 
 Write-Host "======================================================================" -ForegroundColor Cyan
-Write-Host "   Ozerler Mermer ERP - Local Development Runner                     " -ForegroundColor Cyan
+Write-Host "   Ozerler Mermer ERP - Local Development Runner (PostgreSQL)         " -ForegroundColor Cyan
 Write-Host "======================================================================" -ForegroundColor Cyan
 Write-Host "Repo: $RepoRoot" -ForegroundColor DarkGray
 
@@ -55,18 +60,18 @@ function Get-JavaMajorVersion {
     return 0
 }
 
-function Wait-MysqlHealthy {
+function Wait-PostgresHealthy {
     param ([int]$TimeoutSeconds)
 
     $elapsed = 0
-    Write-Host "[WAIT] Waiting for MySQL health ($MysqlContainer)..." -ForegroundColor Yellow
+    Write-Host "[WAIT] Waiting for PostgreSQL health ($PostgresContainer)..." -ForegroundColor Yellow
     while ($elapsed -lt $TimeoutSeconds) {
         $previousEap = $ErrorActionPreference
         $ErrorActionPreference = "Continue"
-        $health = docker inspect -f "{{.State.Health.Status}}" $MysqlContainer 2>$null
+        $health = docker inspect -f "{{.State.Health.Status}}" $PostgresContainer 2>$null
         $ErrorActionPreference = $previousEap
         if ($health -eq "healthy") {
-            Write-Host "[OK] MySQL is ready." -ForegroundColor Green
+            Write-Host "[OK] PostgreSQL is ready." -ForegroundColor Green
             return
         }
         Start-Sleep -Seconds 2
@@ -75,14 +80,14 @@ function Wait-MysqlHealthy {
         Write-Host "  ... ${elapsed}s (status: $status)" -ForegroundColor DarkGray
     }
 
-    throw "MySQL did not become healthy within $TimeoutSeconds seconds. Check: docker logs $MysqlContainer"
+    throw "PostgreSQL did not become healthy within $TimeoutSeconds seconds. Check: docker logs $PostgresContainer"
 }
 
 if ($DockerAll) {
     if (-not (Test-CommandExists "docker")) {
         throw "Docker was not found. Install and start Docker Desktop."
     }
-    Write-Host "[DOCKER] Starting MySQL + application (port 81)..." -ForegroundColor Yellow
+    Write-Host "[DOCKER] Starting PostgreSQL + application (port 81)..." -ForegroundColor Yellow
     docker compose -f $ComposeFile up -d --build
     if ($LASTEXITCODE -ne 0) {
         throw "docker compose up failed."
@@ -109,19 +114,19 @@ if (-not (Test-Path $mvnw)) {
     throw "Maven wrapper not found: $mvnw"
 }
 
-if (-not $SkipMysql) {
+if (-not $SkipPostgres) {
     if (-not (Test-CommandExists "docker")) {
-        throw "Docker was not found. Install Docker, or re-run with -SkipMysql."
+        throw "Docker was not found. Install Docker, or re-run with -SkipPostgres."
     }
 
-    Write-Host "[DOCKER] Starting MySQL..." -ForegroundColor Yellow
-    docker compose -f $ComposeFile up -d mysql
+    Write-Host "[DOCKER] Starting PostgreSQL..." -ForegroundColor Yellow
+    docker compose -f $ComposeFile up -d postgres
     if ($LASTEXITCODE -ne 0) {
-        throw "Failed to start the MySQL container."
+        throw "Failed to start the PostgreSQL container."
     }
-    Wait-MysqlHealthy -TimeoutSeconds $MysqlWaitSeconds
+    Wait-PostgresHealthy -TimeoutSeconds $PostgresWaitSeconds
 } else {
-    Write-Host "[SKIP] MySQL Docker step skipped." -ForegroundColor Yellow
+    Write-Host "[SKIP] PostgreSQL Docker step skipped." -ForegroundColor Yellow
 }
 
 Write-Host ""

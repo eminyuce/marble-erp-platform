@@ -7,7 +7,7 @@
 [![Port](https://img.shields.io/badge/Port-81-blue.svg)](http://localhost:81)
 [![PMD](https://img.shields.io/badge/PMD-7.17.0%20(0%20Violations)-blueviolet.svg)](https://pmd.github.io/)
 [![JaCoCo](https://img.shields.io/badge/Coverage-JaCoCo%200.8.13-success.svg)](https://www.jacoco.org/)
-[![Database](https://img.shields.io/badge/Database-MySQL%208.4%20LTS-blue.svg)](https://www.mysql.com/)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%2016-336791.svg)](https://www.postgresql.org/)
 
 ---
 
@@ -35,7 +35,7 @@
 | Category | Technologies & Tools |
 | :--- | :--- |
 | **Backend Framework** | Java 24 (Eclipse Temurin 24.0.2), Spring Boot 4.0.7, Spring Security 7.x, Spring Data JPA |
-| **Persistence & Migration** | MySQL 8.4 LTS, Hibernate 7.x, Flyway 11.x, HikariCP |
+| **Persistence & Migration** | PostgreSQL 16, Hibernate 7.x, Flyway 11.x, HikariCP |
 | **Frontend & UI/UX** | Thymeleaf 3, Tailwind CSS 4, HTMX 2, Alpine.js 3, Tabulator 6, Lucide Icons |
 | **Rich Editing & Uploads**| TipTap Editor, CodeMirror 6, FilePond 4 with client-side image optimization |
 | **Reporting & Utilities** | Apache POI 5.3.0, Apache Commons (`commons-lang3`, `commons-collections4 4.5.0`) |
@@ -71,11 +71,11 @@ The platform adheres to **Layered Clean Architecture** and **Domain-Driven Desig
 | :--- | :--- | :--- |
 | `SERVER_PORT` | Application HTTP port | `81` |
 | `SPRING_PROFILES_ACTIVE` | Active Spring profile | `dev` |
-| `DB_HOST` | MySQL hostname | `localhost` |
-| `DB_PORT` | MySQL port | `3306` |
+| `DB_HOST` | PostgreSQL hostname | `localhost` |
+| `DB_PORT` | PostgreSQL port | `5432` |
 | `DB_NAME` | Database schema name | `marble_erp` |
-| `DB_USER` | Database username | `marble_user` |
-| `DB_PASS` | Database password | `marble_pass` |
+| `DB_USER` | Database username | `marbleuser` |
+| `DB_PASS` | Database password | `marblepass` |
 
 ### Step-by-Step Local Setup
 
@@ -87,7 +87,7 @@ The platform adheres to **Layered Clean Architecture** and **Domain-Driven Desig
 
 2. **Start Infrastructure Services (Docker):**
    ```bash
-   docker compose -f docker/docker-compose.yml up -d mysql
+   docker compose -f docker/docker-compose.yml up -d postgres
    ```
 
 3. **Compile, Check Quality & Run Tests:**
