@@ -89,6 +89,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         String clientIp = ClientIps.from(request);
+        if ("127.0.0.1".equals(clientIp) || "::1".equals(clientIp) || "0:0:0:0:0:0:0:1".equals(clientIp)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         Tier tier = determineTier(request);
 
         if (!rateLimitService.isAllowed(clientIp, tier)) {

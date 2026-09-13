@@ -32,9 +32,9 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     @EntityGraph(attributePaths = {"quarry"})
     @Query("SELECT b FROM Block b WHERE " +
-            "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(b.stoneType) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(b.quarry.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+            "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(b.quarry.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<Block> searchBlocks(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT b FROM Block b WHERE LOWER(b.blockCode) LIKE LOWER(CONCAT('%', :query, '%'))")

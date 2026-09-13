@@ -98,14 +98,14 @@ springdoc:
 
 rate-limiting:
   login:
-    max-requests: 5
-    window-seconds: 60
+    max-requests: ${RATE_LIMIT_LOGIN_MAX:10}
+    window-seconds: ${RATE_LIMIT_LOGIN_WINDOW:60}
   form:
-    max-requests: 10
-    window-seconds: 60
+    max-requests: ${RATE_LIMIT_FORM_MAX:30}
+    window-seconds: ${RATE_LIMIT_FORM_WINDOW:60}
   general:
-    max-requests: 60
-    window-seconds: 60
+    max-requests: ${RATE_LIMIT_GENERAL_MAX:120}
+    window-seconds: ${RATE_LIMIT_GENERAL_WINDOW:60}
 
 logging:
   level:

@@ -14,8 +14,8 @@ import java.util.List;
 public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
 
     @Query("SELECT so FROM SalesOrder so JOIN FETCH so.customer WHERE " +
-            "(:search IS NULL OR LOWER(so.orderNo) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(so.customer.companyName) LIKE LOWER(CONCAT('%', :search, '%')))")
+            "(:search IS NULL OR LOWER(so.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(so.customer.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<SalesOrder> searchSalesOrders(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT so FROM SalesOrder so JOIN FETCH so.customer WHERE LOWER(so.orderNo) LIKE LOWER(CONCAT('%', :query, '%'))")

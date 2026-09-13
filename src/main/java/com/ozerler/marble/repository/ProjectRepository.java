@@ -22,9 +22,9 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     long countByStatus(ProjectStatus status);
 
     @Query("SELECT p FROM Project p WHERE " +
-            "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(p.customerName) LIKE LOWER(CONCAT('%', :search, '%')))")
+            "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<Project> searchProjects(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT p FROM Project p WHERE LOWER(p.projectCode) LIKE LOWER(CONCAT('%', :query, '%')) " +

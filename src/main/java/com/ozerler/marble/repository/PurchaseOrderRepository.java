@@ -16,8 +16,8 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
 
     @EntityGraph(attributePaths = {"supplier", "project"})
     @Query("SELECT po FROM PurchaseOrder po WHERE " +
-            "(:search IS NULL OR LOWER(po.poNumber) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(po.supplier.companyName) LIKE LOWER(CONCAT('%', :search, '%')))")
+            "(:search IS NULL OR LOWER(po.poNumber) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(po.supplier.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<PurchaseOrder> searchPurchaseOrders(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier WHERE LOWER(po.poNumber) LIKE LOWER(CONCAT('%', :query, '%'))")

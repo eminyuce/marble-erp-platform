@@ -23,9 +23,9 @@ public interface ProductionOrderRepository extends JpaRepository<ProductionOrder
 
     @EntityGraph(attributePaths = {"block"})
     @Query("SELECT p FROM ProductionOrder p WHERE " +
-            "(:search IS NULL OR LOWER(p.orderNo) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(p.machineName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(p.block.blockCode) LIKE LOWER(CONCAT('%', :search, '%')))")
+            "(:search IS NULL OR LOWER(p.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(p.machineName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(p.block.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<ProductionOrder> searchOrders(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT p FROM ProductionOrder p WHERE LOWER(p.orderNo) LIKE LOWER(CONCAT('%', :query, '%'))")
