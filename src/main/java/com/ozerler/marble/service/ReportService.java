@@ -25,6 +25,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class ReportService {
 
     private final BlockRepository blockRepository;
@@ -252,6 +253,7 @@ public class ReportService {
         return data;
     }
 
+    @Transactional(readOnly = true)
     public byte[] generateExcelReport(ReportType type) throws IOException {
         ReportData data = getReportData(type);
 
@@ -330,6 +332,7 @@ public class ReportService {
         }
     }
 
+    @Transactional(readOnly = true)
     public byte[] generateCsvReport(ReportType type) {
         ReportData data = getReportData(type);
         StringWriter sw = new StringWriter();

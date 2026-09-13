@@ -21,8 +21,8 @@ public interface CutOrderRepository extends JpaRepository<CutOrder, Long> {
 
     List<CutOrder> findByProjectId(Long projectId);
 
-    @EntityGraph(attributePaths = {"project"})
-    @Query("SELECT c FROM CutOrder c ORDER BY c.id DESC")
+    @EntityGraph(attributePaths = {"project", "items"})
+    @Query("SELECT DISTINCT c FROM CutOrder c ORDER BY c.id DESC")
     List<CutOrder> findAllWithProject();
 
     @EntityGraph(attributePaths = {"project", "location"})
