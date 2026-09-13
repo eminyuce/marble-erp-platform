@@ -46,68 +46,68 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults())
-            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
-            .authenticationProvider(authenticationProvider())
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/actuator/**", "/health/**", "/health")
-            )
-            .authorizeHttpRequests(auth -> auth
-                // Static assets & public endpoints
-                .requestMatchers(
-                    "/css/**",
-                    "/js/**",
-                    "/vendor/**",
-                    "/fonts/**",
-                    "/images/**",
-                    "/uploads/**",
-                    "/favicon.ico",
-                    "/error",
-                    "/login",
-                    "/account/adminlogin/**",
-                    "/account/adminlogin",
-                    "/access-denied",
-                    "/passport/**",
-                    "/health/**",
-                    "/health",
-                    "/actuator/**"
-                ).permitAll()
-                // Admin area strictly restricted to ROLE_ADMIN & ROLE_EXECUTIVE
-                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "EXECUTIVE")
-                // OpenAPI / Swagger UI — authenticated admins only; disabled in prod via springdoc
-                .requestMatchers(
-                    "/v3/api-docs/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html"
-                ).hasAnyRole("ADMIN", "EXECUTIVE")
-                // All other operations require authentication
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/account/adminlogin/")
-                .loginProcessingUrl("/account/adminlogin/")
-                .defaultSuccessUrl("/admin/dashboard", true)
-                .failureUrl("/account/adminlogin/?error=true")
-                .usernameParameter("username")
-                .passwordParameter("password")
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/account/adminlogin/?logout=true")
-                .deleteCookies("JSESSIONID", "remember-me")
-                .invalidateHttpSession(true)
-                .permitAll()
-            )
-            .rememberMe(remember -> remember
-                .key("ozerler-marble-erp-remember-me-key")
-                .tokenValiditySeconds(86400 * 14) // 14 days
-                .userDetailsService(customUserDetailsService)
-            )
-            .exceptionHandling(ex -> ex
-                .accessDeniedPage("/access-denied")
-            );
+                .cors(Customizer.withDefaults())
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .authenticationProvider(authenticationProvider())
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers("/actuator/**", "/health/**", "/health")
+                )
+                .authorizeHttpRequests(auth -> auth
+                        // Static assets & public endpoints
+                        .requestMatchers(
+                                "/css/**",
+                                "/js/**",
+                                "/vendor/**",
+                                "/fonts/**",
+                                "/images/**",
+                                "/uploads/**",
+                                "/favicon.ico",
+                                "/error",
+                                "/login",
+                                "/account/adminlogin/**",
+                                "/account/adminlogin",
+                                "/access-denied",
+                                "/passport/**",
+                                "/health/**",
+                                "/health",
+                                "/actuator/**"
+                        ).permitAll()
+                        // Admin area strictly restricted to ROLE_ADMIN & ROLE_EXECUTIVE
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "EXECUTIVE")
+                        // OpenAPI / Swagger UI — authenticated admins only; disabled in prod via springdoc
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).hasAnyRole("ADMIN", "EXECUTIVE")
+                        // All other operations require authentication
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/account/adminlogin/")
+                        .loginProcessingUrl("/account/adminlogin/")
+                        .defaultSuccessUrl("/admin/dashboard", true)
+                        .failureUrl("/account/adminlogin/?error=true")
+                        .usernameParameter("username")
+                        .passwordParameter("password")
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/account/adminlogin/?logout=true")
+                        .deleteCookies("JSESSIONID", "remember-me")
+                        .invalidateHttpSession(true)
+                        .permitAll()
+                )
+                .rememberMe(remember -> remember
+                        .key("ozerler-marble-erp-remember-me-key")
+                        .tokenValiditySeconds(86400 * 14) // 14 days
+                        .userDetailsService(customUserDetailsService)
+                )
+                .exceptionHandling(ex -> ex
+                        .accessDeniedPage("/access-denied")
+                );
 
         return http.build();
     }

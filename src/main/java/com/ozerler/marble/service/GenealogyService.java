@@ -15,12 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -68,8 +63,8 @@ public class GenealogyService {
         Map<Long, List<CutItem>> itemsBySlabId = slabIds.isEmpty()
                 ? Collections.emptyMap()
                 : cutItemRepository.findBySourceSlabIdIn(slabIds).stream()
-                        .filter(i -> i.getSourceSlab() != null)
-                        .collect(Collectors.groupingBy(i -> i.getSourceSlab().getId()));
+                .filter(i -> i.getSourceSlab() != null)
+                .collect(Collectors.groupingBy(i -> i.getSourceSlab().getId()));
 
         for (ProductionOrder order : orders) {
             GenealogyNodeDto orderNode = buildProductionOrderNode(order);

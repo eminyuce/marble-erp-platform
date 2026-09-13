@@ -24,12 +24,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT u FROM User u WHERE u.deleted = false AND " +
-           "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
-           "(:roleName IS NULL OR EXISTS (SELECT 1 FROM u.roles r WHERE r.name = :roleName)) AND " +
-           "(:enabled IS NULL OR u.enabled = :enabled)")
+            "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+            "(:roleName IS NULL OR EXISTS (SELECT 1 FROM u.roles r WHERE r.name = :roleName)) AND " +
+            "(:enabled IS NULL OR u.enabled = :enabled)")
     Page<User> searchActiveUsers(@Param("search") String search,
                                  @Param("roleName") String roleName,
                                  @Param("enabled") Boolean enabled,

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>E-posta Şablonu Düzenle | Özerler Mermer ERP</title>
 </head>
@@ -21,17 +22,21 @@
                 <section class="erp-form-section">
                     <div th:replace="~{fragments/form-page :: section('Konu ve durum', 'Alıcının göreceği başlık ve şablonun aktifliği')}"></div>
                     <div class="erp-form-field">
-                        <label class="erp-form-label" for="subject">E-posta konu başlığı <span class="req">*</span></label>
+                        <label class="erp-form-label" for="subject">E-posta konu başlığı <span
+                                class="req">*</span></label>
                         <input id="subject" type="text" name="subject" th:value="${template.subject}" required
-                                class="erp-form-input" placeholder="Örn: {{fullName}} için sipariş güncellemesi">
+                               class="erp-form-input" placeholder="Örn: {{fullName}} için sipariş güncellemesi">
                     </div>
                     <label class="erp-form-check" for="edit_isActive">
-                        <input type="checkbox" id="edit_isActive" name="isActive" value="true" th:checked="${template.isActive}">
+                        <input type="checkbox" id="edit_isActive" name="isActive" value="true"
+                               th:checked="${template.isActive}">
                         <span>Şablonu aktif olarak işaretle</span>
                     </label>
                     <div class="erp-form-hint space-y-1" th:if="${template.placeholders}">
-                        <p>Kullanılabilir değişkenler: <code class="font-mono text-amber-700 font-bold" th:text="${template.placeholders}">{{name}}</code></p>
-                        <p class="text-xs text-slate-500">Hem <code>{{degisken}}</code> hem de <code>${degisken}</code> yazımı desteklenir. Ham HTML için <code>{{{degisken}}}</code> kullanabilirsiniz.</p>
+                        <p>Kullanılabilir değişkenler: <code class="font-mono text-amber-700 font-bold"
+                                                             th:text="${template.placeholders}">{{name}}</code></p>
+                        <p class="text-xs text-slate-500">Hem <code>{{degisken}}</code> hem de <code>${degisken}</code>
+                            yazımı desteklenir. Ham HTML için <code>{{{degisken}}}</code> kullanabilirsiniz.</p>
                     </div>
                 </section>
 

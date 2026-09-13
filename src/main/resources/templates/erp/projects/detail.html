@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title th:text="${project.name} + ' | Özerler Mermer ERP'">Proje Detayı</title>
 </head>
@@ -10,13 +11,18 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
             <div class="flex items-start sm:items-center gap-2 flex-wrap">
-                <a th:href="@{/projects}" class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100" aria-label="Şantiyelere dön">
+                <a th:href="@{/projects}"
+                   class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                   aria-label="Şantiyelere dön">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 </a>
-                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight min-w-0 break-words" th:text="${project.name}">X Residence</h1>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-800" th:text="${project.projectCode}">PROJ-2026-0042</span>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight min-w-0 break-words"
+                    th:text="${project.name}">X Residence</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-800"
+                      th:text="${project.projectCode}">PROJ-2026-0042</span>
             </div>
-            <p class="text-sm text-slate-500 mt-1" th:text="'Müşteri: ' + ${project.customerName}">Müşteri: ABC İnşaat A.Ş.</p>
+            <p class="text-sm text-slate-500 mt-1" th:text="'Müşteri: ' + ${project.customerName}">Müşteri: ABC İnşaat
+                A.Ş.</p>
         </div>
         <div class="flex items-center gap-2">
             <span class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
@@ -26,10 +32,14 @@
     </div>
 
     <!-- Variance Alert if Over Budget -->
-    <div th:if="${project.actualCost > project.estimatedCost}" class="p-4 rounded-xl bg-rose-50 border-l-4 border-rose-600 text-xs text-rose-900 flex items-start gap-3">
+    <div th:if="${project.actualCost > project.estimatedCost}"
+         class="p-4 rounded-xl bg-rose-50 border-l-4 border-rose-600 text-xs text-rose-900 flex items-start gap-3">
         <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5"></i>
         <div>
-            <strong class="font-bold">Bütçe Sapma Uyarısı:</strong> Bu projede fiili gerçekleşen maliyet (<span th:text="${#numbers.formatDecimal(project.actualCost, 1, 0)}">8.150.000</span> TL), planlanan tahmini maliyet bütçesini (<span th:text="${#numbers.formatDecimal(project.estimatedCost, 1, 0)}">7.800.000</span> TL) aşmıştır. Lütfen şantiye sarfiyatlarını ve fazla mesai puantajlarını inceleyiniz.
+            <strong class="font-bold">Bütçe Sapma Uyarısı:</strong> Bu projede fiili gerçekleşen maliyet (<span
+                th:text="${#numbers.formatDecimal(project.actualCost, 1, 0)}">8.150.000</span> TL), planlanan tahmini
+            maliyet bütçesini (<span th:text="${#numbers.formatDecimal(project.estimatedCost, 1, 0)}">7.800.000</span>
+            TL) aşmıştır. Lütfen şantiye sarfiyatlarını ve fazla mesai puantajlarını inceleyiniz.
         </div>
     </div>
 
@@ -50,7 +60,8 @@
                 <div th:each="loc : ${locations}" class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
                     <div class="flex items-center justify-between">
                         <div>
-                            <strong class="text-xs font-bold text-slate-800" th:text="${loc.locationName}">Lobi Duvar</strong>
+                            <strong class="text-xs font-bold text-slate-800" th:text="${loc.locationName}">Lobi
+                                Duvar</strong>
                             <div class="text-[11px] text-slate-500" th:text="${loc.stoneSpec}">Muğla Beyaz 80x120</div>
                         </div>
                         <span class="px-2 py-0.5 rounded text-[10px] font-semibold"
@@ -59,11 +70,13 @@
                     </div>
                     <div>
                         <div class="flex justify-between text-[11px] text-slate-600 font-semibold mb-1">
-                            <span><span th:text="${loc.installedAreaM2}">0</span> / <span th:text="${loc.plannedAreaM2}">0</span> m²</span>
+                            <span><span th:text="${loc.installedAreaM2}">0</span> / <span
+                                    th:text="${loc.plannedAreaM2}">0</span> m²</span>
                             <span th:text="'%' + ${loc.getProgressPercentage()}">0%</span>
                         </div>
                         <div class="w-full bg-slate-200 rounded-full h-1.5">
-                            <div class="bg-amber-600 h-1.5 rounded-full" th:style="'width: ' + ${loc.getProgressPercentage()} + '%'"></div>
+                            <div class="bg-amber-600 h-1.5 rounded-full"
+                                 th:style="'width: ' + ${loc.getProgressPercentage()} + '%'"></div>
                         </div>
                     </div>
                 </div>
@@ -73,7 +86,8 @@
             </div>
 
             <!-- Quick Add Location Form -->
-            <form th:action="@{'/projects/' + ${project.id} + '/locations'}" method="post" class="pt-3 border-t border-slate-100 space-y-3">
+            <form th:action="@{'/projects/' + ${project.id} + '/locations'}" method="post"
+                  class="pt-3 border-t border-slate-100 space-y-3">
                 <div class="text-xs font-bold text-slate-800">Yeni Mahal Ekle</div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <input type="text" name="locationName" placeholder="Mahal Adı (Örn: Koridorlar)" required
@@ -87,7 +101,8 @@
                     <input type="number" step="0.1" name="plannedAreaM2" placeholder="Planlanan m²" required
                            class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
                 </div>
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-lg">
+                <button type="submit"
+                        class="w-full min-h-11 py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-lg">
                     Mahal Kaydet
                 </button>
             </form>
@@ -103,14 +118,23 @@
             </div>
 
             <div class="space-y-2 max-h-72 overflow-y-auto">
-                <div th:each="cons : ${consumptions}" class="p-2.5 bg-slate-50 rounded-lg border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div th:each="cons : ${consumptions}"
+                     class="p-2.5 bg-slate-50 rounded-lg border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                     <div>
                         <div class="font-semibold text-slate-800" th:text="${cons.itemName}">Granit Yapıştırıcı</div>
-                        <div class="text-[10px] text-slate-400" th:text="${cons.location.locationName} + ' • ' + ${cons.consumptionType}">Lobi • ADHESIVE</div>
+                        <div class="text-[10px] text-slate-400"
+                             th:text="${cons.location.locationName} + ' • ' + ${cons.consumptionType}">Lobi • ADHESIVE
+                        </div>
                     </div>
                     <div class="text-right">
-                        <div class="font-bold text-slate-900" th:text="${#numbers.formatDecimal(cons.totalCost, 1, 'POINT', 2, 'COMMA')} + ' TL'">88.000 TL</div>
-                        <div class="text-[10px] text-slate-500" th:text="${cons.quantity} + ' ' + ${cons.unit} + ' x ' + ${cons.unitCost} + ' TL'">400 TORBA</div>
+                        <div class="font-bold text-slate-900"
+                             th:text="${#numbers.formatDecimal(cons.totalCost, 1, 'POINT', 2, 'COMMA')} + ' TL'">88.000
+                            TL
+                        </div>
+                        <div class="text-[10px] text-slate-500"
+                             th:text="${cons.quantity} + ' ' + ${cons.unit} + ' x ' + ${cons.unitCost} + ' TL'">400
+                            TORBA
+                        </div>
                     </div>
                 </div>
                 <div th:if="${#lists.isEmpty(consumptions)}" class="py-6 text-center text-xs text-slate-400">
@@ -119,17 +143,20 @@
             </div>
 
             <!-- Quick Add Consumption Form -->
-            <form th:action="@{'/projects/' + ${project.id} + '/consumptions'}" method="post" class="pt-3 border-t border-slate-100 space-y-3">
+            <form th:action="@{'/projects/' + ${project.id} + '/consumptions'}" method="post"
+                  class="pt-3 border-t border-slate-100 space-y-3">
                 <div class="text-xs font-bold text-slate-800">Sarfiyat / Puantaj Girişi</div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <select name="locationId" required class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
                         <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.locationName}"></option>
                     </select>
-                    <select name="consumptionType" required class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
+                    <select name="consumptionType" required
+                            class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
                         <option th:each="t : ${consumptionTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
                     </select>
                 </div>
-                <input type="text" name="itemName" placeholder="Açıklama / Malzeme (Örn: 1. Sınıf Usta Puantajı)" required
+                <input type="text" name="itemName" placeholder="Açıklama / Malzeme (Örn: 1. Sınıf Usta Puantajı)"
+                       required
                        class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <input type="number" step="0.1" name="quantity" placeholder="Miktar" required
@@ -139,7 +166,8 @@
                     <input type="number" step="0.1" name="unitCost" placeholder="Birim Fiyat" required
                            class="px-2.5 py-2.5 text-sm border border-slate-200 rounded-lg">
                 </div>
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-lg">
+                <button type="submit"
+                        class="w-full min-h-11 py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-lg">
                     Sarfiyatı Kaydet
                 </button>
             </form>

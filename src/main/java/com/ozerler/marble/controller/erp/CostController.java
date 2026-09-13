@@ -43,9 +43,9 @@ public class CostController {
 
     @PostMapping("/simulate-pricing")
     public String simulatePricing(@RequestParam("unitCost") BigDecimal unitCost,
-                                 @RequestParam("targetMarginPct") BigDecimal targetMarginPct,
-                                 @RequestParam(value = "discountPct", defaultValue = "0") BigDecimal discountPct,
-                                 Model model) {
+                                  @RequestParam("targetMarginPct") BigDecimal targetMarginPct,
+                                  @RequestParam(value = "discountPct", defaultValue = "0") BigDecimal discountPct,
+                                  Model model) {
 
         Map<String, Object> simulation = pricingService.simulatePrice(unitCost, targetMarginPct, discountPct);
         model.addAttribute("sim", simulation);

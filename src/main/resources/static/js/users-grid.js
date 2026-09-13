@@ -18,7 +18,7 @@ function initUsersGrid() {
                 "Accept": "application/json",
             },
         },
-        ajaxURLGenerator: function(url, config, params) {
+        ajaxURLGenerator: function (url, config, params) {
             const searchVal = document.getElementById("search-input")?.value || "";
             const filters = currentUserFilters();
             let sorterField = "";
@@ -36,19 +36,19 @@ function initUsersGrid() {
             }
             return query;
         },
-        ajaxResponse: function(url, params, response) {
+        ajaxResponse: function (url, params, response) {
             camelizeTabulatorRows(response);
             return applyTabulatorTotal("users-table", response);
         },
         placeholder: "Kullanıcı kaydı bulunamadı.",
         columns: [
             erpResponsiveCollapseColumn(),
-            { title: "ID", field: "id", width: 70, sorter: "number" },
+            {title: "ID", field: "id", width: 70, sorter: "number"},
             {
                 title: "Kullanıcı",
                 field: "username",
                 responsive: 0,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const row = cell.getRow().getData();
                     return `<div>
                         <span class="font-semibold text-slate-800">${row.fullName || row.username}</span>
@@ -56,11 +56,11 @@ function initUsersGrid() {
                     </div>`;
                 }
             },
-            { title: "E-Posta", field: "email", minWidth: 200 },
+            {title: "E-Posta", field: "email", minWidth: 200},
             {
                 title: "Roller",
                 field: "roles",
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const roles = cell.getValue();
                     if (!roles || roles.length === 0) return `<span class="text-xs text-slate-400">Rol Yok</span>`;
                     return roles.map(r => {
@@ -74,7 +74,7 @@ function initUsersGrid() {
                 title: "Durum",
                 field: "enabled",
                 width: 110,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const enabled = cell.getValue();
                     const id = cell.getRow().getData().id;
                     return `<button onclick="toggleUserStatus(${id})" class="px-2.5 py-1 text-xs font-medium rounded-full cursor-pointer transition ${enabled ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-rose-100 text-rose-800 hover:bg-rose-200'}">
@@ -86,7 +86,7 @@ function initUsersGrid() {
                 title: "Kayıt Tarihi",
                 field: "createdAt",
                 width: 140,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const val = cell.getValue();
                     if (!val) return "-";
                     return new Date(val).toLocaleDateString('tr-TR');
@@ -97,13 +97,13 @@ function initUsersGrid() {
                 width: 130,
                 headerSort: false,
                 responsive: 0,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const id = cell.getRow().getData().id;
                     return gridActionsHtml([
-                        { icon: 'edit-3', label: 'Düzenle', href: '/admin/users/' + id + '/edit' },
-                        { icon: 'key', label: 'Şifre Sıfırla', href: '/admin/users/' + id + '/reset-password' },
-                        { divider: true },
-                        { icon: 'trash-2', label: 'Sil', onclick: 'deleteUser(' + id + ')', danger: true }
+                        {icon: 'edit-3', label: 'Düzenle', href: '/admin/users/' + id + '/edit'},
+                        {icon: 'key', label: 'Şifre Sıfırla', href: '/admin/users/' + id + '/reset-password'},
+                        {divider: true},
+                        {icon: 'trash-2', label: 'Sil', onclick: 'deleteUser(' + id + ')', danger: true}
                     ]);
                 }
             }
@@ -112,7 +112,7 @@ function initUsersGrid() {
 
     attachTabulatorPagingAnimation(usersTable);
     bindGridSearch(usersTable, "search-input");
-    usersTable.on("renderComplete", function() {
+    usersTable.on("renderComplete", function () {
         if (window.lucide) window.lucide.createIcons();
         if (window.htmx && usersTable.element) {
             window.htmx.process(usersTable.element);

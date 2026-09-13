@@ -4,20 +4,10 @@ import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.CutItem;
-import com.ozerler.marble.model.CutOrder;
-import com.ozerler.marble.model.Project;
-import com.ozerler.marble.model.ProjectLocation;
-import com.ozerler.marble.model.ScrapLog;
-import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.ScrapReasonCode;
 import com.ozerler.marble.model.enums.SlabStatus;
-import com.ozerler.marble.repository.CutItemRepository;
-import com.ozerler.marble.repository.CutOrderRepository;
-import com.ozerler.marble.repository.ProjectLocationRepository;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.repository.ScrapLogRepository;
-import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -181,9 +171,9 @@ public class WorkshopCutService {
     }
 
     private List<CutItem> generateCutItems(CutOrder order, Slab sourceSlab, ProjectLocation location,
-                                          int piecesCount, BigDecimal targetWidthCm, BigDecimal targetLengthCm,
-                                          BigDecimal itemArea, BigDecimal unitCost,
-                                          String edgeFinish, String targetLocationDesc) {
+                                           int piecesCount, BigDecimal targetWidthCm, BigDecimal targetLengthCm,
+                                           BigDecimal itemArea, BigDecimal unitCost,
+                                           String edgeFinish, String targetLocationDesc) {
         String finish = StringUtils.isNotBlank(edgeFinish) ? edgeFinish : Constants.DEFAULT_EDGE_FINISH;
         String resolvedLocation = StringUtils.isNotBlank(targetLocationDesc)
                 ? targetLocationDesc

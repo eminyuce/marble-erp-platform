@@ -1,11 +1,7 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.PasswordResetRequest;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.dto.UserCreateRequest;
-import com.ozerler.marble.dto.UserDto;
-import com.ozerler.marble.dto.UserUpdateRequest;
+import com.ozerler.marble.dto.*;
 import com.ozerler.marble.model.Role;
 import com.ozerler.marble.model.User;
 import com.ozerler.marble.repository.RoleRepository;

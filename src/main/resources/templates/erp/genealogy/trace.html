@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>Taşın Dijital Soy Ağacı | Özerler Mermer ERP</title>
 </head>
@@ -10,7 +11,8 @@
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Soy Ağacı')}"></div>
             <h2 class="admin-page-title">Soy Ağacı</h2>
-            <p class="erp-list-lead">Blok, plaka veya parça kodu ile ocaktan şantiyeye izlenebilirlik zincirini görüntüleyin.</p>
+            <p class="erp-list-lead">Blok, plaka veya parça kodu ile ocaktan şantiyeye izlenebilirlik zincirini
+                görüntüleyin.</p>
         </div>
     </div>
 
@@ -36,7 +38,8 @@
     </div>
 
     <!-- Error message if not found -->
-    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+    <div th:if="${errorMessage}"
+         class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
         <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
         <span th:text="${errorMessage}">Hata</span>
     </div>
@@ -51,14 +54,18 @@
                         <i data-lucide="mountain" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <div class="text-xs font-semibold text-[#0e7490] uppercase tracking-wider">KAYNAK BLOK KİMLİĞİ</div>
-                        <h2 class="text-xl font-black text-[#102a43] tracking-tight" th:text="${tree.title}">BLK-2026-00125</h2>
-                        <div class="text-xs text-slate-500 mt-0.5" th:text="${tree.subtitle}">Muğla Beyaz (Ekstra Beyaz Kristalize)</div>
+                        <div class="text-xs font-semibold text-[#0e7490] uppercase tracking-wider">KAYNAK BLOK KİMLİĞİ
+                        </div>
+                        <h2 class="text-xl font-black text-[#102a43] tracking-tight" th:text="${tree.title}">
+                            BLK-2026-00125</h2>
+                        <div class="text-xs text-slate-500 mt-0.5" th:text="${tree.subtitle}">Muğla Beyaz (Ekstra Beyaz
+                            Kristalize)
+                        </div>
                     </div>
                 </div>
                 <div class="text-right">
                     <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 border border-emerald-200 text-emerald-700"
-                          th:text="'● ' + ${tree.status}">
+                         th:text="'● ' + ${tree.status}">
                         ● Fabrika Stoğunda
                     </div>
                     <div class="text-xs text-slate-500 mt-1 font-mono" th:text="${tree.details}">
@@ -67,42 +74,58 @@
                 </div>
             </div>
 
-            <div th:if="${tree.alert}" class="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-center gap-2">
+            <div th:if="${tree.alert}"
+                 class="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-center gap-2">
                 <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600 flex-shrink-0"></i>
                 <span th:text="${tree.alertMessage}">Bu blokta çatlak riski tespit edildi!</span>
             </div>
 
             <!-- Children Nodes: Production Orders -->
             <div class="mt-6 space-y-6">
-                <div th:each="orderNode : ${tree.children}" class="bg-[#f5f7fa] rounded-xl p-5 border border-[#d7e0e7] space-y-4">
+                <div th:each="orderNode : ${tree.children}"
+                     class="bg-[#f5f7fa] rounded-xl p-5 border border-[#d7e0e7] space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                         <div class="flex items-center gap-2">
                             <i data-lucide="factory" class="w-4 h-4 text-[#2b6cb0]"></i>
                             <span class="font-bold text-[#102a43] text-sm" th:text="${orderNode.title}">Katrak Kesim Emri</span>
-                            <span class="text-xs text-slate-500" th:text="'(' + ${orderNode.subtitle} + ')'">Katrak-01</span>
+                            <span class="text-xs text-slate-500"
+                                  th:text="'(' + ${orderNode.subtitle} + ')'">Katrak-01</span>
                         </div>
-                        <div class="text-xs text-slate-500" th:text="${orderNode.details}">Operatör: Ahmet Kaya | Süre: 8.5 sa</div>
+                        <div class="text-xs text-slate-500" th:text="${orderNode.details}">Operatör: Ahmet Kaya | Süre:
+                            8.5 sa
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div th:each="slabNode : ${orderNode.children}" class="bg-white rounded-lg p-3.5 border border-[#d7e0e7] space-y-2">
+                        <div th:each="slabNode : ${orderNode.children}"
+                             class="bg-white rounded-lg p-3.5 border border-[#d7e0e7] space-y-2">
                             <div class="flex items-center justify-between">
                                 <span class="font-mono text-xs font-bold text-[#0e7490]" th:text="${slabNode.title}">SLB-2026-00851</span>
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold"
                                       th:classappend="${slabNode.alert ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}"
                                       th:text="${slabNode.status}">SERBEST</span>
                             </div>
-                            <div class="text-[11px] text-slate-600" th:text="${slabNode.subtitle}">Cilalı - A Kalite</div>
-                            <div class="text-[10px] text-slate-500" th:text="${slabNode.details}">Ebat: 175x285 cm • 1.185,57 TL/m²</div>
+                            <div class="text-[11px] text-slate-600" th:text="${slabNode.subtitle}">Cilalı - A Kalite
+                            </div>
+                            <div class="text-[10px] text-slate-500" th:text="${slabNode.details}">Ebat: 175x285 cm •
+                                1.185,57 TL/m²
+                            </div>
 
-                            <div th:if="${!#lists.isEmpty(slabNode.children)}" class="mt-2 pt-2 border-t border-slate-100 space-y-1">
-                                <div class="text-[10px] font-bold text-slate-500 uppercase">Ebatlı Mamuller (Atölye Kesimi):</div>
-                                <div th:each="itemNode : ${slabNode.children}" class="p-1.5 bg-[#f5f7fa] rounded text-[11px] text-slate-700 flex justify-between items-center">
+                            <div th:if="${!#lists.isEmpty(slabNode.children)}"
+                                 class="mt-2 pt-2 border-t border-slate-100 space-y-1">
+                                <div class="text-[10px] font-bold text-slate-500 uppercase">Ebatlı Mamuller (Atölye
+                                    Kesimi):
+                                </div>
+                                <div th:each="itemNode : ${slabNode.children}"
+                                     class="p-1.5 bg-[#f5f7fa] rounded text-[11px] text-slate-700 flex justify-between items-center">
                                     <div>
                                         <span class="font-mono text-[#0e7490] font-bold" th:text="${itemNode.title}">ITM-00101</span>
-                                        <div class="text-[9px] text-slate-500" th:text="${itemNode.subtitle}">Hedef: Lobi Duvar</div>
+                                        <div class="text-[9px] text-slate-500" th:text="${itemNode.subtitle}">Hedef:
+                                            Lobi Duvar
+                                        </div>
                                     </div>
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] bg-sky-50 text-sky-800" th:text="${itemNode.status}">HAZIR</span>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] bg-sky-50 text-sky-800"
+                                          th:text="${itemNode.status}">HAZIR</span>
                                 </div>
                             </div>
                         </div>

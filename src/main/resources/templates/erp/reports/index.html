@@ -29,7 +29,8 @@
 
     <aside class="erp-callout" role="note">
         <i data-lucide="info"></i>
-        <p><strong>Nasıl kullanılır:</strong> İstediğiniz raporu seçin, tabloyu kontrol edin, ardından Excel veya CSV indirin. Dosya anında oluşur; ayrı bir kuyruk yoktur.</p>
+        <p><strong>Nasıl kullanılır:</strong> İstediğiniz raporu seçin, tabloyu kontrol edin, ardından Excel veya CSV
+            indirin. Dosya anında oluşur; ayrı bir kuyruk yoktur.</p>
     </aside>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -106,25 +107,27 @@
         <div class="erp-report-table-wrap rounded-2xl border border-slate-200">
             <table class="w-full text-left text-xs text-slate-700">
                 <thead class="bg-gradient-to-b from-[#f4f8fc] to-[#e8f0f8] text-[#1a365d] uppercase text-[11px] tracking-wider font-bold">
-                    <tr>
-                        <th class="p-3.5 text-center w-12">#</th>
-                        <th th:each="header : ${entry.value.headers}"
-                            class="p-3.5 whitespace-nowrap"
-                            th:text="${header}">Başlık</th>
-                    </tr>
+                <tr>
+                    <th class="p-3.5 text-center w-12">#</th>
+                    <th th:each="header : ${entry.value.headers}"
+                        class="p-3.5 whitespace-nowrap"
+                        th:text="${header}">Başlık
+                    </th>
+                </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <tr th:if="${#lists.isEmpty(entry.value.rows)}">
-                        <td th:colspan="${entry.value.headers.length + 1}" class="p-8 text-center text-slate-400">
-                            Bu raporda henüz kayıt yok. Veri oluşunca tablo ve indirme dosyası dolacaktır.
-                        </td>
-                    </tr>
-                    <tr th:each="row, stat : ${entry.value.rows}" class="hover:bg-slate-50/80 transition">
-                        <td class="p-3.5 text-center font-mono text-[11px] text-slate-400" th:text="${stat.count}">1</td>
-                        <td th:each="col : ${row}"
-                            class="p-3.5 whitespace-nowrap text-slate-800"
-                            th:text="${col}">Değer</td>
-                    </tr>
+                <tr th:if="${#lists.isEmpty(entry.value.rows)}">
+                    <td th:colspan="${entry.value.headers.length + 1}" class="p-8 text-center text-slate-400">
+                        Bu raporda henüz kayıt yok. Veri oluşunca tablo ve indirme dosyası dolacaktır.
+                    </td>
+                </tr>
+                <tr th:each="row, stat : ${entry.value.rows}" class="hover:bg-slate-50/80 transition">
+                    <td class="p-3.5 text-center font-mono text-[11px] text-slate-400" th:text="${stat.count}">1</td>
+                    <td th:each="col : ${row}"
+                        class="p-3.5 whitespace-nowrap text-slate-800"
+                        th:text="${col}">Değer
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>

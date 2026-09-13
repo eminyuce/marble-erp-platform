@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>Yeni Proje | Özerler Mermer ERP</title>
 </head>
@@ -22,13 +23,15 @@
                     <div th:replace="~{fragments/form-page :: section('Kimlik', 'Proje kodu, adı ve işveren')}"></div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="projectCode">Proje kodu <span class="req">*</span></label>
+                            <label class="erp-form-label" for="projectCode">Proje kodu <span
+                                    class="req">*</span></label>
                             <input id="projectCode" type="text" name="projectCode" required
                                    class="erp-form-input" style="font-family:var(--font-mono);"
                                    placeholder="PROJ-2026-0043">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="customerName">Müşteri / işveren <span class="req">*</span></label>
+                            <label class="erp-form-label" for="customerName">Müşteri / işveren <span
+                                    class="req">*</span></label>
                             <input id="customerName" type="text" name="customerName" required class="erp-form-input"
                                    placeholder="ABC İnşaat A.Ş.">
                         </div>
@@ -44,13 +47,17 @@
                     <div th:replace="~{fragments/form-page :: section('Bütçe', 'Sözleşme bedeli ve tahmini maliyet')}"></div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="contractValue">Sözleşme bedeli (TL) <span class="req">*</span></label>
-                            <input id="contractValue" type="number" step="0.01" name="contractValue" required class="erp-form-input"
+                            <label class="erp-form-label" for="contractValue">Sözleşme bedeli (TL) <span
+                                    class="req">*</span></label>
+                            <input id="contractValue" type="number" step="0.01" name="contractValue" required
+                                   class="erp-form-input"
                                    placeholder="12400000.00">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="estimatedCost">Tahmini bütçe (TL) <span class="req">*</span></label>
-                            <input id="estimatedCost" type="number" step="0.01" name="estimatedCost" required class="erp-form-input"
+                            <label class="erp-form-label" for="estimatedCost">Tahmini bütçe (TL) <span
+                                    class="req">*</span></label>
+                            <input id="estimatedCost" type="number" step="0.01" name="estimatedCost" required
+                                   class="erp-form-input"
                                    placeholder="7800000.00">
                         </div>
                     </div>

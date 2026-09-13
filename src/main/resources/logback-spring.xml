@@ -5,13 +5,19 @@
     <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="marble-erp-platform"/>
     <springProperty scope="context" name="activeProfile" source="spring.profiles.active" defaultValue="default"/>
 
-    <springProperty scope="context" name="asyncQueueCapacity" source="logging.async.queue-capacity" defaultValue="8192"/>
-    <springProperty scope="context" name="asyncHighWaterMarkPercent" source="logging.async.high-water-mark-percent" defaultValue="90"/>
-    <springProperty scope="context" name="asyncOverflowPolicy" source="logging.async.overflow-policy" defaultValue="DROP_LOW_PRIORITY"/>
+    <springProperty scope="context" name="asyncQueueCapacity" source="logging.async.queue-capacity"
+                    defaultValue="8192"/>
+    <springProperty scope="context" name="asyncHighWaterMarkPercent" source="logging.async.high-water-mark-percent"
+                    defaultValue="90"/>
+    <springProperty scope="context" name="asyncOverflowPolicy" source="logging.async.overflow-policy"
+                    defaultValue="DROP_LOW_PRIORITY"/>
     <springProperty scope="context" name="asyncBatchSize" source="logging.async.batch-size" defaultValue="256"/>
-    <springProperty scope="context" name="asyncDrainTimeoutMillis" source="logging.async.drain-timeout-millis" defaultValue="5000"/>
-    <springProperty scope="context" name="asyncPollTimeoutMillis" source="logging.async.poll-timeout-millis" defaultValue="100"/>
-    <springProperty scope="context" name="asyncIncludeCallerData" source="logging.async.include-caller-data" defaultValue="false"/>
+    <springProperty scope="context" name="asyncDrainTimeoutMillis" source="logging.async.drain-timeout-millis"
+                    defaultValue="5000"/>
+    <springProperty scope="context" name="asyncPollTimeoutMillis" source="logging.async.poll-timeout-millis"
+                    defaultValue="100"/>
+    <springProperty scope="context" name="asyncIncludeCallerData" source="logging.async.include-caller-data"
+                    defaultValue="false"/>
 
     <!-- Structured JSON Console Appender -->
     <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">

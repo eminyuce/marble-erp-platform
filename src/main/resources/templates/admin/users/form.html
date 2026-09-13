@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title th:text="${(isEdit ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı') + ' | Özerler Mermer ERP'}">Kullanıcı</title>
 </head>
@@ -35,7 +36,8 @@
                                    placeholder="Örn: Ahmet"
                                    class="erp-form-input"
                                    th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid'">
-                            <p th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}" class="erp-form-field-error"></p>
+                            <p th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"
+                               class="erp-form-field-error"></p>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="lastName">Soyad <span class="req">*</span></label>
@@ -43,16 +45,20 @@
                                    placeholder="Örn: Yılmaz"
                                    class="erp-form-input"
                                    th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid'">
-                            <p th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}" class="erp-form-field-error"></p>
+                            <p th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"
+                               class="erp-form-field-error"></p>
                         </div>
                         <div class="erp-form-field erp-form-field--full" th:if="${!isEdit}">
-                            <label class="erp-form-label" for="username">Kullanıcı adı <span class="req">*</span></label>
+                            <label class="erp-form-label" for="username">Kullanıcı adı <span
+                                    class="req">*</span></label>
                             <input id="username" type="text" th:field="*{username}" required autocomplete="username"
                                    placeholder="örnek.kullanici"
                                    class="erp-form-input"
                                    th:classappend="${#fields.hasErrors('username')} ? 'is-invalid'">
-                            <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="erp-form-field-error"></p>
-                            <p th:unless="${#fields.hasErrors('username')}" class="erp-form-hint">Girişte kullanılır; oluşturulduktan sonra değiştirilemez.</p>
+                            <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}"
+                               class="erp-form-field-error"></p>
+                            <p th:unless="${#fields.hasErrors('username')}" class="erp-form-hint">Girişte kullanılır;
+                                oluşturulduktan sonra değiştirilemez.</p>
                         </div>
                     </div>
                 </section>
@@ -66,7 +72,8 @@
                                    placeholder="ad.soyad@sirket.com"
                                    class="erp-form-input"
                                    th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
-                            <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="erp-form-field-error"></p>
+                            <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}"
+                               class="erp-form-field-error"></p>
                         </div>
                     </div>
                 </section>
@@ -79,8 +86,10 @@
                                placeholder="En az 6 karakter"
                                class="erp-form-input"
                                th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'">
-                        <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="erp-form-field-error"></p>
-                        <p th:unless="${#fields.hasErrors('password')}" class="erp-form-hint">Kullanıcı ilk girişte bu şifreyi kullanır; daha sonra kendi şifresini belirleyebilir.</p>
+                        <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}"
+                           class="erp-form-field-error"></p>
+                        <p th:unless="${#fields.hasErrors('password')}" class="erp-form-hint">Kullanıcı ilk girişte bu
+                            şifreyi kullanır; daha sonra kendi şifresini belirleyebilir.</p>
                     </div>
                 </section>
 

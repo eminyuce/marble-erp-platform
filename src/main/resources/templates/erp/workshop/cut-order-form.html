@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>Yeni Ebatlama Emri | Özerler Mermer ERP</title>
 </head>
@@ -22,7 +23,8 @@
                     <div th:replace="~{fragments/form-page :: section('Kaynak ve hedef', 'Kesilecek plaka ve mahal')}"></div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field erp-form-field--full">
-                            <label class="erp-form-label" for="slabId">Kesilecek plaka (ambar) <span class="req">*</span></label>
+                            <label class="erp-form-label" for="slabId">Kesilecek plaka (ambar) <span
+                                    class="req">*</span></label>
                             <select id="slabId" name="slabId" required class="erp-form-select">
                                 <option value="" disabled selected>Plaka seçin</option>
                                 <option th:each="s : ${availableSlabs}" th:value="${s.id}"
@@ -49,15 +51,19 @@
                     <div class="erp-form-grid--3">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="piecesCount">Adet <span class="req">*</span></label>
-                            <input id="piecesCount" type="number" name="piecesCount" value="4" min="1" required class="erp-form-input">
+                            <input id="piecesCount" type="number" name="piecesCount" value="4" min="1" required
+                                   class="erp-form-input">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="targetWidthCm">En (cm) <span class="req">*</span></label>
-                            <input id="targetWidthCm" type="number" name="targetWidthCm" value="80" required class="erp-form-input">
+                            <input id="targetWidthCm" type="number" name="targetWidthCm" value="80" required
+                                   class="erp-form-input">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="targetLengthCm">Boy (cm) <span class="req">*</span></label>
-                            <input id="targetLengthCm" type="number" name="targetLengthCm" value="120" required class="erp-form-input">
+                            <label class="erp-form-label" for="targetLengthCm">Boy (cm) <span
+                                    class="req">*</span></label>
+                            <input id="targetLengthCm" type="number" name="targetLengthCm" value="120" required
+                                   class="erp-form-input">
                         </div>
                     </div>
                 </section>
@@ -66,7 +72,8 @@
                     <div th:replace="~{fragments/form-page :: section('Operasyon', 'Makine, operatör ve kenar işlemi')}"></div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="machineName">Makine (köprü kesme / CNC) <span class="req">*</span></label>
+                            <label class="erp-form-label" for="machineName">Makine (köprü kesme / CNC) <span
+                                    class="req">*</span></label>
                             <input id="machineName" type="text" name="machineName" required
                                    class="erp-form-input" placeholder="Köprü Kesme - CNC 01">
                         </div>
@@ -77,11 +84,13 @@
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="edgeFinish">Kenar işlemi</label>
-                            <input id="edgeFinish" type="text" name="edgeFinish" class="erp-form-input" placeholder="PAHLI_CILALI">
+                            <input id="edgeFinish" type="text" name="edgeFinish" class="erp-form-input"
+                                   placeholder="PAHLI_CILALI">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="notes">Notlar</label>
-                            <input id="notes" type="text" name="notes" class="erp-form-input" placeholder="Özel kesim notu">
+                            <input id="notes" type="text" name="notes" class="erp-form-input"
+                                   placeholder="Özel kesim notu">
                         </div>
                     </div>
                 </section>

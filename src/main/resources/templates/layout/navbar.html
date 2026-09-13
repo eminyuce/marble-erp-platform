@@ -95,7 +95,7 @@
                        class="admin-topbar-search-input"
                        title="Tüm kayıtlarda arama yapar: blok kodu, plaka, şantiye, sipariş no, müşteri, tedarikçi ve kullanıcı. En az 2 karakter yazın."
                        aria-label="Tüm sistemde global arama"
-                       autocomplete="off" />
+                       autocomplete="off"/>
 
                 <!-- Clear button -->
                 <button type="button"
@@ -135,8 +135,10 @@
                             Global Arama
                         </div>
                         <div class="admin-topbar-search-tooltip-body">
-                            Tüm kayıtlarda arama yapar: blok kodu, plaka, şantiye, sipariş no, müşteri, tedarikçi ve kullanıcı.<br>
-                            <span class="text-amber-300 font-semibold">En az 2 karakter yazın;</span> sonuca tıklayınca ilgili kayda gidersiniz.
+                            Tüm kayıtlarda arama yapar: blok kodu, plaka, şantiye, sipariş no, müşteri, tedarikçi ve
+                            kullanıcı.<br>
+                            <span class="text-amber-300 font-semibold">En az 2 karakter yazın;</span> sonuca tıklayınca
+                            ilgili kayda gidersiniz.
                         </div>
                     </div>
                 </div>
@@ -171,7 +173,8 @@
             <div x-show="!loading && total > 0" class="admin-topbar-search-results">
                 <div class="admin-topbar-search-dropdown-header">
                     <span class="text-xs font-semibold text-slate-500">Arama Sonuçları</span>
-                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#2b6cb0]" x-text="total + ' kayıt'"></span>
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#2b6cb0]"
+                          x-text="total + ' kayıt'"></span>
                 </div>
                 <div class="admin-topbar-search-items-list">
                     <template x-for="hit in results" :key="hit.type + '-' + hit.url + '-' + hit.title">
@@ -183,11 +186,13 @@
                             <div class="admin-topbar-search-item-content">
                                 <div class="flex items-center gap-1.5">
                                     <span class="admin-topbar-search-badge" x-text="hit.typeLabel"></span>
-                                    <span class="text-xs font-bold text-slate-800 group-hover:text-[#2b6cb0] truncate" x-text="hit.title"></span>
+                                    <span class="text-xs font-bold text-slate-800 group-hover:text-[#2b6cb0] truncate"
+                                          x-text="hit.title"></span>
                                 </div>
                                 <div class="text-[11px] text-slate-500 truncate" x-text="hit.subtitle || ''"></div>
                             </div>
-                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition shrink-0"></i>
+                            <i data-lucide="chevron-right"
+                               class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition shrink-0"></i>
                         </a>
                     </template>
                 </div>
@@ -213,7 +218,8 @@
             <i data-lucide="x" class="w-4 h-4" x-show="mobileSearchOpen" x-cloak></i>
         </button>
         <span class="admin-topbar-user" sec:authentication="name">admin</span>
-        <a th:href="@{/account/change-password}" class="admin-topbar-logout" title="Şifre Değiştir" style="text-decoration:none;">
+        <a th:href="@{/account/change-password}" class="admin-topbar-logout" title="Şifre Değiştir"
+           style="text-decoration:none;">
             <i data-lucide="key-round" class="w-4 h-4"></i>
             <span>Şifre Değiştir</span>
         </a>

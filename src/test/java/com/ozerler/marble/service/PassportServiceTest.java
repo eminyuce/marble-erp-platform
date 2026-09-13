@@ -1,8 +1,6 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.dto.PassportResult;
-import com.ozerler.marble.model.Block;
-import com.ozerler.marble.model.CutItem;
 import com.ozerler.marble.model.Pallet;
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.repository.BlockRepository;

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title th:text="${order.orderNo + ' | Özerler Mermer ERP'}">Sipariş Detay</title>
 </head>
@@ -10,11 +11,14 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
             <div class="flex items-start sm:items-center gap-2 flex-wrap">
-                <a th:href="@{/sales}" class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100" aria-label="Satışlara dön">
+                <a th:href="@{/sales}" class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                   aria-label="Satışlara dön">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 </a>
-                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight min-w-0 break-words" th:text="${order.customer.companyName}">Müşteri Adı</h1>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-800" th:text="${order.orderNo}">SAT-001</span>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight min-w-0 break-words"
+                    th:text="${order.customer.companyName}">Müşteri Adı</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-800"
+                      th:text="${order.orderNo}">SAT-001</span>
             </div>
             <p class="text-sm text-slate-500 mt-1">
                 <span th:text="'Müşteri Tipi: ' + ${order.customer.customerType.label}">Tip</span> ·
@@ -35,7 +39,8 @@
     <!-- Confirm button -->
     <div th:if="${order.status.name() == 'DRAFT'}" class="flex items-center gap-2">
         <form th:action="@{'/sales/' + ${order.id} + '/confirm'}" method="post" style="display:inline">
-            <button type="submit" class="min-h-11 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-sm">
+            <button type="submit"
+                    class="min-h-11 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-sm">
                 <i data-lucide="check" class="w-4 h-4 inline-block mr-1"></i> Siparişi Onayla
             </button>
         </form>
@@ -56,9 +61,11 @@
         </div>
 
         <div th:unless="${order.items.isEmpty()}" class="space-y-2">
-            <div th:each="item : ${order.items}" class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div th:each="item : ${order.items}"
+                 class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div class="min-w-0">
-                    <strong class="text-sm font-bold text-slate-800 break-words" th:text="${item.description}">Ürün</strong>
+                    <strong class="text-sm font-bold text-slate-800 break-words"
+                            th:text="${item.description}">Ürün</strong>
                     <div class="text-[11px] text-slate-500">
                         <span th:if="${item.slab != null}" th:text="'Plaka: ' + ${item.slab.slabCode}">Plaka</span>
                         <span th:if="${item.block != null}" th:text="'Blok: ' + ${item.block.blockCode}">Blok</span>
@@ -68,7 +75,8 @@
                     <span th:text="${#numbers.formatDecimal(item.quantity, 1, 2)} + ' ' + ${item.unit}">1 m2</span>
                     <span>×</span>
                     <span th:text="${#numbers.formatDecimal(item.unitPrice, 1, 'POINT', 0, 'COMMA')} + ' TL'">100 TL</span>
-                    <span class="font-bold text-slate-900" th:text="${#numbers.formatDecimal(item.lineTotal, 1, 'POINT', 0, 'COMMA')} + ' TL'">100 TL</span>
+                    <span class="font-bold text-slate-900"
+                          th:text="${#numbers.formatDecimal(item.lineTotal, 1, 'POINT', 0, 'COMMA')} + ' TL'">100 TL</span>
                 </div>
             </div>
         </div>
@@ -104,7 +112,8 @@
                            class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
                 </div>
             </div>
-            <button type="submit" class="min-h-11 w-full sm:w-auto px-5 py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-lg shadow-sm">
+            <button type="submit"
+                    class="min-h-11 w-full sm:w-auto px-5 py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-lg shadow-sm">
                 Kalemi Ekle
             </button>
         </form>

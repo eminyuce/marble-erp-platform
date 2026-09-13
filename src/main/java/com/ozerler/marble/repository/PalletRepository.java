@@ -9,5 +9,6 @@ import java.util.Optional;
 @Repository
 public interface PalletRepository extends JpaRepository<Pallet, Long> {
     Optional<Pallet> findByPalletCode(String palletCode);
+
     Optional<Pallet> findByQrCodeHash(String qrCodeHash);
 }

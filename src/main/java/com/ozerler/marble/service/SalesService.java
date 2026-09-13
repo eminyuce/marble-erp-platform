@@ -3,11 +3,7 @@ package com.ozerler.marble.service;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.SalesOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.Block;
-import com.ozerler.marble.model.Customer;
-import com.ozerler.marble.model.SalesOrder;
-import com.ozerler.marble.model.SalesOrderItem;
-import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CustomerRepository;
@@ -49,7 +45,7 @@ public class SalesService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<SalesOrderDto> getSalesOrdersPaged(int page, int size,
-                                                                 String search, String sortField, String sortDir) {
+                                                                String search, String sortField, String sortDir) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         if (sortField != null && !sortField.isBlank()) {
             Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;

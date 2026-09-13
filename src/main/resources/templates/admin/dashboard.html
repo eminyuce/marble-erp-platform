@@ -67,7 +67,8 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
             <p class="text-sm font-semibold text-[#2b6cb0] tracking-wide">Özerler Mermer</p>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-0.5">Yönetici Paneline Hoş Geldiniz</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-0.5">Yönetici Paneline Hoş
+                Geldiniz</h1>
             <p class="text-sm text-slate-500 mt-1">Tüm modüllere buradan hızlıca erişebilirsiniz.</p>
         </div>
         <a th:href="@{/admin/dashboard/oursitefeatures}"
@@ -79,40 +80,40 @@
 
     <!-- Search Bar -->
     <div class="space-y-2">
-    <form class="flex flex-col sm:flex-row items-stretch gap-2" @submit.prevent="runSearch()">
-        <div class="relative flex-1">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+        <form class="flex flex-col sm:flex-row items-stretch gap-2" @submit.prevent="runSearch()">
+            <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+                </div>
+                <input type="search"
+                       x-model="search"
+                       @input="onInput()"
+                       placeholder="Blok kodu, proje, sipariş no, müşteri veya kullanıcı ara…"
+                       class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-[#2b6cb0]/20 focus:border-[#2b6cb0] outline-none transition placeholder:text-slate-400"
+                       autocomplete="off"/>
             </div>
-            <input type="search"
-                   x-model="search"
-                   @input="onInput()"
-                   placeholder="Blok kodu, proje, sipariş no, müşteri veya kullanıcı ara…"
-                   class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-[#2b6cb0]/20 focus:border-[#2b6cb0] outline-none transition placeholder:text-slate-400"
-                   autocomplete="off" />
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
-            <button type="submit"
-                    class="px-4 py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition cursor-pointer">
-                <i data-lucide="search" class="w-3.5 h-3.5"></i>
-                Ara
-            </button>
-            <button type="button"
-                    x-show="search.length > 0"
-                    @click="clear()"
-                    class="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-semibold rounded-lg flex items-center gap-1.5 transition cursor-pointer">
-                <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                Temizle
-            </button>
-        </div>
-    </form>
-    <p class="flex items-start gap-2 text-xs text-slate-500">
-        <i data-lucide="info" class="w-3.5 h-3.5 text-[#2b6cb0] mt-0.5 shrink-0"></i>
-        <span>
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="submit"
+                        class="px-4 py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition cursor-pointer">
+                    <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                    Ara
+                </button>
+                <button type="button"
+                        x-show="search.length > 0"
+                        @click="clear()"
+                        class="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-semibold rounded-lg flex items-center gap-1.5 transition cursor-pointer">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    Temizle
+                </button>
+            </div>
+        </form>
+        <p class="flex items-start gap-2 text-xs text-slate-500">
+            <i data-lucide="info" class="w-3.5 h-3.5 text-[#2b6cb0] mt-0.5 shrink-0"></i>
+            <span>
             Tüm kayıtlarda arama yapar: blok kodu, plaka, şantiye, sipariş no, müşteri, tedarikçi ve kullanıcı.
             En az 2 karakter yazın; sonuca tıklayınca ilgili kayda gidersiniz.
         </span>
-    </p>
+        </p>
     </div>
 
     <!-- Search results -->
@@ -122,7 +123,8 @@
             <h2 class="text-xl font-black text-slate-900 mt-1">Arama Sonuçları</h2>
             <p class="text-sm text-slate-500 mt-1">
                 <span x-text="total"></span> sonuç:
-                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-xs font-semibold" x-text="search.trim()"></span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-xs font-semibold"
+                      x-text="search.trim()"></span>
             </p>
         </div>
 
@@ -131,7 +133,9 @@
         <div x-show="!loading && total === 0" class="text-center py-10 bg-white border border-slate-200 rounded-xl">
             <i data-lucide="search-x" class="w-10 h-10 text-slate-300 mx-auto mb-3"></i>
             <p class="text-sm text-slate-500">Aramanızla eşleşen kayıt bulunamadı.</p>
-            <button type="button" @click="clear()" class="mt-2 text-sm text-[#2b6cb0] hover:underline font-semibold cursor-pointer">Aramayı Temizle</button>
+            <button type="button" @click="clear()"
+                    class="mt-2 text-sm text-[#2b6cb0] hover:underline font-semibold cursor-pointer">Aramayı Temizle
+            </button>
         </div>
 
         <div x-show="!loading && total > 0" class="space-y-3">
@@ -143,9 +147,11 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-0.5">
-                            <span class="text-[11px] font-bold uppercase tracking-wide text-[#2b6cb0]" x-text="hit.typeLabel"></span>
+                            <span class="text-[11px] font-bold uppercase tracking-wide text-[#2b6cb0]"
+                                  x-text="hit.typeLabel"></span>
                         </div>
-                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition truncate" x-text="hit.title"></div>
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition truncate"
+                             x-text="hit.title"></div>
                         <div class="text-xs text-slate-500 mt-0.5 truncate" x-text="hit.subtitle || ''"></div>
                     </div>
                     <span class="shrink-0 px-3 py-1.5 bg-[#2b6cb0] text-white text-xs font-semibold rounded-lg">Aç</span>
@@ -156,223 +162,258 @@
 
     <div x-show="!searched" class="space-y-6">
 
-    <!-- ════════════════════════════════════════════════════ -->
-    <!-- Ocak & Hammadde                                     -->
-    <!-- ════════════════════════════════════════════════════ -->
-    <div>
-        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Ocak &amp; Hammadde</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- Ocak & Hammadde                                     -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div>
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Ocak &amp; Hammadde</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-            <a th:href="@{/blocks}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                    <i data-lucide="box" class="w-5 h-5 text-amber-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Bloklar</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Ocak blok kayıtları ve sevkiyat</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/blocks}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                        <i data-lucide="box" class="w-5 h-5 text-amber-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Bloklar
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Ocak blok kayıtları ve sevkiyat</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
-            <a th:href="@{/genealogy}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                    <i data-lucide="git-branch" class="w-5 h-5 text-purple-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Soy Ağacı</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Blok-plaka izlenebilirlik</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/genealogy}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                        <i data-lucide="git-branch" class="w-5 h-5 text-purple-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Soy Ağacı
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Blok-plaka izlenebilirlik</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
+            </div>
         </div>
-    </div>
 
-    <!-- ════════════════════════════════════════════════════ -->
-    <!-- Üretim                                              -->
-    <!-- ════════════════════════════════════════════════════ -->
-    <div>
-        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Üretim</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- Üretim                                              -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div>
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Üretim</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-            <a th:href="@{/production}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-                    <i data-lucide="factory" class="w-5 h-5 text-emerald-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Katrak Kesim</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Üretim emirleri ve kesim işlemleri</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/production}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                        <i data-lucide="factory" class="w-5 h-5 text-emerald-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Katrak
+                            Kesim
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Üretim emirleri ve kesim işlemleri</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
-            <a th:href="@{/production/slabs}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <i data-lucide="layers" class="w-5 h-5 text-blue-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Plaka Ambarı</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Plaka stok ve kalite kayıtları</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/production/slabs}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                        <i data-lucide="layers" class="w-5 h-5 text-blue-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Plaka
+                            Ambarı
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Plaka stok ve kalite kayıtları</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
-            <a th:href="@{/workshop}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
-                    <i data-lucide="scissors" class="w-5 h-5 text-teal-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Atölye</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Ebatlama ve yüzey işlemleri</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/workshop}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
+                        <i data-lucide="scissors" class="w-5 h-5 text-teal-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Atölye</div>
+                        <div class="text-xs text-slate-500 mt-0.5">Ebatlama ve yüzey işlemleri</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
+            </div>
         </div>
-    </div>
 
-    <!-- ════════════════════════════════════════════════════ -->
-    <!-- Projeler & Satış                                    -->
-    <!-- ════════════════════════════════════════════════════ -->
-    <div>
-        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Projeler &amp; Satış</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- Projeler & Satış                                    -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div>
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Projeler &amp; Satış</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-            <a th:href="@{/projects}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
-                    <i data-lucide="building-2" class="w-5 h-5 text-indigo-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Şantiyeler</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Proje ve mahal yönetimi</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/projects}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                        <i data-lucide="building-2" class="w-5 h-5 text-indigo-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Şantiyeler
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Proje ve mahal yönetimi</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
-            <a th:href="@{/sales}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center">
-                    <i data-lucide="shopping-cart" class="w-5 h-5 text-cyan-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Satış Siparişleri</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Müşteri siparişleri ve faturalama</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/sales}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center">
+                        <i data-lucide="shopping-cart" class="w-5 h-5 text-cyan-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Satış
+                            Siparişleri
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Müşteri siparişleri ve faturalama</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
-            <a th:href="@{/procurement}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
-                    <i data-lucide="truck" class="w-5 h-5 text-orange-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Satın Alma</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Tedarik siparişleri</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/procurement}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
+                        <i data-lucide="truck" class="w-5 h-5 text-orange-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Satın Alma
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Tedarik siparişleri</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
+            </div>
         </div>
-    </div>
 
-    <!-- ════════════════════════════════════════════════════ -->
-    <!-- Maliyet & Raporlar                                  -->
-    <!-- ════════════════════════════════════════════════════ -->
-    <div>
-        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Maliyet &amp; Raporlar</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- Maliyet & Raporlar                                  -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div>
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Maliyet &amp; Raporlar</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-            <a th:href="@{/costs}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center">
-                    <i data-lucide="calculator" class="w-5 h-5 text-rose-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Masraf Merkezleri</div>
-                    <div class="text-xs text-slate-500 mt-0.5">ABC maliyet takibi</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/costs}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center">
+                        <i data-lucide="calculator" class="w-5 h-5 text-rose-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Masraf
+                            Merkezleri
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">ABC maliyet takibi</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
-            <a th:href="@{/reports}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center">
-                    <i data-lucide="bar-chart-3" class="w-5 h-5 text-violet-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Raporlar</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Excel ve CSV raporları</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/reports}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-violet-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Raporlar
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Excel ve CSV raporları</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
+            </div>
         </div>
-    </div>
 
-    <!-- ════════════════════════════════════════════════════ -->
-    <!-- Yönetim                                             -->
-    <!-- ════════════════════════════════════════════════════ -->
-    <div>
-        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Yönetim</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <!-- ════════════════════════════════════════════════════ -->
+        <!-- Yönetim                                             -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div>
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Yönetim</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-            <a th:href="@{/admin/users}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center">
-                    <i data-lucide="users" class="w-5 h-5 text-sky-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Kullanıcılar</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Kullanıcı ve yetki yönetimi</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/admin/users}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center">
+                        <i data-lucide="users" class="w-5 h-5 text-sky-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">
+                            Kullanıcılar
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Kullanıcı ve yetki yönetimi</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
-            <a th:href="@{/admin/settings}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <i data-lucide="settings" class="w-5 h-5 text-slate-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Sistem Ayarları</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Güvenlik, SMTP ve genel ayarlar</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/admin/settings}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <i data-lucide="settings" class="w-5 h-5 text-slate-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Sistem
+                            Ayarları
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Güvenlik, SMTP ve genel ayarlar</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
-            <a th:href="@{/roles}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                    <i data-lucide="shield" class="w-5 h-5 text-amber-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Roller ve Yetkiler</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Rol açıklamaları</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/roles}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                        <i data-lucide="shield" class="w-5 h-5 text-amber-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Roller ve
+                            Yetkiler
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Rol açıklamaları</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
-            <a th:href="@{/account/change-password}"
-               class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                    <i data-lucide="key" class="w-5 h-5 text-red-600"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Şifre Değiştir</div>
-                    <div class="text-xs text-slate-500 mt-0.5">Kendi şifreni güncelle</div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
-            </a>
+                <a th:href="@{/account/change-password}"
+                   class="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-4 hover:shadow-md hover:border-slate-300 transition cursor-pointer">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+                        <i data-lucide="key" class="w-5 h-5 text-red-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-[#2b6cb0] transition">Şifre
+                            Değiştir
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5">Kendi şifreni güncelle</div>
+                    </div>
+                    <i data-lucide="chevron-right"
+                       class="w-4 h-4 text-slate-300 group-hover:text-[#2b6cb0] transition flex-shrink-0"></i>
+                </a>
 
+            </div>
         </div>
-    </div>
 
     </div>
 

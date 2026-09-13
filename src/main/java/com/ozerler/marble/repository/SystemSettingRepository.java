@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface SystemSettingRepository extends JpaRepository<SystemSetting, Long> {
     Optional<SystemSetting> findByKey(String key);
+
     List<SystemSetting> findByCategory(String category);
 }

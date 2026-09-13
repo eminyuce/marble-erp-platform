@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>Yeni Satış Siparişi | Özerler Mermer ERP</title>
 </head>
@@ -31,7 +32,9 @@
                             <label class="erp-form-label" for="customerId">Müşteri <span class="req">*</span></label>
                             <select id="customerId" name="customerId" required class="erp-form-select">
                                 <option value="" disabled selected>Müşteri seçin</option>
-                                <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName + ' (' + c.customerType.label + ')'}">Müşteri</option>
+                                <option th:each="c : ${customers}" th:value="${c.id}"
+                                        th:text="${c.companyName + ' (' + c.customerType.label + ')'}">Müşteri
+                                </option>
                             </select>
                         </div>
                     </div>

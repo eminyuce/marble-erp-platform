@@ -97,7 +97,7 @@ public class ProjectSiteService {
 
     @Transactional
     public ProjectLocation addLocation(Long projectId, Long parentId, String locationName,
-                                      String floorLevel, String stoneSpec, BigDecimal plannedAreaM2) {
+                                       String floorLevel, String stoneSpec, BigDecimal plannedAreaM2) {
         Objects.requireNonNull(locationName, getMessage("error.location.name.required"));
         Project project = getProjectById(projectId);
         ProjectLocation parent = parentId != null ? projectLocationRepository.findById(parentId).orElse(null) : null;
@@ -118,8 +118,8 @@ public class ProjectSiteService {
 
     @Transactional
     public SiteConsumption recordConsumption(Long projectId, Long locationId,
-                                            ConsumptionType type, String itemName,
-                                            BigDecimal quantity, String unit, BigDecimal unitCost, String notes) {
+                                             ConsumptionType type, String itemName,
+                                             BigDecimal quantity, String unit, BigDecimal unitCost, String notes) {
         Objects.requireNonNull(type, getMessage("error.consumption.type.required"));
         Objects.requireNonNull(quantity, getMessage("error.consumption.quantity.required"));
         Objects.requireNonNull(unitCost, getMessage("error.consumption.unit_cost.required"));

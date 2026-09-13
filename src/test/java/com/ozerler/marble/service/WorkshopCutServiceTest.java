@@ -4,12 +4,7 @@ import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.CutOrder;
-import com.ozerler.marble.repository.CutItemRepository;
-import com.ozerler.marble.repository.CutOrderRepository;
-import com.ozerler.marble.repository.ProjectLocationRepository;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.repository.ScrapLogRepository;
-import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,7 +56,7 @@ class WorkshopCutServiceTest {
                 0, new BigDecimal("60"), new BigDecimal("120"),
                 "PAHLI", "Banyo", "Notlar"
         )).isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("Parça adedi");
+                .hasMessageContaining("Parça adedi");
     }
 
     @Test
@@ -72,7 +67,7 @@ class WorkshopCutServiceTest {
                 5, BigDecimal.ZERO, new BigDecimal("120"),
                 "PAHLI", "Banyo", "Notlar"
         )).isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("Hedef genişlik");
+                .hasMessageContaining("Hedef genişlik");
     }
 
     @Test

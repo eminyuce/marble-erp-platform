@@ -32,7 +32,8 @@ public class PassportController {
                 case "SLAB" -> model.addAttribute("slab", result.getSlab());
                 case "ITEM" -> model.addAttribute("item", result.getItem());
                 case "BLOCK" -> model.addAttribute("block", result.getBlock());
-                default -> {}
+                default -> {
+                }
             }
         } else {
             model.addAttribute("errorMessage", result.getErrorMessage());

@@ -19,9 +19,13 @@
             <h1 class="admin-login__panel-title">Yetkisiz Erişim (403)</h1>
             <p class="admin-login__panel-sub">Bu sayfayı görüntülemek için gerekli rol ve izinlere sahip değilsiniz.</p>
             <div class="flex items-center justify-center gap-3 mt-6">
-                <a th:href="@{/admin/dashboard}" class="admin-login__submit" style="width: auto; padding: 0 18px; text-decoration: none;">Ana Sayfaya Dön</a>
+                <a th:href="@{/admin/dashboard}" class="admin-login__submit"
+                   style="width: auto; padding: 0 18px; text-decoration: none;">Ana Sayfaya Dön</a>
                 <form th:action="@{/logout}" method="post" class="inline">
-                    <button type="submit" class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white">Farklı Hesapla Giriş Yap</button>
+                    <button type="submit"
+                            class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white">
+                        Farklı Hesapla Giriş Yap
+                    </button>
                 </form>
             </div>
         </section>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>Ocak &amp; Blok Yönetimi | Özerler Mermer ERP</title>
 </head>
@@ -10,7 +11,8 @@
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Bloklar')}"></div>
             <h2 class="admin-page-title">Bloklar</h2>
-            <p class="erp-list-lead">3 eksenli ölçüm, teorik hacim/tonaj, kantar tartımı ve dahili fabrika transferi.</p>
+            <p class="erp-list-lead">3 eksenli ölçüm, teorik hacim/tonaj, kantar tartımı ve dahili fabrika
+                transferi.</p>
         </div>
     </div>
 
@@ -18,7 +20,8 @@
 
     <aside class="erp-callout" role="note">
         <i data-lucide="info"></i>
-        <p><strong>İç sevk:</strong> Blok kendi fabrikasına gittiğinde ocak bedeli ve nakliye hammadde maliyetine yazılır; yapay iç kâr eklenmez.</p>
+        <p><strong>İç sevk:</strong> Blok kendi fabrikasına gittiğinde ocak bedeli ve nakliye hammadde maliyetine
+            yazılır; yapay iç kâr eklenmez.</p>
     </aside>
 
     <div class="erp-toolbar">
@@ -35,14 +38,17 @@
                     <i data-lucide="chevron-down" class="w-3 h-3"></i>
                 </button>
                 <div x-show="exportOpen" @click.outside="exportOpen = false" x-transition
-                     class="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50" style="display:none;">
+                     class="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50"
+                     style="display:none;">
                     <button @click="downloadTable(blocksTable, 'bloklar', 'csv'); exportOpen = false"
-                            type="button" class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
+                            type="button"
+                            class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
                         <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
                         <span><strong>CSV</strong> <span class="text-slate-400">(.csv)</span></span>
                     </button>
                     <button @click="downloadTable(blocksTable, 'bloklar', 'xlsx'); exportOpen = false"
-                            type="button" class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
+                            type="button"
+                            class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
                         <span><strong>Excel</strong> <span class="text-slate-400">(.xlsx)</span></span>
                     </button>

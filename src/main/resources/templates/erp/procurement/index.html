@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>Satın Alma Siparişleri | Özerler Mermer ERP</title>
 </head>
@@ -30,14 +31,17 @@
                     <i data-lucide="chevron-down" class="w-3 h-3"></i>
                 </button>
                 <div x-show="exportOpen" @click.outside="exportOpen = false" x-transition
-                     class="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50" style="display:none;">
+                     class="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50"
+                     style="display:none;">
                     <button @click="downloadTable(procurementTable, 'satinalma', 'csv'); exportOpen = false"
-                            type="button" class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
+                            type="button"
+                            class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
                         <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
                         <span><strong>CSV</strong> <span class="text-slate-400">(.csv)</span></span>
                     </button>
                     <button @click="downloadTable(procurementTable, 'satinalma', 'xlsx'); exportOpen = false"
-                            type="button" class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
+                            type="button"
+                            class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
                         <span><strong>Excel</strong> <span class="text-slate-400">(.xlsx)</span></span>
                     </button>
@@ -50,117 +54,117 @@
 </div>
 
 <th:block layout:fragment="scripts">
-<script>
-let procurementTable;
-document.addEventListener("DOMContentLoaded", () => {
-    procurementTable = new Tabulator("#procurement-table", {
-        ...erpGridDefaults(),
-        pagination: true,
-        paginationMode: "remote",
-        paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-        paginationSizeSelector: [5, 10, 25, 50],
-        ajaxURL: "/procurement/api/data",
-        ajaxConfig: { method: "GET", headers: { "Accept": "application/json" } },
-        ajaxURLGenerator: function(url, config, params) {
-            const searchVal = document.getElementById("procurement-search-input")?.value || "";
-            return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
-        },
-        ajaxResponse: function(url, params, response) {
-            camelizeTabulatorRows(response);
-            return applyTabulatorTotal("procurement-table", response);
-        },
-        columns: [
-            erpResponsiveCollapseColumn(),
-            {
-                title: "Sipariş No",
-                field: "poNumber",
-                width: 160,
-                responsive: 0,
-                formatter: function(cell) {
-                    return `<span class="font-mono font-bold text-amber-900">${cell.getValue()}</span>`;
-                }
-            },
-            {
-                title: "Tedarikçi",
-                field: "supplierName",
-                minWidth: 200,
-                formatter: function(cell) {
-                    const row = cell.getRow().getData();
-                    return `<div>
+    <script>
+        let procurementTable;
+        document.addEventListener("DOMContentLoaded", () => {
+            procurementTable = new Tabulator("#procurement-table", {
+                ...erpGridDefaults(),
+                pagination: true,
+                paginationMode: "remote",
+                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
+                paginationSizeSelector: [5, 10, 25, 50],
+                ajaxURL: "/procurement/api/data",
+                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
+                ajaxURLGenerator: function (url, config, params) {
+                    const searchVal = document.getElementById("procurement-search-input")?.value || "";
+                    return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
+                },
+                ajaxResponse: function (url, params, response) {
+                    camelizeTabulatorRows(response);
+                    return applyTabulatorTotal("procurement-table", response);
+                },
+                columns: [
+                    erpResponsiveCollapseColumn(),
+                    {
+                        title: "Sipariş No",
+                        field: "poNumber",
+                        width: 160,
+                        responsive: 0,
+                        formatter: function (cell) {
+                            return `<span class="font-mono font-bold text-amber-900">${cell.getValue()}</span>`;
+                        }
+                    },
+                    {
+                        title: "Tedarikçi",
+                        field: "supplierName",
+                        minWidth: 200,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return `<div>
                         <a href="/procurement/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${row.supplierName}</a>
                         <div class="text-xs text-slate-500">${row.supplierType}</div>
                     </div>`;
-                }
-            },
-            {
-                title: "Proje",
-                field: "projectName",
-                width: 150,
-                formatter: function(cell) {
-                    return `<span class="text-sm">${cell.getValue() || '—'}</span>`;
-                }
-            },
-            {
-                title: "Sipariş Tarihi",
-                field: "orderDate",
-                width: 130,
-                formatter: function(cell) {
-                    return `<span class="text-sm">${cell.getValue() || '—'}</span>`;
-                }
-            },
-            {
-                title: "Toplam Tutar",
-                field: "totalAmount",
-                width: 150,
-                formatter: function(cell) {
-                    return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
-                }
-            },
-            {
-                title: "Durum",
-                field: "statusLabel",
-                width: 130,
-                formatter: function(cell) {
-                    const status = cell.getRow().getData().status;
-                    const colors = {
-                        'DRAFT': 'bg-slate-100 text-slate-700',
-                        'SENT': 'bg-blue-100 text-blue-800',
-                        'CONFIRMED': 'bg-emerald-100 text-emerald-800',
-                        'PARTIAL_DELIVERY': 'bg-amber-100 text-amber-800',
-                        'DELIVERED': 'bg-green-100 text-green-800',
-                        'CANCELLED': 'bg-rose-100 text-rose-800'
-                    };
-                    const c = colors[status] || 'bg-slate-100 text-slate-700';
-                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${c}">● ${cell.getValue()}</span>`;
-                }
-            },
-            {
-                title: "İşlemler",
-                width: 120,
-                headerSort: false,
-                responsive: 0,
-                formatter: function(cell) {
-                    const row = cell.getRow().getData();
-                    return gridActionsHtml([
-                        { icon: 'eye', label: 'Detay', href: '/procurement/' + row.id },
-                        { icon: 'edit-3', label: 'Düzenle', href: '/procurement/' + row.id }
-                    ]);
-                }
-            }
-        ]
-    });
+                        }
+                    },
+                    {
+                        title: "Proje",
+                        field: "projectName",
+                        width: 150,
+                        formatter: function (cell) {
+                            return `<span class="text-sm">${cell.getValue() || '—'}</span>`;
+                        }
+                    },
+                    {
+                        title: "Sipariş Tarihi",
+                        field: "orderDate",
+                        width: 130,
+                        formatter: function (cell) {
+                            return `<span class="text-sm">${cell.getValue() || '—'}</span>`;
+                        }
+                    },
+                    {
+                        title: "Toplam Tutar",
+                        field: "totalAmount",
+                        width: 150,
+                        formatter: function (cell) {
+                            return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
+                        }
+                    },
+                    {
+                        title: "Durum",
+                        field: "statusLabel",
+                        width: 130,
+                        formatter: function (cell) {
+                            const status = cell.getRow().getData().status;
+                            const colors = {
+                                'DRAFT': 'bg-slate-100 text-slate-700',
+                                'SENT': 'bg-blue-100 text-blue-800',
+                                'CONFIRMED': 'bg-emerald-100 text-emerald-800',
+                                'PARTIAL_DELIVERY': 'bg-amber-100 text-amber-800',
+                                'DELIVERED': 'bg-green-100 text-green-800',
+                                'CANCELLED': 'bg-rose-100 text-rose-800'
+                            };
+                            const c = colors[status] || 'bg-slate-100 text-slate-700';
+                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${c}">● ${cell.getValue()}</span>`;
+                        }
+                    },
+                    {
+                        title: "İşlemler",
+                        width: 120,
+                        headerSort: false,
+                        responsive: 0,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return gridActionsHtml([
+                                {icon: 'eye', label: 'Detay', href: '/procurement/' + row.id},
+                                {icon: 'edit-3', label: 'Düzenle', href: '/procurement/' + row.id}
+                            ]);
+                        }
+                    }
+                ]
+            });
 
-    attachTabulatorPagingAnimation(procurementTable);
-    bindGridSearch(procurementTable, "procurement-search-input");
-    procurementTable.on("renderComplete", () => {
-        if (window.lucide) window.lucide.createIcons();
-    });
-});
+            attachTabulatorPagingAnimation(procurementTable);
+            bindGridSearch(procurementTable, "procurement-search-input");
+            procurementTable.on("renderComplete", () => {
+                if (window.lucide) window.lucide.createIcons();
+            });
+        });
 
-function reloadProcurementGrid() {
-    if (procurementTable) procurementTable.replaceData();
-}
-</script>
+        function reloadProcurementGrid() {
+            if (procurementTable) procurementTable.replaceData();
+        }
+    </script>
 </th:block>
 </body>
 </html>

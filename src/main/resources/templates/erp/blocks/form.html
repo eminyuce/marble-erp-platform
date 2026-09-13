@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>Yeni Blok Kaydı | Özerler Mermer ERP</title>
 </head>
@@ -25,7 +26,8 @@
                             <label class="erp-form-label" for="quarryId">Ocak sahası <span class="req">*</span></label>
                             <select id="quarryId" name="quarryId" required class="erp-form-select">
                                 <option value="" disabled selected>Ocak seçin</option>
-                                <option th:each="q : ${quarries}" th:value="${q.id}" th:text="${q.name + ' (' + q.location + ')'}"></option>
+                                <option th:each="q : ${quarries}" th:value="${q.id}"
+                                        th:text="${q.name + ' (' + q.location + ')'}"></option>
                             </select>
                         </div>
                         <div class="erp-form-field">
@@ -42,26 +44,34 @@
                     <div class="erp-form-grid--3">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="widthCm">En (cm) <span class="req">*</span></label>
-                            <input id="widthCm" type="number" name="widthCm" required value="180" class="erp-form-input" placeholder="180">
+                            <input id="widthCm" type="number" name="widthCm" required value="180" class="erp-form-input"
+                                   placeholder="180">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="lengthCm">Boy (cm) <span class="req">*</span></label>
-                            <input id="lengthCm" type="number" name="lengthCm" required value="290" class="erp-form-input" placeholder="290">
+                            <input id="lengthCm" type="number" name="lengthCm" required value="290"
+                                   class="erp-form-input" placeholder="290">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="heightCm">Yükseklik (cm) <span class="req">*</span></label>
-                            <input id="heightCm" type="number" name="heightCm" required value="150" class="erp-form-input" placeholder="150">
+                            <label class="erp-form-label" for="heightCm">Yükseklik (cm) <span
+                                    class="req">*</span></label>
+                            <input id="heightCm" type="number" name="heightCm" required value="150"
+                                   class="erp-form-input" placeholder="150">
                         </div>
                     </div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="actualWeightKg">Kantar tartımı (kg) <span class="req">*</span></label>
-                            <input id="actualWeightKg" type="number" step="0.01" name="actualWeightKg" required value="20850"
+                            <label class="erp-form-label" for="actualWeightKg">Kantar tartımı (kg) <span
+                                    class="req">*</span></label>
+                            <input id="actualWeightKg" type="number" step="0.01" name="actualWeightKg" required
+                                   value="20850"
                                    class="erp-form-input" placeholder="20850.00">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="extractionCost">Ocak çıkarma maliyeti (TL) <span class="req">*</span></label>
-                            <input id="extractionCost" type="number" step="0.01" name="extractionCost" required value="42000"
+                            <label class="erp-form-label" for="extractionCost">Ocak çıkarma maliyeti (TL) <span
+                                    class="req">*</span></label>
+                            <input id="extractionCost" type="number" step="0.01" name="extractionCost" required
+                                   value="42000"
                                    class="erp-form-input" placeholder="42000.00">
                         </div>
                     </div>
@@ -71,14 +81,16 @@
                     <div th:replace="~{fragments/form-page :: section('Kalite', 'Taş cinsi, sınıf ve çatlak seviyesi')}"></div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field erp-form-field--full">
-                            <label class="erp-form-label" for="stoneType">Taş cinsi ve seleksiyon <span class="req">*</span></label>
+                            <label class="erp-form-label" for="stoneType">Taş cinsi ve seleksiyon <span
+                                    class="req">*</span></label>
                             <input id="stoneType" type="text" name="stoneType" required value="Muğla Beyaz"
                                    class="erp-form-input" placeholder="Örn: Muğla Beyaz Kristal">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="qualityGrade">Kalite sınıfı</label>
                             <select id="qualityGrade" name="qualityGrade" class="erp-form-select">
-                                <option th:each="g : ${qualityGrades}" th:value="${g.name()}" th:text="${g.label}"></option>
+                                <option th:each="g : ${qualityGrades}" th:value="${g.name()}"
+                                        th:text="${g.label}"></option>
                             </select>
                         </div>
                         <div class="erp-form-field">
@@ -102,7 +114,8 @@
                     <div class="erp-form-field">
                         <label class="erp-form-label">Jeolojik ayna notları</label>
                         <div id="dual-editor-container"></div>
-                        <input type="hidden" id="notes-hidden-input" name="notes" value="Ocak sahasında ayna A-2 seviyesinden homojen kristal blok çıkarımı.">
+                        <input type="hidden" id="notes-hidden-input" name="notes"
+                               value="Ocak sahasında ayna A-2 seviyesinden homojen kristal blok çıkarımı.">
                     </div>
                 </section>
             </div>
@@ -113,10 +126,10 @@
 </div>
 
 <th:block layout:fragment="scripts">
-<script>
-    initFilePond('#block-filepond', '#photo-urls-input');
-    initDualEditor('dual-editor-container', 'notes-hidden-input');
-</script>
+    <script>
+        initFilePond('#block-filepond', '#photo-urls-input');
+        initDualEditor('dual-editor-container', 'notes-hidden-input');
+    </script>
 </th:block>
 </body>
 </html>

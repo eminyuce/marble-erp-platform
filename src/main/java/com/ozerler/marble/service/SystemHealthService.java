@@ -17,12 +17,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.Statement;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Service orchestrating system diagnostic metrics, JVM runtime stats, and database health probes.

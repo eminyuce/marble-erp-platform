@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title th:text="${errorPage.status + ' ' + errorPage.title + ' | Özerler Mermer ERP'}">Hata | Özerler Mermer ERP</title>
+    <title th:text="${errorPage.status + ' ' + errorPage.title + ' | Özerler Mermer ERP'}">Hata | Özerler Mermer
+        ERP</title>
     <link rel="preload" th:href="@{/fonts/inter-latin-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" th:href="@{/fonts/inter-latin-ext-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" th:href="@{/css/app.css}">
@@ -93,7 +94,9 @@
             event.stopPropagation();
             navigator.clipboard.writeText(trace.textContent || "").then(() => {
                 copy.lastChild.textContent = " Kopyalandı";
-                setTimeout(() => { copy.lastChild.textContent = " Kopyala"; }, 1600);
+                setTimeout(() => {
+                    copy.lastChild.textContent = " Kopyala";
+                }, 1600);
             });
         });
     }

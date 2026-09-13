@@ -14,9 +14,9 @@ function initBlocksGrid() {
         ajaxURL: "/blocks/api/data",
         ajaxConfig: {
             method: "GET",
-            headers: { "Accept": "application/json" },
+            headers: {"Accept": "application/json"},
         },
-        ajaxURLGenerator: function(url, config, params) {
+        ajaxURLGenerator: function (url, config, params) {
             const searchVal = document.getElementById("search-input")?.value || "";
             let sorterField = "";
             let sorterDir = "";
@@ -26,7 +26,7 @@ function initBlocksGrid() {
             }
             return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}&sortField=${sorterField}&sortDir=${sorterDir}`;
         },
-        ajaxResponse: function(url, params, response) {
+        ajaxResponse: function (url, params, response) {
             camelizeTabulatorRows(response);
             return applyTabulatorTotal("blocks-table", response);
         },
@@ -39,17 +39,17 @@ function initBlocksGrid() {
                 minWidth: 160,
                 width: 170,
                 responsive: 0,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const val = cell.getValue();
                     return `<div class="font-mono font-bold text-amber-900">${val}</div>`;
                 }
             },
-            { title: "Ocak", field: "quarryName", minWidth: 140 },
-            { title: "Taş Cinsi", field: "stoneType", minWidth: 120 },
+            {title: "Ocak", field: "quarryName", minWidth: 140},
+            {title: "Taş Cinsi", field: "stoneType", minWidth: 120},
             {
                 title: "Ebatlar (En x Boy x Yük.)",
                 minWidth: 190,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const row = cell.getRow().getData();
                     return `${row.widthCm}x${row.lengthCm}x${row.heightCm} cm (${row.volumeM3} m³)`;
                 }
@@ -57,7 +57,7 @@ function initBlocksGrid() {
             {
                 title: "Kantar (Fiili / Teorik)",
                 minWidth: 160,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const dev = row.weightDeviationPct;
                     const isNeg = dev < 0;
@@ -72,7 +72,7 @@ function initBlocksGrid() {
                 field: "qualityGrade",
                 minWidth: 80,
                 width: 90,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const val = cell.getValue();
                     const colors = {
                         'EXTRA': 'bg-purple-100 text-purple-800',
@@ -89,7 +89,7 @@ function initBlocksGrid() {
                 field: "statusLabel",
                 minWidth: 140,
                 width: 150,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const st = row.status;
                     let badge = 'bg-slate-100 text-slate-700';
@@ -104,7 +104,7 @@ function initBlocksGrid() {
                 field: "totalCost",
                 minWidth: 130,
                 width: 140,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
                 }
             },
@@ -114,12 +114,12 @@ function initBlocksGrid() {
                 width: 130,
                 headerSort: false,
                 responsive: 0,
-                formatter: function(cell) {
+                formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const items = [];
-                    items.push({ icon: 'git-branch', label: 'Soy Ağacı', href: '/genealogy?code=' + row.blockCode });
+                    items.push({icon: 'git-branch', label: 'Soy Ağacı', href: '/genealogy?code=' + row.blockCode});
                     if (row.status === 'QUARRY') {
-                        items.push({ icon: 'truck', label: 'Fabrikaya Sevk', onclick: 'transferBlock(' + row.id + ')' });
+                        items.push({icon: 'truck', label: 'Fabrikaya Sevk', onclick: 'transferBlock(' + row.id + ')'});
                     }
                     return gridActionsHtml(items);
                 }
@@ -144,7 +144,7 @@ function transferBlock(id) {
 
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
-    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    const headers = {'Content-Type': 'application/x-www-form-urlencoded'};
     if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
 
     fetch(`/blocks/${id}/transfer-to-factory`, {

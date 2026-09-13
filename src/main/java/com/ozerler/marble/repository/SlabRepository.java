@@ -34,9 +34,9 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
 
     @EntityGraph(attributePaths = {"block", "productionOrder", "pallet"})
     @Query("SELECT s FROM Slab s WHERE " +
-           "(:search IS NULL OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(s.block.blockCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(s.block.stoneType) LIKE LOWER(CONCAT('%', :search, '%')))")
+            "(:search IS NULL OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(s.block.blockCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(s.block.stoneType) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Slab> searchSlabs(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT s FROM Slab s WHERE LOWER(s.slabCode) LIKE LOWER(CONCAT('%', :query, '%'))")

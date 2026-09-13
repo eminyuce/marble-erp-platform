@@ -69,10 +69,10 @@ public class CostBreakdownDto {
     private BigDecimal minimumFloorPrice; // e.g. 20% margin limit
 
     public static CostBreakdownDto calculateStandard(String identifier, String stoneType,
-                                                    BigDecimal raw, BigDecimal factory,
-                                                    BigDecimal workshop, BigDecimal scrap,
-                                                    BigDecimal logistics, BigDecimal overhead,
-                                                    BigDecimal marginPct) {
+                                                     BigDecimal raw, BigDecimal factory,
+                                                     BigDecimal workshop, BigDecimal scrap,
+                                                     BigDecimal logistics, BigDecimal overhead,
+                                                     BigDecimal marginPct) {
         BigDecimal total = raw.add(factory).add(workshop).add(scrap).add(logistics).add(overhead);
 
         BigDecimal margin = marginPct != null ? marginPct : new BigDecimal("30.0");

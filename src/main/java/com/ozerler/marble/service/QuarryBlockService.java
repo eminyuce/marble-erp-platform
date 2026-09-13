@@ -69,10 +69,10 @@ public class QuarryBlockService {
 
     @Transactional
     public Block registerBlock(Long quarryId, String blockCode, LocalDate extractionDate,
-                              int widthCm, int lengthCm, int heightCm,
-                              BigDecimal actualWeightKg, String stoneType, String colorTone,
-                              QualityGrade qualityGrade, int crackLevel,
-                              BigDecimal extractionCost, String notes, String photoUrls) {
+                               int widthCm, int lengthCm, int heightCm,
+                               BigDecimal actualWeightKg, String stoneType, String colorTone,
+                               QualityGrade qualityGrade, int crackLevel,
+                               BigDecimal extractionCost, String notes, String photoUrls) {
 
         Objects.requireNonNull(quarryId, getMessage("error.quarry.id.required"));
         Objects.requireNonNull(blockCode, getMessage("error.block.code.required"));

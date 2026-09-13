@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <div th:fragment="alerts">
-    <div th:if="${successMessage}" class="mb-5 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3">
+    <div th:if="${successMessage}"
+         class="mb-5 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3">
         <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
         <div class="text-sm font-medium" th:text="${successMessage}">İşlem başarıyla tamamlandı.</div>
     </div>
-    <div th:if="${errorMessage}" class="mb-5 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-3">
+    <div th:if="${errorMessage}"
+         class="mb-5 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-3">
         <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
         <div class="text-sm font-medium" th:text="${errorMessage}">Bir hata meydana geldi.</div>
     </div>
-    <div th:if="${warningMessage}" class="mb-5 p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-3">
+    <div th:if="${warningMessage}"
+         class="mb-5 p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-3">
         <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0"></i>
         <div class="text-sm font-medium" th:text="${warningMessage}">Dikkat edilmesi gereken durum.</div>
     </div>

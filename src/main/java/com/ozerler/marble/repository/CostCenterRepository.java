@@ -15,6 +15,6 @@ public interface CostCenterRepository extends JpaRepository<CostCenter, Long> {
     Optional<CostCenter> findByCode(String code);
 
     @Query("SELECT c FROM CostCenter c WHERE LOWER(c.code) LIKE LOWER(CONCAT('%', :query, '%')) " +
-           "OR LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%'))")
+            "OR LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<CostCenter> searchByCodeOrName(@Param("query") String query, Pageable pageable);
 }

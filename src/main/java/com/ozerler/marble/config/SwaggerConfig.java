@@ -20,7 +20,7 @@ public class SwaggerConfig {
                         .description("""
                                 REST and MVC endpoints for Ozerler Mermer ERP — physical \
                                 traceability, waste management, and dynamic cost accounting.
-
+                                
                                 Covered areas:
                                 • Authentication and account management (admin login, password change, roles)
                                 • Quarry blocks (inventory, factory transfer, sales)

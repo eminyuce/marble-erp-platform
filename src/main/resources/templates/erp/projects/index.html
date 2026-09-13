@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>Proje &amp; Şantiye Yönetimi | Özerler Mermer ERP</title>
 </head>
@@ -30,14 +31,17 @@
                     <i data-lucide="chevron-down" class="w-3 h-3"></i>
                 </button>
                 <div x-show="exportOpen" @click.outside="exportOpen = false" x-transition
-                     class="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50" style="display:none;">
+                     class="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50"
+                     style="display:none;">
                     <button @click="downloadTable(projectsTable, 'projeler', 'csv'); exportOpen = false"
-                            type="button" class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
+                            type="button"
+                            class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
                         <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
                         <span><strong>CSV</strong> <span class="text-slate-400">(.csv)</span></span>
                     </button>
                     <button @click="downloadTable(projectsTable, 'projeler', 'xlsx'); exportOpen = false"
-                            type="button" class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
+                            type="button"
+                            class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
                         <span><strong>Excel</strong> <span class="text-slate-400">(.xlsx)</span></span>
                     </button>
@@ -50,76 +54,76 @@
 </div>
 
 <th:block layout:fragment="scripts">
-<script>
-let projectsTable;
-document.addEventListener("DOMContentLoaded", () => {
-    projectsTable = new Tabulator("#projects-table", {
-        ...erpGridDefaults(),
-        pagination: true,
-        paginationMode: "remote",
-        paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-        paginationSizeSelector: [5, 10, 25, 50],
-        ajaxURL: "/projects/api/data",
-        ajaxConfig: { method: "GET", headers: { "Accept": "application/json" } },
-        ajaxURLGenerator: function(url, config, params) {
-            const searchVal = document.getElementById("project-search-input")?.value || "";
-            return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
-        },
-        ajaxResponse: function(url, params, response) {
-            return applyTabulatorTotal("projects-table", response);
-        },
-        columns: [
-            erpResponsiveCollapseColumn(),
-            {
-                title: "Proje Kodu",
-                field: "projectCode",
-                width: 160,
-                responsive: 0,
-                formatter: function(cell) {
-                    return `<span class="font-mono font-bold text-amber-900">${cell.getValue()}</span>`;
-                }
-            },
-            {
-                title: "Proje Adı",
-                field: "name",
-                minWidth: 200,
-                formatter: function(cell) {
-                    const row = cell.getRow().getData();
-                    return `<div>
+    <script>
+        let projectsTable;
+        document.addEventListener("DOMContentLoaded", () => {
+            projectsTable = new Tabulator("#projects-table", {
+                ...erpGridDefaults(),
+                pagination: true,
+                paginationMode: "remote",
+                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
+                paginationSizeSelector: [5, 10, 25, 50],
+                ajaxURL: "/projects/api/data",
+                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
+                ajaxURLGenerator: function (url, config, params) {
+                    const searchVal = document.getElementById("project-search-input")?.value || "";
+                    return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
+                },
+                ajaxResponse: function (url, params, response) {
+                    return applyTabulatorTotal("projects-table", response);
+                },
+                columns: [
+                    erpResponsiveCollapseColumn(),
+                    {
+                        title: "Proje Kodu",
+                        field: "projectCode",
+                        width: 160,
+                        responsive: 0,
+                        formatter: function (cell) {
+                            return `<span class="font-mono font-bold text-amber-900">${cell.getValue()}</span>`;
+                        }
+                    },
+                    {
+                        title: "Proje Adı",
+                        field: "name",
+                        minWidth: 200,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return `<div>
                         <a href="/projects/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${row.name}</a>
                         <div class="text-xs text-slate-500">${row.customerName}</div>
                     </div>`;
-                }
-            },
-            {
-                title: "Sözleşme Bedeli",
-                field: "contractValue",
-                width: 150,
-                formatter: function(cell) {
-                    return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
-                }
-            },
-            {
-                title: "Gerçekleşen Maliyet",
-                field: "actualCost",
-                width: 160,
-                formatter: function(cell) {
-                    const row = cell.getRow().getData();
-                    const isOver = row.costVariance > 0;
-                    return `<div>
+                        }
+                    },
+                    {
+                        title: "Sözleşme Bedeli",
+                        field: "contractValue",
+                        width: 150,
+                        formatter: function (cell) {
+                            return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
+                        }
+                    },
+                    {
+                        title: "Gerçekleşen Maliyet",
+                        field: "actualCost",
+                        width: 160,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            const isOver = row.costVariance > 0;
+                            return `<div>
                         <span class="font-bold ${isOver ? 'text-rose-700' : 'text-slate-800'}">${Number(cell.getValue()).toLocaleString('tr-TR')} TL</span>
                         <div class="text-xs text-slate-500">Tahmini: ${Number(row.estimatedCost).toLocaleString('tr-TR')} TL</div>
                     </div>`;
-                }
-            },
-            {
-                title: "Montaj İlerlemesi",
-                formatter: function(cell) {
-                    const row = cell.getRow().getData();
-                    const planned = row.totalPlannedAreaM2 || 0;
-                    const installed = row.totalInstalledAreaM2 || 0;
-                    const pct = planned > 0 ? ((installed / planned) * 100).toFixed(1) : 0;
-                    return `<div>
+                        }
+                    },
+                    {
+                        title: "Montaj İlerlemesi",
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            const planned = row.totalPlannedAreaM2 || 0;
+                            const installed = row.totalInstalledAreaM2 || 0;
+                            const pct = planned > 0 ? ((installed / planned) * 100).toFixed(1) : 0;
+                            return `<div>
                         <div class="flex justify-between text-xs font-semibold mb-1">
                             <span>${installed} / ${planned} m²</span>
                             <span>%${pct}</span>
@@ -128,43 +132,43 @@ document.addEventListener("DOMContentLoaded", () => {
                             <div class="bg-emerald-600 h-1.5 rounded-full" style="width: ${pct}%"></div>
                         </div>
                     </div>`;
-                }
-            },
-            {
-                title: "Durum",
-                field: "statusLabel",
-                width: 120,
-                formatter: function(cell) {
-                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">● ${cell.getValue()}</span>`;
-                }
-            },
-            {
-                title: "İşlemler",
-                width: 120,
-                headerSort: false,
-                responsive: 0,
-                formatter: function(cell) {
-                    const row = cell.getRow().getData();
-                    return gridActionsHtml([
-                        { icon: 'eye', label: 'Detay', href: '/projects/' + row.id },
-                        { icon: 'map-pin', label: 'Mahaller', href: '/projects/' + row.id }
-                    ]);
-                }
-            }
-        ]
-    });
+                        }
+                    },
+                    {
+                        title: "Durum",
+                        field: "statusLabel",
+                        width: 120,
+                        formatter: function (cell) {
+                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">● ${cell.getValue()}</span>`;
+                        }
+                    },
+                    {
+                        title: "İşlemler",
+                        width: 120,
+                        headerSort: false,
+                        responsive: 0,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return gridActionsHtml([
+                                {icon: 'eye', label: 'Detay', href: '/projects/' + row.id},
+                                {icon: 'map-pin', label: 'Mahaller', href: '/projects/' + row.id}
+                            ]);
+                        }
+                    }
+                ]
+            });
 
-    attachTabulatorPagingAnimation(projectsTable);
-    bindGridSearch(projectsTable, "project-search-input");
-    projectsTable.on("renderComplete", () => {
-        if (window.lucide) window.lucide.createIcons();
-    });
-});
+            attachTabulatorPagingAnimation(projectsTable);
+            bindGridSearch(projectsTable, "project-search-input");
+            projectsTable.on("renderComplete", () => {
+                if (window.lucide) window.lucide.createIcons();
+            });
+        });
 
-function reloadProjectsGrid() {
-    if (projectsTable) projectsTable.replaceData();
-}
-</script>
+        function reloadProjectsGrid() {
+            if (projectsTable) projectsTable.replaceData();
+        }
+    </script>
 </th:block>
 </body>
 </html>

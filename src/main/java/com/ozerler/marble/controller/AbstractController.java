@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 public abstract class AbstractController {
 
     protected BackEndResponse buildFatalResponse(BackEndResponse ber, ServiceStatus serviceStatus, Status status,
-                                                String action, String code) {
+                                                 String action, String code) {
         if (ber == null) {
             ber = new BackEndResponse();
         }
@@ -35,7 +35,7 @@ public abstract class AbstractController {
     }
 
     protected BackEndResponse buildFailureResponse(BackEndResponse ber, ServiceStatus serviceStatus, Status status,
-                                                  String action, String code, HttpStatus httpStatus) {
+                                                   String action, String code, HttpStatus httpStatus) {
         if (ber == null) {
             ber = new BackEndResponse();
         }
@@ -55,7 +55,7 @@ public abstract class AbstractController {
     }
 
     protected BackEndResponse buildSuccessResponse(BackEndResponse ber, ServiceStatus serviceStatus, Status status,
-                                                  Object data, String message) {
+                                                   Object data, String message) {
         if (ber == null) {
             ber = new BackEndResponse();
         }

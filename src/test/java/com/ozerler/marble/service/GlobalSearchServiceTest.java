@@ -3,19 +3,7 @@ package com.ozerler.marble.service;
 import com.ozerler.marble.dto.GlobalSearchResponse;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.Project;
-import com.ozerler.marble.repository.BlockRepository;
-import com.ozerler.marble.repository.CostCenterRepository;
-import com.ozerler.marble.repository.CustomerRepository;
-import com.ozerler.marble.repository.CutItemRepository;
-import com.ozerler.marble.repository.CutOrderRepository;
-import com.ozerler.marble.repository.ProductionOrderRepository;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.repository.PurchaseOrderRepository;
-import com.ozerler.marble.repository.QuarryRepository;
-import com.ozerler.marble.repository.SalesOrderRepository;
-import com.ozerler.marble.repository.SlabRepository;
-import com.ozerler.marble.repository.SupplierRepository;
-import com.ozerler.marble.repository.UserRepository;
+import com.ozerler.marble.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,12 +18,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class GlobalSearchServiceTest {

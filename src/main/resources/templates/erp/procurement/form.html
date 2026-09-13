@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>Yeni Satın Alma Siparişi | Özerler Mermer ERP</title>
 </head>
@@ -31,14 +32,18 @@
                             <label class="erp-form-label" for="supplierId">Tedarikçi <span class="req">*</span></label>
                             <select id="supplierId" name="supplierId" required class="erp-form-select">
                                 <option value="" disabled selected>Tedarikçi seçin</option>
-                                <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.companyName + ' (' + s.supplierType.label + ')'}">Tedarikçi</option>
+                                <option th:each="s : ${suppliers}" th:value="${s.id}"
+                                        th:text="${s.companyName + ' (' + s.supplierType.label + ')'}">Tedarikçi
+                                </option>
                             </select>
                         </div>
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="projectId">İlgili proje</label>
                             <select id="projectId" name="projectId" class="erp-form-select">
                                 <option value="">Proje seçilmedi</option>
-                                <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.projectCode + ' — ' + p.name}">Proje</option>
+                                <option th:each="p : ${projects}" th:value="${p.id}"
+                                        th:text="${p.projectCode + ' — ' + p.name}">Proje
+                                </option>
                             </select>
                         </div>
                     </div>

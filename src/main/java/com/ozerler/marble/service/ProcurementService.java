@@ -46,7 +46,7 @@ public class ProcurementService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<PurchaseOrderDto> getPurchaseOrdersPaged(int page, int size,
-                                                                       String search, String sortField, String sortDir) {
+                                                                      String search, String sortField, String sortDir) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         if (sortField != null && !sortField.isBlank()) {
             Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -83,7 +83,7 @@ public class ProcurementService {
 
     @Transactional
     public PurchaseOrder createPurchaseOrder(String poNumber, Long supplierId, Long projectId,
-                                              LocalDate expectedDelivery, String notes) {
+                                             LocalDate expectedDelivery, String notes) {
         Objects.requireNonNull(supplierId, getMessage("error.supplier.required"));
 
         Supplier supplier = supplierRepository.findById(supplierId)
@@ -109,7 +109,7 @@ public class ProcurementService {
 
     @Transactional
     public PurchaseOrderItem addItemToOrder(Long orderId, String itemName, String itemType,
-                                             BigDecimal quantity, String unit, BigDecimal unitPrice) {
+                                            BigDecimal quantity, String unit, BigDecimal unitPrice) {
         PurchaseOrder order = getOrderById(orderId);
 
         PurchaseOrderItem item = PurchaseOrderItem.builder()

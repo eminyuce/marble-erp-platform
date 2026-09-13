@@ -1,21 +1,12 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.OrderChildAggregate;
-import com.ozerler.marble.dto.ProductionOrderDto;
-import com.ozerler.marble.dto.SlabDto;
-import com.ozerler.marble.dto.SlabLabelDto;
-import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.*;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.ScrapLog;
 import com.ozerler.marble.model.Slab;
-import com.ozerler.marble.model.enums.BlockStatus;
-import com.ozerler.marble.model.enums.ProcessType;
-import com.ozerler.marble.model.enums.QualityGrade;
-import com.ozerler.marble.model.enums.ScrapReasonCode;
-import com.ozerler.marble.model.enums.SlabStatus;
-import com.ozerler.marble.model.enums.SurfaceFinish;
+import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.ScrapLogRepository;
@@ -31,17 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -118,12 +104,12 @@ public class ProductionService {
      */
     @Transactional
     public ProductionOrder executeGangsawCut(Long blockId, String orderNo, String machineName,
-                                            BigDecimal durationHours, BigDecimal electricityKwh,
-                                            BigDecimal bladeWearMm, BigDecimal directCuttingExpense,
-                                            String operatorName, String notes,
-                                            int slabCountGradeA, int slabCountGradeB, int slabCountGradeC,
-                                            BigDecimal slabWidthCm, BigDecimal slabLengthCm, BigDecimal thicknessCm,
-                                            ScrapReasonCode scrapReason, BigDecimal scrapWeightKg, String scrapNotes) {
+                                             BigDecimal durationHours, BigDecimal electricityKwh,
+                                             BigDecimal bladeWearMm, BigDecimal directCuttingExpense,
+                                             String operatorName, String notes,
+                                             int slabCountGradeA, int slabCountGradeB, int slabCountGradeC,
+                                             BigDecimal slabWidthCm, BigDecimal slabLengthCm, BigDecimal thicknessCm,
+                                             ScrapReasonCode scrapReason, BigDecimal scrapWeightKg, String scrapNotes) {
 
         Objects.requireNonNull(blockId, getMessage("error.block.id.required"));
         Block block = blockRepository.findById(blockId)
@@ -221,8 +207,8 @@ public class ProductionService {
     }
 
     private List<Slab> generateSlabsForGrade(ProductionOrder order, Block block, int count, QualityGrade grade,
-                                            BigDecimal thickness, BigDecimal width, BigDecimal length,
-                                            BigDecimal area, BigDecimal costPerM2, long baseSequence) {
+                                             BigDecimal thickness, BigDecimal width, BigDecimal length,
+                                             BigDecimal area, BigDecimal costPerM2, long baseSequence) {
         List<Slab> slabs = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             String slabCode = String.format("SLB-%d-%d", Year.now().getValue(), baseSequence + i);
@@ -232,8 +218,8 @@ public class ProductionService {
     }
 
     private void recordScrapIfApplicable(ProductionOrder order, Block block, ScrapReasonCode scrapReason,
-                                        BigDecimal scrapWeightKg, BigDecimal directExpenses,
-                                        String scrapNotes, String operatorName, long sequence) {
+                                         BigDecimal scrapWeightKg, BigDecimal directExpenses,
+                                         String scrapNotes, String operatorName, long sequence) {
         if (scrapReason != null && scrapWeightKg != null && scrapWeightKg.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal costImpact = directExpenses.multiply(Constants.SCRAP_COST_IMPACT_RATE).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
             String description = (scrapNotes != null && !scrapNotes.isBlank()) ? scrapNotes : scrapReason.getDescription();

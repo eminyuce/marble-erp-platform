@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface ProjectLocationRepository extends JpaRepository<ProjectLocation, Long> {
     List<ProjectLocation> findByProjectId(Long projectId);
+
     List<ProjectLocation> findByProjectIdAndParentIsNull(Long projectId);
 }

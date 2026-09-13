@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title th:text="${pageTitle != null ? pageTitle + ' | Özerler Mermer ERP' : 'Özerler Mermer ERP'}">Özerler Mermer ERP</title>
+    <title th:text="${pageTitle != null ? pageTitle + ' | Özerler Mermer ERP' : 'Özerler Mermer ERP'}">Özerler Mermer
+        ERP</title>
 
     <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf != null}"/>
@@ -14,76 +16,142 @@
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <link rel="stylesheet" th:href="@{/vendor/tabulator/tabulator.min.css}">
     <link rel="stylesheet" href="https://unpkg.com/filepond@^4/dist/filepond.css">
-    <link rel="stylesheet" href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css">
+    <link rel="stylesheet"
+          href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css">
 
     <style>
-    [x-cloak] { display: none !important; }
-    .grid-actions { position: relative; display: inline-flex; }
-    .grid-actions-btn {
-        display: inline-flex; align-items: center; gap: 5px;
-        padding: 5px 10px; font-size: 12px; font-weight: 600;
-        color: #334e68; background: #f1f5f9; border: 1px solid #d7dee8;
-        border-radius: 8px; cursor: pointer; white-space: nowrap;
-        transition: background .15s, border-color .15s;
-    }
-    .grid-actions-btn:hover { background: #e2e8f0; border-color: #c5d1dc; }
-    .grid-actions-portal {
-        background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
-        box-shadow: 0 8px 24px rgba(15,23,42,.15);
-        min-width: 180px; padding: 6px;
-        display: flex; flex-direction: column; gap: 2px;
-        animation: .12s ease-out grid-actions-in;
-    }
-    @keyframes grid-actions-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-    .grid-actions-item {
-        display: flex; align-items: center; gap: 8px;
-        padding: 8px 12px; font-size: 13px; font-weight: 500;
-        color: #1e293b; background: none; border: none; border-radius: 6px;
-        cursor: pointer; text-decoration: none; white-space: nowrap;
-        transition: background .15s;
-    }
-    .grid-actions-item:hover { background: #f1f5f9; color: #0f172a; }
-    .grid-actions-item--danger {
-        color: #dc2626; background: #fef2f2; border: 1px solid #fecaca;
-        border-radius: 8px; font-weight: 600; margin-top: 4px; justify-content: center;
-    }
-    .grid-actions-item--danger:hover { background: #fee2e2; color: #b91c1c; }
-    .grid-actions-divider { height: 1px; background: #e2e8f0; border: none; margin: 4px 0; }
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .grid-actions {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .grid-actions-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #334e68;
+            background: #f1f5f9;
+            border: 1px solid #d7dee8;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background .15s, border-color .15s;
+        }
+
+        .grid-actions-btn:hover {
+            background: #e2e8f0;
+            border-color: #c5d1dc;
+        }
+
+        .grid-actions-portal {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .15);
+            min-width: 180px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            animation: .12s ease-out grid-actions-in;
+        }
+
+        @keyframes grid-actions-in {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .grid-actions-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1e293b;
+            background: none;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background .15s;
+        }
+
+        .grid-actions-item:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .grid-actions-item--danger {
+            color: #dc2626;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 4px;
+            justify-content: center;
+        }
+
+        .grid-actions-item--danger:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .grid-actions-divider {
+            height: 1px;
+            background: #e2e8f0;
+            border: none;
+            margin: 4px 0;
+        }
     </style>
 </head>
 <body class="admin-app min-h-screen antialiased">
 
-    <form id="logoutForm" th:action="@{/logout}" method="post" class="hidden" hidden></form>
+<form id="logoutForm" th:action="@{/logout}" method="post" class="hidden" hidden></form>
 
-    <div class="admin-main">
-        <div th:replace="~{layout/navbar :: navbar}"></div>
+<div class="admin-main">
+    <div th:replace="~{layout/navbar :: navbar}"></div>
 
-        <main class="admin-content">
-            <div th:replace="~{fragments/alerts :: alerts}"></div>
-            <div layout:fragment="content">
-            </div>
-        </main>
-    </div>
+    <main class="admin-content">
+        <div th:replace="~{fragments/alerts :: alerts}"></div>
+        <div layout:fragment="content">
+        </div>
+    </main>
+</div>
 
-    <div th:replace="~{layout/mega-menu :: megaMenu}"></div>
+<div th:replace="~{layout/mega-menu :: megaMenu}"></div>
 
-    <div id="modal-container"></div>
+<div id="modal-container"></div>
 
-    <script th:src="@{/vendor/htmx.min.js}"></script>
-    <script th:src="@{/vendor/alpine-collapse.min.js}"></script>
-    <script th:src="@{/vendor/alpine.min.js}"></script>
-    <script th:src="@{/vendor/tabulator/tabulator.min.js}"></script>
-    <script th:src="@{/vendor/xlsx.full.min.js}"></script>
-    <script th:src="@{/vendor/lucide.min.js}"></script>
-    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
-    <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
+<script th:src="@{/vendor/htmx.min.js}"></script>
+<script th:src="@{/vendor/alpine-collapse.min.js}"></script>
+<script th:src="@{/vendor/alpine.min.js}"></script>
+<script th:src="@{/vendor/tabulator/tabulator.min.js}"></script>
+<script th:src="@{/vendor/xlsx.full.min.js}"></script>
+<script th:src="@{/vendor/lucide.min.js}"></script>
+<script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+<script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
 
-    <script th:src="@{/js/app.js}"></script>
-    <script th:inline="javascript">window.ERP_GRID_PAGE_SIZE = /*[[${gridDefaultPageSize}]]*/ 25;</script>
-    <script th:src="@{/js/mega-menu.js}"></script>
-    <script th:src="@{/js/editor-setup.js}"></script>
-    <script th:src="@{/js/filepond-setup.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+<script th:inline="javascript">window.ERP_GRID_PAGE_SIZE = /*[[${gridDefaultPageSize}]]*/ 25;</script>
+<script th:src="@{/js/mega-menu.js}"></script>
+<script th:src="@{/js/editor-setup.js}"></script>
+<script th:src="@{/js/filepond-setup.js}"></script>
 
-    <th:block layout:fragment="scripts"></th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>
