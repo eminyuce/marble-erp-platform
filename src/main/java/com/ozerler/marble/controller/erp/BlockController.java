@@ -90,6 +90,54 @@ public class BlockController extends AbstractController {
         }
     }
 
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
+        var block = quarryBlockService.getBlockById(id);
+        model.addAttribute("block", block);
+        model.addAttribute("isEdit", true);
+        populateBlockForm(model, locale);
+        model.addAttribute("pageTitle", "Blok Düzenle");
+        return "erp/blocks/form";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String updateBlock(@PathVariable("id") Long id,
+                              @RequestParam("quarryId") Long quarryId,
+                              @RequestParam("blockCode") String blockCode,
+                              @RequestParam(value = "extractionDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate extractionDate,
+                              @RequestParam("widthCm") int widthCm,
+                              @RequestParam("lengthCm") int lengthCm,
+                              @RequestParam("heightCm") int heightCm,
+                              @RequestParam("actualWeightKg") BigDecimal actualWeightKg,
+                              @RequestParam("stoneType") String stoneType,
+                              @RequestParam(value = "colorTone", required = false) String colorTone,
+                              @RequestParam("qualityGrade") QualityGrade qualityGrade,
+                              @RequestParam(value = "crackLevel", defaultValue = "0") int crackLevel,
+                              @RequestParam("extractionCost") BigDecimal extractionCost,
+                              @RequestParam(value = "notes", required = false) String notes,
+                              @RequestParam(value = "photoUrls", required = false) String photoUrls,
+                              Locale locale,
+                              Model model,
+                              RedirectAttributes redirectAttributes) {
+
+        try {
+            quarryBlockService.updateBlock(id, quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
+                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls);
+            redirectAttributes.addFlashAttribute("successMessage", "Blok başarıyla güncellendi.");
+            return "redirect:/blocks";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            try {
+                model.addAttribute("block", quarryBlockService.getBlockById(id));
+            } catch (Exception ignored) {
+            }
+            model.addAttribute("isEdit", true);
+            populateBlockForm(model, locale);
+            return "erp/blocks/form";
+        }
+    }
+
     @PostMapping("/{id}/transfer-to-factory")
     public @ResponseBody BackEndResponse transferToFactory(@PathVariable("id") Long id,
                                                            @RequestParam("transportCost") BigDecimal transportCost) {

@@ -2,10 +2,8 @@ package com.ozerler.marble.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class CutOrder {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class CutOrder extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,7 +52,4 @@ public class CutOrder {
     @Builder.Default
     private List<CutItem> items = new ArrayList<>();
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 }

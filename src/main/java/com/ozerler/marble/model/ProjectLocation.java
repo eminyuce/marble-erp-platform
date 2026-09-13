@@ -2,11 +2,9 @@ package com.ozerler.marble.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,8 +15,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class ProjectLocation {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class ProjectLocation extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,9 +55,6 @@ public class ProjectLocation {
     @Builder.Default
     private String status = "PLANNED"; // PLANNED, IN_PROGRESS, COMPLETED
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     public BigDecimal getProgressPercentage() {
         if (plannedAreaM2 == null || plannedAreaM2.compareTo(BigDecimal.ZERO) == 0) {

@@ -118,6 +118,7 @@ function initBlocksGrid() {
                     const row = cell.getRow().getData();
                     const items = [];
                     items.push({icon: 'git-branch', label: 'Soy Ağacı', href: '/genealogy?code=' + row.blockCode});
+                    items.push({icon: 'edit-3', label: 'Düzenle', href: '/blocks/' + row.id + '/edit'});
                     if (row.status === 'QUARRY') {
                         items.push({icon: 'truck', label: 'Fabrikaya Sevk', onclick: 'transferBlock(' + row.id + ')'});
                     }

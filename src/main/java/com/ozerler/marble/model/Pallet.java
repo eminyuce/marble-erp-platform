@@ -3,10 +3,8 @@ package com.ozerler.marble.model;
 import com.ozerler.marble.model.enums.PackagingType;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,8 +15,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class Pallet {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class Pallet extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,7 +48,4 @@ public class Pallet {
     @Builder.Default
     private List<Slab> slabs = new ArrayList<>();
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 }

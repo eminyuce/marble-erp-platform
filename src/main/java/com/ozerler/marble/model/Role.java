@@ -10,8 +10,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class Role {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class Role extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -24,15 +24,16 @@
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="poNumber">Sipariş no <span class="req">*</span></label>
-                            <input id="poNumber" type="text" name="poNumber" th:value="${generatedPoNumber}" required
+                            <input id="poNumber" type="text" name="poNumber" th:value="${record != null ? record.poNumber : generatedPoNumber}" required
                                    class="erp-form-input" style="font-family:var(--font-mono);"
                                    placeholder="SIP-2026-00001">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="supplierId">Tedarikçi <span class="req">*</span></label>
                             <select id="supplierId" name="supplierId" required class="erp-form-select">
-                                <option value="" disabled selected>Tedarikçi seçin</option>
+                                <option value="" disabled th:selected="${record == null}">Tedarikçi seçin</option>
                                 <option th:each="s : ${suppliers}" th:value="${s.id}"
+                                        th:selected="${record != null and record.supplier != null and record.supplier.id == s.id}"
                                         th:text="${s.companyName + ' (' + s.supplierType.label + ')'}">Tedarikçi
                                 </option>
                             </select>
@@ -40,8 +41,9 @@
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="projectId">İlgili proje</label>
                             <select id="projectId" name="projectId" class="erp-form-select">
-                                <option value="">Proje seçilmedi</option>
+                                <option value="" th:selected="${record == null or record.project == null}">Proje seçilmedi</option>
                                 <option th:each="p : ${projects}" th:value="${p.id}"
+                                        th:selected="${record != null and record.project != null and record.project.id == p.id}"
                                         th:text="${p.projectCode + ' — ' + p.name}">Proje
                                 </option>
                             </select>
@@ -54,15 +56,20 @@
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="expectedDelivery">Beklenen teslimat tarihi</label>
-                            <input id="expectedDelivery" type="date" name="expectedDelivery" class="erp-form-input">
+                            <input id="expectedDelivery" type="date" name="expectedDelivery" class="erp-form-input"
+                                   th:value="${record != null ? record.expectedDelivery : ''}">
                         </div>
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="notes">Notlar</label>
                             <textarea id="notes" name="notes" class="erp-form-textarea"
+                                      th:text="${record != null ? record.notes : ''}"
                                       placeholder="Sipariş detayları, teslimat adresi..."></textarea>
                         </div>
                     </div>
                 </section>
+
+                <div th:if="${isEdit and record != null}"
+                     th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/procurement})}"></div>

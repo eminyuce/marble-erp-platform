@@ -92,6 +92,10 @@ public class UserController extends AbstractController {
                 .lastName(user.getLastName())
                 .enabled(user.isEnabled())
                 .roles(user.getRoles())
+                .createdDate(user.getCreatedDate() != null ? user.getCreatedDate() : user.getCreatedAt())
+                .updatedDate(user.getUpdatedDate() != null ? user.getUpdatedDate() : user.getUpdatedAt())
+                .addUserId(user.getAddUserId())
+                .updateUserId(user.getUpdateUserId())
                 .build();
 
         populateUserForm(model, form, true, null, null, locale);
@@ -107,6 +111,14 @@ public class UserController extends AbstractController {
                              RedirectAttributes redirectAttributes) {
         form.setId(id);
         if (bindingResult.hasErrors()) {
+            try {
+                UserDto existing = userService.getUserById(id);
+                form.setCreatedDate(existing.getCreatedDate() != null ? existing.getCreatedDate() : existing.getCreatedAt());
+                form.setUpdatedDate(existing.getUpdatedDate() != null ? existing.getUpdatedDate() : existing.getUpdatedAt());
+                form.setAddUserId(existing.getAddUserId());
+                form.setUpdateUserId(existing.getUpdateUserId());
+            } catch (Exception ignored) {
+            }
             populateUserForm(model, form, true, bindingResult, null, locale);
             return Constants.VIEW_USER_FORM;
         }
@@ -117,6 +129,14 @@ public class UserController extends AbstractController {
                     messageSource.getMessage("admin.users.update.success", null, locale));
             return "redirect:/admin/users";
         } catch (IllegalArgumentException e) {
+            try {
+                UserDto existing = userService.getUserById(id);
+                form.setCreatedDate(existing.getCreatedDate() != null ? existing.getCreatedDate() : existing.getCreatedAt());
+                form.setUpdatedDate(existing.getUpdatedDate() != null ? existing.getUpdatedDate() : existing.getUpdatedAt());
+                form.setAddUserId(existing.getAddUserId());
+                form.setUpdateUserId(existing.getUpdateUserId());
+            } catch (Exception ignored) {
+            }
             populateUserForm(model, form, true, bindingResult, e.getMessage(), locale);
             return Constants.VIEW_USER_FORM;
         }

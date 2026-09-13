@@ -4,6 +4,7 @@ import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.SlabLabelDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.enums.ScrapReasonCode;
 import com.ozerler.marble.service.ProductionService;
 import com.ozerler.marble.service.QuarryBlockService;
@@ -88,6 +89,16 @@ public class ProductionController {
             populateProductionForm(model, locale);
             return "erp/production/order-form";
         }
+    }
+
+    @GetMapping("/orders/{id}/edit")
+    public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
+        ProductionOrder order = productionService.getOrderById(id);
+        populateProductionForm(model, locale);
+        model.addAttribute("record", order);
+        model.addAttribute("isEdit", true);
+        model.addAttribute("pageTitle", "Üretim Emri Düzenle: " + order.getOrderNo());
+        return "erp/production/order-form";
     }
 
     @GetMapping("/slabs")

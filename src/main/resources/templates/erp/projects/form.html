@@ -26,6 +26,7 @@
                             <label class="erp-form-label" for="projectCode">Proje kodu <span
                                     class="req">*</span></label>
                             <input id="projectCode" type="text" name="projectCode" required
+                                   th:value="${record != null ? record.projectCode : ''}"
                                    class="erp-form-input" style="font-family:var(--font-mono);"
                                    placeholder="PROJ-2026-0043">
                         </div>
@@ -33,11 +34,13 @@
                             <label class="erp-form-label" for="customerName">Müşteri / işveren <span
                                     class="req">*</span></label>
                             <input id="customerName" type="text" name="customerName" required class="erp-form-input"
+                                   th:value="${record != null ? record.customerName : ''}"
                                    placeholder="ABC İnşaat A.Ş.">
                         </div>
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="name">Proje adı <span class="req">*</span></label>
                             <input id="name" type="text" name="name" required class="erp-form-input"
+                                   th:value="${record != null ? record.name : ''}"
                                    placeholder="X Residence doğal taş imalatı">
                         </div>
                     </div>
@@ -50,6 +53,7 @@
                             <label class="erp-form-label" for="contractValue">Sözleşme bedeli (TL) <span
                                     class="req">*</span></label>
                             <input id="contractValue" type="number" step="0.01" name="contractValue" required
+                                   th:value="${record != null ? record.contractValue : ''}"
                                    class="erp-form-input"
                                    placeholder="12400000.00">
                         </div>
@@ -57,6 +61,7 @@
                             <label class="erp-form-label" for="estimatedCost">Tahmini bütçe (TL) <span
                                     class="req">*</span></label>
                             <input id="estimatedCost" type="number" step="0.01" name="estimatedCost" required
+                                   th:value="${record != null ? record.estimatedCost : ''}"
                                    class="erp-form-input"
                                    placeholder="7800000.00">
                         </div>
@@ -68,19 +73,25 @@
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="startDate">Başlangıç tarihi</label>
-                            <input id="startDate" type="date" name="startDate" class="erp-form-input">
+                            <input id="startDate" type="date" name="startDate" class="erp-form-input"
+                                   th:value="${record != null ? record.startDate : ''}">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="deliveryDate">Teslim tarihi</label>
-                            <input id="deliveryDate" type="date" name="deliveryDate" class="erp-form-input">
+                            <input id="deliveryDate" type="date" name="deliveryDate" class="erp-form-input"
+                                   th:value="${record != null ? record.deliveryDate : ''}">
                         </div>
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="notes">Proje notları</label>
                             <textarea id="notes" name="notes" class="erp-form-textarea"
+                                      th:text="${record != null ? record.notes : ''}"
                                       placeholder="Şantiye koordinatları, taşeron ekibi ve mahal metraj detayları..."></textarea>
                         </div>
                     </div>
                 </section>
+
+                <div th:if="${isEdit and record != null}"
+                     th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/projects})}"></div>

@@ -62,6 +62,22 @@ public class UserDto {
     @JsonAlias("updatedAt")
     private LocalDateTime updatedAt;
 
+    @JsonProperty("created_date")
+    @JsonAlias("createdDate")
+    private LocalDateTime createdDate;
+
+    @JsonProperty("updated_date")
+    @JsonAlias("updatedDate")
+    private LocalDateTime updatedDate;
+
+    @JsonProperty("add_user_id")
+    @JsonAlias("addUserId")
+    private String addUserId;
+
+    @JsonProperty("update_user_id")
+    @JsonAlias("updateUserId")
+    private String updateUserId;
+
     public static UserDto fromEntity(User user) {
         return UserDto.builder()
                 .id(user.getId())
@@ -74,6 +90,10 @@ public class UserDto {
                 .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()))
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .createdDate(user.getCreatedDate())
+                .updatedDate(user.getUpdatedDate())
+                .addUserId(user.getAddUserId())
+                .updateUserId(user.getUpdateUserId())
                 .build();
     }
 }

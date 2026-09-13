@@ -123,7 +123,7 @@
                     <div>
                         <div class="font-semibold text-slate-800" th:text="${cons.itemName}">Granit Yapıştırıcı</div>
                         <div class="text-[10px] text-slate-400"
-                             th:text="${cons.location.locationName} + ' • ' + ${cons.consumptionType}">Lobi • ADHESIVE
+                             th:text="${(cons.location != null ? cons.location.locationName : '-') + ' • ' + cons.consumptionType}">Lobi • ADHESIVE
                         </div>
                     </div>
                     <div class="text-right">
@@ -172,6 +172,11 @@
                 </button>
             </form>
         </div>
+    </div>
+
+    <!-- Audit Information -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <div th:replace="~{fragments/audit :: auditInfo(${project?.createdDate}, ${project?.updatedDate}, ${project?.addUserId}, ${project?.updateUserId})}"></div>
     </div>
 
 </div>

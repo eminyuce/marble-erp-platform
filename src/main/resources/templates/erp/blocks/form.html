@@ -2,20 +2,21 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Yeni Blok Kaydı | Özerler Mermer ERP</title>
+    <title th:text="${(isEdit ? 'Blok Düzenle' : 'Yeni Blok Kaydı') + ' | Özerler Mermer ERP'}">Blok</title>
 </head>
 <body>
 <div layout:fragment="content" class="erp-form-page">
 
-    <div th:replace="~{fragments/form-page :: breadcrumb('Bloklar', @{/blocks}, 'Yeni kayıt')}"></div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Bloklar', @{/blocks}, ${isEdit ? 'Düzenle' : 'Yeni kayıt'})}"></div>
     <div th:replace="~{fragments/form-page :: heading(
-        'Yeni ham blok giriş kartı',
-        'Ocak çıkışını, 3 eksenli ölçüleri, kantar tartımını ve kalite bilgilerini kaydedin.',
-        '',
+        ${isEdit ? 'Blok bilgilerini düzenle' : 'Yeni ham blok giriş kartı'},
+        ${isEdit ? 'Ocak çıkışını, 3 eksenli ölçüleri, tartım ve kalite bilgilerini güncelleyin.' : 'Ocak çıkışını, 3 eksenli ölçüleri, kantar tartımını ve kalite bilgilerini kaydedin.'},
+        ${isEdit ? 'Blok #' + block.blockCode : ''},
         @{/blocks})}"></div>
 
     <div class="erp-form-card">
-        <form th:action="@{/blocks/create}" method="post" class="erp-form">
+        <form th:action="${isEdit} ? @{/blocks/{id}/edit(id=${block.id})} : @{/blocks/create}" method="post"
+              class="erp-form">
             <div class="erp-form-body">
                 <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
 
@@ -25,14 +26,16 @@
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="quarryId">Ocak sahası <span class="req">*</span></label>
                             <select id="quarryId" name="quarryId" required class="erp-form-select">
-                                <option value="" disabled selected>Ocak seçin</option>
+                                <option value="" disabled th:selected="${!isEdit}">Ocak seçin</option>
                                 <option th:each="q : ${quarries}" th:value="${q.id}"
+                                        th:selected="${isEdit and block != null and block.quarry != null and block.quarry.id == q.id}"
                                         th:text="${q.name + ' (' + q.location + ')'}"></option>
                             </select>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="blockCode">Blok kodu <span class="req">*</span></label>
                             <input id="blockCode" type="text" name="blockCode" required
+                                   th:value="${isEdit and block != null ? block.blockCode : ''}"
                                    class="erp-form-input" style="font-family:var(--font-mono);"
                                    placeholder="BLK-2026-00128">
                         </div>
@@ -44,18 +47,21 @@
                     <div class="erp-form-grid--3">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="widthCm">En (cm) <span class="req">*</span></label>
-                            <input id="widthCm" type="number" name="widthCm" required value="180" class="erp-form-input"
-                                   placeholder="180">
+                            <input id="widthCm" type="number" name="widthCm" required
+                                   th:value="${isEdit and block != null ? block.widthCm : 180}"
+                                   class="erp-form-input" placeholder="180">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="lengthCm">Boy (cm) <span class="req">*</span></label>
-                            <input id="lengthCm" type="number" name="lengthCm" required value="290"
+                            <input id="lengthCm" type="number" name="lengthCm" required
+                                   th:value="${isEdit and block != null ? block.lengthCm : 290}"
                                    class="erp-form-input" placeholder="290">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="heightCm">Yükseklik (cm) <span
                                     class="req">*</span></label>
-                            <input id="heightCm" type="number" name="heightCm" required value="150"
+                            <input id="heightCm" type="number" name="heightCm" required
+                                   th:value="${isEdit and block != null ? block.heightCm : 150}"
                                    class="erp-form-input" placeholder="150">
                         </div>
                     </div>
@@ -64,14 +70,14 @@
                             <label class="erp-form-label" for="actualWeightKg">Kantar tartımı (kg) <span
                                     class="req">*</span></label>
                             <input id="actualWeightKg" type="number" step="0.01" name="actualWeightKg" required
-                                   value="20850"
+                                   th:value="${isEdit and block != null ? block.actualWeightKg : 20850}"
                                    class="erp-form-input" placeholder="20850.00">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="extractionCost">Ocak çıkarma maliyeti (TL) <span
                                     class="req">*</span></label>
                             <input id="extractionCost" type="number" step="0.01" name="extractionCost" required
-                                   value="42000"
+                                   th:value="${isEdit and block != null ? block.extractionCost : 42000}"
                                    class="erp-form-input" placeholder="42000.00">
                         </div>
                     </div>
@@ -83,22 +89,30 @@
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="stoneType">Taş cinsi ve seleksiyon <span
                                     class="req">*</span></label>
-                            <input id="stoneType" type="text" name="stoneType" required value="Muğla Beyaz"
+                            <input id="stoneType" type="text" name="stoneType" required
+                                   th:value="${isEdit and block != null ? block.stoneType : 'Muğla Beyaz'}"
                                    class="erp-form-input" placeholder="Örn: Muğla Beyaz Kristal">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="qualityGrade">Kalite sınıfı</label>
                             <select id="qualityGrade" name="qualityGrade" class="erp-form-select">
                                 <option th:each="g : ${qualityGrades}" th:value="${g.name()}"
+                                        th:selected="${isEdit and block != null and block.qualityGrade == g}"
                                         th:text="${g.label}"></option>
                             </select>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="crackLevel">Çatlak seviyesi</label>
                             <select id="crackLevel" name="crackLevel" class="erp-form-select">
-                                <option value="0">0 — Çatlaksız (temiz)</option>
-                                <option value="1">1 — Yüzeysel kılcal</option>
-                                <option value="2">2 — Kritik / derin çatlak</option>
+                                <option value="0" th:selected="${isEdit and block != null and block.crackLevel == 0}">0
+                                    — Çatlaksız (temiz)
+                                </option>
+                                <option value="1" th:selected="${isEdit and block != null and block.crackLevel == 1}">1
+                                    — Yüzeysel kılcal
+                                </option>
+                                <option value="2" th:selected="${isEdit and block != null and block.crackLevel == 2}">2
+                                    — Kritik / derin çatlak
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -109,15 +123,20 @@
                     <div class="erp-form-field">
                         <label class="erp-form-label" for="block-filepond">Blok 4 cephe fotoğrafları</label>
                         <input type="file" id="block-filepond" name="file" class="filepond">
-                        <input type="hidden" id="photo-urls-input" name="photoUrls" value="">
+                        <input type="hidden" id="photo-urls-input" name="photoUrls"
+                               th:value="${isEdit and block != null ? block.photoUrls : ''}">
                     </div>
                     <div class="erp-form-field">
                         <label class="erp-form-label">Jeolojik ayna notları</label>
                         <div id="dual-editor-container"></div>
                         <input type="hidden" id="notes-hidden-input" name="notes"
-                               value="Ocak sahasında ayna A-2 seviyesinden homojen kristal blok çıkarımı.">
+                               th:value="${isEdit and block != null ? block.notes : 'Ocak sahasında ayna A-2 seviyesinden homojen kristal blok çıkarımı.'}">
                     </div>
                 </section>
+
+                <!-- Audit Information in Edit Mode -->
+                <div th:if="${isEdit and block != null}"
+                     th:replace="~{fragments/audit :: auditInfo(${block?.createdDate}, ${block?.updatedDate}, ${block?.addUserId}, ${block?.updateUserId})}"></div>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/blocks})}"></div>

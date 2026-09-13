@@ -3,7 +3,6 @@ package com.ozerler.marble.model;
 import com.ozerler.marble.model.enums.ProcessType;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,8 +16,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class ProductionOrder {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class ProductionOrder extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,7 +72,4 @@ public class ProductionOrder {
     @Builder.Default
     private List<ScrapLog> scrapLogs = new ArrayList<>();
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 }

@@ -46,11 +46,10 @@ public class SalesService {
     @Transactional(readOnly = true)
     public TabulatorResponse<SalesOrderDto> getSalesOrdersPaged(int page, int size,
                                                                 String search, String sortField, String sortDir) {
-        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
-        if (sortField != null && !sortField.isBlank()) {
-            Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-            sort = Sort.by(dir, sortField);
-        }
+        String sortProperty = (sortField == null || sortField.isBlank() || "createdAt".equalsIgnoreCase(sortField))
+                ? "createdDate" : sortField;
+        Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(dir, sortProperty);
 
         int pageIndex = Math.max(0, page - 1);
         Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
@@ -71,7 +70,7 @@ public class SalesService {
     @Transactional(readOnly = true)
     public SalesOrder getOrderById(Long id) {
         Objects.requireNonNull(id, getMessage("error.sales_order.id.required"));
-        return salesOrderRepository.findById(id)
+        return salesOrderRepository.findWithDetailsById(id)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.sales_order.not_found", id)));
     }
 

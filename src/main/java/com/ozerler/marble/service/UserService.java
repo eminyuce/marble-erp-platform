@@ -51,11 +51,10 @@ public class UserService {
     @Transactional(readOnly = true)
     public TabulatorResponse<UserDto> getUsersPaged(int page, int size, String search, String sortField, String sortDir,
                                                     String roleName, Boolean enabled) {
-        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
-        if (StringUtils.isNotBlank(sortField)) {
-            Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-            sort = Sort.by(dir, sortField);
-        }
+        String sortProperty = (sortField == null || sortField.isBlank() || "createdAt".equalsIgnoreCase(sortField))
+                ? "createdDate" : sortField;
+        Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(dir, sortProperty);
 
         // Tabulator pages are 1-indexed, Spring Data is 0-indexed
         int pageIndex = Math.max(0, page - 1);

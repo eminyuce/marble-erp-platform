@@ -5,11 +5,9 @@ import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.model.enums.SurfaceFinish;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "slabs")
@@ -18,8 +16,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class Slab {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class Slab extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,9 +73,6 @@ public class Slab {
     @Builder.Default
     private SlabStatus status = SlabStatus.AVAILABLE;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     public void calculateArea() {
         if (widthCm != null && lengthCm != null) {

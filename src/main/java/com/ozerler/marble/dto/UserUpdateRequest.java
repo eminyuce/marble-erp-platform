@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -49,4 +50,20 @@ public class UserUpdateRequest {
     @JsonProperty("roles")
     @JsonAlias("roles")
     private Set<String> roles = new HashSet<>();
+
+    @JsonProperty("created_date")
+    @JsonAlias("createdDate")
+    private LocalDateTime createdDate;
+
+    @JsonProperty("updated_date")
+    @JsonAlias("updatedDate")
+    private LocalDateTime updatedDate;
+
+    @JsonProperty("add_user_id")
+    @JsonAlias("addUserId")
+    private String addUserId;
+
+    @JsonProperty("update_user_id")
+    @JsonAlias("updateUserId")
+    private String updateUserId;
 }

@@ -47,11 +47,10 @@ public class ProjectSiteService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String sortField, String sortDir) {
-        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
-        if (sortField != null && !sortField.isBlank()) {
-            Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-            sort = Sort.by(dir, sortField);
-        }
+        String sortProperty = (sortField == null || sortField.isBlank() || "createdAt".equalsIgnoreCase(sortField))
+                ? "createdDate" : sortField;
+        Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(dir, sortProperty);
 
         int pageIndex = Math.max(0, page - 1);
         Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);

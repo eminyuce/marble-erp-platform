@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class SiteConsumption {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class SiteConsumption extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

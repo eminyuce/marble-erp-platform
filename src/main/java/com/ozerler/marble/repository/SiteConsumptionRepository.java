@@ -13,7 +13,8 @@ import java.util.List;
 @Repository
 public interface SiteConsumptionRepository extends JpaRepository<SiteConsumption, Long> {
 
-    List<SiteConsumption> findByProjectId(Long projectId);
+    @Query("SELECT s FROM SiteConsumption s LEFT JOIN FETCH s.location WHERE s.project.id = :projectId")
+    List<SiteConsumption> findByProjectId(@Param("projectId") Long projectId);
 
     List<SiteConsumption> findByLocationId(Long locationId);
 

@@ -49,6 +49,8 @@
                                   th:text="${template.bodyHtml}"></textarea>
                     </div>
                 </section>
+
+                <div th:replace="~{fragments/audit :: auditInfo(${template?.createdDate}, ${template?.updatedDate}, ${template?.addUserId}, ${template?.updateUserId})}"></div>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/admin/settings(tab='templates')})}"></div>

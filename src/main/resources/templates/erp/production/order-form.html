@@ -33,7 +33,8 @@
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="machineName">Makine / katrak <span
                                     class="req">*</span></label>
-                            <input id="machineName" type="text" name="machineName" value="Katrak-01 (80 Lamalı)"
+                            <input id="machineName" type="text" name="machineName"
+                                   th:value="${record != null ? record.machineName : 'Katrak-01 (80 Lamalı)'}"
                                    required
                                    class="erp-form-input" placeholder="Katrak-01">
                         </div>
@@ -126,17 +127,21 @@
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="operatorName">Operatör adı <span
                                     class="req">*</span></label>
-                            <input id="operatorName" type="text" name="operatorName" value="Ahmet Kaya" required
+                            <input id="operatorName" type="text" name="operatorName"
+                                   th:value="${record != null ? record.operatorName : 'Ahmet Kaya'}" required
                                    class="erp-form-input" placeholder="Operatör adı">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="notes">Vardiya / notlar</label>
                             <input id="notes" type="text" name="notes"
-                                   value="Gündüz vardiyası, 80 lama standart indirme"
+                                   th:value="${record != null ? record.notes : 'Gündüz vardiyası, 80 lama standart indirme'}"
                                    class="erp-form-input" placeholder="Vardiya notu">
                         </div>
                     </div>
                 </section>
+
+                <div th:if="${isEdit and record != null}"
+                     th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/production})}"></div>

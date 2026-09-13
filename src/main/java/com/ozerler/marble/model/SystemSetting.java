@@ -2,9 +2,6 @@ package com.ozerler.marble.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "system_settings")
@@ -13,8 +10,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class SystemSetting {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class SystemSetting extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,8 +28,4 @@ public class SystemSetting {
 
     @Column(length = 255)
     private String description;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }

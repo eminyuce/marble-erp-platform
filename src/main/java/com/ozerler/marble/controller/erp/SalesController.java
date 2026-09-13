@@ -70,6 +70,16 @@ public class SalesController {
         }
     }
 
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
+        SalesOrder order = salesService.getOrderById(id);
+        populateSalesForm(model, locale);
+        model.addAttribute("record", order);
+        model.addAttribute("isEdit", true);
+        model.addAttribute("pageTitle", "Satış Siparişi Düzenle: " + order.getOrderNo());
+        return "erp/sales/form";
+    }
+
     @GetMapping("/{id}")
     public String orderDetail(@PathVariable("id") Long id, Model model) {
         SalesOrder order = salesService.getOrderById(id);

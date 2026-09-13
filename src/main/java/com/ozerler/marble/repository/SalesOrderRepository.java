@@ -18,6 +18,9 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
             "LOWER(so.customer.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<SalesOrder> searchSalesOrders(@Param("search") String search, Pageable pageable);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"customer", "items"})
+    java.util.Optional<SalesOrder> findWithDetailsById(@Param("id") Long id);
+
     @Query("SELECT so FROM SalesOrder so JOIN FETCH so.customer WHERE LOWER(so.orderNo) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<SalesOrder> searchByOrderNo(@Param("query") String query, Pageable pageable);
 }

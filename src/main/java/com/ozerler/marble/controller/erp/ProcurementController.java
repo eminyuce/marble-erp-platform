@@ -69,6 +69,16 @@ public class ProcurementController {
         }
     }
 
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable("id") Long id, Model model, java.util.Locale locale) {
+        PurchaseOrder order = procurementService.getOrderById(id);
+        populateProcurementForm(model, locale);
+        model.addAttribute("record", order);
+        model.addAttribute("isEdit", true);
+        model.addAttribute("pageTitle", "Satınalma Siparişi Düzenle: " + order.getPoNumber());
+        return "erp/procurement/form";
+    }
+
     @GetMapping("/{id}")
     public String orderDetail(@PathVariable("id") Long id, Model model) {
         PurchaseOrder order = procurementService.getOrderById(id);

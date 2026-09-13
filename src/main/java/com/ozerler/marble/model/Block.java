@@ -4,13 +4,10 @@ import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.QualityGrade;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "blocks")
@@ -19,8 +16,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class Block {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class Block extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -95,13 +92,6 @@ public class Block {
     @Column(name = "photo_urls", columnDefinition = "TEXT")
     private String photoUrls;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     public void calculateMetrics(BigDecimal specificGravity) {
         if (widthCm != null && lengthCm != null && heightCm != null) {

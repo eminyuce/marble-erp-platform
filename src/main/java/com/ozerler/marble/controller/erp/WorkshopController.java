@@ -2,6 +2,7 @@ package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.CutOrder;
 import com.ozerler.marble.service.WorkshopCutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -73,6 +74,16 @@ public class WorkshopController {
             populateCutForm(model, locale);
             return "erp/workshop/cut-order-form";
         }
+    }
+
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
+        CutOrder order = workshopCutService.getCutOrderById(id);
+        populateCutForm(model, locale);
+        model.addAttribute("record", order);
+        model.addAttribute("isEdit", true);
+        model.addAttribute("pageTitle", "Kesim Emri Düzenle: " + order.getCutOrderNo());
+        return "erp/workshop/cut-order-form";
     }
 
     private void populateCutForm(Model model, Locale locale) {

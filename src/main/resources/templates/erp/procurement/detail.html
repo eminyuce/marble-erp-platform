@@ -124,6 +124,11 @@
         </form>
     </div>
 
+    <!-- Audit Information -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <div th:replace="~{fragments/audit :: auditInfo(${order?.createdDate}, ${order?.updatedDate}, ${order?.addUserId}, ${order?.updateUserId})}"></div>
+    </div>
+
 </div>
 </body>
 </html>

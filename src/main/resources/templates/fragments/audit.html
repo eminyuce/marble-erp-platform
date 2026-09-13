@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="auditInfo(createdDate, updatedDate, addUserId, updateUserId)"
+     class="erp-form-section erp-audit-section">
+    <div class="erp-form-section-head">
+        <h3 class="erp-form-section-title">Denetim Bilgileri</h3>
+        <p class="erp-form-hint">Kayıt ve güncelleme geçmişi</p>
+    </div>
+    <div class="erp-audit-grid">
+        <div class="erp-audit-card">
+            <span class="erp-audit-label">Oluşturma Tarihi</span>
+            <span class="erp-audit-value"
+                  th:text="${@auditPresenter.formatDateTime(createdDate)}">22.07.2026 20:11</span>
+        </div>
+        <div class="erp-audit-card">
+            <span class="erp-audit-label">Güncelleme Tarihi</span>
+            <span class="erp-audit-value"
+                  th:text="${@auditPresenter.formatDateTime(updatedDate)}">3.09.2026 12:57</span>
+        </div>
+        <div class="erp-audit-card">
+            <span class="erp-audit-label">Oluşturan</span>
+            <span class="erp-audit-value"
+                  th:text="${@auditPresenter.formatUser(addUserId)}">xyz@email.com (Emin YUCE)</span>
+        </div>
+        <div class="erp-audit-card">
+            <span class="erp-audit-label">Güncelleyen</span>
+            <span class="erp-audit-value"
+                  th:text="${@auditPresenter.formatUser(updateUserId)}">pow@gmail.com (Huseyin YUCE)</span>
+        </div>
+    </div>
+</div>
+
+</html>

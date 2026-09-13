@@ -24,15 +24,16 @@
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="orderNo">Sipariş no <span class="req">*</span></label>
-                            <input id="orderNo" type="text" name="orderNo" th:value="${generatedOrderNo}" required
+                            <input id="orderNo" type="text" name="orderNo" th:value="${record != null ? record.orderNo : generatedOrderNo}" required
                                    class="erp-form-input" style="font-family:var(--font-mono);"
                                    placeholder="SAT-2026-00001">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="customerId">Müşteri <span class="req">*</span></label>
                             <select id="customerId" name="customerId" required class="erp-form-select">
-                                <option value="" disabled selected>Müşteri seçin</option>
+                                <option value="" disabled th:selected="${record == null}">Müşteri seçin</option>
                                 <option th:each="c : ${customers}" th:value="${c.id}"
+                                        th:selected="${record != null and record.customer != null and record.customer.id == c.id}"
                                         th:text="${c.companyName + ' (' + c.customerType.label + ')'}">Müşteri
                                 </option>
                             </select>
@@ -45,15 +46,20 @@
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="deliveryDate">Teslim tarihi</label>
-                            <input id="deliveryDate" type="date" name="deliveryDate" class="erp-form-input">
+                            <input id="deliveryDate" type="date" name="deliveryDate" class="erp-form-input"
+                                   th:value="${record != null ? record.deliveryDate : ''}">
                         </div>
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="notes">Notlar</label>
                             <textarea id="notes" name="notes" class="erp-form-textarea"
+                                      th:text="${record != null ? record.notes : ''}"
                                       placeholder="Sipariş detayları, teslimat adresi..."></textarea>
                         </div>
                     </div>
                 </section>
+
+                <div th:if="${isEdit and record != null}"
+                     th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/sales})}"></div>

@@ -12,8 +12,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class CostCenter {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class CostCenter extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

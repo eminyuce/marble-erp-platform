@@ -74,6 +74,16 @@ public class ProjectController {
         }
     }
 
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
+        Project project = projectSiteService.getProjectById(id);
+        model.addAttribute("project", project);
+        model.addAttribute("record", project);
+        model.addAttribute("isEdit", true);
+        model.addAttribute("pageTitle", "Proje Düzenle: " + project.getName());
+        return "erp/projects/form";
+    }
+
     @GetMapping("/{id}")
     public String projectDetail(@PathVariable("id") Long id, Model model) {
         Project project = projectSiteService.getProjectById(id);

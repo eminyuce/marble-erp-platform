@@ -3,11 +3,9 @@ package com.ozerler.marble.model;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,8 +16,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class SalesOrder {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class SalesOrder extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,9 +57,6 @@ public class SalesOrder {
     @Builder.Default
     private List<SalesOrderItem> items = new ArrayList<>();
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     public void recalculateTotal() {
         this.totalAmount = items.stream()

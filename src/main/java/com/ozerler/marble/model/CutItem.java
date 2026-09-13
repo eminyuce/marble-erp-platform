@@ -2,11 +2,9 @@ package com.ozerler.marble.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "cut_items")
@@ -15,8 +13,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-public class CutItem {
+@EqualsAndHashCode(callSuper = false, of = "id")
+public class CutItem extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,9 +57,6 @@ public class CutItem {
     @Builder.Default
     private String status = "READY"; // READY, PACKED, DELIVERED, INSTALLED
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     public void calculateArea() {
         if (widthCm != null && lengthCm != null) {

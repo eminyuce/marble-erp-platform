@@ -110,6 +110,9 @@
                         <span>Kullanıcı hesabı aktif</span>
                     </label>
                 </section>
+
+                <div th:if="${isEdit}"
+                     th:replace="~{fragments/audit :: auditInfo(${userForm?.createdDate}, ${userForm?.updatedDate}, ${userForm?.addUserId}, ${userForm?.updateUserId})}"></div>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/admin/users})}"></div>
