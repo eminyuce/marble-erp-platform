@@ -4,7 +4,7 @@
 >
 > **EN:** Do not use `scripts/run_local.sh` or `mvn spring-boot:run` on the production host. Run the packaged JAR under systemd: `./scripts/deploy_production.sh` (or `./scripts/deploy_production.sh -y`)
 
-This runbook is for the **bare-metal JAR** layout already in use on the Linux host (`eyuce`, `/opt/marble-erp/app.jar`). First-time OS hardening, Nginx, and Docker Compose are documented in [DEPLOYMENT_LINUX.md](../DEPLOYMENT_LINUX.md). Automated image deploys (GHCR) live in [`.github/workflows/deploy-production.yml`](../.github/workflows/deploy-production.yml). For an operational runbook, see [`DEPLOYMENT_RUNBOOK.md`](../DEPLOYMENT_RUNBOOK.md).
+This runbook is for the **bare-metal JAR** layout already in use on the Linux host (`eyuce`, `/opt/marble-erp/app.jar`). First-time OS hardening, Nginx, and Docker Compose are documented in [DEPLOYMENT_LINUX.md](../DEPLOYMENT_LINUX.md). Production deploys are **manual**: run `./scripts/deploy_production.sh` on the host (there is no GitHub Actions deploy). For an operational runbook, see [`DEPLOYMENT_RUNBOOK.md`](../DEPLOYMENT_RUNBOOK.md).
 
 Local development stays in [RUNNING_LOCALLY.md](../RUNNING_LOCALLY.md) and `scripts/run_local.sh`.
 
@@ -66,7 +66,7 @@ Do not store secrets in git. Use placeholders locally; put real values only in `
 
 ## Build (same steps as Docker / CI)
 
-Frontend CSS is compiled into `src/main/resources/static/css/app.css` **before** Maven packages the JAR. The GitHub workflow builds this inside `docker/Dockerfile`; on the host you do it explicitly:
+Frontend CSS is compiled into `src/main/resources/static/css/app.css` **before** Maven packages the JAR. Image builds do this inside `docker/Dockerfile`; on the host you do it explicitly:
 
 ```bash
 cd frontend && npm install && npm run build && cd ..
