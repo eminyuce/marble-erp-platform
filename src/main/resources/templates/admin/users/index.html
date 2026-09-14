@@ -103,7 +103,7 @@
     <script th:inline="javascript">
         window.USER_ROLE_LABELS = /*[[${roleLabelMap}]]*/ {};
     </script>
-    <script th:src="@{/js/users-grid.js}"></script>
+    <script th:src="@{/js/users-grid.js(v=${assetVersion})}"></script>
 </th:block>
 </body>
 </html>

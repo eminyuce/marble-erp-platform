@@ -34,6 +34,13 @@ spring:
         order_updates: true
   thymeleaf:
     cache: true
+  web:
+    locale: tr
+    locale-resolver: fixed
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
 
 server:
   port: ${PORT:${SERVER_PORT:10000}}
