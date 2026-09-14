@@ -18,8 +18,8 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     Optional<Block> findByBlockCode(String blockCode);
 
-    @EntityGraph(attributePaths = {"quarry"})
-    Optional<Block> findByBlockCodeWithQuarry(String blockCode);
+    @Query("SELECT b FROM Block b JOIN FETCH b.quarry WHERE b.blockCode = :blockCode")
+    Optional<Block> findByBlockCodeWithQuarry(@Param("blockCode") String blockCode);
 
     @EntityGraph(attributePaths = {"quarry"})
     @Query("SELECT b FROM Block b WHERE b.id = :id")
