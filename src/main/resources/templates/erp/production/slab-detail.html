@@ -26,6 +26,10 @@
             </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
+            <a th:href="@{/production/slabs/{id}/edit(id=${slab.id})}" class="erp-btn-secondary">
+                <i data-lucide="edit-3"></i>
+                <span>Düzenle</span>
+            </a>
             <a th:href="@{'/production/slabs/' + ${slab.id} + '/label'}" class="erp-btn-secondary" target="_blank">
                 <i data-lucide="printer"></i>
                 <span>Barkod</span>

@@ -44,6 +44,7 @@ const PAGES_TO_TEST = [
     { name: '12b_production_order_edit', path: '/production/orders/1/edit', isPublic: false },
     { name: '13_slabs', path: '/production/slabs', isPublic: false, tabulatorId: '#slabs-table' },
     { name: '13b_slab_detail', path: '/production/slabs/1', isPublic: false },
+    { name: '13c_slab_edit', path: '/production/slabs/1/edit', isPublic: false },
     { name: '14_slab_label', path: '/production/slabs/1/label', isPublic: false },
 
     // Workshop

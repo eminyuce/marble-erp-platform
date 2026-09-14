@@ -5,7 +5,11 @@ import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.SlabLabelDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.ProductionOrder;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.ScrapReasonCode;
+import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.model.enums.SurfaceFinish;
 import com.ozerler.marble.service.ProductionService;
 import com.ozerler.marble.service.QuarryBlockService;
 import lombok.RequiredArgsConstructor;
@@ -131,6 +135,44 @@ public class ProductionController {
         return "erp/production/slab-detail";
     }
 
+    @GetMapping("/slabs/{id}/edit")
+    public String showSlabEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
+        populateSlabEditForm(model, productionService.getSlabWithDetails(id), locale);
+        return "erp/production/slab-form";
+    }
+
+    @PostMapping("/slabs/{id}/edit")
+    public String updateSlab(@PathVariable("id") Long id,
+                             @RequestParam("slabCode") String slabCode,
+                             @RequestParam("thicknessCm") BigDecimal thicknessCm,
+                             @RequestParam("widthCm") BigDecimal widthCm,
+                             @RequestParam("lengthCm") BigDecimal lengthCm,
+                             @RequestParam("surfaceFinish") SurfaceFinish surfaceFinish,
+                             @RequestParam("qualityGrade") QualityGrade qualityGrade,
+                             @RequestParam(value = "glossLevel", required = false) Integer glossLevel,
+                             @RequestParam("costPerM2") BigDecimal costPerM2,
+                             @RequestParam("status") SlabStatus status,
+                             Locale locale,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            productionService.updateSlab(id, slabCode, thicknessCm, widthCm, lengthCm,
+                    surfaceFinish, qualityGrade, glossLevel, costPerM2, status);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.slab.update.success", null, locale));
+            return "redirect:/production/slabs";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            try {
+                populateSlabEditForm(model, productionService.getSlabWithDetails(id), locale);
+            } catch (Exception ignored) {
+                model.addAttribute("pageTitle", messageSource.getMessage("erp.slab.title.edit", null, locale));
+            }
+            return "erp/production/slab-form";
+        }
+    }
+
     @GetMapping("/slabs/{id}/label")
     public String slabLabel(@PathVariable("id") Long id, Model model) {
         SlabLabelDto label = productionService.getSlabLabelData(id, "http://localhost:8080/passport/");
@@ -148,5 +190,15 @@ public class ProductionController {
         model.addAttribute("availableBlocks", quarryBlockService.getAvailableBlocksForProduction());
         model.addAttribute("scrapReasons", ScrapReasonCode.values());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.production.title.create", null, locale));
+    }
+
+    private void populateSlabEditForm(Model model, Slab slab, Locale locale) {
+        model.addAttribute("record", slab);
+        model.addAttribute("slab", slab);
+        model.addAttribute("qualityGrades", QualityGrade.values());
+        model.addAttribute("surfaceFinishes", SurfaceFinish.values());
+        model.addAttribute("slabStatuses", SlabStatus.values());
+        model.addAttribute("pageTitle", messageSource.getMessage("erp.slab.title.edit", null, locale)
+                + ": " + slab.getSlabCode());
     }
 }

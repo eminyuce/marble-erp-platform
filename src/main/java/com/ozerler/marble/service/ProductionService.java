@@ -329,4 +329,50 @@ public class ProductionService {
                 .quarryName(quarryName)
                 .build();
     }
+
+    @Transactional
+    public Slab updateSlab(Long id,
+                           String slabCode,
+                           BigDecimal thicknessCm,
+                           BigDecimal widthCm,
+                           BigDecimal lengthCm,
+                           SurfaceFinish surfaceFinish,
+                           QualityGrade qualityGrade,
+                           Integer glossLevel,
+                           BigDecimal costPerM2,
+                           SlabStatus status) {
+        Objects.requireNonNull(id, getMessage("error.slab.id.required"));
+        Objects.requireNonNull(slabCode, getMessage("error.slab.code.required"));
+
+        Slab slab = slabRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(getMessage("error.slab.entity_not_found", id)));
+
+        slab.setSlabCode(slabCode.trim());
+        if (thicknessCm != null) {
+            slab.setThicknessCm(thicknessCm);
+        }
+        if (widthCm != null) {
+            slab.setWidthCm(widthCm);
+        }
+        if (lengthCm != null) {
+            slab.setLengthCm(lengthCm);
+        }
+        slab.calculateArea();
+        if (surfaceFinish != null) {
+            slab.setSurfaceFinish(surfaceFinish);
+        }
+        if (qualityGrade != null) {
+            slab.setQualityGrade(qualityGrade);
+        }
+        if (glossLevel != null) {
+            slab.setGlossLevel(glossLevel);
+        }
+        if (costPerM2 != null) {
+            slab.setCostPerM2(costPerM2);
+        }
+        if (status != null) {
+            slab.setStatus(status);
+        }
+        return slabRepository.save(slab);
+    }
 }

@@ -7,6 +7,9 @@ import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.enums.ProcessType;
+import com.ozerler.marble.model.enums.QualityGrade;
+import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.model.enums.SurfaceFinish;
 import jakarta.persistence.EntityNotFoundException;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.ProductionOrderRepository;
@@ -126,6 +129,61 @@ class ProductionServiceTest {
 
         assertThat(result.getSlabCode()).isEqualTo("SLB-001");
         verify(slabRepository).findWithDetailsById(4L);
+    }
+
+    @Test
+    @DisplayName("updateSlab writes identity, dimensions, finish, and status then saves")
+    void updateSlab_UpdatesFieldsRecalculatesAreaAndSaves() {
+        Slab existing = Slab.builder()
+                .id(4L)
+                .slabCode("SLB-OLD")
+                .thicknessCm(new BigDecimal("2.00"))
+                .widthCm(new BigDecimal("100.00"))
+                .lengthCm(new BigDecimal("100.00"))
+                .surfaceAreaM2(new BigDecimal("1.0000"))
+                .surfaceFinish(SurfaceFinish.RAW)
+                .qualityGrade(QualityGrade.B)
+                .glossLevel(0)
+                .costPerM2(new BigDecimal("100.00"))
+                .status(SlabStatus.AVAILABLE)
+                .build();
+        when(slabRepository.findById(4L)).thenReturn(Optional.of(existing));
+        when(slabRepository.save(any(Slab.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Slab updated = productionService.updateSlab(
+                4L,
+                "SLB-2026-00851",
+                new BigDecimal("2.00"),
+                new BigDecimal("175.00"),
+                new BigDecimal("285.00"),
+                SurfaceFinish.POLISHED,
+                QualityGrade.A,
+                88,
+                new BigDecimal("1185.57"),
+                SlabStatus.RESERVED
+        );
+
+        assertThat(updated.getSlabCode()).isEqualTo("SLB-2026-00851");
+        assertThat(updated.getWidthCm()).isEqualByComparingTo("175.00");
+        assertThat(updated.getLengthCm()).isEqualByComparingTo("285.00");
+        assertThat(updated.getSurfaceAreaM2()).isEqualByComparingTo("4.9875");
+        assertThat(updated.getSurfaceFinish()).isEqualTo(SurfaceFinish.POLISHED);
+        assertThat(updated.getQualityGrade()).isEqualTo(QualityGrade.A);
+        assertThat(updated.getGlossLevel()).isEqualTo(88);
+        assertThat(updated.getCostPerM2()).isEqualByComparingTo("1185.57");
+        assertThat(updated.getStatus()).isEqualTo(SlabStatus.RESERVED);
+        verify(slabRepository).save(existing);
+    }
+
+    @Test
+    @DisplayName("updateSlab throws when the slab does not exist")
+    void updateSlab_MissingSlab_Throws() {
+        when(slabRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productionService.updateSlab(
+                99L, "SLB-1", BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE,
+                SurfaceFinish.RAW, QualityGrade.A, 0, BigDecimal.ONE, SlabStatus.AVAILABLE))
+                .isInstanceOf(EntityNotFoundException.class);
     }
 
     @Test

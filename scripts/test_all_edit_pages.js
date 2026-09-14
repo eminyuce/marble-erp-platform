@@ -33,7 +33,8 @@ const EDIT_PAGES_TO_TEST = [
   { name: 'production_order_1_edit', path: '/production/orders/1/edit', label: 'Üretim Emri Düzenle' },
   { name: 'workshop_1_detail', path: '/workshop/1', label: 'Atölye Kesim Detay' },
   { name: 'workshop_1_edit', path: '/workshop/1/edit', label: 'Atölye Kesim Düzenle' },
-  { name: 'slab_1_detail', path: '/production/slabs/1', label: 'Plaka Detay' }
+  { name: 'slab_1_detail', path: '/production/slabs/1', label: 'Plaka Detay' },
+  { name: 'slab_1_edit', path: '/production/slabs/1/edit', label: 'Plaka Düzenle' }
 ];
 
 async function run() {

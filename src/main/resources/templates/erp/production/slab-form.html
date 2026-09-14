@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${'Plaka Düzenle | Özerler Mermer ERP'}">Plaka Düzenle</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Plaka Ambarı', @{/production/slabs}, 'Düzenle')}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        'Plaka bilgilerini düzenle',
+        'Ölçü, yüzey, kalite, maliyet ve stok durumunu güncelleyin.',
+        ${record?.slabCode},
+        @{/production/slabs})}"></div>
+
+    <div class="erp-form-card">
+        <form th:action="@{/production/slabs/{id}/edit(id=${record.id})}" method="post" class="erp-form">
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Plaka kodu ve stok durumu')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="slabCode">Plaka kodu <span class="req">*</span></label>
+                            <input id="slabCode" type="text" name="slabCode" required
+                                   th:value="${record != null ? record.slabCode : ''}"
+                                   class="erp-form-input" style="font-family:var(--font-mono);"
+                                   placeholder="SLB-2026-00851">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="status">Durum <span class="req">*</span></label>
+                            <select id="status" name="status" required class="erp-form-select">
+                                <option th:each="st : ${slabStatuses}" th:value="${st.name()}"
+                                        th:selected="${record != null and record.status == st}"
+                                        th:text="${st.label}">AVAILABLE</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Ölçüler', 'Kalınlık, en, boy ve parlaklık')}"></div>
+                    <div class="erp-form-grid--4">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="thicknessCm">Kalınlık (cm) <span class="req">*</span></label>
+                            <input id="thicknessCm" type="number" step="0.01" name="thicknessCm" required
+                                   th:value="${record != null ? record.thicknessCm : ''}"
+                                   class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="widthCm">En (cm) <span class="req">*</span></label>
+                            <input id="widthCm" type="number" step="0.01" name="widthCm" required
+                                   th:value="${record != null ? record.widthCm : ''}"
+                                   class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="lengthCm">Boy (cm) <span class="req">*</span></label>
+                            <input id="lengthCm" type="number" step="0.01" name="lengthCm" required
+                                   th:value="${record != null ? record.lengthCm : ''}"
+                                   class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="glossLevel">Parlaklık</label>
+                            <input id="glossLevel" type="number" min="0" name="glossLevel"
+                                   th:value="${record != null ? record.glossLevel : 0}"
+                                   class="erp-form-input">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kalite ve maliyet', 'Yüzey işlemi, kalite sınıfı ve birim maliyet')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="surfaceFinish">Yüzey <span class="req">*</span></label>
+                            <select id="surfaceFinish" name="surfaceFinish" required class="erp-form-select">
+                                <option th:each="finish : ${surfaceFinishes}" th:value="${finish.name()}"
+                                        th:selected="${record != null and record.surfaceFinish == finish}"
+                                        th:text="${finish.label}">RAW</option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="qualityGrade">Kalite <span class="req">*</span></label>
+                            <select id="qualityGrade" name="qualityGrade" required class="erp-form-select">
+                                <option th:each="grade : ${qualityGrades}" th:value="${grade.name()}"
+                                        th:selected="${record != null and record.qualityGrade == grade}"
+                                        th:text="${grade.label}">A</option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="costPerM2">Birim maliyet (TL/m²) <span class="req">*</span></label>
+                            <input id="costPerM2" type="number" step="0.01" name="costPerM2" required
+                                   th:value="${record != null ? record.costPerM2 : ''}"
+                                   class="erp-form-input">
+                        </div>
+                    </div>
+                </section>
+
+                <div th:if="${record != null}"
+                     th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
+            </div>
+
+            <div th:replace="~{fragments/form-page :: actions(@{/production/slabs})}"></div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
