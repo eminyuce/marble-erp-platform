@@ -13,8 +13,8 @@
     <link rel="preload" th:href="@{/fonts/inter-latin-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" th:href="@{/fonts/inter-latin-ext-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
 
-    <link rel="stylesheet" th:href="@{/css/app.css}">
-    <link rel="stylesheet" th:href="@{/css/searchable-select.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css(v=${assetVersion})}">
+    <link rel="stylesheet" th:href="@{/css/searchable-select.css(v=${assetVersion})}">
     <link rel="stylesheet" th:href="@{/vendor/tabulator/tabulator.min.css}">
     <link rel="stylesheet" href="https://unpkg.com/filepond@^4/dist/filepond.css">
     <link rel="stylesheet"
@@ -23,6 +23,129 @@
     <style>
         [x-cloak] {
             display: none !important;
+        }
+
+        /* Help slide-over is inlined so a year-cached /css/app.css cannot hide it in prod. */
+        body.help-panel-open { overflow: hidden; }
+        .help-panel-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 4000;
+            pointer-events: none;
+            visibility: hidden;
+        }
+        .help-panel-layer.is-open {
+            pointer-events: auto;
+            visibility: visible;
+        }
+        .help-panel-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            opacity: 0;
+            transition: opacity 0.28s ease;
+        }
+        .help-panel-layer.is-open .help-panel-backdrop { opacity: 1; }
+        .help-panel {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            box-shadow: -12px 0 40px rgba(15, 23, 42, 0.18);
+            outline: none;
+        }
+        .help-panel-handle { display: none; }
+        @media (min-width: 1024px) {
+            .help-panel {
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 400px;
+                max-width: 100%;
+                transform: translateX(100%);
+                transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+                border-left: 1px solid #d9e2ec;
+            }
+            .help-panel-layer.is-open .help-panel { transform: translateX(0); }
+        }
+        @media (max-width: 1023px) {
+            .help-panel {
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                max-height: 85vh;
+                transform: translateY(100%);
+                transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+                border-radius: 16px 16px 0 0;
+                box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.18);
+            }
+            .help-panel-layer.is-open .help-panel { transform: translateY(0); }
+            .help-panel-handle {
+                display: block;
+                width: 40px;
+                height: 4px;
+                margin: 10px auto 0;
+                border-radius: 999px;
+                background: #cbd5e1;
+                flex-shrink: 0;
+            }
+        }
+        .help-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.15rem;
+            background: #f0f9ff;
+            border-bottom: 1px solid #bae6fd;
+        }
+        .help-panel-header-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.6rem;
+            background: #e0f2fe;
+            color: #0284c7;
+            flex-shrink: 0;
+        }
+        .help-panel-title {
+            flex: 1 1 auto;
+            min-width: 0;
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0c4a6e;
+        }
+        .help-panel-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            background: #fff;
+            color: #0369a1;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .help-panel-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            padding: 1.1rem 1.2rem;
+            overflow-y: auto;
+        }
+        .help-panel-footer {
+            padding: 0.9rem 1.2rem 1.1rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
         }
 
         .grid-actions {
@@ -259,8 +382,8 @@
 </div>
 
 <script th:src="@{/vendor/htmx.min.js}"></script>
-<script th:src="@{/js/help-panel.js}"></script>
-<script th:src="@{/js/change-password-form.js}"></script>
+<script th:src="@{/js/help-panel.js(v=${assetVersion})}"></script>
+<script th:src="@{/js/change-password-form.js(v=${assetVersion})}"></script>
 <script th:src="@{/vendor/alpine-collapse.min.js}"></script>
 <script th:src="@{/vendor/alpine.min.js}"></script>
 <script th:src="@{/vendor/tabulator/tabulator.min.js}"></script>

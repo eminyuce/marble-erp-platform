@@ -5,6 +5,7 @@ import com.ozerler.marble.service.SettingService;
 import com.ozerler.marble.util.Ints;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -14,6 +15,9 @@ public class GlobalModelAttributes {
 
     private final SettingService settingService;
     private final HelpService helpService;
+
+    @Value("${app.asset-version:20260914-help}")
+    private String assetVersion;
 
     @ModelAttribute("gridDefaultPageSize")
     public int gridDefaultPageSize() {
@@ -30,5 +34,10 @@ public class GlobalModelAttributes {
     @ModelAttribute("helpPageKey")
     public String helpPageKey(HttpServletRequest request) {
         return helpService.resolvePageKey(request.getRequestURI()).orElse("");
+    }
+
+    @ModelAttribute("assetVersion")
+    public String assetVersion() {
+        return assetVersion;
     }
 }
