@@ -3,6 +3,7 @@ package com.ozerler.marble.dto;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.ProductionOrder;
+import com.ozerler.marble.model.enums.OperationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -80,6 +81,10 @@ public class ProductionOrderDto {
     @JsonAlias("status")
     private String status;
 
+    @JsonProperty("status_label")
+    @JsonAlias("statusLabel")
+    private String statusLabel;
+
     @JsonProperty("slab_count")
     @JsonAlias("slabCount")
     private int slabCount;
@@ -113,6 +118,7 @@ public class ProductionOrderDto {
                 .bladeWearMm(p.getBladeWearMm())
                 .operatorName(p.getOperatorName())
                 .status(p.getStatus())
+                .statusLabel(OperationStatus.labelOf(p.getStatus()))
                 .slabCount(slabCount)
                 .totalSlabAreaM2(totalSlabAreaM2 != null ? totalSlabAreaM2 : BigDecimal.ZERO)
                 .notes(p.getNotes())

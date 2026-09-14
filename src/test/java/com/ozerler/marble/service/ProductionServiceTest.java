@@ -72,6 +72,8 @@ class ProductionServiceTest {
         assertThat(response.getData()).hasSize(1);
         ProductionOrderDto dto = response.getData().getFirst();
         assertThat(dto.getOrderNo()).isEqualTo("PO-2026-001");
+        assertThat(dto.getStatus()).isEqualTo("COMPLETED");
+        assertThat(dto.getStatusLabel()).isEqualTo("Tamamlandı");
         assertThat(dto.getSlabCount()).isEqualTo(12);
         assertThat(dto.getTotalSlabAreaM2()).isEqualByComparingTo("48.5000");
         assertThat(order.getSlabs()).isEmpty();

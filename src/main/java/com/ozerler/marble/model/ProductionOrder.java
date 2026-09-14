@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.model.enums.OperationStatus;
 import com.ozerler.marble.model.enums.ProcessType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -71,5 +72,10 @@ public class ProductionOrder extends AuditableEntity {
     @OneToMany(mappedBy = "productionOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<ScrapLog> scrapLogs = new ArrayList<>();
+
+    @Transient
+    public String getStatusLabel() {
+        return OperationStatus.labelOf(status);
+    }
 
 }

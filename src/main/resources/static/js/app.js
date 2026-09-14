@@ -55,7 +55,35 @@ function erpGridDefaults() {
         autoResize: false,
         renderVertical: "basic",
         responsiveLayout: "collapse",
-        responsiveLayoutCollapseStartOpen: false
+        responsiveLayoutCollapseStartOpen: false,
+        locale: "tr",
+        langs: {
+            tr: {
+                data: {
+                    loading: "Yükleniyor",
+                    error: "Veri yüklenemedi"
+                },
+                pagination: {
+                    page_size: "Sayfa boyutu",
+                    page_title: "Sayfa",
+                    first: "İlk",
+                    first_title: "İlk sayfa",
+                    last: "Son",
+                    last_title: "Son sayfa",
+                    prev: "Önceki",
+                    prev_title: "Önceki sayfa",
+                    next: "Sonraki",
+                    next_title: "Sonraki sayfa",
+                    all: "Tümü",
+                    counter: {
+                        showing: "Gösterilen",
+                        of: "/",
+                        rows: "kayıt",
+                        pages: "sayfa"
+                    }
+                }
+            }
+        }
     };
 }
 
@@ -132,6 +160,23 @@ function gridMoney(value) {
 function gridArea(value) {
     const amount = gridNumber(value, (n) => n.toFixed(2));
     return amount === "—" ? "—" : amount + " m²";
+}
+
+function erpStatusBadge(status, label) {
+    const code = status || "";
+    let badge = "bg-amber-100 text-amber-800";
+    if (code === "COMPLETED" || code === "AVAILABLE" || code === "READY") {
+        badge = "bg-emerald-100 text-emerald-800";
+    } else if (code === "IN_PROGRESS" || code === "IN_CUTTING" || code === "PACKED") {
+        badge = "bg-blue-100 text-blue-800";
+    } else if (code === "PLANNED" || code === "RESERVED") {
+        badge = "bg-slate-100 text-slate-700";
+    } else if (code === "CANCELLED" || code === "SCRAPPED") {
+        badge = "bg-rose-100 text-rose-800";
+    } else if (code === "INSTALLED" || code === "DELIVERED") {
+        badge = "bg-indigo-100 text-indigo-800";
+    }
+    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badge}">● ${gridText(label || status)}</span>`;
 }
 
 function toAsciiTurkishFilename(filename) {
@@ -297,3 +342,19 @@ function bindGridSearch(table, inputId) {
         });
     }
 }
+
+window.erpGridDefaults = erpGridDefaults;
+window.attachTabulatorPagingAnimation = attachTabulatorPagingAnimation;
+window.camelizeTabulatorRows = camelizeTabulatorRows;
+window.applyTabulatorTotal = applyTabulatorTotal;
+window.gridText = gridText;
+window.gridNumber = gridNumber;
+window.gridMoney = gridMoney;
+window.gridArea = gridArea;
+window.erpStatusBadge = erpStatusBadge;
+window.erpResponsiveCollapseColumn = erpResponsiveCollapseColumn;
+window.gridActionsHtml = gridActionsHtml;
+window.bindGridSearch = bindGridSearch;
+window.downloadTable = downloadTable;
+window.downloadTableCsv = downloadTableCsv;
+

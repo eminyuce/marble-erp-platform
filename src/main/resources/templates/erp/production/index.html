@@ -63,7 +63,7 @@
 </div>
 
 <th:block layout:fragment="scripts">
-    <script th:src="@{/js/production-grid.js}"></script>
+    <script th:src="@{/js/production-grid.js(v=${assetVersion})}"></script>
 </th:block>
 </body>
 </html>

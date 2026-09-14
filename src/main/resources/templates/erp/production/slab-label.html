@@ -224,11 +224,11 @@
             </div>
             <div class="detail-row">
                 <span class="detail-label">Kalite</span>
-                <span class="detail-value" th:text="${slab.qualityGrade}">A</span>
+                <span class="detail-value" th:text="${slab.qualityGrade != null ? slab.qualityGrade.label : '—'}">A Kalite</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Yüzey</span>
-                <span class="detail-value" th:text="${slab.surfaceFinish}">RAW</span>
+                <span class="detail-value" th:text="${slab.surfaceFinish != null ? slab.surfaceFinish.label : '—'}">Ham (Testere Çıkışı)</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Blok Kodu</span>
@@ -242,7 +242,7 @@
 
         <!-- QR Column -->
         <div class="label-qr">
-            <img th:src="'data:image/png;base64,' + ${qrCodeBase64}" alt="QR Code"/>
+            <img th:src="'data:image/png;base64,' + ${qrCodeBase64}" alt="QR kodu"/>
             <span class="qr-hint">Dijital Pasaport</span>
         </div>
     </div>

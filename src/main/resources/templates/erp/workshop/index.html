@@ -97,9 +97,10 @@
                     {
                         title: "Durum",
                         field: "status",
-                        width: 110,
+                        width: 130,
                         formatter: function (cell) {
-                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">● ${gridText(cell.getValue())}</span>`;
+                            const row = cell.getRow().getData();
+                            return erpStatusBadge(row.status, row.statusLabel);
                         }
                     },
                     {

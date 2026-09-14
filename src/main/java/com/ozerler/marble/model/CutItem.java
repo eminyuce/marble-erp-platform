@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.model.enums.CutItemStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -55,8 +56,12 @@ public class CutItem extends AuditableEntity {
 
     @Column(nullable = false, length = 30)
     @Builder.Default
-    private String status = "READY"; // READY, PACKED, DELIVERED, INSTALLED
+    private String status = "READY";
 
+    @Transient
+    public String getStatusLabel() {
+        return CutItemStatus.labelOf(status);
+    }
 
     public void calculateArea() {
         if (widthCm != null && lengthCm != null) {

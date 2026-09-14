@@ -2,6 +2,7 @@ package com.ozerler.marble.dto;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ozerler.marble.model.CutOrder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +27,7 @@ class CutOrderDtoJsonTest {
                 .itemCount(4)
                 .totalAreaM2(new BigDecimal("3.8400"))
                 .status("COMPLETED")
+                .statusLabel("Tamamlandı")
                 .build();
 
         JsonNode json = objectMapper.readTree(objectMapper.writeValueAsString(dto));
@@ -34,9 +36,26 @@ class CutOrderDtoJsonTest {
         assertThat(json.path("project_name").asText()).isEqualTo("Villa");
         assertThat(json.path("item_count").asInt()).isEqualTo(4);
         assertThat(json.path("total_area_m2").decimalValue()).isEqualByComparingTo("3.8400");
+        assertThat(json.path("status").asText()).isEqualTo("COMPLETED");
+        assertThat(json.path("status_label").asText()).isEqualTo("Tamamlandı");
         assertThat(json.has("cutOrderNo")).isFalse();
+        assertThat(json.has("statusLabel")).isFalse();
         assertThat(json.has("projectName")).isFalse();
         assertThat(json.has("itemCount")).isFalse();
         assertThat(json.has("totalAreaM2")).isFalse();
+    }
+
+    @Test
+    @DisplayName("fromEntity maps COMPLETED to the Turkish status label")
+    void fromEntity_mapsTurkishStatusLabel() {
+        CutOrderDto dto = CutOrderDto.fromEntity(
+                CutOrder.builder()
+                        .id(1L)
+                        .cutOrderNo("CUT-2026-0001")
+                        .status("COMPLETED")
+                        .build());
+
+        assertThat(dto.getStatus()).isEqualTo("COMPLETED");
+        assertThat(dto.getStatusLabel()).isEqualTo("Tamamlandı");
     }
 }

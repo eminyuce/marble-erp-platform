@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.model.enums.OperationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -51,5 +52,10 @@ public class CutOrder extends AuditableEntity {
     @OneToMany(mappedBy = "cutOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<CutItem> items = new ArrayList<>();
+
+    @Transient
+    public String getStatusLabel() {
+        return OperationStatus.labelOf(status);
+    }
 
 }

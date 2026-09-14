@@ -103,19 +103,28 @@
                     {
                         title: "Yüzey",
                         field: "surfaceFinish",
-                        width: 110,
+                        minWidth: 140,
+                        width: 170,
                         formatter: function (cell) {
-                            return `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 font-medium">${gridText(cell.getValue())}</span>`;
+                            const row = cell.getRow().getData();
+                            return `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 font-medium">${gridText(row.surfaceFinishLabel || cell.getValue())}</span>`;
                         }
                     },
                     {
                         title: "Kalite",
                         field: "qualityGrade",
-                        width: 90,
+                        width: 120,
                         formatter: function (cell) {
-                            const val = cell.getValue();
-                            const color = val === 'A' ? 'bg-emerald-100 text-emerald-800' : (val === 'B' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800');
-                            return `<span class="px-2 py-0.5 rounded text-xs font-bold ${color}">${gridText(val)}</span>`;
+                            const row = cell.getRow().getData();
+                            const val = row.qualityGrade;
+                            const colors = {
+                                'EXTRA': 'bg-purple-100 text-purple-800',
+                                'A': 'bg-emerald-100 text-emerald-800',
+                                'B': 'bg-blue-100 text-blue-800',
+                                'C': 'bg-amber-100 text-amber-800',
+                                'MOLOZ': 'bg-rose-100 text-rose-800'
+                            };
+                            return `<span class="px-2 py-0.5 rounded text-xs font-bold ${colors[val] || 'bg-slate-100 text-slate-700'}">${gridText(row.qualityGradeLabel || val)}</span>`;
                         }
                     },
                     {
@@ -129,10 +138,11 @@
                     {
                         title: "Durum",
                         field: "status",
-                        width: 130,
+                        minWidth: 140,
+                        width: 170,
                         formatter: function (cell) {
-                            const val = cell.getValue();
-                            return `<span class="px-2 py-0.5 rounded-full text-xs font-semibold ${val === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">● ${gridText(val)}</span>`;
+                            const row = cell.getRow().getData();
+                            return erpStatusBadge(row.status, row.statusLabel);
                         }
                     },
                     {
