@@ -3,6 +3,8 @@
       layout:decorate="~{layout/base}">
 <head>
     <title th:text="${((isEdit ?: false) ? 'Blok Düzenle' : 'Yeni Blok Kaydı') + ' | Özerler Mermer ERP'}">Blok</title>
+    <link rel="stylesheet" th:href="@{/vendor/filepond/filepond.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/filepond/filepond-plugin-image-preview.min.css}">
 </head>
 <body>
 <div layout:fragment="content" class="erp-form-page">
@@ -145,6 +147,9 @@
 </div>
 
 <th:block layout:fragment="scripts">
+    <script th:src="@{/vendor/filepond/filepond-plugin-image-preview.min.js}"></script>
+    <script th:src="@{/vendor/filepond/filepond.min.js}"></script>
+    <script th:src="@{/js/filepond-setup.js(v=${assetVersion})}"></script>
     <script>
         initFilePond('#block-filepond', '#photo-urls-input');
         initDualEditor('dual-editor-container', 'notes-hidden-input');

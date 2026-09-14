@@ -49,34 +49,60 @@ class TabulatorGridUndefinedTest {
     }
 
     @Test
-    @DisplayName("Layout serves FilePond locally so a CDN hang cannot block app.js globals")
-    void layoutDoesNotLoadBlockingFilePondCdnBeforeAppJs() throws Exception {
+    @DisplayName("Base layout defines inline gridText fallbacks before page fragment scripts")
+    void layoutDefinesInlineGridFallbacksBeforePageScripts() throws Exception {
         String layout = readResource("/templates/layout/base.html");
-
-        assertThat(layout).doesNotContain("unpkg.com/filepond");
-        assertThat(layout).contains("@{/vendor/filepond/filepond.min.js}");
-        assertThat(layout).contains("@{/vendor/filepond/filepond-plugin-image-preview.min.js}");
-        assertThat(layout).contains("@{/js/app.js(v=${assetVersion})}");
-
-        int appJsIndex = layout.indexOf("@{/js/app.js");
-        int filePondJsIndex = layout.indexOf("@{/vendor/filepond/filepond.min.js}");
+        int appJsIndex = layout.indexOf("@{/js/app.js(v=${assetVersion})}");
         int fallbackIndex = layout.indexOf("typeof window.gridText !== \"function\"");
         int pageScriptsIndex = layout.indexOf("layout:fragment=\"scripts\"");
-        assertThat(appJsIndex).isGreaterThanOrEqualTo(0);
-        assertThat(filePondJsIndex).isGreaterThan(appJsIndex);
+
+        assertThat(appJsIndex)
+                .as("cache-busted app.js must still load before page fragment scripts")
+                .isGreaterThanOrEqualTo(0)
+                .isLessThan(pageScriptsIndex);
         assertThat(fallbackIndex)
                 .as("inline script must define window.gridText with no network dependency")
-                .isGreaterThan(appJsIndex);
-        assertThat(pageScriptsIndex)
-                .as("page grid scripts must load after cache-busted app.js and the gridText fallback")
                 .isGreaterThan(appJsIndex)
-                .isGreaterThan(fallbackIndex);
+                .isLessThan(pageScriptsIndex);
+
+        String fallbackBlock = layout.substring(fallbackIndex, pageScriptsIndex);
+        assertThat(fallbackBlock).contains("window.gridText = function");
+        assertThat(fallbackBlock).contains("window.gridNumber");
+        assertThat(fallbackBlock).contains("window.gridMoney");
+        assertThat(fallbackBlock).contains("window.gridArea");
+        assertThat(fallbackBlock).contains("window.erpStatusBadge");
+        assertThat(fallbackBlock).contains("window.erpGridDefaults");
+    }
+
+    @Test
+    @DisplayName("FilePond is off the global critical path and never loaded from unpkg")
+    void filePondIsLocalAndNotOnEveryGridPage() throws Exception {
+        String layout = readResource("/templates/layout/base.html");
+        String blockForm = readResource("/templates/erp/blocks/form.html");
+
+        assertThat(layout).doesNotContain("unpkg.com/filepond");
+        assertThat(layout).doesNotContain("unpkg.com");
+        assertThat(layout).doesNotContain("filepond.min.js");
+        assertThat(layout).doesNotContain("filepond.min.css");
+        assertThat(layout).doesNotContain("filepond-setup.js");
+
+        assertThat(blockForm).doesNotContain("unpkg.com/filepond");
+        assertThat(blockForm).contains("@{/vendor/filepond/filepond.min.js}");
+        assertThat(blockForm).contains("@{/vendor/filepond/filepond-plugin-image-preview.min.js}");
+        assertThat(blockForm).contains("@{/js/filepond-setup.js(v=${assetVersion})}");
+
+        int filePondJsIndex = blockForm.indexOf("@{/vendor/filepond/filepond.min.js}");
+        int initIndex = blockForm.indexOf("initFilePond(");
+        assertThat(filePondJsIndex).isGreaterThanOrEqualTo(0);
+        assertThat(initIndex)
+                .as("block form must initialize FilePond only after local vendor scripts")
+                .isGreaterThan(filePondJsIndex);
 
         var blockingRemoteScript = Pattern.compile(
                 "<script(?![^>]*\\b(?:async|defer)\\b)[^>]*src=\"https?://[^\"]*\"",
                 Pattern.CASE_INSENSITIVE);
         assertThat(blockingRemoteScript.matcher(layout).find())
-                .as("classic remote scripts without async/defer would stall app.js if the CDN hangs")
+                .as("classic remote scripts without async/defer would stall grid helpers if a CDN hangs")
                 .isFalse();
 
         assertThat(getClass().getResource("/static/vendor/filepond/filepond.min.js")).isNotNull();
