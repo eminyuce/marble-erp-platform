@@ -60,7 +60,7 @@ public class PassportService {
                     .build();
         }
 
-        Optional<Slab> slab = slabRepository.findBySlabCode(cleanCode);
+        Optional<Slab> slab = slabRepository.findBySlabCodeWithBlock(cleanCode);
         if (slab.isPresent()) {
             return PassportResult.builder()
                     .found(true)
@@ -80,7 +80,7 @@ public class PassportService {
                     .build();
         }
 
-        Optional<Block> block = blockRepository.findByBlockCode(cleanCode);
+        Optional<Block> block = blockRepository.findByBlockCodeWithQuarry(cleanCode);
         if (block.isPresent()) {
             return PassportResult.builder()
                     .found(true)

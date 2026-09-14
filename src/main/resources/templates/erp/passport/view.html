@@ -40,7 +40,7 @@
             <div class="flex justify-between items-start gap-3 text-xs">
                 <span class="text-slate-400">Ambalaj Tipi</span>
                 <span class="font-semibold text-slate-200"
-                      th:text="${pallet.packagingType.label}">İhracat Ahşap Sandık</span>
+                      th:text="${pallet.packagingType != null ? pallet.packagingType.label : '—'}">İhracat Ahşap Sandık</span>
             </div>
             <div class="flex justify-between items-start gap-3 text-xs">
                 <span class="text-slate-400">Brüt Ağırlık</span>
@@ -66,12 +66,12 @@
             <div class="flex justify-between items-start gap-3 text-xs">
                 <span class="text-slate-400">Taş Cinsi &amp; Yüzey</span>
                 <span class="font-semibold text-slate-200"
-                      th:text="${slab.block.stoneType} + ' (' + ${slab.surfaceFinish.label} + ')'">Muğla Beyaz (Cilalı)</span>
+                      th:text="${(slab.block != null ? slab.block.stoneType : '—') + ' (' + (slab.surfaceFinish != null ? slab.surfaceFinish.label : '—') + ')'}">Muğla Beyaz (Cilalı)</span>
             </div>
             <div class="flex justify-between items-start gap-3 text-xs">
                 <span class="text-slate-400">Kalite Seleksiyonu</span>
                 <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400"
-                      th:text="${slab.qualityGrade.label}">A Kalite</span>
+                      th:text="${slab.qualityGrade != null ? slab.qualityGrade.label : '—'}">A Kalite</span>
             </div>
             <div class="flex justify-between items-start gap-3 text-xs">
                 <span class="text-slate-400">Net Ölçüler &amp; Alan</span>
@@ -84,7 +84,7 @@
             </div>
             <div class="flex justify-between items-start gap-3 text-xs">
                 <span class="text-slate-400">Kaynak Blok</span>
-                <span class="font-mono text-amber-400" th:text="${slab.block.blockCode}">BLK-2026-00125</span>
+                <span class="font-mono text-amber-400" th:text="${slab.block != null ? slab.block.blockCode : '—'}">BLK-2026-00125</span>
             </div>
         </div>
     </div>
@@ -99,7 +99,7 @@
             </div>
             <div class="flex justify-between items-start gap-3 text-xs">
                 <span class="text-slate-400">Ocak Adı</span>
-                <span class="font-semibold text-slate-200" th:text="${block.quarry.name}">Yatağan Beyaz Ocağı</span>
+                <span class="font-semibold text-slate-200" th:text="${block.quarry != null ? block.quarry.name : '—'}">Yatağan Beyaz Ocağı</span>
             </div>
             <div class="flex justify-between items-start gap-3 text-xs">
                 <span class="text-slate-400">Taş Cinsi</span>

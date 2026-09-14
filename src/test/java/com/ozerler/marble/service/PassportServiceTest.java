@@ -53,7 +53,7 @@ class PassportServiceTest {
     void getPassportByCode_ResolvesSlab() {
         Slab slab = Slab.builder().slabCode("SLB-2026-002").build();
         when(palletRepository.findByPalletCode("SLB-2026-002")).thenReturn(Optional.empty());
-        when(slabRepository.findBySlabCode("SLB-2026-002")).thenReturn(Optional.of(slab));
+        when(slabRepository.findBySlabCodeWithBlock("SLB-2026-002")).thenReturn(Optional.of(slab));
 
         PassportResult result = passportService.getPassportByCode("SLB-2026-002");
 
@@ -66,9 +66,9 @@ class PassportServiceTest {
     @DisplayName("getPassportByCode returns not found when code does not match any entity")
     void getPassportByCode_NotFound() {
         when(palletRepository.findByPalletCode("UNKNOWN")).thenReturn(Optional.empty());
-        when(slabRepository.findBySlabCode("UNKNOWN")).thenReturn(Optional.empty());
+        when(slabRepository.findBySlabCodeWithBlock("UNKNOWN")).thenReturn(Optional.empty());
         when(cutItemRepository.findByItemCode("UNKNOWN")).thenReturn(Optional.empty());
-        when(blockRepository.findByBlockCode("UNKNOWN")).thenReturn(Optional.empty());
+        when(blockRepository.findByBlockCodeWithQuarry("UNKNOWN")).thenReturn(Optional.empty());
 
         PassportResult result = passportService.getPassportByCode("UNKNOWN");
 
