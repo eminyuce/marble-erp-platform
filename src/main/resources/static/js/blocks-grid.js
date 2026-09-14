@@ -17,18 +17,10 @@ function initBlocksGrid() {
             headers: {"Accept": "application/json"},
         },
         ajaxURLGenerator: function (url, config, params) {
-            const searchVal = document.getElementById("search-input")?.value || "";
-            let sorterField = "";
-            let sorterDir = "";
-            if (params.sorters && params.sorters.length > 0) {
-                sorterField = params.sorters[0].field;
-                sorterDir = params.sorters[0].dir;
-            }
-            return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}&sortField=${sorterField}&sortDir=${sorterDir}`;
+            return erpGridAjaxUrl(url, params, "search-input");
         },
         ajaxResponse: function (url, params, response) {
-            camelizeTabulatorRows(response);
-            return applyTabulatorTotal("blocks-table", response);
+            return erpGridAjaxResponse("blocks-table", response);
         },
         placeholder: "Blok kaydı bulunamadı.",
         columns: [

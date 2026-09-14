@@ -64,13 +64,12 @@
                 ajaxURL: "/projects/api/data",
                 ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
                 ajaxURLGenerator: function (url, config, params) {
-                    const searchVal = document.getElementById("project-search-input")?.value || "";
-                    return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
+                    return erpGridAjaxUrl(url, params, "project-search-input");
                 },
                 ajaxResponse: function (url, params, response) {
-                    camelizeTabulatorRows(response);
-                    return applyTabulatorTotal("projects-table", response);
+                    return erpGridAjaxResponse("projects-table", response);
                 },
+                placeholder: "Proje kaydı bulunamadı.",
                 columns: [
                     erpResponsiveCollapseColumn(),
                     {

@@ -11,11 +11,9 @@ import com.ozerler.marble.model.enums.ProjectStatus;
 import com.ozerler.marble.repository.ProjectLocationRepository;
 import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.SiteConsumptionRepository;
+import com.ozerler.marble.util.GridPages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,15 +45,8 @@ public class ProjectSiteService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String sortField, String sortDir) {
-        String sortProperty = (sortField == null || sortField.isBlank() || "createdAt".equalsIgnoreCase(sortField))
-                ? "createdDate" : sortField;
-        Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sort = Sort.by(dir, sortProperty);
-
-        int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
-
-        Page<Project> projectPage = projectRepository.searchProjects(search, pageable);
+        Page<Project> projectPage = GridPages.execute(page, size, sortField, sortDir,
+                pageable -> projectRepository.searchProjects(search, pageable));
         List<ProjectDto> dtos = projectPage.getContent().stream()
                 .map(ProjectDto::fromEntity)
                 .collect(Collectors.toList());

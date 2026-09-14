@@ -64,13 +64,12 @@
                 ajaxURL: "/procurement/api/data",
                 ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
                 ajaxURLGenerator: function (url, config, params) {
-                    const searchVal = document.getElementById("procurement-search-input")?.value || "";
-                    return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
+                    return erpGridAjaxUrl(url, params, "procurement-search-input");
                 },
                 ajaxResponse: function (url, params, response) {
-                    camelizeTabulatorRows(response);
-                    return applyTabulatorTotal("procurement-table", response);
+                    return erpGridAjaxResponse("procurement-table", response);
                 },
+                placeholder: "Satın alma siparişi bulunamadı.",
                 columns: [
                     erpResponsiveCollapseColumn(),
                     {

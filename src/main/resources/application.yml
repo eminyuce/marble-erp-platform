@@ -85,7 +85,7 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20260914-tr"
+  asset-version: "20260914-grids"
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:8080,http://127.0.0.1:8080}
     allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.trycloudflare.com}

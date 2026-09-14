@@ -64,13 +64,12 @@
                 ajaxURL: "/sales/api/data",
                 ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
                 ajaxURLGenerator: function (url, config, params) {
-                    const searchVal = document.getElementById("sales-search-input")?.value || "";
-                    return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
+                    return erpGridAjaxUrl(url, params, "sales-search-input");
                 },
                 ajaxResponse: function (url, params, response) {
-                    camelizeTabulatorRows(response);
-                    return applyTabulatorTotal("sales-table", response);
+                    return erpGridAjaxResponse("sales-table", response);
                 },
+                placeholder: "Satış siparişi bulunamadı.",
                 columns: [
                     erpResponsiveCollapseColumn(),
                     {

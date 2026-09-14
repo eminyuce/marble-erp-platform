@@ -1,6 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.SalesOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.*;
@@ -9,11 +8,9 @@ import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.SalesOrderRepository;
 import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.util.GridPages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,15 +43,8 @@ public class SalesService {
     @Transactional(readOnly = true)
     public TabulatorResponse<SalesOrderDto> getSalesOrdersPaged(int page, int size,
                                                                 String search, String sortField, String sortDir) {
-        String sortProperty = (sortField == null || sortField.isBlank() || "createdAt".equalsIgnoreCase(sortField))
-                ? "createdDate" : sortField;
-        Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sort = Sort.by(dir, sortProperty);
-
-        int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
-
-        Page<SalesOrder> orderPage = salesOrderRepository.searchSalesOrders(search, pageable);
+        Page<SalesOrder> orderPage = GridPages.execute(page, size, sortField, sortDir,
+                pageable -> salesOrderRepository.searchSalesOrders(search, pageable));
         List<SalesOrderDto> dtos = orderPage.getContent().stream()
                 .map(SalesOrderDto::fromEntity)
                 .collect(Collectors.toList());

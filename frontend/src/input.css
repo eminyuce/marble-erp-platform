@@ -1378,6 +1378,7 @@ button.erp-btn-primary {
 
 .tabulator .tabulator-tableholder {
   transition: opacity 200ms ease, transform 200ms ease;
+  min-height: 140px;
 }
 
 .tabulator.is-paging .tabulator-tableholder {
@@ -2396,6 +2397,20 @@ button.erp-btn-secondary {
 .erp-grid-shell .tabulator {
   border: 0 !important;
   border-radius: 0 !important;
+  min-height: 180px;
+}
+
+.tabulator .tabulator-placeholder {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #627d98;
+  font-weight: 600;
+}
+
+.erp-grid-shell .tabulator-tableholder {
+  min-height: 140px;
 }
 
 .erp-list-page.is-compact .tabulator-row .tabulator-cell {

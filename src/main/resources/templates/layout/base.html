@@ -16,9 +16,8 @@
     <link rel="stylesheet" th:href="@{/css/app.css(v=${assetVersion})}">
     <link rel="stylesheet" th:href="@{/css/searchable-select.css(v=${assetVersion})}">
     <link rel="stylesheet" th:href="@{/vendor/tabulator/tabulator.min.css}">
-    <link rel="stylesheet" href="https://unpkg.com/filepond@^4/dist/filepond.css">
-    <link rel="stylesheet"
-          href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css">
+    <link rel="stylesheet" th:href="@{/vendor/filepond/filepond.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/filepond/filepond-plugin-image-preview.min.css}">
 
     <style>
         [x-cloak] {
@@ -293,6 +292,23 @@
             word-break: break-word;
         }
 
+        /* Grid visibility is inlined so a year-cached /css/app.css cannot collapse Tabulator. */
+        .erp-grid-shell .tabulator,
+        .tabulator {
+            min-height: 180px;
+        }
+        .tabulator .tabulator-tableholder {
+            min-height: 140px;
+        }
+        .tabulator .tabulator-placeholder {
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #627d98;
+            font-weight: 600;
+        }
+
     </style>
 </head>
 <body class="admin-app min-h-screen antialiased"
@@ -389,15 +405,15 @@
 <script th:src="@{/vendor/tabulator/tabulator.min.js}"></script>
 <script th:src="@{/vendor/xlsx.full.min.js}"></script>
 <script th:src="@{/vendor/lucide.min.js}"></script>
-<script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
-<script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
+<script th:src="@{/vendor/filepond/filepond-plugin-image-preview.min.js}"></script>
+<script th:src="@{/vendor/filepond/filepond.min.js}"></script>
 
-<script th:src="@{/js/app.js}"></script>
-<script th:src="@{/js/searchable-select.js}"></script>
+<script th:src="@{/js/app.js(v=${assetVersion})}"></script>
+<script th:src="@{/js/searchable-select.js(v=${assetVersion})}"></script>
 <script th:inline="javascript">window.ERP_GRID_PAGE_SIZE = /*[[${gridDefaultPageSize}]]*/ 25;</script>
-<script th:src="@{/js/mega-menu.js}"></script>
-<script th:src="@{/js/editor-setup.js}"></script>
-<script th:src="@{/js/filepond-setup.js}"></script>
+<script th:src="@{/js/mega-menu.js(v=${assetVersion})}"></script>
+<script th:src="@{/js/editor-setup.js(v=${assetVersion})}"></script>
+<script th:src="@{/js/filepond-setup.js(v=${assetVersion})}"></script>
 
 <th:block layout:fragment="scripts"></th:block>
 </body>
