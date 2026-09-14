@@ -53,8 +53,8 @@ public class ProductionService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<ProductionOrderDto> getOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
-        Page<ProductionOrder> orderPage = GridPages.execute(page, size, sortField, sortDir,
-                pageable -> productionOrderRepository.searchOrders(search, pageable));
+        Page<ProductionOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PRODUCTION_ORDER_SORTS,
+                pageable -> productionOrderRepository.searchOrders(GridPages.normalizeSearch(search), pageable));
         return TabulatorResponse.of(
                 toOrderDtos(orderPage.getContent()),
                 orderPage.getTotalPages(),
@@ -261,8 +261,8 @@ public class ProductionService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<SlabDto> getSlabsPaged(int page, int size, String search, String sortField, String sortDir) {
-        Page<Slab> slabPage = GridPages.execute(page, size, sortField, sortDir,
-                pageable -> slabRepository.searchSlabs(search, pageable));
+        Page<Slab> slabPage = GridPages.execute(page, size, sortField, sortDir, GridPages.SLAB_SORTS,
+                pageable -> slabRepository.searchSlabs(GridPages.normalizeSearch(search), pageable));
         List<SlabDto> dtos = slabPage.getContent().stream()
                 .map(SlabDto::fromEntity)
                 .toList();

@@ -34,7 +34,7 @@ class ProjectDtoJsonTest {
             html = new String(in.readAllBytes());
         }
 
-        assertThat(html).contains("camelizeTabulatorRows(response)");
+        assertThat(html).contains("erpGridAjaxResponse(");
         assertThat(html).contains("field: \"projectCode\"");
     }
 }

@@ -12,7 +12,7 @@ class WorkshopGridActionsTest {
     void gridCamelizesApiRows() throws Exception {
         String html = readWorkshopIndex();
 
-        assertThat(html).contains("camelizeTabulatorRows(response)");
+        assertThat(html).contains("erpGridAjaxResponse(");
         assertThat(html).contains("field: \"cutOrderNo\"");
         assertThat(html).contains("field: \"projectName\"");
         assertThat(html).contains("row.itemCount");

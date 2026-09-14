@@ -45,8 +45,8 @@ public class ProjectSiteService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String sortField, String sortDir) {
-        Page<Project> projectPage = GridPages.execute(page, size, sortField, sortDir,
-                pageable -> projectRepository.searchProjects(search, pageable));
+        Page<Project> projectPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PROJECT_SORTS,
+                pageable -> projectRepository.searchProjects(GridPages.normalizeSearch(search), pageable));
         List<ProjectDto> dtos = projectPage.getContent().stream()
                 .map(ProjectDto::fromEntity)
                 .collect(Collectors.toList());

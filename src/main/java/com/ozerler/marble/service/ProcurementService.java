@@ -44,8 +44,8 @@ public class ProcurementService {
     @Transactional(readOnly = true)
     public TabulatorResponse<PurchaseOrderDto> getPurchaseOrdersPaged(int page, int size,
                                                                       String search, String sortField, String sortDir) {
-        Page<PurchaseOrder> orderPage = GridPages.execute(page, size, sortField, sortDir,
-                pageable -> purchaseOrderRepository.searchPurchaseOrders(search, pageable));
+        Page<PurchaseOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PURCHASE_ORDER_SORTS,
+                pageable -> purchaseOrderRepository.searchPurchaseOrders(GridPages.normalizeSearch(search), pageable));
         List<PurchaseOrderDto> dtos = orderPage.getContent().stream()
                 .map(PurchaseOrderDto::fromEntity)
                 .collect(Collectors.toList());

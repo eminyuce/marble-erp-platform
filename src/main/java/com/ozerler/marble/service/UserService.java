@@ -51,11 +51,12 @@ public class UserService {
     @Transactional(readOnly = true)
     public TabulatorResponse<UserDto> getUsersPaged(int page, int size, String search, String sortField, String sortDir,
                                                     Collection<String> roleNames, Boolean enabled) {
-        String normalizedSearch = StringUtils.isBlank(search) ? null : search.trim();
+        String normalizedSearch = GridPages.normalizeSearch(search);
         List<String> selectedRoles = normalizeRoleNames(roleNames);
-        Page<User> userPage = GridPages.execute(page, size, sortField, sortDir, pageable -> selectedRoles.isEmpty()
-                ? userRepository.searchActiveUsers(normalizedSearch, null, enabled, pageable)
-                : userRepository.searchActiveUsersByAnyRole(normalizedSearch, selectedRoles, enabled, pageable));
+        Page<User> userPage = GridPages.execute(page, size, sortField, sortDir, GridPages.USER_SORTS,
+                pageable -> selectedRoles.isEmpty()
+                        ? userRepository.searchActiveUsers(normalizedSearch, null, enabled, pageable)
+                        : userRepository.searchActiveUsersByAnyRole(normalizedSearch, selectedRoles, enabled, pageable));
         List<UserDto> dtos = userPage.getContent().stream()
                 .map(UserDto::fromEntity)
                 .collect(Collectors.toList());

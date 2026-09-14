@@ -50,8 +50,8 @@ public class WorkshopCutService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<CutOrderDto> getCutOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
-        Page<CutOrder> orderPage = GridPages.execute(page, size, sortField, sortDir,
-                pageable -> cutOrderRepository.searchCutOrders(search, pageable));
+        Page<CutOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.CUT_ORDER_SORTS,
+                pageable -> cutOrderRepository.searchCutOrders(GridPages.normalizeSearch(search), pageable));
         return TabulatorResponse.of(
                 toCutOrderDtos(orderPage.getContent()),
                 orderPage.getTotalPages(),

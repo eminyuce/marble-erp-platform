@@ -34,16 +34,35 @@ class GridPagesTest {
     }
 
     @Test
+    @DisplayName("DTO statusLabel and snake_case customer_name map onto entity properties")
+    void gridColumnNamesMapToEntityProperties() {
+        assertThat(GridPages.of(1, 25, "statusLabel", "asc").getSort())
+                .containsExactly(Sort.Order.asc("status"));
+        assertThat(GridPages.of(1, 25, "customer_name", "desc", GridPages.SALES_ORDER_SORTS).getSort())
+                .containsExactly(Sort.Order.desc("customer.companyName"));
+        assertThat(GridPages.of(1, 25, "quarryName", "asc", GridPages.BLOCK_SORTS).getSort())
+                .containsExactly(Sort.Order.asc("quarry.name"));
+    }
+
+    @Test
+    @DisplayName("blank search becomes null so JPQL null-checks skip LIKE")
+    void blankSearchNormalizesToNull() {
+        assertThat(GridPages.normalizeSearch(null)).isNull();
+        assertThat(GridPages.normalizeSearch("  ")).isNull();
+        assertThat(GridPages.normalizeSearch(" SIP-1 ")).isEqualTo("SIP-1");
+    }
+
+    @Test
     @DisplayName("unknown sort properties retry with createdDate")
     void unknownSortPropertyFallsBack() {
         AtomicInteger calls = new AtomicInteger();
         Page<String> fallbackPage = new PageImpl<>(List.of("ok"));
 
-        Page<String> result = GridPages.execute(1, 10, "statusLabel", "asc", pageable -> {
+        Page<String> result = GridPages.execute(1, 10, "notAColumn", "asc", pageable -> {
             int call = calls.incrementAndGet();
             if (call == 1) {
-                assertThat(pageable.getSort()).containsExactly(Sort.Order.asc("statusLabel"));
-                throw new InvalidDataAccessApiUsageException("No property 'statusLabel' found");
+                assertThat(pageable.getSort()).containsExactly(Sort.Order.asc("notAColumn"));
+                throw new InvalidDataAccessApiUsageException("No property 'notAColumn' found");
             }
             assertThat(pageable.getSort()).containsExactly(Sort.Order.asc("createdDate"));
             return fallbackPage;

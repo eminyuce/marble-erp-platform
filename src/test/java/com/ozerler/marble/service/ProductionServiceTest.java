@@ -98,9 +98,9 @@ class ProductionServiceTest {
                 .thenAnswer(invocation -> {
                     Pageable pageable = invocation.getArgument(1);
                     boolean unknown = pageable.getSort().stream()
-                            .anyMatch(sortOrder -> "statusLabel".equals(sortOrder.getProperty()));
+                            .anyMatch(sortOrder -> "notAColumn".equals(sortOrder.getProperty()));
                     if (unknown) {
-                        throw new InvalidDataAccessApiUsageException("No property 'statusLabel' found");
+                        throw new InvalidDataAccessApiUsageException("No property 'notAColumn' found");
                     }
                     return new PageImpl<>(List.of(order));
                 });
@@ -108,7 +108,7 @@ class ProductionServiceTest {
                 .thenReturn(List.of(aggregate(7L, 12L, new BigDecimal("48.5000"))));
 
         TabulatorResponse<ProductionOrderDto> response =
-                productionService.getOrdersPaged(1, 10, null, "statusLabel", "asc");
+                productionService.getOrdersPaged(1, 10, null, "notAColumn", "asc");
 
         assertThat(response.getData()).hasSize(1);
         assertThat(response.getData().getFirst().getOrderNo()).isEqualTo("PO-2026-001");
