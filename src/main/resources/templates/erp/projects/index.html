@@ -68,6 +68,7 @@
                     return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
                 },
                 ajaxResponse: function (url, params, response) {
+                    camelizeTabulatorRows(response);
                     return applyTabulatorTotal("projects-table", response);
                 },
                 columns: [
