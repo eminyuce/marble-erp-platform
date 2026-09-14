@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,8 +37,45 @@ class TabulatorGridUndefinedTest {
         assertThat(appJs).contains("function gridMoney(");
         assertThat(appJs).contains("function gridArea(");
         assertThat(appJs).contains("function erpStatusBadge(");
+        assertThat(appJs).contains("window.gridText = gridText");
+        assertThat(appJs).contains("window.gridArea = gridArea");
+        assertThat(appJs).contains("window.gridMoney = gridMoney");
+        assertThat(appJs).contains("window.erpStatusBadge = erpStatusBadge");
+        assertThat(appJs).contains("window.erpGridDefaults = erpGridDefaults");
         assertThat(appJs).contains("locale: \"tr\"");
         assertThat(appJs).contains("first: \"İlk\"");
+    }
+
+    @Test
+    @DisplayName("Layout serves FilePond locally so a CDN hang cannot block app.js globals")
+    void layoutDoesNotLoadBlockingFilePondCdnBeforeAppJs() throws Exception {
+        String layout = readResource("/templates/layout/base.html");
+
+        assertThat(layout).doesNotContain("unpkg.com/filepond");
+        assertThat(layout).contains("@{/vendor/filepond/filepond.min.js}");
+        assertThat(layout).contains("@{/vendor/filepond/filepond-plugin-image-preview.min.js}");
+        assertThat(layout).contains("@{/js/app.js(v=${assetVersion})}");
+
+        int appJsIndex = layout.indexOf("@{/js/app.js");
+        int filePondJsIndex = layout.indexOf("@{/vendor/filepond/filepond.min.js}");
+        int pageScriptsIndex = layout.indexOf("layout:fragment=\"scripts\"");
+        assertThat(appJsIndex).isGreaterThanOrEqualTo(0);
+        assertThat(filePondJsIndex).isGreaterThan(appJsIndex);
+        assertThat(pageScriptsIndex)
+                .as("page grid scripts must load after cache-busted app.js")
+                .isGreaterThan(appJsIndex);
+
+        var blockingRemoteScript = Pattern.compile(
+                "<script(?![^>]*\\b(?:async|defer)\\b)[^>]*src=\"https?://[^\"]*\"",
+                Pattern.CASE_INSENSITIVE);
+        assertThat(blockingRemoteScript.matcher(layout).find())
+                .as("classic remote scripts without async/defer would stall app.js if the CDN hangs")
+                .isFalse();
+
+        assertThat(getClass().getResource("/static/vendor/filepond/filepond.min.js")).isNotNull();
+        assertThat(getClass().getResource("/static/vendor/filepond/filepond.min.css")).isNotNull();
+        assertThat(getClass().getResource("/static/vendor/filepond/filepond-plugin-image-preview.min.js")).isNotNull();
+        assertThat(getClass().getResource("/static/vendor/filepond/filepond-plugin-image-preview.min.css")).isNotNull();
     }
 
     @Test

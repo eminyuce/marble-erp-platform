@@ -342,3 +342,19 @@ function bindGridSearch(table, inputId) {
         });
     }
 }
+
+window.erpGridDefaults = erpGridDefaults;
+window.attachTabulatorPagingAnimation = attachTabulatorPagingAnimation;
+window.camelizeTabulatorRows = camelizeTabulatorRows;
+window.applyTabulatorTotal = applyTabulatorTotal;
+window.gridText = gridText;
+window.gridNumber = gridNumber;
+window.gridMoney = gridMoney;
+window.gridArea = gridArea;
+window.erpStatusBadge = erpStatusBadge;
+window.erpResponsiveCollapseColumn = erpResponsiveCollapseColumn;
+window.gridActionsHtml = gridActionsHtml;
+window.bindGridSearch = bindGridSearch;
+window.downloadTable = downloadTable;
+window.downloadTableCsv = downloadTableCsv;
+
