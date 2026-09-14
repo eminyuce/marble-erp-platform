@@ -41,7 +41,7 @@
 | **Reporting & Utilities** | Apache POI 5.3.0, Apache Commons (`commons-lang3`, `commons-collections4 4.5.0`) |
 | **Logging & Telemetry** | SLF4J, Logback, `logstash-logback-encoder 8.0`, Spring Boot Actuator |
 | **Quality & Testing** | JUnit 5, Mockito, AssertJ, `maven-pmd-plugin 3.28.0` (PMD 7.17.0), `jacoco-maven-plugin 0.8.13` |
-| **Container & CI/CD** | Docker (Multi-stage Temurin 24), Docker Compose v2, GitHub Actions (SSH & GHCR) |
+| **Container & CI/CD** | Docker (Multi-stage Temurin 24), Docker Compose v2; production deploys are manual via `scripts/deploy_production.sh` |
 
 ---
 
