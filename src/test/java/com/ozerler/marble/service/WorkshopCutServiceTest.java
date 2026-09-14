@@ -3,7 +3,9 @@ package com.ozerler.marble.service;
 import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.CutItem;
 import com.ozerler.marble.model.CutOrder;
+import com.ozerler.marble.model.Project;
 import com.ozerler.marble.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -137,6 +140,78 @@ class WorkshopCutServiceTest {
         when(cutOrderRepository.findWithDetailsById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> workshopCutService.getCutOrderWithDetails(99L))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("updateCutOrder updates header fields and existing item metadata")
+    void updateCutOrder_UpdatesHeaderAndItems() {
+        Project existingProject = Project.builder().id(1L).name("Eski").build();
+        Project newProject = Project.builder().id(2L).name("Villa").build();
+        CutOrder order = CutOrder.builder()
+                .id(5L)
+                .cutOrderNo("CUT-2026-005")
+                .project(existingProject)
+                .machineName("Köprü-01")
+                .operatorName("Ali")
+                .status("COMPLETED")
+                .notes("Eski not")
+                .build();
+        CutItem item = CutItem.builder()
+                .id(11L)
+                .itemCode("ITM-1")
+                .cutOrder(order)
+                .edgeFinish("HAM")
+                .targetLocation("Depo")
+                .build();
+        when(cutOrderRepository.findById(5L)).thenReturn(Optional.of(order));
+        when(projectRepository.findById(2L)).thenReturn(Optional.of(newProject));
+        when(cutItemRepository.findByCutOrderId(5L)).thenReturn(List.of(item));
+        when(cutOrderRepository.save(order)).thenReturn(order);
+
+        CutOrder result = workshopCutService.updateCutOrder(
+                5L, 2L, "Köprü-02", "Ayşe", "PAHLI", "Lobi", "Yeni not");
+
+        assertThat(result.getProject()).isEqualTo(newProject);
+        assertThat(result.getMachineName()).isEqualTo("Köprü-02");
+        assertThat(result.getOperatorName()).isEqualTo("Ayşe");
+        assertThat(result.getNotes()).isEqualTo("Yeni not");
+        assertThat(item.getEdgeFinish()).isEqualTo("PAHLI");
+        assertThat(item.getTargetLocation()).isEqualTo("Lobi");
+        verify(cutItemRepository).saveAll(List.of(item));
+        verify(cutOrderRepository).save(order);
+    }
+
+    @Test
+    @DisplayName("updateCutOrder clears the project and skips item writes when metadata is blank")
+    void updateCutOrder_ClearsProjectWithoutTouchingItems() {
+        CutOrder order = CutOrder.builder()
+                .id(8L)
+                .cutOrderNo("CUT-2026-008")
+                .project(Project.builder().id(3L).name("Villa").build())
+                .machineName("Köprü-01")
+                .operatorName("Ali")
+                .status("COMPLETED")
+                .build();
+        when(cutOrderRepository.findById(8L)).thenReturn(Optional.of(order));
+        when(cutOrderRepository.save(order)).thenReturn(order);
+
+        CutOrder result = workshopCutService.updateCutOrder(8L, null, "Köprü-03", "Can", "  ", "", "Not");
+
+        assertThat(result.getProject()).isNull();
+        assertThat(result.getMachineName()).isEqualTo("Köprü-03");
+        assertThat(result.getOperatorName()).isEqualTo("Can");
+        verify(cutItemRepository, never()).findByCutOrderId(8L);
+        verify(cutItemRepository, never()).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("updateCutOrder throws when the cut order is missing")
+    void updateCutOrder_MissingOrder_Throws() {
+        when(cutOrderRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> workshopCutService.updateCutOrder(
+                99L, null, "Köprü-01", "Ali", null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

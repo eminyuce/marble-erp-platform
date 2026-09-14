@@ -84,17 +84,46 @@ public class WorkshopController {
 
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
-        CutOrder order = workshopCutService.getCutOrderById(id);
-        populateCutForm(model, locale);
-        model.addAttribute("record", order);
-        model.addAttribute("isEdit", true);
-        model.addAttribute("pageTitle", "Kesim Emri Düzenle: " + order.getCutOrderNo());
+        populateCutEditForm(model, locale, workshopCutService.getCutOrderWithDetails(id));
         return "erp/workshop/cut-order-form";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String updateCutOrder(@PathVariable("id") Long id,
+                                 @RequestParam(value = "projectId", required = false) Long projectId,
+                                 @RequestParam("machineName") String machineName,
+                                 @RequestParam("operatorName") String operatorName,
+                                 @RequestParam(value = "edgeFinish", required = false) String edgeFinish,
+                                 @RequestParam(value = "targetLocationDesc", required = false) String targetLocationDesc,
+                                 @RequestParam(value = "notes", required = false) String notes,
+                                 Locale locale,
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            workshopCutService.updateCutOrder(id, projectId, machineName, operatorName,
+                    edgeFinish, targetLocationDesc, notes);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.workshop.update.success", null, locale));
+            return "redirect:/workshop";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            populateCutEditForm(model, locale, workshopCutService.getCutOrderWithDetails(id));
+            return "erp/workshop/cut-order-form";
+        }
     }
 
     private void populateCutForm(Model model, Locale locale) {
         model.addAttribute("availableSlabs", workshopCutService.getAvailableSlabs());
         model.addAttribute("projects", workshopCutService.getAllProjects());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.workshop.title.create", null, locale));
+    }
+
+    private void populateCutEditForm(Model model, Locale locale, CutOrder order) {
+        populateCutForm(model, locale);
+        model.addAttribute("record", order);
+        model.addAttribute("isEdit", true);
+        model.addAttribute("pageTitle",
+                messageSource.getMessage("erp.workshop.title.edit", null, locale) + ": " + order.getCutOrderNo());
     }
 }

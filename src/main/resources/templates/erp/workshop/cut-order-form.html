@@ -2,27 +2,29 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Yeni Ebatlama Emri | Özerler Mermer ERP</title>
+    <title th:text="${((isEdit ?: false) ? 'Kesim Emri Düzenle' : 'Yeni Ebatlama Emri') + ' | Özerler Mermer ERP'}">
+        Ebatlama Emri | Özerler Mermer ERP</title>
 </head>
 <body>
 <div layout:fragment="content" class="erp-form-page">
 
-    <div th:replace="~{fragments/form-page :: breadcrumb('Atölye', @{/workshop}, 'Yeni kayıt')}"></div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Atölye', @{/workshop}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
     <div th:replace="~{fragments/form-page :: heading(
-        'Yeni atölye kesim ve ebatlama emri',
-        'Ambardaki plakayı hedef ölçü ve projeye göre ebatlayın.',
-        '',
+        ${(isEdit ?: false) ? 'Kesim emrini düzenle' : 'Yeni atölye kesim ve ebatlama emri'},
+        ${(isEdit ?: false) ? 'Makine, operatör, proje ve kenar bilgilerini güncelleyin. Kaynak plaka ve kesim ölçüleri değişmez.' : 'Ambardaki plakayı hedef ölçü ve projeye göre ebatlayın.'},
+        ${(isEdit ?: false) ? 'Emir #' + record?.cutOrderNo : ''},
         @{/workshop})}"></div>
 
     <div class="erp-form-card">
-        <form th:action="@{/workshop/create}" method="post" class="erp-form">
+        <form th:action="${(isEdit ?: false)} ? @{/workshop/{id}/edit(id=${record.id})} : @{/workshop/create}"
+              method="post" class="erp-form">
             <div class="erp-form-body">
                 <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
 
                 <section class="erp-form-section">
                     <div th:replace="~{fragments/form-page :: section('Kaynak ve hedef', 'Kesilecek plaka ve mahal')}"></div>
                     <div class="erp-form-grid">
-                        <div class="erp-form-field erp-form-field--full">
+                        <div class="erp-form-field erp-form-field--full" th:if="${!(isEdit ?: false)}">
                             <label class="erp-form-label" for="slabId">Kesilecek plaka (ambar) <span
                                     class="req">*</span></label>
                             <select id="slabId" name="slabId" required class="erp-form-select">
@@ -34,19 +36,22 @@
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="projectId">Hedef proje</label>
                             <select id="projectId" name="projectId" class="erp-form-select">
-                                <option value="">Proje seçilmedi</option>
-                                <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
+                                <option value=""
+                                        th:selected="${record == null or record.project == null}">Proje seçilmedi</option>
+                                <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"
+                                        th:selected="${isEdit and record != null and record.project != null and record.project.id == p.id}"></option>
                             </select>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="targetLocationDesc">Hedef mahal / konum</label>
                             <input id="targetLocationDesc" type="text" name="targetLocationDesc"
-                                   class="erp-form-input" placeholder="Lobi duvar kaplama A blok">
+                                   class="erp-form-input" placeholder="Lobi duvar kaplama A blok"
+                                   th:value="${isEdit and record != null and !#lists.isEmpty(record.items) ? record.items[0].targetLocation : ''}">
                         </div>
                     </div>
                 </section>
 
-                <section class="erp-form-section">
+                <section class="erp-form-section" th:if="${!(isEdit ?: false)}">
                     <div th:replace="~{fragments/form-page :: section('Kesim ölçüleri', 'Adet ve hedef en / boy')}"></div>
                     <div class="erp-form-grid--3">
                         <div class="erp-form-field">
@@ -75,22 +80,26 @@
                             <label class="erp-form-label" for="machineName">Makine (köprü kesme / CNC) <span
                                     class="req">*</span></label>
                             <input id="machineName" type="text" name="machineName" required
-                                   class="erp-form-input" placeholder="Köprü Kesme - CNC 01">
+                                   class="erp-form-input" placeholder="Köprü Kesme - CNC 01"
+                                   th:value="${isEdit and record != null ? record.machineName : ''}">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="operatorName">Operatör <span class="req">*</span></label>
                             <input id="operatorName" type="text" name="operatorName" required
-                                   class="erp-form-input" placeholder="Operatör adı">
+                                   class="erp-form-input" placeholder="Operatör adı"
+                                   th:value="${isEdit and record != null ? record.operatorName : ''}">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="edgeFinish">Kenar işlemi</label>
                             <input id="edgeFinish" type="text" name="edgeFinish" class="erp-form-input"
-                                   placeholder="PAHLI_CILALI">
+                                   placeholder="PAHLI_CILALI"
+                                   th:value="${isEdit and record != null and !#lists.isEmpty(record.items) ? record.items[0].edgeFinish : ''}">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="notes">Notlar</label>
                             <input id="notes" type="text" name="notes" class="erp-form-input"
-                                   placeholder="Özel kesim notu">
+                                   placeholder="Özel kesim notu"
+                                   th:value="${isEdit and record != null ? record.notes : ''}">
                         </div>
                     </div>
                 </section>
