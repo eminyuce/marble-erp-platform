@@ -150,6 +150,7 @@
                             const row = cell.getRow().getData();
                             return gridActionsHtml([
                                 {icon: 'eye', label: 'Detay', href: '/projects/' + row.id},
+                                {icon: 'edit-3', label: 'Düzenle', href: '/projects/' + row.id + '/edit'},
                                 {icon: 'map-pin', label: 'Mahaller', href: '/projects/' + row.id}
                             ]);
                         }
