@@ -122,7 +122,7 @@ public class WorkshopCutService {
         Slab sourceSlab = slabRepository.findById(slabId)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.slab.not_found", slabId)));
 
-        Project project = projectId != null ? projectRepository.findById(projectId).orElse(null) : null;
+        Project project = resolveProject(projectId);
         ProjectLocation location = locationId != null ? projectLocationRepository.findById(locationId).orElse(null) : null;
 
         sourceSlab.setStatus(SlabStatus.IN_CUTTING);
@@ -144,10 +144,48 @@ public class WorkshopCutService {
         return order;
     }
 
+    @Transactional
+    public CutOrder updateCutOrder(Long id, Long projectId, String machineName, String operatorName,
+                                   String edgeFinish, String targetLocationDesc, String notes) {
+        CutOrder order = getCutOrderById(id);
+        order.setProject(resolveProject(projectId));
+        order.setMachineName(machineName);
+        order.setOperatorName(operatorName);
+        order.setNotes(notes);
+        updateExistingItemMetadata(id, edgeFinish, targetLocationDesc);
+        return cutOrderRepository.save(order);
+    }
+
     @Transactional(readOnly = true)
     public List<CutItem> getItemsByCutOrder(Long cutOrderId) {
         Objects.requireNonNull(cutOrderId, getMessage("error.cut_order.id.required"));
         return cutItemRepository.findByCutOrderId(cutOrderId);
+    }
+
+    private Project resolveProject(Long projectId) {
+        if (projectId == null) {
+            return null;
+        }
+        return projectRepository.findById(projectId).orElse(null);
+    }
+
+    private void updateExistingItemMetadata(Long cutOrderId, String edgeFinish, String targetLocationDesc) {
+        if (StringUtils.isBlank(edgeFinish) && StringUtils.isBlank(targetLocationDesc)) {
+            return;
+        }
+        List<CutItem> items = cutItemRepository.findByCutOrderId(cutOrderId);
+        if (items.isEmpty()) {
+            return;
+        }
+        for (CutItem item : items) {
+            if (StringUtils.isNotBlank(edgeFinish)) {
+                item.setEdgeFinish(edgeFinish);
+            }
+            if (StringUtils.isNotBlank(targetLocationDesc)) {
+                item.setTargetLocation(targetLocationDesc);
+            }
+        }
+        cutItemRepository.saveAll(items);
     }
 
     private CutOrder buildCutOrderEntity(Project project, ProjectLocation location,
