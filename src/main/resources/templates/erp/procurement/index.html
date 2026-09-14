@@ -80,7 +80,7 @@
                         responsive: 0,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
-                            return `<a href="/procurement/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${cell.getValue()}</a>`;
+                            return `<a href="/procurement/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
                         }
                     },
                     {
@@ -90,8 +90,8 @@
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
                             return `<div>
-                        <a href="/procurement/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${row.supplierName}</a>
-                        <div class="text-xs text-slate-500">${row.supplierType}</div>
+                        <a href="/procurement/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${gridText(row.supplierName)}</a>
+                        <div class="text-xs text-slate-500">${gridText(row.supplierType)}</div>
                     </div>`;
                         }
                     },
@@ -100,7 +100,7 @@
                         field: "projectName",
                         width: 150,
                         formatter: function (cell) {
-                            return `<span class="text-sm">${cell.getValue() || '—'}</span>`;
+                            return `<span class="text-sm">${gridText(cell.getValue())}</span>`;
                         }
                     },
                     {
@@ -108,7 +108,7 @@
                         field: "orderDate",
                         width: 130,
                         formatter: function (cell) {
-                            return `<span class="text-sm">${cell.getValue() || '—'}</span>`;
+                            return `<span class="text-sm">${gridText(cell.getValue())}</span>`;
                         }
                     },
                     {
@@ -116,7 +116,7 @@
                         field: "totalAmount",
                         width: 150,
                         formatter: function (cell) {
-                            return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
+                            return `<strong>${gridMoney(cell.getValue())}</strong>`;
                         }
                     },
                     {
@@ -134,7 +134,7 @@
                                 'CANCELLED': 'bg-rose-100 text-rose-800'
                             };
                             const c = colors[status] || 'bg-slate-100 text-slate-700';
-                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${c}">● ${cell.getValue()}</span>`;
+                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${c}">● ${gridText(cell.getValue())}</span>`;
                         }
                     },
                     {

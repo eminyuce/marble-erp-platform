@@ -40,7 +40,7 @@ function initProductionGrid() {
                 responsive: 0,
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
-                    return `<a href="/production/orders/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${cell.getValue()}</a>`;
+                    return `<a href="/production/orders/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
                 }
             },
             {
@@ -48,8 +48,8 @@ function initProductionGrid() {
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     return `<div>
-                        <strong class="text-slate-800">${row.blockCode}</strong>
-                        <div class="text-xs text-slate-500">${row.stoneType}</div>
+                        <strong class="text-slate-800">${gridText(row.blockCode)}</strong>
+                        <div class="text-xs text-slate-500">${gridText(row.stoneType)}</div>
                     </div>`;
                 }
             },
@@ -59,8 +59,8 @@ function initProductionGrid() {
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     return `<div class="text-xs">
-                        <div>Süre: <strong>${row.durationHours} sa</strong></div>
-                        <div class="text-slate-500">Enerji: ${row.electricityKwh} kWh</div>
+                        <div>Süre: <strong>${gridNumber(row.durationHours)} sa</strong></div>
+                        <div class="text-slate-500">Enerji: ${gridNumber(row.electricityKwh)} kWh</div>
                     </div>`;
                 }
             },
@@ -69,8 +69,8 @@ function initProductionGrid() {
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     return `<div>
-                        <span class="font-bold text-emerald-800">${row.slabCount} Plaka</span>
-                        <div class="text-xs text-slate-500">${Number(row.totalSlabAreaM2).toFixed(2)} m²</div>
+                        <span class="font-bold text-emerald-800">${gridText(row.slabCount)} Plaka</span>
+                        <div class="text-xs text-slate-500">${gridArea(row.totalSlabAreaM2)}</div>
                     </div>`;
                 }
             },
@@ -80,7 +80,7 @@ function initProductionGrid() {
                 field: "status",
                 width: 110,
                 formatter: function (cell) {
-                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">● ${cell.getValue()}</span>`;
+                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">● ${gridText(cell.getValue())}</span>`;
                 }
             },
             {

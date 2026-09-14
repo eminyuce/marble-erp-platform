@@ -51,8 +51,8 @@ function initUsersGrid() {
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     return `<div>
-                        <a href="/admin/users/${row.id}" class="font-semibold text-slate-800 hover:text-amber-700 underline">${row.fullName || row.username}</a>
-                        <div class="text-xs text-slate-500">@${row.username}</div>
+                        <a href="/admin/users/${row.id}" class="font-semibold text-slate-800 hover:text-amber-700 underline">${gridText(row.fullName || row.username)}</a>
+                        <div class="text-xs text-slate-500">@${gridText(row.username)}</div>
                     </div>`;
                 }
             },

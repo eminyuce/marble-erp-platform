@@ -68,6 +68,7 @@
                     return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
                 },
                 ajaxResponse: function (url, params, response) {
+                    camelizeTabulatorRows(response);
                     return applyTabulatorTotal("slabs-table", response);
                 },
                 columns: [
@@ -80,7 +81,7 @@
                         responsive: 0,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
-                            return `<a href="/production/slabs/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${cell.getValue()}</a>`;
+                            return `<a href="/production/slabs/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
                         }
                     },
                     {
@@ -88,7 +89,7 @@
                         minWidth: 150,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
-                            return `${row.thicknessCm} cm • ${row.widthCm}x${row.lengthCm} cm`;
+                            return `${gridText(row.thicknessCm)} cm • ${gridText(row.widthCm)}x${gridText(row.lengthCm)} cm`;
                         }
                     },
                     {
@@ -96,7 +97,7 @@
                         field: "surfaceAreaM2",
                         width: 120,
                         formatter: function (cell) {
-                            return `<strong>${Number(cell.getValue()).toFixed(2)} m²</strong>`;
+                            return `<strong>${gridArea(cell.getValue())}</strong>`;
                         }
                     },
                     {
@@ -104,7 +105,7 @@
                         field: "surfaceFinish",
                         width: 110,
                         formatter: function (cell) {
-                            return `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 font-medium">${cell.getValue()}</span>`;
+                            return `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 font-medium">${gridText(cell.getValue())}</span>`;
                         }
                     },
                     {
@@ -114,7 +115,7 @@
                         formatter: function (cell) {
                             const val = cell.getValue();
                             const color = val === 'A' ? 'bg-emerald-100 text-emerald-800' : (val === 'B' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800');
-                            return `<span class="px-2 py-0.5 rounded text-xs font-bold ${color}">${val}</span>`;
+                            return `<span class="px-2 py-0.5 rounded text-xs font-bold ${color}">${gridText(val)}</span>`;
                         }
                     },
                     {
@@ -122,7 +123,7 @@
                         field: "costPerM2",
                         width: 150,
                         formatter: function (cell) {
-                            return `<strong class="text-slate-800">${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
+                            return `<strong class="text-slate-800">${gridMoney(cell.getValue())}</strong>`;
                         }
                     },
                     {
@@ -131,7 +132,7 @@
                         width: 130,
                         formatter: function (cell) {
                             const val = cell.getValue();
-                            return `<span class="px-2 py-0.5 rounded-full text-xs font-semibold ${val === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">● ${val}</span>`;
+                            return `<span class="px-2 py-0.5 rounded-full text-xs font-semibold ${val === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">● ${gridText(val)}</span>`;
                         }
                     },
                     {

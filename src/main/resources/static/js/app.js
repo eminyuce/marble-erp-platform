@@ -101,12 +101,37 @@ function camelizeTabulatorRows(response) {
 }
 
 function applyTabulatorTotal(tableId, response) {
-    const target = (response && response.response && response.response.body) ? response.response.body : response;
+    const target = camelizeTabulatorRows(response);
     const badge = document.querySelector(`[data-grid-total="${tableId}"]`);
     if (badge && target && typeof target.total === "number") {
         badge.textContent = String(target.total);
     }
     return target;
+}
+
+function gridText(value) {
+    return value === undefined || value === null || value === "" ? "—" : String(value);
+}
+
+function gridNumber(value, format) {
+    if (value === undefined || value === null || value === "") {
+        return "—";
+    }
+    const n = Number(value);
+    if (!Number.isFinite(n)) {
+        return "—";
+    }
+    return typeof format === "function" ? format(n) : String(n);
+}
+
+function gridMoney(value) {
+    const amount = gridNumber(value, (n) => n.toLocaleString("tr-TR"));
+    return amount === "—" ? "—" : amount + " TL";
+}
+
+function gridArea(value) {
+    const amount = gridNumber(value, (n) => n.toFixed(2));
+    return amount === "—" ? "—" : amount + " m²";
 }
 
 function toAsciiTurkishFilename(filename) {

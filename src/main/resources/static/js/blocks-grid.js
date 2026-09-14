@@ -41,7 +41,7 @@ function initBlocksGrid() {
                 responsive: 0,
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
-                    return `<a href="/blocks/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${cell.getValue()}</a>`;
+                    return `<a href="/blocks/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
                 }
             },
             {title: "Ocak", field: "quarryName", minWidth: 140},
@@ -51,7 +51,7 @@ function initBlocksGrid() {
                 minWidth: 190,
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
-                    return `${row.widthCm}x${row.lengthCm}x${row.heightCm} cm (${row.volumeM3} m³)`;
+                    return `${gridText(row.widthCm)}x${gridText(row.lengthCm)}x${gridText(row.heightCm)} cm (${gridNumber(row.volumeM3)} m³)`;
                 }
             },
             {
@@ -60,10 +60,10 @@ function initBlocksGrid() {
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const dev = row.weightDeviationPct;
-                    const isNeg = dev < 0;
+                    const isNeg = Number(dev) < 0;
                     return `<div>
-                        <strong>${Number(row.actualWeightKg).toLocaleString('tr-TR')} kg</strong>
-                        <span class="text-xs ${isNeg ? 'text-blue-600' : 'text-amber-600'}">(${dev}%)</span>
+                        <strong>${gridNumber(row.actualWeightKg, (n) => n.toLocaleString("tr-TR"))} kg</strong>
+                        <span class="text-xs ${isNeg ? 'text-blue-600' : 'text-amber-600'}">(${gridNumber(dev)}%)</span>
                     </div>`;
                 }
             },
@@ -81,7 +81,7 @@ function initBlocksGrid() {
                         'C': 'bg-amber-100 text-amber-800',
                         'MOLOZ': 'bg-rose-100 text-rose-800'
                     };
-                    return `<span class="px-2 py-0.5 rounded text-xs font-semibold ${colors[val] || 'bg-slate-100'}">${val}</span>`;
+                    return `<span class="px-2 py-0.5 rounded text-xs font-semibold ${colors[val] || 'bg-slate-100'}">${gridText(val)}</span>`;
                 }
             },
             {
@@ -96,7 +96,7 @@ function initBlocksGrid() {
                     if (st === 'QUARRY') badge = 'bg-amber-100 text-amber-800';
                     if (st === 'FACTORY_STOCK') badge = 'bg-emerald-100 text-emerald-800';
                     if (st === 'SAWING') badge = 'bg-blue-100 text-blue-800';
-                    return `<span class="px-2.5 py-1 rounded-full text-xs font-medium ${badge}">● ${cell.getValue()}</span>`;
+                    return `<span class="px-2.5 py-1 rounded-full text-xs font-medium ${badge}">● ${gridText(cell.getValue())}</span>`;
                 }
             },
             {
@@ -105,7 +105,7 @@ function initBlocksGrid() {
                 minWidth: 130,
                 width: 140,
                 formatter: function (cell) {
-                    return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
+                    return `<strong>${gridMoney(cell.getValue())}</strong>`;
                 }
             },
             {
