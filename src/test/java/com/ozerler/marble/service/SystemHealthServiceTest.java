@@ -58,4 +58,42 @@ class SystemHealthServiceTest {
         String json = systemHealthService.formatHealthJson(metrics);
         assertThat(json).contains("\"status\" : \"UP\"");
     }
+
+    @Test
+    @DisplayName("buildHealthResponse returns UP when database is reachable")
+    void buildHealthResponse_AllDependenciesUp() throws Exception {
+        Connection connection = mock(Connection.class);
+        Statement statement = mock(Statement.class);
+
+        when(dataSource.getConnection()).thenReturn(connection);
+        when(connection.createStatement()).thenReturn(statement);
+        when(statement.execute(anyString())).thenReturn(true);
+
+        systemHealthService = new SystemHealthService(dataSource, environment, Optional.empty(), null);
+
+        var health = systemHealthService.buildHealthResponse();
+
+        assertThat(health.getStatus()).isEqualTo("UP");
+        assertThat(health.getDependencies()).containsKeys("database", "quarryService", "factoryService", "costAccounting", "diskSpace");
+        assertThat(health.getDependencies().get("database").getStatus()).isEqualTo("UP");
+        assertThat(health.getDependencies().get("database").getError()).isNull();
+        assertThat(health.getDependencies().get("quarryService").getStatus()).isEqualTo("UP");
+        assertThat(health.getDependencies().get("diskSpace").getStatus()).isEqualTo("UP");
+    }
+
+    @Test
+    @DisplayName("buildHealthResponse returns DOWN when database is unreachable")
+    void buildHealthResponse_DatabaseDown() throws Exception {
+        when(dataSource.getConnection()).thenThrow(new RuntimeException("Connection refused"));
+
+        systemHealthService = new SystemHealthService(dataSource, environment, Optional.empty(), null);
+
+        var health = systemHealthService.buildHealthResponse();
+
+        assertThat(health.getStatus()).isEqualTo("DOWN");
+        assertThat(health.getDependencies().get("database").getStatus()).isEqualTo("DOWN");
+        assertThat(health.getDependencies().get("database").getError()).isEqualTo("Database connection failed");
+        assertThat(health.getDependencies().get("quarryService").getStatus()).isEqualTo("UP");
+        assertThat(health.getDependencies().get("quarryService").getError()).isNull();
+    }
 }
