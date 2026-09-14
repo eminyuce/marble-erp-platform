@@ -223,8 +223,63 @@
             <i data-lucide="key-round" class="w-4 h-4"></i>
             <span>Şifre Değiştir</span>
         </a>
-        <button type="submit" form="logoutForm" class="admin-topbar-logout" title="Güvenli Çıkış Yap">
-            <i data-lucide="log-out" class="w-4 h-4"></i>
+        <div class="admin-topbar-help-wrap" x-data="pageHelpModal" @keydown.window="onKeydown($event)">
+            <button type="button"
+                    class="admin-topbar-help"
+                    x-show="hasHelp"
+                    x-cloak
+                    @click="openHelp()"
+                    :aria-expanded="open.toString()"
+                    aria-controls="pageHelpDialog"
+                    aria-haspopup="dialog"
+                    aria-label="Nasıl kullanılır?"
+                    title="Nasıl kullanılır?">
+                <i data-lucide="circle-help" class="w-4 h-4" aria-hidden="true"></i>
+                <span class="admin-topbar-help-label">Yardım</span>
+            </button>
+
+            <div class="page-help-overlay"
+                 x-show="open"
+                 x-cloak
+                 :class="{ 'is-open': open }"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click.self="closeHelp()"
+                 role="presentation">
+                <div id="pageHelpDialog"
+                     class="page-help-dialog"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="pageHelpTitle"
+                     x-ref="helpDialog"
+                     tabindex="-1"
+                     @click.stop>
+                    <header class="page-help-header">
+                        <span class="page-help-header-icon" aria-hidden="true">
+                            <i data-lucide="circle-help" class="w-5 h-5"></i>
+                        </span>
+                        <h2 id="pageHelpTitle" class="page-help-title">Nasıl kullanılır?</h2>
+                        <button type="button"
+                                class="page-help-close"
+                                @click="closeHelp()"
+                                x-ref="helpClose"
+                                aria-label="Yardımı kapat"
+                                title="Kapat">
+                            <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+                        </button>
+                    </header>
+                    <div class="page-help-body">
+                        <ul class="page-help-list" x-ref="helpList"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button type="submit" form="logoutForm" class="admin-topbar-logout admin-mega-logout" title="Güvenli Çıkış Yap">
+            <i data-lucide="power" aria-hidden="true"></i>
             <span>Çıkış Yap</span>
         </button>
     </div>

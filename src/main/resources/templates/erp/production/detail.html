@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${order.orderNo + ' | Özerler Mermer ERP'}">Üretim Emri Detay</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-start sm:items-center gap-2 flex-wrap">
+                <a th:href="@{/production}" class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                   aria-label="Katrak kesime dön">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight min-w-0 break-words font-mono"
+                    th:text="${order.orderNo}">PRD-2026-00452</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      th:classappend="${order.status == 'COMPLETED'} ? 'bg-emerald-100 text-emerald-800' : (${order.status == 'IN_PROGRESS'} ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700')"
+                      th:text="${order.status}">COMPLETED</span>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">
+                <span th:text="${order.processType != null ? order.processType.label : '—'}">Katrak Dilimleme</span> ·
+                <span th:text="${order.machineName}">Katrak-01</span>
+                <span th:if="${order.operatorName != null}"> · <span th:text="'Operatör: ' + ${order.operatorName}">Operatör</span></span>
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a th:href="@{'/production/orders/' + ${order.id} + '/edit'}" class="erp-btn-secondary">
+                <i data-lucide="edit-3"></i>
+                <span>Düzenle</span>
+            </a>
+            <a th:href="@{/genealogy(code=${order.orderNo})}" class="erp-btn-secondary">
+                <i data-lucide="git-branch"></i>
+                <span>Soy Ağacı</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900">Kaynak blok</h3>
+                <p class="text-xs text-slate-500">Kesilen blok ve taş bilgisi</p>
+            </div>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Blok kodu</dt>
+                    <dd class="font-mono font-bold text-amber-900" th:text="${order.block != null ? order.block.blockCode : '—'}">BLK-001</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Taş cinsi</dt>
+                    <dd class="font-semibold text-slate-800" th:text="${order.block != null ? order.block.stoneType : '—'}">Burdur Bej</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Kalite</dt>
+                    <dd th:text="${order.block != null and order.block.qualityGrade != null ? order.block.qualityGrade.label : '—'}">A</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Ebatlar</dt>
+                    <dd th:if="${order.block != null}"
+                        th:text="${order.block.widthCm + ' × ' + order.block.lengthCm + ' × ' + order.block.heightCm + ' cm'}">175 × 285 × 180 cm</dd>
+                    <dd th:unless="${order.block != null}">—</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900">Kesim ve tüketim</h3>
+                <p class="text-xs text-slate-500">Süre, enerji ve lama aşınması</p>
+            </div>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Başlangıç</dt>
+                    <dd th:text="${order.startTime != null ? #temporals.format(order.startTime, 'dd.MM.yyyy HH:mm') : '—'}">03.09.2026 08:00</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Bitiş</dt>
+                    <dd th:text="${order.endTime != null ? #temporals.format(order.endTime, 'dd.MM.yyyy HH:mm') : 'Devam ediyor'}">03.09.2026 16:30</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Süre</dt>
+                    <dd th:text="${order.durationHours != null ? order.durationHours + ' sa' : '—'}">8.5 sa</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Elektrik</dt>
+                    <dd th:text="${order.electricityKwh != null ? order.electricityKwh + ' kWh' : '—'}">420 kWh</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Lama aşınma</dt>
+                    <dd th:text="${order.bladeWearMm != null ? order.bladeWearMm + ' mm' : '—'}">1.2 mm</dd>
+                </div>
+                <div th:if="${!#strings.isEmpty(order.notes)}">
+                    <dt class="text-xs font-semibold text-slate-500">Notlar</dt>
+                    <dd class="text-slate-700" th:text="${order.notes}">Vardiya notu</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 class="font-bold text-slate-900">Çıkan plakalar</h3>
+                <p class="text-xs text-slate-500">Bu iş emrinden üretilen plakalar</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"
+                  th:text="${#lists.size(order.slabs) + ' plaka'}">0 plaka</span>
+        </div>
+
+        <div th:if="${order.slabs.isEmpty()}" class="text-center text-sm text-slate-400 py-6">
+            <i data-lucide="layers" class="w-8 h-8 mx-auto mb-2"></i>
+            Bu iş emrine bağlı plaka kaydı yok.
+        </div>
+
+        <div th:unless="${order.slabs.isEmpty()}" class="space-y-2">
+            <div th:each="slab : ${order.slabs}"
+                 class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <a th:href="@{'/production/slabs/' + ${slab.id} + '/label'}"
+                       class="font-mono text-sm font-bold text-amber-900 hover:text-amber-700 underline"
+                       th:text="${slab.slabCode}">SLB-2026-00851</a>
+                    <div class="text-[11px] text-slate-500">
+                        <span th:text="${slab.widthCm + ' × ' + slab.lengthCm + ' × ' + slab.thicknessCm + ' cm'}">175 × 285 × 2 cm</span>
+                        ·
+                        <span th:text="${#numbers.formatDecimal(slab.surfaceAreaM2, 1, 2) + ' m²'}">4.99 m²</span>
+                        ·
+                        <span th:text="${slab.surfaceFinish != null ? slab.surfaceFinish.label : '—'}">Cilalı</span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="px-2 py-0.5 rounded font-semibold bg-slate-100 text-slate-700"
+                          th:text="${slab.qualityGrade != null ? slab.qualityGrade.label : '—'}">A</span>
+                    <span class="px-2 py-0.5 rounded-full font-semibold"
+                          th:classappend="${slab.status != null and slab.status.name() == 'AVAILABLE'} ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                          th:text="${slab.status != null ? slab.status.label : '—'}">Serbest Stok</span>
+                    <span class="font-bold text-slate-900"
+                          th:text="${#numbers.formatDecimal(slab.costPerM2, 1, 'POINT', 2, 'COMMA') + ' TL/m²'}">1.185,57 TL/m²</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900">Fire kayıtları</h3>
+            <p class="text-xs text-slate-500">Bu kesime bağlı fire ve kırık kayıtları</p>
+        </div>
+
+        <div th:if="${order.scrapLogs.isEmpty()}" class="text-center text-sm text-slate-400 py-6">
+            <i data-lucide="package-open" class="w-8 h-8 mx-auto mb-2"></i>
+            Fire kaydı bulunmuyor.
+        </div>
+
+        <div th:unless="${order.scrapLogs.isEmpty()}" class="space-y-2">
+            <div th:each="scrap : ${order.scrapLogs}"
+                 class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <strong class="text-sm font-bold text-slate-800 font-mono" th:text="${scrap.scrapCode}">SCRAP-2026-0001</strong>
+                    <div class="text-[11px] text-slate-500">
+                        <span th:if="${scrap.reasonCode != null}"
+                              th:text="${scrap.reasonCode.code + ' — ' + scrap.reasonCode.title}">FR-01</span>
+                        <span th:if="${scrap.description != null}"> · <span th:text="${scrap.description}">Açıklama</span></span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-700">
+                    <span th:text="${#numbers.formatDecimal(scrap.scrapWeightKg, 1, 2) + ' kg'}">2100 kg</span>
+                    <span class="font-bold text-rose-800"
+                          th:text="${#numbers.formatDecimal(scrap.costImpact, 1, 'POINT', 2, 'COMMA') + ' TL'}">4.200,00 TL</span>
+                    <span class="text-slate-500" th:if="${scrap.loggedBy != null}" th:text="${scrap.loggedBy}">Ahmet Kaya</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <div th:replace="~{fragments/audit :: auditInfo(${order?.createdDate}, ${order?.updatedDate}, ${order?.addUserId}, ${order?.updateUserId})}"></div>
+    </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,241 @@
+.erp-ss {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+.erp-ss-native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
+.erp-ss-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    text-align: left;
+    color: #102a43;
+    background: #fff;
+    border: 1px solid #d7dee8;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.erp-ss--compact .erp-ss-trigger {
+    min-height: 38px;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.8125rem;
+    border-radius: 8px;
+}
+
+.erp-ss-trigger:hover {
+    border-color: #c5d1dc;
+}
+
+.erp-ss-trigger:focus,
+.erp-ss.is-open .erp-ss-trigger {
+    outline: none;
+    border-color: #2b6cb0;
+    box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.18);
+}
+
+.erp-ss.is-invalid .erp-ss-trigger {
+    border-color: #e11d48;
+    background: #fff7f8;
+}
+
+.erp-ss.is-disabled .erp-ss-trigger {
+    cursor: not-allowed;
+    background: #f8fafc;
+    color: #829ab1;
+}
+
+.erp-ss-trigger.is-placeholder .erp-ss-trigger-label {
+    color: #627d98;
+}
+
+.erp-ss-trigger-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.erp-ss-chevron {
+    display: inline-flex;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: #627d98;
+}
+
+.erp-ss-chevron svg,
+.erp-ss-icon-btn svg,
+.erp-ss-search-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.erp-ss.is-open .erp-ss-chevron {
+    transform: rotate(180deg);
+}
+
+.erp-ss-panel {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(16, 42, 67, 0.14);
+    overflow: hidden;
+}
+
+.erp-ss-panel[hidden] {
+    display: none !important;
+}
+
+.erp-ss-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 10px 0;
+    padding: 0 10px;
+    min-height: 40px;
+    border: 1px solid #d7dee8;
+    border-radius: 999px;
+    background: #fff;
+}
+
+.erp-ss-search:focus-within {
+    border-color: #2b6cb0;
+    box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.16);
+}
+
+.erp-ss-search-icon {
+    display: inline-flex;
+    color: #829ab1;
+}
+
+.erp-ss-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: #102a43;
+    font-size: 0.875rem;
+    padding: 8px 0;
+}
+
+.erp-ss-search-input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.erp-ss-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #829ab1;
+    cursor: pointer;
+}
+
+.erp-ss-icon-btn:hover {
+    color: #102a43;
+    background: #e2e8f0;
+}
+
+.erp-ss-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px 4px;
+    color: #829ab1;
+    font-size: 11px;
+}
+
+.erp-ss-list {
+    max-height: 240px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px 0 8px;
+    list-style: none;
+}
+
+.erp-ss-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 14px;
+    font-size: 0.875rem;
+    color: #102a43;
+    cursor: pointer;
+}
+
+.erp-ss-option.is-selected {
+    background: #eff6ff;
+}
+
+.erp-ss-option.is-active,
+.erp-ss-option:hover {
+    background: #f8fafc;
+}
+
+.erp-ss-option.is-selected.is-active,
+.erp-ss-option.is-selected:hover {
+    background: #e8f1fa;
+}
+
+.erp-ss-option.is-disabled {
+    color: #94a3b8;
+    cursor: default;
+}
+
+.erp-ss-empty {
+    padding: 16px 14px 18px;
+    color: #829ab1;
+    font-size: 0.8125rem;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .erp-ss-trigger,
+    .erp-ss-search-input {
+        font-size: 16px;
+    }
+
+    .erp-ss-panel {
+        max-height: min(70dvh, 420px);
+    }
+
+    .erp-ss-list {
+        max-height: min(50dvh, 280px);
+    }
+}

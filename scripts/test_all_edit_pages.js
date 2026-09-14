@@ -18,7 +18,9 @@ function getBrowserExecutable() {
 }
 
 const EDIT_PAGES_TO_TEST = [
+  { name: 'block_1_detail', path: '/blocks/1', label: 'Blok Detay' },
   { name: 'block_10_edit', path: '/blocks/10/edit', label: 'Blok Düzenle' },
+  { name: 'user_1_detail', path: '/admin/users/1', label: 'Kullanıcı Detay' },
   { name: 'user_1_edit', path: '/admin/users/1/edit', label: 'Kullanıcı Düzenle' },
   { name: 'template_1_edit', path: '/admin/settings/templates/1/edit', label: 'E-posta Şablonu Düzenle' },
   { name: 'project_1_edit', path: '/projects/1/edit', label: 'Proje Düzenle' },
@@ -27,8 +29,11 @@ const EDIT_PAGES_TO_TEST = [
   { name: 'procurement_1_detail', path: '/procurement/1', label: 'Satınalma Detay' },
   { name: 'sales_1_edit', path: '/sales/1/edit', label: 'Satış Düzenle' },
   { name: 'sales_1_detail', path: '/sales/1', label: 'Satış Detay' },
+  { name: 'production_order_1_detail', path: '/production/orders/1', label: 'Üretim Emri Detay' },
   { name: 'production_order_1_edit', path: '/production/orders/1/edit', label: 'Üretim Emri Düzenle' },
-  { name: 'workshop_1_edit', path: '/workshop/1/edit', label: 'Atölye Kesim Düzenle' }
+  { name: 'workshop_1_detail', path: '/workshop/1', label: 'Atölye Kesim Detay' },
+  { name: 'workshop_1_edit', path: '/workshop/1/edit', label: 'Atölye Kesim Düzenle' },
+  { name: 'slab_1_detail', path: '/production/slabs/1', label: 'Plaka Detay' }
 ];
 
 async function run() {

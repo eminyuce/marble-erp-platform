@@ -99,9 +99,24 @@
                         <span class="erp-form-label">Roller</span>
                         <p class="erp-form-hint">Boş bırakılırsa standart kullanıcı rolü atanır.</p>
                         <div class="erp-form-roles">
-                            <label th:each="role : ${allRoles}" class="erp-form-check">
+                            <label th:each="role : ${allRoles}" class="erp-form-check erp-form-roles__item">
                                 <input type="checkbox" th:field="*{roles}" th:value="${role.name}">
-                                <span th:text="${role.description != null ? role.description : role.name}">Rol</span>
+                                <span class="erp-form-roles__text">
+                                    <span th:text="${role.description != null ? role.description : role.name}">Rol</span>
+                                    <span class="erp-form-hint" th:switch="${role.name}">
+                                        <span th:case="'ROLE_ADMIN'">Kullanıcı, ayar ve tüm modüllere tam yetki.</span>
+                                        <span th:case="'ROLE_EXECUTIVE'">Raporlara ve operasyon verilerine okuma erişimi.</span>
+                                        <span th:case="'ROLE_FACTORY_MANAGER'">Üretim emirleri, plaka ambarı ve kalite kontrol.</span>
+                                        <span th:case="'ROLE_QUARRY_CHIEF'">Blok kayıt, tartım ve ocak sevkiyatı.</span>
+                                        <span th:case="'ROLE_SITE_ENGINEER'">Şantiye projesi, montaj ve saha raporları.</span>
+                                        <span th:case="'ROLE_WORKSHOP_CHIEF'">Ebatlama, yüzey işlemleri ve fire kaydı.</span>
+                                        <span th:case="'ROLE_OPERATOR'">Günlük üretim ve makine veri girişi.</span>
+                                        <span th:case="'ROLE_FINANCE'">Maliyet, fiyatlama ve finansal raporlar.</span>
+                                        <span th:case="'ROLE_SALES'">Müşteri, teklif ve satış siparişi takibi.</span>
+                                        <span th:case="'ROLE_QC'">Kalite sınıfı, ölçüm ve fire analizi.</span>
+                                        <span th:case="'ROLE_USER'">Profil görüntüleme ve şifre değiştirme.</span>
+                                    </span>
+                                </span>
                             </label>
                         </div>
                     </div>

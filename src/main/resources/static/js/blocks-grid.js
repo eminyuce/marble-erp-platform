@@ -40,8 +40,8 @@ function initBlocksGrid() {
                 width: 170,
                 responsive: 0,
                 formatter: function (cell) {
-                    const val = cell.getValue();
-                    return `<div class="font-mono font-bold text-amber-900">${val}</div>`;
+                    const row = cell.getRow().getData();
+                    return `<a href="/blocks/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${cell.getValue()}</a>`;
                 }
             },
             {title: "Ocak", field: "quarryName", minWidth: 140},
@@ -117,6 +117,7 @@ function initBlocksGrid() {
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const items = [];
+                    items.push({icon: 'eye', label: 'Detay', href: '/blocks/' + row.id});
                     items.push({icon: 'git-branch', label: 'Soy Ağacı', href: '/genealogy?code=' + row.blockCode});
                     items.push({icon: 'edit-3', label: 'Düzenle', href: '/blocks/' + row.id + '/edit'});
                     if (row.status === 'QUARRY') {

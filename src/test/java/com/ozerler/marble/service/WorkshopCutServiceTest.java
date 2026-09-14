@@ -16,10 +16,12 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -115,5 +117,26 @@ class WorkshopCutServiceTest {
         assertThat(dto.getItemCount()).isEqualTo(4);
         assertThat(dto.getTotalAreaM2()).isEqualByComparingTo("6.2500");
         assertThat(order.getItems()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getCutOrderWithDetails returns the cut order")
+    void getCutOrderWithDetails_ReturnsOrder() {
+        CutOrder order = CutOrder.builder().id(3L).cutOrderNo("CO-2026-003").status("COMPLETED").build();
+        when(cutOrderRepository.findWithDetailsById(3L)).thenReturn(Optional.of(order));
+
+        CutOrder result = workshopCutService.getCutOrderWithDetails(3L);
+
+        assertThat(result.getCutOrderNo()).isEqualTo("CO-2026-003");
+        verify(cutOrderRepository).findWithDetailsById(3L);
+    }
+
+    @Test
+    @DisplayName("getCutOrderWithDetails throws when the cut order is missing")
+    void getCutOrderWithDetails_MissingOrder_Throws() {
+        when(cutOrderRepository.findWithDetailsById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> workshopCutService.getCutOrderWithDetails(99L))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

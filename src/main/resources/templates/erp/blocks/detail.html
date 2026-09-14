@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${block.blockCode + ' | Özerler Mermer ERP'}">Blok Detay</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-start sm:items-center gap-2 flex-wrap">
+                <a th:href="@{/blocks}" class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                   aria-label="Bloklara dön">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight min-w-0 break-words font-mono"
+                    th:text="${block.blockCode}">BLK-2026-00125</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"
+                      th:text="${block.status != null ? block.status.label : block.status}">Ocak</span>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">
+                <span th:text="${block.stoneType}">Burdur Bej</span>
+                <span th:if="${block.quarry != null}"> · <span th:text="${block.quarry.name}">Ana Ocak</span></span>
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a th:href="@{'/blocks/' + ${block.id} + '/edit'}" class="erp-btn-secondary">
+                <i data-lucide="edit-3"></i>
+                <span>Düzenle</span>
+            </a>
+            <a th:href="@{/genealogy(code=${block.blockCode})}" class="erp-btn-secondary">
+                <i data-lucide="git-branch"></i>
+                <span>Soy Ağacı</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900">Blok bilgisi</h3>
+                <p class="text-xs text-slate-500">Ölçü, ağırlık ve kalite</p>
+            </div>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Ebatlar</dt>
+                    <dd th:text="${block.widthCm + ' × ' + block.lengthCm + ' × ' + block.heightCm + ' cm'}">175 × 285 × 180 cm</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Hacim</dt>
+                    <dd th:text="${block.volumeM3 + ' m³'}">9.000 m³</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Fiili ağırlık</dt>
+                    <dd th:text="${#numbers.formatDecimal(block.actualWeightKg, 1, 'POINT', 0, 'COMMA') + ' kg'}">24.300 kg</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Teorik ağırlık</dt>
+                    <dd th:text="${#numbers.formatDecimal(block.theoreticalWeightKg, 1, 'POINT', 0, 'COMMA') + ' kg'}">24.300 kg</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Sapma</dt>
+                    <dd th:text="${block.weightDeviationPct + '%'}">0%</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Kalite</dt>
+                    <dd th:text="${block.qualityGrade != null ? block.qualityGrade.label : '—'}">A</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Renk / ton</dt>
+                    <dd th:text="${!#strings.isEmpty(block.colorTone) ? block.colorTone : '—'}">Bej</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Çıkarma tarihi</dt>
+                    <dd th:text="${block.extractionDate != null ? #temporals.format(block.extractionDate, 'dd.MM.yyyy') : '—'}">01.09.2026</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900">Ocak ve maliyet</h3>
+                <p class="text-xs text-slate-500">Kaynak ocak ve birikmiş maliyet</p>
+            </div>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Ocak</dt>
+                    <dd th:text="${block.quarry != null ? block.quarry.name : '—'}">Ana Ocak</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Lokasyon</dt>
+                    <dd th:text="${block.quarry != null ? block.quarry.location : '—'}">Burdur</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Çıkarma maliyeti</dt>
+                    <dd th:text="${#numbers.formatDecimal(block.extractionCost, 1, 'POINT', 2, 'COMMA') + ' TL'}">0 TL</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Nakliye</dt>
+                    <dd th:text="${#numbers.formatDecimal(block.transportCost, 1, 'POINT', 2, 'COMMA') + ' TL'}">0 TL</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Toplam maliyet</dt>
+                    <dd class="font-bold" th:text="${#numbers.formatDecimal(block.totalCost, 1, 'POINT', 2, 'COMMA') + ' TL'}">0 TL</dd>
+                </div>
+                <div th:if="${!#strings.isEmpty(block.notes)}">
+                    <dt class="text-xs font-semibold text-slate-500">Notlar</dt>
+                    <dd th:text="${block.notes}">Not</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <div th:replace="~{fragments/audit :: auditInfo(${block?.createdDate}, ${block?.updatedDate}, ${block?.addUserId}, ${block?.updateUserId})}"></div>
+    </div>
+</div>
+</body>
+</html>

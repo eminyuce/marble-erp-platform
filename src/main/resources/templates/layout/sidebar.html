@@ -90,13 +90,6 @@
         <span>Yönetici Kokpiti</span>
     </a>
 
-    <!-- System Health -->
-    <a th:href="@{/admin/dashboard/systemhealth/}"
-       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
-        <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
-        <span>Sistem Sağlığı (Health)</span>
-    </a>
-
     <!-- Site Features & Guide -->
     <a th:href="@{/admin/dashboard/oursitefeatures/}"
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
@@ -104,9 +97,14 @@
         <span>Özellikler &amp; Yardım Rehberi</span>
     </a>
 
-    <!-- Admin Only: User Management & Settings -->
+    <!-- Admin: User Management, Settings & System Health -->
+    <div class="pt-4 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Yönetim</div>
+    <a th:href="@{/admin/dashboard/systemhealth/}"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
+        <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
+        <span>Sistem Sağlığı (Health)</span>
+    </a>
     <div sec:authorize="hasRole('ADMIN')">
-        <div class="pt-4 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Yönetim</div>
         <a th:href="@{/admin/users}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
             <i data-lucide="users" class="w-5 h-5 text-blue-400"></i>

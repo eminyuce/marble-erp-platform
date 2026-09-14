@@ -1,6 +1,8 @@
 package com.ozerler.marble.controller.admin;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.UserDto;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.service.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -10,10 +12,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.ui.ExtendedModelMap;
+import org.springframework.ui.Model;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
@@ -72,5 +81,49 @@ class UserControllerTest {
 
         assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
+    }
+
+    @Test
+    @DisplayName("usersPage exposes all roles and Turkish label map")
+    void usersPage_exposesRoleFilters() {
+        Model model = new ExtendedModelMap();
+
+        String view = userController.usersPage(model);
+
+        assertThat(view).isEqualTo("admin/users/index");
+        assertThat(model.getAttribute("filterRoles")).isNotNull();
+        assertThat(model.getAttribute("roleLabelMap")).isInstanceOf(java.util.Map.class);
+    }
+
+    @Test
+    @DisplayName("getUsersData forwards selected roles for OR filtering")
+    void getUsersData_forwardsRoleFilters() {
+        TabulatorResponse<UserDto> expected = TabulatorResponse.of(List.of(), 1, 0);
+        when(userService.getUsersPaged(eq(1), eq(25), eq(""), isNull(), isNull(),
+                eq(List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")), eq(true)))
+                .thenReturn(expected);
+
+        TabulatorResponse<UserDto> response = userController.getUsersData(
+                1, 25, "", null, null, "ROLE_USER", List.of("ROLE_ADMIN", "ROLE_SALES"), true);
+
+        assertThat(response).isSameAs(expected);
+        verify(userService).getUsersPaged(eq(1), eq(25), eq(""), isNull(), isNull(),
+                eq(List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")), eq(true));
+    }
+
+    @Test
+    @DisplayName("getUsersData with no roles still requests the unfiltered page")
+    void getUsersData_withoutRoles_passesEmptyList() {
+        TabulatorResponse<UserDto> expected = TabulatorResponse.of(List.of(), 1, 0);
+        when(userService.getUsersPaged(eq(1), eq(10), isNull(), isNull(), isNull(),
+                eq(List.of()), isNull()))
+                .thenReturn(expected);
+
+        TabulatorResponse<UserDto> response = userController.getUsersData(
+                1, 10, null, null, null, null, null, null);
+
+        assertThat(response).isSameAs(expected);
+        verify(userService).getUsersPaged(eq(1), eq(10), isNull(), isNull(), isNull(),
+                eq(List.of()), isNull());
     }
 }

@@ -75,14 +75,14 @@
                 <div th:text="${successMessage}">Bilgi</div>
             </div>
 
-            <form th:action="@{/account/adminlogin/}" method="post" class="admin-login__form" autocomplete="off">
+            <form th:action="@{/account/adminlogin/}" method="post" class="admin-login__form" id="adminLoginForm">
                 <div class="mb-3">
                     <label for="username" class="form-label">E-Posta</label>
                     <div class="admin-login__input-wrap">
                         <i data-lucide="mail" class="admin-login__field-icon"></i>
                         <input type="email" id="username" name="username" required autofocus
-                               placeholder="e-posta adresiniz" autocomplete="off" autocorrect="off" autocapitalize="off"
-                               spellcheck="false">
+                               placeholder="e-posta adresiniz" autocomplete="username" autocorrect="off"
+                               autocapitalize="off" spellcheck="false">
                     </div>
                 </div>
                 <div class="mb-3">
@@ -90,7 +90,7 @@
                     <div class="admin-login__input-wrap">
                         <i data-lucide="lock" class="admin-login__field-icon"></i>
                         <input type="password" id="password" name="password" required
-                               placeholder="••••••••" autocomplete="new-password">
+                               placeholder="••••••••" autocomplete="current-password">
                         <button type="button" class="admin-login__toggle-password" id="togglePassword"
                                 aria-label="Şifreyi göster">
                             <i data-lucide="eye" class="w-4 h-4"></i>
@@ -124,6 +124,7 @@
     lucide.createIcons();
     const password = document.getElementById("password");
     const toggle = document.getElementById("togglePassword");
+    const loginForm = document.getElementById("adminLoginForm");
     if (toggle && password) {
         toggle.addEventListener("click", () => {
             const isPassword = password.type === "password";
@@ -131,6 +132,11 @@
             toggle.setAttribute("aria-label", isPassword ? "Şifreyi gizle" : "Şifreyi göster");
             toggle.innerHTML = `<i data-lucide="${isPassword ? 'eye-off' : 'eye'}" class="w-4 h-4"></i>`;
             lucide.createIcons();
+        });
+    }
+    if (loginForm && password) {
+        loginForm.addEventListener("submit", () => {
+            password.type = "password";
         });
     }
 </script>

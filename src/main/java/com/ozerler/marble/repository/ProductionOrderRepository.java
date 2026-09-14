@@ -19,6 +19,9 @@ public interface ProductionOrderRepository extends JpaRepository<ProductionOrder
 
     Optional<ProductionOrder> findByOrderNo(String orderNo);
 
+    @EntityGraph(attributePaths = {"block"})
+    Optional<ProductionOrder> findWithDetailsById(Long id);
+
     List<ProductionOrder> findByBlockId(Long blockId);
 
     @EntityGraph(attributePaths = {"block"})

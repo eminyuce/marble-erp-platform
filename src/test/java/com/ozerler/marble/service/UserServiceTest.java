@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.dto.UserCreateRequest;
 import com.ozerler.marble.dto.UserDto;
 import com.ozerler.marble.model.Role;
@@ -13,14 +14,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -131,5 +137,69 @@ class UserServiceTest {
         assertThat(user.isDeleted()).isTrue();
         assertThat(user.isEnabled()).isFalse();
         verify(userRepository).save(user);
+    }
+
+    @Test
+    @DisplayName("Empty role selection lists all users")
+    void getUsersPaged_emptyRoles_doesNotFilterByRole() {
+        when(userRepository.searchActiveUsers(isNull(), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        TabulatorResponse<UserDto> response = userService.getUsersPaged(
+                1, 10, null, null, null, List.of(), null);
+
+        assertThat(response.getData()).isEmpty();
+        verify(userRepository).searchActiveUsers(isNull(), isNull(), isNull(), any(Pageable.class));
+        verify(userRepository, never()).searchActiveUsersByAnyRole(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Blank role tokens are treated as no role filter")
+    void getUsersPaged_blankRoles_doesNotFilterByRole() {
+        when(userRepository.searchActiveUsers(isNull(), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        userService.getUsersPaged(1, 10, null, null, null, List.of("  ", ""), null);
+
+        verify(userRepository).searchActiveUsers(isNull(), isNull(), isNull(), any(Pageable.class));
+        verify(userRepository, never()).searchActiveUsersByAnyRole(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Selected roles filter users who have any of those roles")
+    void getUsersPaged_multipleRoles_matchesAnySelectedRole() {
+        User adminUser = User.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@example.com")
+                .firstName("Sistem")
+                .lastName("Yöneticisi")
+                .roles(Set.of(roleAdmin))
+                .build();
+        when(userRepository.searchActiveUsersByAnyRole(
+                isNull(), eq(List.of("ROLE_ADMIN", "ROLE_SALES")), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(adminUser)));
+
+        TabulatorResponse<UserDto> response = userService.getUsersPaged(
+                1, 10, null, null, null, List.of("ROLE_ADMIN", "ROLE_SALES"), null);
+
+        assertThat(response.getData()).hasSize(1);
+        assertThat(response.getData().getFirst().getUsername()).isEqualTo("admin");
+        verify(userRepository).searchActiveUsersByAnyRole(
+                isNull(), eq(List.of("ROLE_ADMIN", "ROLE_SALES")), isNull(), any(Pageable.class));
+        verify(userRepository, never()).searchActiveUsers(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Comma-separated role tokens are split before querying")
+    void getUsersPaged_commaSeparatedRoles_areNormalized() {
+        when(userRepository.searchActiveUsersByAnyRole(
+                isNull(), eq(List.of("ROLE_ADMIN", "ROLE_USER")), eq(true), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        userService.getUsersPaged(1, 10, null, null, null, List.of("ROLE_ADMIN, ROLE_USER"), true);
+
+        verify(userRepository).searchActiveUsersByAnyRole(
+                isNull(), eq(List.of("ROLE_ADMIN", "ROLE_USER")), eq(true), any(Pageable.class));
     }
 }

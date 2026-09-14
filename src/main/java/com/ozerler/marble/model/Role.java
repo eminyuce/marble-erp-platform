@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.model.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,4 +23,8 @@ public class Role extends AuditableEntity {
 
     @Column(length = 255)
     private String description;
+
+    public String getLabel() {
+        return UserRole.labelFor(name);
+    }
 }

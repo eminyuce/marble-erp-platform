@@ -76,6 +76,12 @@ public class WorkshopController {
         }
     }
 
+    @GetMapping("/{id}")
+    public String cutOrderDetail(@PathVariable("id") Long id, Model model) {
+        model.addAttribute("order", workshopCutService.getCutOrderWithDetails(id));
+        return "erp/workshop/detail";
+    }
+
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
         CutOrder order = workshopCutService.getCutOrderById(id);

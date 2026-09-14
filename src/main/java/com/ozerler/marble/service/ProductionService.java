@@ -13,6 +13,7 @@ import com.ozerler.marble.repository.ScrapLogRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -96,6 +97,16 @@ public class ProductionService {
         Objects.requireNonNull(id, getMessage("error.production.order.id.required"));
         return productionOrderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.production.order.not_found", id)));
+    }
+
+    @Transactional(readOnly = true)
+    public ProductionOrder getOrderWithDetails(Long id) {
+        Objects.requireNonNull(id, getMessage("error.production.order.id.required"));
+        ProductionOrder order = productionOrderRepository.findWithDetailsById(id)
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.production.order.not_found", id)));
+        Hibernate.initialize(order.getSlabs());
+        Hibernate.initialize(order.getScrapLogs());
+        return order;
     }
 
     /**
@@ -282,6 +293,13 @@ public class ProductionService {
     @Transactional(readOnly = true)
     public List<Object[]> getScrapSummary() {
         return scrapLogRepository.getScrapSummaryByReason();
+    }
+
+    @Transactional(readOnly = true)
+    public Slab getSlabWithDetails(Long id) {
+        Objects.requireNonNull(id, getMessage("error.slab.id.required"));
+        return slabRepository.findWithDetailsById(id)
+                .orElseThrow(() -> new EntityNotFoundException(getMessage("error.slab.entity_not_found", id)));
     }
 
     @Transactional(readOnly = true)

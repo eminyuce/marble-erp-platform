@@ -81,7 +81,8 @@
                         width: 160,
                         responsive: 0,
                         formatter: function (cell) {
-                            return `<span class="font-mono font-bold text-amber-900">${cell.getValue()}</span>`;
+                            const row = cell.getRow().getData();
+                            return `<a href="/procurement/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${cell.getValue()}</a>`;
                         }
                     },
                     {

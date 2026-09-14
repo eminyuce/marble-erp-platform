@@ -19,6 +19,9 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
 
     Optional<Slab> findBySlabCode(String slabCode);
 
+    @EntityGraph(attributePaths = {"block", "block.quarry", "productionOrder", "pallet"})
+    Optional<Slab> findWithDetailsById(Long id);
+
     List<Slab> findByBlockId(Long blockId);
 
     List<Slab> findByProductionOrderId(Long orderId);

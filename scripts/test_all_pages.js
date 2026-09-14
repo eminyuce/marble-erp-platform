@@ -35,19 +35,23 @@ const PAGES_TO_TEST = [
     // Blocks
     { name: '07_blocks', path: '/blocks', isPublic: false, tabulatorId: '#blocks-table' },
     { name: '08_block_create', path: '/blocks/create', isPublic: false },
-    { name: '09_block_edit', path: '/blocks/1/edit', isPublic: false },
+    { name: '09_block_detail', path: '/blocks/1', isPublic: false },
+    { name: '09b_block_edit', path: '/blocks/1/edit', isPublic: false },
 
     // Production & Slabs
     { name: '10_production', path: '/production', isPublic: false },
     { name: '11_production_create', path: '/production/create', isPublic: false },
-    { name: '12_production_order_edit', path: '/production/orders/1/edit', isPublic: false },
+    { name: '12_production_order_detail', path: '/production/orders/1', isPublic: false },
+    { name: '12b_production_order_edit', path: '/production/orders/1/edit', isPublic: false },
     { name: '13_slabs', path: '/production/slabs', isPublic: false, tabulatorId: '#slabs-table' },
+    { name: '13b_slab_detail', path: '/production/slabs/1', isPublic: false },
     { name: '14_slab_label', path: '/production/slabs/1/label', isPublic: false },
 
     // Workshop
     { name: '15_workshop', path: '/workshop', isPublic: false },
     { name: '16_workshop_create', path: '/workshop/create', isPublic: false },
-    { name: '17_workshop_edit', path: '/workshop/1/edit', isPublic: false },
+    { name: '17_workshop_detail', path: '/workshop/1', isPublic: false },
+    { name: '17b_workshop_edit', path: '/workshop/1/edit', isPublic: false },
 
     // Projects (including project 2 which failed with MECHANICAL_ANCHOR)
     { name: '18_projects', path: '/projects', isPublic: false },
@@ -78,7 +82,8 @@ const PAGES_TO_TEST = [
     // Admin & Users & Settings
     { name: '36_users', path: '/admin/users', isPublic: false },
     { name: '37_user_create', path: '/admin/users/create', isPublic: false },
-    { name: '38_user_edit_1', path: '/admin/users/1/edit', isPublic: false },
+    { name: '38_user_detail_1', path: '/admin/users/1', isPublic: false },
+    { name: '38b_user_edit_1', path: '/admin/users/1/edit', isPublic: false },
     { name: '39_user_reset_password_1', path: '/admin/users/1/reset-password', isPublic: false },
     { name: '40_settings', path: '/admin/settings', isPublic: false }
 ];

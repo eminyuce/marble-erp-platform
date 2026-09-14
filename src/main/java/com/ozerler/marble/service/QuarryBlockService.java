@@ -66,6 +66,13 @@ public class QuarryBlockService {
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.block.not_found", id)));
     }
 
+    @Transactional(readOnly = true)
+    public Block getBlockWithDetails(Long id) {
+        Objects.requireNonNull(id, getMessage("error.block.id.required"));
+        return blockRepository.findByIdWithQuarry(id)
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.block.not_found", id)));
+    }
+
     @Transactional
     public Block registerBlock(Long quarryId, String blockCode, LocalDate extractionDate,
                                int widthCm, int lengthCm, int heightCm,

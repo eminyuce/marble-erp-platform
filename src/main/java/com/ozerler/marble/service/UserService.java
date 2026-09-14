@@ -18,7 +18,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,7 +52,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<UserDto> getUsersPaged(int page, int size, String search, String sortField, String sortDir,
-                                                    String roleName, Boolean enabled) {
+                                                    Collection<String> roleNames, Boolean enabled) {
         String sortProperty = (sortField == null || sortField.isBlank() || "createdAt".equalsIgnoreCase(sortField))
                 ? "createdDate" : sortField;
         Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -61,8 +63,10 @@ public class UserService {
         Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : 10, sort);
 
         String normalizedSearch = StringUtils.isBlank(search) ? null : search.trim();
-        String normalizedRole = StringUtils.isBlank(roleName) ? null : roleName.trim();
-        Page<User> userPage = userRepository.searchActiveUsers(normalizedSearch, normalizedRole, enabled, pageable);
+        List<String> selectedRoles = normalizeRoleNames(roleNames);
+        Page<User> userPage = selectedRoles.isEmpty()
+                ? userRepository.searchActiveUsers(normalizedSearch, null, enabled, pageable)
+                : userRepository.searchActiveUsersByAnyRole(normalizedSearch, selectedRoles, enabled, pageable);
         List<UserDto> dtos = userPage.getContent().stream()
                 .map(UserDto::fromEntity)
                 .collect(Collectors.toList());
@@ -206,5 +210,24 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<Role> getAllRoles() {
         return roleRepository.findAll();
+    }
+
+    private List<String> normalizeRoleNames(Collection<String> roleNames) {
+        if (roleNames == null || roleNames.isEmpty()) {
+            return List.of();
+        }
+        LinkedHashSet<String> normalized = new LinkedHashSet<>();
+        for (String roleName : roleNames) {
+            if (StringUtils.isBlank(roleName)) {
+                continue;
+            }
+            for (String token : roleName.split(",")) {
+                String trimmed = token.trim();
+                if (!trimmed.isEmpty()) {
+                    normalized.add(trimmed);
+                }
+            }
+        }
+        return List.copyOf(normalized);
     }
 }

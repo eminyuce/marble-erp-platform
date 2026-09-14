@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${user.fullName + ' | Özerler Mermer ERP'}">Kullanıcı Detay</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-start sm:items-center gap-2 flex-wrap">
+                <a th:href="@{/admin/users}" class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                   aria-label="Kullanıcılara dön">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight min-w-0 break-words"
+                    th:text="${user.fullName}">Ahmet Yılmaz</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      th:classappend="${user.enabled} ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
+                      th:text="${user.enabled} ? 'Aktif' : 'Askıda'">Aktif</span>
+            </div>
+            <p class="text-sm text-slate-500 mt-1 font-mono" th:text="'@' + ${user.username}">@admin</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a th:href="@{'/admin/users/' + ${user.id} + '/edit'}" class="erp-btn-secondary">
+                <i data-lucide="edit-3"></i>
+                <span>Düzenle</span>
+            </a>
+            <a th:href="@{'/admin/users/' + ${user.id} + '/reset-password'}" class="erp-btn-secondary">
+                <i data-lucide="key"></i>
+                <span>Şifre Sıfırla</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900">Hesap bilgisi</h3>
+        </div>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+            <div>
+                <dt class="text-xs font-semibold text-slate-500">Kullanıcı adı</dt>
+                <dd class="font-mono font-bold" th:text="${user.username}">admin</dd>
+            </div>
+            <div>
+                <dt class="text-xs font-semibold text-slate-500">E-posta</dt>
+                <dd th:text="${user.email}">admin@eimece.test</dd>
+            </div>
+            <div>
+                <dt class="text-xs font-semibold text-slate-500">Ad soyad</dt>
+                <dd th:text="${user.fullName}">Ahmet Yılmaz</dd>
+            </div>
+            <div>
+                <dt class="text-xs font-semibold text-slate-500">Roller</dt>
+                <dd>
+                    <span th:if="${user.roles == null or user.roles.isEmpty()}" class="text-slate-400">Rol yok</span>
+                    <span th:each="role : ${user.roles}"
+                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mr-1 mb-1"
+                          th:classappend="${#strings.contains(role, 'ADMIN')} ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'"
+                          th:text="${#strings.replace(role, 'ROLE_', '')}">ADMIN</span>
+                </dd>
+            </div>
+        </dl>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <div th:replace="~{fragments/audit :: auditInfo(${user?.createdDate}, ${user?.updatedDate}, ${user?.addUserId}, ${user?.updateUserId})}"></div>
+    </div>
+</div>
+</body>
+</html>

@@ -28,9 +28,9 @@ function initUsersGrid() {
                 sorterDir = params.sorters[0].dir;
             }
             let query = `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}&sortField=${sorterField}&sortDir=${sorterDir}`;
-            if (filters.role) {
-                query += `&role=${encodeURIComponent(filters.role)}`;
-            }
+            (filters.roles || []).forEach(function (role) {
+                query += `&roles=${encodeURIComponent(role)}`;
+            });
             if (filters.enabled !== "") {
                 query += `&enabled=${encodeURIComponent(filters.enabled)}`;
             }
@@ -51,7 +51,7 @@ function initUsersGrid() {
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     return `<div>
-                        <span class="font-semibold text-slate-800">${row.fullName || row.username}</span>
+                        <a href="/admin/users/${row.id}" class="font-semibold text-slate-800 hover:text-amber-700 underline">${row.fullName || row.username}</a>
                         <div class="text-xs text-slate-500">@${row.username}</div>
                     </div>`;
                 }
@@ -64,9 +64,9 @@ function initUsersGrid() {
                     const roles = cell.getValue();
                     if (!roles || roles.length === 0) return `<span class="text-xs text-slate-400">Rol Yok</span>`;
                     return roles.map(r => {
-                        const clean = r.replace("ROLE_", "");
-                        const isAdm = clean === "ADMIN";
-                        return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isAdm ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'} mr-1">${clean}</span>`;
+                        const label = userRoleLabel(r);
+                        const isAdm = r === "ROLE_ADMIN" || r === "ADMIN";
+                        return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${isAdm ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'} mr-1">${label}</span>`;
                     }).join("");
                 }
             },
@@ -100,6 +100,7 @@ function initUsersGrid() {
                 formatter: function (cell) {
                     const id = cell.getRow().getData().id;
                     return gridActionsHtml([
+                        {icon: 'eye', label: 'Detay', href: '/admin/users/' + id},
                         {icon: 'edit-3', label: 'Düzenle', href: '/admin/users/' + id + '/edit'},
                         {icon: 'key', label: 'Şifre Sıfırla', href: '/admin/users/' + id + '/reset-password'},
                         {divider: true},
@@ -120,19 +121,49 @@ function initUsersGrid() {
     });
 }
 
+function userRoleLabel(roleName) {
+    const labels = window.USER_ROLE_LABELS || {};
+    if (roleName && labels[roleName]) {
+        return labels[roleName];
+    }
+    return roleName ? String(roleName).replace("ROLE_", "") : "";
+}
+
+function selectedRoleFiltersFromDom() {
+    return Array.from(document.querySelectorAll("[data-role-filter]:checked"))
+        .map(el => el.value)
+        .filter(Boolean);
+}
+
 function currentUserFilters() {
     const root = document.querySelector("[data-users-filters]");
     if (root && window.Alpine && typeof Alpine.$data === "function") {
         const data = Alpine.$data(root);
         return {
-            role: data.role || "",
+            roles: Array.isArray(data.selectedRoles) ? data.selectedRoles.slice() : [],
             enabled: data.enabled === undefined || data.enabled === null ? "" : String(data.enabled)
         };
     }
     return {
-        role: document.getElementById("filter-role")?.value || "",
+        roles: selectedRoleFiltersFromDom(),
         enabled: document.getElementById("filter-enabled")?.value || ""
     };
+}
+
+function onRoleFilterChange(roleName, isChecked) {
+    const root = document.querySelector("[data-users-filters]");
+    if (root && window.Alpine && typeof Alpine.$data === "function") {
+        const data = Alpine.$data(root);
+        const selected = Array.isArray(data.selectedRoles) ? data.selectedRoles : [];
+        const index = selected.indexOf(roleName);
+        if (isChecked && index < 0) {
+            selected.push(roleName);
+        } else if (!isChecked && index >= 0) {
+            selected.splice(index, 1);
+        }
+        data.selectedRoles = selected;
+    }
+    reloadUsersGrid();
 }
 
 function reloadUsersGrid() {

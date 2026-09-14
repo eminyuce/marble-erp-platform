@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Optional;
 
 @Repository
@@ -34,6 +35,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                  @Param("roleName") String roleName,
                                  @Param("enabled") Boolean enabled,
                                  Pageable pageable);
+
+    @EntityGraph(attributePaths = {"roles"})
+    @Query("SELECT u FROM User u WHERE u.deleted = false AND " +
+            "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND " +
+            "EXISTS (SELECT 1 FROM u.roles r WHERE r.name IN :roleNames) AND " +
+            "(:enabled IS NULL OR u.enabled = :enabled)")
+    Page<User> searchActiveUsersByAnyRole(@Param("search") String search,
+                                          @Param("roleNames") Collection<String> roleNames,
+                                          @Param("enabled") Boolean enabled,
+                                          Pageable pageable);
 
     long countByDeletedFalse();
 }

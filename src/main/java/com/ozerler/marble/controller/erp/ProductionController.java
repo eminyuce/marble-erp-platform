@@ -91,6 +91,13 @@ public class ProductionController {
         }
     }
 
+    @GetMapping("/orders/{id}")
+    public String orderDetail(@PathVariable("id") Long id, Model model) {
+        ProductionOrder order = productionService.getOrderWithDetails(id);
+        model.addAttribute("order", order);
+        return "erp/production/detail";
+    }
+
     @GetMapping("/orders/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
         ProductionOrder order = productionService.getOrderById(id);
@@ -116,6 +123,12 @@ public class ProductionController {
             @RequestParam(value = "sortDir", required = false) String sortDir) {
 
         return productionService.getSlabsPaged(page, size, search, sortField, sortDir);
+    }
+
+    @GetMapping("/slabs/{id}")
+    public String slabDetail(@PathVariable("id") Long id, Model model) {
+        model.addAttribute("slab", productionService.getSlabWithDetails(id));
+        return "erp/production/slab-detail";
     }
 
     @GetMapping("/slabs/{id}/label")

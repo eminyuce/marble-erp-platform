@@ -96,6 +96,13 @@ public class WorkshopCutService {
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cut_order.not_found", id)));
     }
 
+    @Transactional(readOnly = true)
+    public CutOrder getCutOrderWithDetails(Long id) {
+        Objects.requireNonNull(id, getMessage("error.cut_order.id.required"));
+        return cutOrderRepository.findWithDetailsById(id)
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cut_order.not_found", id)));
+    }
+
     @Transactional
     public CutOrder createCutOrder(Long projectId, Long locationId, Long slabId,
                                    String machineName, String operatorName,

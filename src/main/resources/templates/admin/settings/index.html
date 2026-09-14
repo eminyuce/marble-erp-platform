@@ -7,7 +7,6 @@
 </head>
 <body>
 <div layout:fragment="content" class="space-y-5" x-data="{
-    helpOpen: false,
     activeTab: new URLSearchParams(window.location.search).get('tab') || 'general',
     previewModalOpen: false,
     previewSubject: '',
@@ -36,38 +35,7 @@
     }
 }">
 
-    <!-- Help Accordion -->
-    <div class="mb-1">
-        <button @click="helpOpen = !helpOpen"
-                class="w-full flex items-center gap-2 px-4 py-3 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-xl text-left transition cursor-pointer"
-                :class="{ 'rounded-b-none border-b-0': helpOpen }">
-            <i data-lucide="circle-help" class="w-5 h-5 text-sky-600 flex-shrink-0"></i>
-            <span class="text-sm font-bold text-sky-800">Nasıl kullanılır?</span>
-            <small class="text-xs text-sky-600">(açmak / kapatmak için tıklayın)</small>
-            <i data-lucide="chevron-down" class="w-4 h-4 text-sky-500 ml-auto transition-transform duration-200"
-               :class="{ 'rotate-180': helpOpen }"></i>
-        </button>
-        <div x-show="helpOpen" x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
-             class="px-5 py-4 bg-white border border-sky-200 border-t-0 rounded-b-xl text-xs text-slate-700 leading-relaxed space-y-1.5">
-            <ul class="list-disc list-inside space-y-1">
-                <li>Bu sayfada sistem yapılandırma ayarlarını yönetirsiniz.</li>
-                <li><strong>Genel Ayarlar</strong> bölümünden tablo varsayılan değerlerini düzenleyebilirsiniz.</li>
-                <li><strong>Güvenlik</strong> bölümünden İki Faktörlü Doğrulama (2FA) ve Google reCAPTCHA ayarlarını
-                    yapılandırabilirsiniz.
-                </li>
-                <li><strong>SMTP</strong> bölümünden posta sunucusu ayarlarını yapılandırabilir ve test e-postası
-                    gönderebilirsiniz.
-                </li>
-                <li><strong>E-Posta Şablonları</strong> bölümünden bildirim şablonlarını önizleyebilir ve
-                    düzenleyebilirsiniz.
-                </li>
-                <li><strong>Sistem Araçları</strong> bölümünden yedekleme, önbellek ve sistem sağlığı işlemlerine
-                    erişebilirsiniz.
-                </li>
-            </ul>
-        </div>
-    </div>
+    <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfada sistem yapılandırma ayarlarını yönetirsiniz.', '<strong>Genel Ayarlar</strong> bölümünden tablo varsayılan değerlerini düzenleyebilirsiniz.', '<strong>Güvenlik</strong> bölümünden İki Faktörlü Doğrulama (2FA) ve Google reCAPTCHA ayarlarını yapılandırabilirsiniz.', '<strong>SMTP</strong> bölümünden posta sunucusu ayarlarını yapılandırabilir ve test e-postası gönderebilirsiniz.', '<strong>E-Posta Şablonları</strong> bölümünden bildirim şablonlarını önizleyebilir ve düzenleyebilirsiniz.', '<strong>Sistem Araçları</strong> bölümünden yedekleme, önbellek ve sistem sağlığı işlemlerine erişebilirsiniz.'} })}"></div>
 
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">

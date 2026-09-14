@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${slab.slabCode + ' | Özerler Mermer ERP'}">Plaka Detay</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-start sm:items-center gap-2 flex-wrap">
+                <a th:href="@{/production/slabs}" class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                   aria-label="Plaka ambarına dön">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight min-w-0 break-words font-mono"
+                    th:text="${slab.slabCode}">SLB-2026-00851</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      th:classappend="${slab.status != null and slab.status.name() == 'AVAILABLE'} ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                      th:text="${slab.status != null ? slab.status.label : '—'}">Serbest Stok</span>
+            </div>
+            <p class="text-sm text-slate-500 mt-1">
+                <span th:text="${slab.qualityGrade != null ? slab.qualityGrade.label : '—'}">A</span> ·
+                <span th:text="${slab.surfaceFinish != null ? slab.surfaceFinish.label : '—'}">Cilalı</span>
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a th:href="@{'/production/slabs/' + ${slab.id} + '/label'}" class="erp-btn-secondary" target="_blank">
+                <i data-lucide="printer"></i>
+                <span>Barkod</span>
+            </a>
+            <a th:href="@{'/passport/' + ${slab.slabCode}}" class="erp-btn-secondary" target="_blank">
+                <i data-lucide="qr-code"></i>
+                <span>Pasaport</span>
+            </a>
+            <a th:href="@{/genealogy(code=${slab.slabCode})}" class="erp-btn-secondary">
+                <i data-lucide="git-branch"></i>
+                <span>Soy Ağacı</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900">Ölçü ve maliyet</h3>
+            </div>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Ebatlar</dt>
+                    <dd th:text="${slab.widthCm + ' × ' + slab.lengthCm + ' × ' + slab.thicknessCm + ' cm'}">175 × 285 × 2 cm</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Alan</dt>
+                    <dd th:text="${#numbers.formatDecimal(slab.surfaceAreaM2, 1, 2) + ' m²'}">4.99 m²</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Parlaklık</dt>
+                    <dd th:text="${slab.glossLevel != null ? slab.glossLevel : '—'}">88</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Birim maliyet</dt>
+                    <dd class="font-bold" th:text="${#numbers.formatDecimal(slab.costPerM2, 1, 'POINT', 2, 'COMMA') + ' TL/m²'}">1.185,57 TL/m²</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900">Kaynak ve stok</h3>
+            </div>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Blok</dt>
+                    <dd>
+                        <a th:if="${slab.block != null}" th:href="@{'/blocks/' + ${slab.block.id}}"
+                           class="font-mono font-bold text-amber-900 hover:text-amber-700 underline"
+                           th:text="${slab.block.blockCode}">BLK-001</a>
+                        <span th:unless="${slab.block != null}">—</span>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Taş / ocak</dt>
+                    <dd>
+                        <span th:text="${slab.block != null ? slab.block.stoneType : '—'}">Burdur Bej</span>
+                        <span th:if="${slab.block != null and slab.block.quarry != null}"
+                              th:text="' · ' + ${slab.block.quarry.name}"> · Ana Ocak</span>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">İş emri</dt>
+                    <dd>
+                        <a th:if="${slab.productionOrder != null}" th:href="@{'/production/orders/' + ${slab.productionOrder.id}}"
+                           class="font-mono font-bold text-amber-900 hover:text-amber-700 underline"
+                           th:text="${slab.productionOrder.orderNo}">PRD-001</a>
+                        <span th:unless="${slab.productionOrder != null}">—</span>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Palet</dt>
+                    <dd th:text="${slab.pallet != null ? slab.pallet.palletCode : '—'}">PAL-001</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <div th:replace="~{fragments/audit :: auditInfo(${slab?.createdDate}, ${slab?.updatedDate}, ${slab?.addUserId}, ${slab?.updateUserId})}"></div>
+    </div>
+</div>
+</body>
+</html>

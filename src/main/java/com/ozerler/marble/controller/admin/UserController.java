@@ -3,6 +3,7 @@ package com.ozerler.marble.controller.admin;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.*;
+import com.ozerler.marble.model.enums.UserRole;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
@@ -36,7 +37,9 @@ public class UserController extends AbstractController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public String usersPage() {
+    public String usersPage(Model model) {
+        model.addAttribute("filterRoles", UserRole.values());
+        model.addAttribute("roleLabelMap", UserRole.labelMap());
         return "admin/users/index";
     }
 
@@ -49,9 +52,11 @@ public class UserController extends AbstractController {
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir,
             @RequestParam(value = "role", required = false) String role,
+            @RequestParam(value = "roles", required = false) List<String> roles,
             @RequestParam(value = "enabled", required = false) Boolean enabled) {
 
-        return userService.getUsersPaged(page, size, search, sortField, sortDir, role, enabled);
+        return userService.getUsersPaged(page, size, search, sortField, sortDir,
+                combineRoleFilters(roles, role), enabled);
     }
 
     @GetMapping("/create")
@@ -80,6 +85,12 @@ public class UserController extends AbstractController {
             populateUserForm(model, form, false, bindingResult, e.getMessage(), locale);
             return Constants.VIEW_USER_FORM;
         }
+    }
+
+    @GetMapping("/{id}")
+    public String userDetail(@PathVariable("id") Long id, Model model) {
+        model.addAttribute("user", userService.getUserById(id));
+        return "admin/users/detail";
     }
 
     @GetMapping("/{id}/edit")
@@ -234,6 +245,17 @@ public class UserController extends AbstractController {
         model.addAttribute("passwordForm", form != null ? form : PasswordResetRequest.builder().userId(user.getId()).build());
         model.addAttribute("formErrors", collectFormErrors(bindingResult, null, locale));
         model.addAttribute("pageTitle", messageSource.getMessage("admin.users.title.reset_password", null, locale));
+    }
+
+    private List<String> combineRoleFilters(List<String> roles, String role) {
+        List<String> combined = new ArrayList<>();
+        if (roles != null) {
+            combined.addAll(roles);
+        }
+        if (role != null && !role.isBlank()) {
+            combined.add(role);
+        }
+        return combined;
     }
 
     private List<String> collectFormErrors(BindingResult bindingResult, String extraError, Locale locale) {

@@ -91,6 +91,12 @@ public class BlockController extends AbstractController {
         }
     }
 
+    @GetMapping("/{id}")
+    public String blockDetail(@PathVariable("id") Long id, Model model) {
+        model.addAttribute("block", quarryBlockService.getBlockWithDetails(id));
+        return "erp/blocks/detail";
+    }
+
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
         var block = quarryBlockService.getBlockById(id);
