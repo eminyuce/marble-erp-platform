@@ -22,17 +22,16 @@ class TabulatorGridUndefinedTest {
     );
 
     @Test
-    @DisplayName("Shared grid response handler camelizes snake_case API rows")
-    void applyTabulatorTotalCamelizesRows() throws Exception {
+    @DisplayName("Shared grid helpers camelize rows, default page to 1, and recover from non-JSON payloads")
+    void sharedGridHelpersHardenRemotePagination() throws Exception {
         String appJs = readResource("/static/js/app.js");
-        int applyStart = appJs.indexOf("function applyTabulatorTotal");
-        int nextFunction = appJs.indexOf("\nfunction ", applyStart + 1);
 
-        assertThat(applyStart).isGreaterThanOrEqualTo(0);
-        assertThat(nextFunction).isGreaterThan(applyStart);
-
-        String applyBody = appJs.substring(applyStart, nextFunction);
-        assertThat(applyBody).contains("camelizeTabulatorRows(response)");
+        assertThat(appJs).contains("function erpGridDefaults(");
+        assertThat(appJs).contains("function erpGridAjaxUrl(");
+        assertThat(appJs).contains("function erpGridAjaxResponse(");
+        assertThat(appJs).contains("function emptyTabulatorResponse(");
+        assertThat(appJs).contains("const page = Number(params && params.page) > 0 ? params.page : 1");
+        assertThat(appJs).contains("camelizeTabulatorRows(payload)");
         assertThat(appJs).contains("function gridText(");
         assertThat(appJs).contains("function gridMoney(");
         assertThat(appJs).contains("function gridArea(");
@@ -44,6 +43,9 @@ class TabulatorGridUndefinedTest {
         assertThat(appJs).contains("window.erpGridDefaults = erpGridDefaults");
         assertThat(appJs).contains("locale: \"tr\"");
         assertThat(appJs).contains("first: \"İlk\"");
+        assertThat(appJs).contains("minHeight: 180");
+        assertThat(appJs).contains("placeholder: \"Kayıt bulunamadı.\"");
+        assertThat(appJs).contains("window.erpGridAjaxUrl = erpGridAjaxUrl");
     }
 
     @Test
@@ -58,12 +60,17 @@ class TabulatorGridUndefinedTest {
 
         int appJsIndex = layout.indexOf("@{/js/app.js");
         int filePondJsIndex = layout.indexOf("@{/vendor/filepond/filepond.min.js}");
+        int fallbackIndex = layout.indexOf("typeof window.gridText !== \"function\"");
         int pageScriptsIndex = layout.indexOf("layout:fragment=\"scripts\"");
         assertThat(appJsIndex).isGreaterThanOrEqualTo(0);
         assertThat(filePondJsIndex).isGreaterThan(appJsIndex);
-        assertThat(pageScriptsIndex)
-                .as("page grid scripts must load after cache-busted app.js")
+        assertThat(fallbackIndex)
+                .as("inline script must define window.gridText with no network dependency")
                 .isGreaterThan(appJsIndex);
+        assertThat(pageScriptsIndex)
+                .as("page grid scripts must load after cache-busted app.js and the gridText fallback")
+                .isGreaterThan(appJsIndex)
+                .isGreaterThan(fallbackIndex);
 
         var blockingRemoteScript = Pattern.compile(
                 "<script(?![^>]*\\b(?:async|defer)\\b)[^>]*src=\"https?://[^\"]*\"",
@@ -79,16 +86,16 @@ class TabulatorGridUndefinedTest {
     }
 
     @Test
-    @DisplayName("Every Tabulator grid camelizes API rows and avoids interpolating raw undefined values")
-    void everyGridCamelizesAndUsesSafeDisplayHelpers() throws Exception {
+    @DisplayName("Every Tabulator grid uses shared AJAX helpers and avoids interpolating raw undefined values")
+    void everyGridUsesSharedAjaxHelpersAndSafeDisplay() throws Exception {
         for (String resource : GRID_SOURCES) {
             String source = readResource(resource);
             assertThat(source)
-                    .as("%s should camelize Tabulator rows", resource)
-                    .contains("camelizeTabulatorRows(response)");
+                    .as("%s should build page/size with erpGridAjaxUrl", resource)
+                    .contains("erpGridAjaxUrl(");
             assertThat(source)
-                    .as("%s should apply the shared grid total/normalize helper", resource)
-                    .contains("applyTabulatorTotal(");
+                    .as("%s should normalize the AJAX payload with erpGridAjaxResponse", resource)
+                    .contains("erpGridAjaxResponse(");
             assertThat(source)
                     .as("%s should render missing values with gridText", resource)
                     .contains("gridText(");

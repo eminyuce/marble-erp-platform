@@ -77,11 +77,11 @@
 
             <form th:action="@{/account/adminlogin/}" method="post" class="admin-login__form" id="adminLoginForm">
                 <div class="mb-3">
-                    <label for="username" class="form-label">E-Posta</label>
+                    <label for="username" class="form-label">E-posta veya kullanıcı adı</label>
                     <div class="admin-login__input-wrap">
                         <i data-lucide="mail" class="admin-login__field-icon"></i>
-                        <input type="email" id="username" name="username" required autofocus
-                               placeholder="e-posta adresiniz" autocomplete="username" autocorrect="off"
+                        <input type="text" id="username" name="username" required autofocus
+                               placeholder="e-posta veya kullanıcı adı" autocomplete="username" autocorrect="off"
                                autocapitalize="off" spellcheck="false">
                     </div>
                 </div>

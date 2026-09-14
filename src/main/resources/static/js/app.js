@@ -56,6 +56,8 @@ function erpGridDefaults() {
         renderVertical: "basic",
         responsiveLayout: "collapse",
         responsiveLayoutCollapseStartOpen: false,
+        minHeight: 180,
+        placeholder: "Kayıt bulunamadı.",
         locale: "tr",
         langs: {
             tr: {
@@ -85,6 +87,48 @@ function erpGridDefaults() {
             }
         }
     };
+}
+
+function erpGridAjaxUrl(url, params, searchInputId, extraQuery) {
+    const searchVal = document.getElementById(searchInputId)?.value || "";
+    const page = Number(params && params.page) > 0 ? params.page : 1;
+    const size = Number(params && params.size) > 0 ? params.size : (window.ERP_GRID_PAGE_SIZE || 25);
+    let sorterField = "";
+    let sorterDir = "";
+    if (params && Array.isArray(params.sorters) && params.sorters.length > 0) {
+        sorterField = params.sorters[0].field || "";
+        sorterDir = params.sorters[0].dir || "";
+    }
+    let query = `${url}?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}&search=${encodeURIComponent(searchVal)}&sortField=${encodeURIComponent(sorterField)}&sortDir=${encodeURIComponent(sorterDir)}`;
+    if (typeof extraQuery === "function") {
+        query += extraQuery() || "";
+    } else if (extraQuery) {
+        query += extraQuery;
+    }
+    return query;
+}
+
+function emptyTabulatorResponse() {
+    return {data: [], last_page: 1, total: 0};
+}
+
+function erpGridAjaxResponse(tableId, response) {
+    let payload = response;
+    if (typeof payload === "string") {
+        try {
+            payload = JSON.parse(payload);
+        } catch (e) {
+            return emptyTabulatorResponse();
+        }
+    }
+    const target = camelizeTabulatorRows(payload);
+    if (!target || !Array.isArray(target.data)) {
+        return emptyTabulatorResponse();
+    }
+    if (typeof target.last_page !== "number" || target.last_page < 1) {
+        target.last_page = 1;
+    }
+    return applyTabulatorTotal(tableId, target);
 }
 
 function attachTabulatorPagingAnimation(table) {
@@ -344,6 +388,8 @@ function bindGridSearch(table, inputId) {
 }
 
 window.erpGridDefaults = erpGridDefaults;
+window.erpGridAjaxUrl = erpGridAjaxUrl;
+window.erpGridAjaxResponse = erpGridAjaxResponse;
 window.attachTabulatorPagingAnimation = attachTabulatorPagingAnimation;
 window.camelizeTabulatorRows = camelizeTabulatorRows;
 window.applyTabulatorTotal = applyTabulatorTotal;

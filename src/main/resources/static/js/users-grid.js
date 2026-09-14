@@ -19,26 +19,20 @@ function initUsersGrid() {
             },
         },
         ajaxURLGenerator: function (url, config, params) {
-            const searchVal = document.getElementById("search-input")?.value || "";
-            const filters = currentUserFilters();
-            let sorterField = "";
-            let sorterDir = "";
-            if (params.sorters && params.sorters.length > 0) {
-                sorterField = params.sorters[0].field;
-                sorterDir = params.sorters[0].dir;
-            }
-            let query = `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}&sortField=${sorterField}&sortDir=${sorterDir}`;
-            (filters.roles || []).forEach(function (role) {
-                query += `&roles=${encodeURIComponent(role)}`;
+            return erpGridAjaxUrl(url, params, "search-input", function () {
+                const filters = currentUserFilters();
+                let extra = "";
+                (filters.roles || []).forEach(function (role) {
+                    extra += `&roles=${encodeURIComponent(role)}`;
+                });
+                if (filters.enabled !== "") {
+                    extra += `&enabled=${encodeURIComponent(filters.enabled)}`;
+                }
+                return extra;
             });
-            if (filters.enabled !== "") {
-                query += `&enabled=${encodeURIComponent(filters.enabled)}`;
-            }
-            return query;
         },
         ajaxResponse: function (url, params, response) {
-            camelizeTabulatorRows(response);
-            return applyTabulatorTotal("users-table", response);
+            return erpGridAjaxResponse("users-table", response);
         },
         placeholder: "Kullanıcı kaydı bulunamadı.",
         columns: [

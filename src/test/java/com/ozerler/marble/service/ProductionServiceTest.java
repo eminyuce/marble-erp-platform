@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -89,6 +90,30 @@ class ProductionServiceTest {
 
         assertThat(response.getData()).isEmpty();
         verify(productionOrderRepository, never()).aggregateSlabMetrics(anyCollection());
+    }
+
+    @Test
+    @DisplayName("getOrdersPaged retries with createdDate when the grid sort field is not persistable")
+    void getOrdersPaged_UnknownSortField_FallsBackToCreatedDate() {
+        ProductionOrder order = sampleOrder(7L, "PO-2026-001");
+        when(productionOrderRepository.searchOrders(any(), any(Pageable.class)))
+                .thenAnswer(invocation -> {
+                    Pageable pageable = invocation.getArgument(1);
+                    boolean unknown = pageable.getSort().stream()
+                            .anyMatch(sortOrder -> "notAColumn".equals(sortOrder.getProperty()));
+                    if (unknown) {
+                        throw new InvalidDataAccessApiUsageException("No property 'notAColumn' found");
+                    }
+                    return new PageImpl<>(List.of(order));
+                });
+        when(productionOrderRepository.aggregateSlabMetrics(List.of(7L)))
+                .thenReturn(List.of(aggregate(7L, 12L, new BigDecimal("48.5000"))));
+
+        TabulatorResponse<ProductionOrderDto> response =
+                productionService.getOrdersPaged(1, 10, null, "notAColumn", "asc");
+
+        assertThat(response.getData()).hasSize(1);
+        assertThat(response.getData().getFirst().getOrderNo()).isEqualTo("PO-2026-001");
     }
 
     @Test

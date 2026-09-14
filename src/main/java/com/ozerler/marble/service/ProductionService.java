@@ -11,13 +11,11 @@ import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.ScrapLogRepository;
 import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.util.GridPages;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,15 +53,8 @@ public class ProductionService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<ProductionOrderDto> getOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
-        String sortProperty = (sortField == null || sortField.isBlank() || "createdAt".equalsIgnoreCase(sortField))
-                ? "createdDate" : sortField;
-        Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sort = Sort.by(dir, sortProperty);
-
-        int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
-
-        Page<ProductionOrder> orderPage = productionOrderRepository.searchOrders(search, pageable);
+        Page<ProductionOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PRODUCTION_ORDER_SORTS,
+                pageable -> productionOrderRepository.searchOrders(GridPages.normalizeSearch(search), pageable));
         return TabulatorResponse.of(
                 toOrderDtos(orderPage.getContent()),
                 orderPage.getTotalPages(),
@@ -270,15 +261,8 @@ public class ProductionService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<SlabDto> getSlabsPaged(int page, int size, String search, String sortField, String sortDir) {
-        String sortProperty = (sortField == null || sortField.isBlank() || "createdAt".equalsIgnoreCase(sortField))
-                ? "createdDate" : sortField;
-        Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sort = Sort.by(dir, sortProperty);
-
-        int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
-
-        Page<Slab> slabPage = slabRepository.searchSlabs(search, pageable);
+        Page<Slab> slabPage = GridPages.execute(page, size, sortField, sortDir, GridPages.SLAB_SORTS,
+                pageable -> slabRepository.searchSlabs(GridPages.normalizeSearch(search), pageable));
         List<SlabDto> dtos = slabPage.getContent().stream()
                 .map(SlabDto::fromEntity)
                 .toList();

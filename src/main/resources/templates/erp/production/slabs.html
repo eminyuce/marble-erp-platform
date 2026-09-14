@@ -64,13 +64,12 @@
                 ajaxURL: "/production/api/slabs",
                 ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
                 ajaxURLGenerator: function (url, config, params) {
-                    const searchVal = document.getElementById("slab-search-input")?.value || "";
-                    return `${url}?page=${params.page}&size=${params.size}&search=${encodeURIComponent(searchVal)}`;
+                    return erpGridAjaxUrl(url, params, "slab-search-input");
                 },
                 ajaxResponse: function (url, params, response) {
-                    camelizeTabulatorRows(response);
-                    return applyTabulatorTotal("slabs-table", response);
+                    return erpGridAjaxResponse("slabs-table", response);
                 },
+                placeholder: "Plaka kaydı bulunamadı.",
                 columns: [
                     erpResponsiveCollapseColumn(),
                     {

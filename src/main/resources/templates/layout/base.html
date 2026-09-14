@@ -292,6 +292,23 @@
             word-break: break-word;
         }
 
+        /* Grid visibility is inlined so a year-cached /css/app.css cannot collapse Tabulator. */
+        .erp-grid-shell .tabulator,
+        .tabulator {
+            min-height: 180px;
+        }
+        .tabulator .tabulator-tableholder {
+            min-height: 140px;
+        }
+        .tabulator .tabulator-placeholder {
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #627d98;
+            font-weight: 600;
+        }
+
     </style>
 </head>
 <body class="admin-app min-h-screen antialiased"
@@ -389,6 +406,45 @@
 <script th:src="@{/vendor/xlsx.full.min.js}"></script>
 <script th:src="@{/vendor/lucide.min.js}"></script>
 <script th:src="@{/js/app.js(v=${assetVersion})}"></script>
+<script>
+(function (window) {
+    if (typeof window.gridText !== "function") {
+        window.gridText = function (value) {
+            return value === undefined || value === null || value === "" ? "—" : String(value);
+        };
+    }
+    if (typeof window.gridNumber !== "function") {
+        window.gridNumber = function (value, format) {
+            if (value === undefined || value === null || value === "") {
+                return "—";
+            }
+            var n = Number(value);
+            if (!isFinite(n)) {
+                return "—";
+            }
+            return typeof format === "function" ? format(n) : String(n);
+        };
+    }
+    if (typeof window.gridMoney !== "function") {
+        window.gridMoney = function (value) {
+            var amount = window.gridNumber(value, function (n) { return n.toLocaleString("tr-TR"); });
+            return amount === "—" ? "—" : amount + " TL";
+        };
+    }
+    if (typeof window.gridArea !== "function") {
+        window.gridArea = function (value) {
+            var amount = window.gridNumber(value, function (n) { return n.toFixed(2); });
+            return amount === "—" ? "—" : amount + " m²";
+        };
+    }
+    if (typeof window.erpStatusBadge !== "function") {
+        window.erpStatusBadge = function (status, label) {
+            return '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">● '
+                + window.gridText(label || status) + '</span>';
+        };
+    }
+})(window);
+</script>
 <script th:src="@{/js/searchable-select.js(v=${assetVersion})}"></script>
 <script th:inline="javascript">window.ERP_GRID_PAGE_SIZE = /*[[${gridDefaultPageSize}]]*/ 25;</script>
 <script th:src="@{/js/mega-menu.js(v=${assetVersion})}"></script>

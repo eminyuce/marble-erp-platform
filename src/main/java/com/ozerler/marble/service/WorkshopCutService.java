@@ -8,12 +8,10 @@ import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.ScrapReasonCode;
 import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.repository.*;
+import com.ozerler.marble.util.GridPages;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,15 +50,8 @@ public class WorkshopCutService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<CutOrderDto> getCutOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
-        String sortProperty = (sortField == null || sortField.isBlank() || "createdAt".equalsIgnoreCase(sortField))
-                ? "createdDate" : sortField;
-        Sort.Direction dir = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sort = Sort.by(dir, sortProperty);
-
-        int pageIndex = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(pageIndex, size > 0 ? size : Constants.DEFAULT_PAGE_SIZE, sort);
-
-        Page<CutOrder> orderPage = cutOrderRepository.searchCutOrders(search, pageable);
+        Page<CutOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.CUT_ORDER_SORTS,
+                pageable -> cutOrderRepository.searchCutOrders(GridPages.normalizeSearch(search), pageable));
         return TabulatorResponse.of(
                 toCutOrderDtos(orderPage.getContent()),
                 orderPage.getTotalPages(),
