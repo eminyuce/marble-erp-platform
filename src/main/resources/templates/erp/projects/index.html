@@ -80,7 +80,7 @@
                         responsive: 0,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
-                            return `<a href="/projects/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${cell.getValue()}</a>`;
+                            return `<a href="/projects/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
                         }
                     },
                     {
@@ -90,8 +90,8 @@
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
                             return `<div>
-                        <a href="/projects/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${row.name}</a>
-                        <div class="text-xs text-slate-500">${row.customerName}</div>
+                        <a href="/projects/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${gridText(row.name)}</a>
+                        <div class="text-xs text-slate-500">${gridText(row.customerName)}</div>
                     </div>`;
                         }
                     },
@@ -100,7 +100,7 @@
                         field: "contractValue",
                         width: 150,
                         formatter: function (cell) {
-                            return `<strong>${Number(cell.getValue()).toLocaleString('tr-TR')} TL</strong>`;
+                            return `<strong>${gridMoney(cell.getValue())}</strong>`;
                         }
                     },
                     {
@@ -111,8 +111,8 @@
                             const row = cell.getRow().getData();
                             const isOver = row.costVariance > 0;
                             return `<div>
-                        <span class="font-bold ${isOver ? 'text-rose-700' : 'text-slate-800'}">${Number(cell.getValue()).toLocaleString('tr-TR')} TL</span>
-                        <div class="text-xs text-slate-500">Tahmini: ${Number(row.estimatedCost).toLocaleString('tr-TR')} TL</div>
+                        <span class="font-bold ${isOver ? 'text-rose-700' : 'text-slate-800'}">${gridMoney(cell.getValue())}</span>
+                        <div class="text-xs text-slate-500">Tahmini: ${gridMoney(row.estimatedCost)}</div>
                     </div>`;
                         }
                     },
@@ -139,7 +139,7 @@
                         field: "statusLabel",
                         width: 120,
                         formatter: function (cell) {
-                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">● ${cell.getValue()}</span>`;
+                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">● ${gridText(cell.getValue())}</span>`;
                         }
                     },
                     {
