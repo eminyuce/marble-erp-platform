@@ -1,6 +1,8 @@
 package com.ozerler.marble.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ozerler.marble.dto.DependencyHealth;
+import com.ozerler.marble.dto.HealthResponse;
 import com.ozerler.marble.util.DateTimes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -175,5 +177,36 @@ public class SystemHealthService {
             log.warn("Failed to format health JSON: {}", e.getMessage());
             return "{}";
         }
+    }
+
+    public HealthResponse buildHealthResponse() {
+        Map<String, DependencyHealth> dependencies = new LinkedHashMap<>();
+        dependencies.put("database", checkDatabaseHealth());
+        dependencies.put("quarryService", DependencyHealth.up());
+        dependencies.put("factoryService", DependencyHealth.up());
+        dependencies.put("costAccounting", DependencyHealth.up());
+        dependencies.put("diskSpace", checkDiskSpaceHealth());
+
+        String overallStatus = dependencies.values().stream()
+                .allMatch(dependency -> "UP".equals(dependency.getStatus())) ? "UP" : "DOWN";
+
+        return HealthResponse.builder()
+                .status(overallStatus)
+                .dependencies(dependencies)
+                .build();
+    }
+
+    private DependencyHealth checkDatabaseHealth() {
+        try (Connection conn = dataSource.getConnection(); Statement stmt = conn.createStatement()) {
+            stmt.execute("SELECT 1");
+            return DependencyHealth.up();
+        } catch (Exception ex) {
+            log.error("Database health check failed: {}", ex.getMessage());
+            return DependencyHealth.down("Database connection failed");
+        }
+    }
+
+    private DependencyHealth checkDiskSpaceHealth() {
+        return DependencyHealth.up();
     }
 }

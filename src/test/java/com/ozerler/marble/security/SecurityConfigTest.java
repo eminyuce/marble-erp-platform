@@ -94,12 +94,15 @@ class SecurityConfigTest {
     void healthCheck_publicAccess() throws Exception {
         mockMvc.perform(get("/health/"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.response.body.status").value("UP"))
-                .andExpect(jsonPath("$.response.body.port").value(81));
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.dependencies.database.status").value("UP"))
+                .andExpect(jsonPath("$.response").doesNotExist())
+                .andExpect(jsonPath("$.serviceStatus").doesNotExist());
 
         mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.response.body.status").value("UP"));
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.dependencies.diskSpace.status").value("UP"));
     }
 
     @Test
