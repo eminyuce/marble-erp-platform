@@ -30,7 +30,7 @@
                             <select id="slabId" name="slabId" required class="erp-form-select">
                                 <option value="" disabled selected>Plaka seçin</option>
                                 <option th:each="s : ${availableSlabs}" th:value="${s.id}"
-                                        th:text="${s.slabCode + ' (' + s.surfaceFinish + ', ' + s.qualityGrade + ', ' + s.surfaceAreaM2 + ' m², ' + s.costPerM2 + ' TL/m²)'}"></option>
+                                        th:text="${s.slabCode + ' (' + (s.surfaceFinish != null ? s.surfaceFinish.label : '') + ', ' + (s.qualityGrade != null ? s.qualityGrade.label : '') + ', ' + s.surfaceAreaM2 + ' m², ' + s.costPerM2 + ' TL/m²)'}"></option>
                             </select>
                         </div>
                         <div class="erp-form-field">
@@ -92,7 +92,7 @@
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="edgeFinish">Kenar işlemi</label>
                             <input id="edgeFinish" type="text" name="edgeFinish" class="erp-form-input"
-                                   placeholder="PAHLI_CILALI"
+                                   placeholder="Pahlı cilalı"
                                    th:value="${isEdit and record != null and !#lists.isEmpty(record.items) ? record.items[0].edgeFinish : ''}">
                         </div>
                         <div class="erp-form-field">

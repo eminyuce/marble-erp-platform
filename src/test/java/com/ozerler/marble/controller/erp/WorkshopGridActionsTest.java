@@ -25,6 +25,7 @@ class WorkshopGridActionsTest {
         String html = readWorkshopIndex();
 
         assertThat(html).contains("{icon: 'edit-3', label: 'Düzenle', href: '/workshop/' + row.id + '/edit'}");
+        assertThat(html).contains("erpStatusBadge(row.status, row.statusLabel)");
     }
 
     @Test
@@ -38,6 +39,23 @@ class WorkshopGridActionsTest {
 
         assertThat(html).contains("@{/workshop/{id}/edit(id=${record.id})}");
         assertThat(html).contains("th:value=\"${isEdit and record != null ? record.machineName : ''}\"");
+        assertThat(html).contains("s.surfaceFinish.label");
+        assertThat(html).contains("s.qualityGrade.label");
+    }
+
+    @Test
+    @DisplayName("Workshop order detail shows Turkish status labels")
+    void detailPageUsesStatusLabels() throws Exception {
+        String html;
+        try (var in = getClass().getResourceAsStream("/templates/erp/workshop/detail.html")) {
+            assertThat(in).isNotNull();
+            html = new String(in.readAllBytes());
+        }
+
+        assertThat(html).contains("th:text=\"${order.statusLabel}\"");
+        assertThat(html).contains("th:text=\"${item.statusLabel}\"");
+        assertThat(html).doesNotContain("th:text=\"${order.status}\"");
+        assertThat(html).doesNotContain("th:text=\"${item.status}\"");
     }
 
     private static String readWorkshopIndex() throws Exception {

@@ -71,9 +71,17 @@ public class SlabDto {
     @JsonAlias("surface_finish")
     private String surfaceFinish;
 
+    @JsonProperty("surfaceFinishLabel")
+    @JsonAlias("surface_finish_label")
+    private String surfaceFinishLabel;
+
     @JsonProperty("qualityGrade")
     @JsonAlias("quality_grade")
     private String qualityGrade;
+
+    @JsonProperty("qualityGradeLabel")
+    @JsonAlias("quality_grade_label")
+    private String qualityGradeLabel;
 
     @JsonProperty("glossLevel")
     @JsonAlias("gloss_level")
@@ -85,6 +93,10 @@ public class SlabDto {
 
     @JsonProperty("status")
     private String status;
+
+    @JsonProperty("statusLabel")
+    @JsonAlias("status_label")
+    private String statusLabel;
 
     @JsonProperty("createdAt")
     @JsonAlias("created_at")
@@ -108,10 +120,13 @@ public class SlabDto {
                 .lengthCm(s.getLengthCm())
                 .surfaceAreaM2(s.getSurfaceAreaM2())
                 .surfaceFinish(s.getSurfaceFinish() != null ? s.getSurfaceFinish().name() : null)
+                .surfaceFinishLabel(s.getSurfaceFinish() != null ? s.getSurfaceFinish().getLabel() : null)
                 .qualityGrade(s.getQualityGrade() != null ? s.getQualityGrade().name() : null)
+                .qualityGradeLabel(s.getQualityGrade() != null ? s.getQualityGrade().getLabel() : null)
                 .glossLevel(s.getGlossLevel())
                 .costPerM2(s.getCostPerM2())
                 .status(s.getStatus() != null ? s.getStatus().name() : null)
+                .statusLabel(s.getStatus() != null ? s.getStatus().getLabel() : null)
                 .createdAt(s.getCreatedAt())
                 .build();
     }

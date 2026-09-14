@@ -16,7 +16,7 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20260914-grids}")
+    @Value("${app.asset-version:20260914-grid-merge}")
     private String assetVersion;
 
     @ModelAttribute("gridDefaultPageSize")

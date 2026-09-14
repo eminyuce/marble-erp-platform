@@ -3,6 +3,7 @@ package com.ozerler.marble.dto;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.CutOrder;
+import com.ozerler.marble.model.enums.OperationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -56,6 +57,10 @@ public class CutOrderDto {
     @JsonAlias("status")
     private String status;
 
+    @JsonProperty("status_label")
+    @JsonAlias("statusLabel")
+    private String statusLabel;
+
     @JsonProperty("item_count")
     @JsonAlias("itemCount")
     private int itemCount;
@@ -83,6 +88,7 @@ public class CutOrderDto {
                 .operatorName(c.getOperatorName())
                 .plannedStart(c.getPlannedStart())
                 .status(c.getStatus())
+                .statusLabel(OperationStatus.labelOf(c.getStatus()))
                 .itemCount(itemCount)
                 .totalAreaM2(totalAreaM2 != null ? totalAreaM2 : BigDecimal.ZERO)
                 .notes(c.getNotes())

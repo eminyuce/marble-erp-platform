@@ -6,6 +6,8 @@ import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CutItem;
 import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.enums.CutItemStatus;
+import com.ozerler.marble.model.enums.OperationStatus;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CutItemRepository;
@@ -147,7 +149,7 @@ public class GenealogyService {
                 .title(getMessage("genealogy.node.production.title", order.getOrderNo()))
                 .subtitle(order.getMachineName() + " (" + order.getProcessType().getLabel() + ")")
                 .details(details)
-                .status(order.getStatus())
+                .status(OperationStatus.labelOf(order.getStatus()))
                 .qrCode(order.getOrderNo())
                 .children(new ArrayList<>())
                 .build();
@@ -182,7 +184,7 @@ public class GenealogyService {
                 .title(getMessage("genealogy.node.item.title", item.getItemCode()))
                 .subtitle(getMessage("genealogy.node.item.target", item.getTargetLocation()))
                 .details(details)
-                .status(item.getStatus())
+                .status(CutItemStatus.labelOf(item.getStatus()))
                 .qrCode(item.getItemCode())
                 .build();
     }
