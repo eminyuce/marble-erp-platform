@@ -141,7 +141,13 @@ class SecurityConfigTest {
     void adminUsersAndSettings_allowedForAdmin() throws Exception {
         mockMvc.perform(get("/admin/users"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin/users/index"));
+                .andExpect(view().name("admin/users/index"))
+                .andExpect(content().string(containsString("Roller ve Yetkiler")))
+                .andExpect(content().string(containsString("rolesInfoOpen")))
+                .andExpect(content().string(containsString("Sistem Yöneticisi")));
+
+        mockMvc.perform(get("/roles"))
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(get("/admin/settings"))
                 .andExpect(status().isOk())

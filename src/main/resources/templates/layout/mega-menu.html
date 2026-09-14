@@ -150,19 +150,14 @@
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
                             <h3 class="admin-mega-card-title">Yönetim</h3>
-                            <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">4</span>
-                            <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">3</span>
+                            <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">3</span>
+                            <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">2</span>
                         </header>
                         <div class="admin-mega-card-body">
                             <a class="admin-mega-item" th:href="@{/admin/users}" sec:authorize="hasRole('ADMIN')"
-                               data-search="kullanıcı rbac rol şifre" title="Kullanıcılar">
+                               data-search="kullanıcı rbac rol şifre roller yetkiler permission" title="Kullanıcılar">
                                 <i data-lucide="users" aria-hidden="true"></i>
                                 <span>Kullanıcılar</span>
-                            </a>
-                            <a class="admin-mega-item" th:href="@{/roles}"
-                               data-search="rol yetki izin roller yetkiler permission" title="Roller ve Yetkiler">
-                                <i data-lucide="shield" aria-hidden="true"></i>
-                                <span>Roller ve Yetkiler</span>
                             </a>
                             <a class="admin-mega-item" th:href="@{/admin/settings}"
                                data-search="ayar smtp 2fa recaptcha sistem" title="Sistem Ayarları">
