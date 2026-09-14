@@ -170,21 +170,10 @@
             word-break: break-word;
         }
 
-        /* Alpine x-show sets display:block; keep the help overlay flex-centered. */
-        .page-help-overlay.is-open {
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .page-help-dialog {
-            width: min(32rem, calc(100vw - 2.5rem));
-            max-width: 100%;
-            box-sizing: border-box;
-        }
     </style>
 </head>
-<body class="admin-app min-h-screen antialiased">
+<body class="admin-app min-h-screen antialiased"
+      th:data-help-page-key="${helpPageKey}">
 
 <form id="logoutForm" th:action="@{/logout}" method="post" class="hidden" hidden></form>
 
@@ -202,8 +191,76 @@
 
 <div id="modal-container"></div>
 
+<div class="help-panel-layer"
+     x-data="helpPanel"
+     @open-help.window="openFromEvent($event)"
+     @keydown.window="onKeydown($event)"
+     :class="{ 'is-open': open }"
+     :aria-hidden="(!open).toString()">
+    <div class="help-panel-backdrop" @click="closeHelp()" role="presentation"></div>
+    <aside id="helpPanelDialog"
+           class="help-panel"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="helpPanelTitle"
+           x-ref="panel"
+           tabindex="-1">
+        <div class="help-panel-handle" aria-hidden="true"></div>
+        <header class="help-panel-header">
+            <span class="help-panel-header-icon" aria-hidden="true">
+                <i data-lucide="circle-help" class="w-5 h-5"></i>
+            </span>
+            <h2 id="helpPanelTitle" class="help-panel-title" x-text="title">Yardım</h2>
+            <button type="button"
+                    class="help-panel-close"
+                    @click="closeHelp()"
+                    x-ref="closeBtn"
+                    aria-label="Kapat"
+                    title="Kapat">
+                <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div class="help-panel-body">
+            <div class="help-panel-skeleton" x-show="loading" x-cloak>
+                <div class="help-panel-skel-line"></div>
+                <div class="help-panel-skel-line"></div>
+                <div class="help-panel-skel-line is-short"></div>
+            </div>
+            <p class="help-panel-status" x-show="loading" x-cloak>Yükleniyor...</p>
+            <p class="help-panel-error" x-show="!loading && error" x-text="error" x-cloak></p>
+            <div class="help-panel-content" x-show="!loading && !error && bodyHtml" x-html="bodyHtml"></div>
+        </div>
+        <footer class="help-panel-footer">
+            <p class="help-panel-updated" x-show="lastUpdated" x-cloak>
+                Son güncelleme: <span x-text="lastUpdated"></span>
+            </p>
+            <div class="help-panel-feedback" x-show="!loading && !error && pageKey" x-cloak>
+                <span>Faydalı oldu mu?</span>
+                <button type="button"
+                        class="help-panel-vote"
+                        :class="{ 'is-active': feedback === 'up' }"
+                        :disabled="feedbackBusy || !!feedback"
+                        @click="sendFeedback(true)"
+                        aria-label="Evet, faydalı oldu">
+                    <i data-lucide="thumbs-up" class="w-4 h-4" aria-hidden="true"></i>
+                </button>
+                <button type="button"
+                        class="help-panel-vote"
+                        :class="{ 'is-active is-down': feedback === 'down' }"
+                        :disabled="feedbackBusy || !!feedback"
+                        @click="sendFeedback(false)"
+                        aria-label="Hayır, faydalı olmadı">
+                    <i data-lucide="thumbs-down" class="w-4 h-4" aria-hidden="true"></i>
+                </button>
+                <span class="help-panel-feedback-thanks" x-show="feedback" x-cloak>Teşekkürler.</span>
+            </div>
+        </footer>
+    </aside>
+</div>
+
 <script th:src="@{/vendor/htmx.min.js}"></script>
-<script th:src="@{/js/page-help.js}"></script>
+<script th:src="@{/js/help-panel.js}"></script>
+<script th:src="@{/js/change-password-form.js}"></script>
 <script th:src="@{/vendor/alpine-collapse.min.js}"></script>
 <script th:src="@{/vendor/alpine.min.js}"></script>
 <script th:src="@{/vendor/tabulator/tabulator.min.js}"></script>

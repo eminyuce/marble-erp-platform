@@ -1,7 +1,9 @@
 package com.ozerler.marble.config;
 
+import com.ozerler.marble.service.HelpService;
 import com.ozerler.marble.service.SettingService;
 import com.ozerler.marble.util.Ints;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 public class GlobalModelAttributes {
 
     private final SettingService settingService;
+    private final HelpService helpService;
 
     @ModelAttribute("gridDefaultPageSize")
     public int gridDefaultPageSize() {
@@ -22,5 +25,10 @@ public class GlobalModelAttributes {
     @ModelAttribute("isEdit")
     public boolean defaultIsEdit() {
         return false;
+    }
+
+    @ModelAttribute("helpPageKey")
+    public String helpPageKey(HttpServletRequest request) {
+        return helpService.resolvePageKey(request.getRequestURI()).orElse("");
     }
 }

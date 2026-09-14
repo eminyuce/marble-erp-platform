@@ -9,8 +9,6 @@
      x-data="{ selectedRoles: [], enabled: '', density: 'compact' }"
      :class="{ 'is-compact': density === 'compact' }">
 
-    <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfada sistem kullanıcılarını yönetirsiniz.', 'Ad, soyad, e-posta veya kullanıcı adına göre arama yapabilirsiniz.', 'Rol kutucuklarını işaretleyerek ve duruma göre (Aktif / Askıda) filtreleyebilirsiniz; rol seçili değilse tüm kullanıcılar listelenir.', '<strong>Yeni kullanıcı tanımla</strong> butonu ile sisteme kullanıcı ekleyebilirsiniz.', 'İşlemler menüsünden düzenleyebilir, şifre sıfırlayabilir veya hesabı askıya alabilirsiniz.'} })}"></div>
-
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Kullanıcılar')}"></div>

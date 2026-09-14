@@ -8,13 +8,6 @@
 <body>
 <div layout:fragment="content" class="erp-list-page">
 
-    <div th:replace="~{fragments/help-accordion :: help(items=${ {
-        'Bu sayfada sistemde tanımlı tüm rolleri ve her rolün yetkilerini görebilirsiniz.',
-        'Her kart bir rolü temsil eder; açıklamada o role sahip kullanıcının neler yapabileceği listelenmiştir.',
-        'Yeni bir rol atamak veya mevcut rolleri değiştirmek için <strong>Kullanıcılar</strong> sayfasına gidin.',
-        'Rolleriniz hakkında sorularınız varsa sistem yöneticinize başvurun.'
-    } })}"></div>
-
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Roller ve Yetkiler')}"></div>

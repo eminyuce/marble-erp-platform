@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-
-<!-- Hidden page-help source consumed by the shared header modal.
-     Usage: <div th:replace="~{fragments/help-accordion :: help(items=${ {'Line 1','Line 2'} })}"></div> -->
-<div th:fragment="help(items)" id="page-help-source" hidden>
-    <li th:each="item : ${items}" data-page-help-item th:utext="${item}"></li>
-</div>
-
+<!-- Deprecated: page help now comes from GET /api/help/{pageKey} and the header slide-over.
+     This fragment is a no-op so leftover includes do not render. -->
+<div th:fragment="help(items)" hidden></div>
 </body>
 </html>

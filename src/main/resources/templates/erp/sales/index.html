@@ -15,8 +15,6 @@
         </div>
     </div>
 
-    <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfada satış siparişlerini oluşturur ve takip edersiniz.', 'Sipariş no veya müşteri adına göre arama yapabilirsiniz.', '<strong>Yeni sipariş</strong> butonu ile satış siparişi oluşturabilirsiniz.', 'Sipariş detay sayfasından faturalama ve ödeme takibi yapabilirsiniz.', '<strong>CSV İndir</strong> butonu ile tablo verilerini dışa aktarabilirsiniz.'} })}"></div>
-
     <div class="erp-toolbar">
         <a th:href="@{/sales/create}" class="erp-btn-primary">
             <i data-lucide="plus"></i>

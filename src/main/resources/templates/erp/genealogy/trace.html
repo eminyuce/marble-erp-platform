@@ -16,8 +16,6 @@
         </div>
     </div>
 
-    <div th:replace="~{fragments/help-accordion :: help(items=${ {'Bu sayfada mermer ürünlerinin ocaktan şantiyeye izlenebilirlik zincirini görüntülersiniz.', 'Arama kutusuna blok kodu, plaka kodu veya parça kodu girerek soy ağacını çıkarabilirsiniz.', 'Barkod veya QR kod okutarak hızlı sorgulama yapabilirsiniz.', 'Ağaç görünümünde blok → kesim emri → plaka → ebatlı mamul hiyerarşisini takip edebilirsiniz.'} })}"></div>
-
     <!-- Search / Traceback Input Bar -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
         <form th:action="@{/genealogy}" method="get" class="flex flex-col sm:flex-row gap-3">
