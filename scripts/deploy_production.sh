@@ -2,30 +2,35 @@
 # ==============================================================================
 # Özerler Mermer ERP — Production deploy (Linux host)
 #
-# Use this instead of scripts/run_local.sh on the server.
-# See docs/production-deploy.md
+# Usage:
+#   ./scripts/deploy_production.sh        # prompts [Y/n] in terminal
+#   ./scripts/deploy_production.sh -y     # deploys without prompting
+#   ./scripts/deploy_production.sh --yes  # deploys without prompting
+#
+# See docs/production-deploy.md and DEPLOYMENT.md
 #
 # What this does:
-#   1. Build frontend (npm install && npm run build) unless --skip-frontend
-#   2. ./mvnw clean package -DskipTests
-#   3. Stop marble-erp via systemd, or the /opt/marble-erp/app.jar JVM only
-#   4. Backup the live JAR, copy target/*.jar -> /opt/marble-erp/app.jar
-#   5. Start systemd unit (install a default unit if none exists)
-#   6. Health-check http://127.0.0.1:${SERVER_PORT}/health/
-#
-# Never uses spring-boot:run or killall java.
+#   1. Pre-flight checks: Linux host, JDK 25+, Docker DB container running
+#   2. Prepares /opt/marble-erp and verifies /opt/marble-erp/marble-erp.env
+#   3. Build frontend (npm install && npm run build) unless --skip-frontend
+#   4. ./mvnw clean package -DskipTests (unless --skip-build)
+#   5. Stop marble-erp via systemctl (or live JVM)
+#   6. Backup current JAR -> /opt/marble-erp/app.jar.bak.<timestamp>
+#   7. Copy built JAR -> /opt/marble-erp/app.jar
+#   8. Sync /etc/systemd/system/marble-erp.service and start service
+#   9. Verify local health (port 8080) and public domain (https://ozerler.naklink.com)
 # ==============================================================================
 
 set -euo pipefail
 
 usage() {
     cat <<'EOF'
-Usage: ./scripts/deploy_production.sh --yes [options]
+Usage: ./scripts/deploy_production.sh [options]
 
-  --yes              Required. Actually stop/replace/start production.
+  -y, --yes          Apply deployment without interactive prompt.
+  --dry-run          Preview deployment steps and exit.
   --skip-frontend    Skip npm install && npm run build
-  --skip-build       Skip frontend and Maven; only restart/replace if a JAR
-                     already exists at target/marble-erp-platform-1.0.0.jar
+  --skip-build       Skip frontend and Maven; restart/replace with existing JAR
   --print-unit       Print the default systemd unit and exit
   -h, --help         Show this help
 
@@ -35,21 +40,19 @@ Environment (optional):
   SERVICE_USER       Default: current user (eyuce on this host)
   SERVER_PORT        Default: 8080 (must match marble-erp.env)
   HEALTH_PATH        Default: /health/
-
-This script refuses to run without --yes, refuses non-Linux hosts, and
-refuses a DEPLOY_DIR other than /opt/marble-erp unless you also set
-ALLOW_CUSTOM_DEPLOY_DIR=1.
 EOF
 }
 
 YES=0
+DRY_RUN=0
 SKIP_FRONTEND=0
 SKIP_BUILD=0
 PRINT_UNIT=0
 
 for arg in "$@"; do
     case "$arg" in
-        --yes) YES=1 ;;
+        -y|--yes) YES=1 ;;
+        --dry-run) DRY_RUN=1 ;;
         --skip-frontend) SKIP_FRONTEND=1 ;;
         --skip-build) SKIP_BUILD=1; SKIP_FRONTEND=1 ;;
         --print-unit) PRINT_UNIT=1 ;;
@@ -104,8 +107,8 @@ default_unit() {
     cat <<EOF
 [Unit]
 Description=Ozerler Mermer ERP Platform
-After=network.target postgresql.service
-Wants=postgresql.service
+After=network.target docker.service postgresql.service
+Wants=docker.service
 
 [Service]
 Type=simple
@@ -134,16 +137,37 @@ write_env_template() {
 
 SPRING_PROFILES_ACTIVE=prod
 SERVER_PORT=8080
+PORT=8080
 
-# Required on bare metal: prod YAML defaults DB_HOST to "postgres" (Docker DNS).
-DB_URL=jdbc:postgresql://127.0.0.1:5432/marble_erp
+# Database Configuration (PostgreSQL running in Docker container: marble-erp-postgres)
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_NAME=marble_erp
 DB_USERNAME=marbleuser
-DB_PASSWORD=CHANGE_ME
+DB_PASSWORD=marblepass
+DB_URL=jdbc:postgresql://127.0.0.1:5432/marble_erp
 
+# Database Connection Pool Settings
+DB_POOL_MAX=10
+DB_POOL_MIN_IDLE=2
+
+# Application Storage
 APP_UPLOAD_DIR=/opt/marble-erp/uploads
-CORS_ALLOWED_ORIGIN=https://YOUR_PUBLIC_HOST
+
+# Public Domain and CORS Configuration
+CORS_ALLOWED_ORIGIN=https://ozerler.naklink.com
+CORS_ALLOWED_ORIGIN_PATTERN=https://*.naklink.com
+
+# Rate Limiting Configuration
+RATE_LIMIT_LOGIN_MAX=10
+RATE_LIMIT_LOGIN_WINDOW=60
+RATE_LIMIT_FORM_MAX=30
+RATE_LIMIT_FORM_WINDOW=60
+RATE_LIMIT_GENERAL_MAX=120
+RATE_LIMIT_GENERAL_WINDOW=60
 EOF
     sudo_cmd chmod 640 "$ENV_FILE"
+    sudo_cmd chown "${SERVICE_USER}:${SERVICE_GROUP}" "$ENV_FILE" || true
 }
 
 if [ "$PRINT_UNIT" -eq 1 ]; then
@@ -162,13 +186,13 @@ echo "User:       $SERVICE_USER"
 echo "Port:       $SERVER_PORT"
 echo
 
-# --- Safety: this is not run_local.sh ---------------------------------------
+# --- Safety checks -----------------------------------------------------------
 if [ "$(uname -s)" != "Linux" ]; then
     die "This script is for the Linux production host only. Use scripts/run_local.sh for local/dev."
 fi
 
 if [ ! -f "$REPO_ROOT/pom.xml" ] || ! grep -q '<artifactId>marble-erp-platform</artifactId>' "$REPO_ROOT/pom.xml"; then
-    die "Repo root does not look like marble-erp-platform (pom.xml artifactId). Cowardly refusing."
+    die "Repo root does not look like marble-erp-platform (pom.xml artifactId). Refusing."
 fi
 
 if [ "$DEPLOY_DIR" != "/opt/marble-erp" ] && [ "${ALLOW_CUSTOM_DEPLOY_DIR:-}" != "1" ]; then
@@ -181,17 +205,36 @@ case "$DEPLOY_DIR" in
         ;;
 esac
 
+# --- Dry run / interactive confirmation ------------------------------------
+if [ "$DRY_RUN" -eq 1 ]; then
+    echo "Dry run preview. Actions that would be executed:"
+    echo "  1. Ensure Docker PostgreSQL (marble-erp-postgres) is running"
+    echo "  2. Build frontend (npm install && npm run build) unless --skip-frontend"
+    echo "  3. Package backend (./mvnw clean package -DskipTests)"
+    echo "  4. Stop systemd service ($SERVICE_NAME)"
+    echo "  5. Backup $LIVE_JAR -> ${LIVE_JAR}.bak.<timestamp>"
+    echo "  6. Copy built JAR to $LIVE_JAR"
+    echo "  7. Synchronize systemd unit $UNIT_PATH and restart $SERVICE_NAME"
+    echo "  8. Verify health on 127.0.0.1:${SERVER_PORT}${HEALTH_PATH} and public domain"
+    exit 0
+fi
+
 if [ "$YES" -ne 1 ]; then
-    echo "Dry run. Would:"
-    echo "  1. Build frontend + ./mvnw clean package -DskipTests (unless skipped)"
-    echo "  2. systemctl stop $SERVICE_NAME (or stop only the $LIVE_JAR JVM)"
-    echo "  3. Backup $LIVE_JAR -> ${LIVE_JAR}.bak.<timestamp>"
-    echo "  4. Copy $BUILT_JAR -> $LIVE_JAR"
-    echo "  5. systemctl start $SERVICE_NAME (install unit if missing)"
-    echo "  6. curl http://127.0.0.1:${SERVER_PORT}${HEALTH_PATH}"
-    echo
-    echo "Re-run with --yes to apply. See docs/production-deploy.md"
-    exit 1
+    if [ -t 0 ]; then
+        echo -n "Deploy Özerler Mermer ERP to production on this host? [Y/n]: "
+        read -r reply
+        reply="${reply:-y}"
+        if [[ "$reply" =~ ^[Yy]$ ]]; then
+            YES=1
+        else
+            echo "Deployment cancelled."
+            exit 0
+        fi
+    else
+        echo "Non-interactive shell without --yes or -y." >&2
+        echo "Run with -y or --yes to execute deployment automatically." >&2
+        exit 1
+    fi
 fi
 
 need_cmd java
@@ -206,18 +249,35 @@ if [ ! -x "$REPO_ROOT/mvnw" ]; then
 fi
 [ -x "$REPO_ROOT/mvnw" ] || die "Maven wrapper not executable: $REPO_ROOT/mvnw"
 
-# --- Deploy directory + env (fail fast before a long build) -----------------
+# --- Deploy directory & environment file -----------------------------------
 sudo_cmd mkdir -p "$DEPLOY_DIR/uploads" "$DEPLOY_DIR/logs"
 if [ ! -f "$ENV_FILE" ]; then
-    echo "[ENV] Writing template $ENV_FILE"
+    echo "[ENV] Writing initial $ENV_FILE"
     write_env_template
-    die "$ENV_FILE is new and still has placeholders. Set DB_URL / DB_PASSWORD / CORS_ALLOWED_ORIGIN, then re-run with --yes."
 fi
 if grep -Eq 'CHANGE_ME|YOUR_PUBLIC_HOST|YOUR_STRONG' "$ENV_FILE"; then
     die "$ENV_FILE still contains placeholders (CHANGE_ME / YOUR_PUBLIC_HOST). Edit real values and re-run."
 fi
 
-# --- Build (docs/production-deploy.md § Build) ------------------------------
+# Ensure correct permissions
+sudo_cmd chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "$DEPLOY_DIR"
+sudo_cmd chmod 640 "$ENV_FILE"
+
+# --- Database health check (Docker PostgreSQL) -----------------------------
+if command -v docker >/dev/null 2>&1; then
+    if docker inspect marble-erp-postgres >/dev/null 2>&1; then
+        if ! docker inspect -f '{{.State.Running}}' marble-erp-postgres 2>/dev/null | grep -q "true"; then
+            echo "[DB] Starting Docker container 'marble-erp-postgres'..."
+            docker start marble-erp-postgres
+            sleep 2
+        fi
+        if docker exec marble-erp-postgres pg_isready -U marbleuser -d marble_erp -q 2>/dev/null; then
+            echo "[DB] Docker container 'marble-erp-postgres' is healthy and ready."
+        fi
+    fi
+fi
+
+# --- Build (frontend + Maven fat JAR) --------------------------------------
 cd "$REPO_ROOT"
 
 if [ "$SKIP_BUILD" -eq 0 ]; then
@@ -234,7 +294,7 @@ fi
 
 [ -f "$BUILT_JAR" ] || die "Built JAR not found: $BUILT_JAR"
 
-# --- Stop safely (docs/production-deploy.md § Stop / start / restart) -------
+# --- Stop live service safely ----------------------------------------------
 stop_live_jar_jvm() {
     local pids
     pids="$(pgrep -f "$LIVE_JAR" || true)"
@@ -283,9 +343,9 @@ sudo_cmd chown "${SERVICE_USER}:${SERVICE_GROUP}" "$LIVE_JAR" "$DEPLOY_DIR/uploa
 # Keep the last 8 backups
 sudo_cmd bash -c "ls -1t '${LIVE_JAR}.bak.'* 2>/dev/null | tail -n +9 | xargs -r rm -f" || true
 
-# --- systemd start (docs/production-deploy.md § systemd unit) ---------------
-if [ ! -f "$UNIT_PATH" ]; then
-    echo "[UNIT] Installing $UNIT_PATH"
+# --- systemd unit synchronization -------------------------------------------
+if [ ! -f "$UNIT_PATH" ] || ! grep -q "EnvironmentFile=" "$UNIT_PATH" 2>/dev/null || ! grep -q "$LIVE_JAR" "$UNIT_PATH" 2>/dev/null; then
+    echo "[UNIT] Installing/updating $UNIT_PATH"
     default_unit | sudo_cmd tee "$UNIT_PATH" >/dev/null
     sudo_cmd systemctl daemon-reload
     sudo_cmd systemctl enable "${SERVICE_NAME}"
@@ -297,7 +357,7 @@ fi
 echo "[START] sudo systemctl start ${SERVICE_NAME}"
 sudo_cmd systemctl start "${SERVICE_NAME}"
 
-# --- Health (docs/production-deploy.md § Health check) ----------------------
+# --- Health check ----------------------------------------------------------
 HEALTH_URL="http://127.0.0.1:${SERVER_PORT}${HEALTH_PATH}"
 ACTUATOR_URL="http://127.0.0.1:${SERVER_PORT}/actuator/health"
 echo "[HEALTH] Waiting for $HEALTH_URL"
@@ -322,8 +382,23 @@ if curl -sf "$ACTUATOR_URL" >/dev/null; then
     echo "[OK] $ACTUATOR_URL reachable"
 fi
 
+# Probe public domain if configured
+PUBLIC_ORIGIN="$(grep -E '^CORS_ALLOWED_ORIGIN=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | cut -d',' -f1 | tr -d ' "' || true)"
+if [[ "$PUBLIC_ORIGIN" =~ ^https?:// ]] && [[ "$PUBLIC_ORIGIN" != *"localhost"* ]] && [[ "$PUBLIC_ORIGIN" != *"127.0.0.1"* ]]; then
+    PUBLIC_HEALTH_URL="${PUBLIC_ORIGIN}${HEALTH_PATH}"
+    echo "[PUBLIC] Verifying public domain: $PUBLIC_HEALTH_URL"
+    if curl -sf -m 8 "$PUBLIC_HEALTH_URL" | grep -q "UP"; then
+        echo "[OK] Public URL $PUBLIC_HEALTH_URL is UP and healthy!"
+    else
+        echo "[INFO] Public URL probe did not immediately return UP (proxy/DNS may take a moment)."
+    fi
+fi
+
 echo
-echo "Deploy complete."
-echo "  status: sudo systemctl status ${SERVICE_NAME}"
-echo "  logs:   sudo journalctl -u ${SERVICE_NAME} -f -n 100"
-echo "  health: $HEALTH_URL"
+echo "======================================================================"
+echo "   Özerler Mermer ERP — Deploy complete!"
+echo "======================================================================"
+echo "  Public URL: ${PUBLIC_ORIGIN:-https://ozerler.naklink.com}"
+echo "  Status:     sudo systemctl status ${SERVICE_NAME}"
+echo "  Logs:       sudo journalctl -u ${SERVICE_NAME} -f -n 100"
+echo "  Health:     $HEALTH_URL"

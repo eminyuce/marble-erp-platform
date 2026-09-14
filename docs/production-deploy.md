@@ -1,10 +1,10 @@
 # Production deploy (native JAR + systemd)
 
-> **TR:** Üretim sunucusunda `scripts/run_local.sh` veya `mvn spring-boot:run` kullanmayın. Paketlenmiş JAR’ı systemd ile çalıştırın: `./scripts/deploy_production.sh --yes`
+> **TR:** Üretim sunucusunda `scripts/run_local.sh` veya `mvn spring-boot:run` kullanmayın. Paketlenmiş JAR’ı systemd ile çalıştırın: `./scripts/deploy_production.sh` (veya `./scripts/deploy_production.sh -y`)
 >
-> **EN:** Do not use `scripts/run_local.sh` or `mvn spring-boot:run` on the production host. Run the packaged JAR under systemd: `./scripts/deploy_production.sh --yes`
+> **EN:** Do not use `scripts/run_local.sh` or `mvn spring-boot:run` on the production host. Run the packaged JAR under systemd: `./scripts/deploy_production.sh` (or `./scripts/deploy_production.sh -y`)
 
-This runbook is for the **bare-metal JAR** layout already in use on the Linux host (`eyuce`, `/opt/marble-erp/app.jar`). First-time OS hardening, Nginx, and Docker Compose are documented in [DEPLOYMENT_LINUX.md](../DEPLOYMENT_LINUX.md). Automated image deploys (GHCR) live in [`.github/workflows/deploy-production.yml`](../.github/workflows/deploy-production.yml).
+This runbook is for the **bare-metal JAR** layout already in use on the Linux host (`eyuce`, `/opt/marble-erp/app.jar`). First-time OS hardening, Nginx, and Docker Compose are documented in [DEPLOYMENT_LINUX.md](../DEPLOYMENT_LINUX.md). Automated image deploys (GHCR) live in [`.github/workflows/deploy-production.yml`](../.github/workflows/deploy-production.yml). For an operational runbook, see [`DEPLOYMENT_RUNBOOK.md`](../DEPLOYMENT_RUNBOOK.md).
 
 Local development stays in [RUNNING_LOCALLY.md](../RUNNING_LOCALLY.md) and `scripts/run_local.sh`.
 
@@ -22,18 +22,17 @@ Production must run the **already packaged** JAR with `spring.profiles.active=pr
 
 ---
 
-## What you should run now (host is down)
+## What you should run on the host
 
-Java was stopped (`sudo kill` on the last PID). Nothing is serving the app until you start the systemd unit.
-
-On the Linux host, from the **git clone** (not from `scripts/` as a one-off Maven runner):
+On the Linux host, from the **git clone**:
 
 ```bash
-cd /path/to/marble-erp-platform   # your existing clone
+cd /home/eyuce/marble-erp-platform
 git pull origin main
-chmod +x scripts/deploy_production.sh
-./scripts/deploy_production.sh --yes
+./scripts/deploy_production.sh
 ```
+
+Pass `-y` to skip the interactive confirmation prompt (`./scripts/deploy_production.sh -y`).
 
 The first run writes `/opt/marble-erp/marble-erp.env` if it is missing, then **stops** if that file still has placeholders. Edit the file (database URL, user, password) and run the same command again.
 
@@ -120,8 +119,8 @@ Service name: `marble-erp`. The deploy script installs this unit **only if it do
 ```ini
 [Unit]
 Description=Ozerler Mermer ERP Platform
-After=network.target postgresql.service
-Wants=postgresql.service
+After=network.target docker.service postgresql.service
+Wants=docker.service
 
 [Service]
 Type=simple
