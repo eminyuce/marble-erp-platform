@@ -29,7 +29,6 @@ const PAGES_TO_TEST = [
     { name: '02_dashboard', path: '/admin/dashboard', isPublic: false },
     { name: '03_system_health', path: '/admin/dashboard/systemhealth/', isPublic: false },
     { name: '04_site_features', path: '/admin/dashboard/oursitefeatures/', isPublic: false },
-    { name: '05_roles', path: '/roles', isPublic: false },
     { name: '06_health', path: '/health/', isPublic: true },
 
     // Blocks

@@ -108,8 +108,7 @@ const HELP_PATH_PREFIXES = [
     ['/blocks', 'blocks'],
     ['/genealogy', 'genealogy'],
     ['/reports', 'reports'],
-    ['/costs', 'costs'],
-    ['/roles', 'roles']
+    ['/costs', 'costs']
 ].sort((left, right) => right[0].length - left[0].length);
 
 function pageKeyFromPath(pathname) {
