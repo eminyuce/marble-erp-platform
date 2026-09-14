@@ -17,5 +17,19 @@ class ProductionGridActionsTest {
         }
 
         assertThat(script).contains("{icon: 'edit-3', label: 'Düzenle', href: '/production/orders/' + row.id + '/edit'}");
+        assertThat(script).contains("erpStatusBadge(row.status, row.statusLabel)");
+    }
+
+    @Test
+    @DisplayName("Production order detail shows the Turkish status label")
+    void detailPageUsesStatusLabel() throws Exception {
+        String html;
+        try (var in = getClass().getResourceAsStream("/templates/erp/production/detail.html")) {
+            assertThat(in).isNotNull();
+            html = new String(in.readAllBytes());
+        }
+
+        assertThat(html).contains("th:text=\"${order.statusLabel}\"");
+        assertThat(html).doesNotContain("th:text=\"${order.status}\"");
     }
 }

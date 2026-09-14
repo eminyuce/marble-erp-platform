@@ -18,7 +18,7 @@
                     th:text="${order.orderNo}">PRD-2026-00452</h1>
                 <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold"
                       th:classappend="${order.status == 'COMPLETED'} ? 'bg-emerald-100 text-emerald-800' : (${order.status == 'IN_PROGRESS'} ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700')"
-                      th:text="${order.status}">COMPLETED</span>
+                      th:text="${order.statusLabel}">Tamamlandı</span>
             </div>
             <p class="text-sm text-slate-500 mt-1">
                 <span th:text="${order.processType != null ? order.processType.label : '—'}">Katrak Dilimleme</span> ·

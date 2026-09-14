@@ -117,6 +117,8 @@ class WorkshopCutServiceTest {
         assertThat(response.getData()).hasSize(1);
         CutOrderDto dto = response.getData().getFirst();
         assertThat(dto.getCutOrderNo()).isEqualTo("CO-2026-009");
+        assertThat(dto.getStatus()).isEqualTo("COMPLETED");
+        assertThat(dto.getStatusLabel()).isEqualTo("Tamamlandı");
         assertThat(dto.getItemCount()).isEqualTo(4);
         assertThat(dto.getTotalAreaM2()).isEqualByComparingTo("6.2500");
         assertThat(order.getItems()).isEmpty();

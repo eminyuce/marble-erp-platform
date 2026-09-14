@@ -35,6 +35,9 @@ class TabulatorGridUndefinedTest {
         assertThat(appJs).contains("function gridText(");
         assertThat(appJs).contains("function gridMoney(");
         assertThat(appJs).contains("function gridArea(");
+        assertThat(appJs).contains("function erpStatusBadge(");
+        assertThat(appJs).contains("locale: \"tr\"");
+        assertThat(appJs).contains("first: \"İlk\"");
     }
 
     @Test
