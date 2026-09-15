@@ -64,6 +64,11 @@ class TerminologyContractTest {
         assertThat(megaMenu).contains("Sistem Tanımları");
         String blocks = Files.readString(root.resolve("templates/erp/blocks/index.html"));
         assertThat(blocks).contains("Stok Sahası").doesNotContain("Sevkiyat Sahası");
+        String blockForm = Files.readString(root.resolve("templates/erp/blocks/form.html"));
+        assertThat(blockForm).contains("<th:block th:if=\"${isEdit and block != null}\">")
+                .doesNotContain("name=\"crackLevel\" class=\"erp-form-select\"");
+        String auditFragment = Files.readString(root.resolve("templates/fragments/audit.html"));
+        assertThat(auditFragment).contains("th:if=\"${createdDate != null}\"");
         String costs = Files.readString(root.resolve("templates/erp/costs/index.html"));
         assertThat(costs).contains("Ocak Maliyet Analizi")
                 .contains("Fabrika Maliyet Analizi")

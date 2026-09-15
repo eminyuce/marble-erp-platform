@@ -127,8 +127,9 @@
                     </div>
                 </section>
 
-                <div th:if="${isEdit and block != null}"
-                     th:replace="~{fragments/audit :: auditInfo(${block?.createdDate}, ${block?.updatedDate}, ${block?.addUserId}, ${block?.updateUserId})}"></div>
+                <th:block th:if="${isEdit and block != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${block?.createdDate}, ${block?.updatedDate}, ${block?.addUserId}, ${block?.updateUserId})}"></div>
+                </th:block>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/blocks})}"></div>
