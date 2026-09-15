@@ -110,11 +110,13 @@ Yazılımın ana menüsü, sayfa başlıkları, yardım metinleri, raporları ve
 - `sellBlockExternally()` yalnızca durumu değiştirir. Müşteri, fiyat, işaretleme tarihi ve satış anındaki saha kaydı oluşturmaz.
 - “Fabrikaya transfer” doğrudan `FACTORY_STOCK` yapar; sevk, teslim alma ve fabrika blok sahasına indirme ayrı olaylar değildir.
 - Ölçüden hesaplanan değer kg alanında tutuluyor. Kullanıcıya yaklaşık **tonaj** gösterilirken kg/1000 dönüşümü tek standarda bağlanmalıdır.
+- Rehber `%5` kantar sapması uyarısı bulunduğunu söylese de servis veya grid içinde mutlak `%5` eşik kuralı yoktur.
 
 #### Eksik olanlar
 
 - Aylık mazot, elektrik, işçilik, demirbaş sarfı ve diğer gider girişleri.
 - Ocak makine parkı ve makine bazlı mazot alımı.
+- Ocak kartlarının kullanıcı tarafından eklenmesi/düzenlenmesi; mevcut ocaklar yalnızca seed/repository üzerinden gelir.
 - Elektrik faturası sonraki ay geldiğinde giderin önceki üretim ayına yazılması.
 - Aylık üretilen ton ve ton başı maliyet.
 - Blok müşteri işaretleme/rezervasyon süreci.
@@ -142,6 +144,8 @@ Yazılımın ana menüsü, sayfa başlıkları, yardım metinleri, raporları ve
 - `ProcessType` mesaj dosyasındaki değerler ile Java enum değerleri eşit değildir; örneğin `bridge_cut` ve `bridge_cutting` iki farklı ad olarak bulunur.
 - Extra kalite katsayısı tanımlı ve dokümante edilmiş olsa da fabrika giriş formunda Extra plaka adedi yoktur.
 - Seed verileri yapılmamış silim/epoksi operasyonlarını yapılmış gibi gösteriyor.
+- Üretim emri için düzenleme ekranı açılır fakat POST güncelleme uç noktası yoktur.
+- Kesim tamamlandığında blok `SAWING` durumundan sonraki duruma geçirilmez.
 
 #### Eksik olanlar
 
@@ -201,6 +205,7 @@ Yazılımın ana menüsü, sayfa başlıkları, yardım metinleri, raporları ve
 - `calculateProductionRequirement()` serviste var fakat kullanıcı akışına, stok verisine ve üretim/satın alma taleplerine bağlanmamıştır.
 - Tüketim kaydı montaj ilerlemesini güncelliyor; ancak malzemenin hangi palet/ebatlı ürün üzerinden mahalle ulaştığı izlenmiyor.
 - `actualCost` artımlı güncelleniyor; kayıt düzeltme/silme halinde yeniden hesaplama garantisi yoktur.
+- Şantiye düzenleme ekranı bulunmasına rağmen güncelleme servisi/POST uç noktası yoktur; form yeni kayıt akışına döner.
 
 #### Eksik olanlar
 
@@ -228,6 +233,7 @@ Yazılımın ana menüsü, sayfa başlıkları, yardım metinleri, raporları ve
 - `ExpenseType` verilen iş gereksinimlerindeki mazot, vergi ve taşıma ayrımını tam kapsamaz.
 - Fabrika, atölye ve şantiye bazlı sonuçlar tek ekranda ayrı analiz olarak sunulmaz.
 - Fiyat önerisi maliyet analizinin yerine geçirilmiştir; fiyatlama ikincil sekme olmalıdır.
+- `recordTransaction()` servis metodu vardır fakat gider girişi için controller/form yoktur ve operasyonlar otomatik maliyet hareketi üretmez.
 
 #### Eksik olanlar
 
