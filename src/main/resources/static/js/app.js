@@ -240,20 +240,68 @@ function toAsciiTurkishFilename(filename) {
     return ascii || "indirilen";
 }
 
+function padExportTimeUnit(value) {
+    return String(value).padStart(2, "0");
+}
+
+function formatExportTimestamp(date) {
+    var d = date || new Date();
+    return d.getFullYear()
+        + "-" + padExportTimeUnit(d.getMonth() + 1)
+        + "-" + padExportTimeUnit(d.getDate())
+        + "_" + padExportTimeUnit(d.getHours())
+        + "-" + padExportTimeUnit(d.getMinutes())
+        + "-" + padExportTimeUnit(d.getSeconds());
+}
+
+function buildExportFilename(entityName, extension, date) {
+    var stem = toAsciiTurkishFilename(entityName).replace(/\.\w+$/, "") || "indirilen";
+    var ext = String(extension || "").replace(/^\.+/, "").toLowerCase();
+    return stem + "_" + formatExportTimestamp(date) + (ext ? "." + ext : "");
+}
+
+function resolveExportTable(table) {
+    if (table && typeof table.download === "function") {
+        return table;
+    }
+    if (typeof table !== "string" || !table) {
+        return null;
+    }
+    var named = window[table];
+    if (named && typeof named.download === "function") {
+        return named;
+    }
+    var selector = table.charAt(0) === "#" ? table : "#" + table;
+    if (window.Tabulator && typeof Tabulator.findTable === "function") {
+        var found = Tabulator.findTable(selector);
+        if (found && found[0] && typeof found[0].download === "function") {
+            return found[0];
+        }
+    }
+    var element = document.querySelector(selector);
+    if (element && element.tabulator && typeof element.tabulator.download === "function") {
+        return element.tabulator;
+    }
+    return null;
+}
+
 function downloadTableCsv(table, filename) {
-    if (!table) {
+    var resolved = resolveExportTable(table);
+    if (!resolved) {
         return;
     }
-    table.download("csv", toAsciiTurkishFilename(filename));
+    resolved.download("csv", buildExportFilename(filename, "csv"));
 }
 
 function downloadTable(table, baseName, format) {
-    if (!table) return;
-    var name = toAsciiTurkishFilename(baseName);
+    var resolved = resolveExportTable(table);
+    if (!resolved) {
+        return;
+    }
     if (format === 'xlsx') {
-        table.download("xlsx", name.replace(/\.\w+$/, '') + ".xlsx", {sheetName: "Veri"});
+        resolved.download("xlsx", buildExportFilename(baseName, "xlsx"), {sheetName: "Veri"});
     } else {
-        table.download("csv", name.replace(/\.\w+$/, '') + ".csv");
+        resolved.download("csv", buildExportFilename(baseName, "csv"));
     }
 }
 
@@ -401,6 +449,7 @@ window.erpStatusBadge = erpStatusBadge;
 window.erpResponsiveCollapseColumn = erpResponsiveCollapseColumn;
 window.gridActionsHtml = gridActionsHtml;
 window.bindGridSearch = bindGridSearch;
+window.buildExportFilename = buildExportFilename;
 window.downloadTable = downloadTable;
 window.downloadTableCsv = downloadTableCsv;
 

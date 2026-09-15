@@ -494,6 +494,11 @@ public final class Constants {
     public static final String DATE_TIME_FORMAT_YMD_HM = "yyyy-MM-dd HH:mm";
 
     /**
+     * Export/download filename timestamp: date, underscore, 24-hour time with hyphens.
+     */
+    public static final String DATE_TIME_FORMAT_EXPORT_FILENAME = "yyyy-MM-dd_HH-mm-ss";
+
+    /**
      * Default display string for zero or negative uptime.
      */
     public static final String DEFAULT_UPTIME_FORMAT = "0 sa 00 dk 00 sn";

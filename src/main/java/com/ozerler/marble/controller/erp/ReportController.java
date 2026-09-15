@@ -1,8 +1,8 @@
 package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.service.ReportService;
+import com.ozerler.marble.util.ExportFilenames;
 import com.ozerler.marble.util.HttpDownloads;
-import com.ozerler.marble.util.TurkishAsciiFilename;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -56,18 +56,18 @@ public class ReportController {
             return ResponseEntity.badRequest().build();
         }
 
-        String safeFilename = TurkishAsciiFilename.toAsciiTurkishFilename(
-                type.getExportFilenameStem() + "_" + LocalDate.now());
-
         if ("csv".equalsIgnoreCase(format)) {
             byte[] csvBytes = reportService.generateCsvReport(type);
-            return HttpDownloads.attachment(csvBytes, safeFilename + ".csv", MediaType.parseMediaType("text/csv; charset=UTF-8"));
+            return HttpDownloads.attachment(
+                    csvBytes,
+                    ExportFilenames.build(type.getExportFilenameStem(), "csv"),
+                    MediaType.parseMediaType("text/csv; charset=UTF-8"));
         }
 
         byte[] excelBytes = reportService.generateExcelReport(type);
         return HttpDownloads.attachment(
                 excelBytes,
-                safeFilename + ".xlsx",
+                ExportFilenames.build(type.getExportFilenameStem(), "xlsx"),
                 MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
     }
 }

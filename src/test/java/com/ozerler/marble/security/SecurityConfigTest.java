@@ -20,6 +20,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
@@ -195,14 +197,16 @@ class SecurityConfigTest {
         mockMvc.perform(get("/reports/export/QUARRY_BLOCKS").param("format", "csv"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", containsString("text/csv")))
-                .andExpect(header().string("Content-Disposition", containsString("ocak_bloklari_")))
-                .andExpect(header().string("Content-Disposition", containsString(".csv")));
+                .andExpect(header().string("Content-Disposition",
+                        matchesPattern(".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}\\.csv\".*")))
+                .andExpect(header().string("Content-Disposition", not(containsString(":"))));
 
         mockMvc.perform(get("/reports/export/QUARRY_BLOCKS").param("format", "excel"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", containsString("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")))
-                .andExpect(header().string("Content-Disposition", containsString("ocak_bloklari_")))
-                .andExpect(header().string("Content-Disposition", containsString(".xlsx")));
+                .andExpect(header().string("Content-Disposition",
+                        matchesPattern(".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}\\.xlsx\".*")))
+                .andExpect(header().string("Content-Disposition", not(containsString(":"))));
     }
 
     @Test
