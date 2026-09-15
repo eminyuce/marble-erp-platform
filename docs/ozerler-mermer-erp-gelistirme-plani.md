@@ -169,7 +169,7 @@ Yazılımın ana menüsü, sayfa başlıkları, yardım metinleri, raporları ve
 #### Kısmen yapılmış veya yanlış modellenmiş olanlar
 
 - `CutOrder` ve “Kesim Emri” adı fabrika kesimiyle karışır. Kullanıcı metni **Atölye İş Emri** olmalıdır.
-- Makine serbest metindir; 2 köprü kesme, 1 baş kesme ve 1 pah makinesinin kayıtlı makine parkı yoktur.
+- Makine serbest metindir; 2 köprü kesme, 1 kenar kesme ve 1 pah makinesinin kayıtlı makine parkı yoktur.
 - Kenar işlemi serbest metindir; makinede pah ile spiral kullanılarak yapılan ince pah birbirinden ayrı operasyon değildir.
 - Kaynak yalnızca mevcut `Slab` olabilir. Kendi fabrikasından veya dış fabrikadan alınan malzemenin kabulü ve maliyeti izlenmez.
 - Ebatlama sonunda kaynak plakanın kalan miktarı ve stok durumu tam kapanmaz.
@@ -180,7 +180,7 @@ Yazılımın ana menüsü, sayfa başlıkları, yardım metinleri, raporları ve
 - Alınan malzemenin doğrudan satış veya işlem sonrası satış rotası.
 - Şirket şantiyesi için atölye üretim talebi.
 - Makine parkı ve makine bazlı operasyon.
-- Baş kesme, pah makinesi ve spiral ile manuel ince pah.
+- Kenar kesme, pah makinesi ve spiral ile manuel ince pah.
 - Girdi m², çıktı m², fire, süre ve işçilik kaydı.
 - Atölye palet/stok ve müşteri/şantiye sevki.
 - Dış alım, iç malzeme, makine, manuel işçilik ve fireyi birleştiren maliyet.
@@ -190,7 +190,7 @@ Yazılımın ana menüsü, sayfa başlıkları, yardım metinleri, raporları ve
 #### Yapılmış olanlar
 
 - `Project` altında mahal ağacı, taş tanımı, planlanan ve monte edilen m² tutuluyor.
-- Kum/çimento dışındaki çeşitli sarf tipleri, doğal taş ve işçilik tüketimi girilebiliyor.
+- Yapıştırıcı, derz, ankraj ve benzeri çeşitli sarflar ile doğal taş ve işçilik tüketimi girilebiliyor; kum ve çimento tüketim tipleri eksik.
 - Tüketim tutarı gerçek maliyete ekleniyor.
 - Genel satın alma siparişi bir projeye bağlanabiliyor.
 - Sözleşme bedeli, tahmini ve gerçekleşen maliyet alanları var.
@@ -239,6 +239,17 @@ Yazılımın ana menüsü, sayfa başlıkları, yardım metinleri, raporları ve
 - Şantiye gelir, gider ve net kâr/zarar analizi.
 - Dönem kapama, yeniden hesaplama ve denetlenebilir maliyet dağıtımı.
 
+### 4.6 Ortak veri bütünlüğü ve teknik borç
+
+- V2 tablolarındaki `created_at`/`updated_at` alanlarına ek olarak V9 ile `created_date`/`updated_date` eklenmiştir. JPA entity’leri yeni alanları kullanırken bazı performans indeksleri eski alanlardadır. Tek audit standardı seçilmeli, eski değerler backfill edilmeli ve indeksler aktif kolonlara taşınmalıdır.
+- `projects.customer_name` ile `customers` tablosu iki ayrı müşteri kaynağıdır. `projects.customer_id` eklenmeli; geçmiş ad snapshot olarak korunmalı ama yeni kayıtlarda müşteri kartı esas alınmalıdır.
+- `stock_reservations` tablosu bulunmasına rağmen servis akışında kullanılmıyor; plaka durumu doğrudan `RESERVED` yapılıyor. Rezervasyon tablosu tek kaynak yapılmalı ve malzeme durumu aktif rezervasyondan türetilmelidir.
+- `shipments` yük bilgisini taşımaz. Sevkiyatın hangi blok, palet veya ürün lotunu taşıdığı `shipment_items` ile zorunlu hale getirilmelidir.
+- `purchase_order_items.item_type` için enum bulunmasına rağmen alan serbest string’dir. Geçersiz değerler migration raporuyla düzeltilip `PurchaseItemType` ile eşlenmelidir.
+- `production_orders`, `cut_orders`, `cut_items`, `project_locations`, `pallets` ve `shipments` içinde bazı durumlar serbest string’dir. Geçmiş değerler korumalı biçimde typed enumlara geçirilmelidir.
+- Soy ağacı bugün Blok → Üretim Emri → Plaka → Ebatlı Mamul seviyesinde biter. Palet, sevkiyat, satış, şantiye/mahal, montaj, fire ve maliyet olayları da izlenebilir zincire katılmalıdır.
+- Rapor yetkilendirmesinde kullanılan `ACCOUNTANT` ve `MANAGER` adları kayıtlı rollerle eşleşmez. Bunlar `FINANCE`, `FACTORY_MANAGER` ve gerekli diğer gerçek rollerle düzeltilmelidir.
+
 ## 5. Adlandırma Düzeltme Planı
 
 ### 5.1 Kullanıcı arayüzü düzeltmeleri
@@ -272,7 +283,7 @@ Bu değişiklikler sidebar, mega menu, dashboard, breadcrumb, `<title>`, H1/H2, 
 - `executeGangsawCut()` → süreç türüne özel `recordCuttingOperation()`; katrak ve ST ayrı doğrulama stratejilerine sahip olmalı.
 - `ProductionOrder` → geriye uyumlu geçişle `FactoryWorkOrder`
 - `ProjectSiteService` → `ConstructionSiteService`
-- Kullanıcı dilinde `Project` gösterimi → `Şantiye`; teknik model adı ancak bütün bağımlılıklar ve migration planı birlikte güncellenebiliyorsa `ConstructionSite` yapılmalı.
+- Kullanıcı dilinde `Project` gösterimi → `Şantiye`. Mevcut `projects` tablosu ve `Project` sınıfı sözleşme/proje ana kaydı olarak korunmalı; riskli toplu rename yapılmamalıdır. Şantiye odaklı yeni servis ve ekran adları `ConstructionSite...` olmalıdır.
 - `WorkshopCutService` → `WorkshopOperationService`
 - `CostAccountingService` → kayıt ve analiz sorumlulukları ayrılarak `ExpenseService` + `CostAnalysisService`
 - `ProcessType` → `FactoryProcessType` ve `WorkshopProcessType` ayrımı veya her değerde `businessUnit` niteliği.
@@ -289,7 +300,7 @@ Mevcut tablolar silinmemeli veya aynı migration içinde yeniden adlandırılmam
 
 - `id`, `code`, `name`
 - `business_unit`: `QUARRY`, `FACTORY`, `WORKSHOP`
-- `machine_type`: ocak makinesi, katrak, ST, plaka silim, bant silim, fabrika köprü kesme, atölye köprü kesme, baş kesme, pah makinesi
+- `machine_type`: ocak makinesi, katrak, ST, plaka silim, bant silim, fabrika köprü kesme, atölye köprü kesme, kenar kesme, pah makinesi
 - `active`, `notes`, audit alanları
 
 Serbest `machine_name` girişleri geçiş sırasında makine kartlarına eşlenmeli; geçmiş kayıtların metni korunmalıdır.
@@ -301,7 +312,7 @@ Serbest `machine_name` girişleri geçiş sırasında makine kartlarına eşlenm
 - `location_type`: `PRODUCTION_YARD`, `DISPATCH_YARD`, `FACTORY_BLOCK_YARD`, `SLAB_STOCK_YARD`, `PALLET_STOCK_YARD`, `WORKSHOP_STOCK`
 - `active`
 
-#### `expense_entries`
+#### Genişletilecek `cost_transactions`
 
 - `id`, `business_unit`, `expense_category`
 - `amount`, `currency`
@@ -311,7 +322,7 @@ Serbest `machine_name` girişleri geçiş sırasında makine kartlarına eşlenm
 - isteğe bağlı `machine_id`, `factory_operation_id`, `workshop_operation_id`, `construction_site_id`, `block_id`
 - `description`, audit alanları
 
-Mevcut `cost_transactions` kayıtları bu yapıya veri kaybı olmadan taşınmalı veya aynı tablo yukarıdaki alanlarla genişletilmelidir. İki paralel gider kaynağı kalmamalıdır.
+Yeni ve paralel bir gider tablosu oluşturulmamalıdır. Mevcut `cost_transactions` tablosu yukarıdaki alanlarla genişletilecek ve bütün modüllerin tek gider kaynağı olacaktır. Java tarafında kullanıcı diline daha yakın bir `ExpenseEntry` modeli istenirse mevcut `CostTransaction` kayıtları aynı tablo üzerinde aşamalı olarak bu modele geçirilmelidir.
 
 ### 6.2 Ocak modeli
 
@@ -377,7 +388,7 @@ Mevcut `slabs` kayıtları `SLAB`, mevcut uygun `cut_items` kayıtları `SIZED_P
 - `supply_route`: `INTERNAL_PRODUCTION`, `EXTERNAL_PURCHASE`, `MIXED`.
 - `site_supply_allocations`: plan satırı ile fabrika/atölye iş emri, satın alma satırı veya stok rezervasyonu ilişkisi.
 - `site_installations`: mahal, teslim alınan ürün lotu/palet, monte edilen m², fire m², tarih ve ekip.
-- Şantiye giderleri ortak `expense_entries` üzerinden `MATERIAL`, `LABOR`, `TAX`, `CONSUMABLE`, `TRANSPORTATION`, `OTHER` kategorileriyle kaydedilmeli.
+- Şantiye giderleri ortak `cost_transactions` üzerinden `MATERIAL`, `LABOR`, `TAX`, `CONSUMABLE`, `TRANSPORTATION`, `OTHER` kategorileriyle kaydedilmeli.
 - `Project.contractValue` gelir kaynağı olarak kullanılabilir; kısmi hakediş gerekiyorsa ayrıca `site_revenues` tablosu eklenmelidir.
 
 ## 7. İş Kuralları ve Hesaplamalar
@@ -473,7 +484,7 @@ Toplamlar artımlı ve düzeltmeye açık tek bir kolon üzerinden güvenilmez b
 
 1. Malzeme Kabul: kendi fabrikası veya dış fabrika.
 2. İş Emri: doğrudan satış, işleyip satış veya şirket şantiyesi.
-3. Operasyonlar: iki köprü kesme, baş kesme, pah makinesi ve manuel ince pah.
+3. Operasyonlar: iki köprü kesme, kenar kesme, pah makinesi ve manuel ince pah.
 4. Atölye Stoku ve Paletleme.
 5. Müşteriye veya şirket şantiyesine sevkiyat.
 6. Atölye Maliyet Analizi.
@@ -545,7 +556,7 @@ Her sekmede dönem filtresi, toplam gider, üretim miktarı, birim maliyet, önc
 
 - İç/dış malzeme kabulü.
 - Atölye iş emri amaçları.
-- Kayıtlı 2 köprü kesme, 1 baş kesme ve 1 pah makinesi ile manuel ince pah.
+- Kayıtlı 2 köprü kesme, 1 kenar kesme ve 1 pah makinesi ile manuel ince pah.
 - Stok, palet, sevkiyat ve iş emri maliyeti.
 - Mevcut `CutOrder` kayıtlarını yeni modele taşı.
 
@@ -671,7 +682,7 @@ Bir iş maddesi yalnızca tablo veya ekran eklendiğinde tamamlanmış sayılmaz
 - Fabrika çalışanı blok kabulünden palet ve sevkiyata kadar ST ve Katrak rotalarını ayrı izler.
 - Plaka Silim ve Bant Silim giriş/çıkış/fire değerleri bağımsızdır; bant Pahlı/Pahsız bilgisi kaybolmaz.
 - Fabrika Köprü Kesme işlemi Atölye iş emriyle karışmaz.
-- Atölyede iç/dış kaynak, 2 köprü kesme, 1 baş kesme, 1 pah makinesi ve manuel ince pah izlenir.
+- Atölyede iç/dış kaynak, 2 köprü kesme, 1 kenar kesme, 1 pah makinesi ve manuel ince pah izlenir.
 - Şantiye mahali için taş ve miktar önceden planlanır; ihtiyaç iç üretime veya dış siparişe bağlanır.
 - Şantiye net kâr/zararı malzeme, işçilik, vergi, sarf ve nakliye dahil gerçek hareketlerden hesaplanır.
 - Maliyet Analizi ekranında Ocak, Fabrika, Atölye ve Şantiyeler aynı adlarla dört ayrı analiz olarak görünür.
