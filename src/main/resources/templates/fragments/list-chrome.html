@@ -13,6 +13,21 @@
     </ol>
 </nav>
 
+<nav th:fragment="breadcrumbTrail(parent, parentHref, current)" class="admin-breadcrumb" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a th:href="@{/admin/dashboard}">
+                <i data-lucide="home"></i>
+                <span>Yönetim Ana Sayfa</span>
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a th:href="@{${parentHref}}" th:text="${parent}">Üst sayfa</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page" th:text="${current}">Sayfa</li>
+    </ol>
+</nav>
+
 <form th:fragment="search(placeholder, inputId)" class="erp-search-form" role="search" onsubmit="return false;">
     <div class="erp-search-field">
         <span class="erp-search-icon" aria-hidden="true">

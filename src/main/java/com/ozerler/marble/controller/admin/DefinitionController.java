@@ -1,6 +1,13 @@
 package com.ozerler.marble.controller.admin;
 
 import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.dto.CostCenterDto;
+import com.ozerler.marble.dto.CustomerDto;
+import com.ozerler.marble.dto.MachineDto;
+import com.ozerler.marble.dto.QuarryDto;
+import com.ozerler.marble.dto.StockLocationDto;
+import com.ozerler.marble.dto.SupplierDto;
+import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.service.MasterDataService;
@@ -38,11 +45,22 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/machines")
     public String listMachines(Model model) {
-        model.addAttribute("machines", masterDataService.getAllMachines());
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("machineTypes", MachineType.values());
         model.addAttribute("currentSection", "definitions-machines");
         return "admin/definitions/machines";
+    }
+
+    @GetMapping("/machines/api/data")
+    @ResponseBody
+    public TabulatorResponse<MachineDto> machinesData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "unit", required = false) BusinessUnit unit,
+            @RequestParam(value = "sortField", required = false) String sortField,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
+        return masterDataService.getMachinesPaged(page, size, search, unit, sortField, sortDir);
     }
 
     @PostMapping("/machines/save")
@@ -86,11 +104,22 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/stock-locations")
     public String listStockLocations(Model model) {
-        model.addAttribute("locations", masterDataService.getAllStockLocations());
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("locationTypes", StockLocationType.values());
         model.addAttribute("currentSection", "definitions-locations");
         return "admin/definitions/stock-locations";
+    }
+
+    @GetMapping("/stock-locations/api/data")
+    @ResponseBody
+    public TabulatorResponse<StockLocationDto> stockLocationsData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "unit", required = false) BusinessUnit unit,
+            @RequestParam(value = "sortField", required = false) String sortField,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
+        return masterDataService.getStockLocationsPaged(page, size, search, unit, sortField, sortDir);
     }
 
     @PostMapping("/stock-locations/save")
@@ -134,9 +163,19 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/quarries")
     public String listQuarries(Model model) {
-        model.addAttribute("quarries", masterDataService.getAllQuarries());
         model.addAttribute("currentSection", "definitions-quarries");
         return "admin/definitions/quarries";
+    }
+
+    @GetMapping("/quarries/api/data")
+    @ResponseBody
+    public TabulatorResponse<QuarryDto> quarriesData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "sortField", required = false) String sortField,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
+        return masterDataService.getQuarriesPaged(page, size, search, sortField, sortDir);
     }
 
     @PostMapping("/quarries/save")
@@ -168,10 +207,21 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/customers")
     public String listCustomers(Model model) {
-        model.addAttribute("customers", masterDataService.getAllCustomers());
         model.addAttribute("customerTypes", CustomerType.values());
         model.addAttribute("currentSection", "definitions-customers");
         return "admin/definitions/customers";
+    }
+
+    @GetMapping("/customers/api/data")
+    @ResponseBody
+    public TabulatorResponse<CustomerDto> customersData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "type", required = false) CustomerType type,
+            @RequestParam(value = "sortField", required = false) String sortField,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
+        return masterDataService.getCustomersPaged(page, size, search, type, sortField, sortDir);
     }
 
     @PostMapping("/customers/save")
@@ -203,10 +253,21 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/suppliers")
     public String listSuppliers(Model model) {
-        model.addAttribute("suppliers", masterDataService.getAllSuppliers());
         model.addAttribute("supplierTypes", SupplierType.values());
         model.addAttribute("currentSection", "definitions-suppliers");
         return "admin/definitions/suppliers";
+    }
+
+    @GetMapping("/suppliers/api/data")
+    @ResponseBody
+    public TabulatorResponse<SupplierDto> suppliersData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "type", required = false) SupplierType type,
+            @RequestParam(value = "sortField", required = false) String sortField,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
+        return masterDataService.getSuppliersPaged(page, size, search, type, sortField, sortDir);
     }
 
     @PostMapping("/suppliers/save")
@@ -238,10 +299,21 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/cost-centers")
     public String listCostCenters(Model model) {
-        model.addAttribute("costCenters", masterDataService.getAllCostCenters());
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("currentSection", "definitions-cost-centers");
         return "admin/definitions/cost-centers";
+    }
+
+    @GetMapping("/cost-centers/api/data")
+    @ResponseBody
+    public TabulatorResponse<CostCenterDto> costCentersData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "unit", required = false) BusinessUnit unit,
+            @RequestParam(value = "sortField", required = false) String sortField,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
+        return masterDataService.getCostCentersPaged(page, size, search, unit, sortField, sortDir);
     }
 
     @PostMapping("/cost-centers/save")

@@ -85,7 +85,17 @@ const PAGES_TO_TEST = [
     { name: '38_user_detail_1', path: '/admin/users/1', isPublic: false },
     { name: '38b_user_edit_1', path: '/admin/users/1/edit', isPublic: false },
     { name: '39_user_reset_password_1', path: '/admin/users/1/reset-password', isPublic: false },
-    { name: '40_settings', path: '/admin/settings', isPublic: false }
+    { name: '40_settings', path: '/admin/settings', isPublic: false },
+    { name: '41_definitions_hub', path: '/admin/definitions', isPublic: false },
+    { name: '42_definitions_suppliers', path: '/admin/definitions/suppliers', isPublic: false, tabulatorId: '#suppliers-table' },
+    { name: '43_definitions_customers', path: '/admin/definitions/customers', isPublic: false, tabulatorId: '#customers-table' },
+    { name: '44_definitions_machines', path: '/admin/definitions/machines', isPublic: false, tabulatorId: '#machines-table' },
+    { name: '45_definitions_stock_locations', path: '/admin/definitions/stock-locations', isPublic: false, tabulatorId: '#stock-locations-table' },
+    { name: '46_definitions_quarries', path: '/admin/definitions/quarries', isPublic: false, tabulatorId: '#quarries-table' },
+    { name: '47_definitions_cost_centers', path: '/admin/definitions/cost-centers', isPublic: false, tabulatorId: '#cost-centers-table' },
+    { name: '48_production_polish', path: '/production/polish', isPublic: false },
+    { name: '49_production_pallets', path: '/production/pallets', isPublic: false },
+    { name: '50_production_tablet', path: '/production/tablet', isPublic: false }
 ];
 
 async function login(page) {

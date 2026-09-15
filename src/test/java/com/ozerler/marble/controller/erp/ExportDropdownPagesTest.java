@@ -9,15 +9,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ExportDropdownPagesTest {
 
-    private static final Map<String, String> LIST_PAGES = Map.of(
-            "/templates/erp/blocks/index.html", "exportDropdown('blocks-table', 'bloklar')",
-            "/templates/erp/production/index.html", "exportDropdown('production-table', 'uretim_emirleri')",
-            "/templates/erp/production/slabs.html", "exportDropdown('slabs-table', 'plakalar')",
-            "/templates/erp/workshop/index.html", "exportDropdown('workshop-table', 'atelye_is_emirleri')",
-            "/templates/erp/projects/index.html", "exportDropdown('projects-table', 'projeler')",
-            "/templates/erp/procurement/index.html", "exportDropdown('procurement-table', 'satinalma')",
-            "/templates/erp/sales/index.html", "exportDropdown('sales-table', 'satislar')",
-            "/templates/admin/users/index.html", "exportDropdown('users-table', 'kullanicilar')"
+    private static final Map<String, String> LIST_PAGES = Map.ofEntries(
+            Map.entry("/templates/erp/blocks/index.html", "exportDropdown('blocks-table', 'bloklar')"),
+            Map.entry("/templates/erp/production/index.html", "exportDropdown('production-table', 'uretim_emirleri')"),
+            Map.entry("/templates/erp/production/slabs.html", "exportDropdown('slabs-table', 'plakalar')"),
+            Map.entry("/templates/erp/workshop/index.html", "exportDropdown('workshop-table', 'atelye_is_emirleri')"),
+            Map.entry("/templates/erp/projects/index.html", "exportDropdown('projects-table', 'projeler')"),
+            Map.entry("/templates/erp/procurement/index.html", "exportDropdown('procurement-table', 'satinalma')"),
+            Map.entry("/templates/erp/sales/index.html", "exportDropdown('sales-table', 'satislar')"),
+            Map.entry("/templates/admin/users/index.html", "exportDropdown('users-table', 'kullanicilar')"),
+            Map.entry("/templates/admin/definitions/suppliers.html", "exportDropdown('suppliers-table', 'tedarikciler')"),
+            Map.entry("/templates/admin/definitions/customers.html", "exportDropdown('customers-table', 'musteriler')"),
+            Map.entry("/templates/admin/definitions/machines.html", "exportDropdown('machines-table', 'makineler')"),
+            Map.entry("/templates/admin/definitions/stock-locations.html", "exportDropdown('stock-locations-table', 'stok_sahalari')"),
+            Map.entry("/templates/admin/definitions/quarries.html", "exportDropdown('quarries-table', 'ocaklar')"),
+            Map.entry("/templates/admin/definitions/cost-centers.html", "exportDropdown('cost-centers-table', 'masraf_merkezleri')")
     );
 
     @Test

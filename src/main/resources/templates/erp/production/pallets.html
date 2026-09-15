@@ -5,13 +5,17 @@
     <title>Paletleme ve Sevkiyat | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-6">
-    <div class="flex items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-            <h1 class="text-xl font-black text-slate-900">Paletleme ve sevkiyat</h1>
-            <p class="text-sm text-slate-500 mt-1">Bant silim ve ebatlama çıkışlarını palete ekleyin; müşteri veya şirket şantiyesine sevk edin.</p>
+<div layout:fragment="content" class="erp-list-page space-y-6">
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Paletleme ve sevkiyat')}"></div>
+            <h2 class="admin-page-title">Paletleme ve sevkiyat</h2>
+            <p class="erp-list-lead">Bant silim ve ebatlama çıkışlarını palete ekleyin; müşteri veya şirket şantiyesine sevk edin.</p>
         </div>
-        <a th:href="@{/production}" class="erp-btn-secondary">Fabrika</a>
+        <a th:href="@{/production}" class="erp-btn-secondary">
+            <i data-lucide="arrow-left"></i>
+            <span>Fabrika</span>
+        </a>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

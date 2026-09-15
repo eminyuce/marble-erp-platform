@@ -1,6 +1,7 @@
 package com.ozerler.marble.repository;
 
 import com.ozerler.marble.model.MachineFuelEntry;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,7 @@ public interface MachineFuelEntryRepository extends JpaRepository<MachineFuelEnt
 
     List<MachineFuelEntry> findByMachineIdOrderByEntryDateDesc(Long machineId);
 
+    @EntityGraph(attributePaths = "machine")
     List<MachineFuelEntry> findAllByOrderByEntryDateDesc();
 
     @Query("SELECT COALESCE(SUM(e.totalAmount), 0) FROM MachineFuelEntry e WHERE e.entryDate >= :start AND e.entryDate < :end")

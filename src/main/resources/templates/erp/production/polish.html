@@ -5,13 +5,17 @@
     <title>Plaka / Bant Silim | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-6">
-    <div class="flex items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-            <h1 class="text-xl font-black text-slate-900">Silim ve ebatlama</h1>
-            <p class="text-sm text-slate-500 mt-1">Plaka Silim, Bant Silim (Pahlı/Pahsız) ve Köprü Kesme ile Ebatlama. Aynı birimde çıkış + fire ≤ giriş.</p>
+<div layout:fragment="content" class="erp-list-page space-y-6">
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Silim / ebatlama')}"></div>
+            <h2 class="admin-page-title">Silim ve ebatlama</h2>
+            <p class="erp-list-lead">Plaka Silim, Bant Silim (Pahlı/Pahsız) ve Köprü Kesme ile Ebatlama. Aynı birimde çıkış + fire ≤ giriş.</p>
         </div>
-        <a th:href="@{/production}" class="erp-btn-secondary">Fabrika</a>
+        <a th:href="@{/production}" class="erp-btn-secondary">
+            <i data-lucide="arrow-left"></i>
+            <span>Fabrika</span>
+        </a>
     </div>
 
     <form th:action="@{/production/polish}" method="post" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
@@ -19,7 +23,7 @@
             <select name="workOrderId" required class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
                 <option value="" disabled selected>Fabrika iş emri</option>
                 <option th:each="wo : ${workOrders}" th:value="${wo.id}"
-                        th:text="${wo.orderNo + ' — ' + (wo.block != null ? wo.block.blockCode : '')}"></option>
+                        th:text="${wo.orderNo + ' — ' + (wo.blockCode != null ? wo.blockCode : '')}"></option>
             </select>
             <select name="processType" required class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
                 <option th:each="t : ${processTypes}" th:value="${t.name()}" th:text="${t.label}"></option>

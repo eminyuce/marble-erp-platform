@@ -45,9 +45,9 @@
                 <div th:each="wo : ${workOrders}" class="p-2 rounded-lg border border-slate-100 flex justify-between gap-2">
                     <div>
                         <strong class="font-mono" th:text="${wo.orderNo}">FWO</strong>
-                        <div class="text-slate-500" th:text="${wo.block != null ? wo.block.blockCode : ''}">BLK</div>
+                        <div class="text-slate-500" th:text="${wo.blockCode}">BLK</div>
                     </div>
-                    <span th:text="${wo.status != null ? wo.status.label : ''}">Durum</span>
+                    <span th:text="${wo.statusLabel}">Durum</span>
                 </div>
                 <div th:if="${#lists.isEmpty(workOrders)}" class="text-slate-400 py-4 text-center">Açık iş emri yok.</div>
             </div>

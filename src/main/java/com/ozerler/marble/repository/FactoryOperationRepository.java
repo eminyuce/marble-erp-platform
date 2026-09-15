@@ -3,6 +3,7 @@ package com.ozerler.marble.repository;
 import com.ozerler.marble.model.FactoryOperation;
 import com.ozerler.marble.model.enums.FactoryProcessType;
 import com.ozerler.marble.model.enums.OperationStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,7 +16,9 @@ public interface FactoryOperationRepository extends JpaRepository<FactoryOperati
 
     List<FactoryOperation> findByProcessTypeAndStatusOrderByIdDesc(FactoryProcessType processType, OperationStatus status);
 
+    @EntityGraph(attributePaths = "workOrder")
     List<FactoryOperation> findByStatusOrderByIdDesc(OperationStatus status);
 
+    @EntityGraph(attributePaths = "workOrder")
     List<FactoryOperation> findByOperatorNameAndStatus(String operatorName, OperationStatus status);
 }

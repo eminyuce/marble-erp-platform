@@ -6,38 +6,17 @@
     <title>Sistem Tanımları &bull; Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-6">
+<div layout:fragment="content" class="erp-list-page space-y-6">
 
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-        <div>
-            <div class="flex items-center gap-3">
-                <span class="p-2.5 bg-gradient-to-br from-amber-600 to-amber-800 text-white rounded-xl shadow-md">
-                    <i data-lucide="database" class="w-6 h-6"></i>
-                </span>
-                <div>
-                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">Sistem &amp; Ana Veri Tanımları</h1>
-                    <p class="text-xs text-slate-500 font-medium">Gerçek işletme operasyonları için makine, stok sahası, ocak, cari ve masraf merkezi tanımları</p>
-                </div>
-            </div>
-        </div>
-        <div class="flex items-center gap-3">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Ana Veri Modülü Aktif</span>
-            </span>
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Sistem Tanımları')}"></div>
+            <h2 class="admin-page-title">Sistem &amp; Ana Veri Tanımları</h2>
+            <p class="erp-list-lead">Makine, stok sahası, ocak, cari ve masraf merkezi tanımlarını buradan yönetin. Listeler Tabulator ızgarası ile açılır.</p>
         </div>
     </div>
 
-    <!-- Alert Messages -->
-    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
-        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
-        <span th:text="${successMessage}">İşlem başarılı</span>
-    </div>
-    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2">
-        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
-        <span th:text="${errorMessage}">Hata oluştu</span>
-    </div>
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
 
     <!-- Hub Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

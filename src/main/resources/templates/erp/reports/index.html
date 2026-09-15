@@ -33,7 +33,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
         <button type="button" th:each="entry : ${reports}"
-                @click="selectedReport = $el.dataset.reportKey"
+                @click="selectedReport = $el.dataset.reportKey; $nextTick(() => window.loadReportPreview && window.loadReportPreview($el.dataset.reportKey))"
                 th:attr="data-report-key=${entry.key}"
                 :class="selectedReport === $el.dataset.reportKey
                     ? 'ring-2 ring-[#2b6cb0] border-[#2b6cb0] bg-sky-50'
@@ -101,36 +101,72 @@
                 </div>
             </article>
         </div>
-
-        <div class="erp-report-table-wrap rounded-2xl border border-slate-200">
-            <table class="w-full text-left text-xs text-slate-700">
-                <thead class="bg-gradient-to-b from-[#f4f8fc] to-[#e8f0f8] text-[#1a365d] uppercase text-[11px] tracking-wider font-bold">
-                <tr>
-                    <th class="p-3.5 text-center w-12">#</th>
-                    <th th:each="header : ${entry.value.headers}"
-                        class="p-3.5 whitespace-nowrap"
-                        th:text="${header}">Başlık
-                    </th>
-                </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                <tr th:if="${#lists.isEmpty(entry.value.rows)}">
-                    <td th:colspan="${entry.value.headers.length + 1}" class="p-8 text-center text-slate-400">
-                        Bu raporda henüz kayıt yok. Veri oluşunca tablo ve indirme dosyası dolacaktır.
-                    </td>
-                </tr>
-                <tr th:each="row, stat : ${entry.value.rows}" class="hover:bg-slate-50/80 transition">
-                    <td class="p-3.5 text-center font-mono text-[11px] text-slate-400" th:text="${stat.count}">1</td>
-                    <td th:each="col : ${row}"
-                        class="p-3.5 whitespace-nowrap text-slate-800"
-                        th:text="${col}">Değer
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
     </div>
 
+    <div th:replace="~{fragments/list-chrome :: gridShell('reports-table')}"></div>
 </div>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        window.REPORT_PREVIEWS = /*[[${reports}]]*/ {};
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            function previewRows(report) {
+                return (report && Array.isArray(report.rows) ? report.rows : []).map((cells) => ({cells: cells || []}));
+            }
+
+            function previewColumns(report) {
+                const columns = [erpResponsiveCollapseColumn(), {
+                    title: "#",
+                    width: 56,
+                    hozAlign: "center",
+                    headerSort: false,
+                    formatter: function (cell) {
+                        return String(cell.getRow().getPosition());
+                    }
+                }];
+                (report && Array.isArray(report.headers) ? report.headers : []).forEach((header, index) => {
+                    columns.push({
+                        title: header,
+                        minWidth: 120,
+                        headerSort: false,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return gridText(row.cells ? row.cells[index] : "");
+                        }
+                    });
+                });
+                return columns;
+            }
+
+            window.reportsTable = new Tabulator("#reports-table", {
+                ...erpGridDefaults(),
+                data: [],
+                columns: previewColumns({headers: []}),
+                pagination: true,
+                paginationMode: "local",
+                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
+                paginationSizeSelector: [5, 10, 25, 50],
+                placeholder: "Bu raporda henüz kayıt yok."
+            });
+            attachTabulatorPagingAnimation(window.reportsTable);
+
+            window.loadReportPreview = function (key) {
+                const report = (window.REPORT_PREVIEWS || {})[key];
+                if (!window.reportsTable || !report) {
+                    return;
+                }
+                window.reportsTable.setColumns(previewColumns(report));
+                window.reportsTable.replaceData(previewRows(report));
+            };
+
+            const initialKey = document.querySelector("[data-report-key]")?.dataset.reportKey;
+            if (initialKey) {
+                window.loadReportPreview(initialKey);
+            }
+        });
+    </script>
+</th:block>
 </body>
 </html>
