@@ -3,7 +3,6 @@ package com.ozerler.marble.service;
 import com.ozerler.marble.dto.CostDistributionDto;
 import com.ozerler.marble.dto.DashboardKpiDto;
 import com.ozerler.marble.dto.ScrapSummaryDto;
-import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.ProjectStatus;
 import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.repository.*;
@@ -34,7 +33,7 @@ public class DashboardService {
         BigDecimal totalSlabArea = slabRepository.getTotalInventoryAreaM2();
         BigDecimal availableSlabArea = slabRepository.getTotalAreaByStatus(SlabStatus.AVAILABLE);
         BigDecimal reservedSlabArea = slabRepository.getTotalAreaByStatus(SlabStatus.RESERVED);
-        long factoryBlockCount = blockRepository.countByStatus(BlockStatus.FACTORY_STOCK);
+        long factoryBlockCount = blockRepository.getCountFactoryStock();
         Double factoryBlockWeight = blockRepository.getTotalFactoryStockWeightKg();
         Double factoryBlockWeightTon = factoryBlockWeight != null ? factoryBlockWeight / 1000.0 : 0.0;
 

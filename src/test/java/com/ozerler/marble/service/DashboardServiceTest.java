@@ -1,7 +1,6 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.dto.DashboardKpiDto;
-import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.ProjectStatus;
 import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.repository.*;
@@ -43,7 +42,7 @@ class DashboardServiceTest {
         when(slabRepository.getTotalInventoryAreaM2()).thenReturn(new BigDecimal("1540.50"));
         when(slabRepository.getTotalAreaByStatus(SlabStatus.AVAILABLE)).thenReturn(new BigDecimal("1200.00"));
         when(slabRepository.getTotalAreaByStatus(SlabStatus.RESERVED)).thenReturn(new BigDecimal("340.50"));
-        when(blockRepository.countByStatus(BlockStatus.FACTORY_STOCK)).thenReturn(18L);
+        when(blockRepository.getCountFactoryStock()).thenReturn(18L);
         when(blockRepository.getTotalFactoryStockWeightKg()).thenReturn(36000.0);
         when(projectRepository.countByStatus(ProjectStatus.ACTIVE)).thenReturn(4L);
         when(scrapLogRepository.getTotalScrapCostImpact()).thenReturn(new BigDecimal("28500.00"));

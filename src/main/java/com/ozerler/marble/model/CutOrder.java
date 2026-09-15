@@ -1,6 +1,7 @@
 package com.ozerler.marble.model;
 
 import com.ozerler.marble.model.enums.OperationStatus;
+import com.ozerler.marble.model.enums.WorkshopWorkPurpose;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -35,6 +36,19 @@ public class CutOrder extends AuditableEntity {
 
     @Column(name = "machine_name", nullable = false, length = 100)
     private String machineName;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "machine_id")
+    private Machine machine;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "purpose", length = 40)
+    @Builder.Default
+    private WorkshopWorkPurpose purpose = WorkshopWorkPurpose.AFTER_PROCESSING_SALE;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
 
     @Column(name = "operator_name", length = 100)
     private String operatorName;

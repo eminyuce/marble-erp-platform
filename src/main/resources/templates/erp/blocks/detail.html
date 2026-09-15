@@ -11,7 +11,7 @@
         <div>
             <div class="flex items-start sm:items-center gap-2 flex-wrap">
                 <a th:href="@{/blocks}" class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                   aria-label="Bloklara dön">
+                   aria-label="Ocağa dön">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 </a>
                 <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight min-w-0 break-words font-mono"
@@ -22,6 +22,10 @@
             <p class="text-sm text-slate-500 mt-1">
                 <span th:text="${block.stoneType}">Burdur Bej</span>
                 <span th:if="${block.quarry != null}"> · <span th:text="${block.quarry.name}">Ana Ocak</span></span>
+                <span th:if="${block.currentLocation != null}"> · Saha: <span th:text="${block.currentLocation.name}">Üretim Sahası</span></span>
+                <span th:if="${block.status != null and block.status.name() == 'SOLD' and block.soldCustomer != null}">
+                    · Müşteri: <span th:text="${block.soldCustomer.companyName}">Müşteri</span>
+                </span>
             </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -60,12 +64,23 @@
                     <dd th:text="${#numbers.formatDecimal(block.theoreticalWeightKg, 1, 'POINT', 0, 'COMMA') + ' kg'}">24.300 kg</dd>
                 </div>
                 <div>
+                    <dt class="text-xs font-semibold text-slate-500">Yaklaşık / fiili tonaj</dt>
+                    <dd th:text="${block.approximateTonnage + ' / ' + block.actualTonnage + ' ton'}">0 / 0 ton</dd>
+                </div>
+                <div>
                     <dt class="text-xs font-semibold text-slate-500">Sapma</dt>
-                    <dd th:text="${block.weightDeviationPct + '%'}">0%</dd>
+                    <dd>
+                        <span th:text="${block.weightDeviationPct + '%'}">0%</span>
+                        <span th:if="${weightWarning}" class="ml-2 text-xs font-semibold text-rose-700">%5 kantar uyarısı</span>
+                    </dd>
                 </div>
                 <div>
                     <dt class="text-xs font-semibold text-slate-500">Kalite</dt>
                     <dd th:text="${block.qualityGrade != null ? block.qualityGrade.label : '—'}">A</dd>
+                </div>
+                <div th:if="${block.status != null and block.status.name() == 'SOLD'}">
+                    <dt class="text-xs font-semibold text-slate-500">Satılan müşteri</dt>
+                    <dd th:text="${block.soldCustomer != null ? block.soldCustomer.companyName : '—'}">Müşteri</dd>
                 </div>
                 <div>
                     <dt class="text-xs font-semibold text-slate-500">Renk / ton</dt>
@@ -109,6 +124,74 @@
                     <dd th:text="${block.notes}">Not</dd>
                 </div>
             </dl>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Saha hareketi</h3>
+            <form th:if="${block.canonicalStatus.atQuarry}"
+                  th:action="@{'/blocks/' + ${block.id} + '/move'}" method="post" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <select name="targetType" required class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option th:each="yard : ${quarryYards}" th:value="${yard.name()}" th:text="${yard.label}">Saha</option>
+                </select>
+                <input type="text" name="description" placeholder="Açıklama" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <button type="submit" class="sm:col-span-2 min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Sahayı güncelle</button>
+            </form>
+            <p th:unless="${block.canonicalStatus.atQuarry}" class="text-xs text-slate-500">
+                Saha taşıma yalnızca ocaktaki (Üretim Sahası / Stok Sahası) bloklar için geçerlidir.
+            </p>
+            <div class="text-xs space-y-1 max-h-40 overflow-y-auto">
+                <div th:each="mv : ${movements}" class="border-b border-slate-100 py-1"
+                     th:text="${(mv.fromLocation != null ? mv.fromLocation.name : '—') + ' → ' + (mv.toLocation != null ? mv.toLocation.name : '—') + ' · ' + (mv.description != null ? mv.description : '')}">
+                    hareket
+                </div>
+                <div th:if="${#lists.isEmpty(movements)}" class="text-slate-400">Henüz saha hareketi yok.</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Müşteri işaretleme ve satış</h3>
+            <form th:if="${block.canonicalStatus.atQuarry}"
+                  th:action="@{'/blocks/' + ${block.id} + '/mark'}" method="post" class="space-y-2">
+                <select name="customerId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Müşteri</option>
+                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="date" name="markedAt" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="date" name="validUntil" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.01" name="offerPrice" required placeholder="Teklif (TL)" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="text" name="currency" value="TRY" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                </div>
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">İşaretle</button>
+            </form>
+            <form th:if="${block.canonicalStatus.atQuarry}"
+                  th:action="@{'/blocks/' + ${block.id} + '/sell-to-customer'}" method="post" class="space-y-2 pt-2 border-t border-slate-100">
+                <p class="text-xs text-slate-500">Doğrudan satış (işaret olmadan).</p>
+                <select name="customerId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Müşteri</option>
+                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                </select>
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-emerald-700 text-white text-sm font-semibold rounded-lg">Sat</button>
+            </form>
+            <div class="text-xs space-y-2">
+                <div th:each="mark : ${marks}" class="p-2 rounded-lg border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <div class="font-semibold" th:text="${mark.customer != null ? mark.customer.companyName : 'Müşteri'}">Müşteri</div>
+                        <div class="text-slate-500"
+                             th:text="${mark.offerPrice + ' ' + mark.currency + ' · ' + (mark.status != null ? mark.status.label : '')}">fiyat</div>
+                    </div>
+                    <form th:if="${mark.status != null and mark.status.name() == 'ACTIVE'}"
+                          th:action="@{'/blocks/marks/' + ${mark.id} + '/sell'}" method="post">
+                        <input type="hidden" name="blockId" th:value="${block.id}">
+                        <button type="submit" class="px-3 py-1.5 rounded bg-emerald-700 text-white text-xs font-semibold">Satışa çevir</button>
+                    </form>
+                </div>
+                <div th:if="${#lists.isEmpty(marks)}" class="text-slate-400">İşaret kaydı yok.</div>
+            </div>
         </div>
     </div>
 

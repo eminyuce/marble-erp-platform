@@ -25,4 +25,6 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
 
     @Query("SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier WHERE LOWER(po.poNumber) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<PurchaseOrder> searchByPoNumber(@Param("query") String query, Pageable pageable);
+
+    boolean existsBySupplierId(Long supplierId);
 }

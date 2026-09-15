@@ -2,15 +2,15 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Plaka Ambarı | Özerler Mermer ERP</title>
+    <title>Plaka Stok Sahası | Özerler Mermer ERP</title>
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page">
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
-            <div th:replace="~{fragments/list-chrome :: breadcrumb('Plaka Ambarı')}"></div>
-            <h2 class="admin-page-title">Plaka ambarı</h2>
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Plaka Stok Sahası')}"></div>
+            <h2 class="admin-page-title">Plaka Stok Sahası</h2>
             <p class="erp-list-lead">Ham, cilalı ve honlu plakalar, birim m² maliyetleri ve barkod etiketleri.</p>
         </div>
     </div>
@@ -18,7 +18,7 @@
     <div class="erp-toolbar">
         <a th:href="@{/production}" class="erp-btn-secondary">
             <i data-lucide="arrow-left"></i>
-            <span>Katrak emirleri</span>
+            <span>Fabrika iş emirleri</span>
         </a>
         <div th:replace="~{fragments/list-chrome :: search('Plaka kodu veya blok kodu', 'slab-search-input')}"></div>
         <div class="erp-toolbar-actions">

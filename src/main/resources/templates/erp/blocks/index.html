@@ -2,24 +2,51 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Ocak &amp; Blok Yönetimi | Özerler Mermer ERP</title>
+    <title>Ocak | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page">
+<div layout:fragment="content" class="erp-list-page space-y-6">
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
-            <div th:replace="~{fragments/list-chrome :: breadcrumb('Bloklar')}"></div>
-            <h2 class="admin-page-title">Bloklar</h2>
-            <p class="erp-list-lead">3 eksenli ölçüm, teorik hacim/tonaj, kantar tartımı ve dahili fabrika
-                transferi.</p>
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Ocak')}"></div>
+            <h2 class="admin-page-title">Ocak</h2>
+            <p class="erp-list-lead">Blok üretimi ve stok sahası, müşteri işaretleme, mazot takibi ve ocak giderleri.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3" th:if="${summary != null}">
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Bu ay üretilen</div>
+            <div class="text-lg font-black text-slate-900 mt-1"
+                 th:text="${#numbers.formatDecimal(summary.producedTonsThisMonth, 1, 'POINT', 2, 'COMMA')} + ' ton'">0 ton</div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Üretim Sahası</div>
+            <div class="text-lg font-black text-slate-900 mt-1" th:text="${summary.productionYardCount} + ' blok'">0 blok</div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Stok Sahası</div>
+            <div class="text-lg font-black text-slate-900 mt-1" th:text="${summary.dispatchYardCount} + ' blok'">0 blok</div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Satılan</div>
+            <div class="text-lg font-black text-slate-900 mt-1" th:text="${summary.soldCount} + ' blok'">0 blok</div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Ton maliyeti</div>
+            <div class="text-lg font-black text-slate-900 mt-1"
+                 th:if="${summary.unallocatedCarryForward}">Dağıtılmamış gider</div>
+            <div class="text-lg font-black text-slate-900 mt-1" th:unless="${summary.unallocatedCarryForward}"
+                 th:text="${summary.costPerTonThisMonth != null ? #numbers.formatDecimal(summary.costPerTonThisMonth, 1, 'POINT', 2, 'COMMA') + ' TL/ton' : '—'}">—</div>
         </div>
     </div>
 
     <aside class="erp-callout" role="note">
         <i data-lucide="info"></i>
-        <p><strong>İç sevk:</strong> Blok kendi fabrikasına gittiğinde ocak bedeli ve nakliye hammadde maliyetine
-            yazılır; yapay iç kâr eklenmez.</p>
+        <p><strong>Saha ve durum ayrıdır:</strong> Üretim Sahası ile Stok Sahası fiziksel konumdur. Kantar sapması
+            %5’i aşan bloklar listede uyarı alır. Elektrik faturası sonraki ay gelse bile önceki üretim ayına yazılır.
+            Fabrikaya sevk ocağı terk eder, bloğu Fabrika Blok Sahasına alır ve nakliyeyi fabrika maliyetine yazar.</p>
     </aside>
 
     <div class="erp-toolbar">
@@ -34,6 +61,87 @@
     </div>
 
     <div th:replace="~{fragments/list-chrome :: gridShell('blocks-table')}"></div>
+
+    <dialog id="sell-block-dialog" class="rounded-xl border border-slate-200 p-0 shadow-xl w-[min(100%,24rem)]">
+        <form method="dialog" class="p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Bloğu sat</h3>
+            <p class="text-sm text-slate-500">Satılan stokta görünecek müşteriyi seçin.</p>
+            <select id="sell-customer-id" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <option value="" disabled selected>Müşteri seçin</option>
+                <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}">Müşteri</option>
+            </select>
+            <div class="flex justify-end gap-2">
+                <button value="cancel" class="px-3 py-2 text-sm rounded-lg border border-slate-200">Vazgeç</button>
+                <button type="button" id="confirm-sell-block" class="px-3 py-2 text-sm rounded-lg bg-emerald-700 text-white font-semibold">Sat</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Ocak kartı</h3>
+            <form th:action="@{/blocks/quarries}" method="post" class="space-y-2">
+                <input type="text" name="code" required placeholder="Kod" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="text" name="name" required placeholder="Ocak adı" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="text" name="location" placeholder="Konum" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="number" step="0.01" name="specificGravity" required value="2.70" placeholder="Özgül ağırlık"
+                       class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="text" name="licenseNo" placeholder="Ruhsat no" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Ocağı kaydet</button>
+            </form>
+            <ul class="text-xs text-slate-600 space-y-1">
+                <li th:each="q : ${quarries}" th:text="${q.code + ' — ' + q.name + ' (' + q.specificGravity + ')'}">OC-01</li>
+            </ul>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Makine mazot takibi</h3>
+            <form th:action="@{/blocks/fuel}" method="post" class="space-y-2">
+                <select name="machineId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Makine seçin</option>
+                    <option th:each="m : ${quarryMachines}" th:value="${m.id}" th:text="${m.name}"></option>
+                </select>
+                <input type="date" name="entryDate" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.001" name="litres" required placeholder="Litre" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="number" step="0.01" name="pricePerLitre" required placeholder="TL/litre" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                </div>
+                <input type="text" name="receiptNo" placeholder="Fiş no" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" name="issuedBy" placeholder="Veren" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="text" name="receivedBy" placeholder="Alan" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                </div>
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Mazot kaydet</button>
+            </form>
+            <div class="max-h-40 overflow-y-auto text-xs space-y-1">
+                <div th:each="f : ${fuelEntries}" class="flex justify-between gap-2 border-b border-slate-100 py-1">
+                    <span th:text="${f.machine != null ? f.machine.name : 'Makine'}">Makine</span>
+                    <span th:text="${f.litres + ' L · ' + f.totalAmount + ' TL'}">0 L</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Ocak giderleri</h3>
+            <form th:action="@{/blocks/expenses}" method="post" class="space-y-2">
+                <select name="centerId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Masraf merkezi</option>
+                    <option th:each="c : ${costCenters}" th:value="${c.id}" th:text="${c.code + ' — ' + c.name}"></option>
+                </select>
+                <select name="expenseType" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
+                </select>
+                <input type="number" step="0.01" name="amount" required placeholder="Tutar (TL)" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="text" name="documentNo" placeholder="Belge / fatura no" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="date" name="invoiceDate" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="month" name="expensePeriod" th:value="${currentPeriod}"
+                       class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <p class="text-[11px] text-slate-500">Elektrik için tüketimin ait olduğu ayı seçin (fatura sonraki ay gelse bile).</p>
+                <input type="text" name="description" placeholder="Açıklama" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Gider kaydet</button>
+            </form>
+        </div>
+    </div>
 </div>
 
 <th:block layout:fragment="scripts">

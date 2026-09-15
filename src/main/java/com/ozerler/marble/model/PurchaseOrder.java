@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.PurchaseOrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,6 +34,10 @@ public class PurchaseOrder extends AuditableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
     private Project project;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "business_unit", length = 30)
+    private BusinessUnit businessUnit;
 
     @Column(name = "order_date", nullable = false)
     @Builder.Default

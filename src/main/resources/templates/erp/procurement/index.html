@@ -81,6 +81,14 @@
                         }
                     },
                     {
+                        title: "Birim",
+                        field: "businessUnitLabel",
+                        width: 130,
+                        formatter: function (cell) {
+                            return `<span class="text-sm">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
                         title: "Sipariş Tarihi",
                         field: "orderDate",
                         width: 130,

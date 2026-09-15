@@ -26,6 +26,7 @@
                 <span th:text="'Sipariş: ' + ${order.orderDate}">Tarih</span> ·
                 <span th:text="'Durum: ' + ${order.status.label}">Durum</span>
                 <span th:if="${order.project != null}"> · <span th:text="'Proje: ' + ${order.project.name}">Proje</span></span>
+                <span th:if="${order.businessUnit != null}"> · <span th:text="'Birim: ' + ${order.businessUnit.label}">Birim</span></span>
             </p>
         </div>
         <div class="flex items-center gap-2">
@@ -65,7 +66,8 @@
                 <div class="min-w-0">
                     <strong class="text-sm font-bold text-slate-800 break-words"
                             th:text="${item.itemName}">Ürün</strong>
-                    <div class="text-[11px] text-slate-500" th:text="'Tip: ' + ${item.itemType}">Tip</div>
+                    <div class="text-[11px] text-slate-500"
+                         th:text="'Tip: ' + ${item.itemType != null ? item.itemType.label : ''}">Tip</div>
                 </div>
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-700">
                     <span th:text="${#numbers.formatDecimal(item.quantity, 1, 2)} + ' ' + ${item.unit}">1 Adet</span>
@@ -94,9 +96,13 @@
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Tip</label>
                     <select name="itemType" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
                         <option value="CONSUMABLE">Sarf Malzeme</option>
+                        <option value="ADHESIVE">Yapıştırıcı</option>
+                        <option value="GROUT">Derz</option>
                         <option value="CHEMICAL">Yapı Kimyasalı</option>
                         <option value="STONE">Doğal Taş</option>
                         <option value="EQUIPMENT">Ekipman</option>
+                        <option value="SAND">Kum</option>
+                        <option value="CEMENT">Çimento</option>
                     </select>
                 </div>
                 <div>

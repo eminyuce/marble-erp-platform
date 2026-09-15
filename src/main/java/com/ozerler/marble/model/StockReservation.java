@@ -40,6 +40,10 @@ public class StockReservation extends AuditableEntity {
 
     @Column(nullable = false, length = 30)
     @Builder.Default
-    private String status = "ACTIVE"; // ACTIVE, FULFILLED, CANCELLED
+    private String status = "ACTIVE";
 
+    @Transient
+    public String getStatusLabel() {
+        return com.ozerler.marble.model.enums.ReservationStatus.labelOf(status);
+    }
 }

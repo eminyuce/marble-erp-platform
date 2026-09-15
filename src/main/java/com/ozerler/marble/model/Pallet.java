@@ -38,7 +38,15 @@ public class Pallet extends AuditableEntity {
 
     @Column(nullable = false, length = 30)
     @Builder.Default
-    private String status = "OPEN"; // OPEN, PACKED, LOADED, SHIPPED, DELIVERED
+    private String status = "PREPARING";
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
 
     @Column(name = "gross_weight_kg", precision = 12, scale = 2)
     @Builder.Default
@@ -48,4 +56,8 @@ public class Pallet extends AuditableEntity {
     @Builder.Default
     private List<Slab> slabs = new ArrayList<>();
 
+    @Transient
+    public String getStatusLabel() {
+        return com.ozerler.marble.model.enums.PalletStatus.labelOf(status);
+    }
 }

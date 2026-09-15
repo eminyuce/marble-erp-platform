@@ -32,6 +32,10 @@ public class Project extends AuditableEntity {
     @Column(name = "customer_name", nullable = false, length = 150)
     private String customerName;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
     @Column(name = "contract_value", nullable = false, precision = 16, scale = 2)
     @Builder.Default
     private BigDecimal contractValue = BigDecimal.ZERO;

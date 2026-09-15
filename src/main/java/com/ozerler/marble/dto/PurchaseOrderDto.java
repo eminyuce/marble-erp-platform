@@ -37,6 +37,14 @@ public class PurchaseOrderDto {
     @JsonAlias("projectName")
     private String projectName;
 
+    @JsonProperty("business_unit")
+    @JsonAlias("businessUnit")
+    private String businessUnit;
+
+    @JsonProperty("business_unit_label")
+    @JsonAlias("businessUnitLabel")
+    private String businessUnitLabel;
+
     @JsonProperty("order_date")
     @JsonAlias("orderDate")
     private LocalDate orderDate;
@@ -64,6 +72,8 @@ public class PurchaseOrderDto {
                 .supplierName(po.getSupplier().getCompanyName())
                 .supplierType(po.getSupplier().getSupplierType().getLabel())
                 .projectName(po.getProject() != null ? po.getProject().getName() : "—")
+                .businessUnit(po.getBusinessUnit() != null ? po.getBusinessUnit().name() : "")
+                .businessUnitLabel(po.getBusinessUnit() != null ? po.getBusinessUnit().getLabel() : "—")
                 .orderDate(po.getOrderDate())
                 .expectedDelivery(po.getExpectedDelivery())
                 .totalAmount(po.getTotalAmount())

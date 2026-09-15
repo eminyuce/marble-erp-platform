@@ -48,6 +48,18 @@ public final class Constants {
      */
     public static final String DEFAULT_LOCATION_NAME = "Genel";
 
+    public static final String STOCK_LOCATION_PRODUCTION_YARD = "OCAK-URETIM";
+    public static final String STOCK_LOCATION_DISPATCH_YARD = "OCAK-SEVK";
+    public static final String STOCK_LOCATION_FACTORY_BLOCK_YARD = "FAB-BLOK";
+    public static final String STOCK_LOCATION_SLAB_STOCK_YARD = "FAB-PLAKA";
+    public static final String STOCK_LOCATION_PALLET_STOCK_YARD = "FAB-PALET";
+    public static final String STOCK_LOCATION_WORKSHOP_STOCK = "ATL-STOK";
+    public static final String COST_CENTER_FACTORY_TRANSPORT = "CC-006";
+
+    public static final String CURRENCY_TRY = "TRY";
+    public static final int TONNAGE_SCALE = 3;
+    public static final String SETTING_QUARRY_TONNAGE_BASIS = "quarry.tonnage_basis";
+
     /**
      * Default target location for workshop cuts.
      */
@@ -76,6 +88,23 @@ public final class Constants {
      * Role identifier for executive/managerial view access.
      */
     public static final String ROLE_EXECUTIVE = "ROLE_EXECUTIVE";
+    public static final String ROLE_FACTORY_MANAGER = "ROLE_FACTORY_MANAGER";
+    public static final String ROLE_QUARRY_CHIEF = "ROLE_QUARRY_CHIEF";
+    public static final String ROLE_SITE_ENGINEER = "ROLE_SITE_ENGINEER";
+    public static final String ROLE_WORKSHOP_CHIEF = "ROLE_WORKSHOP_CHIEF";
+    public static final String ROLE_OPERATOR = "ROLE_OPERATOR";
+    public static final String ROLE_FINANCE = "ROLE_FINANCE";
+    public static final String ROLE_SALES = "ROLE_SALES";
+    public static final String ROLE_QC = "ROLE_QC";
+
+    public static final String PRE_AUTH_QUARRY_WRITE = "hasAnyRole('ADMIN','EXECUTIVE','QUARRY_CHIEF')";
+    public static final String PRE_AUTH_FACTORY_WRITE = "hasAnyRole('ADMIN','EXECUTIVE','FACTORY_MANAGER')";
+    public static final String PRE_AUTH_OPERATOR_WRITE = "hasAnyRole('ADMIN','EXECUTIVE','FACTORY_MANAGER','OPERATOR')";
+    public static final String PRE_AUTH_WORKSHOP_WRITE = "hasAnyRole('ADMIN','EXECUTIVE','WORKSHOP_CHIEF')";
+    public static final String PRE_AUTH_SITE_WRITE = "hasAnyRole('ADMIN','EXECUTIVE','SITE_ENGINEER')";
+    public static final String PRE_AUTH_FINANCE_WRITE = "hasAnyRole('ADMIN','EXECUTIVE','FINANCE')";
+    public static final String PRE_AUTH_SALES_WRITE = "hasAnyRole('ADMIN','EXECUTIVE','SALES')";
+    public static final String PRE_AUTH_REPORTS = "hasAnyRole('ADMIN','EXECUTIVE','FINANCE','FACTORY_MANAGER')";
 
     /**
      * Dynamic setting key to enable or disable global rate limiting.

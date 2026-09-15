@@ -1,12 +1,18 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.PurchaseOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.PurchaseOrder;
 import com.ozerler.marble.model.PurchaseOrderItem;
 import com.ozerler.marble.model.Supplier;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.ExpenseType;
+import com.ozerler.marble.model.enums.PurchaseItemType;
 import com.ozerler.marble.model.enums.PurchaseOrderStatus;
+import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.PurchaseOrderRepository;
 import com.ozerler.marble.repository.SupplierRepository;
@@ -18,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -30,6 +37,8 @@ public class ProcurementService {
     private final SupplierRepository supplierRepository;
     private final ProjectRepository projectRepository;
     private final org.springframework.context.MessageSource messageSource;
+    private final ExpenseService expenseService;
+    private final CostCenterRepository costCenterRepository;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
@@ -72,21 +81,29 @@ public class ProcurementService {
 
     @Transactional
     public PurchaseOrder createPurchaseOrder(String poNumber, Long supplierId, Long projectId,
-                                             LocalDate expectedDelivery, String notes) {
+                                             BusinessUnit businessUnit, LocalDate expectedDelivery, String notes) {
         Objects.requireNonNull(supplierId, getMessage("error.supplier.required"));
+        if (businessUnit == null) {
+            throw new IllegalArgumentException(getMessage("error.purchase.business_unit.required"));
+        }
+        if (businessUnit == BusinessUnit.SITE && projectId == null) {
+            throw new IllegalArgumentException(getMessage("error.purchase.site.project.required"));
+        }
 
         Supplier supplier = supplierRepository.findById(supplierId)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.supplier.not_found", supplierId)));
 
         Project project = null;
         if (projectId != null) {
-            project = projectRepository.findById(projectId).orElse(null);
+            project = projectRepository.findById(projectId)
+                    .orElseThrow(() -> new IllegalArgumentException(getMessage("error.project.not_found", projectId)));
         }
 
         PurchaseOrder order = PurchaseOrder.builder()
                 .poNumber(poNumber != null ? poNumber.trim() : "SIP-" + System.currentTimeMillis())
                 .supplier(supplier)
                 .project(project)
+                .businessUnit(businessUnit)
                 .orderDate(LocalDate.now())
                 .expectedDelivery(expectedDelivery)
                 .status(PurchaseOrderStatus.DRAFT)
@@ -104,7 +121,7 @@ public class ProcurementService {
         PurchaseOrderItem item = PurchaseOrderItem.builder()
                 .purchaseOrder(order)
                 .itemName(itemName)
-                .itemType(itemType != null ? itemType : "CONSUMABLE")
+                .itemType(PurchaseItemType.fromCode(itemType))
                 .quantity(quantity != null ? quantity : BigDecimal.ONE)
                 .unit(unit != null ? unit : "ADET")
                 .unitPrice(unitPrice != null ? unitPrice : BigDecimal.ZERO)
@@ -121,11 +138,35 @@ public class ProcurementService {
     @Transactional
     public void updateStatus(Long orderId, PurchaseOrderStatus newStatus) {
         PurchaseOrder order = getOrderById(orderId);
+        if (newStatus == PurchaseOrderStatus.CONFIRMED && order.getStatus() == PurchaseOrderStatus.DRAFT) {
+            postPurchaseExpense(order);
+        }
         order.setStatus(newStatus);
         purchaseOrderRepository.save(order);
     }
 
     public String generatePoNumber() {
         return "SIP-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999));
+    }
+
+    private void postPurchaseExpense(PurchaseOrder order) {
+        if (order.getTotalAmount() == null || order.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        BusinessUnit unit = order.getBusinessUnit();
+        if (unit == null) {
+            throw new IllegalArgumentException(getMessage("error.purchase.business_unit.required"));
+        }
+        if (unit == BusinessUnit.SITE && order.getProject() == null) {
+            throw new IllegalArgumentException(getMessage("error.purchase.site.project.required"));
+        }
+        CostCenter center = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.unit.missing", unit.getLabel())));
+        String period = YearMonth.now().toString();
+        expenseService.recordExpense(new ExpenseService.ExpenseDraft(
+                center.getId(), ExpenseType.MATERIAL, null, unit, order.getTotalAmount(),
+                Constants.CURRENCY_TRY, order.getPoNumber(), LocalDate.now(), LocalDate.now(),
+                period, period, null, null, order.getProject(), null, null, null, order.getPoNumber(),
+                "Satın alma: " + order.getPoNumber()));
     }
 }

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Paletleme ve Sevkiyat | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6">
+    <div class="flex items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <h1 class="text-xl font-black text-slate-900">Paletleme ve sevkiyat</h1>
+            <p class="text-sm text-slate-500 mt-1">Bant silim ve ebatlama çıkışlarını palete ekleyin; müşteri veya şirket şantiyesine sevk edin.</p>
+        </div>
+        <a th:href="@{/production}" class="erp-btn-secondary">Fabrika</a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Yeni palet</h3>
+            <form th:action="@{/production/pallets}" method="post" class="space-y-2">
+                <input type="text" name="palletCode" placeholder="Palet kodu (boşsa otomatik)" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <select name="customerId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="">Müşteri</option>
+                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                </select>
+                <select name="projectId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="">Şantiye</option>
+                    <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
+                </select>
+                <input type="text" name="warehouseLocation" placeholder="Palet stok sahası / konum" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Palet oluştur</button>
+            </form>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Sevkiyat</h3>
+            <form th:action="@{/production/shipments}" method="post" class="space-y-2">
+                <select name="palletId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Palet</option>
+                    <option th:each="pal : ${pallets}" th:value="${pal.id}"
+                            th:text="${pal.palletCode + ' — ' + pal.statusLabel}"></option>
+                </select>
+                <select name="customerId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="">Müşteri</option>
+                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                </select>
+                <select name="projectId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="">Şantiye</option>
+                    <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
+                </select>
+                <input type="text" name="waybillNo" placeholder="İrsaliye no" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" name="vehiclePlate" required placeholder="Araç plaka" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="text" name="driverName" required placeholder="Sürücü" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                </div>
+                <input type="number" step="0.01" name="freightCost" placeholder="Nakliye tutarı" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Sevk et</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <h3 class="font-bold text-slate-900">Paletler ve lot ekleme</h3>
+        <div th:each="pal : ${pallets}" class="p-3 rounded-lg border border-slate-100 space-y-2">
+            <div class="flex justify-between gap-2 text-sm">
+                <strong class="font-mono" th:text="${pal.palletCode}">PAL</strong>
+                <span th:text="${pal.statusLabel}">Hazırlanıyor</span>
+            </div>
+            <form th:action="@{'/production/pallets/' + ${pal.id} + '/items'}" method="post" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <select name="materialLotId" required class="px-3 py-2 text-sm border border-slate-200 rounded-lg sm:col-span-2">
+                    <option value="" disabled selected>Ürün lotu</option>
+                    <option th:each="lot : ${lots}" th:value="${lot.id}"
+                            th:text="${lot.lotCode + ' — ' + (lot.productForm != null ? lot.productForm.label : '') + ' ' + lot.totalAreaM2 + ' m²'}"></option>
+                </select>
+                <input type="number" name="quantity" placeholder="Adet" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="number" step="0.01" name="areaM2" placeholder="m²" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <button type="submit" class="sm:col-span-4 min-h-11 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg">Lota ekle</button>
+            </form>
+        </div>
+        <div th:if="${#lists.isEmpty(pallets)}" class="text-sm text-slate-400">Henüz palet yok.</div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-2">
+        <h3 class="font-bold text-slate-900">Sevkiyatlar</h3>
+        <div th:each="sh : ${shipments}" class="flex justify-between text-sm border-b border-slate-100 py-2">
+            <span th:text="${sh.waybillNo + ' · ' + sh.vehiclePlate + ' · ' + sh.driverName}">irsaliye</span>
+            <span th:text="${sh.deliveryStatusLabel}">Yolda</span>
+        </div>
+        <div th:if="${#lists.isEmpty(shipments)}" class="text-sm text-slate-400">Sevkiyat yok.</div>
+    </div>
+</div>
+</body>
+</html>

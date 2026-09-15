@@ -50,13 +50,22 @@ public class CostAccountingService {
         CostCenter center = costCenterRepository.findById(centerId)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.not_found", centerId)));
 
+        java.time.LocalDate today = java.time.LocalDate.now();
         CostTransaction tx = CostTransaction.builder()
                 .costCenter(center)
                 .block(block)
                 .slab(slab)
                 .project(project)
+                .constructionSite(project)
                 .expenseType(expenseType)
+                .expenseCategory(expenseType.toCategory())
+                .businessUnit(center.getBusinessUnit())
                 .amount(amount)
+                .currency(Constants.CURRENCY_TRY)
+                .entryDate(today)
+                .invoiceDate(today)
+                .expensePeriod(com.ozerler.marble.domain.ExpensePeriods.expensePeriod(expenseType, today, today))
+                .postingPeriod(com.ozerler.marble.domain.ExpensePeriods.postingPeriod(today))
                 .allocationKey(allocationKey)
                 .description(description)
                 .build();

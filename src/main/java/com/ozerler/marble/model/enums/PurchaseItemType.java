@@ -21,4 +21,16 @@ public enum PurchaseItemType {
     public String getLabel() {
         return MessageUtils.getMessage(messageKey);
     }
+
+    public static PurchaseItemType fromCode(String code) {
+        if (code == null || code.isBlank()) {
+            return CONSUMABLE;
+        }
+        for (PurchaseItemType type : values()) {
+            if (type.name().equalsIgnoreCase(code.trim())) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException(MessageUtils.getMessage("error.purchase.item_type.unknown", code));
+    }
 }

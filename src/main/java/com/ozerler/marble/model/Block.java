@@ -1,12 +1,12 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.domain.BlockMeasurement;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.QualityGrade;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 
 @Entity
@@ -72,7 +72,15 @@ public class Block extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     @Builder.Default
-    private BlockStatus status = BlockStatus.QUARRY;
+    private BlockStatus status = BlockStatus.PRODUCED;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_location_id")
+    private StockLocation currentLocation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sold_customer_id")
+    private Customer soldCustomer;
 
     @Column(name = "extraction_cost", nullable = false, precision = 14, scale = 2)
     @Builder.Default
@@ -95,26 +103,36 @@ public class Block extends AuditableEntity {
 
     public void calculateMetrics(BigDecimal specificGravity) {
         if (widthCm != null && lengthCm != null && heightCm != null) {
-            BigDecimal vol = BigDecimal.valueOf((long) widthCm * lengthCm * heightCm)
-                    .divide(new BigDecimal("1000000"), 3, RoundingMode.HALF_UP);
-            this.volumeM3 = vol;
-
+            this.volumeM3 = BlockMeasurement.volumeCubicMeters(widthCm, lengthCm, heightCm);
             BigDecimal density = specificGravity != null ? specificGravity : new BigDecimal("2.70");
-            this.theoreticalWeightKg = vol.multiply(density).multiply(new BigDecimal("1000"))
-                    .setScale(2, RoundingMode.HALF_UP);
-
-            if (this.actualWeightKg != null && this.theoreticalWeightKg.compareTo(BigDecimal.ZERO) > 0) {
-                this.weightDeviationPct = this.actualWeightKg.subtract(this.theoreticalWeightKg)
-                        .divide(this.theoreticalWeightKg, 4, RoundingMode.HALF_UP)
-                        .multiply(new BigDecimal("100"))
-                        .setScale(2, RoundingMode.HALF_UP);
-            } else {
-                this.weightDeviationPct = BigDecimal.ZERO;
-            }
+            BigDecimal approximateTonnage = BlockMeasurement.approximateTonnage(this.volumeM3, density);
+            this.theoreticalWeightKg = BlockMeasurement.theoreticalWeightKg(approximateTonnage);
+            this.weightDeviationPct = BlockMeasurement.weightDeviationPercent(this.actualWeightKg, this.theoreticalWeightKg);
         }
 
         BigDecimal ext = extractionCost != null ? extractionCost : BigDecimal.ZERO;
         BigDecimal trp = transportCost != null ? transportCost : BigDecimal.ZERO;
         this.totalCost = ext.add(trp);
+    }
+
+    @Transient
+    public BigDecimal getApproximateTonnage() {
+        return BlockMeasurement.kilogramsToTons(theoreticalWeightKg);
+    }
+
+    @Transient
+    public BigDecimal getActualTonnage() {
+        return BlockMeasurement.kilogramsToTons(actualWeightKg);
+    }
+
+    @Transient
+    public boolean isWeightDeviationWarning() {
+        return BlockMeasurement.hasActualWeight(actualWeightKg)
+                && BlockMeasurement.exceedsDeviationWarning(weightDeviationPct);
+    }
+
+    @Transient
+    public BlockStatus getCanonicalStatus() {
+        return status == null ? BlockStatus.PRODUCED : status.canonical();
     }
 }

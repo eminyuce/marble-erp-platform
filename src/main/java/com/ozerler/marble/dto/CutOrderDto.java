@@ -73,6 +73,10 @@ public class CutOrderDto {
     @JsonAlias("notes")
     private String notes;
 
+    @JsonProperty("purpose_label")
+    @JsonAlias("purposeLabel")
+    private String purposeLabel;
+
     public static CutOrderDto fromEntity(CutOrder c) {
         return fromEntity(c, 0, BigDecimal.ZERO);
     }
@@ -92,6 +96,7 @@ public class CutOrderDto {
                 .itemCount(itemCount)
                 .totalAreaM2(totalAreaM2 != null ? totalAreaM2 : BigDecimal.ZERO)
                 .notes(c.getNotes())
+                .purposeLabel(c.getPurpose() != null ? c.getPurpose().getLabel() : "")
                 .build();
     }
 }

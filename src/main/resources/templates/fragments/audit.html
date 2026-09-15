@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <div th:fragment="auditInfo(createdDate, updatedDate, addUserId, updateUserId)"
+     th:if="${createdDate != null}"
      class="erp-form-section erp-audit-section">
     <div class="erp-form-section-head">
         <h3 class="erp-form-section-title">Denetim Bilgileri</h3>

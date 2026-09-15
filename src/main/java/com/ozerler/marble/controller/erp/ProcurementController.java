@@ -3,6 +3,7 @@ package com.ozerler.marble.controller.erp;
 import com.ozerler.marble.dto.PurchaseOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.PurchaseOrder;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.PurchaseOrderStatus;
 import com.ozerler.marble.service.ProcurementService;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,7 @@ public class ProcurementController {
     @PostMapping("/create")
     public String createOrder(@RequestParam("poNumber") String poNumber,
                               @RequestParam("supplierId") Long supplierId,
+                              @RequestParam("businessUnit") BusinessUnit businessUnit,
                               @RequestParam(value = "projectId", required = false) Long projectId,
                               @RequestParam(value = "expectedDelivery", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expectedDelivery,
                               @RequestParam(value = "notes", required = false) String notes,
@@ -57,7 +59,8 @@ public class ProcurementController {
                               RedirectAttributes redirectAttributes,
                               java.util.Locale locale) {
         try {
-            PurchaseOrder order = procurementService.createPurchaseOrder(poNumber, supplierId, projectId, expectedDelivery, notes);
+            PurchaseOrder order = procurementService.createPurchaseOrder(
+                    poNumber, supplierId, projectId, businessUnit, expectedDelivery, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.procurement.create.success", new Object[]{order.getPoNumber()}, locale));
             return "redirect:/procurement";
@@ -106,6 +109,7 @@ public class ProcurementController {
     private void populateProcurementForm(Model model, java.util.Locale locale) {
         model.addAttribute("suppliers", procurementService.getAllSuppliers());
         model.addAttribute("projects", procurementService.getAllProjects());
+        model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("generatedPoNumber", procurementService.generatePoNumber());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.procurement.title.create", null, locale));
     }

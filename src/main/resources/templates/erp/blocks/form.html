@@ -9,7 +9,7 @@
 <body>
 <div layout:fragment="content" class="erp-form-page">
 
-    <div th:replace="~{fragments/form-page :: breadcrumb('Bloklar', @{/blocks}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Ocak', @{/blocks}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
     <div th:replace="~{fragments/form-page :: heading(
         ${(isEdit ?: false) ? 'Blok bilgilerini düzenle' : 'Yeni ham blok giriş kartı'},
         ${(isEdit ?: false) ? 'Ocak çıkışını, 3 eksenli ölçüleri, tartım ve kalite bilgilerini güncelleyin.' : 'Ocak çıkışını, 3 eksenli ölçüleri, kantar tartımını ve kalite bilgilerini kaydedin.'},
@@ -17,7 +17,7 @@
         @{/blocks})}"></div>
 
     <div class="erp-form-card">
-        <form th:action="${(isEdit ?: false)} ? @{/blocks/{id}/edit(id=${block.id})} : @{/blocks/create}" method="post"
+        <form id="block-form" th:action="${(isEdit ?: false)} ? @{/blocks/{id}/edit(id=${block.id})} : @{/blocks/create}" method="post"
               class="erp-form">
             <div class="erp-form-body">
                 <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
@@ -38,8 +38,10 @@
                             <label class="erp-form-label" for="blockCode">Blok kodu <span class="req">*</span></label>
                             <input id="blockCode" type="text" name="blockCode" required
                                    th:value="${isEdit and block != null ? block.blockCode : ''}"
+                                   th:attr="data-exclude-id=${isEdit and block != null ? block.id : ''}"
                                    class="erp-form-input" style="font-family:var(--font-mono);"
-                                   placeholder="BLK-2026-00128">
+                                   placeholder="BLK-2026-00128" autocomplete="off">
+                            <p id="block-code-hint" class="erp-form-hint" role="status"></p>
                         </div>
                     </div>
                 </section>
@@ -50,20 +52,20 @@
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="widthCm">En (cm) <span class="req">*</span></label>
                             <input id="widthCm" type="number" name="widthCm" required
-                                   th:value="${isEdit and block != null ? block.widthCm : 180}"
+                                   th:value="${isEdit and block != null ? block.widthCm : ''}"
                                    class="erp-form-input" placeholder="180">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="lengthCm">Boy (cm) <span class="req">*</span></label>
                             <input id="lengthCm" type="number" name="lengthCm" required
-                                   th:value="${isEdit and block != null ? block.lengthCm : 290}"
+                                   th:value="${isEdit and block != null ? block.lengthCm : ''}"
                                    class="erp-form-input" placeholder="290">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="heightCm">Yükseklik (cm) <span
                                     class="req">*</span></label>
                             <input id="heightCm" type="number" name="heightCm" required
-                                   th:value="${isEdit and block != null ? block.heightCm : 150}"
+                                   th:value="${isEdit and block != null ? block.heightCm : ''}"
                                    class="erp-form-input" placeholder="150">
                         </div>
                     </div>
@@ -72,52 +74,41 @@
                             <label class="erp-form-label" for="actualWeightKg">Kantar tartımı (kg) <span
                                     class="req">*</span></label>
                             <input id="actualWeightKg" type="number" step="0.01" name="actualWeightKg" required
-                                   th:value="${isEdit and block != null ? block.actualWeightKg : 20850}"
+                                   th:value="${isEdit and block != null ? block.actualWeightKg : ''}"
                                    class="erp-form-input" placeholder="20850.00">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="extractionCost">Ocak çıkarma maliyeti (TL) <span
                                     class="req">*</span></label>
                             <input id="extractionCost" type="number" step="0.01" name="extractionCost" required
-                                   th:value="${isEdit and block != null ? block.extractionCost : 42000}"
+                                   th:value="${isEdit and block != null ? block.extractionCost : ''}"
                                    class="erp-form-input" placeholder="42000.00">
                         </div>
                     </div>
                 </section>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Kalite', 'Taş cinsi, sınıf ve çatlak seviyesi')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Kalite', 'Taş cinsi ve kalite sınıfı')}"></div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="stoneType">Taş cinsi ve seleksiyon <span
                                     class="req">*</span></label>
                             <input id="stoneType" type="text" name="stoneType" required
-                                   th:value="${isEdit and block != null ? block.stoneType : 'Muğla Beyaz'}"
+                                   th:value="${isEdit and block != null ? block.stoneType : ''}"
                                    class="erp-form-input" placeholder="Örn: Muğla Beyaz Kristal">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="qualityGrade">Kalite sınıfı</label>
-                            <select id="qualityGrade" name="qualityGrade" class="erp-form-select">
+                            <label class="erp-form-label" for="qualityGrade">Kalite sınıfı <span class="req">*</span></label>
+                            <select id="qualityGrade" name="qualityGrade" required class="erp-form-select">
+                                <option value="" disabled th:selected="${!(isEdit ?: false)}">Kalite seçin</option>
                                 <option th:each="g : ${qualityGrades}" th:value="${g.name()}"
                                         th:selected="${isEdit and block != null and block.qualityGrade == g}"
                                         th:text="${g.label}"></option>
                             </select>
                         </div>
-                        <div class="erp-form-field">
-                            <label class="erp-form-label" for="crackLevel">Çatlak seviyesi</label>
-                            <select id="crackLevel" name="crackLevel" class="erp-form-select">
-                                <option value="0" th:selected="${isEdit and block != null and block.crackLevel == 0}">0
-                                    — Çatlaksız (temiz)
-                                </option>
-                                <option value="1" th:selected="${isEdit and block != null and block.crackLevel == 1}">1
-                                    — Yüzeysel kılcal
-                                </option>
-                                <option value="2" th:selected="${isEdit and block != null and block.crackLevel == 2}">2
-                                    — Kritik / derin çatlak
-                                </option>
-                            </select>
-                        </div>
                     </div>
+                    <input type="hidden" name="crackLevel"
+                           th:value="${isEdit and block != null ? block.crackLevel : 0}">
                 </section>
 
                 <section class="erp-form-section">
@@ -132,13 +123,13 @@
                         <label class="erp-form-label">Jeolojik ayna notları</label>
                         <div id="dual-editor-container"></div>
                         <input type="hidden" id="notes-hidden-input" name="notes"
-                               th:value="${isEdit and block != null ? block.notes : 'Ocak sahasında ayna A-2 seviyesinden homojen kristal blok çıkarımı.'}">
+                               th:value="${isEdit and block != null ? block.notes : ''}">
                     </div>
                 </section>
 
-                <!-- Audit Information in Edit Mode -->
-                <div th:if="${isEdit and block != null}"
-                     th:replace="~{fragments/audit :: auditInfo(${block?.createdDate}, ${block?.updatedDate}, ${block?.addUserId}, ${block?.updateUserId})}"></div>
+                <th:block th:if="${isEdit and block != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${block?.createdDate}, ${block?.updatedDate}, ${block?.addUserId}, ${block?.updateUserId})}"></div>
+                </th:block>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/blocks})}"></div>
@@ -153,6 +144,53 @@
     <script>
         initFilePond('#block-filepond', '#photo-urls-input');
         initDualEditor('dual-editor-container', 'notes-hidden-input');
+
+        (function () {
+            const input = document.getElementById('blockCode');
+            const hint = document.getElementById('block-code-hint');
+            const form = document.getElementById('block-form');
+            if (!input || !hint || !form) return;
+
+            let timer = null;
+
+            function setHint(available, message) {
+                hint.textContent = message || '';
+                hint.dataset.available = available ? 'true' : 'false';
+                hint.classList.toggle('text-rose-700', !available && !!message);
+                hint.classList.toggle('text-emerald-700', available && !!message);
+            }
+
+            function checkCode() {
+                const code = (input.value || '').trim();
+                if (!code) {
+                    setHint(true, '');
+                    return;
+                }
+                const excludeId = input.dataset.excludeId || '';
+                const url = '/blocks/api/block-code-available?code=' + encodeURIComponent(code)
+                    + (excludeId ? '&excludeId=' + encodeURIComponent(excludeId) : '');
+                fetch(url, {headers: {'Accept': 'application/json'}})
+                    .then(function (res) { return res.ok ? res.json() : null; })
+                    .then(function (data) {
+                        if (!data) return;
+                        setHint(!!data.available, data.message || '');
+                    })
+                    .catch(function () { setHint(true, ''); });
+            }
+
+            input.addEventListener('input', function () {
+                hint.dataset.available = 'true';
+                clearTimeout(timer);
+                timer = setTimeout(checkCode, 300);
+            });
+            input.addEventListener('blur', checkCode);
+            form.addEventListener('submit', function (event) {
+                if (hint.dataset.available === 'false') {
+                    event.preventDefault();
+                    input.focus();
+                }
+            });
+        })();
     </script>
 </th:block>
 </body>

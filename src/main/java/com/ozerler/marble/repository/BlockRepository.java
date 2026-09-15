@@ -18,10 +18,14 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     Optional<Block> findByBlockCode(String blockCode);
 
+    boolean existsByBlockCode(String blockCode);
+
+    boolean existsByBlockCodeAndIdNot(String blockCode, Long id);
+
     @Query("SELECT b FROM Block b JOIN FETCH b.quarry WHERE b.blockCode = :blockCode")
     Optional<Block> findByBlockCodeWithQuarry(@Param("blockCode") String blockCode);
 
-    @EntityGraph(attributePaths = {"quarry"})
+    @EntityGraph(attributePaths = {"quarry", "currentLocation", "soldCustomer"})
     @Query("SELECT b FROM Block b WHERE b.id = :id")
     Optional<Block> findByIdWithQuarry(@Param("id") Long id);
 
@@ -31,9 +35,13 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     List<Block> findByStatus(BlockStatus status);
 
+    List<Block> findByStatusIn(List<BlockStatus> statuses);
+
     long countByStatus(BlockStatus status);
 
-    @EntityGraph(attributePaths = {"quarry"})
+    long countByStatusIn(List<BlockStatus> statuses);
+
+    @EntityGraph(attributePaths = {"quarry", "currentLocation", "soldCustomer"})
     @Query("SELECT b FROM Block b WHERE " +
             "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
             "LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
@@ -43,9 +51,27 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     @Query("SELECT b FROM Block b WHERE LOWER(b.blockCode) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Block> searchByBlockCode(@Param("query") String query, Pageable pageable);
 
-    @Query("SELECT SUM(b.actualWeightKg) FROM Block b WHERE b.status = 'FACTORY_STOCK'")
+    @Query("SELECT SUM(b.actualWeightKg) FROM Block b WHERE b.status IN ('FACTORY_STOCK', 'AT_FACTORY')")
     Double getTotalFactoryStockWeightKg();
 
-    @Query("SELECT COUNT(b) FROM Block b WHERE b.status = 'FACTORY_STOCK'")
+    @Query("SELECT COUNT(b) FROM Block b WHERE b.status IN ('FACTORY_STOCK', 'AT_FACTORY')")
     long getCountFactoryStock();
+
+    @Query("SELECT COUNT(b) FROM Block b JOIN b.currentLocation loc WHERE loc.locationType = :locationType")
+    long countByLocationType(@Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType);
+
+    long countByCurrentLocation_LocationTypeAndStatusNot(
+            com.ozerler.marble.model.enums.StockLocationType locationType,
+            BlockStatus status);
+
+    @Query("SELECT COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg END), 0) "
+            + "FROM Block b WHERE b.extractionDate >= :start AND b.extractionDate < :end")
+    java.math.BigDecimal sumProductionWeightKgBetween(@Param("start") java.time.LocalDate start,
+                                                      @Param("end") java.time.LocalDate end);
+
+    boolean existsByQuarryId(Long quarryId);
+
+    boolean existsByCurrentLocationId(Long currentLocationId);
+
+    boolean existsBySoldCustomer_Id(Long customerId);
 }

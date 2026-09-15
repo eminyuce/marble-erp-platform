@@ -48,4 +48,12 @@ public class Shipment extends AuditableEntity {
     @Builder.Default
     private String deliveryStatus = "IN_TRANSIT";
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    @Transient
+    public String getDeliveryStatusLabel() {
+        return com.ozerler.marble.model.enums.ShipmentDeliveryStatus.labelOf(deliveryStatus);
+    }
 }

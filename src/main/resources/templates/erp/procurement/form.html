@@ -10,7 +10,7 @@
     <div th:replace="~{fragments/form-page :: breadcrumb('Satın Alma', @{/procurement}, 'Yeni kayıt')}"></div>
     <div th:replace="~{fragments/form-page :: heading(
         'Yeni satın alma siparişi',
-        'Tedarikçi, proje ve teslimat bilgileriyle yeni bir satın alma kaydı oluşturun.',
+        'Tedarikçi, maliyet birimi ve teslimat bilgileriyle yeni bir satın alma kaydı oluşturun.',
         '',
         @{/procurement})}"></div>
 
@@ -20,8 +20,8 @@
                 <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Sipariş', 'Numara, tedarikçi ve ilgili proje')}"></div>
-                    <div class="erp-form-grid">
+                    <div th:replace="~{fragments/form-page :: section('Sipariş', 'Numara, tedarikçi ve maliyet birimi')}"></div>
+                    <div class="erp-form-grid" x-data="{ unit: '' }">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="poNumber">Sipariş no <span class="req">*</span></label>
                             <input id="poNumber" type="text" name="poNumber" th:value="${record != null ? record.poNumber : generatedPoNumber}" required
@@ -38,15 +38,27 @@
                                 </option>
                             </select>
                         </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="businessUnit">Maliyet birimi <span class="req">*</span></label>
+                            <select id="businessUnit" name="businessUnit" required class="erp-form-select" x-model="unit">
+                                <option value="" disabled selected>Birim seçin</option>
+                                <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}">Birim</option>
+                            </select>
+                        </div>
                         <div class="erp-form-field erp-form-field--full">
-                            <label class="erp-form-label" for="projectId">İlgili proje</label>
-                            <select id="projectId" name="projectId" class="erp-form-select">
+                            <label class="erp-form-label" for="projectId">
+                                İlgili şantiye
+                                <span class="req" x-show="unit === 'SITE'">*</span>
+                            </label>
+                            <select id="projectId" name="projectId" class="erp-form-select"
+                                    :required="unit === 'SITE'">
                                 <option value="" th:selected="${record == null or record.project == null}">Proje seçilmedi</option>
                                 <option th:each="p : ${projects}" th:value="${p.id}"
                                         th:selected="${record != null and record.project != null and record.project.id == p.id}"
                                         th:text="${p.projectCode + ' — ' + p.name}">Proje
                                 </option>
                             </select>
+                            <p class="erp-form-hint" x-show="unit === 'SITE'">Şantiye gideri için proje zorunludur.</p>
                         </div>
                     </div>
                 </section>
@@ -68,8 +80,9 @@
                     </div>
                 </section>
 
-                <div th:if="${isEdit and record != null}"
-                     th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
+                <th:block th:if="${isEdit and record != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
+                </th:block>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/procurement})}"></div>

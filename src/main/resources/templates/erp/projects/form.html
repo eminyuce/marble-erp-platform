@@ -2,28 +2,28 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Yeni Proje | Özerler Mermer ERP</title>
+    <title th:text="${(isEdit ?: false) ? 'Şantiye Düzenle | Özerler Mermer ERP' : 'Yeni Şantiye | Özerler Mermer ERP'}">Yeni Şantiye | Özerler Mermer ERP</title>
 </head>
 <body>
 <div layout:fragment="content" class="erp-form-page">
 
-    <div th:replace="~{fragments/form-page :: breadcrumb('Şantiyeler', @{/projects}, 'Yeni kayıt')}"></div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Şantiyeler', @{/projects}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
     <div th:replace="~{fragments/form-page :: heading(
-        'Yeni şantiye / proje',
-        'Sözleşme, bütçe ve teslim bilgileriyle yeni bir proje kaydı oluşturun.',
-        '',
+        ${(isEdit ?: false) ? 'Şantiyeyi düzenle' : 'Yeni şantiye'},
+        'Sözleşme, bütçe ve teslim bilgileriyle şantiye kaydı oluşturun veya güncelleyin.',
+        ${(isEdit ?: false) ? record?.projectCode : ''},
         @{/projects})}"></div>
 
     <div class="erp-form-card">
-        <form th:action="@{/projects/create}" method="post" class="erp-form">
+        <form th:action="${(isEdit ?: false)} ? @{/projects/{id}/edit(id=${record.id})} : @{/projects/create}" method="post" class="erp-form">
             <div class="erp-form-body">
                 <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Proje kodu, adı ve işveren')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Şantiye kodu, adı ve işveren')}"></div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="projectCode">Proje kodu <span
+                            <label class="erp-form-label" for="projectCode">Şantiye kodu <span
                                     class="req">*</span></label>
                             <input id="projectCode" type="text" name="projectCode" required
                                    th:value="${record != null ? record.projectCode : ''}"
@@ -38,7 +38,7 @@
                                    placeholder="ABC İnşaat A.Ş.">
                         </div>
                         <div class="erp-form-field erp-form-field--full">
-                            <label class="erp-form-label" for="name">Proje adı <span class="req">*</span></label>
+                            <label class="erp-form-label" for="name">Şantiye adı <span class="req">*</span></label>
                             <input id="name" type="text" name="name" required class="erp-form-input"
                                    th:value="${record != null ? record.name : ''}"
                                    placeholder="X Residence doğal taş imalatı">
@@ -82,7 +82,7 @@
                                    th:value="${record != null ? record.deliveryDate : ''}">
                         </div>
                         <div class="erp-form-field erp-form-field--full">
-                            <label class="erp-form-label" for="notes">Proje notları</label>
+                            <label class="erp-form-label" for="notes">Şantiye notları</label>
                             <textarea id="notes" name="notes" class="erp-form-textarea"
                                       th:text="${record != null ? record.notes : ''}"
                                       placeholder="Şantiye koordinatları, taşeron ekibi ve mahal metraj detayları..."></textarea>
@@ -90,8 +90,9 @@
                     </div>
                 </section>
 
-                <div th:if="${isEdit and record != null}"
-                     th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
+                <th:block th:if="${isEdit and record != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
+                </th:block>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/projects})}"></div>

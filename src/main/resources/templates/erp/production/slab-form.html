@@ -7,7 +7,7 @@
 <body>
 <div layout:fragment="content" class="erp-form-page">
 
-    <div th:replace="~{fragments/form-page :: breadcrumb('Plaka Ambarı', @{/production/slabs}, 'Düzenle')}"></div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Plaka Stok Sahası', @{/production/slabs}, 'Düzenle')}"></div>
     <div th:replace="~{fragments/form-page :: heading(
         'Plaka bilgilerini düzenle',
         'Ölçü, yüzey, kalite, maliyet ve stok durumunu güncelleyin.',
@@ -98,8 +98,9 @@
                     </div>
                 </section>
 
-                <div th:if="${record != null}"
-                     th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
+                <th:block th:if="${record != null and record.createdDate != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
+                </th:block>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/production/slabs})}"></div>

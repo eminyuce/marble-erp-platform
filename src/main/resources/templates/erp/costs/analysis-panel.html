@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="panel(analysis)" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+            <h3 class="font-bold text-slate-900" th:text="${analysis.businessUnitLabel} + ' — ' + ${analysis.expensePeriod}">Ocak</h3>
+            <p class="text-xs text-slate-500">Önceki dönem: <span th:text="${analysis.previousPeriod}">—</span></p>
+        </div>
+        <a class="text-xs font-semibold text-amber-800 underline" th:href="@{/reports}">Excel / CSV dışa aktarma</a>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+        <div>
+            <div class="text-[11px] text-slate-500">Toplam gider</div>
+            <div class="font-black" th:text="${#numbers.formatDecimal(analysis.totalExpense, 1, 'POINT', 2, 'COMMA')} + ' TL'">0</div>
+        </div>
+        <div>
+            <div class="text-[11px] text-slate-500">Üretim</div>
+            <div class="font-black" th:text="${analysis.productionQuantity + ' ' + analysis.productionUnit}">0</div>
+        </div>
+        <div>
+            <div class="text-[11px] text-slate-500">Birim maliyet</div>
+            <div class="font-black" th:if="${analysis.unallocatedCarryForward}">Dağıtılmamış gider</div>
+            <div class="font-black" th:unless="${analysis.unallocatedCarryForward}"
+                 th:text="${analysis.unitCost != null ? #numbers.formatDecimal(analysis.unitCost, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+        </div>
+        <div>
+            <div class="text-[11px] text-slate-500">Önceki birim</div>
+            <div class="font-bold text-slate-600"
+                 th:text="${analysis.previousUnitCost != null ? #numbers.formatDecimal(analysis.previousUnitCost, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+        </div>
+    </div>
+    <div>
+        <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Kategori kırılımı</h4>
+        <div th:each="entry : ${analysis.expenseByCategory}" class="flex justify-between text-sm border-b border-slate-100 py-1">
+            <span th:text="${entry.key.label}">Kategori</span>
+            <span th:text="${#numbers.formatDecimal(entry.value, 1, 'POINT', 2, 'COMMA')} + ' TL'">0</span>
+        </div>
+    </div>
+    <div th:if="${analysis.yields != null and !analysis.yields.isEmpty()}">
+        <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Verim</h4>
+        <div th:each="y : ${analysis.yields}" class="text-xs border-b border-slate-100 py-1"
+             th:text="${y.processLabel + ' · ' + y.yieldLabel + ' ' + y.yieldValue}">verim</div>
+    </div>
+    <div>
+        <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Gider satırları</h4>
+        <div th:each="line : ${analysis.lines}" class="flex justify-between text-xs border-b border-slate-100 py-1">
+            <span th:text="${line.categoryLabel + ' — ' + line.description}">satır</span>
+            <span th:text="${#numbers.formatDecimal(line.amount, 1, 'POINT', 2, 'COMMA')}">0</span>
+        </div>
+        <div th:if="${analysis.lines == null or analysis.lines.isEmpty()}" class="text-xs text-slate-400">Bu dönemde gider satırı yok.</div>
+    </div>
+</div>
+</body>
+</html>

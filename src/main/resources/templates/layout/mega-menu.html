@@ -82,20 +82,20 @@
                             <span class="admin-mega-count">4</span>
                         </header>
                         <div class="admin-mega-card-body">
-                            <a class="admin-mega-item" th:href="@{/blocks}" data-search="blok ocak kantar mermer kabul"
-                               title="Bloklar">
+                            <a class="admin-mega-item" th:href="@{/blocks}" data-search="ocak blok üretim sahası stok mazot"
+                               title="Ocak">
                                 <i data-lucide="mountain" aria-hidden="true"></i>
-                                <span>Bloklar</span>
+                                <span>Ocak</span>
                             </a>
                             <a class="admin-mega-item" th:href="@{/production}"
-                               data-search="katrak kesim üretim fabrika iş emri" title="Katrak Kesim">
+                               data-search="fabrika kesim katrak st silim palet iş emri" title="Fabrika">
                                 <i data-lucide="scissors" aria-hidden="true"></i>
-                                <span>Katrak Kesim</span>
+                                <span>Fabrika</span>
                             </a>
                             <a class="admin-mega-item" th:href="@{/production/slabs}"
-                               data-search="plaka ambar stok barkod cilalı" title="Plaka Ambarı">
+                               data-search="plaka stok saha barkod cilalı" title="Plaka Stok Sahası">
                                 <i data-lucide="layers" aria-hidden="true"></i>
-                                <span>Plaka Ambarı</span>
+                                <span>Plaka Stok Sahası</span>
                             </a>
                             <a class="admin-mega-item" th:href="@{/workshop}"
                                data-search="atölye ebatlama kesim nesting" title="Atölye">
@@ -109,7 +109,7 @@
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="building-2"
                                                                   aria-hidden="true"></i></span>
-                            <h3 class="admin-mega-card-title">Proje ve maliyet</h3>
+                            <h3 class="admin-mega-card-title">Şantiye ve maliyet</h3>
                             <span class="admin-mega-count">6</span>
                         </header>
                         <div class="admin-mega-card-body">
@@ -128,10 +128,10 @@
                                 <i data-lucide="truck" aria-hidden="true"></i>
                                 <span>Satın Alma</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/costs}" data-search="maliyet fiyatlama abc muhasebe"
-                               title="Maliyet">
+                            <a class="admin-mega-item" th:href="@{/costs}" data-search="maliyet analizi ocak fabrika atölye şantiye"
+                               title="Maliyet Analizi">
                                 <i data-lucide="calculator" aria-hidden="true"></i>
-                                <span>Maliyet</span>
+                                <span>Maliyet Analizi</span>
                             </a>
                             <a class="admin-mega-item" th:href="@{/reports}" data-search="rapor excel csv dışa aktarma"
                                title="Rapor Merkezi">
@@ -150,16 +150,22 @@
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
                             <h3 class="admin-mega-card-title">Yönetim</h3>
-                            <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">3</span>
-                            <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">2</span>
+                            <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">4</span>
+                            <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">1</span>
                         </header>
                         <div class="admin-mega-card-body">
+                            <a class="admin-mega-item" th:href="@{/admin/definitions}" sec:authorize="hasRole('ADMIN')"
+                               data-search="sistem tanımları makine ocak müşteri tedarikçi masraf stok sahası"
+                               title="Sistem Tanımları">
+                                <i data-lucide="database" aria-hidden="true"></i>
+                                <span>Sistem Tanımları</span>
+                            </a>
                             <a class="admin-mega-item" th:href="@{/admin/users}" sec:authorize="hasRole('ADMIN')"
                                data-search="kullanıcı rbac rol şifre roller yetkiler permission" title="Kullanıcılar">
                                 <i data-lucide="users" aria-hidden="true"></i>
                                 <span>Kullanıcılar</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/admin/settings}"
+                            <a class="admin-mega-item" th:href="@{/admin/settings}" sec:authorize="hasRole('ADMIN')"
                                data-search="ayar smtp 2fa recaptcha sistem" title="Sistem Ayarları">
                                 <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
                                 <span>Sistem Ayarları</span>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Tedarikçiler &bull; Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6" x-data="{
+    search: '',
+    selectedType: '',
+    modalOpen: false,
+    deleteModalOpen: false,
+    deleteId: null,
+    deleteName: '',
+    isEdit: false,
+    form: {
+        id: null,
+        supplierCode: '',
+        companyName: '',
+        contactPerson: '',
+        phone: '',
+        email: '',
+        address: '',
+        taxOffice: '',
+        taxNumber: '',
+        supplierType: 'CONSUMABLE',
+        notes: ''
+    },
+    openCreateModal() {
+        this.isEdit = false;
+        this.form = {
+            id: null,
+            supplierCode: '',
+            companyName: '',
+            contactPerson: '',
+            phone: '',
+            email: '',
+            address: '',
+            taxOffice: '',
+            taxNumber: '',
+            supplierType: 'CONSUMABLE',
+            notes: ''
+        };
+        this.modalOpen = true;
+    },
+    openEditModal(s) {
+        this.isEdit = true;
+        this.form = {
+            id: s.id,
+            supplierCode: s.supplierCode,
+            companyName: s.companyName,
+            contactPerson: s.contactPerson || '',
+            phone: s.phone || '',
+            email: s.email || '',
+            address: s.address || '',
+            taxOffice: s.taxOffice || '',
+            taxNumber: s.taxNumber || '',
+            supplierType: s.supplierType,
+            notes: s.notes || ''
+        };
+        this.modalOpen = true;
+    },
+    confirmDelete(id, name) {
+        this.deleteId = id;
+        this.deleteName = name;
+        this.deleteModalOpen = true;
+    }
+}">
+
+    <!-- Page Header & Breadcrumb -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                <a th:href="@{/admin/definitions}" class="hover:text-cyan-600 transition">Sistem Tanımları</a>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                <span class="text-slate-800 font-semibold">Tedarikçiler &amp; Fason</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Tedarikçi Yönetimi</h1>
+            <p class="text-xs text-slate-500 font-medium">Satın alma siparişleri, sarf malzeme alımları ve fason hizmet sağlayan iş ortakları</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="button" @click="openCreateModal()"
+                    class="px-4 py-2.5 bg-cyan-700 hover:bg-cyan-800 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition flex items-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Yeni Tedarikçi Tanımla</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
+        <span th:text="${successMessage}">İşlem başarılı</span>
+    </div>
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
+        <span th:text="${errorMessage}">Hata oluştu</span>
+    </div>
+
+    <!-- Toolbar Filters -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3 flex-1 min-w-[260px]">
+            <div class="relative w-full max-w-sm">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" x-model="search" placeholder="Tedarikçi kodu, firma adı veya yetkili ile filtrele..."
+                       class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition">
+            </div>
+            <select x-model="selectedType"
+                    class="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                <option value="">Tüm Tedarikçi Tipleri</option>
+                <option th:each="type : ${supplierTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
+            </select>
+        </div>
+        <div class="text-xs text-slate-500 font-mono">
+            Toplam <span class="font-bold text-slate-800" th:text="${#lists.size(suppliers)}">0</span> tedarikçi kayıtlı
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-bold tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4">Tedarikçi Kodu</th>
+                        <th class="py-3 px-4">Firma / Ünvan</th>
+                        <th class="py-3 px-4">Tedarik Tipi</th>
+                        <th class="py-3 px-4">Yetkili / İletişim</th>
+                        <th class="py-3 px-4">Vergi Dairesi / No</th>
+                        <th class="py-3 px-4 text-right">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <tr th:each="s : ${suppliers}"
+                        th:attr="data-code=${s.supplierCode}, data-name=${s.companyName}, data-person=${s.contactPerson ?: ''}, data-type=${s.supplierType.name()}"
+                        x-show="(!search || $el.dataset.code.toLowerCase().includes(search.toLowerCase()) || $el.dataset.name.toLowerCase().includes(search.toLowerCase()) || $el.dataset.person.toLowerCase().includes(search.toLowerCase())) && (!selectedType || $el.dataset.type === selectedType)"
+                        class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900" th:text="${s.supplierCode}">SUPP-001</td>
+                        <td class="py-3.5 px-4 font-semibold text-slate-800">
+                            <div th:text="${s.companyName}">Kaya Elmas A.Ş.</div>
+                            <div class="text-[11px] text-slate-400 font-normal truncate max-w-xs" th:text="${s.address}">Afyon OSB</div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200"
+                                  th:text="${s.supplierType.label}">Sarf Malzeme</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600">
+                            <div class="font-medium text-slate-800" th:text="${s.contactPerson ?: '-'}">Ali Bey</div>
+                            <div class="text-[11px] text-slate-500 font-mono" th:text="${(s.phone ?: '') + ' ' + (s.email ?: '')}">0272...</div>
+                        </td>
+                        <td class="py-3.5 px-4 font-mono text-slate-600">
+                            <span th:text="${s.taxOffice ?: '-'}">Kocatepe</span> / <span th:text="${s.taxNumber ?: '-'}">9876543210</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right space-x-2">
+                            <button type="button"
+                                    th:data-id="${s.id}"
+                                    th:data-code="${s.supplierCode}"
+                                    th:data-name="${s.companyName}"
+                                    th:data-person="${s.contactPerson}"
+                                    th:data-phone="${s.phone}"
+                                    th:data-email="${s.email}"
+                                    th:data-addr="${s.address}"
+                                    th:data-taxoff="${s.taxOffice}"
+                                    th:data-taxno="${s.taxNumber}"
+                                    th:data-type="${s.supplierType.name()}"
+                                    th:data-notes="${s.notes}"
+                                    @click="openEditModal({
+                                        id: $el.dataset.id,
+                                        supplierCode: $el.dataset.code,
+                                        companyName: $el.dataset.name,
+                                        contactPerson: $el.dataset.person,
+                                        phone: $el.dataset.phone,
+                                        email: $el.dataset.email,
+                                        address: $el.dataset.addr,
+                                        taxOffice: $el.dataset.taxoff,
+                                        taxNumber: $el.dataset.taxno,
+                                        supplierType: $el.dataset.type,
+                                        notes: $el.dataset.notes
+                                    })"
+                                    class="p-1.5 text-slate-500 hover:text-cyan-700 hover:bg-cyan-50 rounded-lg transition"
+                                    title="Düzenle">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button"
+                                    th:data-id="${s.id}"
+                                    th:data-name="${s.companyName}"
+                                    @click="confirmDelete($el.dataset.id, $el.dataset.name)"
+                                    class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                    title="Sil">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create / Edit Modal -->
+    <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;" @keydown.escape.window="modalOpen = false">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+             @click.outside="modalOpen = false">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-slate-900" x-text="isEdit ? 'Tedarikçi Düzenle' : 'Yeni Tedarikçi Tanımla'"></h3>
+                <button type="button" @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form th:action="@{/admin/definitions/suppliers/save}" method="post" class="space-y-4">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="id" :value="form.id">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tedarikçi Kodu *</label>
+                        <input type="text" name="supplierCode" x-model="form.supplierCode" required placeholder="örn: SUPP-004"
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono uppercase focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tedarikçi Tipi *</label>
+                        <select name="supplierType" x-model="form.supplierType" required
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                            <option th:each="type : ${supplierTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Firma / Ünvan Adı *</label>
+                    <input type="text" name="companyName" x-model="form.companyName" required placeholder="örn: Anadolu Kimya &amp; Epoksi A.Ş."
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Yetkili Kişi</label>
+                        <input type="text" name="contactPerson" x-model="form.contactPerson" placeholder="Ad Soyad"
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Telefon</label>
+                        <input type="text" name="phone" x-model="form.phone" placeholder="0532..."
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">E-posta</label>
+                        <input type="email" name="email" x-model="form.email" placeholder="ornek@firma.com"
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Vergi Dairesi</label>
+                        <input type="text" name="taxOffice" x-model="form.taxOffice" placeholder="örn: Kocatepe"
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Vergi Numarası</label>
+                        <input type="text" name="taxNumber" x-model="form.taxNumber" placeholder="örn: 10 haneli VKN"
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Adres</label>
+                    <textarea name="address" x-model="form.address" rows="2" placeholder="Fatura / depo adresi..."
+                              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Notlar</label>
+                    <textarea name="notes" x-model="form.notes" rows="2" placeholder="Ödeme koşulları, indirim anlaşmaları..."
+                              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" @click="modalOpen = false"
+                            class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                        İptal
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-xl text-xs font-bold shadow-md transition">
+                        Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-6 space-y-4"
+             @click.outside="deleteModalOpen = false">
+            <div class="flex items-center gap-3 text-rose-600">
+                <span class="p-2 bg-rose-50 rounded-xl"><i data-lucide="alert-triangle" class="w-6 h-6"></i></span>
+                <h3 class="text-base font-bold text-slate-900">Tedarikçiyi Sil</h3>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                <strong x-text="deleteName"></strong> tedarikçisini silmek istediğinize emin misiniz? Satın alma siparişlerinde kayıtlı tedarikçiler silinemez.
+            </p>
+            <form :action="'/admin/definitions/suppliers/' + deleteId + '/delete'" method="post" class="flex items-center justify-end gap-3 pt-2">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="button" @click="deleteModalOpen = false"
+                        class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                    Vazgeç
+                </button>
+                <button type="submit"
+                        class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md transition">
+                    Evet, Sil
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

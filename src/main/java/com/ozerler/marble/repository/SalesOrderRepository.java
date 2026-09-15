@@ -26,4 +26,6 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
 
     @Query("SELECT so FROM SalesOrder so JOIN FETCH so.customer WHERE LOWER(so.orderNo) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<SalesOrder> searchByOrderNo(@Param("query") String query, Pageable pageable);
+
+    boolean existsByCustomerId(Long customerId);
 }

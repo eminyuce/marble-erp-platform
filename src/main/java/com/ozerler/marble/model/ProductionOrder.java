@@ -34,6 +34,18 @@ public class ProductionOrder extends AuditableEntity {
     @Column(name = "machine_name", nullable = false, length = 100)
     private String machineName;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "machine_id")
+    private Machine machine;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "factory_work_order_id")
+    private FactoryWorkOrder factoryWorkOrder;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "factory_operation_id")
+    private FactoryOperation factoryOperation;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "process_type", nullable = false, length = 50)
     private ProcessType processType;

@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.model.enums.BusinessUnit;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,4 +32,8 @@ public class CostCenter extends AuditableEntity {
 
     @Column(length = 255)
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "business_unit", length = 30)
+    private BusinessUnit businessUnit;
 }

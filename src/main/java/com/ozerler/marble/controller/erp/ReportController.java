@@ -18,11 +18,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 @Controller
 @RequestMapping("/reports")
-@PreAuthorize("hasAnyRole('ADMIN', 'EXECUTIVE', 'ACCOUNTANT', 'MANAGER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'EXECUTIVE', 'FINANCE', 'FACTORY_MANAGER')")
 @RequiredArgsConstructor
 @Slf4j
 public class ReportController {
@@ -51,7 +52,7 @@ public class ReportController {
 
         ReportService.ReportType type;
         try {
-            type = ReportService.ReportType.valueOf(typeStr.toUpperCase());
+            type = ReportService.ReportType.valueOf(typeStr.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }

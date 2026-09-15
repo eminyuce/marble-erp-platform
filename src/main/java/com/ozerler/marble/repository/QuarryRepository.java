@@ -17,4 +17,6 @@ public interface QuarryRepository extends JpaRepository<Quarry, Long> {
     @Query("SELECT q FROM Quarry q WHERE LOWER(q.code) LIKE LOWER(CONCAT('%', :query, '%')) " +
             "OR LOWER(q.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Quarry> searchByCodeOrName(@Param("query") String query, Pageable pageable);
+
+    List<Quarry> findAllByOrderByCodeAsc();
 }

@@ -2,41 +2,72 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Yeni Kesim Emri | Özerler Mermer ERP</title>
+    <title th:text="${(isEdit ?: false) ? 'Fabrika İş Emri Düzenle | Özerler Mermer ERP' : 'Yeni ST / Katrak Kesim | Özerler Mermer ERP'}">
+        Fabrika Kesim | Özerler Mermer ERP</title>
 </head>
 <body>
 <div layout:fragment="content" class="erp-form-page">
 
-    <div th:replace="~{fragments/form-page :: breadcrumb('Katrak Kesim', @{/production}, 'Yeni kayıt')}"></div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Fabrika', @{/production}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
     <div th:replace="~{fragments/form-page :: heading(
-        'Katrak dilimleme iş emri',
-        'Kaynak bloğu, makine tüketimini, plaka seleksiyonunu ve fire kaydını girerek kesimi başlatın.',
-        '',
+        ${(isEdit ?: false) ? 'Fabrika iş emrini düzenle' : 'ST veya Katrak kesim'},
+        ${(isEdit ?: false) ? 'Makine, operatör ve tüketim bilgilerini güncelleyin.' : 'Giriş tonajı, çıkış m² ve fireyi ayrı girin. ST bant, Katrak plaka üretir.'},
+        ${(isEdit ?: false) ? 'Emir #' + record?.orderNo : ''},
         @{/production})}"></div>
 
     <div class="erp-form-card">
-        <form th:action="@{/production/create}" method="post" class="erp-form">
+        <form th:action="${(isEdit ?: false)} ? @{/production/orders/{id}/edit(id=${record.id})} : @{/production/create}"
+              method="post" class="erp-form">
             <div class="erp-form-body">
                 <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
 
-                <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Kaynak', 'Kesilecek blok ve makine')}"></div>
+                <section class="erp-form-section" th:if="${!(isEdit ?: false)}">
+                    <div th:replace="~{fragments/form-page :: section('Kaynak', 'Kesilecek blok, süreç ve makine')}"></div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="blockId">Kesilecek kaynak blok <span class="req">*</span></label>
                             <select id="blockId" name="blockId" required class="erp-form-select">
                                 <option value="" disabled selected>Blok seçin</option>
                                 <option th:each="b : ${availableBlocks}" th:value="${b.id}"
-                                        th:text="${b.blockCode + ' (' + b.stoneType + ', ' + b.actualWeightKg + ' kg)'}"></option>
+                                        th:text="${b.blockCode + ' (' + b.stoneType + ', ' + b.actualTonnage + ' ton)'}"></option>
                             </select>
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="machineName">Makine / katrak <span
-                                    class="req">*</span></label>
+                            <label class="erp-form-label" for="processType">Kesim türü <span class="req">*</span></label>
+                            <select id="processType" name="processType" required class="erp-form-select">
+                                <option th:each="t : ${cuttingTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="machineId">Kayıtlı makine</label>
+                            <select id="machineId" name="machineId" class="erp-form-select">
+                                <option value="">Serbest makine adı</option>
+                                <option th:each="m : ${factoryMachines}" th:value="${m.id}" th:text="${m.name + ' (' + (m.machineType != null ? m.machineType.label : '') + ')'}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="machineName">Makine adı <span class="req">*</span></label>
                             <input id="machineName" type="text" name="machineName"
-                                   th:value="${record != null ? record.machineName : 'Katrak-01 (80 Lamalı)'}"
-                                   required
-                                   class="erp-form-input" placeholder="Katrak-01">
+                                   th:value="${record != null ? record.machineName : 'Katrak-01'}"
+                                   required class="erp-form-input" placeholder="Katrak-01 veya ST-01">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section" th:if="${isEdit ?: false}">
+                    <div th:replace="~{fragments/form-page :: section('Operasyon', 'Makine ve operatör')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="machineNameEdit">Makine adı <span class="req">*</span></label>
+                            <input id="machineNameEdit" type="text" name="machineName"
+                                   th:value="${record != null ? record.machineName : ''}"
+                                   required class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="operatorNameEdit">Operatör <span class="req">*</span></label>
+                            <input id="operatorNameEdit" type="text" name="operatorName"
+                                   th:value="${record != null ? record.operatorName : ''}"
+                                   required class="erp-form-input">
                         </div>
                     </div>
                 </section>
@@ -45,103 +76,118 @@
                     <div th:replace="~{fragments/form-page :: section('Tüketim', 'Süre, enerji, lama ve kesim gideri')}"></div>
                     <div class="erp-form-grid--4">
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="durationHours">Kesim süresi (sa) <span
-                                    class="req">*</span></label>
-                            <input id="durationHours" type="number" step="0.5" name="durationHours" value="8.5" required
-                                   class="erp-form-input">
+                            <label class="erp-form-label" for="durationHours">Kesim süresi (sa) <span class="req">*</span></label>
+                            <input id="durationHours" type="number" step="0.5" name="durationHours"
+                                   th:value="${record != null ? record.durationHours : 8.5}" required class="erp-form-input">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="electricityKwh">Elektrik (kWh) <span class="req">*</span></label>
-                            <input id="electricityKwh" type="number" step="1" name="electricityKwh" value="420" required
-                                   class="erp-form-input">
+                            <input id="electricityKwh" type="number" step="1" name="electricityKwh"
+                                   th:value="${record != null ? record.electricityKwh : 420}" required class="erp-form-input">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="bladeWearMm">Lama aşınma (mm) <span class="req">*</span></label>
-                            <input id="bladeWearMm" type="number" step="0.1" name="bladeWearMm" value="1.2" required
-                                   class="erp-form-input">
+                            <input id="bladeWearMm" type="number" step="0.1" name="bladeWearMm"
+                                   th:value="${record != null ? record.bladeWearMm : 1.2}" required class="erp-form-input">
                         </div>
-                        <div class="erp-form-field">
-                            <label class="erp-form-label" for="directCuttingExpense">Kesim gideri (TL) <span
-                                    class="req">*</span></label>
+                        <div class="erp-form-field" th:if="${!(isEdit ?: false)}">
+                            <label class="erp-form-label" for="directCuttingExpense">Kesim gideri (TL) <span class="req">*</span></label>
                             <input id="directCuttingExpense" type="number" step="1" name="directCuttingExpense"
                                    value="18500" required class="erp-form-input">
                         </div>
                     </div>
                 </section>
 
-                <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Plaka çıkışı', 'Seleksiyon adetleri ve plaka ölçüleri')}"></div>
+                <section class="erp-form-section" th:if="${!(isEdit ?: false)}">
+                    <div th:replace="~{fragments/form-page :: section('Giriş / çıkış / fire', 'Kesimde ton → m² dönüşümü yapılmaz')}"></div>
+                    <div class="erp-form-grid--4">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="inputQuantity">Giriş tonajı (ton)</label>
+                            <input id="inputQuantity" type="number" step="0.001" name="inputQuantity" class="erp-form-input" placeholder="Boşsa blok tonajı">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="outputQuantity">Çıkış (m²)</label>
+                            <input id="outputQuantity" type="number" step="0.01" name="outputQuantity" class="erp-form-input" placeholder="Boşsa plaka alanından">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="wasteQuantity">Fire miktarı</label>
+                            <input id="wasteQuantity" type="number" step="0.01" name="wasteQuantity" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="wasteUnit">Fire birimi</label>
+                            <select id="wasteUnit" name="wasteUnit" class="erp-form-select">
+                                <option th:each="u : ${wasteUnits}" th:value="${u.name()}" th:text="${u.label}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section" th:if="${!(isEdit ?: false)}">
+                    <div th:replace="~{fragments/form-page :: section('Plaka / bant çıkışı', 'Seleksiyon adetleri ve ölçüler')}"></div>
                     <div class="erp-form-grid--3">
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="slabCountGradeA">A kalite adet (K=1.15) <span
-                                    class="req">*</span></label>
-                            <input id="slabCountGradeA" type="number" name="slabCountGradeA" value="30" min="0" required
-                                   class="erp-form-input">
+                            <label class="erp-form-label" for="slabCountGradeExtra">Extra adet (K=1.30)</label>
+                            <input id="slabCountGradeExtra" type="number" name="slabCountGradeExtra" value="0" min="0" class="erp-form-input">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="slabCountGradeB">B kalite adet (K=1.00) <span
-                                    class="req">*</span></label>
-                            <input id="slabCountGradeB" type="number" name="slabCountGradeB" value="15" min="0" required
-                                   class="erp-form-input">
+                            <label class="erp-form-label" for="slabCountGradeA">A kalite adet (K=1.15) <span class="req">*</span></label>
+                            <input id="slabCountGradeA" type="number" name="slabCountGradeA" value="30" min="0" required class="erp-form-input">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="slabCountGradeC">C kalite adet (K=0.65) <span
-                                    class="req">*</span></label>
-                            <input id="slabCountGradeC" type="number" name="slabCountGradeC" value="5" min="0" required
-                                   class="erp-form-input">
+                            <label class="erp-form-label" for="slabCountGradeB">B kalite adet (K=1.00) <span class="req">*</span></label>
+                            <input id="slabCountGradeB" type="number" name="slabCountGradeB" value="15" min="0" required class="erp-form-input">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="thicknessCm">Kalınlık (cm) <span
-                                    class="req">*</span></label>
-                            <input id="thicknessCm" type="number" step="0.5" name="thicknessCm" value="2.0" required
-                                   class="erp-form-input">
+                            <label class="erp-form-label" for="slabCountGradeC">C kalite adet (K=0.65) <span class="req">*</span></label>
+                            <input id="slabCountGradeC" type="number" name="slabCountGradeC" value="5" min="0" required class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="thicknessCm">Kalınlık (cm) <span class="req">*</span></label>
+                            <input id="thicknessCm" type="number" step="0.5" name="thicknessCm" value="2.0" required class="erp-form-input">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="slabWidthCm">En (cm) <span class="req">*</span></label>
-                            <input id="slabWidthCm" type="number" name="slabWidthCm" value="175" required
-                                   class="erp-form-input">
+                            <input id="slabWidthCm" type="number" name="slabWidthCm" value="175" required class="erp-form-input">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="slabLengthCm">Boy (cm) <span class="req">*</span></label>
-                            <input id="slabLengthCm" type="number" name="slabLengthCm" value="285" required
-                                   class="erp-form-input">
+                            <input id="slabLengthCm" type="number" name="slabLengthCm" value="285" required class="erp-form-input">
                         </div>
                     </div>
                 </section>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Fire ve operasyon', 'Zorunlu fire kaydı, operatör ve vardiya')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Fire ve operasyon', 'Fire kaydı, operatör ve vardiya')}"></div>
                     <div class="erp-form-grid">
-                        <div class="erp-form-field">
+                        <div class="erp-form-field" th:if="${!(isEdit ?: false)}">
                             <label class="erp-form-label" for="scrapReason">Fire neden kodu</label>
                             <select id="scrapReason" name="scrapReason" class="erp-form-select">
                                 <option th:each="r : ${scrapReasons}" th:value="${r.name()}"
                                         th:text="${r.code + ' - ' + r.title}"></option>
                             </select>
                         </div>
-                        <div class="erp-form-field">
+                        <div class="erp-form-field" th:if="${!(isEdit ?: false)}">
                             <label class="erp-form-label" for="scrapWeightKg">Fire miktarı (kg)</label>
-                            <input id="scrapWeightKg" type="number" step="0.1" name="scrapWeightKg" value="2100"
-                                   class="erp-form-input">
+                            <input id="scrapWeightKg" type="number" step="0.1" name="scrapWeightKg" value="2100" class="erp-form-input">
                         </div>
-                        <div class="erp-form-field">
-                            <label class="erp-form-label" for="operatorName">Operatör adı <span
-                                    class="req">*</span></label>
+                        <div class="erp-form-field" th:if="${!(isEdit ?: false)}">
+                            <label class="erp-form-label" for="operatorName">Operatör adı <span class="req">*</span></label>
                             <input id="operatorName" type="text" name="operatorName"
-                                   th:value="${record != null ? record.operatorName : 'Ahmet Kaya'}" required
+                                   th:value="${record != null ? record.operatorName : ''}" required
                                    class="erp-form-input" placeholder="Operatör adı">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="notes">Vardiya / notlar</label>
                             <input id="notes" type="text" name="notes"
-                                   th:value="${record != null ? record.notes : 'Gündüz vardiyası, 80 lama standart indirme'}"
+                                   th:value="${record != null ? record.notes : ''}"
                                    class="erp-form-input" placeholder="Vardiya notu">
                         </div>
                     </div>
                 </section>
 
-                <div th:if="${isEdit and record != null}"
-                     th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
+                <th:block th:if="${isEdit and record != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${record?.createdDate}, ${record?.updatedDate}, ${record?.addUserId}, ${record?.updateUserId})}"></div>
+                </th:block>
             </div>
 
             <div th:replace="~{fragments/form-page :: actions(@{/production})}"></div>
