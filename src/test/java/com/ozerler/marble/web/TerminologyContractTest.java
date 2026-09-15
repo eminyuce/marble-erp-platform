@@ -62,8 +62,32 @@ class TerminologyContractTest {
                 .contains("Sistem Tanımları");
         String megaMenu = Files.readString(root.resolve("templates/layout/mega-menu.html"));
         assertThat(megaMenu).contains("Sistem Tanımları");
-        assertThat(megaMenu).contains("Tanımlar &amp; Yönetim");
-        assertThat(megaMenu).contains("/admin/definitions/suppliers");
+        assertThat(megaMenu).contains("admin-mega-card-title\">Tanımlar<");
+        assertThat(megaMenu).contains("admin-mega-card-title\">Sistem<");
+        assertThat(megaMenu).doesNotContain("Tanımlar &amp; Yönetim");
+        int definitionsIdx = megaMenu.indexOf("data-mega-group=\"definitions\"");
+        int systemIdx = megaMenu.indexOf("data-mega-group=\"system\"");
+        assertThat(definitionsIdx).isGreaterThanOrEqualTo(0);
+        assertThat(systemIdx).isGreaterThan(definitionsIdx);
+        String definitionsCard = megaMenu.substring(definitionsIdx, systemIdx);
+        String systemCard = megaMenu.substring(systemIdx);
+        assertThat(definitionsCard)
+                .contains("/admin/definitions")
+                .contains("/admin/definitions/machines")
+                .contains("/admin/definitions/stock-locations")
+                .contains("/admin/definitions/quarries")
+                .contains("/admin/definitions/customers")
+                .contains("/admin/definitions/suppliers")
+                .contains("/admin/definitions/cost-centers")
+                .doesNotContain("/admin/users")
+                .doesNotContain("/admin/settings")
+                .doesNotContain("systemhealth");
+        assertThat(systemCard)
+                .contains("/admin/users")
+                .contains("/admin/settings")
+                .contains("/admin/dashboard/systemhealth/")
+                .doesNotContain("/admin/definitions/machines")
+                .doesNotContain("/admin/definitions/suppliers");
         assertThat(megaMenu).doesNotContain("/swagger-ui.html");
         assertThat(megaMenu).doesNotContain("/v3/api-docs");
         assertThat(megaMenu).doesNotContain("/actuator");
