@@ -84,7 +84,7 @@
         </button>
         <div th:replace="~{fragments/list-chrome :: search('Tedarikçi kodu, firma adı veya yetkili', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
-            <select id="supplier-type-filter" class="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
+            <select id="supplier-type-filter" class="erp-toolbar-filter" aria-label="Tedarikçi tipi">
                 <option value="">Tüm tedarikçi tipleri</option>
                 <option th:each="type : ${supplierTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
             </select>

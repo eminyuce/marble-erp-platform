@@ -72,7 +72,7 @@
         </button>
         <div th:replace="~{fragments/list-chrome :: search('Makine kodu veya adı', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
-            <select id="machine-unit-filter" class="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
+            <select id="machine-unit-filter" class="erp-toolbar-filter" aria-label="İş birimi">
                 <option value="">Tüm birimler</option>
                 <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"></option>
             </select>

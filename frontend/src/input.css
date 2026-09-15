@@ -2169,8 +2169,8 @@ button.erp-btn-secondary {
 }
 
 .erp-toolbar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(8rem, 1fr) minmax(0, max-content);
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
@@ -2180,21 +2180,67 @@ button.erp-btn-secondary {
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 }
 
+.erp-toolbar > .erp-btn-primary,
+.erp-toolbar > .erp-btn-secondary,
+.erp-toolbar > a.erp-btn-primary,
+.erp-toolbar > a.erp-btn-secondary,
+.erp-toolbar > button.erp-btn-primary,
+.erp-toolbar > button.erp-btn-secondary {
+  flex: 0 0 auto;
+  height: 42px;
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.erp-toolbar > input[type="hidden"] {
+  display: none;
+}
+
 .erp-search-form {
-  flex: 1 1 220px;
-  min-width: 180px;
+  min-width: 0;
+  width: 100%;
   margin: 0;
 }
 
 .erp-toolbar-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+
+.erp-toolbar-actions .relative {
+  flex: 0 0 auto;
+}
+
+.erp-toolbar-actions .erp-btn-primary,
+.erp-toolbar-actions .erp-btn-secondary,
+.erp-toolbar-actions a.erp-btn-primary,
+.erp-toolbar-actions a.erp-btn-secondary {
+  flex: 0 0 auto;
+  height: 42px;
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.erp-toolbar-filter {
+  height: 42px;
+  min-height: 42px;
+  max-width: 14rem;
+  padding: 0 12px;
+  border: 1px solid #d7dee8;
+  border-radius: 10px;
+  background: #fff;
+  color: #102a43;
+  font-size: 13px;
+  line-height: 1.2;
+  flex: 0 1 auto;
+  min-width: 8.5rem;
 }
 
 .erp-toolbar .erp-quick {
-  flex-basis: 100%;
+  grid-column: 1 / -1;
   margin-top: 4px;
 }
 
@@ -2202,6 +2248,7 @@ button.erp-btn-secondary {
   display: flex;
   align-items: stretch;
   width: 100%;
+  min-width: 0;
   min-height: 42px;
   border: 1px solid #d7dee8;
   border-radius: 10px;
@@ -2242,10 +2289,14 @@ button.erp-btn-secondary {
   display: flex;
 }
 
-.erp-search-btn {
+.erp-search-btn,
+button.erp-search-btn {
   border-radius: 0;
-  min-width: 108px;
+  min-width: 42px;
+  width: 42px;
+  padding: 0;
   height: 100%;
+  flex: 0 0 42px;
 }
 
 .erp-quick {
@@ -3345,16 +3396,18 @@ textarea,
   }
 
   .erp-toolbar {
-    align-items: stretch;
+    align-items: center;
   }
 
   .erp-search-form {
-    flex: 1 1 100%;
     min-width: 0;
   }
 
-  .erp-search-btn {
-    min-width: 88px;
+  .erp-search-btn,
+  button.erp-search-btn {
+    min-width: 42px;
+    width: 42px;
+    padding: 0;
   }
 
   .erp-search-input {
@@ -3483,14 +3536,8 @@ textarea,
     max-width: 42vw;
   }
 
-  .erp-toolbar-actions {
-    width: 100%;
-  }
-
-  .erp-toolbar-actions .relative,
-  .erp-toolbar-actions .erp-btn-secondary,
-  .erp-toolbar-actions .erp-btn-primary {
-    width: 100%;
+  .erp-toolbar {
+    grid-template-columns: auto minmax(6.5rem, 1fr) minmax(0, max-content);
   }
 
   .erp-stack-table thead {
