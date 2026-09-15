@@ -19,4 +19,6 @@ public interface MachineFuelEntryRepository extends JpaRepository<MachineFuelEnt
 
     @Query("SELECT COALESCE(SUM(e.totalAmount), 0) FROM MachineFuelEntry e WHERE e.entryDate >= :start AND e.entryDate < :end")
     BigDecimal sumAmountBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    boolean existsByMachineId(Long machineId);
 }

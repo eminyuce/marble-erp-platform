@@ -60,4 +60,8 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             + "FROM Block b WHERE b.extractionDate >= :start AND b.extractionDate < :end")
     java.math.BigDecimal sumProductionWeightKgBetween(@Param("start") java.time.LocalDate start,
                                                       @Param("end") java.time.LocalDate end);
+
+    boolean existsByQuarryId(Long quarryId);
+
+    boolean existsByCurrentLocationId(Long currentLocationId);
 }

@@ -19,4 +19,8 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
     List<Machine> findByMachineTypeAndActiveTrueOrderByNameAsc(MachineType machineType);
 
     List<Machine> findByActiveTrueOrderByNameAsc();
+
+    List<Machine> findAllByOrderByCodeAsc();
+
+    long countByActiveTrue();
 }

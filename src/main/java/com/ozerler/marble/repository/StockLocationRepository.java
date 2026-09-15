@@ -16,4 +16,8 @@ public interface StockLocationRepository extends JpaRepository<StockLocation, Lo
     Optional<StockLocation> findByLocationTypeAndActiveTrue(StockLocationType locationType);
 
     List<StockLocation> findByActiveTrueOrderByNameAsc();
+
+    List<StockLocation> findAllByOrderByCodeAsc();
+
+    long countByActiveTrue();
 }

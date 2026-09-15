@@ -104,7 +104,11 @@
         <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
         <span>Sistem Sağlığı</span>
     </a>
-    <div sec:authorize="hasRole('ADMIN')">
+        <a th:href="@{/admin/definitions}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
+            <i data-lucide="database" class="w-5 h-5 text-amber-400"></i>
+            <span>Sistem Tanımları</span>
+        </a>
         <a th:href="@{/admin/users}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
             <i data-lucide="users" class="w-5 h-5 text-blue-400"></i>

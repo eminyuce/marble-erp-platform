@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Maden Ocakları &bull; Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6" x-data="{
+    search: '',
+    modalOpen: false,
+    deleteModalOpen: false,
+    deleteId: null,
+    deleteName: '',
+    isEdit: false,
+    form: {
+        id: null,
+        code: '',
+        name: '',
+        location: '',
+        specificGravity: '2.70',
+        licenseNo: ''
+    },
+    openCreateModal() {
+        this.isEdit = false;
+        this.form = {
+            id: null,
+            code: '',
+            name: '',
+            location: '',
+            specificGravity: '2.70',
+            licenseNo: ''
+        };
+        this.modalOpen = true;
+    },
+    openEditModal(q) {
+        this.isEdit = true;
+        this.form = {
+            id: q.id,
+            code: q.code,
+            name: q.name,
+            location: q.location,
+            specificGravity: q.specificGravity,
+            licenseNo: q.licenseNo || ''
+        };
+        this.modalOpen = true;
+    },
+    confirmDelete(id, name) {
+        this.deleteId = id;
+        this.deleteName = name;
+        this.deleteModalOpen = true;
+    }
+}">
+
+    <!-- Page Header & Breadcrumb -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                <a th:href="@{/admin/definitions}" class="hover:text-emerald-600 transition">Sistem Tanımları</a>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                <span class="text-slate-800 font-semibold">Maden Ocakları</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Maden Ocağı Yönetimi</h1>
+            <p class="text-xs text-slate-500 font-medium">Hammadde blok üretimi yapılan ruhsatlı mermer ocaklarının tescil ve parametreleri</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="button" @click="openCreateModal()"
+                    class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition flex items-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Yeni Ocak Tanımla</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
+        <span th:text="${successMessage}">İşlem başarılı</span>
+    </div>
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
+        <span th:text="${errorMessage}">Hata oluştu</span>
+    </div>
+
+    <!-- Toolbar Filters -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3 flex-1 min-w-[260px]">
+            <div class="relative w-full max-w-sm">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" x-model="search" placeholder="Ocak kodu, adı veya bölgesi ile filtrele..."
+                       class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+            </div>
+        </div>
+        <div class="text-xs text-slate-500 font-mono">
+            Toplam <span class="font-bold text-slate-800" th:text="${#lists.size(quarries)}">0</span> ocak kayıtlı
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-bold tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4">Ocak Kodu</th>
+                        <th class="py-3 px-4">Ocak Adı</th>
+                        <th class="py-3 px-4">Lokasyon / Mevkii</th>
+                        <th class="py-3 px-4">Özgül Ağırlık (ton/m³)</th>
+                        <th class="py-3 px-4">Ruhsat No</th>
+                        <th class="py-3 px-4 text-right">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <tr th:each="q : ${quarries}"
+                        th:attr="data-code=${q.code}, data-name=${q.name}, data-loc=${q.location}"
+                        x-show="!search || $el.dataset.code.toLowerCase().includes(search.toLowerCase()) || $el.dataset.name.toLowerCase().includes(search.toLowerCase()) || $el.dataset.loc.toLowerCase().includes(search.toLowerCase())"
+                        class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900" th:text="${q.code}">Q-01</td>
+                        <td class="py-3.5 px-4 font-semibold text-slate-800" th:text="${q.name}">İscehisar Beyaz Ocağı</td>
+                        <td class="py-3.5 px-4 text-slate-600" th:text="${q.location}">Afyonkarahisar / İscehisar</td>
+                        <td class="py-3.5 px-4 font-mono font-bold text-emerald-700" th:text="${q.specificGravity}">2.70</td>
+                        <td class="py-3.5 px-4 font-mono text-slate-500" th:text="${q.licenseNo ?: '-'}">-</td>
+                        <td class="py-3.5 px-4 text-right space-x-2">
+                            <button type="button"
+                                    th:data-id="${q.id}"
+                                    th:data-code="${q.code}"
+                                    th:data-name="${q.name}"
+                                    th:data-loc="${q.location}"
+                                    th:data-sg="${q.specificGravity}"
+                                    th:data-lic="${q.licenseNo}"
+                                    @click="openEditModal({
+                                        id: $el.dataset.id,
+                                        code: $el.dataset.code,
+                                        name: $el.dataset.name,
+                                        location: $el.dataset.loc,
+                                        specificGravity: $el.dataset.sg,
+                                        licenseNo: $el.dataset.lic
+                                    })"
+                                    class="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition"
+                                    title="Düzenle">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button"
+                                    th:data-id="${q.id}"
+                                    th:data-code="${q.code}"
+                                    @click="confirmDelete($el.dataset.id, $el.dataset.code)"
+                                    class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                    title="Sil">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create / Edit Modal -->
+    <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;" @keydown.escape.window="modalOpen = false">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-4"
+             @click.outside="modalOpen = false">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-slate-900" x-text="isEdit ? 'Ocak Düzenle' : 'Yeni Ocak Tanımla'"></h3>
+                <button type="button" @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form th:action="@{/admin/definitions/quarries/save}" method="post" class="space-y-4">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="id" :value="form.id">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Ocak Kodu *</label>
+                    <input type="text" name="code" x-model="form.code" required placeholder="örn: OCK-03"
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono uppercase focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Ocak Adı *</label>
+                    <input type="text" name="name" x-model="form.name" required placeholder="örn: Muğla Yatağan Beyaz Ocağı"
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Lokasyon / Mevkii *</label>
+                    <input type="text" name="location" x-model="form.location" required placeholder="örn: Muğla / Yatağan / Kavaklıdere"
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Özgül Ağırlık (ton/m³) *</label>
+                        <input type="number" step="0.01" name="specificGravity" x-model="form.specificGravity" required
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Maden Ruhsat No</label>
+                        <input type="text" name="licenseNo" x-model="form.licenseNo" placeholder="örn: İR-2023/1104"
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" @click="modalOpen = false"
+                            class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                        İptal
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-md transition">
+                        Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-6 space-y-4"
+             @click.outside="deleteModalOpen = false">
+            <div class="flex items-center gap-3 text-rose-600">
+                <span class="p-2 bg-rose-50 rounded-xl"><i data-lucide="alert-triangle" class="w-6 h-6"></i></span>
+                <h3 class="text-base font-bold text-slate-900">Ocağı Sil</h3>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                <strong x-text="deleteName"></strong> ocağını silmek istediğinize emin misiniz? Bu ocağa bağlı blok kayıtları varsa silme işlemi engellenecektir.
+            </p>
+            <form :action="'/admin/definitions/quarries/' + deleteId + '/delete'" method="post" class="flex items-center justify-end gap-3 pt-2">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="button" @click="deleteModalOpen = false"
+                        class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                    Vazgeç
+                </button>
+                <button type="submit"
+                        class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md transition">
+                    Evet, Sil
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

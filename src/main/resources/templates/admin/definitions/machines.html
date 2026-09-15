@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Makineler &amp; Ekipmanlar &bull; Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-6" x-data="{
+    search: '',
+    selectedUnit: '',
+    modalOpen: false,
+    deleteModalOpen: false,
+    deleteId: null,
+    deleteName: '',
+    isEdit: false,
+    form: {
+        id: null,
+        code: '',
+        name: '',
+        businessUnit: 'FACTORY',
+        machineType: 'GANGSAW',
+        active: true,
+        notes: ''
+    },
+    openCreateModal() {
+        this.isEdit = false;
+        this.form = {
+            id: null,
+            code: '',
+            name: '',
+            businessUnit: 'FACTORY',
+            machineType: 'GANGSAW',
+            active: true,
+            notes: ''
+        };
+        this.modalOpen = true;
+    },
+    openEditModal(machine) {
+        this.isEdit = true;
+        this.form = {
+            id: machine.id,
+            code: machine.code,
+            name: machine.name,
+            businessUnit: machine.businessUnit,
+            machineType: machine.machineType,
+            active: machine.active,
+            notes: machine.notes || ''
+        };
+        this.modalOpen = true;
+    },
+    confirmDelete(id, name) {
+        this.deleteId = id;
+        this.deleteName = name;
+        this.deleteModalOpen = true;
+    }
+}">
+
+    <!-- Page Header & Breadcrumb -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                <a th:href="@{/admin/definitions}" class="hover:text-amber-600 transition">Sistem Tanımları</a>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                <span class="text-slate-800 font-semibold">Makineler &amp; Ekipmanlar</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Makineler &amp; Ekipman Yönetimi</h1>
+            <p class="text-xs text-slate-500 font-medium">Ocak, fabrika ve atölyede kullanılan tüm iş makinelerinin ve tezgâhların parametrik tanımları</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="button" @click="openCreateModal()"
+                    class="px-4 py-2.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition flex items-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Yeni Makine Tanımla</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
+        <span th:text="${successMessage}">İşlem başarılı</span>
+    </div>
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
+        <span th:text="${errorMessage}">Hata oluştu</span>
+    </div>
+
+    <!-- Toolbar Filters -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3 flex-1 min-w-[260px]">
+            <div class="relative w-full max-w-sm">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" x-model="search" placeholder="Makine kodu veya adı ile filtrele..."
+                       class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none transition">
+            </div>
+            <select x-model="selectedUnit"
+                    class="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <option value="">Tüm Birimler</option>
+                <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"></option>
+            </select>
+        </div>
+        <div class="text-xs text-slate-500 font-mono">
+            Toplam <span class="font-bold text-slate-800" th:text="${#lists.size(machines)}">0</span> makine kayıtlı
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-bold tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4">Kod</th>
+                        <th class="py-3 px-4">Makine Adı</th>
+                        <th class="py-3 px-4">İş Birimi</th>
+                        <th class="py-3 px-4">Makine Tipi</th>
+                        <th class="py-3 px-4">Durum</th>
+                        <th class="py-3 px-4">Açıklama / Not</th>
+                        <th class="py-3 px-4 text-right">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <tr th:each="machine : ${machines}"
+                        th:attr="data-code=${machine.code}, data-name=${machine.name}, data-unit=${machine.businessUnit.name()}"
+                        x-show="(!search || $el.dataset.code.toLowerCase().includes(search.toLowerCase()) || $el.dataset.name.toLowerCase().includes(search.toLowerCase())) && (!selectedUnit || $el.dataset.unit === selectedUnit)"
+                        class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-900" th:text="${machine.code}">OCK-MK-01</td>
+                        <td class="py-3.5 px-4 font-semibold text-slate-800" th:text="${machine.name}">Ocak Ekskavatör</td>
+                        <td class="py-3.5 px-4">
+                            <span th:if="${machine.businessUnit.name() == 'QUARRY'}" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">Ocak</span>
+                            <span th:if="${machine.businessUnit.name() == 'FACTORY'}" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">Fabrika</span>
+                            <span th:if="${machine.businessUnit.name() == 'WORKSHOP'}" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">Atölye</span>
+                            <span th:if="${machine.businessUnit.name() == 'SITE'}" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-cyan-100 text-cyan-800">Şantiye</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600" th:text="${machine.machineType.label}">Katrak</td>
+                        <td class="py-3.5 px-4">
+                            <form th:action="@{'/admin/definitions/machines/' + ${machine.id} + '/toggle'}" method="post" class="inline">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit"
+                                        th:class="${machine.active ? 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition' : 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200 transition'}"
+                                        th:title="${machine.active ? 'Pasife almak için tıklayın' : 'Aktif etmek için tıklayın'}">
+                                    <span th:text="${machine.active ? '● Aktif' : '○ Pasif'}">● Aktif</span>
+                                </button>
+                            </form>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-500 truncate max-w-xs" th:text="${machine.notes ?: '-'}">-</td>
+                        <td class="py-3.5 px-4 text-right space-x-2">
+                            <button type="button"
+                                    th:data-id="${machine.id}"
+                                    th:data-code="${machine.code}"
+                                    th:data-name="${machine.name}"
+                                    th:data-unit="${machine.businessUnit.name()}"
+                                    th:data-type="${machine.machineType.name()}"
+                                    th:data-active="${machine.active}"
+                                    th:data-notes="${machine.notes}"
+                                    @click="openEditModal({
+                                        id: $el.dataset.id,
+                                        code: $el.dataset.code,
+                                        name: $el.dataset.name,
+                                        businessUnit: $el.dataset.unit,
+                                        machineType: $el.dataset.type,
+                                        active: $el.dataset.active === 'true',
+                                        notes: $el.dataset.notes
+                                    })"
+                                    class="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition"
+                                    title="Düzenle">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button"
+                                    th:data-id="${machine.id}"
+                                    th:data-code="${machine.code}"
+                                    @click="confirmDelete($el.dataset.id, $el.dataset.code)"
+                                    class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                    title="Sil">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(machines)}">
+                        <td colspan="7" class="py-8 text-center text-slate-400">Kayıtlı makine bulunamadı.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create / Edit Modal -->
+    <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;" @keydown.escape.window="modalOpen = false">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-4"
+             @click.outside="modalOpen = false">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-slate-900" x-text="isEdit ? 'Makine Düzenle' : 'Yeni Makine Tanımla'"></h3>
+                <button type="button" @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form th:action="@{/admin/definitions/machines/save}" method="post" class="space-y-4">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="id" :value="form.id">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Makine Kodu *</label>
+                    <input type="text" name="code" x-model="form.code" required placeholder="örn: FAB-KATRAK-02"
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono uppercase focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Makine / Tezgâh Adı *</label>
+                    <input type="text" name="name" x-model="form.name" required placeholder="örn: 80 Lamalı Katrak 02"
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">İş Birimi *</label>
+                        <select name="businessUnit" x-model="form.businessUnit" required
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Makine Tipi *</label>
+                        <select name="machineType" x-model="form.machineType" required
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <option th:each="type : ${machineTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                        <input type="checkbox" name="active" x-model="form.active" value="true" class="rounded border-slate-300 text-amber-700">
+                        <span>Aktif kullanımda</span>
+                    </label>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Notlar &amp; Özellikler</label>
+                    <textarea name="notes" x-model="form.notes" rows="2" placeholder="Kapasite, motor gücü, hat no..."
+                              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" @click="modalOpen = false"
+                            class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                        İptal
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-bold shadow-md transition">
+                        Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-6 space-y-4"
+             @click.outside="deleteModalOpen = false">
+            <div class="flex items-center gap-3 text-rose-600">
+                <span class="p-2 bg-rose-50 rounded-xl"><i data-lucide="alert-triangle" class="w-6 h-6"></i></span>
+                <h3 class="text-base font-bold text-slate-900">Makineyi Sil</h3>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                <strong x-text="deleteName"></strong> kodlu makineyi silmek istediğinize emin misiniz? Yakıt veya iş emri kaydı bulunan makineler silinemez; dilerseniz pasife alabilirsiniz.
+            </p>
+            <form :action="'/admin/definitions/machines/' + deleteId + '/delete'" method="post" class="flex items-center justify-end gap-3 pt-2">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="button" @click="deleteModalOpen = false"
+                        class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                    Vazgeç
+                </button>
+                <button type="submit"
+                        class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md transition">
+                    Evet, Sil
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
