@@ -49,7 +49,7 @@ public class ReportService {
     public enum ReportType {
         QUARRY_BLOCKS("ocak_bloklari"),
         FACTORY_SCRAP("katrak_fire"),
-        WORKSHOP_ORDERS("kesim_emirleri"),
+        WORKSHOP_ORDERS("atelye_is_emirleri"),
         SITE_INSTALLATION("santiye_projeleri"),
         COST_ACCOUNTING("maliyet_raporu"),
         SLABS_INVENTORY("plaka_stogu");
@@ -242,10 +242,10 @@ public class ReportService {
                             sl.getBlock() != null ? sl.getBlock().getBlockCode() : "-",
                             dims,
                             sl.getThicknessCm() != null ? sl.getThicknessCm() + " cm" : "2 cm",
-                            sl.getSurfaceFinish() != null ? sl.getSurfaceFinish().name() : "POLISHED",
-                            sl.getQualityGrade() != null ? sl.getQualityGrade().name() : "A",
+                            sl.getSurfaceFinish() != null ? sl.getSurfaceFinish().getLabel() : "",
+                            sl.getQualityGrade() != null ? sl.getQualityGrade().getLabel() : "",
                             sl.getCostPerM2() != null ? sl.getCostPerM2().toString() + " ₺" : "1365.00 ₺",
-                            sl.getStatus() != null ? sl.getStatus().name() : "AVAILABLE"
+                            sl.getStatus() != null ? sl.getStatus().getLabel() : ""
                     });
                 }
             }

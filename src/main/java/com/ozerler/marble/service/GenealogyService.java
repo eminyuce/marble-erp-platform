@@ -3,15 +3,25 @@ package com.ozerler.marble.service;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.GenealogyNodeDto;
 import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.CostTransaction;
 import com.ozerler.marble.model.CutItem;
+import com.ozerler.marble.model.MaterialLot;
+import com.ozerler.marble.model.PalletItem;
 import com.ozerler.marble.model.ProductionOrder;
+import com.ozerler.marble.model.ShipmentItem;
+import com.ozerler.marble.model.SiteInstallation;
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.enums.CutItemStatus;
 import com.ozerler.marble.model.enums.OperationStatus;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CostTransactionRepository;
 import com.ozerler.marble.repository.CutItemRepository;
+import com.ozerler.marble.repository.MaterialLotRepository;
+import com.ozerler.marble.repository.PalletItemRepository;
 import com.ozerler.marble.repository.ProductionOrderRepository;
+import com.ozerler.marble.repository.ShipmentItemRepository;
+import com.ozerler.marble.repository.SiteInstallationRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +38,11 @@ public class GenealogyService {
     private final ProductionOrderRepository productionOrderRepository;
     private final SlabRepository slabRepository;
     private final CutItemRepository cutItemRepository;
+    private final MaterialLotRepository materialLotRepository;
+    private final PalletItemRepository palletItemRepository;
+    private final ShipmentItemRepository shipmentItemRepository;
+    private final SiteInstallationRepository siteInstallationRepository;
+    private final CostTransactionRepository costTransactionRepository;
     private final org.springframework.context.MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
@@ -79,11 +94,17 @@ public class GenealogyService {
                 for (CutItem item : items) {
                     slabNode.getChildren().add(buildCutItemNode(item));
                 }
+                materialLotRepository.findBySlabId(slab.getId()).ifPresent(lot ->
+                        attachLotEvents(slabNode, lot));
 
                 orderNode.getChildren().add(slabNode);
             }
 
             rootNode.getChildren().add(orderNode);
+        }
+
+        for (CostTransaction tx : costTransactionRepository.findByBlockId(block.getId())) {
+            rootNode.getChildren().add(buildCostNode(tx));
         }
 
         return rootNode;
@@ -117,6 +138,60 @@ public class GenealogyService {
         }
 
         return Optional.empty();
+    }
+
+    private void attachLotEvents(GenealogyNodeDto parent, MaterialLot lot) {
+        for (PalletItem palletItem : palletItemRepository.findByMaterialLotId(lot.getId())) {
+            GenealogyNodeDto palletNode = GenealogyNodeDto.builder()
+                    .id("PAL-" + palletItem.getPallet().getId())
+                    .type("PALLET")
+                    .title(getMessage("genealogy.node.pallet.title", palletItem.getPallet().getPalletCode()))
+                    .subtitle(palletItem.getPallet().getStatusLabel())
+                    .details(getMessage("genealogy.node.pallet.details", palletItem.getQuantity(), palletItem.getAreaM2()))
+                    .status(palletItem.getPallet().getStatusLabel())
+                    .qrCode(palletItem.getPallet().getPalletCode())
+                    .children(new ArrayList<>())
+                    .build();
+            for (ShipmentItem shipmentItem : shipmentItemRepository.findByPalletId(palletItem.getPallet().getId())) {
+                palletNode.getChildren().add(GenealogyNodeDto.builder()
+                        .id("SHP-" + shipmentItem.getShipment().getId())
+                        .type("SHIPMENT")
+                        .title(getMessage("genealogy.node.shipment.title", shipmentItem.getShipment().getWaybillNo()))
+                        .subtitle(shipmentItem.getShipment().getDeliveryStatusLabel())
+                        .details(getMessage("genealogy.node.shipment.details",
+                                shipmentItem.getShipment().getVehiclePlate(),
+                                shipmentItem.getShipment().getDriverName()))
+                        .status(shipmentItem.getShipment().getDeliveryStatusLabel())
+                        .qrCode(shipmentItem.getShipment().getWaybillNo())
+                        .children(new ArrayList<>())
+                        .build());
+            }
+            parent.getChildren().add(palletNode);
+        }
+        for (SiteInstallation installation : siteInstallationRepository.findByMaterialLotId(lot.getId())) {
+            parent.getChildren().add(GenealogyNodeDto.builder()
+                    .id("INS-" + installation.getId())
+                    .type("SITE")
+                    .title(getMessage("genealogy.node.site.title", installation.getProject().getName()))
+                    .subtitle(installation.getLocation() != null ? installation.getLocation().getLocationName() : "")
+                    .details(getMessage("genealogy.node.site.details",
+                            installation.getInstalledAreaM2(), installation.getWasteAreaM2()))
+                    .status(installation.getCrewName())
+                    .children(new ArrayList<>())
+                    .build());
+        }
+    }
+
+    private GenealogyNodeDto buildCostNode(CostTransaction tx) {
+        return GenealogyNodeDto.builder()
+                .id("CST-" + tx.getId())
+                .type("COST")
+                .title(getMessage("genealogy.node.cost.title", tx.getExpenseType().getLabel()))
+                .subtitle(tx.getExpensePeriod())
+                .details(tx.getDescription())
+                .status(tx.getAmount() != null ? tx.getAmount().toPlainString() : "0")
+                .children(new ArrayList<>())
+                .build();
     }
 
     private GenealogyNodeDto buildBlockNode(Block block) {

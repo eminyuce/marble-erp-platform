@@ -80,6 +80,10 @@ public class BlockDto {
     @JsonAlias("qualityGrade")
     private String qualityGrade;
 
+    @JsonProperty("quality_grade_label")
+    @JsonAlias("qualityGradeLabel")
+    private String qualityGradeLabel;
+
     @JsonProperty("crack_level")
     @JsonAlias("crackLevel")
     private Integer crackLevel;
@@ -112,6 +116,26 @@ public class BlockDto {
     @JsonAlias("photoUrls")
     private String photoUrls;
 
+    @JsonProperty("location_name")
+    @JsonAlias("locationName")
+    private String locationName;
+
+    @JsonProperty("approximate_tonnage")
+    @JsonAlias("approximateTonnage")
+    private BigDecimal approximateTonnage;
+
+    @JsonProperty("actual_tonnage")
+    @JsonAlias("actualTonnage")
+    private BigDecimal actualTonnage;
+
+    @JsonProperty("canonical_status")
+    @JsonAlias("canonicalStatus")
+    private String canonicalStatus;
+
+    @JsonProperty("weight_deviation_warning")
+    @JsonAlias("weightDeviationWarning")
+    private boolean weightDeviationWarning;
+
     public static BlockDto fromEntity(Block b) {
         return BlockDto.builder()
                 .id(b.getId())
@@ -128,7 +152,8 @@ public class BlockDto {
                 .weightDeviationPct(b.getWeightDeviationPct())
                 .stoneType(b.getStoneType())
                 .colorTone(b.getColorTone())
-                .qualityGrade(b.getQualityGrade().name())
+                .qualityGrade(b.getQualityGrade() != null ? b.getQualityGrade().name() : "")
+                .qualityGradeLabel(b.getQualityGrade() != null ? b.getQualityGrade().getLabel() : "")
                 .crackLevel(b.getCrackLevel())
                 .status(b.getStatus().name())
                 .statusLabel(b.getStatus().getLabel())
@@ -137,6 +162,11 @@ public class BlockDto {
                 .totalCost(b.getTotalCost())
                 .notes(b.getNotes())
                 .photoUrls(b.getPhotoUrls())
+                .locationName(b.getCurrentLocation() != null ? b.getCurrentLocation().getName() : "")
+                .approximateTonnage(b.getApproximateTonnage())
+                .actualTonnage(b.getActualTonnage())
+                .canonicalStatus(b.getCanonicalStatus().name())
+                .weightDeviationWarning(b.isWeightDeviationWarning())
                 .build();
     }
 }

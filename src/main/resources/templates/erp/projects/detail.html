@@ -2,7 +2,7 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title th:text="${project.name} + ' | Özerler Mermer ERP'">Proje Detayı</title>
+    <title th:text="${project.name} + ' | Özerler Mermer ERP'">Şantiye Detayı</title>
 </head>
 <body>
 <div layout:fragment="content" class="space-y-6">
@@ -25,6 +25,10 @@
                 A.Ş.</p>
         </div>
         <div class="flex items-center gap-2">
+            <a th:href="@{'/projects/' + ${project.id} + '/edit'}" class="erp-btn-secondary">
+                <i data-lucide="edit-3"></i>
+                <span>Düzenle</span>
+            </a>
             <span class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                 Sözleşme: <span th:text="${#numbers.formatDecimal(project.contractValue, 1, 'POINT', 0, 'COMMA')}">12.400.000</span> TL
             </span>
@@ -36,7 +40,7 @@
          class="p-4 rounded-xl bg-rose-50 border-l-4 border-rose-600 text-xs text-rose-900 flex items-start gap-3">
         <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5"></i>
         <div>
-            <strong class="font-bold">Bütçe Sapma Uyarısı:</strong> Bu projede fiili gerçekleşen maliyet (<span
+            <strong class="font-bold">Bütçe Sapma Uyarısı:</strong> Bu şantiyede fiili gerçekleşen maliyet (<span
                 th:text="${#numbers.formatDecimal(project.actualCost, 1, 0)}">8.150.000</span> TL), planlanan tahmini
             maliyet bütçesini (<span th:text="${#numbers.formatDecimal(project.estimatedCost, 1, 0)}">7.800.000</span>
             TL) aşmıştır. Lütfen şantiye sarfiyatlarını ve fazla mesai puantajlarını inceleyiniz.
@@ -50,7 +54,7 @@
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
-                    <h3 class="font-bold text-slate-900">Mahal Bazlı Metraj Ağacı (WBS)</h3>
+                    <h3 class="font-bold text-slate-900">Mahal bazlı metraj ağacı</h3>
                     <p class="text-xs text-slate-500">Planlanan vs gerçekleşen montaj alanı</p>
                 </div>
             </div>
@@ -66,7 +70,7 @@
                         </div>
                         <span class="px-2 py-0.5 rounded text-[10px] font-semibold"
                               th:classappend="${loc.status == 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}"
-                              th:text="${loc.status}">DURUM</span>
+                              th:text="${loc.statusLabel}">Durum</span>
                     </div>
                     <div>
                         <div class="flex justify-between text-[11px] text-slate-600 font-semibold mb-1">
@@ -123,7 +127,7 @@
                     <div>
                         <div class="font-semibold text-slate-800" th:text="${cons.itemName}">Granit Yapıştırıcı</div>
                         <div class="text-[10px] text-slate-400"
-                             th:text="${(cons.location != null ? cons.location.locationName : '-') + ' • ' + cons.consumptionType}">Lobi • ADHESIVE
+                             th:text="${(cons.location != null ? cons.location.locationName : '-') + ' • ' + (cons.consumptionType != null ? cons.consumptionType.label : '')}">Lobi • Yapıştırıcı
                         </div>
                     </div>
                     <div class="text-right">
@@ -170,6 +174,80 @@
                         class="w-full min-h-11 py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-lg">
                     Sarfiyatı Kaydet
                 </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4" th:if="${profit != null}">
+        <h3 class="font-bold text-slate-900">Şantiye maliyet analizi</h3>
+        <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+            <div>
+                <dt class="text-xs text-slate-500">Gelir</dt>
+                <dd class="font-bold" th:text="${#numbers.formatDecimal(profit.realizedRevenue, 1, 'POINT', 2, 'COMMA')} + ' TL'">0</dd>
+            </div>
+            <div>
+                <dt class="text-xs text-slate-500">Toplam maliyet</dt>
+                <dd class="font-bold" th:text="${#numbers.formatDecimal(profit.totalCost, 1, 'POINT', 2, 'COMMA')} + ' TL'">0</dd>
+            </div>
+            <div>
+                <dt class="text-xs text-slate-500">Net kâr / zarar</dt>
+                <dd class="font-black" th:text="${#numbers.formatDecimal(profit.netProfitOrLoss, 1, 'POINT', 2, 'COMMA')} + ' TL'">0</dd>
+            </div>
+            <div>
+                <dt class="text-xs text-slate-500">Malzeme / işçilik / vergi</dt>
+                <dd th:text="${profit.materialCost + ' / ' + profit.laborCost + ' / ' + profit.taxCost}">0</dd>
+            </div>
+        </dl>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Mahal taş planı</h3>
+            <div th:each="plan : ${stonePlans}" class="text-xs p-2 border border-slate-100 rounded-lg">
+                <strong th:text="${plan.stoneType}">Taş</strong>
+                <span th:text="' · ' + (plan.location != null ? plan.location.locationName : '')">Mahal</span>
+                <div th:text="${plan.plannedAreaM2 + ' m² plan · ihtiyaç ' + plan.requiredAreaM2 + ' m² · ' + (plan.supplyRoute != null ? plan.supplyRoute.label : '')}">plan</div>
+            </div>
+            <form th:action="@{'/projects/' + ${project.id} + '/plans'}" method="post" class="space-y-2 pt-2 border-t">
+                <select name="locationId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.locationName}"></option>
+                </select>
+                <input type="text" name="stoneType" required placeholder="Taş cinsi" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <select name="surfaceFinish" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="">Yüzey</option>
+                    <option th:each="f : ${surfaceFinishes}" th:value="${f.name()}" th:text="${f.label}"></option>
+                </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.1" name="widthCm" placeholder="En cm" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="number" step="0.1" name="lengthCm" placeholder="Boy cm" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.01" name="plannedAreaM2" required placeholder="Planlanan m²" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="number" step="0.1" name="scrapPercent" placeholder="Fire %" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                </div>
+                <select name="supplyRoute" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option th:each="r : ${supplyRoutes}" th:value="${r.name()}" th:text="${r.label}"></option>
+                </select>
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Planı kaydet</button>
+            </form>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Mahal montajı</h3>
+            <div th:each="ins : ${installations}" class="text-xs p-2 border border-slate-100 rounded-lg"
+                 th:text="${(ins.location != null ? ins.location.locationName : '') + ' · ' + ins.installedAreaM2 + ' m² · fire ' + ins.wasteAreaM2}">montaj</div>
+            <form th:action="@{'/projects/' + ${project.id} + '/installations'}" method="post" class="space-y-2 pt-2 border-t">
+                <select name="locationId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.locationName}"></option>
+                </select>
+                <input type="number" name="materialLotId" placeholder="Malzeme lot id" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="number" name="palletId" placeholder="Palet id" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.01" name="installedAreaM2" required placeholder="Monte m²" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="number" step="0.01" name="wasteAreaM2" placeholder="Fire m²" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                </div>
+                <input type="date" name="installedOn" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="text" name="crewName" placeholder="Ekip" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Montaj kaydet</button>
             </form>
         </div>
     </div>

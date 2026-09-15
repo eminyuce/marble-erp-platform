@@ -10,7 +10,6 @@ import com.ozerler.marble.model.enums.ProcessType;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.model.enums.SurfaceFinish;
-import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.ScrapLogRepository;
 import com.ozerler.marble.repository.SlabRepository;
@@ -43,8 +42,6 @@ class ProductionServiceTest {
     @Mock
     private ProductionOrderRepository productionOrderRepository;
     @Mock
-    private BlockRepository blockRepository;
-    @Mock
     private SlabRepository slabRepository;
     @Mock
     private ScrapLogRepository scrapLogRepository;
@@ -56,7 +53,7 @@ class ProductionServiceTest {
     @BeforeEach
     void setUp() {
         productionService = new ProductionService(
-                productionOrderRepository, blockRepository, slabRepository, scrapLogRepository, barcodeService, null);
+                productionOrderRepository, slabRepository, scrapLogRepository, barcodeService, null, null);
     }
 
     @Test

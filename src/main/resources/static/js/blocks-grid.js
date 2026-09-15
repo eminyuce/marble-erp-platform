@@ -1,4 +1,4 @@
-// Tabulator 6 Data Grid for Quarry & Block Management
+// Tabulator 6 Data Grid for quarry block production
 let blocksTable;
 
 function initBlocksGrid() {
@@ -37,6 +37,7 @@ function initBlocksGrid() {
                 }
             },
             {title: "Ocak", field: "quarryName", minWidth: 140},
+            {title: "Saha", field: "locationName", minWidth: 140},
             {title: "Taş Cinsi", field: "stoneType", minWidth: 120},
             {
                 title: "Ebatlar (En x Boy x Yük.)",
@@ -47,25 +48,27 @@ function initBlocksGrid() {
                 }
             },
             {
-                title: "Kantar (Fiili / Teorik)",
-                minWidth: 160,
+                title: "Tonaj (yaklaşık / fiili)",
+                minWidth: 170,
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
-                    const dev = row.weightDeviationPct;
-                    const isNeg = Number(dev) < 0;
+                    const warn = row.weightDeviationWarning;
                     return `<div>
-                        <strong>${gridNumber(row.actualWeightKg, (n) => n.toLocaleString("tr-TR"))} kg</strong>
-                        <span class="text-xs ${isNeg ? 'text-blue-600' : 'text-amber-600'}">(${gridNumber(dev)}%)</span>
+                        <strong>${gridNumber(row.approximateTonnage)} / ${gridNumber(row.actualTonnage)} ton</strong>
+                        <div class="text-xs ${warn ? 'text-rose-700 font-semibold' : 'text-slate-500'}">
+                            sapma ${gridNumber(row.weightDeviationPct)}%${warn ? ' · %5 uyarısı' : ''}
+                        </div>
                     </div>`;
                 }
             },
             {
                 title: "Kalite",
-                field: "qualityGrade",
-                minWidth: 80,
-                width: 90,
+                field: "qualityGradeLabel",
+                minWidth: 90,
+                width: 110,
                 formatter: function (cell) {
-                    const val = cell.getValue();
+                    const row = cell.getRow().getData();
+                    const val = row.qualityGrade;
                     const colors = {
                         'EXTRA': 'bg-purple-100 text-purple-800',
                         'A': 'bg-emerald-100 text-emerald-800',
@@ -73,22 +76,16 @@ function initBlocksGrid() {
                         'C': 'bg-amber-100 text-amber-800',
                         'MOLOZ': 'bg-rose-100 text-rose-800'
                     };
-                    return `<span class="px-2 py-0.5 rounded text-xs font-semibold ${colors[val] || 'bg-slate-100'}">${gridText(val)}</span>`;
+                    return `<span class="px-2 py-0.5 rounded text-xs font-semibold ${colors[val] || 'bg-slate-100'}">${gridText(cell.getValue())}</span>`;
                 }
             },
             {
                 title: "Durum",
                 field: "statusLabel",
                 minWidth: 140,
-                width: 150,
+                width: 160,
                 formatter: function (cell) {
-                    const row = cell.getRow().getData();
-                    const st = row.status;
-                    let badge = 'bg-slate-100 text-slate-700';
-                    if (st === 'QUARRY') badge = 'bg-amber-100 text-amber-800';
-                    if (st === 'FACTORY_STOCK') badge = 'bg-emerald-100 text-emerald-800';
-                    if (st === 'SAWING') badge = 'bg-blue-100 text-blue-800';
-                    return `<span class="px-2.5 py-1 rounded-full text-xs font-medium ${badge}">● ${gridText(cell.getValue())}</span>`;
+                    return `<span class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">● ${gridText(cell.getValue())}</span>`;
                 }
             },
             {
@@ -112,7 +109,9 @@ function initBlocksGrid() {
                     items.push({icon: 'eye', label: 'Detay', href: '/blocks/' + row.id});
                     items.push({icon: 'git-branch', label: 'Soy Ağacı', href: '/genealogy?code=' + row.blockCode});
                     items.push({icon: 'edit-3', label: 'Düzenle', href: '/blocks/' + row.id + '/edit'});
-                    if (row.status === 'QUARRY') {
+                    const atQuarry = row.canonicalStatus === 'PRODUCED' || row.canonicalStatus === 'MARKED'
+                        || row.status === 'QUARRY' || row.status === 'PRODUCED' || row.status === 'MARKED';
+                    if (atQuarry) {
                         items.push({icon: 'truck', label: 'Fabrikaya Sevk', onclick: 'transferBlock(' + row.id + ')'});
                     }
                     return gridActionsHtml(items);

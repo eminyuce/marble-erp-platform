@@ -6,6 +6,7 @@ import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.PurchaseOrder;
 import com.ozerler.marble.model.PurchaseOrderItem;
 import com.ozerler.marble.model.Supplier;
+import com.ozerler.marble.model.enums.PurchaseItemType;
 import com.ozerler.marble.model.enums.PurchaseOrderStatus;
 import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.PurchaseOrderRepository;
@@ -104,7 +105,7 @@ public class ProcurementService {
         PurchaseOrderItem item = PurchaseOrderItem.builder()
                 .purchaseOrder(order)
                 .itemName(itemName)
-                .itemType(itemType != null ? itemType : "CONSUMABLE")
+                .itemType(PurchaseItemType.fromCode(itemType))
                 .quantity(quantity != null ? quantity : BigDecimal.ONE)
                 .unit(unit != null ? unit : "ADET")
                 .unitPrice(unitPrice != null ? unitPrice : BigDecimal.ZERO)

@@ -102,7 +102,7 @@
     <a th:href="@{/admin/dashboard/systemhealth/}"
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
         <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
-        <span>Sistem Sağlığı (Health)</span>
+        <span>Sistem Sağlığı</span>
     </a>
     <div sec:authorize="hasRole('ADMIN')">
         <a th:href="@{/admin/users}"
@@ -119,39 +119,34 @@
 
     <div class="pt-4 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mermer Operasyonları</div>
 
-    <!-- 1. Ocak & Blok -->
     <a th:href="@{/blocks}"
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
         <i data-lucide="mountain" class="w-5 h-5 text-emerald-400"></i>
-        <span>1. Ocak &amp; Blok</span>
+        <span>Ocak</span>
     </a>
 
-    <!-- 2. Fabrika & Plaka -->
     <a th:href="@{/production}"
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
         <i data-lucide="factory" class="w-5 h-5 text-amber-400"></i>
-        <span>2. Fabrika &amp; Katrak</span>
+        <span>Fabrika</span>
     </a>
 
-    <!-- 2b. Plaka Ambarı -->
     <a th:href="@{/production/slabs}"
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
         <i data-lucide="layers" class="w-5 h-5 text-indigo-400"></i>
-        <span>Plaka Ambarı</span>
+        <span>Plaka Stok Sahası</span>
     </a>
 
-    <!-- 3. Atölye & Ebatlama -->
     <a th:href="@{/workshop}"
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
         <i data-lucide="scissors" class="w-5 h-5 text-rose-400"></i>
-        <span>3. Atölye &amp; Ebatlama</span>
+        <span>Atölye</span>
     </a>
 
-    <!-- 4. Proje & Şantiye -->
     <a th:href="@{/projects}"
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
         <i data-lucide="building-2" class="w-5 h-5 text-cyan-400"></i>
-        <span>4. Proje &amp; Şantiye</span>
+        <span>Şantiyeler</span>
     </a>
 
     <div class="pt-4 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mali &amp; Raporlama</div>
@@ -160,7 +155,7 @@
     <a th:href="@{/costs}"
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
         <i data-lucide="calculator" class="w-5 h-5 text-emerald-400"></i>
-        <span>Maliyet &amp; Fiyatlama</span>
+        <span>Maliyet Analizi</span>
     </a>
 
     <!-- 5b. Rapor Merkezi (Excel/CSV) -->

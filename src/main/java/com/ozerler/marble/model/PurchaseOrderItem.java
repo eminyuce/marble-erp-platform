@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.model.enums.PurchaseItemType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,9 +28,10 @@ public class PurchaseOrderItem extends AuditableEntity {
     @Column(name = "item_name", nullable = false, length = 300)
     private String itemName;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false, length = 50)
     @Builder.Default
-    private String itemType = "CONSUMABLE";
+    private PurchaseItemType itemType = PurchaseItemType.CONSUMABLE;
 
     @Column(nullable = false, precision = 12, scale = 2)
     @Builder.Default

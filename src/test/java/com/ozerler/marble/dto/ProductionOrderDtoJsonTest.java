@@ -50,6 +50,6 @@ class ProductionOrderDtoJsonTest {
 
         assertThat(dto.getStatus()).isEqualTo("COMPLETED");
         assertThat(dto.getStatusLabel()).isEqualTo("Tamamlandı");
-        assertThat(dto.getProcessLabel()).isEqualTo("Katrak Dilimleme (80 Lama)");
+        assertThat(dto.getProcessLabel()).isEqualTo("Katrak");
     }
 }

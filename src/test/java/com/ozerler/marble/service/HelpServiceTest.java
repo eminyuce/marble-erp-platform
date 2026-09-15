@@ -70,6 +70,11 @@ class HelpServiceTest {
         assertThat(helpService.resolvePageKey("/projects/2")).contains("projects");
         assertThat(helpService.resolvePageKey("/production/slabs")).contains("slabs");
         assertThat(helpService.resolvePageKey("/production/orders/1")).contains("production");
+        assertThat(helpService.resolvePageKey("/production/polish")).contains("production");
+        assertThat(helpService.resolvePageKey("/quarry")).contains("blocks");
+        assertThat(helpService.resolvePageKey("/factory")).contains("production");
+        assertThat(helpService.resolvePageKey("/sites")).contains("projects");
+        assertThat(helpService.resolvePageKey("/cost-analysis")).contains("costs");
         assertThat(helpService.resolvePageKey("/account/change-password?x=1")).contains("change-password");
         assertThat(helpService.resolvePageKey("/unknown")).isEmpty();
         assertThat(helpService.resolvePageKey("/roles")).isEmpty();

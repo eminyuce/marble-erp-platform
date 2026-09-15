@@ -37,15 +37,14 @@
             <ol class="osf-guide__toc-list">
                 <li><a href="#osf-home" data-osf-toc-link data-osf-page="0" class="is-active" aria-current="page">1.
                     Kokpit</a></li>
-                <li><a href="#osf-blocks" data-osf-toc-link data-osf-page="1" aria-current="false">2. Ocak ve
-                    bloklar</a></li>
-                <li><a href="#osf-production" data-osf-toc-link data-osf-page="2" aria-current="false">3. Katrak
-                    kesim</a></li>
-                <li><a href="#osf-slabs" data-osf-toc-link data-osf-page="3" aria-current="false">4. Plaka ambarı</a>
+                <li><a href="#osf-blocks" data-osf-toc-link data-osf-page="1" aria-current="false">2. Ocak</a></li>
+                <li><a href="#osf-production" data-osf-toc-link data-osf-page="2" aria-current="false">3. Fabrika</a>
+                </li>
+                <li><a href="#osf-slabs" data-osf-toc-link data-osf-page="3" aria-current="false">4. Plaka Stok Sahası</a>
                 </li>
                 <li><a href="#osf-workshop" data-osf-toc-link data-osf-page="4" aria-current="false">5. Atölye</a></li>
-                <li><a href="#osf-projects" data-osf-toc-link data-osf-page="5" aria-current="false">6. Şantiye</a></li>
-                <li><a href="#osf-cost" data-osf-toc-link data-osf-page="6" aria-current="false">7. Maliyet ve rapor</a>
+                <li><a href="#osf-projects" data-osf-toc-link data-osf-page="5" aria-current="false">6. Şantiyeler</a></li>
+                <li><a href="#osf-cost" data-osf-toc-link data-osf-page="6" aria-current="false">7. Maliyet Analizi</a>
                 </li>
                 <li><a href="#osf-users" data-osf-toc-link data-osf-page="7" aria-current="false">8. Kullanıcılar</a>
                 </li>
@@ -99,7 +98,7 @@
                     </aside>
                     <p class="osf-guide__where">
                         Yönetim:
-                        <a th:href="@{/blocks}">Bloklar</a>
+                        <a th:href="@{/blocks}">Ocak</a>
                     </p>
                 </section>
 
@@ -109,13 +108,13 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="scissors"></i></span>
                         <div>
-                            <h2 id="osf-production-title">Katrak kesim</h2>
-                            <p>Bloğu dilimleyin, yüzey işlemini atayın ve fireyi kodlayın.</p>
+                            <h2 id="osf-production-title">Fabrika</h2>
+                            <p>Blok kabulünden ST/Katrak kesime, silim ve palet sevkiyata kadar izleyin.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
                     <ul class="osf-guide__list">
-                        <li>Katrak veya ST kesim emri açın</li>
+                        <li>Katrak veya ST kesimini ayrı iş emri olarak kaydedin</li>
                         <li>Cila, honlama veya fırçalama yüzey işlemi seçin</li>
                         <li>Fireyi FR-01 … FR-10 kodlarıyla kaydedin</li>
                     </ul>
@@ -125,7 +124,7 @@
                     </aside>
                     <p class="osf-guide__where">
                         Yönetim:
-                        <a th:href="@{/production}">Katrak Kesim</a>
+                        <a th:href="@{/production}">Fabrika</a>
                     </p>
                 </section>
 
@@ -135,7 +134,7 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="layers"></i></span>
                         <div>
-                            <h2 id="osf-slabs-title">Plaka ambarı</h2>
+                            <h2 id="osf-slabs-title">Plaka Stok Sahası</h2>
                             <p>Her plakayı barkodlayın, kaliteleyin ve paletleyin.</p>
                         </div>
                     </header>
@@ -143,11 +142,11 @@
                     <ul class="osf-guide__list">
                         <li>Plakaya tekil kod ve QR etiket verin</li>
                         <li>Kalite sınıfı, kalınlık ve parlaklık (gloss) kaydedin</li>
-                        <li>Stok durumunu AVAILABLE, RESERVED veya SHIPPED izleyin</li>
+                        <li>Stok durumunu Stokta, Rezerve veya Sevk Edildi olarak izleyin</li>
                     </ul>
                     <p class="osf-guide__where">
                         Yönetim:
-                        <a th:href="@{/production/slabs}">Plaka Ambarı</a>
+                        <a th:href="@{/production/slabs}">Plaka Stok Sahası</a>
                     </p>
                 </section>
 
@@ -182,13 +181,13 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="building-2"></i></span>
                         <div>
-                            <h2 id="osf-projects-title">Şantiye ve WBS</h2>
-                            <p>Projeyi mahal ağacına bölün; montaj ve sarfiyatı izleyin.</p>
+                            <h2 id="osf-projects-title">Şantiyeler</h2>
+                            <p>Şantiyeyi mahal ağacına bölün; montaj ve sarfiyatı izleyin.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
                     <ul class="osf-guide__list">
-                        <li>Blok → kat → mahal → oda kırılımında WBS oluşturun</li>
+                        <li>Blok → kat → mahal → oda kırılımında mahal ağacı oluşturun</li>
                         <li>Planlanan m² ile fiili montajı karşılaştırın</li>
                         <li>Kum, çimento ve yapıştırıcı sarfiyatını kaydedin</li>
                     </ul>
@@ -204,8 +203,8 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="calculator"></i></span>
                         <div>
-                            <h2 id="osf-cost-title">Maliyet, rapor ve soy ağacı</h2>
-                            <p>Kalite çarpanlı maliyet, Excel rapor ve taş pasaportu.</p>
+                            <h2 id="osf-cost-title">Maliyet Analizi, rapor ve soy ağacı</h2>
+                            <p>Gerçek operasyon giderleri, Excel rapor ve taş pasaportu.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
@@ -216,7 +215,7 @@
                     </ul>
                     <p class="osf-guide__where">
                         Yönetim:
-                        <a th:href="@{/costs}">Maliyet</a>
+                        <a th:href="@{/costs}">Maliyet Analizi</a>
                         |
                         <a th:href="@{/reports}">Rapor Merkezi</a>
                         |

@@ -22,7 +22,7 @@ import java.util.Map;
 
 @Controller
 @RequestMapping("/reports")
-@PreAuthorize("hasAnyRole('ADMIN', 'EXECUTIVE', 'ACCOUNTANT', 'MANAGER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'EXECUTIVE', 'FINANCE', 'FACTORY_MANAGER')")
 @RequiredArgsConstructor
 @Slf4j
 public class ReportController {

@@ -22,7 +22,7 @@ function initProductionGrid() {
         ajaxResponse: function (url, params, response) {
             return erpGridAjaxResponse("production-table", response);
         },
-        placeholder: "Üretim emri kaydı bulunamadı.",
+        placeholder: "Fabrika iş emri kaydı bulunamadı.",
         columns: [
             erpResponsiveCollapseColumn(),
             {

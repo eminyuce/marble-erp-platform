@@ -37,18 +37,25 @@ public class HelpContentCatalog {
 
     private static final List<PathMapping> PATH_MAPPINGS = List.of(
                     new PathMapping("/account/change-password", "change-password"),
+                    new PathMapping("/production/tablet", "production"),
+                    new PathMapping("/production/pallets", "production"),
+                    new PathMapping("/production/polish", "production"),
                     new PathMapping("/production/slabs", "slabs"),
                     new PathMapping("/admin/settings", "settings"),
                     new PathMapping("/admin/users", "users"),
                     new PathMapping("/admin/dashboard", "dashboard"),
+                    new PathMapping("/factory", "production"),
                     new PathMapping("/production", "production"),
                     new PathMapping("/workshop", "workshop"),
+                    new PathMapping("/sites", "projects"),
                     new PathMapping("/projects", "projects"),
                     new PathMapping("/procurement", "procurement"),
                     new PathMapping("/sales", "sales"),
+                    new PathMapping("/quarry", "blocks"),
                     new PathMapping("/blocks", "blocks"),
                     new PathMapping("/genealogy", "genealogy"),
                     new PathMapping("/reports", "reports"),
+                    new PathMapping("/cost-analysis", "costs"),
                     new PathMapping("/costs", "costs")
             ).stream()
             .sorted(Comparator.comparingInt((PathMapping mapping) -> mapping.path().length()).reversed())

@@ -30,7 +30,7 @@ class QuarryBlockServiceTest {
 
     @BeforeEach
     void setUp() {
-        quarryBlockService = new QuarryBlockService(blockRepository, quarryRepository, null);
+        quarryBlockService = new QuarryBlockService(blockRepository, quarryRepository, null, null, null, null);
     }
 
     @Test

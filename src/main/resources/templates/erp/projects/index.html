@@ -2,7 +2,7 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Proje &amp; Şantiye Yönetimi | Özerler Mermer ERP</title>
+    <title>Şantiyeler | Özerler Mermer ERP</title>
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page">
@@ -11,16 +11,16 @@
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Şantiyeler')}"></div>
             <h2 class="admin-page-title">Şantiyeler</h2>
-            <p class="erp-list-lead">Mahal metraj ağacı (WBS), fiili sarfiyatlar, montaj puantajı ve bütçe sapması.</p>
+            <p class="erp-list-lead">Mahal metraj ağacı, taş planı, montaj ve şantiye kâr/zararı.</p>
         </div>
     </div>
 
     <div class="erp-toolbar">
         <a th:href="@{/projects/create}" class="erp-btn-primary">
             <i data-lucide="plus"></i>
-            <span>Yeni proje oluştur</span>
+            <span>Yeni şantiye</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Proje kodu, adı veya müşteri', 'project-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: search('Şantiye kodu, adı veya müşteri', 'project-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('projects-table', 'projeler')}"></div>
         </div>
@@ -47,11 +47,11 @@
                 ajaxResponse: function (url, params, response) {
                     return erpGridAjaxResponse("projects-table", response);
                 },
-                placeholder: "Proje kaydı bulunamadı.",
+                placeholder: "Şantiye kaydı bulunamadı.",
                 columns: [
                     erpResponsiveCollapseColumn(),
                     {
-                        title: "Proje Kodu",
+                        title: "Şantiye Kodu",
                         field: "projectCode",
                         width: 160,
                         responsive: 0,
@@ -61,7 +61,7 @@
                         }
                     },
                     {
-                        title: "Proje Adı",
+                        title: "Şantiye Adı",
                         field: "name",
                         minWidth: 200,
                         formatter: function (cell) {

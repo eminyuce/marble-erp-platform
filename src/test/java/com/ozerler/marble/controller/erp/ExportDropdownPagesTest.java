@@ -13,7 +13,7 @@ class ExportDropdownPagesTest {
             "/templates/erp/blocks/index.html", "exportDropdown('blocks-table', 'bloklar')",
             "/templates/erp/production/index.html", "exportDropdown('production-table', 'uretim_emirleri')",
             "/templates/erp/production/slabs.html", "exportDropdown('slabs-table', 'plakalar')",
-            "/templates/erp/workshop/index.html", "exportDropdown('workshop-table', 'kesim_emirleri')",
+            "/templates/erp/workshop/index.html", "exportDropdown('workshop-table', 'atelye_is_emirleri')",
             "/templates/erp/projects/index.html", "exportDropdown('projects-table', 'projeler')",
             "/templates/erp/procurement/index.html", "exportDropdown('procurement-table', 'satinalma')",
             "/templates/erp/sales/index.html", "exportDropdown('sales-table', 'satislar')",

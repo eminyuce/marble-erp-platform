@@ -9,7 +9,7 @@
 <body>
 <div layout:fragment="content" class="erp-form-page">
 
-    <div th:replace="~{fragments/form-page :: breadcrumb('Bloklar', @{/blocks}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Ocak', @{/blocks}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
     <div th:replace="~{fragments/form-page :: heading(
         ${(isEdit ?: false) ? 'Blok bilgilerini düzenle' : 'Yeni ham blok giriş kartı'},
         ${(isEdit ?: false) ? 'Ocak çıkışını, 3 eksenli ölçüleri, tartım ve kalite bilgilerini güncelleyin.' : 'Ocak çıkışını, 3 eksenli ölçüleri, kantar tartımını ve kalite bilgilerini kaydedin.'},

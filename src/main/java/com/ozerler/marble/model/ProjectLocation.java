@@ -55,6 +55,10 @@ public class ProjectLocation extends AuditableEntity {
     @Builder.Default
     private String status = "PLANNED"; // PLANNED, IN_PROGRESS, COMPLETED
 
+    @Transient
+    public String getStatusLabel() {
+        return com.ozerler.marble.model.enums.OperationStatus.labelOf(status);
+    }
 
     public BigDecimal getProgressPercentage() {
         if (plannedAreaM2 == null || plannedAreaM2.compareTo(BigDecimal.ZERO) == 0) {
