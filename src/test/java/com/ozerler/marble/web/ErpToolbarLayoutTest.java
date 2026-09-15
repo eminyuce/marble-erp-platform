@@ -25,6 +25,7 @@ class ErpToolbarLayoutTest {
         String css = Files.readString(Path.of("frontend/src/input.css"));
         assertThat(css).contains("grid-template-columns: auto minmax(8rem, 1fr) minmax(0, max-content)");
         assertThat(css).contains(".erp-toolbar-filter");
+        assertThat(css).contains("min-width: 16rem");
         assertThat(css).contains(".erp-search-form {\n  min-width: 0;");
         assertThat(css).doesNotContain("flex: 1 1 220px");
         assertThat(css).doesNotContain(".erp-toolbar-actions {\n    width: 100%;");
@@ -44,5 +45,12 @@ class ErpToolbarLayoutTest {
                     .as("%s should use the compact toolbar filter", page)
                     .contains("class=\"erp-toolbar-filter\"");
         }
+
+        String searchableCss = Files.readString(Path.of("src/main/resources/static/css/searchable-select.css"));
+        assertThat(searchableCss).contains(".erp-ss--toolbar");
+        assertThat(searchableCss).contains("min-width: 16rem");
+        String searchableJs = Files.readString(Path.of("src/main/resources/static/js/searchable-select.js"));
+        assertThat(searchableJs).contains("erp-ss--toolbar");
+        assertThat(searchableJs).contains("erp-toolbar-filter");
     }
 }

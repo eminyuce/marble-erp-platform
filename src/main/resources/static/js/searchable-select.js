@@ -101,7 +101,14 @@
     function SearchableSelect(select) {
         this.select = select;
         this.noun = optionNoun(select);
-        this.root = createEl("div", "erp-ss" + (select.classList.contains("erp-form-select") ? "" : " erp-ss--compact"));
+        const rootClasses = ["erp-ss"];
+        if (!select.classList.contains("erp-form-select")) {
+            rootClasses.push("erp-ss--compact");
+        }
+        if (select.classList.contains("erp-toolbar-filter")) {
+            rootClasses.push("erp-ss--toolbar");
+        }
+        this.root = createEl("div", rootClasses.join(" "));
         this.root.setAttribute("data-erp-searchable-root", "");
         this.trigger = createEl("button", "erp-ss-trigger", {type: "button", "aria-haspopup": "listbox"});
         this.triggerLabel = createEl("span", "erp-ss-trigger-label");

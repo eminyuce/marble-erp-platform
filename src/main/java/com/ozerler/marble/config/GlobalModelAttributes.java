@@ -16,7 +16,7 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20260915-toolbar-oneline}")
+    @Value("${app.asset-version:20260915-filter-dropdown}")
     private String assetVersion;
 
     @ModelAttribute("gridDefaultPageSize")
