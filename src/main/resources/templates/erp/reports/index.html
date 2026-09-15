@@ -140,10 +140,13 @@
                 return columns;
             }
 
+            const initialKey = document.querySelector("[data-report-key]")?.dataset.reportKey;
+            const initialReport = initialKey ? (window.REPORT_PREVIEWS || {})[initialKey] : null;
+
             window.reportsTable = new Tabulator("#reports-table", {
                 ...erpGridDefaults(),
-                data: [],
-                columns: previewColumns({headers: []}),
+                data: previewRows(initialReport),
+                columns: previewColumns(initialReport || {headers: []}),
                 pagination: true,
                 paginationMode: "local",
                 paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
@@ -160,11 +163,6 @@
                 window.reportsTable.setColumns(previewColumns(report));
                 window.reportsTable.replaceData(previewRows(report));
             };
-
-            const initialKey = document.querySelector("[data-report-key]")?.dataset.reportKey;
-            if (initialKey) {
-                window.loadReportPreview(initialKey);
-            }
         });
     </script>
 </th:block>

@@ -14,6 +14,7 @@ spring:
       connection-timeout: 20000
       max-lifetime: 1200000
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
     show-sql: false
@@ -33,3 +34,14 @@ app:
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:8080,http://127.0.0.1:8080}
     allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.trycloudflare.com}
+
+rate-limiting:
+  login:
+    max-requests: 1000
+    window-seconds: 60
+  form:
+    max-requests: 2000
+    window-seconds: 60
+  general:
+    max-requests: 10000
+    window-seconds: 60

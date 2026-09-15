@@ -205,7 +205,7 @@
             <h3 class="font-bold text-slate-900">Mahal taş planı</h3>
             <div th:each="plan : ${stonePlans}" class="text-xs p-2 border border-slate-100 rounded-lg">
                 <strong th:text="${plan.stoneType}">Taş</strong>
-                <span th:text="' · ' + (plan.location != null ? plan.location.locationName : '')">Mahal</span>
+                <span th:if="${plan.location != null}" th:text="${' · ' + plan.location.locationName}">Mahal</span>
                 <div th:text="${plan.plannedAreaM2 + ' m² plan · ihtiyaç ' + plan.requiredAreaM2 + ' m² · ' + (plan.supplyRoute != null ? plan.supplyRoute.label : '')}">plan</div>
             </div>
             <form th:action="@{'/projects/' + ${project.id} + '/plans'}" method="post" class="space-y-2 pt-2 border-t">
@@ -233,8 +233,10 @@
         </div>
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
             <h3 class="font-bold text-slate-900">Mahal montajı</h3>
-            <div th:each="ins : ${installations}" class="text-xs p-2 border border-slate-100 rounded-lg"
-                 th:text="${(ins.location != null ? ins.location.locationName : '') + ' · ' + ins.installedAreaM2 + ' m² · fire ' + ins.wasteAreaM2}">montaj</div>
+            <div th:each="ins : ${installations}" class="text-xs p-2 border border-slate-100 rounded-lg">
+                <span th:text="${ins.location != null ? ins.location.locationName : '—'}"></span>
+                <span th:text="${' · ' + ins.installedAreaM2 + ' m² · fire ' + ins.wasteAreaM2}"></span>
+            </div>
             <form th:action="@{'/projects/' + ${project.id} + '/installations'}" method="post" class="space-y-2 pt-2 border-t">
                 <select name="locationId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
                     <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.locationName}"></option>

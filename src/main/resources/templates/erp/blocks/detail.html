@@ -142,9 +142,10 @@
                 Saha taşıma yalnızca ocaktaki (Üretim Sahası / Stok Sahası) bloklar için geçerlidir.
             </p>
             <div class="text-xs space-y-1 max-h-40 overflow-y-auto">
-                <div th:each="mv : ${movements}" class="border-b border-slate-100 py-1"
-                     th:text="${(mv.fromLocation != null ? mv.fromLocation.name : '—') + ' → ' + (mv.toLocation != null ? mv.toLocation.name : '—') + ' · ' + (mv.description != null ? mv.description : '')}">
-                    hareket
+                <div th:each="mv : ${movements}" class="border-b border-slate-100 py-1">
+                    <span th:text="${(mv.fromLocation != null ? mv.fromLocation.name : '—') + ' → ' + (mv.toLocation != null ? mv.toLocation.name : '—')}"></span>
+                    <span th:if="${mv.description != null and !#strings.isEmpty(mv.description)}"
+                          th:text="${' · ' + mv.description}"></span>
                 </div>
                 <div th:if="${#lists.isEmpty(movements)}" class="text-slate-400">Henüz saha hareketi yok.</div>
             </div>
