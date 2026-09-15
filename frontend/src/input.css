@@ -674,9 +674,15 @@ body.help-panel-open {
 
 .help-panel-content h3,
 .help-panel-content h4 {
-  margin: 0 0 0.5rem;
+  margin: 1rem 0 0.45rem;
   font-size: 0.95rem;
+  font-weight: 800;
   color: #0f172a;
+}
+
+.help-panel-content h3:first-child,
+.help-panel-content h4:first-child {
+  margin-top: 0;
 }
 
 .help-panel-skeleton {
