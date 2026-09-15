@@ -59,9 +59,12 @@ class TerminologyContractTest {
         String sidebar = Files.readString(root.resolve("templates/layout/sidebar.html"));
         assertThat(sidebar).contains(">Ocak<").contains(">Fabrika<").contains(">Atölye<")
                 .contains(">Şantiyeler<").contains(">Maliyet Analizi<").contains(">Plaka Stok Sahası<")
-                .contains("Sistem Tanımları");
+                .contains("/admin/definitions/machines")
+                .contains("/admin/definitions/suppliers")
+                .doesNotContain("th:href=\"@{/admin/definitions}\"");
         String megaMenu = Files.readString(root.resolve("templates/layout/mega-menu.html"));
-        assertThat(megaMenu).contains("Sistem Tanımları");
+        assertThat(megaMenu).doesNotContain("Sistem Tanımları");
+        assertThat(megaMenu).doesNotContain("th:href=\"@{/admin/definitions}\"");
         assertThat(megaMenu).contains("admin-mega-card-title\">Tanımlar<");
         assertThat(megaMenu).contains("admin-mega-card-title\">Sistem<");
         assertThat(megaMenu).doesNotContain("Tanımlar &amp; Yönetim");
@@ -72,7 +75,7 @@ class TerminologyContractTest {
         String definitionsCard = megaMenu.substring(definitionsIdx, systemIdx);
         String systemCard = megaMenu.substring(systemIdx);
         assertThat(definitionsCard)
-                .contains("/admin/definitions")
+                .doesNotContain("th:href=\"@{/admin/definitions}\"")
                 .contains("/admin/definitions/machines")
                 .contains("/admin/definitions/stock-locations")
                 .contains("/admin/definitions/quarries")

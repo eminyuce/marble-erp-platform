@@ -65,15 +65,20 @@ class DefinitionFormPagesTest {
                     .doesNotContain("openCreateModal")
                     .doesNotContain("openEditModal")
                     .doesNotContain("x-show=\"modalOpen\"")
+                    .doesNotContain("breadcrumbTrail")
                     .contains("/create")
                     .contains("/edit");
         }
+        assertThat(Path.of("src/main/resources/templates/admin/definitions/index.html")).doesNotExist();
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("admin can open definition create and edit form pages")
     void adminCanOpenCreateAndEditForms() throws Exception {
+        mockMvc.perform(get("/admin/definitions"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/definitions/machines"));
         mockMvc.perform(get("/admin/definitions/machines/create"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/definitions/machine-form"));

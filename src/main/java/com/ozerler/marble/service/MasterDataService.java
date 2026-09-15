@@ -402,34 +402,6 @@ public class MasterDataService {
         log.info("Cost center deleted successfully. ID: {}, Code: {}", id, costCenter.getCode());
     }
 
-    // =========================================================================
-    // SUMMARY COUNTS FOR HUB
-    // =========================================================================
-
-    public DefinitionCounts getSummaryCounts() {
-        return new DefinitionCounts(
-                machineRepository.count(),
-                machineRepository.countByActiveTrue(),
-                stockLocationRepository.count(),
-                stockLocationRepository.countByActiveTrue(),
-                quarryRepository.count(),
-                customerRepository.count(),
-                supplierRepository.count(),
-                costCenterRepository.count()
-        );
-    }
-
-    public record DefinitionCounts(
-            long totalMachines,
-            long activeMachines,
-            long totalStockLocations,
-            long activeStockLocations,
-            long totalQuarries,
-            long totalCustomers,
-            long totalSuppliers,
-            long totalCostCenters
-    ) {}
-
     static String normalizeCode(String raw) {
         return raw.trim().toUpperCase(Locale.ROOT);
     }

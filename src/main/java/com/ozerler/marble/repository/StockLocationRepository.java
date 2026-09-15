@@ -24,8 +24,6 @@ public interface StockLocationRepository extends JpaRepository<StockLocation, Lo
 
     List<StockLocation> findAllByOrderByCodeAsc();
 
-    long countByActiveTrue();
-
     @Query("SELECT l FROM StockLocation l WHERE (:search IS NULL "
             + "OR LOWER(l.code) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(l.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "

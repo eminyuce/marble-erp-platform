@@ -30,15 +30,9 @@ public class DefinitionController extends AbstractController {
 
     private final MasterDataService masterDataService;
 
-    // =========================================================================
-    // HUB / OVERVIEW
-    // =========================================================================
-
     @GetMapping
-    public String index(Model model) {
-        model.addAttribute("counts", masterDataService.getSummaryCounts());
-        model.addAttribute("currentSection", "definitions");
-        return "admin/definitions/index";
+    public String index() {
+        return "redirect:/admin/definitions/machines";
     }
 
     // =========================================================================

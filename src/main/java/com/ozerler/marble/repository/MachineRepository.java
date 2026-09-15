@@ -26,8 +26,6 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
 
     List<Machine> findAllByOrderByCodeAsc();
 
-    long countByActiveTrue();
-
     @Query("SELECT m FROM Machine m WHERE (:search IS NULL "
             + "OR LOWER(m.code) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(m.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
