@@ -69,6 +69,7 @@ class TerminologyContractTest {
                 .contains("Fabrika Maliyet Analizi")
                 .contains("Atölye Maliyet Analizi")
                 .contains("Şantiye Maliyet Analizi")
-                .contains("Fiyat Simülasyonu");
+                .contains("Fiyat Simülasyonu")
+                .contains("Şantiye gideri bir projeye bağlanmalıdır");
     }
 }

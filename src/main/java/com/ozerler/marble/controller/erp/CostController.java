@@ -1,8 +1,10 @@
 package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
+import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.service.CostAccountingService;
 import com.ozerler.marble.service.CostAnalysisService;
 import com.ozerler.marble.service.ExpenseService;
@@ -34,6 +36,7 @@ public class CostController {
     private final CostAnalysisService costAnalysisService;
     private final ExpenseService expenseService;
     private final PricingService pricingService;
+    private final ProjectRepository projectRepository;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -48,6 +51,7 @@ public class CostController {
         model.addAttribute("costCenters", costAccountingService.getAllCostCenters());
         model.addAttribute("expenseTypes", ExpenseType.values());
         model.addAttribute("businessUnits", BusinessUnit.values());
+        model.addAttribute("projects", projectRepository.findAll());
         model.addAttribute("totalExpenses", costAccountingService.getTotalExpenses());
         return "erp/costs/index";
     }
@@ -69,18 +73,30 @@ public class CostController {
                                 @RequestParam("expenseType") ExpenseType expenseType,
                                 @RequestParam("businessUnit") BusinessUnit businessUnit,
                                 @RequestParam("amount") BigDecimal amount,
+                                @RequestParam(value = "projectId", required = false) Long projectId,
                                 @RequestParam(value = "documentNo", required = false) String documentNo,
                                 @RequestParam(value = "invoiceDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate invoiceDate,
                                 @RequestParam(value = "expensePeriod", required = false) String expensePeriod,
                                 @RequestParam(value = "description", required = false) String description,
                                 Locale locale,
                                 RedirectAttributes redirectAttributes) {
-        expenseService.recordExpense(new ExpenseService.ExpenseDraft(
-                centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
-                documentNo, invoiceDate, LocalDate.now(), expensePeriod, YearMonth.now().toString(),
-                null, null, null, null, null, null, null, description));
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.cost.expense.success", null, locale));
+        try {
+            Project project = null;
+            if (projectId != null) {
+                project = projectRepository.findById(projectId)
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                messageSource.getMessage("error.project.not_found", new Object[]{projectId}, locale)));
+            }
+            expenseService.recordExpense(new ExpenseService.ExpenseDraft(
+                    centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
+                    documentNo, invoiceDate, LocalDate.now(), expensePeriod, YearMonth.now().toString(),
+                    null, null, project, null, null, null, null, description));
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.cost.expense.success", null, locale));
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+        }
         return "redirect:/costs";
     }
 

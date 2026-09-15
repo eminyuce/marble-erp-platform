@@ -151,7 +151,7 @@
                             <span class="admin-mega-card-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
                             <h3 class="admin-mega-card-title">Yönetim</h3>
                             <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">4</span>
-                            <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">2</span>
+                            <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">1</span>
                         </header>
                         <div class="admin-mega-card-body">
                             <a class="admin-mega-item" th:href="@{/admin/definitions}" sec:authorize="hasRole('ADMIN')"
@@ -165,7 +165,7 @@
                                 <i data-lucide="users" aria-hidden="true"></i>
                                 <span>Kullanıcılar</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/admin/settings}"
+                            <a class="admin-mega-item" th:href="@{/admin/settings}" sec:authorize="hasRole('ADMIN')"
                                data-search="ayar smtp 2fa recaptcha sistem" title="Sistem Ayarları">
                                 <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
                                 <span>Sistem Ayarları</span>

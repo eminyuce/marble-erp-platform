@@ -72,4 +72,6 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     boolean existsByQuarryId(Long quarryId);
 
     boolean existsByCurrentLocationId(Long currentLocationId);
+
+    boolean existsBySoldCustomer_Id(Long customerId);
 }

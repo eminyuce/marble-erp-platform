@@ -161,6 +161,20 @@ class MasterDataServiceTest {
     }
 
     @Test
+    @DisplayName("customers with sold quarry blocks cannot be deleted")
+    void deleteCustomer_WithSoldBlock_Throws() {
+        when(customerRepository.findById(8L)).thenReturn(Optional.of(
+                Customer.builder().id(8L).customerCode("C-8").companyName("Alıcı").build()));
+        when(salesOrderRepository.existsByCustomerId(8L)).thenReturn(false);
+        when(blockCustomerMarkRepository.existsByCustomerId(8L)).thenReturn(false);
+        when(blockRepository.existsBySoldCustomer_Id(8L)).thenReturn(true);
+
+        assertThatThrownBy(() -> masterDataService.deleteCustomer(8L))
+                .isInstanceOf(IllegalStateException.class);
+        verify(customerRepository, never()).delete(any());
+    }
+
+    @Test
     @DisplayName("suppliers without purchase orders can be deleted")
     void deleteSupplier_WithoutOrders_Deletes() {
         Supplier supplier = Supplier.builder().id(5L).supplierCode("T-1").companyName("Tedarik").build();

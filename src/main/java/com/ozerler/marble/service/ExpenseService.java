@@ -49,6 +49,9 @@ public class ExpenseService {
         BusinessUnit unit = draft.businessUnit() != null
                 ? draft.businessUnit()
                 : (center.getBusinessUnit() != null ? center.getBusinessUnit() : BusinessUnit.FACTORY);
+        if (unit == BusinessUnit.SITE && draft.project() == null) {
+            throw new IllegalArgumentException(MessageUtils.getMessage("error.expense.site.project.required"));
+        }
         String postingPeriod = ExpensePeriods.normalize(
                 draft.postingPeriod() != null ? draft.postingPeriod() : YearMonth.now().toString());
         String expensePeriod = draft.expensePeriod() != null

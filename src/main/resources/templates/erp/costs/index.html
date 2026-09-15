@@ -113,13 +113,21 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
             <h3 class="font-bold text-slate-900">Gider girişi</h3>
-            <form th:action="@{/costs/expenses}" method="post" class="space-y-2">
+            <form th:action="@{/costs/expenses}" method="post" class="space-y-2" x-data="{ unit: 'QUARRY' }">
                 <select name="centerId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Masraf merkezi</option>
                     <option th:each="c : ${costCenters}" th:value="${c.id}" th:text="${c.code + ' — ' + c.name}"></option>
                 </select>
-                <select name="businessUnit" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <select name="businessUnit" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" x-model="unit">
                     <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}"></option>
                 </select>
+                <select name="projectId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                        :required="unit === 'SITE'">
+                    <option value="">Şantiye seçilmedi</option>
+                    <option th:each="p : ${projects}" th:value="${p.id}"
+                            th:text="${p.projectCode + ' — ' + p.name}">Proje</option>
+                </select>
+                <p class="text-[11px] text-slate-500" x-show="unit === 'SITE'">Şantiye gideri bir projeye bağlanmalıdır.</p>
                 <select name="expenseType" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
                     <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
                 </select>

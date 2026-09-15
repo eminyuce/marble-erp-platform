@@ -234,8 +234,10 @@ public class MasterDataService {
     @Transactional
     public void deleteCustomer(Long id) {
         Customer customer = getCustomerById(id);
-        if (salesOrderRepository.existsByCustomerId(id) || blockCustomerMarkRepository.existsByCustomerId(id)) {
-            throw new IllegalStateException("Bu müşteriye ait satış veya işaret kayıtları mevcuttur. Müşteri silinemez.");
+        if (salesOrderRepository.existsByCustomerId(id)
+                || blockCustomerMarkRepository.existsByCustomerId(id)
+                || blockRepository.existsBySoldCustomer_Id(id)) {
+            throw new IllegalStateException("Bu müşteriye ait satış, işaret veya satılan blok kayıtları mevcuttur. Müşteri silinemez.");
         }
         customerRepository.delete(customer);
         log.info("Customer deleted successfully. ID: {}, Code: {}", id, customer.getCustomerCode());

@@ -20,7 +20,9 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -77,5 +79,19 @@ class ExpenseServiceTest {
         verify(costTransactionRepository).save(captor.capture());
         assertThat(captor.getValue().getExpensePeriod()).isEqualTo("2026-08");
         assertThat(captor.getValue().getPostingPeriod()).isEqualTo("2026-09");
+    }
+
+    @Test
+    @DisplayName("site expenses require a construction project")
+    void siteExpenseWithoutProject_Throws() {
+        CostCenter center = CostCenter.builder().id(5L).code("CC-S").name("Şantiye").businessUnit(BusinessUnit.SITE).build();
+        when(costCenterRepository.findById(5L)).thenReturn(Optional.of(center));
+
+        assertThatThrownBy(() -> expenseService.recordExpense(new ExpenseService.ExpenseDraft(
+                5L, ExpenseType.MATERIAL, null, BusinessUnit.SITE, new BigDecimal("500"), "TRY",
+                "F-2", LocalDate.of(2026, 9, 10), LocalDate.of(2026, 9, 10), "2026-09", "2026-09",
+                null, null, null, null, null, null, null, "Malzeme")))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(costTransactionRepository, never()).save(any());
     }
 }

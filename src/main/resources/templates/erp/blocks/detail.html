@@ -130,13 +130,17 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
             <h3 class="font-bold text-slate-900">Saha hareketi</h3>
-            <form th:action="@{'/blocks/' + ${block.id} + '/move'}" method="post" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <form th:if="${block.canonicalStatus.atQuarry}"
+                  th:action="@{'/blocks/' + ${block.id} + '/move'}" method="post" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <select name="targetType" required class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
                     <option th:each="yard : ${quarryYards}" th:value="${yard.name()}" th:text="${yard.label}">Saha</option>
                 </select>
                 <input type="text" name="description" placeholder="Açıklama" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
                 <button type="submit" class="sm:col-span-2 min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Sahayı güncelle</button>
             </form>
+            <p th:unless="${block.canonicalStatus.atQuarry}" class="text-xs text-slate-500">
+                Saha taşıma yalnızca ocaktaki (Üretim Sahası / Stok Sahası) bloklar için geçerlidir.
+            </p>
             <div class="text-xs space-y-1 max-h-40 overflow-y-auto">
                 <div th:each="mv : ${movements}" class="border-b border-slate-100 py-1"
                      th:text="${(mv.fromLocation != null ? mv.fromLocation.name : '—') + ' → ' + (mv.toLocation != null ? mv.toLocation.name : '—') + ' · ' + (mv.description != null ? mv.description : '')}">
@@ -148,7 +152,8 @@
 
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
             <h3 class="font-bold text-slate-900">Müşteri işaretleme ve satış</h3>
-            <form th:action="@{'/blocks/' + ${block.id} + '/mark'}" method="post" class="space-y-2">
+            <form th:if="${block.canonicalStatus.atQuarry}"
+                  th:action="@{'/blocks/' + ${block.id} + '/mark'}" method="post" class="space-y-2">
                 <select name="customerId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
                     <option value="" disabled selected>Müşteri</option>
                     <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
@@ -163,7 +168,7 @@
                 </div>
                 <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">İşaretle</button>
             </form>
-            <form th:if="${block.status != null and (block.status.name() == 'PRODUCED' or block.status.name() == 'MARKED' or block.status.name() == 'QUARRY')}"
+            <form th:if="${block.canonicalStatus.atQuarry}"
                   th:action="@{'/blocks/' + ${block.id} + '/sell-to-customer'}" method="post" class="space-y-2 pt-2 border-t border-slate-100">
                 <p class="text-xs text-slate-500">Doğrudan satış (işaret olmadan).</p>
                 <select name="customerId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
