@@ -14,11 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,21 +36,21 @@ public class HelpContentCatalog {
             "(?s)<section[^>]*>(.*)</section>", Pattern.CASE_INSENSITIVE);
 
     private static final List<PathMapping> PATH_MAPPINGS = List.of(
-            new PathMapping("/account/change-password", "change-password"),
-            new PathMapping("/production/slabs", "slabs"),
-            new PathMapping("/admin/settings", "settings"),
-            new PathMapping("/admin/users", "users"),
-            new PathMapping("/admin/dashboard", "dashboard"),
-            new PathMapping("/production", "production"),
-            new PathMapping("/workshop", "workshop"),
-            new PathMapping("/projects", "projects"),
-            new PathMapping("/procurement", "procurement"),
-            new PathMapping("/sales", "sales"),
-            new PathMapping("/blocks", "blocks"),
-            new PathMapping("/genealogy", "genealogy"),
-            new PathMapping("/reports", "reports"),
-            new PathMapping("/costs", "costs")
-    ).stream()
+                    new PathMapping("/account/change-password", "change-password"),
+                    new PathMapping("/production/slabs", "slabs"),
+                    new PathMapping("/admin/settings", "settings"),
+                    new PathMapping("/admin/users", "users"),
+                    new PathMapping("/admin/dashboard", "dashboard"),
+                    new PathMapping("/production", "production"),
+                    new PathMapping("/workshop", "workshop"),
+                    new PathMapping("/projects", "projects"),
+                    new PathMapping("/procurement", "procurement"),
+                    new PathMapping("/sales", "sales"),
+                    new PathMapping("/blocks", "blocks"),
+                    new PathMapping("/genealogy", "genealogy"),
+                    new PathMapping("/reports", "reports"),
+                    new PathMapping("/costs", "costs")
+            ).stream()
             .sorted(Comparator.comparingInt((PathMapping mapping) -> mapping.path().length()).reversed())
             .toList();
 
