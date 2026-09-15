@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${((isEdit ?: false) ? 'Masraf Merkezi Düzenle' : 'Yeni Masraf Merkezi') + ' | Özerler Mermer ERP'}">Masraf Merkezi</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Masraf Merkezleri', @{/admin/definitions/cost-centers}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        ${(isEdit ?: false) ? 'Masraf merkezi düzenle' : 'Yeni masraf merkezi'},
+        ${(isEdit ?: false) ? 'Kod, birim ve aylık bütçeyi güncelleyin.' : 'Giderlerin bağlanacağı masraf merkezini tanımlayın.'},
+        ${(isEdit ?: false) ? 'Merkez #' + costCenter?.code : ''},
+        @{/admin/definitions/cost-centers})}"></div>
+
+    <div class="erp-form-card">
+        <form th:object="${costCenter}" th:action="@{/admin/definitions/cost-centers/save}" method="post" class="erp-form">
+            <input type="hidden" th:if="${isEdit ?: false}" th:field="*{id}"/>
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Merkez kodu, ad ve iş birimi')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="code">Merkez kodu <span class="req">*</span></label>
+                            <input id="code" type="text" th:field="*{code}" required autocomplete="off"
+                                   class="erp-form-input" style="font-family:var(--font-mono);"
+                                   placeholder="FAB-01">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="businessUnit">İş birimi <span class="req">*</span></label>
+                            <select id="businessUnit" th:field="*{businessUnit}" required class="erp-form-select">
+                                <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="name">Masraf merkezi adı <span class="req">*</span></label>
+                            <input id="name" type="text" th:field="*{name}" required class="erp-form-input">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Bütçe', 'Aylık planlanan gider')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="monthlyBudget">Aylık bütçe (TRY) <span class="req">*</span></label>
+                            <input id="monthlyBudget" type="number" step="0.01" th:field="*{monthlyBudget}" required
+                                   class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="description">Açıklama</label>
+                            <textarea id="description" th:field="*{description}" rows="3" class="erp-form-input"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <th:block th:if="${(isEdit ?: false) and costCenter != null and costCenter.createdDate != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${costCenter.createdDate}, ${costCenter.updatedDate}, ${costCenter.addUserId}, ${costCenter.updateUserId})}"></div>
+                </th:block>
+            </div>
+            <div th:replace="~{fragments/form-page :: actions(@{/admin/definitions/cost-centers})}"></div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

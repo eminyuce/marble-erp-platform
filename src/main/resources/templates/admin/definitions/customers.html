@@ -8,58 +8,9 @@
 <body>
 <div layout:fragment="content" class="erp-list-page" data-definition-page
      x-data="{
-    modalOpen: false,
     deleteModalOpen: false,
     deleteId: null,
     deleteName: '',
-    isEdit: false,
-    form: {
-        id: null,
-        customerCode: '',
-        companyName: '',
-        contactPerson: '',
-        phone: '',
-        email: '',
-        address: '',
-        taxOffice: '',
-        taxNumber: '',
-        customerType: 'CONSTRUCTION',
-        notes: ''
-    },
-    openCreateModal() {
-        this.isEdit = false;
-        this.form = {
-            id: null,
-            customerCode: '',
-            companyName: '',
-            contactPerson: '',
-            phone: '',
-            email: '',
-            address: '',
-            taxOffice: '',
-            taxNumber: '',
-            customerType: 'CONSTRUCTION',
-            notes: ''
-        };
-        this.modalOpen = true;
-    },
-    openEditModal(c) {
-        this.isEdit = true;
-        this.form = {
-            id: c.id,
-            customerCode: c.customerCode,
-            companyName: c.companyName,
-            contactPerson: c.contactPerson || '',
-            phone: c.phone || '',
-            email: c.email || '',
-            address: c.address || '',
-            taxOffice: c.taxOffice || '',
-            taxNumber: c.taxNumber || '',
-            customerType: c.customerType,
-            notes: c.notes || ''
-        };
-        this.modalOpen = true;
-    },
     confirmDelete(id, name) {
         this.deleteId = id;
         this.deleteName = name;
@@ -78,10 +29,10 @@
     <div th:replace="~{fragments/alerts :: alerts}"></div>
 
     <div class="erp-toolbar">
-        <button type="button" class="erp-btn-primary" @click="openCreateModal()">
+        <a th:href="@{/admin/definitions/customers/create}" class="erp-btn-primary">
             <i data-lucide="plus"></i>
             <span>Yeni müşteri</span>
-        </button>
+        </a>
         <div th:replace="~{fragments/list-chrome :: search('Müşteri kodu, firma adı veya yetkili', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
             <select id="customer-type-filter" class="erp-toolbar-filter" aria-label="Müşteri tipi">
@@ -93,85 +44,6 @@
     </div>
 
     <div th:replace="~{fragments/list-chrome :: gridShell('customers-table')}"></div>
-
-    <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-         style="display: none;" @keydown.escape.window="modalOpen = false">
-        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto"
-             @click.outside="modalOpen = false">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-slate-900" x-text="isEdit ? 'Müşteri Düzenle' : 'Yeni Müşteri Tanımla'"></h3>
-                <button type="button" @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 p-1">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <form th:action="@{/admin/definitions/customers/save}" method="post" class="space-y-4">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <input type="hidden" name="id" :value="form.id">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Müşteri / Cari Kodu *</label>
-                        <input type="text" name="customerCode" x-model="form.customerCode" required
-                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono uppercase focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Müşteri Tipi *</label>
-                        <select name="customerType" x-model="form.customerType" required
-                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            <option th:each="type : ${customerTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Firma / Ünvan Adı *</label>
-                    <input type="text" name="companyName" x-model="form.companyName" required
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Yetkili Kişi</label>
-                        <input type="text" name="contactPerson" x-model="form.contactPerson"
-                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Telefon</label>
-                        <input type="text" name="phone" x-model="form.phone"
-                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">E-posta</label>
-                        <input type="email" name="email" x-model="form.email"
-                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Vergi Dairesi</label>
-                        <input type="text" name="taxOffice" x-model="form.taxOffice"
-                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Vergi Numarası</label>
-                        <input type="text" name="taxNumber" x-model="form.taxNumber"
-                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Adres</label>
-                    <textarea name="address" x-model="form.address" rows="2"
-                              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Notlar</label>
-                    <textarea name="notes" x-model="form.notes" rows="2"
-                              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-                </div>
-                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                    <button type="button" @click="modalOpen = false" class="erp-btn-secondary">İptal</button>
-                    <button type="submit" class="erp-btn-primary">Kaydet</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
          style="display: none;">
@@ -270,7 +142,7 @@
                         formatter: function (cell) {
                             const id = cell.getRow().getData().id;
                             return gridActionsHtml([
-                                {icon: "edit-3", label: "Düzenle", onclick: "openDefinitionEdit(" + id + ")"},
+                                {icon: "edit-3", label: "Düzenle", href: "/admin/definitions/customers/" + id + "/edit"},
                                 {icon: "trash-2", label: "Sil", onclick: "confirmDefinitionDelete(" + id + ")", danger: true}
                             ]);
                         }

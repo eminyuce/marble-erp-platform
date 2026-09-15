@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${((isEdit ?: false) ? 'Tedarikçi Düzenle' : 'Yeni Tedarikçi') + ' | Özerler Mermer ERP'}">Tedarikçi</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Tedarikçiler', @{/admin/definitions/suppliers}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        ${(isEdit ?: false) ? 'Tedarikçi düzenle' : 'Yeni tedarikçi'},
+        ${(isEdit ?: false) ? 'Tedarikçi kodu, tip ve iletişim bilgilerini güncelleyin.' : 'Sarf, kimyasal, taş veya ekipman tedarikçisini sisteme kaydedin.'},
+        ${(isEdit ?: false) ? 'Tedarikçi #' + supplier?.supplierCode : ''},
+        @{/admin/definitions/suppliers})}"></div>
+
+    <div class="erp-form-card">
+        <form th:object="${supplier}" th:action="@{/admin/definitions/suppliers/save}" method="post" class="erp-form">
+            <input type="hidden" th:if="${isEdit ?: false}" th:field="*{id}"/>
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Tedarikçi kodu, tip ve ünvan')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="supplierCode">Tedarikçi kodu <span class="req">*</span></label>
+                            <input id="supplierCode" type="text" th:field="*{supplierCode}" required autocomplete="off"
+                                   class="erp-form-input" style="font-family:var(--font-mono);"
+                                   placeholder="SUPP-004">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="supplierType">Tedarikçi tipi <span class="req">*</span></label>
+                            <select id="supplierType" th:field="*{supplierType}" required class="erp-form-select">
+                                <option th:each="type : ${supplierTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="companyName">Firma / ünvan adı <span class="req">*</span></label>
+                            <input id="companyName" type="text" th:field="*{companyName}" required class="erp-form-input">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('İletişim', 'Yetkili, telefon ve e-posta')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="contactPerson">Yetkili kişi</label>
+                            <input id="contactPerson" type="text" th:field="*{contactPerson}" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="phone">Telefon</label>
+                            <input id="phone" type="text" th:field="*{phone}" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="email">E-posta</label>
+                            <input id="email" type="email" th:field="*{email}" class="erp-form-input">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Vergi ve adres', 'Fatura bilgileri')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="taxOffice">Vergi dairesi</label>
+                            <input id="taxOffice" type="text" th:field="*{taxOffice}" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="taxNumber">Vergi numarası</label>
+                            <input id="taxNumber" type="text" th:field="*{taxNumber}" class="erp-form-input"
+                                   style="font-family:var(--font-mono);">
+                        </div>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="address">Adres</label>
+                            <textarea id="address" th:field="*{address}" rows="2" class="erp-form-input"></textarea>
+                        </div>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="notes">Notlar</label>
+                            <textarea id="notes" th:field="*{notes}" rows="2" class="erp-form-input"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <th:block th:if="${(isEdit ?: false) and supplier != null and supplier.createdDate != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${supplier.createdDate}, ${supplier.updatedDate}, ${supplier.addUserId}, ${supplier.updateUserId})}"></div>
+                </th:block>
+            </div>
+            <div th:replace="~{fragments/form-page :: actions(@{/admin/definitions/suppliers})}"></div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

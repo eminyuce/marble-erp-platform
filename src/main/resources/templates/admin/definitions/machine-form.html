@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${((isEdit ?: false) ? 'Makine Düzenle' : 'Yeni Makine') + ' | Özerler Mermer ERP'}">Makine</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Makineler', @{/admin/definitions/machines}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        ${(isEdit ?: false) ? 'Makine düzenle' : 'Yeni makine'},
+        ${(isEdit ?: false) ? 'İş birimi, tip ve kullanım durumunu güncelleyin.' : 'Ocak, fabrika veya atölye tezgâhını sistem tanımlarına ekleyin.'},
+        ${(isEdit ?: false) ? 'Makine #' + machine?.code : ''},
+        @{/admin/definitions/machines})}"></div>
+
+    <div class="erp-form-card">
+        <form th:object="${machine}" th:action="@{/admin/definitions/machines/save}" method="post" class="erp-form">
+            <input type="hidden" th:if="${isEdit ?: false}" th:field="*{id}"/>
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Makine kodu ve görünen ad')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="code">Makine kodu <span class="req">*</span></label>
+                            <input id="code" type="text" th:field="*{code}" required autocomplete="off"
+                                   class="erp-form-input" style="font-family:var(--font-mono);"
+                                   placeholder="FAB-KATRAK-02">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="name">Makine / tezgâh adı <span class="req">*</span></label>
+                            <input id="name" type="text" th:field="*{name}" required class="erp-form-input"
+                                   placeholder="Katrak-02">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Sınıflandırma', 'Hangi birimde ve hangi iş için kullanılır')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="businessUnit">İş birimi <span class="req">*</span></label>
+                            <select id="businessUnit" th:field="*{businessUnit}" required class="erp-form-select">
+                                <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="machineType">Makine tipi <span class="req">*</span></label>
+                            <select id="machineType" th:field="*{machineType}" required class="erp-form-select">
+                                <option th:each="type : ${machineTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <label class="erp-form-check" for="active">
+                        <input id="active" type="checkbox" th:field="*{active}">
+                        <span>Aktif kullanımda</span>
+                    </label>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Notlar', 'İsteğe bağlı açıklama')}"></div>
+                    <div class="erp-form-field erp-form-field--full">
+                        <label class="erp-form-label" for="notes">Notlar</label>
+                        <textarea id="notes" th:field="*{notes}" rows="3" class="erp-form-input"></textarea>
+                    </div>
+                </section>
+
+                <th:block th:if="${(isEdit ?: false) and machine != null and machine.createdDate != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${machine.createdDate}, ${machine.updatedDate}, ${machine.addUserId}, ${machine.updateUserId})}"></div>
+                </th:block>
+            </div>
+            <div th:replace="~{fragments/form-page :: actions(@{/admin/definitions/machines})}"></div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

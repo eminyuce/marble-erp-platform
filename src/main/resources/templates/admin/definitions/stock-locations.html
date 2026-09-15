@@ -8,43 +8,9 @@
 <body>
 <div layout:fragment="content" class="erp-list-page" data-definition-page
      x-data="{
-    modalOpen: false,
     deleteModalOpen: false,
     deleteId: null,
     deleteName: '',
-    isEdit: false,
-    form: {
-        id: null,
-        code: '',
-        name: '',
-        businessUnit: 'FACTORY',
-        locationType: 'FACTORY_BLOCK_YARD',
-        active: true
-    },
-    openCreateModal() {
-        this.isEdit = false;
-        this.form = {
-            id: null,
-            code: '',
-            name: '',
-            businessUnit: 'FACTORY',
-            locationType: 'FACTORY_BLOCK_YARD',
-            active: true
-        };
-        this.modalOpen = true;
-    },
-    openEditModal(loc) {
-        this.isEdit = true;
-        this.form = {
-            id: loc.id,
-            code: loc.code,
-            name: loc.name,
-            businessUnit: loc.businessUnit,
-            locationType: loc.locationType,
-            active: loc.active
-        };
-        this.modalOpen = true;
-    },
     confirmDelete(id, name) {
         this.deleteId = id;
         this.deleteName = name;
@@ -63,10 +29,10 @@
     <div th:replace="~{fragments/alerts :: alerts}"></div>
 
     <div class="erp-toolbar">
-        <button type="button" class="erp-btn-primary" @click="openCreateModal()">
+        <a th:href="@{/admin/definitions/stock-locations/create}" class="erp-btn-primary">
             <i data-lucide="plus"></i>
             <span>Yeni saha / depo</span>
-        </button>
+        </a>
         <div th:replace="~{fragments/list-chrome :: search('Saha kodu veya adı', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
             <select id="location-unit-filter" class="erp-toolbar-filter" aria-label="İş birimi">
@@ -78,57 +44,6 @@
     </div>
 
     <div th:replace="~{fragments/list-chrome :: gridShell('stock-locations-table')}"></div>
-
-    <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-         style="display: none;" @keydown.escape.window="modalOpen = false">
-        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-4"
-             @click.outside="modalOpen = false">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-slate-900" x-text="isEdit ? 'Stok Sahası Düzenle' : 'Yeni Stok Sahası Tanımla'"></h3>
-                <button type="button" @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 p-1">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <form th:action="@{/admin/definitions/stock-locations/save}" method="post" class="space-y-4">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <input type="hidden" name="id" :value="form.id">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Saha / Depo Kodu *</label>
-                    <input type="text" name="code" x-model="form.code" required
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono uppercase focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Saha / Depo Adı *</label>
-                    <input type="text" name="name" x-model="form.name" required
-                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">İş Birimi *</label>
-                        <select name="businessUnit" x-model="form.businessUnit" required
-                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"></option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Lokasyon Tipi *</label>
-                        <select name="locationType" x-model="form.locationType" required
-                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option th:each="type : ${locationTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
-                        </select>
-                    </div>
-                </div>
-                <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
-                    <input type="checkbox" name="active" x-model="form.active" value="true" class="rounded border-slate-300 text-indigo-700">
-                    <span>Aktif kullanımda</span>
-                </label>
-                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                    <button type="button" @click="modalOpen = false" class="erp-btn-secondary">İptal</button>
-                    <button type="submit" class="erp-btn-primary">Kaydet</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
          style="display: none;">
@@ -212,7 +127,7 @@
                         formatter: function (cell) {
                             const id = cell.getRow().getData().id;
                             return gridActionsHtml([
-                                {icon: "edit-3", label: "Düzenle", onclick: "openDefinitionEdit(" + id + ")"},
+                                {icon: "edit-3", label: "Düzenle", href: "/admin/definitions/stock-locations/" + id + "/edit"},
                                 {icon: "trash-2", label: "Sil", onclick: "confirmDefinitionDelete(" + id + ")", danger: true}
                             ]);
                         }

@@ -20,14 +20,6 @@ function definitionRowById(id) {
     }) || null;
 }
 
-function openDefinitionEdit(id) {
-    const page = definitionAlpine();
-    const row = definitionRowById(id);
-    if (page && row && typeof page.openEditModal === "function") {
-        page.openEditModal(row);
-    }
-}
-
 function confirmDefinitionDelete(id) {
     const page = definitionAlpine();
     const row = definitionRowById(id);
@@ -82,7 +74,6 @@ function bindGridSelectFilter(table, selectId) {
 
 window.definitionPageRoot = definitionPageRoot;
 window.definitionAlpine = definitionAlpine;
-window.openDefinitionEdit = openDefinitionEdit;
 window.confirmDefinitionDelete = confirmDefinitionDelete;
 window.toggleDefinitionActive = toggleDefinitionActive;
 window.businessUnitBadge = businessUnitBadge;

@@ -58,6 +58,7 @@ class ErpModuleSecurityTest {
     @DisplayName("non-admin users cannot open master data definitions")
     void userCannotOpenDefinitions() throws Exception {
         mockMvc.perform(get("/admin/definitions")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/admin/definitions/machines/create")).andExpect(status().isForbidden());
     }
 
     @Test
