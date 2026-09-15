@@ -104,10 +104,36 @@
         <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
         <span>Sistem Sağlığı</span>
     </a>
-    <a th:href="@{/admin/definitions}" sec:authorize="hasRole('ADMIN')"
+    <div class="pt-4 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-500" sec:authorize="hasRole('ADMIN')">Tanımlar</div>
+    <a th:href="@{/admin/definitions/machines}" sec:authorize="hasRole('ADMIN')"
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
-        <i data-lucide="database" class="w-5 h-5 text-amber-400"></i>
-        <span>Sistem Tanımları</span>
+        <i data-lucide="cpu" class="w-5 h-5 text-amber-400"></i>
+        <span>Makineler</span>
+    </a>
+    <a th:href="@{/admin/definitions/stock-locations}" sec:authorize="hasRole('ADMIN')"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
+        <i data-lucide="warehouse" class="w-5 h-5 text-indigo-400"></i>
+        <span>Stok Sahaları</span>
+    </a>
+    <a th:href="@{/admin/definitions/quarries}" sec:authorize="hasRole('ADMIN')"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
+        <i data-lucide="mountain" class="w-5 h-5 text-emerald-400"></i>
+        <span>Ocaklar</span>
+    </a>
+    <a th:href="@{/admin/definitions/customers}" sec:authorize="hasRole('ADMIN')"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
+        <i data-lucide="building" class="w-5 h-5 text-blue-400"></i>
+        <span>Müşteriler</span>
+    </a>
+    <a th:href="@{/admin/definitions/suppliers}" sec:authorize="hasRole('ADMIN')"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
+        <i data-lucide="truck" class="w-5 h-5 text-cyan-400"></i>
+        <span>Tedarikçiler</span>
+    </a>
+    <a th:href="@{/admin/definitions/cost-centers}" sec:authorize="hasRole('ADMIN')"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">
+        <i data-lucide="pie-chart" class="w-5 h-5 text-purple-400"></i>
+        <span>Masraf Merkezleri</span>
     </a>
     <a th:href="@{/admin/users}" sec:authorize="hasRole('ADMIN')"
        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition group">

@@ -1,6 +1,7 @@
 package com.ozerler.marble.repository;
 
 import com.ozerler.marble.model.Quarry;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,10 @@ public interface QuarryRepository extends JpaRepository<Quarry, Long> {
     List<Quarry> searchByCodeOrName(@Param("query") String query, Pageable pageable);
 
     List<Quarry> findAllByOrderByCodeAsc();
+
+    @Query("SELECT q FROM Quarry q WHERE (:search IS NULL "
+            + "OR LOWER(q.code) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(q.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(COALESCE(q.location, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    Page<Quarry> search(@Param("search") String search, Pageable pageable);
 }

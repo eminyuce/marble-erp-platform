@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${((isEdit ?: false) ? 'Ocak Düzenle' : 'Yeni Ocak') + ' | Özerler Mermer ERP'}">Ocak</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Ocaklar', @{/admin/definitions/quarries}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        ${(isEdit ?: false) ? 'Ocak düzenle' : 'Yeni ocak'},
+        ${(isEdit ?: false) ? 'Ruhsat, mevkii ve özgül ağırlık bilgilerini güncelleyin.' : 'Hammadde üretimi yapılan ruhsatlı ocağı sisteme kaydedin.'},
+        ${(isEdit ?: false) ? 'Ocak #' + quarry?.code : ''},
+        @{/admin/definitions/quarries})}"></div>
+
+    <div class="erp-form-card">
+        <form th:object="${quarry}" th:action="@{/admin/definitions/quarries/save}" method="post" class="erp-form">
+            <input type="hidden" th:if="${isEdit ?: false}" th:field="*{id}"/>
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Ocak kodu ve adı')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="code">Ocak kodu <span class="req">*</span></label>
+                            <input id="code" type="text" th:field="*{code}" required autocomplete="off"
+                                   class="erp-form-input" style="font-family:var(--font-mono);"
+                                   placeholder="OCK-01">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="name">Ocak adı <span class="req">*</span></label>
+                            <input id="name" type="text" th:field="*{name}" required class="erp-form-input"
+                                   placeholder="Milas Ocağı">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Saha ve ruhsat', 'Mevkii, özgül ağırlık ve ruhsat no')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="location">Lokasyon / mevkii <span class="req">*</span></label>
+                            <input id="location" type="text" th:field="*{location}" required class="erp-form-input"
+                                   placeholder="Muğla / Milas">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="specificGravity">Özgül ağırlık (ton/m³) <span class="req">*</span></label>
+                            <input id="specificGravity" type="number" step="0.01" th:field="*{specificGravity}" required
+                                   class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="licenseNo">Maden ruhsat no</label>
+                            <input id="licenseNo" type="text" th:field="*{licenseNo}" class="erp-form-input">
+                        </div>
+                    </div>
+                </section>
+
+                <th:block th:if="${(isEdit ?: false) and quarry != null and quarry.createdDate != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${quarry.createdDate}, ${quarry.updatedDate}, ${quarry.addUserId}, ${quarry.updateUserId})}"></div>
+                </th:block>
+            </div>
+            <div th:replace="~{fragments/form-page :: actions(@{/admin/definitions/quarries})}"></div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

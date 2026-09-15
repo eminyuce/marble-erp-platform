@@ -43,7 +43,7 @@ public class ProductionController {
     @GetMapping
     public String productionIndex(Model model) {
         model.addAttribute("scrapReasons", ScrapReasonCode.values());
-        model.addAttribute("workOrders", factoryProductionService.listWorkOrders());
+        model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
         model.addAttribute("dispatchedBlocks", quarryBlockService.getDispatchedBlocks());
         model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
         return "erp/production/index";
@@ -166,7 +166,7 @@ public class ProductionController {
 
     @GetMapping("/polish")
     public String polishForm(Model model) {
-        model.addAttribute("workOrders", factoryProductionService.listWorkOrders());
+        model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
         model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
         model.addAttribute("processTypes", new FactoryProcessType[]{
                 FactoryProcessType.SLAB_POLISHING, FactoryProcessType.STRIP_POLISHING, FactoryProcessType.BRIDGE_SAW_SIZING});
@@ -249,7 +249,7 @@ public class ProductionController {
     public String tablet(@RequestParam(value = "operatorName", required = false) String operatorName, Model model) {
         model.addAttribute("operations", factoryProductionService.tabletQueue(operatorName));
         model.addAttribute("operatorName", operatorName);
-        model.addAttribute("workOrders", factoryProductionService.listWorkOrders());
+        model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
         model.addAttribute("processTypes", FactoryProcessType.values());
         model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
         return "erp/production/tablet";

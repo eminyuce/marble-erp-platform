@@ -42,6 +42,10 @@ class GridPagesTest {
                 .containsExactly(Sort.Order.desc("customer.companyName"));
         assertThat(GridPages.of(1, 25, "quarryName", "asc", GridPages.BLOCK_SORTS).getSort())
                 .containsExactly(Sort.Order.asc("quarry.name"));
+        assertThat(GridPages.of(1, 25, "supplierTypeLabel", "asc", GridPages.SUPPLIER_SORTS).getSort())
+                .containsExactly(Sort.Order.asc("supplierType"));
+        assertThat(GridPages.of(1, 25, "businessUnitLabel", "desc", GridPages.MACHINE_SORTS).getSort())
+                .containsExactly(Sort.Order.desc("businessUnit"));
     }
 
     @Test

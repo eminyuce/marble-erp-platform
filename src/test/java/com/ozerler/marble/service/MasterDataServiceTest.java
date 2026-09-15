@@ -1,6 +1,8 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.SupplierDto;
+import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.Machine;
@@ -9,6 +11,7 @@ import com.ozerler.marble.model.Supplier;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.MachineType;
 import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.model.enums.SupplierType;
 import com.ozerler.marble.repository.BlockCustomerMarkRepository;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CostCenterRepository;
@@ -28,13 +31,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -184,6 +192,28 @@ class MasterDataServiceTest {
         masterDataService.deleteSupplier(5L);
 
         verify(supplierRepository).delete(supplier);
+    }
+
+    @Test
+    @DisplayName("supplier grid paging maps entities to Tabulator DTOs")
+    void getSuppliersPaged_MapsDtos() {
+        Supplier supplier = Supplier.builder()
+                .id(11L)
+                .supplierCode("SUPP-1")
+                .companyName("Kaya Elmas")
+                .supplierType(SupplierType.CONSUMABLE)
+                .build();
+        when(supplierRepository.search(isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(supplier), PageRequest.of(0, 25), 1));
+
+        TabulatorResponse<SupplierDto> response =
+                masterDataService.getSuppliersPaged(1, 25, null, null, "companyName", "asc");
+
+        assertThat(response.getData()).hasSize(1);
+        assertThat(response.getData().get(0).getSupplierCode()).isEqualTo("SUPP-1");
+        assertThat(response.getData().get(0).getCompanyName()).isEqualTo("Kaya Elmas");
+        assertThat(response.getTotal()).isEqualTo(1);
+        assertThat(response.getLast_page()).isEqualTo(1);
     }
 
     @Test

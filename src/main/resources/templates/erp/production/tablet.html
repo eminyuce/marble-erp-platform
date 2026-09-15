@@ -5,10 +5,13 @@
     <title>Operatör Tableti | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-6 max-w-3xl mx-auto">
-    <div>
-        <h1 class="text-2xl font-black text-slate-900">Operatör tableti</h1>
-        <p class="text-sm text-slate-500 mt-1">Yalnızca atanan iş, büyük dokunma alanları, başlat / bitir, giriş-çıkış-fire.</p>
+<div layout:fragment="content" class="erp-list-page space-y-6 max-w-3xl mx-auto">
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Operatör tableti')}"></div>
+            <h2 class="admin-page-title">Operatör tableti</h2>
+            <p class="erp-list-lead">Yalnızca atanan iş, büyük dokunma alanları, başlat / bitir, giriş-çıkış-fire.</p>
+        </div>
     </div>
 
     <form method="get" th:action="@{/production/tablet}" class="flex gap-2">

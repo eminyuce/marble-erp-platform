@@ -59,9 +59,58 @@ class TerminologyContractTest {
         String sidebar = Files.readString(root.resolve("templates/layout/sidebar.html"));
         assertThat(sidebar).contains(">Ocak<").contains(">Fabrika<").contains(">Atölye<")
                 .contains(">Şantiyeler<").contains(">Maliyet Analizi<").contains(">Plaka Stok Sahası<")
-                .contains("Sistem Tanımları");
+                .contains("/admin/definitions/machines")
+                .contains("/admin/definitions/suppliers")
+                .doesNotContain("th:href=\"@{/admin/definitions}\"");
         String megaMenu = Files.readString(root.resolve("templates/layout/mega-menu.html"));
-        assertThat(megaMenu).contains("Sistem Tanımları");
+        assertThat(megaMenu).doesNotContain("Sistem Tanımları");
+        assertThat(megaMenu).doesNotContain("th:href=\"@{/admin/definitions}\"");
+        assertThat(megaMenu).contains("admin-mega-card-title\">Tanımlar<");
+        assertThat(megaMenu).contains("admin-mega-card-title\">Sistem<");
+        assertThat(megaMenu).doesNotContain("Tanımlar &amp; Yönetim");
+        int definitionsIdx = megaMenu.indexOf("data-mega-group=\"definitions\"");
+        int systemIdx = megaMenu.indexOf("data-mega-group=\"system\"");
+        assertThat(definitionsIdx).isGreaterThanOrEqualTo(0);
+        assertThat(systemIdx).isGreaterThan(definitionsIdx);
+        String definitionsCard = megaMenu.substring(definitionsIdx, systemIdx);
+        String systemCard = megaMenu.substring(systemIdx);
+        assertThat(definitionsCard)
+                .doesNotContain("th:href=\"@{/admin/definitions}\"")
+                .contains("/admin/definitions/machines")
+                .contains("/admin/definitions/stock-locations")
+                .contains("/admin/definitions/quarries")
+                .contains("/admin/definitions/customers")
+                .contains("/admin/definitions/suppliers")
+                .contains("/admin/definitions/cost-centers")
+                .doesNotContain("/admin/users")
+                .doesNotContain("/admin/settings")
+                .doesNotContain("systemhealth");
+        assertThat(systemCard)
+                .contains("/admin/users")
+                .contains("/admin/settings")
+                .contains("/admin/dashboard/systemhealth/")
+                .doesNotContain("/admin/definitions/machines")
+                .doesNotContain("/admin/definitions/suppliers");
+        assertThat(megaMenu).doesNotContain("/swagger-ui.html");
+        assertThat(megaMenu).doesNotContain("/v3/api-docs");
+        assertThat(megaMenu).doesNotContain("/actuator");
+        assertThat(megaMenu).doesNotContain("/blocks/create");
+        assertThat(megaMenu).doesNotContain("/production/create");
+        assertThat(megaMenu).doesNotContain("/projects/create");
+        assertThat(megaMenu).doesNotContain("/sales/create");
+        assertThat(megaMenu).doesNotContain("/procurement/create");
+        assertThat(megaMenu).doesNotContain("/workshop/create");
+        assertThat(megaMenu).doesNotContain("/admin/users/create");
+        assertThat(megaMenu).doesNotContain("Yeni Blok Kaydı");
+        assertThat(megaMenu).doesNotContain("Yeni Üretim İş Emri");
+        assertThat(megaMenu).contains("data-search=");
+        assertThat(megaMenu).contains("data-lucide=");
+        assertThat(megaMenu).contains("admin-mega-item");
+        assertThat(megaMenu).contains("/admin/definitions/machines");
+        assertThat(megaMenu).contains("/admin/definitions/stock-locations");
+        assertThat(megaMenu).contains("/admin/definitions/quarries");
+        assertThat(megaMenu).contains("/admin/definitions/customers");
+        assertThat(megaMenu).contains("/admin/definitions/cost-centers");
         String blocks = Files.readString(root.resolve("templates/erp/blocks/index.html"));
         assertThat(blocks).contains("Stok Sahası").doesNotContain("Sevkiyat Sahası");
         String blockForm = Files.readString(root.resolve("templates/erp/blocks/form.html"));

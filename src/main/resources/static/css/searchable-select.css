@@ -225,6 +225,40 @@
     text-align: center;
 }
 
+.erp-ss--toolbar {
+    width: auto;
+    flex: 0 0 auto;
+    min-width: 16rem;
+}
+
+.erp-ss--toolbar .erp-ss-trigger {
+    min-height: 42px;
+    height: 42px;
+    padding: 0 14px;
+    font-size: 0.9375rem;
+}
+
+.erp-ss--toolbar .erp-ss-panel {
+    z-index: 1200;
+    top: calc(100% + 4px);
+    right: auto;
+    width: max-content;
+    min-width: max(100%, 18rem);
+    max-width: min(28rem, 92vw);
+    overflow: visible;
+}
+
+.erp-ss--toolbar .erp-ss-list {
+    max-height: 280px;
+}
+
+.erp-ss--toolbar .erp-ss-option {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    padding: 10px 16px;
+    white-space: nowrap;
+}
+
 @media (max-width: 640px) {
     .erp-ss-trigger,
     .erp-ss-search-input {

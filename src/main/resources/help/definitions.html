@@ -1,8 +1,15 @@
 <section class="help-page" data-title="Sistem Tanımları" data-updated="2026-09-15">
+    <p>Tanım listeleri yalnızca yönetici hesabıyla açılır. Mega menüdeki <strong>Tanımlar</strong> kartından makine, stok sahası, ocak, müşteri, tedarikçi veya masraf merkezi listesine gidin. Ortak bir hub sayfası yoktur. Hareket, işaret veya iş emri kalemi burada tutulmaz.</p>
+    <h3>Liste ve form</h3>
     <ul class="help-panel-list">
-        <li><strong>Sistem Tanımları</strong> yalnızca yönetici hesabıyla açılır. Makine, stok sahası, ocak, müşteri, tedarikçi ve masraf merkezi kartları buradan yönetilir.</li>
-        <li>İç ilişki tabloları (hareket, işaret, iş emri kalemi) burada CRUD olarak sunulmaz.</li>
-        <li>Temel stok sahaları (<code>OCAK-URETIM</code>, <code>OCAK-SEVK</code>, <code>FAB-BLOK</code> ve diğer çekirdek kodlar) silinemez ve pasife alınamaz.</li>
-        <li>Kayıtlı hareketi olan makine, ocak, cari veya masraf merkezi silinmez; önce ilişkili işlemler korunmalıdır.</li>
+        <li><strong>Yeni …</strong> boş bir form sayfası açar. <strong>Düzenle</strong> aynı formu dolu getirir. Kayıt modal pencerede yapılmaz.</li>
+        <li>Silme onayı listede kalır. Kodlar tekrarsızdır; kayıt hatası formda görünür, listeye atılmaz.</li>
+        <li>Arama, birim / tip filtresi ve <strong>Dışa Aktar</strong> ızgarada çalışır. Aktif / pasif anahtarı silmeden kullanıma kapatır.</li>
+    </ul>
+    <h3>Silme kuralları</h3>
+    <ul class="help-panel-list">
+        <li>Çekirdek stok sahaları silinemez, pasife alınamaz ve kodu değiştirilemez: <code>OCAK-URETIM</code>, <code>OCAK-SEVK</code>, <code>FAB-BLOK</code>, <code>FAB-PLAKA</code>, <code>FAB-PALET</code>, <code>ATL-STOK</code>.</li>
+        <li>Yakıt fişi olan makine, bloğu olan ocak, satış veya işaret kaydı olan müşteri, siparişi olan tedarikçi, hareketi olan masraf merkezi silinmez; önce ilişkili işlemler korunmalıdır.</li>
+        <li>Bloğu bulunan saha silinmez; pasife alın.</li>
     </ul>
 </section>

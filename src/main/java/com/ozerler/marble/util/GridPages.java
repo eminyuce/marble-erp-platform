@@ -123,6 +123,76 @@ public final class GridPages {
             Map.entry("createdAt", DEFAULT_SORT_PROPERTY)
     );
 
+    public static final Map<String, String> SUPPLIER_SORTS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("supplierCode", "supplierCode"),
+            Map.entry("companyName", "companyName"),
+            Map.entry("contactPerson", "contactPerson"),
+            Map.entry("supplierType", "supplierType"),
+            Map.entry("supplierTypeLabel", "supplierType"),
+            Map.entry("createdDate", DEFAULT_SORT_PROPERTY),
+            Map.entry("createdAt", DEFAULT_SORT_PROPERTY)
+    );
+
+    public static final Map<String, String> CUSTOMER_SORTS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("customerCode", "customerCode"),
+            Map.entry("companyName", "companyName"),
+            Map.entry("contactPerson", "contactPerson"),
+            Map.entry("customerType", "customerType"),
+            Map.entry("customerTypeLabel", "customerType"),
+            Map.entry("createdDate", DEFAULT_SORT_PROPERTY),
+            Map.entry("createdAt", DEFAULT_SORT_PROPERTY)
+    );
+
+    public static final Map<String, String> MACHINE_SORTS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("code", "code"),
+            Map.entry("name", "name"),
+            Map.entry("businessUnit", "businessUnit"),
+            Map.entry("businessUnitLabel", "businessUnit"),
+            Map.entry("machineType", "machineType"),
+            Map.entry("machineTypeLabel", "machineType"),
+            Map.entry("active", "active"),
+            Map.entry("createdDate", DEFAULT_SORT_PROPERTY),
+            Map.entry("createdAt", DEFAULT_SORT_PROPERTY)
+    );
+
+    public static final Map<String, String> STOCK_LOCATION_SORTS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("code", "code"),
+            Map.entry("name", "name"),
+            Map.entry("businessUnit", "businessUnit"),
+            Map.entry("businessUnitLabel", "businessUnit"),
+            Map.entry("locationType", "locationType"),
+            Map.entry("locationTypeLabel", "locationType"),
+            Map.entry("active", "active"),
+            Map.entry("createdDate", DEFAULT_SORT_PROPERTY),
+            Map.entry("createdAt", DEFAULT_SORT_PROPERTY)
+    );
+
+    public static final Map<String, String> QUARRY_SORTS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("code", "code"),
+            Map.entry("name", "name"),
+            Map.entry("location", "location"),
+            Map.entry("specificGravity", "specificGravity"),
+            Map.entry("licenseNo", "licenseNo"),
+            Map.entry("createdDate", DEFAULT_SORT_PROPERTY),
+            Map.entry("createdAt", DEFAULT_SORT_PROPERTY)
+    );
+
+    public static final Map<String, String> COST_CENTER_SORTS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("code", "code"),
+            Map.entry("name", "name"),
+            Map.entry("businessUnit", "businessUnit"),
+            Map.entry("businessUnitLabel", "businessUnit"),
+            Map.entry("monthlyBudget", "monthlyBudget"),
+            Map.entry("createdDate", DEFAULT_SORT_PROPERTY),
+            Map.entry("createdAt", DEFAULT_SORT_PROPERTY)
+    );
+
     private GridPages() {
     }
 

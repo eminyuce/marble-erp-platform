@@ -146,20 +146,55 @@
                         </div>
                     </section>
 
-                    <section class="admin-mega-card admin-mega-card--users" data-mega-group="admin">
+                    <section class="admin-mega-card admin-mega-card--system" data-mega-group="definitions"
+                             sec:authorize="hasRole('ADMIN')">
+                        <header class="admin-mega-card-head">
+                            <span class="admin-mega-card-icon"><i data-lucide="database" aria-hidden="true"></i></span>
+                            <h3 class="admin-mega-card-title">Tanımlar</h3>
+                            <span class="admin-mega-count">6</span>
+                        </header>
+                        <div class="admin-mega-card-body">
+                            <a class="admin-mega-item" th:href="@{/admin/definitions/machines}"
+                               data-search="makine ekipman katrak st silim tezgah tanımlar" title="Makineler">
+                                <i data-lucide="cpu" aria-hidden="true"></i>
+                                <span>Makineler</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/admin/definitions/stock-locations}"
+                               data-search="stok sahası depo ambar lokasyon tanımlar" title="Stok Sahaları">
+                                <i data-lucide="warehouse" aria-hidden="true"></i>
+                                <span>Stok Sahaları</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/admin/definitions/quarries}"
+                               data-search="ocak maden ruhsat özgül ağırlık tanımlar" title="Ocaklar">
+                                <i data-lucide="mountain" aria-hidden="true"></i>
+                                <span>Ocaklar</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/admin/definitions/customers}"
+                               data-search="müşteri cari firma tanımlar" title="Müşteriler">
+                                <i data-lucide="building" aria-hidden="true"></i>
+                                <span>Müşteriler</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/admin/definitions/suppliers}"
+                               data-search="tedarikçi fason sarf malzeme tanımlar" title="Tedarikçiler">
+                                <i data-lucide="truck" aria-hidden="true"></i>
+                                <span>Tedarikçiler</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/admin/definitions/cost-centers}"
+                               data-search="masraf merkezi bütçe maliyet tanımlar" title="Masraf Merkezleri">
+                                <i data-lucide="pie-chart" aria-hidden="true"></i>
+                                <span>Masraf Merkezleri</span>
+                            </a>
+                        </div>
+                    </section>
+
+                    <section class="admin-mega-card admin-mega-card--users" data-mega-group="system">
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
-                            <h3 class="admin-mega-card-title">Yönetim</h3>
-                            <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">4</span>
+                            <h3 class="admin-mega-card-title">Sistem</h3>
+                            <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">3</span>
                             <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">1</span>
                         </header>
                         <div class="admin-mega-card-body">
-                            <a class="admin-mega-item" th:href="@{/admin/definitions}" sec:authorize="hasRole('ADMIN')"
-                               data-search="sistem tanımları makine ocak müşteri tedarikçi masraf stok sahası"
-                               title="Sistem Tanımları">
-                                <i data-lucide="database" aria-hidden="true"></i>
-                                <span>Sistem Tanımları</span>
-                            </a>
                             <a class="admin-mega-item" th:href="@{/admin/users}" sec:authorize="hasRole('ADMIN')"
                                data-search="kullanıcı rbac rol şifre roller yetkiler permission" title="Kullanıcılar">
                                 <i data-lucide="users" aria-hidden="true"></i>

@@ -3,6 +3,7 @@ package com.ozerler.marble.service;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.domain.BlockMeasurement;
 import com.ozerler.marble.domain.OperationYield;
+import com.ozerler.marble.dto.FactoryWorkOrderSummaryDto;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.FactoryOperation;
 import com.ozerler.marble.model.FactoryWorkOrder;
@@ -265,8 +266,10 @@ public class FactoryProductionService {
     }
 
     @Transactional(readOnly = true)
-    public List<FactoryWorkOrder> listWorkOrders() {
-        return workOrderRepository.findAllByOrderByIdDesc();
+    public List<FactoryWorkOrderSummaryDto> listWorkOrderSummaries() {
+        return workOrderRepository.findAllWithBlockOrderByIdDesc().stream()
+                .map(FactoryWorkOrderSummaryDto::fromEntity)
+                .toList();
     }
 
     @Transactional

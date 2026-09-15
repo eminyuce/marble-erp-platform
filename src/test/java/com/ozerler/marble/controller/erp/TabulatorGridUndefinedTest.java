@@ -18,7 +18,13 @@ class TabulatorGridUndefinedTest {
             "/templates/erp/production/slabs.html",
             "/templates/erp/projects/index.html",
             "/templates/erp/sales/index.html",
-            "/templates/erp/procurement/index.html"
+            "/templates/erp/procurement/index.html",
+            "/templates/admin/definitions/suppliers.html",
+            "/templates/admin/definitions/customers.html",
+            "/templates/admin/definitions/machines.html",
+            "/templates/admin/definitions/stock-locations.html",
+            "/templates/admin/definitions/quarries.html",
+            "/templates/admin/definitions/cost-centers.html"
     );
 
     @Test

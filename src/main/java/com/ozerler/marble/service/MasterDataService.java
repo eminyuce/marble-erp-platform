@@ -1,10 +1,22 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.CostCenterDto;
+import com.ozerler.marble.dto.CustomerDto;
+import com.ozerler.marble.dto.MachineDto;
+import com.ozerler.marble.dto.QuarryDto;
+import com.ozerler.marble.dto.StockLocationDto;
+import com.ozerler.marble.dto.SupplierDto;
+import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.*;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.CustomerType;
+import com.ozerler.marble.model.enums.SupplierType;
 import com.ozerler.marble.repository.*;
+import com.ozerler.marble.util.GridPages;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +59,16 @@ public class MasterDataService {
 
     public List<Machine> getAllMachines() {
         return machineRepository.findAllByOrderByCodeAsc();
+    }
+
+    public TabulatorResponse<MachineDto> getMachinesPaged(int page, int size, String search, BusinessUnit unit,
+                                                          String sortField, String sortDir) {
+        Page<Machine> result = GridPages.execute(page, size, sortField, sortDir, GridPages.MACHINE_SORTS,
+                pageable -> machineRepository.search(GridPages.normalizeSearch(search), unit, pageable));
+        return TabulatorResponse.of(
+                result.getContent().stream().map(MachineDto::fromEntity).toList(),
+                result.getTotalPages(),
+                result.getTotalElements());
     }
 
     public Machine getMachineById(Long id) {
@@ -98,6 +120,17 @@ public class MasterDataService {
 
     public List<StockLocation> getAllStockLocations() {
         return stockLocationRepository.findAllByOrderByCodeAsc();
+    }
+
+    public TabulatorResponse<StockLocationDto> getStockLocationsPaged(int page, int size, String search,
+                                                                      BusinessUnit unit, String sortField,
+                                                                      String sortDir) {
+        Page<StockLocation> result = GridPages.execute(page, size, sortField, sortDir, GridPages.STOCK_LOCATION_SORTS,
+                pageable -> stockLocationRepository.search(GridPages.normalizeSearch(search), unit, pageable));
+        return TabulatorResponse.of(
+                result.getContent().stream().map(StockLocationDto::fromEntity).toList(),
+                result.getTotalPages(),
+                result.getTotalElements());
     }
 
     public StockLocation getStockLocationById(Long id) {
@@ -163,6 +196,16 @@ public class MasterDataService {
         return quarryRepository.findAllByOrderByCodeAsc();
     }
 
+    public TabulatorResponse<QuarryDto> getQuarriesPaged(int page, int size, String search,
+                                                         String sortField, String sortDir) {
+        Page<Quarry> result = GridPages.execute(page, size, sortField, sortDir, GridPages.QUARRY_SORTS,
+                pageable -> quarryRepository.search(GridPages.normalizeSearch(search), pageable));
+        return TabulatorResponse.of(
+                result.getContent().stream().map(QuarryDto::fromEntity).toList(),
+                result.getTotalPages(),
+                result.getTotalElements());
+    }
+
     public Quarry getQuarryById(Long id) {
         return quarryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Ocak bulunamadı: ID " + id));
@@ -204,6 +247,16 @@ public class MasterDataService {
 
     public List<Customer> getAllCustomers() {
         return customerRepository.findAllByOrderByCompanyNameAsc();
+    }
+
+    public TabulatorResponse<CustomerDto> getCustomersPaged(int page, int size, String search, CustomerType type,
+                                                            String sortField, String sortDir) {
+        Page<Customer> result = GridPages.execute(page, size, sortField, sortDir, GridPages.CUSTOMER_SORTS,
+                pageable -> customerRepository.search(GridPages.normalizeSearch(search), type, pageable));
+        return TabulatorResponse.of(
+                result.getContent().stream().map(CustomerDto::fromEntity).toList(),
+                result.getTotalPages(),
+                result.getTotalElements());
     }
 
     public Customer getCustomerById(Long id) {
@@ -251,6 +304,16 @@ public class MasterDataService {
         return supplierRepository.findAllByOrderByCompanyNameAsc();
     }
 
+    public TabulatorResponse<SupplierDto> getSuppliersPaged(int page, int size, String search, SupplierType type,
+                                                            String sortField, String sortDir) {
+        Page<Supplier> result = GridPages.execute(page, size, sortField, sortDir, GridPages.SUPPLIER_SORTS,
+                pageable -> supplierRepository.search(GridPages.normalizeSearch(search), type, pageable));
+        return TabulatorResponse.of(
+                result.getContent().stream().map(SupplierDto::fromEntity).toList(),
+                result.getTotalPages(),
+                result.getTotalElements());
+    }
+
     public Supplier getSupplierById(Long id) {
         return supplierRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Tedarikçi bulunamadı: ID " + id));
@@ -294,6 +357,16 @@ public class MasterDataService {
         return costCenterRepository.findAllByOrderByCodeAsc();
     }
 
+    public TabulatorResponse<CostCenterDto> getCostCentersPaged(int page, int size, String search, BusinessUnit unit,
+                                                                String sortField, String sortDir) {
+        Page<CostCenter> result = GridPages.execute(page, size, sortField, sortDir, GridPages.COST_CENTER_SORTS,
+                pageable -> costCenterRepository.search(GridPages.normalizeSearch(search), unit, pageable));
+        return TabulatorResponse.of(
+                result.getContent().stream().map(CostCenterDto::fromEntity).toList(),
+                result.getTotalPages(),
+                result.getTotalElements());
+    }
+
     public CostCenter getCostCenterById(Long id) {
         return costCenterRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Masraf merkezi bulunamadı: ID " + id));
@@ -328,34 +401,6 @@ public class MasterDataService {
         costCenterRepository.delete(costCenter);
         log.info("Cost center deleted successfully. ID: {}, Code: {}", id, costCenter.getCode());
     }
-
-    // =========================================================================
-    // SUMMARY COUNTS FOR HUB
-    // =========================================================================
-
-    public DefinitionCounts getSummaryCounts() {
-        return new DefinitionCounts(
-                machineRepository.count(),
-                machineRepository.countByActiveTrue(),
-                stockLocationRepository.count(),
-                stockLocationRepository.countByActiveTrue(),
-                quarryRepository.count(),
-                customerRepository.count(),
-                supplierRepository.count(),
-                costCenterRepository.count()
-        );
-    }
-
-    public record DefinitionCounts(
-            long totalMachines,
-            long activeMachines,
-            long totalStockLocations,
-            long activeStockLocations,
-            long totalQuarries,
-            long totalCustomers,
-            long totalSuppliers,
-            long totalCostCenters
-    ) {}
 
     static String normalizeCode(String raw) {
         return raw.trim().toUpperCase(Locale.ROOT);

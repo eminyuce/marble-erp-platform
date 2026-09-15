@@ -41,6 +41,9 @@ class ErpModuleSecurityTest {
     void authenticatedGetIsAllowed() throws Exception {
         mockMvc.perform(get("/blocks")).andExpect(status().isOk());
         mockMvc.perform(get("/production")).andExpect(status().isOk());
+        mockMvc.perform(get("/production/polish")).andExpect(status().isOk());
+        mockMvc.perform(get("/production/pallets")).andExpect(status().isOk());
+        mockMvc.perform(get("/production/tablet")).andExpect(status().isOk());
         mockMvc.perform(get("/workshop")).andExpect(status().isOk());
         mockMvc.perform(get("/projects")).andExpect(status().isOk());
         mockMvc.perform(get("/costs")).andExpect(status().isOk());
@@ -55,13 +58,18 @@ class ErpModuleSecurityTest {
     @DisplayName("non-admin users cannot open master data definitions")
     void userCannotOpenDefinitions() throws Exception {
         mockMvc.perform(get("/admin/definitions")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/admin/definitions/machines")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/admin/definitions/machines/create")).andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("admin can open master data definitions")
+    @DisplayName("admin can open master data definition lists")
     void adminCanOpenDefinitions() throws Exception {
-        mockMvc.perform(get("/admin/definitions")).andExpect(status().isOk());
+        mockMvc.perform(get("/admin/definitions"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/definitions/machines"));
+        mockMvc.perform(get("/admin/definitions/machines")).andExpect(status().isOk());
     }
 
     @Test

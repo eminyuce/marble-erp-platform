@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${((isEdit ?: false) ? 'Müşteri Düzenle' : 'Yeni Müşteri') + ' | Özerler Mermer ERP'}">Müşteri</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Müşteriler', @{/admin/definitions/customers}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        ${(isEdit ?: false) ? 'Müşteri düzenle' : 'Yeni müşteri'},
+        ${(isEdit ?: false) ? 'Cari kod, iletişim ve vergi bilgilerini güncelleyin.' : 'Satış, rezervasyon ve şantiye sözleşmelerinde kullanılacak cari kartı ekleyin.'},
+        ${(isEdit ?: false) ? 'Cari #' + customer?.customerCode : ''},
+        @{/admin/definitions/customers})}"></div>
+
+    <div class="erp-form-card">
+        <form th:object="${customer}" th:action="@{/admin/definitions/customers/save}" method="post" class="erp-form">
+            <input type="hidden" th:if="${isEdit ?: false}" th:field="*{id}"/>
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Cari kod, tip ve ünvan')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="customerCode">Müşteri / cari kodu <span class="req">*</span></label>
+                            <input id="customerCode" type="text" th:field="*{customerCode}" required autocomplete="off"
+                                   class="erp-form-input" style="font-family:var(--font-mono);"
+                                   placeholder="MUS-004">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="customerType">Müşteri tipi <span class="req">*</span></label>
+                            <select id="customerType" th:field="*{customerType}" required class="erp-form-select">
+                                <option th:each="type : ${customerTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="companyName">Firma / ünvan adı <span class="req">*</span></label>
+                            <input id="companyName" type="text" th:field="*{companyName}" required class="erp-form-input">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('İletişim', 'Yetkili, telefon ve e-posta')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="contactPerson">Yetkili kişi</label>
+                            <input id="contactPerson" type="text" th:field="*{contactPerson}" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="phone">Telefon</label>
+                            <input id="phone" type="text" th:field="*{phone}" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="email">E-posta</label>
+                            <input id="email" type="email" th:field="*{email}" class="erp-form-input">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Vergi ve adres', 'Fatura bilgileri')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="taxOffice">Vergi dairesi</label>
+                            <input id="taxOffice" type="text" th:field="*{taxOffice}" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="taxNumber">Vergi numarası</label>
+                            <input id="taxNumber" type="text" th:field="*{taxNumber}" class="erp-form-input"
+                                   style="font-family:var(--font-mono);">
+                        </div>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="address">Adres</label>
+                            <textarea id="address" th:field="*{address}" rows="2" class="erp-form-input"></textarea>
+                        </div>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="notes">Notlar</label>
+                            <textarea id="notes" th:field="*{notes}" rows="2" class="erp-form-input"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <th:block th:if="${(isEdit ?: false) and customer != null and customer.createdDate != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${customer.createdDate}, ${customer.updatedDate}, ${customer.addUserId}, ${customer.updateUserId})}"></div>
+                </th:block>
+            </div>
+            <div th:replace="~{fragments/form-page :: actions(@{/admin/definitions/customers})}"></div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

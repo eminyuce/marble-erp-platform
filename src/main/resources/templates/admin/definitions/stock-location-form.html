@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${((isEdit ?: false) ? 'Stok Sahası Düzenle' : 'Yeni Stok Sahası') + ' | Özerler Mermer ERP'}">Stok Sahası</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Stok Sahaları', @{/admin/definitions/stock-locations}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        ${(isEdit ?: false) ? 'Stok sahası düzenle' : 'Yeni stok sahası'},
+        ${(isEdit ?: false) ? 'Saha kodu, birim ve lokasyon tipini güncelleyin.' : 'Blok, plaka veya atölye stokunun tutulacağı sahayı tanımlayın.'},
+        ${(isEdit ?: false) ? 'Saha #' + location?.code : ''},
+        @{/admin/definitions/stock-locations})}"></div>
+
+    <div class="erp-form-card">
+        <form th:object="${location}" th:action="@{/admin/definitions/stock-locations/save}" method="post" class="erp-form">
+            <input type="hidden" th:if="${isEdit ?: false}" th:field="*{id}"/>
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Saha kodu ve adı')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="code">Saha / depo kodu <span class="req">*</span></label>
+                            <input id="code" type="text" th:field="*{code}" required autocomplete="off"
+                                   class="erp-form-input" style="font-family:var(--font-mono);"
+                                   placeholder="FAB-BLOK">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="name">Saha / depo adı <span class="req">*</span></label>
+                            <input id="name" type="text" th:field="*{name}" required class="erp-form-input"
+                                   placeholder="Fabrika Blok Sahası">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Sınıflandırma', 'Hangi birimde ve hangi stok türü için')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="businessUnit">İş birimi <span class="req">*</span></label>
+                            <select id="businessUnit" th:field="*{businessUnit}" required class="erp-form-select">
+                                <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="locationType">Lokasyon tipi <span class="req">*</span></label>
+                            <select id="locationType" th:field="*{locationType}" required class="erp-form-select">
+                                <option th:each="type : ${locationTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <label class="erp-form-check" for="active">
+                        <input id="active" type="checkbox" th:field="*{active}">
+                        <span>Aktif kullanımda</span>
+                    </label>
+                </section>
+
+                <th:block th:if="${(isEdit ?: false) and location != null and location.createdDate != null}">
+                    <div th:replace="~{fragments/audit :: auditInfo(${location.createdDate}, ${location.updatedDate}, ${location.addUserId}, ${location.updateUserId})}"></div>
+                </th:block>
+            </div>
+            <div th:replace="~{fragments/form-page :: actions(@{/admin/definitions/stock-locations})}"></div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

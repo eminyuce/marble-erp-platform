@@ -79,6 +79,26 @@ public class ReportService {
         public String description;
         public String[] headers;
         public List<String[]> rows = new ArrayList<>();
+
+        public String getKey() {
+            return key;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public String[] getHeaders() {
+            return headers;
+        }
+
+        public List<String[]> getRows() {
+            return rows;
+        }
     }
 
     @Transactional(readOnly = true)
