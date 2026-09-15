@@ -41,6 +41,7 @@ public class HelpContentCatalog {
                     new PathMapping("/production/pallets", "production"),
                     new PathMapping("/production/polish", "production"),
                     new PathMapping("/production/slabs", "slabs"),
+                    new PathMapping("/admin/definitions", "definitions"),
                     new PathMapping("/admin/settings", "settings"),
                     new PathMapping("/admin/users", "users"),
                     new PathMapping("/admin/dashboard", "dashboard"),

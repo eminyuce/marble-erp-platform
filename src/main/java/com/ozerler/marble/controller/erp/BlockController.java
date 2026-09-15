@@ -2,6 +2,7 @@ package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.dto.BlockCodeAvailabilityDto;
 import com.ozerler.marble.dto.BlockDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.BusinessUnit;
@@ -53,6 +54,7 @@ public class BlockController extends AbstractController {
         model.addAttribute("quarryMachines", machineFuelService.quarryMachines());
         model.addAttribute("fuelEntries", machineFuelService.listAll());
         model.addAttribute("costCenters", costCenterRepository.findByBusinessUnit(BusinessUnit.QUARRY));
+        model.addAttribute("customers", blockCustomerMarkService.customers());
         model.addAttribute("expenseTypes", new ExpenseType[]{
                 ExpenseType.DIESEL, ExpenseType.ELECTRICITY, ExpenseType.DIRECT_LABOR,
                 ExpenseType.FIXTURE_CONSUMABLE, ExpenseType.OVERHEAD});
@@ -70,6 +72,18 @@ public class BlockController extends AbstractController {
             @RequestParam(value = "sortDir", required = false) String sortDir) {
 
         return quarryBlockService.getBlocksPaged(page, size, search, sortField, sortDir);
+    }
+
+    @GetMapping("/api/block-code-available")
+    @ResponseBody
+    public BlockCodeAvailabilityDto checkBlockCode(@RequestParam("code") String code,
+                                                   @RequestParam(value = "excludeId", required = false) Long excludeId,
+                                                   Locale locale) {
+        boolean available = quarryBlockService.isBlockCodeAvailable(code, excludeId);
+        String message = available
+                ? messageSource.getMessage("erp.block.code.available", null, locale)
+                : messageSource.getMessage("error.block.code.duplicate", new Object[]{code}, locale);
+        return new BlockCodeAvailabilityDto(available, message);
     }
 
     @GetMapping("/create")
@@ -108,6 +122,7 @@ public class BlockController extends AbstractController {
         } catch (Exception e) {
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            model.addAttribute("isEdit", false);
             populateBlockForm(model, locale);
             return "erp/blocks/form";
         }
@@ -120,6 +135,8 @@ public class BlockController extends AbstractController {
         model.addAttribute("movements", quarryBlockService.getMovements(id));
         model.addAttribute("marks", blockCustomerMarkService.listForBlock(id));
         model.addAttribute("customers", blockCustomerMarkService.customers());
+        model.addAttribute("quarryYards", new StockLocationType[]{
+                StockLocationType.PRODUCTION_YARD, StockLocationType.DISPATCH_YARD});
         model.addAttribute("weightWarning", quarryBlockService.isWeightDeviationWarning(block));
         return "erp/blocks/detail";
     }
@@ -203,15 +220,16 @@ public class BlockController extends AbstractController {
 
     @PostMapping("/{id}/sell")
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
-    public @ResponseBody BackEndResponse sellBlock(@PathVariable("id") Long id) {
+    public @ResponseBody BackEndResponse sellBlock(@PathVariable("id") Long id,
+                                                   @RequestParam("customerId") Long customerId) {
         BackEndResponse ber = new BackEndResponse();
         ServiceStatus serviceStatus = new ServiceStatus();
         Status status = new Status();
         status.setErrorCode(Constants.NO_ERR);
 
         try {
-            log.info("Selling block externally with id {}", id);
-            quarryBlockService.sellBlockExternally(id);
+            log.info("Selling block externally with id {} to customer {}", id, customerId);
+            quarryBlockService.sellBlockExternally(id, customerId);
 
             ResponseEntity<Void> resp = ResponseEntity.ok().build();
             ber.setResponse(resp);
@@ -237,6 +255,18 @@ public class BlockController extends AbstractController {
         quarryBlockService.moveToYard(id, targetType, description);
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.block.move.success", null, locale));
+        return "redirect:/blocks/" + id;
+    }
+
+    @PostMapping("/{id}/sell-to-customer")
+    @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
+    public String sellToCustomer(@PathVariable("id") Long id,
+                                 @RequestParam("customerId") Long customerId,
+                                 Locale locale,
+                                 RedirectAttributes redirectAttributes) {
+        quarryBlockService.sellBlockExternally(id, customerId);
+        redirectAttributes.addFlashAttribute("successMessage",
+                messageSource.getMessage("erp.block.sell.success", null, locale));
         return "redirect:/blocks/" + id;
     }
 

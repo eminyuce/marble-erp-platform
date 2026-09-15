@@ -120,6 +120,14 @@ public class BlockDto {
     @JsonAlias("locationName")
     private String locationName;
 
+    @JsonProperty("location_type")
+    @JsonAlias("locationType")
+    private String locationType;
+
+    @JsonProperty("sold_customer_name")
+    @JsonAlias("soldCustomerName")
+    private String soldCustomerName;
+
     @JsonProperty("approximate_tonnage")
     @JsonAlias("approximateTonnage")
     private BigDecimal approximateTonnage;
@@ -163,6 +171,9 @@ public class BlockDto {
                 .notes(b.getNotes())
                 .photoUrls(b.getPhotoUrls())
                 .locationName(b.getCurrentLocation() != null ? b.getCurrentLocation().getName() : "")
+                .locationType(b.getCurrentLocation() != null && b.getCurrentLocation().getLocationType() != null
+                        ? b.getCurrentLocation().getLocationType().name() : "")
+                .soldCustomerName(b.getSoldCustomer() != null ? b.getSoldCustomer().getCompanyName() : "")
                 .approximateTonnage(b.getApproximateTonnage())
                 .actualTonnage(b.getActualTonnage())
                 .canonicalStatus(b.getCanonicalStatus().name())

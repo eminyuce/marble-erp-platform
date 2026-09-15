@@ -24,10 +24,10 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
             <h3 class="font-bold text-slate-900">Blok kabul</h3>
-            <p class="text-xs text-slate-500">Yoldaki blokları Fabrika Blok Sahasına alın ve ilk makineyi atayın.</p>
+            <p class="text-xs text-slate-500">Fabrika Blok Sahasındaki bloklar için iş emri açın ve ilk makineyi atayın.</p>
             <form th:action="@{/production/accept}" method="post" class="space-y-2">
                 <select name="blockId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option value="" disabled selected>Sevk edilmiş blok</option>
+                    <option value="" disabled selected>Fabrika Blok Sahası</option>
                     <option th:each="b : ${dispatchedBlocks}" th:value="${b.id}"
                             th:text="${b.blockCode + ' (' + b.stoneType + ')'}">BLK</option>
                 </select>

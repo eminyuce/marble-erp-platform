@@ -266,4 +266,12 @@ public class DefinitionController extends AbstractController {
         }
         return "redirect:/admin/definitions/cost-centers";
     }
+
+    private void addSuccessFlash(RedirectAttributes redirectAttributes, String message) {
+        redirectAttributes.addFlashAttribute("successMessage", message);
+    }
+
+    private void addErrorFlash(RedirectAttributes redirectAttributes, String message) {
+        redirectAttributes.addFlashAttribute("errorMessage", message);
+    }
 }

@@ -61,9 +61,9 @@ class BlockControllerTest {
     void shouldReturnSuccessBackEndResponseOnSell() {
         Long blockId = 100L;
 
-        BackEndResponse response = blockController.sellBlock(blockId);
+        BackEndResponse response = blockController.sellBlock(blockId, 9L);
 
-        verify(quarryBlockService).sellBlockExternally(blockId);
+        verify(quarryBlockService).sellBlockExternally(blockId, 9L);
         assertThat(response).isNotNull();
         assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
@@ -74,9 +74,9 @@ class BlockControllerTest {
     @DisplayName("sellBlock should return fatal BackEndResponse on exception")
     void shouldReturnFatalBackEndResponseOnSellError() {
         Long blockId = 100L;
-        doThrow(new RuntimeException("Lock conflict")).when(quarryBlockService).sellBlockExternally(blockId);
+        doThrow(new RuntimeException("Lock conflict")).when(quarryBlockService).sellBlockExternally(blockId, 9L);
 
-        BackEndResponse response = blockController.sellBlock(blockId);
+        BackEndResponse response = blockController.sellBlock(blockId, 9L);
 
         assertThat(response).isNotNull();
         assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);

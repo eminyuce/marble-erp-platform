@@ -28,7 +28,9 @@ class TerminologyContractTest {
             "Proje &amp; Şantiye",
             "Atölye &amp; Ebatlama",
             "Katrak Kesim Emri",
-            "Akıllı Fiyatlama"
+            "Akıllı Fiyatlama",
+            "Moloz / Düşük",
+            "Sevkiyat Sahası"
     );
 
     @Test
@@ -56,7 +58,12 @@ class TerminologyContractTest {
 
         String sidebar = Files.readString(root.resolve("templates/layout/sidebar.html"));
         assertThat(sidebar).contains(">Ocak<").contains(">Fabrika<").contains(">Atölye<")
-                .contains(">Şantiyeler<").contains(">Maliyet Analizi<").contains(">Plaka Stok Sahası<");
+                .contains(">Şantiyeler<").contains(">Maliyet Analizi<").contains(">Plaka Stok Sahası<")
+                .contains("Sistem Tanımları");
+        String megaMenu = Files.readString(root.resolve("templates/layout/mega-menu.html"));
+        assertThat(megaMenu).contains("Sistem Tanımları");
+        String blocks = Files.readString(root.resolve("templates/erp/blocks/index.html"));
+        assertThat(blocks).contains("Stok Sahası").doesNotContain("Sevkiyat Sahası");
         String costs = Files.readString(root.resolve("templates/erp/costs/index.html"));
         assertThat(costs).contains("Ocak Maliyet Analizi")
                 .contains("Fabrika Maliyet Analizi")

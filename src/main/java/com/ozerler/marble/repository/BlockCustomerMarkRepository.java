@@ -16,4 +16,6 @@ public interface BlockCustomerMarkRepository extends JpaRepository<BlockCustomer
     Optional<BlockCustomerMark> findFirstByBlockIdAndStatus(Long blockId, BlockMarkStatus status);
 
     List<BlockCustomerMark> findByStatusOrderByMarkedAtDesc(BlockMarkStatus status);
+
+    boolean existsByCustomerId(Long customerId);
 }

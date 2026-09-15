@@ -54,6 +54,7 @@ public final class Constants {
     public static final String STOCK_LOCATION_SLAB_STOCK_YARD = "FAB-PLAKA";
     public static final String STOCK_LOCATION_PALLET_STOCK_YARD = "FAB-PALET";
     public static final String STOCK_LOCATION_WORKSHOP_STOCK = "ATL-STOK";
+    public static final String COST_CENTER_FACTORY_TRANSPORT = "CC-006";
 
     public static final String CURRENCY_TRY = "TRY";
     public static final int TONNAGE_SCALE = 3;

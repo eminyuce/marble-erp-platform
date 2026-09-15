@@ -7,14 +7,19 @@ import com.ozerler.marble.dto.QuarrySummaryDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.BlockLocationMovement;
+import com.ozerler.marble.model.CostCenter;
+import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.Quarry;
 import com.ozerler.marble.model.StockLocation;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.StockLocationType;
 import com.ozerler.marble.repository.BlockLocationMovementRepository;
 import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.QuarryRepository;
 import com.ozerler.marble.repository.StockLocationRepository;
 import com.ozerler.marble.util.GridPages;
@@ -42,6 +47,9 @@ public class QuarryBlockService {
     private final StockLocationRepository stockLocationRepository;
     private final BlockLocationMovementRepository movementRepository;
     private final CostAnalysisService costAnalysisService;
+    private final ExpenseService expenseService;
+    private final CostCenterRepository costCenterRepository;
+    private final CustomerRepository customerRepository;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
@@ -90,6 +98,7 @@ public class QuarryBlockService {
 
         Quarry quarry = quarryRepository.findById(quarryId)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.quarry.not_found", quarryId)));
+        assertBlockCodeAvailable(blockCode.trim(), null);
 
         StockLocation productionYard = requireLocation(StockLocationType.PRODUCTION_YARD);
         Block block = Block.builder()
@@ -125,6 +134,7 @@ public class QuarryBlockService {
                              QualityGrade qualityGrade, int crackLevel,
                              BigDecimal extractionCost, String notes, String photoUrls) {
         Block block = getBlockById(id);
+        assertBlockCodeAvailable(blockCode.trim(), id);
         if (quarryId != null && !quarryId.equals(block.getQuarry().getId())) {
             Quarry quarry = quarryRepository.findById(quarryId)
                     .orElseThrow(() -> new IllegalArgumentException(getMessage("error.quarry.not_found", quarryId)));
@@ -172,30 +182,52 @@ public class QuarryBlockService {
 
     @Transactional
     public Block dispatchToFactory(Long blockId, BigDecimal transportCost) {
-        Block block = getBlockById(blockId);
-        StockLocation dispatchYard = requireLocation(StockLocationType.DISPATCH_YARD);
-        if (block.getCurrentLocation() == null
-                || block.getCurrentLocation().getLocationType() != StockLocationType.DISPATCH_YARD) {
-            StockLocation from = block.getCurrentLocation();
-            block.setCurrentLocation(dispatchYard);
-            recordMovement(block, from, dispatchYard, "Sevkiyat sahasına alındı");
-        }
-        block.setStatus(BlockStatus.DISPATCHED);
-        block.setTransportCost(transportCost != null ? transportCost : BigDecimal.ZERO);
-        block.calculateMetrics(block.getQuarry().getSpecificGravity());
-        return blockRepository.save(block);
+        return transferToFactory(blockId, transportCost);
     }
 
     @Transactional
     public Block transferToFactory(Long blockId, BigDecimal transportCost) {
-        return dispatchToFactory(blockId, transportCost);
+        Block block = getBlockById(blockId);
+        if (!block.getCanonicalStatus().isAtQuarry()) {
+            throw new IllegalArgumentException(getMessage("error.block.move.not_at_quarry"));
+        }
+        StockLocation factoryYard = requireLocation(StockLocationType.FACTORY_BLOCK_YARD);
+        StockLocation from = block.getCurrentLocation();
+        BigDecimal cost = transportCost != null ? transportCost : BigDecimal.ZERO;
+        block.setCurrentLocation(factoryYard);
+        block.setStatus(BlockStatus.AT_FACTORY);
+        block.setTransportCost(cost);
+        block.calculateMetrics(block.getQuarry().getSpecificGravity());
+        Block saved = blockRepository.save(block);
+        recordMovement(saved, from, factoryYard, "Fabrika Blok Sahasına sevk edildi");
+        postFactoryTransportCost(saved, cost);
+        return saved;
     }
 
     @Transactional
-    public Block sellBlockExternally(Long blockId) {
+    public Block sellBlockExternally(Long blockId, Long customerId) {
         Block block = getBlockById(blockId);
+        if (!block.getCanonicalStatus().isAtQuarry()) {
+            throw new IllegalArgumentException(getMessage("error.block.sell.not_at_quarry"));
+        }
+        Objects.requireNonNull(customerId, getMessage("error.block.sell.customer.required"));
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.customer.not_found", customerId)));
         block.setStatus(BlockStatus.SOLD);
+        block.setSoldCustomer(customer);
         return blockRepository.save(block);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isBlockCodeAvailable(String blockCode, Long excludeId) {
+        if (blockCode == null || blockCode.isBlank()) {
+            return false;
+        }
+        String trimmed = blockCode.trim();
+        if (excludeId == null) {
+            return !blockRepository.existsByBlockCode(trimmed);
+        }
+        return !blockRepository.existsByBlockCodeAndIdNot(trimmed, excludeId);
     }
 
     @Cacheable(Constants.CACHE_QUARRIES)
@@ -231,7 +263,8 @@ public class QuarryBlockService {
 
     @Transactional(readOnly = true)
     public List<Block> getDispatchedBlocks() {
-        return blockRepository.findByStatusIn(List.of(BlockStatus.DISPATCHED, BlockStatus.IN_TRANSIT));
+        return blockRepository.findByStatusIn(List.of(
+                BlockStatus.DISPATCHED, BlockStatus.IN_TRANSIT, BlockStatus.AT_FACTORY));
     }
 
     @Transactional(readOnly = true)
@@ -245,8 +278,10 @@ public class QuarryBlockService {
         var analysis = costAnalysisService.analyze(BusinessUnit.QUARRY, period);
         return QuarrySummaryDto.builder()
                 .producedTonsThisMonth(analysis.getProductionQuantity())
-                .productionYardCount(blockRepository.countByLocationType(StockLocationType.PRODUCTION_YARD))
-                .dispatchYardCount(blockRepository.countByLocationType(StockLocationType.DISPATCH_YARD))
+                .productionYardCount(blockRepository.countByCurrentLocation_LocationTypeAndStatusNot(
+                        StockLocationType.PRODUCTION_YARD, BlockStatus.SOLD))
+                .dispatchYardCount(blockRepository.countByCurrentLocation_LocationTypeAndStatusNot(
+                        StockLocationType.DISPATCH_YARD, BlockStatus.SOLD))
                 .soldCount(blockRepository.countByStatus(BlockStatus.SOLD))
                 .costPerTonThisMonth(analysis.getUnitCost() != null ? analysis.getUnitCost() : BigDecimal.ZERO)
                 .unallocatedCarryForward(analysis.isUnallocatedCarryForward())
@@ -258,6 +293,27 @@ public class QuarryBlockService {
     public boolean isWeightDeviationWarning(Block block) {
         return block != null && BlockMeasurement.exceedsDeviationWarning(block.getWeightDeviationPct())
                 && BlockMeasurement.hasActualWeight(block.getActualWeightKg());
+    }
+
+    private void assertBlockCodeAvailable(String blockCode, Long excludeId) {
+        if (!isBlockCodeAvailable(blockCode, excludeId)) {
+            throw new IllegalArgumentException(getMessage("error.block.code.duplicate", blockCode));
+        }
+    }
+
+    private void postFactoryTransportCost(Block block, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        CostCenter center = costCenterRepository.findByCode(Constants.COST_CENTER_FACTORY_TRANSPORT)
+                .or(() -> costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.FACTORY))
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.factory_transport.missing")));
+        String period = YearMonth.now().toString();
+        expenseService.recordExpense(new ExpenseService.ExpenseDraft(
+                center.getId(), ExpenseType.TRANSPORTATION, null, BusinessUnit.FACTORY, amount,
+                Constants.CURRENCY_TRY, null, LocalDate.now(), LocalDate.now(), period, period,
+                block, null, null, null, null, null, block.getBlockCode(),
+                "Fabrika nakliye: " + block.getBlockCode()));
     }
 
     private StockLocation requireLocation(StockLocationType type) {

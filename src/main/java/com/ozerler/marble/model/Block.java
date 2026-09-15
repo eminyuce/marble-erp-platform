@@ -78,6 +78,10 @@ public class Block extends AuditableEntity {
     @JoinColumn(name = "current_location_id")
     private StockLocation currentLocation;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sold_customer_id")
+    private Customer soldCustomer;
+
     @Column(name = "extraction_cost", nullable = false, precision = 14, scale = 2)
     @Builder.Default
     private BigDecimal extractionCost = BigDecimal.ZERO;

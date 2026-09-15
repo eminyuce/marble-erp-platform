@@ -51,6 +51,20 @@ class ErpModuleSecurityTest {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
+    @DisplayName("non-admin users cannot open master data definitions")
+    void userCannotOpenDefinitions() throws Exception {
+        mockMvc.perform(get("/admin/definitions")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("admin can open master data definitions")
+    void adminCanOpenDefinitions() throws Exception {
+        mockMvc.perform(get("/admin/definitions")).andExpect(status().isOk());
+    }
+
+    @Test
     @WithMockUser(roles = "OPERATOR")
     @DisplayName("operator cannot record finance expenses or quarry fuel")
     void operatorCannotWriteFinanceOrQuarry() throws Exception {

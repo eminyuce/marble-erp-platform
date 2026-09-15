@@ -4,7 +4,7 @@ function initDualEditor(containerId, hiddenInputId) {
     const hiddenInput = document.getElementById(hiddenInputId);
     if (!container || !hiddenInput) return;
 
-    let initialContent = hiddenInput.value || "<p>Doğal taş teknik şartnamesi ve detay açıklamaları...</p>";
+    let initialContent = hiddenInput.value || "";
 
     // Render Tabbed Header
     container.innerHTML = `

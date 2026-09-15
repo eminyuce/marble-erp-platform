@@ -88,6 +88,7 @@ public class BlockCustomerMarkService {
         mark.setStatus(BlockMarkStatus.CONVERTED_TO_SALE);
         mark.setSalesOrderItem(saved.getItems().getFirst());
         block.setStatus(BlockStatus.SOLD);
+        block.setSoldCustomer(mark.getCustomer());
         return saved;
     }
 

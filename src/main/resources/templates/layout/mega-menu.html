@@ -82,7 +82,7 @@
                             <span class="admin-mega-count">4</span>
                         </header>
                         <div class="admin-mega-card-body">
-                            <a class="admin-mega-item" th:href="@{/blocks}" data-search="ocak blok üretim sahası sevkiyat mazot"
+                            <a class="admin-mega-item" th:href="@{/blocks}" data-search="ocak blok üretim sahası stok mazot"
                                title="Ocak">
                                 <i data-lucide="mountain" aria-hidden="true"></i>
                                 <span>Ocak</span>
@@ -150,10 +150,16 @@
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
                             <h3 class="admin-mega-card-title">Yönetim</h3>
-                            <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">3</span>
+                            <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">4</span>
                             <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">2</span>
                         </header>
                         <div class="admin-mega-card-body">
+                            <a class="admin-mega-item" th:href="@{/admin/definitions}" sec:authorize="hasRole('ADMIN')"
+                               data-search="sistem tanımları makine ocak müşteri tedarikçi masraf stok sahası"
+                               title="Sistem Tanımları">
+                                <i data-lucide="database" aria-hidden="true"></i>
+                                <span>Sistem Tanımları</span>
+                            </a>
                             <a class="admin-mega-item" th:href="@{/admin/users}" sec:authorize="hasRole('ADMIN')"
                                data-search="kullanıcı rbac rol şifre roller yetkiler permission" title="Kullanıcılar">
                                 <i data-lucide="users" aria-hidden="true"></i>

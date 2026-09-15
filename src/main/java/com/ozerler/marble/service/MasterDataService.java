@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 @Service
@@ -38,6 +39,7 @@ public class MasterDataService {
     private final SalesOrderRepository salesOrderRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final CostTransactionRepository costTransactionRepository;
+    private final BlockCustomerMarkRepository blockCustomerMarkRepository;
 
     // =========================================================================
     // MACHINES
@@ -61,7 +63,7 @@ public class MasterDataService {
             throw new IllegalArgumentException("Makine adı boş olamaz.");
         }
 
-        String cleanCode = machine.getCode().trim().toUpperCase();
+        String cleanCode = normalizeCode(machine.getCode());
         machineRepository.findByCode(cleanCode).ifPresent(existing -> {
             if (machine.getId() == null || !existing.getId().equals(machine.getId())) {
                 throw new IllegalArgumentException("Bu makine kodu zaten kullanımda: " + cleanCode);
@@ -112,12 +114,18 @@ public class MasterDataService {
             throw new IllegalArgumentException("Saha / Depo adı boş olamaz.");
         }
 
-        String cleanCode = location.getCode().trim().toUpperCase();
+        String cleanCode = normalizeCode(location.getCode());
         stockLocationRepository.findByCode(cleanCode).ifPresent(existing -> {
             if (location.getId() == null || !existing.getId().equals(location.getId())) {
                 throw new IllegalArgumentException("Bu saha / depo kodu zaten kullanımda: " + cleanCode);
             }
         });
+        if (location.getId() != null) {
+            StockLocation stored = getStockLocationById(location.getId());
+            if (CORE_STOCK_LOCATION_CODES.contains(stored.getCode()) && !stored.getCode().equals(cleanCode)) {
+                throw new IllegalStateException("Temel ERP operasyon sahasının kodu değiştirilemez: " + stored.getCode());
+            }
+        }
 
         location.setCode(cleanCode);
         return stockLocationRepository.save(location);
@@ -169,7 +177,7 @@ public class MasterDataService {
             throw new IllegalArgumentException("Ocak adı boş olamaz.");
         }
 
-        String cleanCode = quarry.getCode().trim().toUpperCase();
+        String cleanCode = normalizeCode(quarry.getCode());
         quarryRepository.findByCode(cleanCode).ifPresent(existing -> {
             if (quarry.getId() == null || !existing.getId().equals(quarry.getId())) {
                 throw new IllegalArgumentException("Bu ocak kodu zaten kullanımda: " + cleanCode);
@@ -212,7 +220,7 @@ public class MasterDataService {
             throw new IllegalArgumentException("Firma adı boş olamaz.");
         }
 
-        String cleanCode = customer.getCustomerCode().trim().toUpperCase();
+        String cleanCode = normalizeCode(customer.getCustomerCode());
         customerRepository.findByCustomerCode(cleanCode).ifPresent(existing -> {
             if (customer.getId() == null || !existing.getId().equals(customer.getId())) {
                 throw new IllegalArgumentException("Bu müşteri kodu zaten kullanımda: " + cleanCode);
@@ -226,12 +234,8 @@ public class MasterDataService {
     @Transactional
     public void deleteCustomer(Long id) {
         Customer customer = getCustomerById(id);
-        if (salesOrderRepository.count() > 0) {
-            boolean hasOrders = salesOrderRepository.findAll().stream()
-                    .anyMatch(so -> customer.getCompanyName().equalsIgnoreCase(so.getCustomerName()));
-            if (hasOrders) {
-                throw new IllegalStateException("Bu müşteriye ait satış siparişleri mevcuttur. Müşteri silinemez.");
-            }
+        if (salesOrderRepository.existsByCustomerId(id) || blockCustomerMarkRepository.existsByCustomerId(id)) {
+            throw new IllegalStateException("Bu müşteriye ait satış veya işaret kayıtları mevcuttur. Müşteri silinemez.");
         }
         customerRepository.delete(customer);
         log.info("Customer deleted successfully. ID: {}, Code: {}", id, customer.getCustomerCode());
@@ -259,7 +263,7 @@ public class MasterDataService {
             throw new IllegalArgumentException("Firma adı boş olamaz.");
         }
 
-        String cleanCode = supplier.getSupplierCode().trim().toUpperCase();
+        String cleanCode = normalizeCode(supplier.getSupplierCode());
         supplierRepository.findBySupplierCode(cleanCode).ifPresent(existing -> {
             if (supplier.getId() == null || !existing.getId().equals(supplier.getId())) {
                 throw new IllegalArgumentException("Bu tedarikçi kodu zaten kullanımda: " + cleanCode);
@@ -273,10 +277,7 @@ public class MasterDataService {
     @Transactional
     public void deleteSupplier(Long id) {
         Supplier supplier = getSupplierById(id);
-        boolean hasOrders = purchaseOrderRepository.findAll().stream()
-                .anyMatch(po -> supplier.getId().equals(po.getSupplierId()) ||
-                        supplier.getCompanyName().equalsIgnoreCase(po.getSupplierName()));
-        if (hasOrders) {
+        if (purchaseOrderRepository.existsBySupplierId(id)) {
             throw new IllegalStateException("Bu tedarikçiye ait satın alma siparişleri mevcuttur. Tedarikçi silinemez.");
         }
         supplierRepository.delete(supplier);
@@ -305,7 +306,7 @@ public class MasterDataService {
             throw new IllegalArgumentException("Masraf merkezi adı boş olamaz.");
         }
 
-        String cleanCode = costCenter.getCode().trim().toUpperCase();
+        String cleanCode = normalizeCode(costCenter.getCode());
         costCenterRepository.findByCode(cleanCode).ifPresent(existing -> {
             if (costCenter.getId() == null || !existing.getId().equals(costCenter.getId())) {
                 throw new IllegalArgumentException("Bu masraf merkezi kodu zaten kullanımda: " + cleanCode);
@@ -319,7 +320,7 @@ public class MasterDataService {
     @Transactional
     public void deleteCostCenter(Long id) {
         CostCenter costCenter = getCostCenterById(id);
-        if (costTransactionRepository.countByCenterId(id) > 0) {
+        if (costTransactionRepository.countByCostCenterId(id) > 0) {
             throw new IllegalStateException("Bu masraf merkezine bağlı maliyet fişleri/hareketleri bulunmaktadır.");
         }
         costCenterRepository.delete(costCenter);
@@ -353,4 +354,8 @@ public class MasterDataService {
             long totalSuppliers,
             long totalCostCenters
     ) {}
+
+    static String normalizeCode(String raw) {
+        return raw.trim().toUpperCase(Locale.ROOT);
+    }
 }

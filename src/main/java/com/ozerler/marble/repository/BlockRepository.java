@@ -18,10 +18,14 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     Optional<Block> findByBlockCode(String blockCode);
 
+    boolean existsByBlockCode(String blockCode);
+
+    boolean existsByBlockCodeAndIdNot(String blockCode, Long id);
+
     @Query("SELECT b FROM Block b JOIN FETCH b.quarry WHERE b.blockCode = :blockCode")
     Optional<Block> findByBlockCodeWithQuarry(@Param("blockCode") String blockCode);
 
-    @EntityGraph(attributePaths = {"quarry"})
+    @EntityGraph(attributePaths = {"quarry", "currentLocation", "soldCustomer"})
     @Query("SELECT b FROM Block b WHERE b.id = :id")
     Optional<Block> findByIdWithQuarry(@Param("id") Long id);
 
@@ -37,7 +41,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     long countByStatusIn(List<BlockStatus> statuses);
 
-    @EntityGraph(attributePaths = {"quarry"})
+    @EntityGraph(attributePaths = {"quarry", "currentLocation", "soldCustomer"})
     @Query("SELECT b FROM Block b WHERE " +
             "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
             "LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
@@ -55,6 +59,10 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     @Query("SELECT COUNT(b) FROM Block b JOIN b.currentLocation loc WHERE loc.locationType = :locationType")
     long countByLocationType(@Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType);
+
+    long countByCurrentLocation_LocationTypeAndStatusNot(
+            com.ozerler.marble.model.enums.StockLocationType locationType,
+            BlockStatus status);
 
     @Query("SELECT COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg END), 0) "
             + "FROM Block b WHERE b.extractionDate >= :start AND b.extractionDate < :end")

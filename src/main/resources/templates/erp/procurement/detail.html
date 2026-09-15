@@ -26,6 +26,7 @@
                 <span th:text="'Sipariş: ' + ${order.orderDate}">Tarih</span> ·
                 <span th:text="'Durum: ' + ${order.status.label}">Durum</span>
                 <span th:if="${order.project != null}"> · <span th:text="'Proje: ' + ${order.project.name}">Proje</span></span>
+                <span th:if="${order.businessUnit != null}"> · <span th:text="'Birim: ' + ${order.businessUnit.label}">Birim</span></span>
             </p>
         </div>
         <div class="flex items-center gap-2">

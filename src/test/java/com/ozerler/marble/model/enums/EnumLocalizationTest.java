@@ -56,6 +56,8 @@ class EnumLocalizationTest {
         }
         assertThat(ProcessType.ST.getLabel()).isEqualTo("ST");
         assertThat(ProcessType.GANGSAW.getLabel()).isEqualTo("Katrak");
+        assertThat(QualityGrade.MOLOZ.getLabel()).isEqualTo("Moloz");
+        assertThat(StockLocationType.DISPATCH_YARD.getLabel()).isEqualTo("Stok Sahası");
         assertThat(FactoryProcessType.ST_CUTTING.getLabel()).contains("ST");
         assertThat(FactoryProcessType.GANGSAW_CUTTING.getLabel()).contains("Katrak");
     }

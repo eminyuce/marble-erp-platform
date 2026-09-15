@@ -26,7 +26,7 @@
             <div class="text-lg font-black text-slate-900 mt-1" th:text="${summary.productionYardCount} + ' blok'">0 blok</div>
         </div>
         <div class="bg-white rounded-xl border border-slate-200 p-4">
-            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Sevkiyat Sahası</div>
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Stok Sahası</div>
             <div class="text-lg font-black text-slate-900 mt-1" th:text="${summary.dispatchYardCount} + ' blok'">0 blok</div>
         </div>
         <div class="bg-white rounded-xl border border-slate-200 p-4">
@@ -44,8 +44,9 @@
 
     <aside class="erp-callout" role="note">
         <i data-lucide="info"></i>
-        <p><strong>Saha ve durum ayrıdır:</strong> Üretim Sahası ile Sevkiyat Sahası fiziksel konumdur. Kantar sapması
-            %5’i aşan bloklar listede uyarı alır. Elektrik faturası sonraki ay gelse bile önceki üretim ayına yazılır.</p>
+        <p><strong>Saha ve durum ayrıdır:</strong> Üretim Sahası ile Stok Sahası fiziksel konumdur. Kantar sapması
+            %5’i aşan bloklar listede uyarı alır. Elektrik faturası sonraki ay gelse bile önceki üretim ayına yazılır.
+            Fabrikaya sevk ocağı terk eder, bloğu Fabrika Blok Sahasına alır ve nakliyeyi fabrika maliyetine yazar.</p>
     </aside>
 
     <div class="erp-toolbar">
@@ -60,6 +61,21 @@
     </div>
 
     <div th:replace="~{fragments/list-chrome :: gridShell('blocks-table')}"></div>
+
+    <dialog id="sell-block-dialog" class="rounded-xl border border-slate-200 p-0 shadow-xl w-[min(100%,24rem)]">
+        <form method="dialog" class="p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Bloğu sat</h3>
+            <p class="text-sm text-slate-500">Satılan stokta görünecek müşteriyi seçin.</p>
+            <select id="sell-customer-id" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <option value="" disabled selected>Müşteri seçin</option>
+                <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}">Müşteri</option>
+            </select>
+            <div class="flex justify-end gap-2">
+                <button value="cancel" class="px-3 py-2 text-sm rounded-lg border border-slate-200">Vazgeç</button>
+                <button type="button" id="confirm-sell-block" class="px-3 py-2 text-sm rounded-lg bg-emerald-700 text-white font-semibold">Sat</button>
+            </div>
+        </form>
+    </dialog>
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">

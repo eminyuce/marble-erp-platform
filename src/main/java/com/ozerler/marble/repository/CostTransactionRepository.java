@@ -16,6 +16,8 @@ public interface CostTransactionRepository extends JpaRepository<CostTransaction
 
     List<CostTransaction> findByCostCenterId(Long centerId);
 
+    long countByCostCenterId(Long costCenterId);
+
     List<CostTransaction> findByBlockId(Long blockId);
 
     List<CostTransaction> findByProjectId(Long projectId);
