@@ -16,8 +16,10 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20260915-filter-dropdown}")
-    private String assetVersion;
+    @Value("${app.asset-version:20260916-multifile-grid}")
+    private String configuredAssetVersion;
+
+    private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();
 
     @ModelAttribute("gridDefaultPageSize")
     public int gridDefaultPageSize() {
@@ -38,6 +40,9 @@ public class GlobalModelAttributes {
 
     @ModelAttribute("assetVersion")
     public String assetVersion() {
-        return assetVersion;
+        if (configuredAssetVersion != null && !configuredAssetVersion.isBlank()) {
+            return configuredAssetVersion;
+        }
+        return fallbackAssetVersion;
     }
 }

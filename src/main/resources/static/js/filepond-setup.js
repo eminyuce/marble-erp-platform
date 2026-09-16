@@ -217,3 +217,8 @@ function deleteAttachedFile(fileId, elementId) {
         alert('Bağlantı hatası oluştu.');
     });
 }
+
+window.initFilePond = initFilePond;
+window.initMultiFilePond = initMultiFilePond;
+window.deleteAttachedFile = deleteAttachedFile;
+

@@ -4268,9 +4268,90 @@ textarea,
   display: inline-block;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 640px) {
   .tabulator .tabulator-col.erp-col-index,
   .tabulator .tabulator-cell.erp-col-index {
-    display: none !important;
+    min-width: 36px !important;
+    width: 36px !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
   }
 }
+
+/* -------------------------------------------------------------------------
+   Tabulator Pagination & Footer Controls
+   ------------------------------------------------------------------------- */
+.tabulator .tabulator-footer {
+  background-color: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 13px;
+  padding: 8px 12px;
+}
+
+.tabulator .tabulator-footer .tabulator-footer-contents {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+}
+
+.tabulator .tabulator-footer .tabulator-page-counter {
+  font-weight: 500;
+  color: #64748b;
+  font-size: 12px;
+  display: inline-block;
+}
+
+.tabulator .tabulator-footer .tabulator-paginator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tabulator .tabulator-footer .tabulator-page-size {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  padding: 4px 8px;
+  outline: none;
+}
+
+.tabulator .tabulator-footer .tabulator-page {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  transition: all 0.15s ease;
+}
+
+.tabulator .tabulator-footer .tabulator-page:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.tabulator .tabulator-footer .tabulator-page.active {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.tabulator .tabulator-footer .tabulator-page:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
