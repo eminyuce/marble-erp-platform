@@ -32,6 +32,10 @@ public class CostTransaction extends AuditableEntity {
     private Block block;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quarry_id")
+    private Quarry quarry;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "slab_id")
     private Slab slab;
 

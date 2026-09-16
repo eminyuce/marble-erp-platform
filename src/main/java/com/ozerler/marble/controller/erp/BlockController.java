@@ -8,18 +8,14 @@ import com.ozerler.marble.dto.FileStorageDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.enums.BlockStatus;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.StockLocationType;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
-import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.service.BlockCostCalculationService;
 import com.ozerler.marble.service.BlockCustomerMarkService;
-import com.ozerler.marble.service.ExpenseService;
 import com.ozerler.marble.service.FileStorageService;
-import com.ozerler.marble.service.MachineFuelService;
 import com.ozerler.marble.service.QuarryBlockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +31,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -47,25 +42,14 @@ import java.util.Locale;
 public class BlockController extends AbstractController {
 
     private final QuarryBlockService quarryBlockService;
+    private final BlockCostCalculationService blockCostCalculationService;
     private final BlockCustomerMarkService blockCustomerMarkService;
-    private final MachineFuelService machineFuelService;
-    private final ExpenseService expenseService;
-    private final CostCenterRepository costCenterRepository;
     private final MessageSource messageSource;
     private final FileStorageService fileStorageService;
 
     @GetMapping
     public String blocksIndex(Model model) {
-        model.addAttribute("quarries", quarryBlockService.getAllQuarries());
         model.addAttribute("summary", quarryBlockService.quarrySummary());
-        model.addAttribute("quarryMachines", machineFuelService.quarryMachines());
-        model.addAttribute("fuelEntries", machineFuelService.listAll());
-        model.addAttribute("costCenters", costCenterRepository.findByBusinessUnit(BusinessUnit.QUARRY));
-        model.addAttribute("customers", blockCustomerMarkService.customers());
-        model.addAttribute("expenseTypes", new ExpenseType[]{
-                ExpenseType.DIESEL, ExpenseType.ELECTRICITY, ExpenseType.DIRECT_LABOR,
-                ExpenseType.FIXTURE_CONSUMABLE, ExpenseType.OVERHEAD});
-        model.addAttribute("currentPeriod", YearMonth.now().toString());
         return "erp/blocks/index";
     }
 
@@ -114,11 +98,10 @@ public class BlockController extends AbstractController {
                               @RequestParam("lengthCm") int lengthCm,
                               @RequestParam("heightCm") int heightCm,
                               @RequestParam(value = "actualWeightKg", required = false) BigDecimal actualWeightKg,
-                              @RequestParam("stoneType") String stoneType,
+                              @RequestParam(value = "stoneType", required = false) String stoneType,
                               @RequestParam(value = "colorTone", required = false) String colorTone,
                               @RequestParam("qualityGrade") QualityGrade qualityGrade,
                               @RequestParam(value = "crackLevel", defaultValue = "0") int crackLevel,
-                              @RequestParam("extractionCost") BigDecimal extractionCost,
                               @RequestParam(value = "notes", required = false) String notes,
                               @RequestParam(value = "photoUrls", required = false) String photoUrls,
                               @RequestParam(value = "fileIds", required = false) List<Long> fileIds,
@@ -128,7 +111,7 @@ public class BlockController extends AbstractController {
 
         try {
             quarryBlockService.registerBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
-                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls, locationType, fileIds);
+                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, notes, photoUrls, locationType, fileIds);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.create.success", null, locale));
             return "redirect:/blocks";
@@ -146,6 +129,16 @@ public class BlockController extends AbstractController {
     public String blockDetail(@PathVariable("id") Long id, Model model) {
         var block = quarryBlockService.getBlockWithDetails(id);
         model.addAttribute("block", block);
+        Long quarryId = block.getQuarry() != null ? block.getQuarry().getId() : null;
+        var breakdown = quarryId != null
+                ? blockCostCalculationService.quarryBreakdown(quarryId, java.time.YearMonth.now().toString())
+                : null;
+        BigDecimal expensePerTon = breakdown != null ? breakdown.getExpensePerTon() : null;
+        model.addAttribute("calculatedExtractionCost",
+                blockCostCalculationService.calculatedExtractionCost(block, expensePerTon));
+        model.addAttribute("calculatedTotalCost",
+                blockCostCalculationService.calculatedTotalCost(block, expensePerTon));
+        model.addAttribute("blockMarketValue", blockCostCalculationService.blockMarketValue(block));
         model.addAttribute("movements", quarryBlockService.getMovements(id));
         model.addAttribute("marks", blockCustomerMarkService.listForBlock(id));
         model.addAttribute("customers", blockCustomerMarkService.customers());
@@ -192,11 +185,11 @@ public class BlockController extends AbstractController {
                               @RequestParam("lengthCm") int lengthCm,
                               @RequestParam("heightCm") int heightCm,
                               @RequestParam(value = "actualWeightKg", required = false) BigDecimal actualWeightKg,
-                              @RequestParam("stoneType") String stoneType,
+                              @RequestParam(value = "stoneType", required = false) String stoneType,
                               @RequestParam(value = "colorTone", required = false) String colorTone,
                               @RequestParam("qualityGrade") QualityGrade qualityGrade,
                               @RequestParam(value = "crackLevel", defaultValue = "0") int crackLevel,
-                              @RequestParam("extractionCost") BigDecimal extractionCost,
+                              @RequestParam(value = "unitMarketValuePerTon", required = false) BigDecimal unitMarketValuePerTon,
                               @RequestParam(value = "notes", required = false) String notes,
                               @RequestParam(value = "photoUrls", required = false) String photoUrls,
                               @RequestParam(value = "fileIds", required = false) List<Long> fileIds,
@@ -206,7 +199,7 @@ public class BlockController extends AbstractController {
 
         try {
             quarryBlockService.updateBlock(id, quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
-                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls, locationType, fileIds);
+                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, unitMarketValuePerTon, notes, photoUrls, locationType, fileIds);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.update.success", null, locale));
             return "redirect:/blocks";
@@ -318,7 +311,8 @@ public class BlockController extends AbstractController {
     @PostMapping("/{id}/sell")
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     public @ResponseBody BackEndResponse sellBlock(@PathVariable("id") Long id,
-                                                   @RequestParam("customerId") Long customerId) {
+                                                   @RequestParam("customerId") Long customerId,
+                                                   @RequestParam("salePrice") BigDecimal salePrice) {
         BackEndResponse ber = new BackEndResponse();
         ServiceStatus serviceStatus = new ServiceStatus();
         Status status = new Status();
@@ -326,7 +320,7 @@ public class BlockController extends AbstractController {
 
         try {
             log.info("Selling block externally with id {} to customer {}", id, customerId);
-            quarryBlockService.sellBlockExternally(id, customerId);
+            quarryBlockService.sellBlockExternally(id, customerId, salePrice, LocalDate.now(), null);
 
             ResponseEntity<Void> resp = ResponseEntity.ok().build();
             ber.setResponse(resp);
@@ -412,10 +406,13 @@ public class BlockController extends AbstractController {
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     public String sellToCustomer(@PathVariable("id") Long id,
                                  @RequestParam("customerId") Long customerId,
+                                 @RequestParam("salePrice") BigDecimal salePrice,
+                                 @RequestParam(value = "saleDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate saleDate,
+                                 @RequestParam(value = "saleNotes", required = false) String saleNotes,
                                  Locale locale,
                                  RedirectAttributes redirectAttributes) {
         try {
-            quarryBlockService.sellBlockExternally(id, customerId);
+            quarryBlockService.sellBlockExternally(id, customerId, salePrice, saleDate, saleNotes);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.sell.success", null, locale));
             return "redirect:/blocks/" + id;
@@ -467,44 +464,6 @@ public class BlockController extends AbstractController {
         quarryBlockService.saveQuarry(id, code, name, location, specificGravity, licenseNo);
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.block.quarry.save.success", null, locale));
-        return "redirect:/blocks";
-    }
-
-    @PostMapping("/fuel")
-    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
-    public String recordFuel(@RequestParam("machineId") Long machineId,
-                             @RequestParam(value = "entryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
-                             @RequestParam("litres") BigDecimal litres,
-                             @RequestParam("pricePerLitre") BigDecimal pricePerLitre,
-                             @RequestParam(value = "receiptNo", required = false) String receiptNo,
-                             @RequestParam(value = "issuedBy", required = false) String issuedBy,
-                             @RequestParam(value = "receivedBy", required = false) String receivedBy,
-                             @RequestParam(value = "notes", required = false) String notes,
-                             Locale locale,
-                             RedirectAttributes redirectAttributes) {
-        machineFuelService.recordFuel(machineId, entryDate, litres, pricePerLitre, receiptNo, issuedBy, receivedBy, notes);
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.block.fuel.success", null, locale));
-        return "redirect:/blocks";
-    }
-
-    @PostMapping("/expenses")
-    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
-    public String recordExpense(@RequestParam("centerId") Long centerId,
-                                @RequestParam("expenseType") ExpenseType expenseType,
-                                @RequestParam("amount") BigDecimal amount,
-                                @RequestParam(value = "documentNo", required = false) String documentNo,
-                                @RequestParam(value = "invoiceDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate invoiceDate,
-                                @RequestParam(value = "expensePeriod", required = false) String expensePeriod,
-                                @RequestParam(value = "description", required = false) String description,
-                                Locale locale,
-                                RedirectAttributes redirectAttributes) {
-        expenseService.recordExpense(new ExpenseService.ExpenseDraft(
-                centerId, expenseType, null, BusinessUnit.QUARRY, amount, Constants.CURRENCY_TRY,
-                documentNo, invoiceDate, LocalDate.now(), expensePeriod, YearMonth.now().toString(),
-                null, null, null, null, null, null, null, description));
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.block.expense.success", null, locale));
         return "redirect:/blocks";
     }
 

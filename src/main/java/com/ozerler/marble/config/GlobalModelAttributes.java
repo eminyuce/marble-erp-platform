@@ -16,7 +16,7 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20260916-excel-csv-support}")
+    @Value("${app.asset-version:20260916-blocks-auto-cost}")
     private String configuredAssetVersion;
 
     private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();

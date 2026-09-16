@@ -70,6 +70,7 @@ function initBlocksGrid() {
             });
         },
         ajaxResponse: function (url, params, response) {
+            updateBlocksGridTotals(response);
             return erpGridAjaxResponse("blocks-table", response);
         },
         placeholder: "Blok kaydı bulunamadı.",
@@ -118,17 +119,43 @@ function initBlocksGrid() {
                 }
             },
             {title: "Ocak", field: "quarryName", minWidth: 120},
-            {title: "Taş Cinsi", field: "stoneType", minWidth: 110},
+            {title: "Taş Cinsi", field: "stoneType", minWidth: 100, formatter: (cell) => gridText(cell.getValue())},
+            {title: "Seleksiyon", field: "colorTone", minWidth: 100, formatter: (cell) => gridText(cell.getValue())},
             {
                 title: "Tonaj",
-                minWidth: 130,
+                field: "approximateTonnage",
+                minWidth: 110,
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const warn = row.weightDeviationWarning;
+                    const ton = row.actualTonnage > 0
+                        ? `${gridNumber(row.approximateTonnage)} / ${gridNumber(row.actualTonnage)} t`
+                        : `${gridNumber(row.approximateTonnage)} t`;
                     return `<div>
-                        <strong>${gridNumber(row.approximateTonnage)} / ${gridNumber(row.actualTonnage)} t</strong>
+                        <strong>${ton}</strong>
                         ${warn ? '<div class="text-xs text-rose-700 font-semibold">%5 sapma uyarısı</div>' : ""}
                     </div>`;
+                }
+            },
+            {
+                title: "m²",
+                field: "surfaceAreaM2",
+                minWidth: 90,
+                formatter: (cell) => gridArea(cell.getValue())
+            },
+            {
+                title: "Piyasa Değeri",
+                field: "marketValue",
+                minWidth: 120,
+                formatter: function (cell) {
+                    const row = cell.getRow().getData();
+                    if (row.marketValue) {
+                        return `<strong class="text-emerald-800">${gridMoney(row.marketValue)}</strong>`;
+                    }
+                    if (row.unitMarketValuePerTon) {
+                        return `<span class="text-xs text-slate-600">${gridMoney(row.unitMarketValuePerTon)}/ton</span>`;
+                    }
+                    return '<span class="text-slate-400">—</span>';
                 }
             },
             {
@@ -140,9 +167,19 @@ function initBlocksGrid() {
                 }
             },
             {
-                title: "Maliyet",
+                title: "Çıkarma Maliyeti",
+                field: "calculatedExtractionCost",
+                minWidth: 130,
+                formatter: function (cell) {
+                    const row = cell.getRow().getData();
+                    const val = row.calculatedExtractionCost != null ? row.calculatedExtractionCost : row.extractionCost;
+                    return `<strong>${gridMoney(val)}</strong>`;
+                }
+            },
+            {
+                title: "Toplam Maliyet",
                 field: "totalCost",
-                minWidth: 110,
+                minWidth: 120,
                 formatter: function (cell) {
                     return `<strong>${gridMoney(cell.getValue())}</strong>`;
                 }
@@ -204,6 +241,25 @@ function reloadBlocksGrid() {
     if (blocksTable) {
         blocksTable.setPage(1);
     }
+}
+
+function updateBlocksGridTotals(response) {
+    const meta = response && response.meta ? response.meta : null;
+    const totalsEl = document.getElementById("blocks-grid-totals");
+    const tonEl = document.getElementById("blocks-total-tonnage");
+    const m2El = document.getElementById("blocks-total-m2");
+    if (!totalsEl || !tonEl || !m2El) return;
+    if (!meta) {
+        totalsEl.classList.add("hidden");
+        return;
+    }
+    totalsEl.classList.remove("hidden");
+    tonEl.textContent = meta.totalTonnage != null
+        ? Number(meta.totalTonnage).toLocaleString("tr-TR", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ton"
+        : "—";
+    m2El.textContent = meta.totalSurfaceM2 != null
+        ? Number(meta.totalSurfaceM2).toLocaleString("tr-TR", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " m²"
+        : "—";
 }
 
 function csrfHeaders() {

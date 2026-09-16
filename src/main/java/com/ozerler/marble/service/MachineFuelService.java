@@ -60,7 +60,7 @@ public class MachineFuelService {
                         "TRY", receiptNo, entry.getEntryDate(), entry.getEntryDate(),
                         YearMonth.from(entry.getEntryDate()).toString(),
                         YearMonth.now().toString(),
-                        null, null, null, machine, null, null, machine.getCode(),
+                        null, null, null, null, machine, null, null, machine.getCode(),
                         "Mazot: " + machine.getName() + " / " + litres + " L")));
         return saved;
     }

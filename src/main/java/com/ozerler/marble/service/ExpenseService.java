@@ -67,6 +67,7 @@ public class ExpenseService {
         CostTransaction tx = CostTransaction.builder()
                 .costCenter(center)
                 .block(draft.block())
+                .quarry(draft.quarry())
                 .slab(draft.slab())
                 .project(draft.project())
                 .constructionSite(draft.project())
@@ -143,6 +144,7 @@ public class ExpenseService {
             String expensePeriod,
             String postingPeriod,
             com.ozerler.marble.model.Block block,
+            com.ozerler.marble.model.Quarry quarry,
             com.ozerler.marble.model.Slab slab,
             com.ozerler.marble.model.Project project,
             com.ozerler.marble.model.Machine machine,
@@ -156,7 +158,7 @@ public class ExpenseService {
                                       String description) {
             return new ExpenseDraft(centerId, type, null, unit, amount, Constants.CURRENCY_TRY,
                     null, null, LocalDate.now(), expensePeriod, postingPeriod,
-                    null, null, null, null, null, null, null, description);
+                    null, null, null, null, null, null, null, null, description);
         }
     }
 }

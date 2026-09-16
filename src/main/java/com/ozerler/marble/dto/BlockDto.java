@@ -149,6 +149,26 @@ public class BlockDto {
     @JsonAlias("canDelete")
     private boolean canDelete;
 
+    @JsonProperty("surface_area_m2")
+    @JsonAlias("surfaceAreaM2")
+    private BigDecimal surfaceAreaM2;
+
+    @JsonProperty("calculated_extraction_cost")
+    @JsonAlias("calculatedExtractionCost")
+    private BigDecimal calculatedExtractionCost;
+
+    @JsonProperty("market_value")
+    @JsonAlias("marketValue")
+    private BigDecimal marketValue;
+
+    @JsonProperty("sale_price")
+    @JsonAlias("salePrice")
+    private BigDecimal salePrice;
+
+    @JsonProperty("unit_market_value_per_ton")
+    @JsonAlias("unitMarketValuePerTon")
+    private BigDecimal unitMarketValuePerTon;
+
     public static BlockDto fromEntity(Block b) {
         boolean deletable = b.getStatus() == BlockStatus.PRODUCED
                 && b.getSoldCustomer() == null
@@ -157,6 +177,11 @@ public class BlockDto {
     }
 
     public static BlockDto fromEntity(Block b, boolean canDelete) {
+        return fromEntity(b, canDelete, null, null, null, null);
+    }
+
+    public static BlockDto fromEntity(Block b, boolean canDelete, BigDecimal calculatedExtractionCost,
+                                      BigDecimal totalCost, BigDecimal surfaceAreaM2, BigDecimal marketValue) {
         return BlockDto.builder()
                 .id(b.getId())
                 .quarryId(b.getQuarry() != null ? b.getQuarry().getId() : null)
@@ -177,9 +202,14 @@ public class BlockDto {
                 .crackLevel(b.getCrackLevel())
                 .status(b.getStatus() != null ? b.getStatus().name() : "")
                 .statusLabel(b.getStatus() != null ? b.getStatus().getLabel() : "")
-                .extractionCost(b.getExtractionCost())
+                .extractionCost(calculatedExtractionCost != null ? calculatedExtractionCost : b.getExtractionCost())
                 .transportCost(b.getTransportCost())
-                .totalCost(b.getTotalCost())
+                .totalCost(totalCost != null ? totalCost : b.getTotalCost())
+                .calculatedExtractionCost(calculatedExtractionCost)
+                .surfaceAreaM2(surfaceAreaM2)
+                .marketValue(marketValue)
+                .salePrice(b.getSalePrice())
+                .unitMarketValuePerTon(b.getUnitMarketValuePerTon())
                 .notes(b.getNotes())
                 .photoUrls(b.getPhotoUrls())
                 .locationName(b.getCurrentLocation() != null ? b.getCurrentLocation().getName() : "")

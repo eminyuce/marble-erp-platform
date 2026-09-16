@@ -192,7 +192,7 @@ public class ProcurementService {
         expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 center.getId(), ExpenseType.MATERIAL, null, unit, order.getTotalAmount(),
                 Constants.CURRENCY_TRY, order.getPoNumber(), LocalDate.now(), LocalDate.now(),
-                period, period, null, null, order.getProject(), null, null, null, order.getPoNumber(),
+                period, period, null, null, null, order.getProject(), null, null, null, order.getPoNumber(),
                 "Satın alma: " + order.getPoNumber()));
     }
 }

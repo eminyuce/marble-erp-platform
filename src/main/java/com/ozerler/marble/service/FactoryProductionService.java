@@ -454,7 +454,7 @@ public class FactoryProductionService {
                 new ExpenseService.ExpenseDraft(center.getId(), ExpenseType.ELECTRICITY, null, BusinessUnit.FACTORY,
                         amount, "TRY", null, LocalDate.now(), LocalDate.now(),
                         YearMonth.now().toString(), YearMonth.now().toString(),
-                        block, null, null, operation.getMachine(), operation, null, operation.getProcessType().name(),
+                        block, null, null, null, operation.getMachine(), operation, null, operation.getProcessType().name(),
                         operation.getProcessType().getLabel())));
     }
 

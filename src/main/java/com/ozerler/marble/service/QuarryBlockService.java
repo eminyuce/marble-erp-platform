@@ -39,7 +39,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -53,6 +55,7 @@ public class QuarryBlockService {
     private final StockLocationRepository stockLocationRepository;
     private final BlockLocationMovementRepository movementRepository;
     private final CostAnalysisService costAnalysisService;
+    private final BlockCostCalculationService blockCostCalculationService;
     private final ExpenseService expenseService;
     private final CostCenterRepository costCenterRepository;
     private final CustomerRepository customerRepository;
@@ -81,11 +84,36 @@ public class QuarryBlockService {
         Page<Block> blockPage = GridPages.execute(page, size, sortField, sortDir, GridPages.BLOCK_SORTS,
                 pageable -> blockRepository.searchBlocks(
                         GridPages.normalizeSearch(search), locationType, status, unsoldOnly, pageable));
+        String period = YearMonth.now().toString();
+        Map<Long, BigDecimal> expensePerTonByQuarry = blockCostCalculationService.expensePerTonByQuarry(period);
         List<BlockDto> dtos = blockPage.getContent().stream()
-                .map(b -> BlockDto.fromEntity(b, canDeleteBlock(b)))
+                .map(b -> toBlockDto(b, expensePerTonByQuarry))
                 .collect(Collectors.toList());
 
-        return TabulatorResponse.of(dtos, blockPage.getTotalPages(), blockPage.getTotalElements());
+        Map<String, Object> meta = gridMetricsMeta(
+                GridPages.normalizeSearch(search), locationType, status, unsoldOnly);
+        return TabulatorResponse.of(dtos, blockPage.getTotalPages(), blockPage.getTotalElements(), meta);
+    }
+
+    private BlockDto toBlockDto(Block block, Map<Long, BigDecimal> expensePerTonByQuarry) {
+        Long quarryId = block.getQuarry() != null ? block.getQuarry().getId() : null;
+        BigDecimal expensePerTon = quarryId != null ? expensePerTonByQuarry.get(quarryId) : null;
+        BigDecimal extraction = blockCostCalculationService.calculatedExtractionCost(block, expensePerTon);
+        BigDecimal total = blockCostCalculationService.calculatedTotalCost(block, expensePerTon);
+        BigDecimal m2 = blockCostCalculationService.blockFootprintM2(block);
+        BigDecimal market = blockCostCalculationService.blockMarketValue(block);
+        return BlockDto.fromEntity(block, canDeleteBlock(block), extraction, total, m2, market);
+    }
+
+    private Map<String, Object> gridMetricsMeta(String search, StockLocationType locationType,
+                                                BlockStatus status, boolean unsoldOnly) {
+        Object[] sums = blockRepository.sumGridMetrics(search, locationType, status, unsoldOnly);
+        Map<String, Object> meta = new HashMap<>();
+        if (sums != null && sums.length >= 2) {
+            meta.put("totalTonnage", sums[0]);
+            meta.put("totalSurfaceM2", sums[1]);
+        }
+        return meta;
     }
 
     @Transactional(readOnly = true)
@@ -107,10 +135,10 @@ public class QuarryBlockService {
                                int widthCm, int lengthCm, int heightCm,
                                BigDecimal actualWeightKg, String stoneType, String colorTone,
                                QualityGrade qualityGrade, int crackLevel,
-                               BigDecimal extractionCost, String notes, String photoUrls) {
+                               String notes, String photoUrls) {
         return registerBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
                 actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel,
-                extractionCost, notes, photoUrls, StockLocationType.PRODUCTION_YARD);
+                notes, photoUrls, StockLocationType.PRODUCTION_YARD);
     }
 
     @Transactional
@@ -118,7 +146,7 @@ public class QuarryBlockService {
                                int widthCm, int lengthCm, int heightCm,
                                BigDecimal actualWeightKg, String stoneType, String colorTone,
                                QualityGrade qualityGrade, int crackLevel,
-                               BigDecimal extractionCost, String notes, String photoUrls,
+                               String notes, String photoUrls,
                                StockLocationType locationType) {
 
         Objects.requireNonNull(quarryId, getMessage("error.quarry.id.required"));
@@ -137,13 +165,13 @@ public class QuarryBlockService {
                 .lengthCm(lengthCm)
                 .heightCm(heightCm)
                 .actualWeightKg(actualWeightKg != null ? actualWeightKg : BigDecimal.ZERO)
-                .stoneType(stoneType)
-                .colorTone(colorTone)
+                .stoneType(stoneType != null && !stoneType.isBlank() ? stoneType.trim() : null)
+                .colorTone(colorTone != null && !colorTone.isBlank() ? colorTone.trim() : null)
                 .qualityGrade(qualityGrade != null ? qualityGrade : QualityGrade.A)
                 .crackLevel(crackLevel)
                 .status(BlockStatus.PRODUCED)
                 .currentLocation(targetLocation)
-                .extractionCost(extractionCost != null ? extractionCost : BigDecimal.ZERO)
+                .extractionCost(BigDecimal.ZERO)
                 .transportCost(BigDecimal.ZERO)
                 .notes(notes)
                 .photoUrls(photoUrls)
@@ -160,11 +188,11 @@ public class QuarryBlockService {
                                int widthCm, int lengthCm, int heightCm,
                                BigDecimal actualWeightKg, String stoneType, String colorTone,
                                QualityGrade qualityGrade, int crackLevel,
-                               BigDecimal extractionCost, String notes, String photoUrls,
+                               String notes, String photoUrls,
                                StockLocationType locationType, List<Long> fileIds) {
         Block saved = registerBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
                 actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel,
-                extractionCost, notes, photoUrls, locationType);
+                notes, photoUrls, locationType);
         if (fileIds != null && !fileIds.isEmpty()) {
             fileStorageService.attachFilesToEntity(fileIds, "BLOCK", saved.getId());
         }
@@ -176,10 +204,10 @@ public class QuarryBlockService {
                              int widthCm, int lengthCm, int heightCm,
                              BigDecimal actualWeightKg, String stoneType, String colorTone,
                              QualityGrade qualityGrade, int crackLevel,
-                             BigDecimal extractionCost, String notes, String photoUrls) {
+                             BigDecimal unitMarketValuePerTon, String notes, String photoUrls) {
         return updateBlock(id, quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
                 actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel,
-                extractionCost, notes, photoUrls, null);
+                unitMarketValuePerTon, notes, photoUrls, null);
     }
 
     @Transactional
@@ -187,7 +215,7 @@ public class QuarryBlockService {
                              int widthCm, int lengthCm, int heightCm,
                              BigDecimal actualWeightKg, String stoneType, String colorTone,
                              QualityGrade qualityGrade, int crackLevel,
-                             BigDecimal extractionCost, String notes, String photoUrls,
+                             BigDecimal unitMarketValuePerTon, String notes, String photoUrls,
                              StockLocationType locationType) {
         Block block = getBlockById(id);
         assertBlockCodeAvailable(blockCode.trim(), id);
@@ -204,13 +232,15 @@ public class QuarryBlockService {
         block.setLengthCm(lengthCm);
         block.setHeightCm(heightCm);
         block.setActualWeightKg(actualWeightKg != null ? actualWeightKg : BigDecimal.ZERO);
-        block.setStoneType(stoneType);
-        block.setColorTone(colorTone);
+        block.setStoneType(stoneType != null && !stoneType.isBlank() ? stoneType.trim() : null);
+        block.setColorTone(colorTone != null && !colorTone.isBlank() ? colorTone.trim() : null);
         if (qualityGrade != null) {
             block.setQualityGrade(qualityGrade);
         }
         block.setCrackLevel(crackLevel);
-        block.setExtractionCost(extractionCost != null ? extractionCost : BigDecimal.ZERO);
+        if (block.getStatus() != BlockStatus.SOLD) {
+            block.setUnitMarketValuePerTon(unitMarketValuePerTon);
+        }
         block.setNotes(notes);
         if (photoUrls != null && !photoUrls.isBlank()) {
             block.setPhotoUrls(photoUrls);
@@ -233,11 +263,11 @@ public class QuarryBlockService {
                              int widthCm, int lengthCm, int heightCm,
                              BigDecimal actualWeightKg, String stoneType, String colorTone,
                              QualityGrade qualityGrade, int crackLevel,
-                             BigDecimal extractionCost, String notes, String photoUrls,
+                             BigDecimal unitMarketValuePerTon, String notes, String photoUrls,
                              StockLocationType locationType, List<Long> fileIds) {
         Block updated = updateBlock(id, quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
                 actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel,
-                extractionCost, notes, photoUrls, locationType);
+                unitMarketValuePerTon, notes, photoUrls, locationType);
         if (fileIds != null && !fileIds.isEmpty()) {
             fileStorageService.attachFilesToEntity(fileIds, "BLOCK", updated.getId());
         }
@@ -345,19 +375,28 @@ public class QuarryBlockService {
     }
 
     @Transactional
-    public Block sellBlockExternally(Long blockId, Long customerId) {
+    public Block sellBlockExternally(Long blockId, Long customerId, BigDecimal salePrice,
+                                     LocalDate saleDate, String saleNotes) {
         Block block = getBlockById(blockId);
         if (!block.getCanonicalStatus().isAtQuarry()) {
             throw new IllegalArgumentException(getMessage("error.block.sell.not_at_quarry"));
         }
         Objects.requireNonNull(customerId, getMessage("error.block.sell.customer.required"));
+        Objects.requireNonNull(salePrice, getMessage("error.block.sell.price.required"));
+        if (salePrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException(getMessage("error.block.sell.price.required"));
+        }
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.customer.not_found", customerId)));
         StockLocation from = block.getCurrentLocation();
         block.setStatus(BlockStatus.SOLD);
         block.setSoldCustomer(customer);
+        block.setSalePrice(salePrice);
+        block.setSaleDate(saleDate != null ? saleDate : LocalDate.now());
+        block.setSaleNotes(saleNotes);
         Block saved = blockRepository.save(block);
-        recordMovement(saved, from, from, "Satış: " + customer.getCompanyName());
+        recordMovement(saved, from, from, "Satış: " + customer.getCompanyName()
+                + " — " + salePrice + " TL");
         return saved;
     }
 
@@ -456,7 +495,7 @@ public class QuarryBlockService {
         expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 center.getId(), ExpenseType.TRANSPORTATION, null, BusinessUnit.FACTORY, amount,
                 Constants.CURRENCY_TRY, null, LocalDate.now(), LocalDate.now(), period, period,
-                block, null, null, null, null, null, block.getBlockCode(),
+                block, null, null, null, null, null, null, block.getBlockCode(),
                 "Fabrika nakliye: " + block.getBlockCode()));
     }
 
