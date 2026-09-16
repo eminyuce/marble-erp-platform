@@ -10,9 +10,17 @@
     <div th:replace="~{fragments/form-page :: breadcrumb('Satın Alma', @{/procurement}, 'Yeni kayıt')}"></div>
     <div th:replace="~{fragments/form-page :: heading(
         'Yeni satın alma siparişi',
-        'Tedarikçi, maliyet birimi ve teslimat bilgileriyle yeni bir satın alma kaydı oluşturun.',
+        'Her satın alma kalemi onaylandığında seçtiğiniz masraf merkezine gider olarak yazılır.',
         '',
         @{/procurement})}"></div>
+
+    <aside class="erp-callout mb-4" role="note">
+        <i data-lucide="pie-chart"></i>
+        <p>
+            <strong>Masraf merkezi zorunludur.</strong> Ocak, fabrika, atölye veya şantiye (proje) giderlerini
+            doğru birime yönlendirmek için maliyet birimini seçin, ardından ilgili masraf merkezini belirleyin.
+        </p>
+    </aside>
 
     <div class="erp-form-card">
         <form th:action="@{/procurement/create}" method="post" class="erp-form">
@@ -21,7 +29,7 @@
 
                 <section class="erp-form-section">
                     <div th:replace="~{fragments/form-page :: section('Sipariş', 'Numara, tedarikçi ve maliyet birimi')}"></div>
-                    <div class="erp-form-grid" x-data="{ unit: '' }">
+                    <div class="erp-form-grid" x-data="procurementForm()" x-init="init()">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="poNumber">Sipariş no <span class="req">*</span></label>
                             <input id="poNumber" type="text" name="poNumber" th:value="${record != null ? record.poNumber : generatedPoNumber}" required
@@ -39,11 +47,28 @@
                             </select>
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="businessUnit">Maliyet birimi <span class="req">*</span></label>
-                            <select id="businessUnit" name="businessUnit" required class="erp-form-select" x-model="unit">
+                            <label class="erp-form-label" for="businessUnit">
+                                Maliyet birimi <span class="req">*</span>
+                                <span th:replace="~{fragments/erp-ops :: tip('', 'Giderin hangi iş birimine ait olduğunu belirler: Ocak, Fabrika, Atölye veya Şantiye.')}"></span>
+                            </label>
+                            <select id="businessUnit" name="businessUnit" required class="erp-form-select" x-model="unit" @change="loadCenters()">
                                 <option value="" disabled selected>Birim seçin</option>
                                 <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}">Birim</option>
                             </select>
+                        </div>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="costCenterId">
+                                Masraf merkezi <span class="req">*</span>
+                                <span th:replace="~{fragments/erp-ops :: tip('', 'Onay sonrası gider bu masraf merkezine yazılır. Birim değişince liste güncellenir.')}"></span>
+                            </label>
+                            <select id="costCenterId" name="costCenterId" required class="erp-form-select" x-model="centerId" :disabled="!unit || loading">
+                                <option value="" disabled selected x-show="!centerId">Masraf merkezi seçin</option>
+                                <template x-for="c in centers" :key="c.id">
+                                    <option :value="c.id" x-text="c.code + ' — ' + c.name"></option>
+                                </template>
+                            </select>
+                            <p class="erp-form-hint" x-show="loading">Masraf merkezleri yükleniyor…</p>
+                            <p class="erp-form-hint" x-show="unit && !loading && centers.length === 0">Bu birim için tanımlı masraf merkezi yok.</p>
                         </div>
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="projectId">
@@ -89,5 +114,38 @@
         </form>
     </div>
 </div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        function procurementForm() {
+            return {
+                unit: '',
+                centerId: '',
+                centers: [],
+                loading: false,
+                init() {
+                    const pre = document.getElementById('businessUnit');
+                    if (pre && pre.value) {
+                        this.unit = pre.value;
+                        this.loadCenters();
+                    }
+                },
+                async loadCenters() {
+                    this.centerId = '';
+                    this.centers = [];
+                    if (!this.unit) return;
+                    this.loading = true;
+                    try {
+                        const res = await fetch('/procurement/api/cost-centers?businessUnit=' + encodeURIComponent(this.unit));
+                        if (res.ok) this.centers = await res.json();
+                    } finally {
+                        this.loading = false;
+                        if (window.lucide) window.lucide.createIcons();
+                    }
+                }
+            };
+        }
+    </script>
+</th:block>
 </body>
 </html>

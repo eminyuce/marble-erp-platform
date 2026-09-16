@@ -1,5 +1,9 @@
 // Tabulator 6 Data Grid for quarry block production
 let blocksTable;
+let pendingSellBlockId = null;
+let pendingTransferBlockId = null;
+let pendingMoveBlockId = null;
+let pendingMoveTargetType = null;
 
 function initBlocksGrid() {
     const tableElement = document.getElementById("blocks-table");
@@ -17,7 +21,9 @@ function initBlocksGrid() {
             headers: {"Accept": "application/json"},
         },
         ajaxURLGenerator: function (url, config, params) {
-            return erpGridAjaxUrl(url, params, "search-input");
+            return erpGridAjaxUrl(url, params, "search-input", function () {
+                return window.quarryPageState ? window.quarryPageState.gridExtraQuery() : "";
+            });
         },
         ajaxResponse: function (url, params, response) {
             return erpGridAjaxResponse("blocks-table", response);
@@ -36,98 +42,97 @@ function initBlocksGrid() {
                     return `<a href="/blocks/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
                 }
             },
-            {title: "Ocak", field: "quarryName", minWidth: 140},
-            {title: "Saha", field: "locationName", minWidth: 140},
+            {
+                title: "Saha",
+                field: "locationName",
+                minWidth: 130,
+                formatter: function (cell) {
+                    const row = cell.getRow().getData();
+                    const name = gridText(cell.getValue());
+                    if (!name || name === "—") return '<span class="text-slate-400">—</span>';
+                    const badge = row.locationType === "PRODUCTION_YARD"
+                        ? "bg-amber-100 text-amber-800"
+                        : row.locationType === "DISPATCH_YARD"
+                            ? "bg-sky-100 text-sky-800"
+                            : "bg-slate-100 text-slate-700";
+                    return `<span class="px-2 py-0.5 rounded text-xs font-semibold ${badge}">${name}</span>`;
+                }
+            },
             {
                 title: "Müşteri",
                 field: "soldCustomerName",
                 minWidth: 140,
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
-                    const sold = row.canonicalStatus === 'SOLD' || row.status === 'SOLD';
+                    const sold = row.canonicalStatus === "SOLD" || row.status === "SOLD";
                     if (!sold) return '<span class="text-slate-400">—</span>';
-                    return gridText(cell.getValue());
+                    const name = gridText(cell.getValue());
+                    return name && name !== "—"
+                        ? `<span class="font-semibold text-emerald-800">${name}</span>`
+                        : '<span class="text-slate-400">Belirtilmedi</span>';
                 }
             },
-            {title: "Taş Cinsi", field: "stoneType", minWidth: 120},
+            {title: "Ocak", field: "quarryName", minWidth: 120},
+            {title: "Taş Cinsi", field: "stoneType", minWidth: 110},
             {
-                title: "Ebatlar (En x Boy x Yük.)",
-                minWidth: 190,
-                formatter: function (cell) {
-                    const row = cell.getRow().getData();
-                    return `${gridText(row.widthCm)}x${gridText(row.lengthCm)}x${gridText(row.heightCm)} cm (${gridNumber(row.volumeM3)} m³)`;
-                }
-            },
-            {
-                title: "Tonaj (yaklaşık / fiili)",
-                minWidth: 170,
+                title: "Tonaj",
+                minWidth: 130,
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const warn = row.weightDeviationWarning;
                     return `<div>
-                        <strong>${gridNumber(row.approximateTonnage)} / ${gridNumber(row.actualTonnage)} ton</strong>
-                        <div class="text-xs ${warn ? 'text-rose-700 font-semibold' : 'text-slate-500'}">
-                            sapma ${gridNumber(row.weightDeviationPct)}%${warn ? ' · %5 uyarısı' : ''}
-                        </div>
+                        <strong>${gridNumber(row.approximateTonnage)} / ${gridNumber(row.actualTonnage)} t</strong>
+                        ${warn ? '<div class="text-xs text-rose-700 font-semibold">%5 sapma uyarısı</div>' : ""}
                     </div>`;
-                }
-            },
-            {
-                title: "Kalite",
-                field: "qualityGradeLabel",
-                minWidth: 90,
-                width: 110,
-                formatter: function (cell) {
-                    const row = cell.getRow().getData();
-                    const val = row.qualityGrade;
-                    const colors = {
-                        'EXTRA': 'bg-purple-100 text-purple-800',
-                        'A': 'bg-emerald-100 text-emerald-800',
-                        'B': 'bg-blue-100 text-blue-800',
-                        'C': 'bg-amber-100 text-amber-800',
-                        'MOLOZ': 'bg-rose-100 text-rose-800'
-                    };
-                    return `<span class="px-2 py-0.5 rounded text-xs font-semibold ${colors[val] || 'bg-slate-100'}">${gridText(cell.getValue())}</span>`;
                 }
             },
             {
                 title: "Durum",
                 field: "statusLabel",
-                minWidth: 140,
-                width: 160,
+                minWidth: 120,
                 formatter: function (cell) {
-                    return `<span class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">● ${gridText(cell.getValue())}</span>`;
+                    return `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">${gridText(cell.getValue())}</span>`;
                 }
             },
             {
-                title: "Toplam Maliyet",
+                title: "Maliyet",
                 field: "totalCost",
-                minWidth: 130,
-                width: 140,
+                minWidth: 110,
                 formatter: function (cell) {
                     return `<strong>${gridMoney(cell.getValue())}</strong>`;
                 }
             },
             {
                 title: "İşlemler",
-                minWidth: 120,
-                width: 130,
+                minWidth: 110,
+                width: 120,
                 headerSort: false,
                 responsive: 0,
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const items = [];
-                    items.push({icon: 'eye', label: 'Detay', href: '/blocks/' + row.id});
-                    items.push({icon: 'git-branch', label: 'Soy Ağacı', href: '/genealogy?code=' + row.blockCode});
-                    items.push({icon: 'edit-3', label: 'Düzenle', href: '/blocks/' + row.id + '/edit'});
-                    const sold = row.canonicalStatus === 'SOLD' || row.status === 'SOLD';
-                    const atQuarry = !sold && (row.canonicalStatus === 'PRODUCED' || row.canonicalStatus === 'MARKED'
-                        || row.status === 'QUARRY' || row.status === 'PRODUCED' || row.status === 'MARKED');
+                    items.push({icon: "eye", label: "Detay ve işlemler", href: "/blocks/" + row.id});
+                    items.push({icon: "edit-3", label: "Düzenle", href: "/blocks/" + row.id + "/edit"});
+                    const sold = row.canonicalStatus === "SOLD" || row.status === "SOLD";
+                    const atQuarry = !sold && (row.canonicalStatus === "PRODUCED" || row.canonicalStatus === "MARKED"
+                        || row.status === "QUARRY" || row.status === "PRODUCED" || row.status === "MARKED");
                     if (atQuarry) {
-                        items.push({icon: 'map-pin', label: 'Üretim Sahasına Taşı', onclick: 'moveBlock(' + row.id + ', \'PRODUCTION_YARD\')'});
-                        items.push({icon: 'warehouse', label: 'Stok Sahasına Taşı', onclick: 'moveBlock(' + row.id + ', \'DISPATCH_YARD\')'});
-                        items.push({icon: 'handshake', label: 'Sat', onclick: 'openSellBlock(' + row.id + ')'});
-                        items.push({icon: 'truck', label: 'Fabrikaya Sevk', onclick: 'transferBlock(' + row.id + ')'});
+                        if (row.locationType !== "PRODUCTION_YARD") {
+                            items.push({
+                                icon: "pickaxe",
+                                label: "Üretim Sahasına taşı",
+                                onclick: "openMoveBlock(" + row.id + ", 'PRODUCTION_YARD', 'Üretim Sahasına taşı')"
+                            });
+                        }
+                        if (row.locationType !== "DISPATCH_YARD") {
+                            items.push({
+                                icon: "warehouse",
+                                label: "Stok Sahasına taşı",
+                                onclick: "openMoveBlock(" + row.id + ", 'DISPATCH_YARD', 'Stok Sahasına taşı')"
+                            });
+                        }
+                        items.push({icon: "handshake", label: "Sat", onclick: "openSellBlock(" + row.id + ")"});
+                        items.push({icon: "truck", label: "Fabrikaya sevk", onclick: "openTransferBlock(" + row.id + ")"});
                     }
                     return gridActionsHtml(items);
                 }
@@ -143,75 +148,131 @@ function initBlocksGrid() {
 }
 
 function reloadBlocksGrid() {
-    if (blocksTable) blocksTable.replaceData();
+    if (blocksTable) blocksTable.setPage(1).then(() => blocksTable.replaceData());
 }
 
 function csrfHeaders() {
-    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
-    const headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute("content");
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute("content");
+    const headers = {"Content-Type": "application/x-www-form-urlencoded"};
     if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
     return headers;
 }
 
-function transferBlock(id) {
-    const cost = prompt("Fabrikaya iç transfer nakliye bedelini giriniz (TL):", "");
-    if (cost === null) return;
-    if (!cost) return;
+function showBlocksToast(message, ok) {
+    const existing = document.querySelector(".erp-toast");
+    if (existing) existing.remove();
+    const toast = document.createElement("div");
+    toast.className = "erp-toast " + (ok ? "erp-toast--ok" : "erp-toast--err");
+    toast.setAttribute("role", "alert");
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
 
-    fetch(`/blocks/${id}/transfer-to-factory`, {
-        method: 'POST',
+function handleBlockActionResponse(res, okMessage) {
+    if (res.ok) {
+        showBlocksToast(okMessage, true);
+        reloadBlocksGrid();
+        return;
+    }
+    showBlocksToast("İşlem tamamlanamadı. Lütfen tekrar deneyin veya blok detayından deneyin.", false);
+}
+
+function openTransferBlock(id) {
+    pendingTransferBlockId = id;
+    const dialog = document.getElementById("transfer-block-dialog");
+    const costInput = document.getElementById("transfer-cost");
+    if (costInput) costInput.value = "";
+    if (dialog && typeof dialog.showModal === "function") {
+        dialog.showModal();
+    }
+}
+
+function transferBlock(id, cost) {
+    fetch(`/blocks/${id}/api/transfer-to-factory`, {
+        method: "POST",
         headers: csrfHeaders(),
         body: `transportCost=${encodeURIComponent(cost)}`
-    }).then(res => {
-        if (res.ok) reloadBlocksGrid();
-    });
+    }).then(res => handleBlockActionResponse(res, "Blok fabrikaya sevk edildi."));
 }
 
-function moveBlock(id, targetType) {
+function openMoveBlock(id, targetType, title) {
+    pendingMoveBlockId = id;
+    pendingMoveTargetType = targetType;
+    const dialog = document.getElementById("move-block-dialog");
+    const titleEl = document.getElementById("move-block-title");
+    const descInput = document.getElementById("move-description");
+    if (titleEl) titleEl.textContent = title || "Saha taşı";
+    if (descInput) descInput.value = "";
+    if (dialog && typeof dialog.showModal === "function") {
+        dialog.showModal();
+    }
+}
+
+function moveBlock(id, targetType, description) {
     fetch(`/blocks/${id}/move`, {
-        method: 'POST',
+        method: "POST",
         headers: csrfHeaders(),
-        body: `targetType=${encodeURIComponent(targetType)}&description=${encodeURIComponent('Saha hareketi')}`
-    }).then(res => {
-        if (res.ok) reloadBlocksGrid();
-    });
+        body: `targetType=${encodeURIComponent(targetType)}&description=${encodeURIComponent(description || "Saha hareketi")}`
+    }).then(res => handleBlockActionResponse(res, "Saha güncellendi."));
 }
-
-let pendingSellBlockId = null;
 
 function openSellBlock(id) {
     pendingSellBlockId = id;
-    const dialog = document.getElementById('sell-block-dialog');
-    if (dialog && typeof dialog.showModal === 'function') {
+    const dialog = document.getElementById("sell-block-dialog");
+    const select = document.getElementById("sell-customer-id");
+    if (select) select.selectedIndex = 0;
+    if (dialog && typeof dialog.showModal === "function") {
         dialog.showModal();
         return;
     }
-    const customerId = prompt('Müşteri kaydının numarasını girin:');
-    if (customerId) sellBlock(id, customerId);
+    showBlocksToast("Satış penceresi açılamadı.", false);
 }
 
 function sellBlock(id, customerId) {
     fetch(`/blocks/${id}/sell`, {
-        method: 'POST',
+        method: "POST",
         headers: csrfHeaders(),
         body: `customerId=${encodeURIComponent(customerId)}`
-    }).then(res => {
-        if (res.ok) reloadBlocksGrid();
-    });
+    }).then(res => handleBlockActionResponse(res, "Satış kaydedildi."));
 }
 
 document.addEventListener("DOMContentLoaded", function () {
     initBlocksGrid();
-    const confirmBtn = document.getElementById('confirm-sell-block');
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', function () {
-            const customerId = document.getElementById('sell-customer-id')?.value;
-            const dialog = document.getElementById('sell-block-dialog');
-            if (!customerId || !pendingSellBlockId) return;
-            sellBlock(pendingSellBlockId, customerId);
-            if (dialog) dialog.close();
-            pendingSellBlockId = null;
-        });
-    }
+
+    document.getElementById("confirm-sell-block")?.addEventListener("click", function () {
+        const customerId = document.getElementById("sell-customer-id")?.value;
+        const dialog = document.getElementById("sell-block-dialog");
+        if (!customerId || !pendingSellBlockId) return;
+        sellBlock(pendingSellBlockId, customerId);
+        if (dialog) dialog.close();
+        pendingSellBlockId = null;
+    });
+
+    document.getElementById("confirm-transfer-block")?.addEventListener("click", function () {
+        const cost = document.getElementById("transfer-cost")?.value;
+        const dialog = document.getElementById("transfer-block-dialog");
+        if (!cost || !pendingTransferBlockId) {
+            showBlocksToast("Nakliye bedeli girin.", false);
+            return;
+        }
+        transferBlock(pendingTransferBlockId, cost);
+        if (dialog) dialog.close();
+        pendingTransferBlockId = null;
+    });
+
+    document.getElementById("transfer-cancel")?.addEventListener("click", function () {
+        document.getElementById("transfer-block-dialog")?.close();
+    });
+
+    document.getElementById("confirm-move-block")?.addEventListener("click", function () {
+        const description = document.getElementById("move-description")?.value || "";
+        const dialog = document.getElementById("move-block-dialog");
+        if (!pendingMoveBlockId || !pendingMoveTargetType) return;
+        moveBlock(pendingMoveBlockId, pendingMoveTargetType, description);
+        if (dialog) dialog.close();
+        pendingMoveBlockId = null;
+        pendingMoveTargetType = null;
+    });
 });
