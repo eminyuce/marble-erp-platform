@@ -63,6 +63,7 @@ class TerminologyContractTest {
                 .contains("/admin/definitions/suppliers")
                 .doesNotContain("th:href=\"@{/admin/definitions}\"");
         String megaMenu = Files.readString(root.resolve("templates/layout/mega-menu.html"));
+        assertThat(megaMenu).contains(">Ocak — Blok Takibi<");
         assertThat(megaMenu).doesNotContain("Sistem Tanımları");
         assertThat(megaMenu).doesNotContain("th:href=\"@{/admin/definitions}\"");
         assertThat(megaMenu).contains("admin-mega-card-title\">Tanımlar<");
