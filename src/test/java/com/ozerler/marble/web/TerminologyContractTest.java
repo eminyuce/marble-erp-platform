@@ -111,6 +111,7 @@ class TerminologyContractTest {
         assertThat(megaMenu).contains("/admin/definitions/quarries");
         assertThat(megaMenu).contains("/admin/definitions/customers");
         assertThat(megaMenu).contains("/admin/definitions/cost-centers");
+        assertThat(megaMenu).contains("th:href=\"@{/expenses}\"");
         String blocks = Files.readString(root.resolve("templates/erp/blocks/index.html"));
         assertThat(blocks).contains("Stok Sahası").doesNotContain("Sevkiyat Sahası");
         String blockForm = Files.readString(root.resolve("templates/erp/blocks/form.html"));

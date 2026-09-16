@@ -23,6 +23,7 @@ test.describe('Responsive Layout & Navigation Systems', () => {
     // Verify mega menu opens
     const megaMenu = page.locator('#adminMegaMenu');
     await expect(megaMenu).toBeVisible();
+    await expect(megaMenu.locator('a[href*="/expenses"]').first()).toBeVisible();
 
     // Click blocks link inside mega menu
     const blockLink = megaMenu.locator('a[href*="/blocks"]');

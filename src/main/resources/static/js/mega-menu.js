@@ -135,7 +135,8 @@
         menu.querySelectorAll("[data-mega-group]").forEach((card) => {
             let cardVisible = 0;
             card.querySelectorAll(".admin-mega-item").forEach((item) => {
-                const haystack = ((item.getAttribute("data-search") || "") + " " + (item.textContent || "")).toLowerCase();
+                const href = item.getAttribute("href") || "";
+                const haystack = ((item.getAttribute("data-search") || "") + " " + (item.textContent || "") + " " + href).toLowerCase();
                 const match = !q || haystack.includes(q);
                 item.hidden = !match;
                 item.classList.toggle("search-highlight", Boolean(q && match));
@@ -146,8 +147,11 @@
             });
             card.hidden = cardVisible === 0;
             const countEl = card.querySelector(".admin-mega-count");
-            if (countEl && q) {
-                countEl.textContent = String(cardVisible);
+            if (countEl) {
+                if (!countEl.dataset.initialCount) {
+                    countEl.dataset.initialCount = countEl.textContent.trim();
+                }
+                countEl.textContent = q ? String(cardVisible) : countEl.dataset.initialCount;
             }
         });
         if (emptyState) {
@@ -189,4 +193,8 @@
     setPageTitle();
     markActiveItem();
     refreshIcons();
+
+    window.openAdminMegaMenu = openMenu;
+    window.closeAdminMegaMenu = closeMenu;
+    window.toggleAdminMegaMenu = toggleMenu;
 })();

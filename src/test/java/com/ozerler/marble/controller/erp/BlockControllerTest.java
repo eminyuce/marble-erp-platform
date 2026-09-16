@@ -105,7 +105,12 @@ class BlockControllerTest {
 
         BackEndResponse response = blockController.sellBlock(blockId, 9L, new BigDecimal("500000"));
 
-        verify(quarryBlockService).sellBlockExternally(blockId, 9L, new BigDecimal("500000"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.isNull());
+        verify(quarryBlockService).sellBlockExternally(
+                org.mockito.ArgumentMatchers.eq(blockId),
+                org.mockito.ArgumentMatchers.eq(9L),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("500000")),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.isNull());
         assertThat(response).isNotNull();
         assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
@@ -117,7 +122,12 @@ class BlockControllerTest {
     void shouldReturnFatalBackEndResponseOnSellError() {
         Long blockId = 100L;
         doThrow(new RuntimeException("Lock conflict")).when(quarryBlockService)
-                .sellBlockExternally(blockId, 9L, new BigDecimal("500000"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.isNull());
+                .sellBlockExternally(
+                        org.mockito.ArgumentMatchers.eq(blockId),
+                        org.mockito.ArgumentMatchers.eq(9L),
+                        org.mockito.ArgumentMatchers.eq(new BigDecimal("500000")),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.isNull());
 
         BackEndResponse response = blockController.sellBlock(blockId, 9L, new BigDecimal("500000"));
 
