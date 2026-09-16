@@ -457,6 +457,7 @@
             return '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">● '
                 + window.gridText(label || status) + '</span>';
         };
+    }
     if (typeof window.erpGridDefaults !== "function") {
         window.erpGridDefaults = function () {
             return { locale: "tr" };
