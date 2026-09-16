@@ -86,6 +86,7 @@ const PAGES_TO_TEST = [
     { name: '38b_user_edit_1', path: '/admin/users/1/edit', isPublic: false },
     { name: '39_user_reset_password_1', path: '/admin/users/1/reset-password', isPublic: false },
     { name: '40_settings', path: '/admin/settings', isPublic: false },
+    { name: '40b_deployment', path: '/admin/deployment', isPublic: false },
     { name: '42_definitions_suppliers', path: '/admin/definitions/suppliers', isPublic: false, tabulatorId: '#suppliers-table' },
     { name: '43_definitions_customers', path: '/admin/definitions/customers', isPublic: false, tabulatorId: '#customers-table' },
     { name: '44_definitions_machines', path: '/admin/definitions/machines', isPublic: false, tabulatorId: '#machines-table' },

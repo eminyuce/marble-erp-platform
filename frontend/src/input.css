@@ -3135,6 +3135,14 @@ button.erp-search-btn {
   color: #2b6cb0;
 }
 
+a.settings-sidebar-item {
+  text-decoration: none;
+}
+
+.deploy-terminal {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
 /* -------------------------------------------------------------------------
    Dedicated create / edit form pages (shared product chrome)
    ------------------------------------------------------------------------- */

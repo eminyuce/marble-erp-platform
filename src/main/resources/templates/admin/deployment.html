@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Deployment &bull; Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="space-y-5">
+    <script>
+        window.deploymentConsole = function () {
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+            return {
+                status: {
+                    state: 'IDLE',
+                    canStart: false,
+                    linuxHost: false,
+                    enabled: false,
+                    commandAvailable: false,
+                    sudoReady: false,
+                    branch: 'main',
+                    headCommit: '',
+                    headMessage: '',
+                    startedAt: null,
+                    finishedAt: null,
+                    message: 'Durum yükleniyor...',
+                    blockingReasons: []
+                },
+                logText: '',
+                offset: 0,
+                confirming: false,
+                starting: false,
+                watching: false,
+                downtime: false,
+                errorMessage: '',
+                timer: null,
+                async init() {
+                    if (this.status.state === 'RUNNING') {
+                        this.watching = true;
+                    }
+                    await this.refreshStatus();
+                    await this.pollLog();
+                    this.timer = setInterval(() => this.tick(), 700);
+                },
+                async tick() {
+                    if (this.watching || this.status.state === 'RUNNING' || this.downtime) {
+                        await this.pollLog();
+                    } else if (!this._idleTicks) {
+                        this._idleTicks = 0;
+                    }
+                    if (!(this.watching || this.status.state === 'RUNNING' || this.downtime)) {
+                        this._idleTicks = (this._idleTicks || 0) + 1;
+                        if (this._idleTicks % 8 === 0) {
+                            await this.refreshStatus();
+                        }
+                    }
+                },
+                csrfHeaders() {
+                    const headers = {'Accept': 'application/json'};
+                    if (csrfHeader && csrfToken) {
+                        headers[csrfHeader] = csrfToken;
+                    }
+                    return headers;
+                },
+                async refreshStatus() {
+                    try {
+                        const res = await fetch('/admin/deployment/status', {headers: this.csrfHeaders()});
+                        if (!res.ok) {
+                            throw new Error('status ' + res.status);
+                        }
+                        this.status = await res.json();
+                        this.downtime = false;
+                        if (this.status.state === 'RUNNING') {
+                            this.watching = true;
+                        }
+                    } catch (e) {
+                        if (this.watching || this.starting) {
+                            this.downtime = true;
+                        }
+                    }
+                },
+                async pollLog() {
+                    try {
+                        const res = await fetch('/admin/deployment/log?offset=' + this.offset, {headers: this.csrfHeaders()});
+                        if (!res.ok) {
+                            throw new Error('log ' + res.status);
+                        }
+                        const data = await res.json();
+                        this.downtime = false;
+                        if (typeof data.nextOffset === 'number') {
+                            this.offset = data.nextOffset;
+                        }
+                        if (data.chunk) {
+                            this.logText += data.chunk;
+                            this.$nextTick(() => {
+                                const el = this.$refs.terminal;
+                                if (el) {
+                                    el.scrollTop = el.scrollHeight;
+                                }
+                            });
+                        }
+                        if (data.state) {
+                            this.status = Object.assign({}, this.status, {
+                                state: data.state,
+                                startedAt: data.startedAt || this.status.startedAt,
+                                finishedAt: data.finishedAt || this.status.finishedAt
+                            });
+                            if (data.state === 'SUCCESS' || data.state === 'FAILED') {
+                                this.watching = false;
+                                this.starting = false;
+                                this.confirming = false;
+                                await this.refreshStatus();
+                            }
+                        }
+                    } catch (e) {
+                        this.downtime = true;
+                    }
+                },
+                canClickStart() {
+                    return !this.starting && (this.confirming || this.status.canStart) && this.status.state !== 'RUNNING';
+                },
+                onStartClick() {
+                    this.errorMessage = '';
+                    if (!this.confirming) {
+                        this.confirming = true;
+                        return;
+                    }
+                    this.startDeploy();
+                },
+                async startDeploy() {
+                    this.starting = true;
+                    this.confirming = false;
+                    this.logText = '';
+                    this.offset = 0;
+                    try {
+                        const res = await fetch('/admin/deployment/start', {
+                            method: 'POST',
+                            headers: this.csrfHeaders()
+                        });
+                        const data = await res.json();
+                        if (!res.ok || !data.accepted) {
+                            this.errorMessage = data.message || 'Yayın başlatılamadı.';
+                            this.starting = false;
+                            return;
+                        }
+                        this.watching = true;
+                        this.status = Object.assign({}, this.status, {
+                            state: 'RUNNING',
+                            canStart: false,
+                            message: data.message
+                        });
+                    } catch (e) {
+                        this.errorMessage = 'Yayın isteği gönderilemedi.';
+                        this.starting = false;
+                    }
+                },
+                startButtonLabel() {
+                    if (this.status.state === 'RUNNING' || this.starting) {
+                        return 'Yayın sürüyor...';
+                    }
+                    return this.confirming ? "Evet, main'den yayınla" : "main dalından yayınla";
+                },
+                actionHint() {
+                    if (this.downtime) {
+                        return 'Sunucu yeniden başlıyor. Bağlantı otomatik kurulacak.';
+                    }
+                    if (this.confirming) {
+                        return 'Servis duracak. Yaklaşık 1–2 dakika kesinti olur. Emin misiniz?';
+                    }
+                    return this.status.message || '';
+                },
+                badgeLabel() {
+                    if (this.downtime) return 'YENİDEN BAŞLIYOR';
+                    const labels = {
+                        RUNNING: 'YAYIN SÜRÜYOR',
+                        SUCCESS: 'TAMAMLANDI',
+                        FAILED: 'BAŞARISIZ',
+                        UNAVAILABLE: 'KAPALI',
+                        IDLE: 'HAZIR'
+                    };
+                    return labels[this.status.state] || this.status.state;
+                },
+                badgeClass() {
+                    if (this.downtime) return 'bg-amber-50 text-amber-800 border-amber-200';
+                    const map = {
+                        RUNNING: 'bg-violet-50 text-violet-800 border-violet-200',
+                        SUCCESS: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                        FAILED: 'bg-rose-50 text-rose-800 border-rose-200',
+                        UNAVAILABLE: 'bg-slate-100 text-slate-600 border-slate-200',
+                        IDLE: 'bg-sky-50 text-sky-800 border-sky-200'
+                    };
+                    return map[this.status.state] || 'bg-slate-100 text-slate-600 border-slate-200';
+                },
+                dotClass() {
+                    if (this.downtime) return 'bg-amber-500 animate-pulse';
+                    const map = {
+                        RUNNING: 'bg-violet-500 animate-pulse',
+                        SUCCESS: 'bg-emerald-500',
+                        FAILED: 'bg-rose-500',
+                        UNAVAILABLE: 'bg-slate-400',
+                        IDLE: 'bg-sky-500'
+                    };
+                    return map[this.status.state] || 'bg-slate-400';
+                },
+                reconnectLabel() {
+                    if (this.downtime) return 'bağlantı kesildi — bekleniyor';
+                    if (this.status.state === 'RUNNING') return 'canlı çıktı';
+                    return 'günlük';
+                },
+                idleTerminal() {
+                    return [
+                        'eyuce@eyucedev:~$ cd marble-erp-platform/',
+                        'eyuce@eyucedev:~/marble-erp-platform$ sudo git pull origin main',
+                        'eyuce@eyucedev:~/marble-erp-platform$ sudo ./scripts/deploy_production.sh -y',
+                        '',
+                        '# Bu iki komut, Yayınla düğmesiyle buradan çalışır.',
+                        '# SSH oturumu açmanıza gerek yoktur.'
+                    ].join('\n');
+                }
+            };
+        };
+    </script>
+
+    <div class="space-y-5" x-data="deploymentConsole()" x-init="init()">
+        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 pb-4 border-b border-slate-200">
+            <div class="flex items-start gap-3">
+                <div class="p-3 bg-violet-600 text-white rounded-2xl shadow-lg shadow-violet-700/20 ring-4 ring-violet-100">
+                    <i data-lucide="rocket" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Üretim Yayını</h1>
+                        <span class="px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wider rounded-full border flex items-center gap-1.5"
+                              :class="badgeClass()">
+                            <span class="w-2 h-2 rounded-full" :class="dotClass()"></span>
+                            <span x-text="badgeLabel()"></span>
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium mt-1">
+                        SSH olmadan <strong>main</strong> dalını çekip üretim paketini kurar.
+                        Araçlar: <code class="font-mono text-[11px]">git pull origin main</code>
+                        ve <code class="font-mono text-[11px]">./scripts/deploy_production.sh -y</code>
+                    </p>
+                </div>
+            </div>
+            <a th:href="@{/admin/settings?tab=tools}"
+               class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold transition flex items-center gap-1.5">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Sistem Araçları
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            <div class="xl:col-span-1 space-y-5">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+                    <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i data-lucide="git-branch" class="w-4 h-4 text-violet-600"></i>
+                        <h2 class="text-sm font-bold text-slate-900">Kaynak</h2>
+                    </div>
+                    <dl class="space-y-3 text-xs">
+                        <div>
+                            <dt class="text-slate-400 font-semibold uppercase tracking-wide">Dal</dt>
+                            <dd class="font-mono font-bold text-slate-800 mt-0.5" x-text="status.branch || 'main'"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-400 font-semibold uppercase tracking-wide">Son commit</dt>
+                            <dd class="font-mono text-slate-800 mt-0.5" x-text="status.headCommit || '—'"></dd>
+                            <dd class="text-slate-500 mt-1 leading-relaxed"
+                                x-text="status.headMessage || 'Commit bilgisi okunamadı'"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-400 font-semibold uppercase tracking-wide">Durum</dt>
+                            <dd class="text-slate-700 mt-0.5 leading-relaxed" x-text="status.message"></dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+                    <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600"></i>
+                        <h2 class="text-sm font-bold text-slate-900">Ne olur?</h2>
+                    </div>
+                    <ol class="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed">
+                        <li><code class="font-mono">git pull origin main</code> çalışır.</li>
+                        <li>Önyüz ve JAR derlenir.</li>
+                        <li><code class="font-mono">marble-erp</code> servisi durur (kısa kesinti).</li>
+                        <li>Yeni JAR kurulur, servis ayağa kalkar, sağlık kontrolü yapılır.</li>
+                    </ol>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">
+                        Bu sekme açık kalsın. Servis durunca bağlantı kopar; ekran yeniden bağlanıp kalan günlüğü
+                        gösterir.
+                    </p>
+                </div>
+
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 space-y-2"
+                     x-show="status.blockingReasons && status.blockingReasons.length && status.state !== 'RUNNING'"
+                     x-cloak>
+                    <p class="font-bold">Yayın henüz hazır değil</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <template x-for="reason in (status.blockingReasons || [])" :key="reason">
+                            <li x-text="reason"></li>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="xl:col-span-2 space-y-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-900">Yayını başlat</h2>
+                            <p class="text-xs text-slate-500" x-text="actionHint()"></p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button"
+                                    class="px-4 py-2 rounded-xl text-xs font-bold border bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 transition"
+                                    @click="confirming = false"
+                                    x-show="confirming"
+                                    x-cloak>
+                                Vazgeç
+                            </button>
+                            <button type="button"
+                                    id="deployment-start-btn"
+                                    class="px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :class="confirming ? 'bg-rose-600 hover:bg-rose-700' : 'bg-violet-600 hover:bg-violet-700'"
+                                    :disabled="!canClickStart()"
+                                    @click="onStartClick()">
+                                <i data-lucide="rocket" class="w-4 h-4"></i>
+                                <span x-text="startButtonLabel()"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-rose-700" x-show="errorMessage" x-text="errorMessage" x-cloak></p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-800 bg-[#0b1220] shadow-inner overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2.5 border-b border-slate-800 bg-[#111827]">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-300">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span class="ml-2 font-mono">eyuce@eyucedev:~/marble-erp-platform</span>
+                        </div>
+                        <span class="text-[10px] font-mono text-slate-500" x-text="reconnectLabel()"></span>
+                    </div>
+                    <pre id="deployment-log"
+                         x-ref="terminal"
+                         class="deploy-terminal p-4 text-[11px] leading-5 text-emerald-300 font-mono whitespace-pre-wrap break-all min-h-[420px] max-h-[70vh] overflow-auto"
+                         x-text="logText || idleTerminal()"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

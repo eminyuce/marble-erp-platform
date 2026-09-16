@@ -136,7 +136,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 || path.startsWith("/favicon.ico")
                 || path.startsWith("/error")
                 || path.startsWith("/actuator")
-                || path.startsWith("/health");
+                || path.startsWith("/health")
+                || path.startsWith("/admin/deployment/log")
+                || path.startsWith("/admin/deployment/status");
     }
 
     /**

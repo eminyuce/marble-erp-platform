@@ -1,0 +1,15 @@
+<section class="help-page" data-title="Üretim yayını" data-updated="2026-09-16">
+    <p>Sistem Araçları içindeki <strong>Deployment</strong> ekranı, sunucuya SSH açmadan <code>main</code> dalından üretim yayını başlatır ve çıktıyı canlı gösterir.</p>
+    <h3>Ne çalışır</h3>
+    <ul class="help-panel-list">
+        <li><code>git pull origin main</code> yeni kodu çeker.</li>
+        <li><code>./scripts/deploy_production.sh -y</code> derler, servisi durdurur, JAR’ı değiştirir ve sağlık kontrolü yapar.</li>
+        <li>Yayın sırasında uygulama kısa süre kapanır; bu sekme açık kalırsa günlük otomatik devam eder.</li>
+    </ul>
+    <h3>İlk kurulum</h3>
+    <ul class="help-panel-list">
+        <li>Bu ekran yalnızca Linux üretim sunucusunda ve yönetici hesabıyla çalışır.</li>
+        <li>İlk kez SSH ile <code>sudo ./scripts/deploy_production.sh -y</code> çalıştırın; bu, sonraki yayınlar için şifresiz sudo ve yayın komutunu kurar.</li>
+        <li>Düğme kapalıysa sarı kutudaki nedeni okuyun.</li>
+    </ul>
+</section>
