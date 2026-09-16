@@ -137,25 +137,33 @@
                             </p>
                             <p id="weight-deviation-badge" class="text-xs font-semibold mt-1 hidden"></p>
                         </div>
-                        <div class="erp-form-field">
-                            <label class="erp-form-label" for="extractionCost">Ocak çıkarma maliyeti (TL) <span
-                                    class="req">*</span></label>
-                            <input id="extractionCost" type="number" step="0.01" min="0" name="extractionCost" required
-                                   th:value="${isEdit and block != null ? block.extractionCost : ''}"
-                                   class="erp-form-input" placeholder="42000.00">
-                        </div>
                     </div>
+                    <p th:if="${isEdit ?: false}" class="erp-form-hint text-xs text-emerald-700 mt-2">
+                        Ocak çıkarma maliyeti gider kayıtlarından otomatik hesaplanır; listelemede gösterilir.
+                    </p>
                 </section>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Kalite', 'Taş cinsi ve kalite sınıfı')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Kalite', 'Taş cinsi, seleksiyon ve kalite sınıfı')}"></div>
                     <div class="erp-form-grid">
-                        <div class="erp-form-field erp-form-field--full">
-                            <label class="erp-form-label" for="stoneType">Taş cinsi ve seleksiyon <span
-                                    class="req">*</span></label>
-                            <input id="stoneType" type="text" name="stoneType" required
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="stoneType">Taş cinsi</label>
+                            <input id="stoneType" type="text" name="stoneType"
                                    th:value="${isEdit and block != null ? block.stoneType : ''}"
-                                   class="erp-form-input" placeholder="Örn: Muğla Beyaz Kristal">
+                                   class="erp-form-input" placeholder="Örn: Muğla Beyaz">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="colorTone">Seleksiyon</label>
+                            <input id="colorTone" type="text" name="colorTone"
+                                   th:value="${isEdit and block != null ? block.colorTone : ''}"
+                                   class="erp-form-input" placeholder="Örn: Kristal, Homojen">
+                        </div>
+                        <div class="erp-form-field" th:if="${isEdit and block != null and block.status.name() != 'SOLD'}">
+                            <label class="erp-form-label" for="unitMarketValuePerTon">Birim piyasa değeri (TL/ton)</label>
+                            <input id="unitMarketValuePerTon" type="number" step="0.01" min="0" name="unitMarketValuePerTon"
+                                   th:value="${block.unitMarketValuePerTon}"
+                                   class="erp-form-input" placeholder="Satılmayan blok için tahmini değer">
+                            <p class="erp-form-hint text-xs">Ton × birim değer = tahmini piyasa değeri (listede gösterilir)</p>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="qualityGrade">Kalite sınıfı <span class="req">*</span></label>

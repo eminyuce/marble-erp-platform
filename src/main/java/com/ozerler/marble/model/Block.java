@@ -54,7 +54,7 @@ public class Block extends AuditableEntity {
     @Column(name = "weight_deviation_pct", nullable = false, precision = 6, scale = 2)
     private BigDecimal weightDeviationPct;
 
-    @Column(name = "stone_type", nullable = false, length = 100)
+    @Column(name = "stone_type", length = 100)
     private String stoneType;
 
     @Column(name = "color_tone", length = 100)
@@ -85,6 +85,19 @@ public class Block extends AuditableEntity {
     @Column(name = "extraction_cost", nullable = false, precision = 14, scale = 2)
     @Builder.Default
     private BigDecimal extractionCost = BigDecimal.ZERO;
+
+    @Column(name = "sale_price", precision = 14, scale = 2)
+    private BigDecimal salePrice;
+
+    @Column(name = "sale_date")
+    private LocalDate saleDate;
+
+    @Column(name = "sale_notes", columnDefinition = "TEXT")
+    private String saleNotes;
+
+    /** Satılmayan bloklar için ton başına tahmini piyasa değeri (TL/ton). */
+    @Column(name = "unit_market_value_per_ton", precision = 14, scale = 2)
+    private BigDecimal unitMarketValuePerTon;
 
     @Column(name = "transport_cost", nullable = false, precision = 14, scale = 2)
     @Builder.Default

@@ -96,4 +96,29 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     boolean existsByCurrentLocationId(Long currentLocationId);
 
     boolean existsBySoldCustomer_Id(Long customerId);
+
+    @EntityGraph(attributePaths = {"quarry"})
+    List<Block> findByQuarryId(Long quarryId);
+
+    @Query("SELECT DISTINCT b.quarry.id FROM Block b WHERE b.quarry IS NOT NULL")
+    List<Long> findDistinctQuarryIds();
+
+    @Query("SELECT COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg END), 0) / 1000.0, "
+            + "COALESCE(SUM((b.widthCm * b.lengthCm) / 10000.0), 0) "
+            + "FROM Block b "
+            + "LEFT JOIN b.currentLocation loc "
+            + "LEFT JOIN b.soldCustomer soldCust "
+            + "LEFT JOIN b.quarry q WHERE "
+            + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(COALESCE(b.colorTone, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+            + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
+            + "(:status IS NULL OR b.status = :status) AND "
+            + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)")
+    Object[] sumGridMetrics(@Param("search") String search,
+                            @Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
+                            @Param("status") BlockStatus status,
+                            @Param("unsoldOnly") boolean unsoldOnly);
 }

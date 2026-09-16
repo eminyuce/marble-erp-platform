@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Giderler ve Satın Alma | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-6" x-data="{ unit: '[[${selectedUnit.name()}]]' }">
+
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Giderler ve Satın Alma')}"></div>
+            <h2 class="admin-page-title">Giderler ve Satın Alma</h2>
+            <p class="erp-list-lead">
+                Ocak, fabrika, atölye ve şantiye giderlerini günlük olarak kaydedin.
+                Ocak giderleri girildikçe blok çıkarma maliyeti otomatik hesaplanır.
+            </p>
+        </div>
+        <form method="get" th:action="@{/expenses}" class="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="unit" th:value="${selectedUnit.name()}">
+            <input type="hidden" name="quarryId" th:if="${selectedQuarryId != null}" th:value="${selectedQuarryId}">
+            <label class="text-xs font-semibold text-slate-600" for="period">Dönem</label>
+            <input id="period" type="month" name="period" th:value="${period}"
+                   class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+            <button type="submit" class="px-3 py-2 text-sm font-semibold bg-slate-800 text-white rounded-lg">Uygula</button>
+        </form>
+    </div>
+
+    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-800" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-800" th:text="${errorMessage}"></div>
+
+    <nav class="erp-module-tabs" role="tablist">
+        <a th:each="u : ${businessUnits}"
+           th:href="@{/expenses(unit=${u.name()}, quarryId=${selectedQuarryId}, period=${period})}"
+           class="erp-module-tab"
+           th:classappend="${selectedUnit == u} ? ' erp-module-tab--active' : ''"
+           th:text="${u.label}">Birim</a>
+    </nav>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="xl:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900">Gider kaydı</h3>
+                <p class="text-xs text-slate-500 mt-0.5" th:text="${selectedUnit.label + ' birimi için günlük gider girişi'}">Gider</p>
+            </div>
+            <form th:action="@{/expenses}" method="post" class="space-y-3">
+                <input type="hidden" name="businessUnit" th:value="${selectedUnit.name()}">
+
+                <div th:if="${selectedUnit.name() == 'QUARRY'}" class="erp-form-field">
+                    <label class="erp-form-label" for="quarryId">Ocak <span class="req">*</span></label>
+                    <select id="quarryId" name="quarryId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
+                        <option value="" disabled th:selected="${selectedQuarryId == null}">Ocak seçin</option>
+                        <option th:each="q : ${quarries}" th:value="${q.id}"
+                                th:selected="${selectedQuarryId != null and selectedQuarryId == q.id}"
+                                th:text="${q.name + ' (' + q.code + ')'}"></option>
+                    </select>
+                </div>
+
+                <div th:if="${selectedUnit.name() == 'SITE'}" class="erp-form-field">
+                    <label class="erp-form-label" for="projectId">Şantiye / Proje <span class="req">*</span></label>
+                    <select id="projectId" name="projectId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
+                        <option value="" disabled selected>Proje seçin</option>
+                        <option th:each="p : ${projects}" th:value="${p.id}"
+                                th:text="${p.projectCode + ' — ' + p.name}"></option>
+                    </select>
+                </div>
+
+                <select name="centerId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Masraf merkezi seçin</option>
+                    <option th:each="c : ${costCenters}" th:value="${c.id}" th:text="${c.code + ' — ' + c.name}"></option>
+                </select>
+
+                <select name="expenseType" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
+                    <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
+                </select>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Tarih <span class="req">*</span></label>
+                        <input type="date" name="entryDate" required th:value="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}"
+                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Tutar (TL) <span class="req">*</span></label>
+                        <input type="number" step="0.01" min="0.01" name="amount" required placeholder="0.00"
+                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg mt-1">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input type="text" name="documentNo" placeholder="Belge / fatura no"
+                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
+                    <input type="date" name="invoiceDate" placeholder="Fatura tarihi"
+                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
+                </div>
+
+                <input type="month" name="expensePeriod" th:value="${period}"
+                       class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg"
+                       title="Giderin ait olduğu maliyet dönemi">
+
+                <input type="text" name="description" placeholder="Açıklama (isteğe bağlı)"
+                       class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
+
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">
+                    Gider kaydet
+                </button>
+            </form>
+        </div>
+
+        <div class="space-y-4">
+            <div th:if="${quarryBreakdown != null}" class="bg-white rounded-xl border border-emerald-200 shadow-sm p-5 space-y-3">
+                <h3 class="font-bold text-slate-900">Ocak çıkarma maliyeti</h3>
+                <p class="text-xs text-slate-500" th:text="${quarryBreakdown.quarryName + ' · ' + quarryBreakdown.expensePeriod}">Ocak</p>
+                <dl class="text-sm space-y-2">
+                    <div class="flex justify-between gap-2">
+                        <dt class="text-slate-500">Toplam gider</dt>
+                        <dd class="font-semibold" th:text="${#numbers.formatDecimal(quarryBreakdown.totalExpenses, 1, 'POINT', 2, 'COMMA') + ' TL'}">0</dd>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <dt class="text-slate-500">Toplam tonaj</dt>
+                        <dd class="font-semibold" th:text="${#numbers.formatDecimal(quarryBreakdown.totalTonnage, 1, 'POINT', 2, 'COMMA') + ' ton'}">0</dd>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <dt class="text-slate-500">Toplam piyasa değeri</dt>
+                        <dd class="font-semibold" th:text="${quarryBreakdown.totalMarketValue != null ? #numbers.formatDecimal(quarryBreakdown.totalMarketValue, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">—</dd>
+                    </div>
+                    <div class="flex justify-between gap-2 border-t border-slate-100 pt-2">
+                        <dt class="text-slate-700 font-semibold">Ton başına çıkarma maliyeti</dt>
+                        <dd class="font-bold text-emerald-800"
+                            th:text="${quarryBreakdown.expensePerTon != null ? #numbers.formatDecimal(quarryBreakdown.expensePerTon, 1, 'POINT', 2, 'COMMA') + ' TL/ton' : '—'}">—</dd>
+                    </div>
+                </dl>
+                <details class="text-xs" th:if="${!#maps.isEmpty(quarryBreakdown.expenseByType)}">
+                    <summary class="cursor-pointer font-semibold text-slate-700">Gider alt kalemleri</summary>
+                    <ul class="mt-2 space-y-1">
+                        <li th:each="entry : ${quarryBreakdown.expenseByType}" class="flex justify-between gap-2">
+                            <span th:text="${entry.key}">Kalem</span>
+                            <span class="font-mono" th:text="${#numbers.formatDecimal(entry.value, 1, 'POINT', 2, 'COMMA') + ' TL'}">0</span>
+                        </li>
+                    </ul>
+                </details>
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    Formül: (toplam tonaj × ort. piyasa değeri − toplam gider) / toplam tonaj =
+                    <span th:if="${quarryBreakdown.marginPerTon != null}"
+                          th:text="${#numbers.formatDecimal(quarryBreakdown.marginPerTon, 1, 'POINT', 2, 'COMMA') + ' TL/ton (marj)'}">—</span>
+                    <span th:unless="${quarryBreakdown.marginPerTon != null}">—</span>
+                </p>
+            </div>
+
+            <div th:if="${selectedUnit.name() == 'QUARRY' and selectedQuarryId == null}"
+                 class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900">
+                Ocak çıkarma maliyetini görmek için formda ocak seçin veya listeden ocak filtreleyin.
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <h3 class="font-bold text-slate-900 mb-2">Son giderler</h3>
+                <div class="max-h-96 overflow-y-auto text-sm space-y-2">
+                    <div th:each="tx : ${recentExpenses}" class="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                        <div class="flex justify-between gap-2">
+                            <span class="font-semibold" th:text="${tx.expenseType != null ? tx.expenseType.label : 'Gider'}">Gider</span>
+                            <span th:text="${#numbers.formatDecimal(tx.amount, 1, 'POINT', 2, 'COMMA') + ' TL'}">0</span>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-0.5"
+                             th:text="${(tx.entryDate != null ? tx.entryDate : '') + (tx.description != null ? ' · ' + tx.description : '')}">—</div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(recentExpenses)}" class="text-slate-400 text-center py-4">Bu dönemde gider yok.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

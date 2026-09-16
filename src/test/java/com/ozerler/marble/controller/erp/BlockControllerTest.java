@@ -103,9 +103,9 @@ class BlockControllerTest {
     void shouldReturnSuccessBackEndResponseOnSell() {
         Long blockId = 100L;
 
-        BackEndResponse response = blockController.sellBlock(blockId, 9L);
+        BackEndResponse response = blockController.sellBlock(blockId, 9L, new BigDecimal("500000"));
 
-        verify(quarryBlockService).sellBlockExternally(blockId, 9L);
+        verify(quarryBlockService).sellBlockExternally(blockId, 9L, new BigDecimal("500000"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.isNull());
         assertThat(response).isNotNull();
         assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
@@ -116,9 +116,10 @@ class BlockControllerTest {
     @DisplayName("sellBlock should return fatal BackEndResponse on exception")
     void shouldReturnFatalBackEndResponseOnSellError() {
         Long blockId = 100L;
-        doThrow(new RuntimeException("Lock conflict")).when(quarryBlockService).sellBlockExternally(blockId, 9L);
+        doThrow(new RuntimeException("Lock conflict")).when(quarryBlockService)
+                .sellBlockExternally(blockId, 9L, new BigDecimal("500000"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.isNull());
 
-        BackEndResponse response = blockController.sellBlock(blockId, 9L);
+        BackEndResponse response = blockController.sellBlock(blockId, 9L, new BigDecimal("500000"));
 
         assertThat(response).isNotNull();
         assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -197,13 +198,13 @@ class BlockControllerTest {
         String view = blockController.createBlock(
                 1L, "BLK-NEW-01", StockLocationType.DISPATCH_YARD, null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null, null,
+                "Not", null, null,
                 java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
         verify(quarryBlockService).registerBlock(
                 1L, "BLK-NEW-01", null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null, StockLocationType.DISPATCH_YARD, null);
+                "Not", null, StockLocationType.DISPATCH_YARD, null);
         assertThat(view).isEqualTo("redirect:/blocks");
     }
 
@@ -218,13 +219,13 @@ class BlockControllerTest {
         String view = blockController.createBlock(
                 1L, "BLK-NEW-02", StockLocationType.PRODUCTION_YARD, null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null, fileIds,
+                "Not", null, fileIds,
                 java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
         verify(quarryBlockService).registerBlock(
                 1L, "BLK-NEW-02", null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null, StockLocationType.PRODUCTION_YARD, fileIds);
+                "Not", null, StockLocationType.PRODUCTION_YARD, fileIds);
         assertThat(view).isEqualTo("redirect:/blocks");
     }
 

@@ -72,6 +72,10 @@ class QuarryBlockServiceTest {
     private ShipmentItemRepository shipmentItemRepository;
     @Mock
     private FileStorageService fileStorageService;
+    @Mock
+    private CostAnalysisService costAnalysisService;
+    @Mock
+    private BlockCostCalculationService blockCostCalculationService;
 
     private QuarryBlockService quarryBlockService;
 
@@ -79,7 +83,7 @@ class QuarryBlockServiceTest {
     void setUp() {
         quarryBlockService = new QuarryBlockService(
                 blockRepository, quarryRepository, null, stockLocationRepository, movementRepository,
-                null, expenseService, costCenterRepository, customerRepository,
+                costAnalysisService, blockCostCalculationService, expenseService, costCenterRepository, customerRepository,
                 slabRepository, factoryWorkOrderRepository, productionOrderRepository,
                 blockCustomerMarkRepository, costTransactionRepository, shipmentItemRepository,
                 fileStorageService);
@@ -126,7 +130,7 @@ class QuarryBlockServiceTest {
 
         assertThatThrownBy(() -> quarryBlockService.registerBlock(
                 1L, "BLK-1", null, 100, 100, 100, BigDecimal.TEN, "Beyaz", null,
-                null, 0, BigDecimal.ONE, null, null))
+                null, 0, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("BLK-1");
         verify(blockRepository, never()).save(any());
@@ -190,10 +194,11 @@ class QuarryBlockServiceTest {
         when(customerRepository.findById(2L)).thenReturn(Optional.of(customer));
         when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Block sold = quarryBlockService.sellBlockExternally(4L, 2L);
+        Block sold = quarryBlockService.sellBlockExternally(4L, 2L, new BigDecimal("750000"), java.time.LocalDate.now(), "Test satış");
 
         assertThat(sold.getStatus()).isEqualTo(BlockStatus.SOLD);
         assertThat(sold.getSoldCustomer().getCompanyName()).isEqualTo("Mermer A.Ş.");
+        assertThat(sold.getSalePrice()).isEqualByComparingTo("750000");
         verify(movementRepository).save(any());
     }
 
@@ -222,7 +227,7 @@ class QuarryBlockServiceTest {
         // En: 200 cm, Boy: 250 cm, Yükseklik: 150 cm -> Hacim: 7.500 m³ -> 7.5 * 2.70 = 20.25 ton = 20250.00 kg
         Block saved = quarryBlockService.registerBlock(
                 1L, "BLK-AUTO-01", null, 200, 250, 150, null, "Beyaz Mermer", "Açık",
-                QualityGrade.A, 0, new BigDecimal("5000"), "Notlar", null);
+                QualityGrade.A, 0, "Notlar", null);
 
         assertThat(saved).isNotNull();
         assertThat(saved.getVolumeM3()).isEqualByComparingTo(new BigDecimal("7.500"));
@@ -334,7 +339,7 @@ class QuarryBlockServiceTest {
         Block result = quarryBlockService.registerBlock(
                 1L, "BLK-REG-01", null, 200, 200, 150,
                 null, "Beyaz", "Açık", QualityGrade.A, 0,
-                BigDecimal.valueOf(1000), "Not", null, StockLocationType.DISPATCH_YARD);
+                "Not", null, StockLocationType.DISPATCH_YARD);
 
         assertThat(result.getCurrentLocation()).isEqualTo(dispatchYard);
         verify(movementRepository).save(any(BlockLocationMovement.class));
@@ -416,7 +421,7 @@ class QuarryBlockServiceTest {
         Block saved = quarryBlockService.registerBlock(
                 1L, "BLK-NEW-FILES", null, 150, 250, 140,
                 null, "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null, StockLocationType.PRODUCTION_YARD, fileIds);
+                "Not", null, StockLocationType.PRODUCTION_YARD, fileIds);
 
         assertThat(saved).isNotNull();
         verify(fileStorageService).attachFilesToEntity(fileIds, "BLOCK", 99L);

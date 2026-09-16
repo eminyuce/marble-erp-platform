@@ -90,7 +90,7 @@ public class CostController {
             expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                     centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
                     documentNo, invoiceDate, LocalDate.now(), expensePeriod, YearMonth.now().toString(),
-                    null, null, project, null, null, null, null, description));
+                    null, null, null, project, null, null, null, null, description));
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.cost.expense.success", null, locale));
         } catch (Exception e) {

@@ -82,10 +82,12 @@ class ErpModuleSecurityTest {
                         .param("businessUnit", "QUARRY")
                         .param("amount", "10"))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(post("/blocks/fuel").with(csrf())
-                        .param("machineId", "1")
-                        .param("litres", "10")
-                        .param("pricePerLitre", "40"))
+        mockMvc.perform(post("/expenses").with(csrf())
+                        .param("businessUnit", "QUARRY")
+                        .param("centerId", "1")
+                        .param("expenseType", "DIESEL")
+                        .param("amount", "10")
+                        .param("entryDate", "2026-09-16"))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/reports")).andExpect(status().isForbidden());
     }

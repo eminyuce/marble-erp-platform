@@ -160,7 +160,6 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
     await page.locator('input[name="heightCm"]').fill('140');
     await page.locator('input[name="stoneType"]').fill('Test Mermer');
     await page.locator('select[name="qualityGrade"]').selectOption('A');
-    await page.locator('input[name="extractionCost"]').fill('12000');
 
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle' }),
@@ -239,7 +238,6 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
     await page.locator('input[name="heightCm"]').fill('130');
     await page.locator('input[name="stoneType"]').fill('Burdur Bej');
     await page.locator('select[name="qualityGrade"]').selectOption('A');
-    await page.locator('input[name="extractionCost"]').fill('15000');
 
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle' }),
@@ -304,6 +302,8 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
     const customerSelect = page.locator('select[name="customerId"]');
     await expect(customerSelect).toBeVisible();
     await customerSelect.selectOption({ index: 1 });
+
+    await page.locator('input[name="salePrice"]').fill('650000');
 
     const notesTextarea = page.locator('textarea[name="saleNotes"]');
     await notesTextarea.fill('E2E Test satışı başarıyla tamamlandı.');

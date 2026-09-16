@@ -102,7 +102,7 @@ public class WorkshopOperationService {
                     new ExpenseService.ExpenseDraft(center.getId(), ExpenseType.MATERIAL, null, BusinessUnit.WORKSHOP,
                             purchaseCost, "TRY", receipt.getReceiptNo(), receipt.getReceivedAt(), LocalDate.now(),
                             YearMonth.from(receipt.getReceivedAt()).toString(), YearMonth.now().toString(),
-                            null, null, null, null, null, null, source.name(), "Atölye malzeme kabulü")));
+                            null, null, null, null, null, null, null, source.name(), "Atölye malzeme kabulü")));
         }
         return receipt;
     }
@@ -149,7 +149,7 @@ public class WorkshopOperationService {
                     new ExpenseService.ExpenseDraft(center.getId(), ExpenseType.CONSUMABLES, null, BusinessUnit.WORKSHOP,
                             extraExpense, "TRY", order.getCutOrderNo(), LocalDate.now(), LocalDate.now(),
                             YearMonth.now().toString(), YearMonth.now().toString(),
-                            null, null, order.getProject(), machine, null, operation, processType.name(),
+                            null, null, null, order.getProject(), machine, null, operation, processType.name(),
                             processType.getLabel())));
         }
         return operation;

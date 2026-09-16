@@ -61,8 +61,8 @@
                     th:text="${(block.actualWeightKg != null and block.actualWeightKg > 0) ? (block.approximateTonnage + ' / ' + block.actualTonnage + ' t') : (block.approximateTonnage + ' t')}">—</dd>
             </div>
             <div class="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
-                <dt class="text-xs font-semibold text-slate-500">Çıkarma Maliyeti</dt>
-                <dd class="font-bold text-emerald-800 mt-1" th:text="${#numbers.formatDecimal(block.extractionCost, 1, 'POINT', 2, 'COMMA') + ' TL'}">0 TL</dd>
+                <dt class="text-xs font-semibold text-slate-500">Yaklaşık Tonaj</dt>
+                <dd class="font-bold text-slate-800 mt-1" th:text="${block.approximateTonnage + ' ton'}">—</dd>
             </div>
             <div class="col-span-2 sm:col-span-4 lg:col-span-1 bg-slate-50/70 p-3 rounded-xl border border-slate-100">
                 <dt class="text-xs font-semibold text-slate-500">Renk / Seleksiyon</dt>
@@ -160,6 +160,18 @@
                                 <span th:text="${block.currentLocation != null ? block.currentLocation.name : 'Ocak Depolama Sahası'}">Stok Sahası</span>
                             </div>
                             <p class="erp-form-hint text-xs text-slate-500 mt-1">Bloğun ocaktan sevk edileceği konumu belirtir.</p>
+                        </div>
+
+                        <!-- Satış Rakamı -->
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="salePrice">
+                                <span>Satış rakamı (TL)</span>
+                                <span class="req">*</span>
+                                <span th:replace="~{fragments/erp-ops :: tip('', 'Bloğun satış bedeli; piyasa değeri olarak maliyet hesaplarında kullanılır.')}"></span>
+                            </label>
+                            <input id="salePrice" type="number" step="0.01" min="0.01" name="salePrice" required
+                                   class="erp-form-input" placeholder="Örn: 850000">
+                            <p class="erp-form-hint text-xs text-slate-500 mt-1">Satış fiyatı ilgili blok için piyasa değeridir.</p>
                         </div>
 
                         <!-- Satış Tarihi -->

@@ -54,7 +54,7 @@ class ExpenseServiceTest {
         expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 1L, ExpenseType.ELECTRICITY, null, BusinessUnit.QUARRY, new BigDecimal("1000"), "TRY",
                 "F-1", LocalDate.of(2026, 9, 10), LocalDate.of(2026, 9, 10), null, "2026-09",
-                null, null, null, null, null, null, null, "Elektrik"));
+                null, null, null, null, null, null, null, null, "Elektrik"));
 
         ArgumentCaptor<CostTransaction> captor = ArgumentCaptor.forClass(CostTransaction.class);
         verify(costTransactionRepository).save(captor.capture());
@@ -73,7 +73,7 @@ class ExpenseServiceTest {
         expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 1L, ExpenseType.ELECTRICITY, null, BusinessUnit.QUARRY, new BigDecimal("1000"), "TRY",
                 "F-1", LocalDate.of(2026, 9, 10), LocalDate.of(2026, 9, 10), "2026-08", "2026-09",
-                null, null, null, null, null, null, null, "Elektrik"));
+                null, null, null, null, null, null, null, null, "Elektrik"));
 
         ArgumentCaptor<CostTransaction> captor = ArgumentCaptor.forClass(CostTransaction.class);
         verify(costTransactionRepository).save(captor.capture());
@@ -90,7 +90,7 @@ class ExpenseServiceTest {
         assertThatThrownBy(() -> expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 5L, ExpenseType.MATERIAL, null, BusinessUnit.SITE, new BigDecimal("500"), "TRY",
                 "F-2", LocalDate.of(2026, 9, 10), LocalDate.of(2026, 9, 10), "2026-09", "2026-09",
-                null, null, null, null, null, null, null, "Malzeme")))
+                null, null, null, null, null, null, null, null, "Malzeme")))
                 .isInstanceOf(IllegalArgumentException.class);
         verify(costTransactionRepository, never()).save(any());
     }
