@@ -1,6 +1,7 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.domain.BlockCostFormula;
 import com.ozerler.marble.domain.BlockMeasurement;
 import com.ozerler.marble.dto.BlockDto;
 import com.ozerler.marble.dto.QuarrySummaryDto;
@@ -41,6 +42,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -91,7 +93,7 @@ public class QuarryBlockService {
                 .collect(Collectors.toList());
 
         Map<String, Object> meta = gridMetricsMeta(
-                GridPages.normalizeSearch(search), locationType, status, unsoldOnly);
+                GridPages.normalizeSearch(search), locationType, status, unsoldOnly, expensePerTonByQuarry);
         return TabulatorResponse.of(dtos, blockPage.getTotalPages(), blockPage.getTotalElements(), meta);
     }
 
@@ -106,14 +108,68 @@ public class QuarryBlockService {
     }
 
     private Map<String, Object> gridMetricsMeta(String search, StockLocationType locationType,
-                                                BlockStatus status, boolean unsoldOnly) {
-        Object[] sums = blockRepository.sumGridMetrics(search, locationType, status, unsoldOnly);
-        Map<String, Object> meta = new HashMap<>();
-        if (sums != null && sums.length >= 2) {
-            meta.put("totalTonnage", sums[0]);
-            meta.put("totalSurfaceM2", sums[1]);
+                                                BlockStatus status, boolean unsoldOnly,
+                                                Map<Long, BigDecimal> expensePerTonByQuarry) {
+        List<Object[]> rows = blockRepository.sumGridMetricsByQuarry(search, locationType, status, unsoldOnly);
+        BigDecimal totalTonnage = BigDecimal.ZERO;
+        BigDecimal totalSurfaceM2 = BigDecimal.ZERO;
+        BigDecimal totalTransport = BigDecimal.ZERO;
+        BigDecimal totalExtraction = BigDecimal.ZERO;
+        Map<Long, BigDecimal> perTon = expensePerTonByQuarry != null ? expensePerTonByQuarry : Map.of();
+        if (rows != null) {
+            for (Object[] row : rows) {
+                Object[] values = unwrapMetricRow(row);
+                if (values.length < 4) {
+                    continue;
+                }
+                Long quarryId = toLong(values[0]);
+                BigDecimal tons = toBigDecimal(values[1]);
+                BigDecimal surfaceM2 = toBigDecimal(values[2]);
+                BigDecimal transport = toBigDecimal(values[3]);
+                totalTonnage = totalTonnage.add(tons);
+                totalSurfaceM2 = totalSurfaceM2.add(surfaceM2);
+                totalTransport = totalTransport.add(transport);
+                totalExtraction = totalExtraction.add(
+                        BlockCostFormula.blockExtractionCost(tons, quarryId != null ? perTon.get(quarryId) : null));
+            }
         }
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("totalTonnage", totalTonnage);
+        meta.put("totalSurfaceM2", totalSurfaceM2);
+        meta.put("totalExtractionCost", totalExtraction);
+        meta.put("totalCost", totalExtraction.add(totalTransport));
         return meta;
+    }
+
+    private static Object[] unwrapMetricRow(Object[] row) {
+        if (row != null && row.length == 1 && row[0] instanceof Object[] nested) {
+            return nested;
+        }
+        return row != null ? row : new Object[0];
+    }
+
+    private static Long toLong(Object value) {
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        return null;
+    }
+
+    private static BigDecimal toBigDecimal(Object value) {
+        if (value instanceof BigDecimal decimal) {
+            return decimal;
+        }
+        if (value instanceof Number number) {
+            return BigDecimal.valueOf(number.doubleValue());
+        }
+        return BigDecimal.ZERO;
+    }
+
+    static String normalizeBlockCode(String blockCode) {
+        if (blockCode == null) {
+            return null;
+        }
+        return blockCode.trim().toUpperCase(Locale.ROOT);
     }
 
     @Transactional(readOnly = true)
@@ -151,15 +207,16 @@ public class QuarryBlockService {
 
         Objects.requireNonNull(quarryId, getMessage("error.quarry.id.required"));
         Objects.requireNonNull(blockCode, getMessage("error.block.code.required"));
+        String normalizedCode = requireNormalizedBlockCode(blockCode);
 
         Quarry quarry = quarryRepository.findById(quarryId)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.quarry.not_found", quarryId)));
-        assertBlockCodeAvailable(blockCode.trim(), null);
+        assertBlockCodeAvailable(normalizedCode, null);
 
         StockLocation targetLocation = requireLocation(locationType != null ? locationType : StockLocationType.PRODUCTION_YARD);
         Block block = Block.builder()
                 .quarry(quarry)
-                .blockCode(blockCode.trim())
+                .blockCode(normalizedCode)
                 .extractionDate(extractionDate != null ? extractionDate : LocalDate.now())
                 .widthCm(widthCm)
                 .lengthCm(lengthCm)
@@ -218,13 +275,14 @@ public class QuarryBlockService {
                              BigDecimal unitMarketValuePerTon, String notes, String photoUrls,
                              StockLocationType locationType) {
         Block block = getBlockById(id);
-        assertBlockCodeAvailable(blockCode.trim(), id);
+        String normalizedCode = requireNormalizedBlockCode(blockCode);
+        assertBlockCodeAvailable(normalizedCode, id);
         if (quarryId != null && !quarryId.equals(block.getQuarry().getId())) {
             Quarry quarry = quarryRepository.findById(quarryId)
                     .orElseThrow(() -> new IllegalArgumentException(getMessage("error.quarry.not_found", quarryId)));
             block.setQuarry(quarry);
         }
-        block.setBlockCode(blockCode.trim());
+        block.setBlockCode(normalizedCode);
         if (extractionDate != null) {
             block.setExtractionDate(extractionDate);
         }
@@ -405,11 +463,11 @@ public class QuarryBlockService {
         if (blockCode == null || blockCode.isBlank()) {
             return false;
         }
-        String trimmed = blockCode.trim();
+        String normalized = normalizeBlockCode(blockCode);
         if (excludeId == null) {
-            return !blockRepository.existsByBlockCode(trimmed);
+            return !blockRepository.existsByBlockCodeIgnoreCase(normalized);
         }
-        return !blockRepository.existsByBlockCodeAndIdNot(trimmed, excludeId);
+        return !blockRepository.existsByBlockCodeIgnoreCaseAndIdNot(normalized, excludeId);
     }
 
     @Cacheable(Constants.CACHE_QUARRIES)
@@ -476,6 +534,15 @@ public class QuarryBlockService {
     public boolean isWeightDeviationWarning(Block block) {
         return block != null && BlockMeasurement.exceedsDeviationWarning(block.getWeightDeviationPct())
                 && BlockMeasurement.hasActualWeight(block.getActualWeightKg());
+    }
+
+    private String requireNormalizedBlockCode(String blockCode) {
+        Objects.requireNonNull(blockCode, getMessage("error.block.code.required"));
+        String normalized = normalizeBlockCode(blockCode);
+        if (normalized == null || normalized.isBlank()) {
+            throw new IllegalArgumentException(getMessage("error.block.code.required"));
+        }
+        return normalized;
     }
 
     private void assertBlockCodeAvailable(String blockCode, Long excludeId) {

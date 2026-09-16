@@ -59,6 +59,7 @@ function initBlocksGrid() {
         paginationMode: "remote",
         paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
         paginationSizeSelector: [5, 10, 25, 50],
+        columnCalcs: "bottom",
         ajaxURL: "/blocks/api/data",
         ajaxConfig: {
             method: "GET",
@@ -85,7 +86,8 @@ function initBlocksGrid() {
                 responsive: 0,
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
-                    return `<a href="/blocks/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
+                    const code = String(cell.getValue() || "").toLocaleUpperCase("en-US");
+                    return `<a href="/blocks/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(code)}</a>`;
                 }
             },
             {
@@ -125,6 +127,10 @@ function initBlocksGrid() {
                 title: "Tonaj",
                 field: "approximateTonnage",
                 minWidth: 110,
+                bottomCalc: blocksMetaCalc("totalTonnage"),
+                bottomCalcFormatter: function (cell) {
+                    return `<strong>${formatBlocksMetric(cell.getValue(), "t")}</strong>`;
+                },
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const warn = row.weightDeviationWarning;
@@ -141,6 +147,10 @@ function initBlocksGrid() {
                 title: "m²",
                 field: "surfaceAreaM2",
                 minWidth: 90,
+                bottomCalc: blocksMetaCalc("totalSurfaceM2"),
+                bottomCalcFormatter: function (cell) {
+                    return `<strong>${formatBlocksMetric(cell.getValue(), "m²")}</strong>`;
+                },
                 formatter: (cell) => gridArea(cell.getValue())
             },
             {
@@ -170,6 +180,10 @@ function initBlocksGrid() {
                 title: "Çıkarma Maliyeti",
                 field: "calculatedExtractionCost",
                 minWidth: 130,
+                bottomCalc: blocksMetaCalc("totalExtractionCost"),
+                bottomCalcFormatter: function (cell) {
+                    return `<strong>${gridMoney(cell.getValue())}</strong>`;
+                },
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const val = row.calculatedExtractionCost != null ? row.calculatedExtractionCost : row.extractionCost;
@@ -180,6 +194,10 @@ function initBlocksGrid() {
                 title: "Toplam Maliyet",
                 field: "totalCost",
                 minWidth: 120,
+                bottomCalc: blocksMetaCalc("totalCost"),
+                bottomCalcFormatter: function (cell) {
+                    return `<strong>${gridMoney(cell.getValue())}</strong>`;
+                },
                 formatter: function (cell) {
                     return `<strong>${gridMoney(cell.getValue())}</strong>`;
                 }
@@ -243,23 +261,54 @@ function reloadBlocksGrid() {
     }
 }
 
+let blocksGridMeta = {};
+
+function blocksMetaCalc(key) {
+    return function () {
+        const value = blocksGridMeta ? blocksGridMeta[key] : null;
+        const number = Number(value);
+        return Number.isFinite(number) ? number : 0;
+    };
+}
+
+function formatBlocksMetric(value, suffix) {
+    const formatted = gridNumber(value, function (n) {
+        return n.toLocaleString("tr-TR", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    });
+    if (formatted === "—") {
+        return "—";
+    }
+    return suffix ? formatted + " " + suffix : formatted;
+}
+
 function updateBlocksGridTotals(response) {
-    const meta = response && response.meta ? response.meta : null;
+    const meta = response && response.meta ? response.meta : {};
+    blocksGridMeta = meta;
     const totalsEl = document.getElementById("blocks-grid-totals");
     const tonEl = document.getElementById("blocks-total-tonnage");
     const m2El = document.getElementById("blocks-total-m2");
-    if (!totalsEl || !tonEl || !m2El) return;
-    if (!meta) {
-        totalsEl.classList.add("hidden");
-        return;
+    const extractionEl = document.getElementById("blocks-total-extraction");
+    const costEl = document.getElementById("blocks-total-cost");
+    if (totalsEl) {
+        totalsEl.classList.remove("hidden");
+        if (tonEl) {
+            tonEl.textContent = formatBlocksMetric(meta.totalTonnage, "ton");
+        }
+        if (m2El) {
+            m2El.textContent = formatBlocksMetric(meta.totalSurfaceM2, "m²");
+        }
+        if (extractionEl) {
+            extractionEl.textContent = gridMoney(meta.totalExtractionCost);
+        }
+        if (costEl) {
+            costEl.textContent = gridMoney(meta.totalCost);
+        }
     }
-    totalsEl.classList.remove("hidden");
-    tonEl.textContent = meta.totalTonnage != null
-        ? Number(meta.totalTonnage).toLocaleString("tr-TR", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ton"
-        : "—";
-    m2El.textContent = meta.totalSurfaceM2 != null
-        ? Number(meta.totalSurfaceM2).toLocaleString("tr-TR", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " m²"
-        : "—";
+    window.setTimeout(function () {
+        if (blocksTable && typeof blocksTable.recalc === "function") {
+            blocksTable.recalc();
+        }
+    }, 0);
 }
 
 function csrfHeaders() {

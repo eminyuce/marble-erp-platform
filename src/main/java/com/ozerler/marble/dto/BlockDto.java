@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Locale;
 
 /**
  * Data Transfer Object representing marble block details and metrics.
@@ -186,7 +187,7 @@ public class BlockDto {
                 .id(b.getId())
                 .quarryId(b.getQuarry() != null ? b.getQuarry().getId() : null)
                 .quarryName(b.getQuarry() != null ? b.getQuarry().getName() : "")
-                .blockCode(b.getBlockCode())
+                .blockCode(b.getBlockCode() != null ? b.getBlockCode().toUpperCase(Locale.ROOT) : "")
                 .extractionDate(b.getExtractionDate())
                 .widthCm(b.getWidthCm())
                 .lengthCm(b.getLengthCm())

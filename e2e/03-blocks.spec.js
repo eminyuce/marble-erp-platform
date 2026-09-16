@@ -33,9 +33,25 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
     expect(api.body.total, 'Grid API must return existing quarry blocks').toBeGreaterThan(0);
     expect(api.body.data.length).toBeGreaterThan(0);
     expect(api.body.data[0].blockCode || api.body.data[0].block_code).toBeTruthy();
+    expect(api.body.meta, 'Grid API must return footer totals').toBeTruthy();
+    expect(api.body.meta.totalTonnage).not.toBeUndefined();
+    expect(api.body.meta.totalSurfaceM2).not.toBeUndefined();
+    expect(api.body.meta.totalExtractionCost).not.toBeUndefined();
+    expect(api.body.meta.totalCost).not.toBeUndefined();
 
     const rowCount = await waitForTabulator(page, '#blocks-table', 1);
     expect(rowCount).toBeGreaterThan(0);
+
+    const totals = page.locator('#blocks-grid-totals');
+    await expect(totals).toBeVisible();
+    await expect(page.locator('#blocks-total-tonnage')).not.toHaveText('—');
+    await expect(page.locator('#blocks-total-m2')).not.toHaveText('—');
+    await expect(page.locator('#blocks-total-extraction')).not.toHaveText('—');
+    await expect(page.locator('#blocks-total-cost')).not.toHaveText('—');
+    await expect(totals).toContainText('Toplam tonaj');
+    await expect(totals).toContainText('Toplam m²');
+    await expect(totals).toContainText('Toplam çıkarma');
+    await expect(totals).toContainText('Toplam maliyet');
 
     const searchInput = page.locator('#search-input');
     await expect(searchInput).toBeVisible();
@@ -77,6 +93,8 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
     const heightInput = page.locator('input[name="heightCm"]');
 
     await expect(blockCodeInput).toBeVisible();
+    await blockCodeInput.fill('blk-e2e-lower');
+    await expect(blockCodeInput).toHaveValue('BLK-E2E-LOWER');
     await expect(widthInput).toBeVisible();
     await expect(lengthInput).toBeVisible();
     await expect(heightInput).toBeVisible();
