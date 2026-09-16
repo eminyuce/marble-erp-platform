@@ -87,7 +87,19 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20260916-blocks-page-totals"
+  asset-version: "20260916-inapp-deploy"
+  deployment:
+    enabled: false
+    command: /usr/local/sbin/marble-erp-inapp-deploy
+    repo-dir: /home/eyuce/marble-erp-platform
+    log-file: /opt/marble-erp/logs/inapp-deploy.log
+    status-file: /opt/marble-erp/logs/inapp-deploy.status
+    lock-file: /opt/marble-erp/logs/inapp-deploy.lock
+    git-remote: origin
+    git-branch: main
+    use-sudo: true
+    stale-running-minutes: 45
+    log-chunk-bytes: 32768
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:8080,http://127.0.0.1:8080}
     allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.trycloudflare.com}

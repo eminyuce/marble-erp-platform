@@ -40,6 +40,7 @@ class HelpServiceTest {
         assertThat(helpService.getHelpPage("costs")).isPresent();
         assertThat(helpService.getHelpPage("definitions")).isPresent();
         assertThat(helpService.getHelpPage("settings")).isPresent();
+        assertThat(helpService.getHelpPage("deployment")).isPresent();
         assertThat(helpService.getHelpPage("change-password")).isPresent();
     }
 
@@ -77,6 +78,7 @@ class HelpServiceTest {
         assertThat(helpService.resolvePageKey("/sites")).contains("projects");
         assertThat(helpService.resolvePageKey("/cost-analysis")).contains("costs");
         assertThat(helpService.resolvePageKey("/admin/definitions")).contains("definitions");
+        assertThat(helpService.resolvePageKey("/admin/deployment")).contains("deployment");
         assertThat(helpService.resolvePageKey("/account/change-password?x=1")).contains("change-password");
         assertThat(helpService.resolvePageKey("/unknown")).isEmpty();
         assertThat(helpService.resolvePageKey("/roles")).isEmpty();

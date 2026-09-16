@@ -56,6 +56,30 @@ test.describe('Admin Settings & Master Definitions (Tanımlar & Ayarlar)', () =>
     await errorTracker.assertCleanState();
   });
 
+  test('Deployment page is reachable from Sistem Araçları and shows live console', async ({ page }) => {
+    const errorTracker = setupErrorTracking(page);
+
+    await page.goto('/admin/settings?tab=tools', { waitUntil: 'networkidle' });
+    const deployLink = page.locator('a[href="/admin/deployment"]');
+    await expect(deployLink.first()).toBeVisible();
+
+    await page.goto('/admin/deployment', { waitUntil: 'networkidle' });
+    expect(page.url()).toContain('/admin/deployment');
+    await expect(page.locator('h1')).toContainText('Üretim Yayını');
+    await expect(page.locator('#deployment-start-btn')).toBeVisible();
+    await expect(page.locator('#deployment-log')).toBeVisible();
+
+    const statusRes = await page.evaluate(async () => {
+      const res = await fetch('/admin/deployment/status');
+      return { status: res.status, data: await res.json() };
+    });
+    expect(statusRes.status).toBe(200);
+    expect(statusRes.data.state).toBeTruthy();
+    expect(typeof statusRes.data.canStart).toBe('boolean');
+
+    await errorTracker.assertCleanState();
+  });
+
   test('Definitions Hub page loads all definition categories', async ({ page }) => {
     const errorTracker = setupErrorTracking(page);
 

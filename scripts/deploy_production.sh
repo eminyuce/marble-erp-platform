@@ -106,6 +106,42 @@ sudo_cmd() {
     fi
 }
 
+install_inapp_deploy_support() {
+    local src="$REPO_ROOT/scripts/deploy_from_app.sh"
+    local dest="/usr/local/sbin/marble-erp-inapp-deploy"
+    local sudoers_file="/etc/sudoers.d/marble-erp-inapp-deploy"
+
+    if [ ! -f "$src" ]; then
+        echo "[INAPP] $src not found; skipping in-app deploy setup"
+        return 0
+    fi
+
+    echo "[INAPP] Installing root-owned $dest"
+    sudo_cmd install -m 755 -o root -g root "$src" "$dest"
+
+    local tmp
+    tmp="$(mktemp)"
+    cat > "$tmp" <<EOF
+# Allow the ERP service user to start a production deploy from the web UI.
+# The command target is root-owned so the git working copy cannot replace it.
+${SERVICE_USER} ALL=(root) NOPASSWD: ${dest}
+EOF
+    local visudo_ok=0
+    if visudo -cf "$tmp" >/dev/null 2>&1; then
+        visudo_ok=1
+    elif sudo_cmd visudo -cf "$tmp" >/dev/null 2>&1; then
+        visudo_ok=1
+    fi
+    if [ "$visudo_ok" -eq 1 ]; then
+        sudo_cmd install -m 440 -o root -g root "$tmp" "$sudoers_file"
+        echo "[INAPP] Passwordless sudo: ${SERVICE_USER} -> ${dest}"
+    else
+        echo "[INAPP] visudo rejected ${sudoers_file}; in-app deploy will stay disabled."
+        cat "$tmp" >&2
+    fi
+    rm -f "$tmp"
+}
+
 default_unit() {
     cat <<EOF
 [Unit]
@@ -312,6 +348,8 @@ fi
 sudo_cmd chown "${SERVICE_USER}:${SERVICE_GROUP}" "$DEPLOY_DIR" "$DEPLOY_DIR/uploads" "$DEPLOY_DIR/logs" || true
 sudo_cmd chmod 640 "$ENV_FILE"
 
+install_inapp_deploy_support
+
 # --- Database health check (Docker PostgreSQL) -----------------------------
 if command -v docker >/dev/null 2>&1; then
     if docker inspect marble-erp-postgres >/dev/null 2>&1; then
@@ -460,3 +498,4 @@ echo "  Public URL: ${PUBLIC_ORIGIN:-https://ozerler.naklink.com}"
 echo "  Status:     sudo systemctl status ${SERVICE_NAME}"
 echo "  Logs:       sudo journalctl -u ${SERVICE_NAME} -f -n 100"
 echo "  Health:     $HEALTH_URL"
+echo "  In-app:     /admin/deployment"

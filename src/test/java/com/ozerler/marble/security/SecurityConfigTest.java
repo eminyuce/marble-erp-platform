@@ -155,6 +155,12 @@ class SecurityConfigTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/settings/index"));
 
+        mockMvc.perform(get("/admin/deployment"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/deployment"))
+                .andExpect(content().string(containsString("Üretim Yayını")))
+                .andExpect(content().string(containsString("deployment-start-btn")));
+
         mockMvc.perform(get("/admin/dashboard/systemhealth/"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/system-health"))
@@ -183,6 +189,9 @@ class SecurityConfigTest {
     @DisplayName("Regular user without ROLE_ADMIN should be denied access to /admin/settings")
     void adminSettings_deniedForRegularUser() throws Exception {
         mockMvc.perform(get("/admin/settings"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/admin/deployment"))
                 .andExpect(status().isForbidden());
     }
 

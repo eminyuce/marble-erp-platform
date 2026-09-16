@@ -50,6 +50,8 @@ app:
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:81}
     allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.onrender.com}
+  deployment:
+    enabled: true
 
 springdoc:
   api-docs:
