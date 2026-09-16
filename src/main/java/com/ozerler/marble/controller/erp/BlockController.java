@@ -4,6 +4,7 @@ import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.BlockCodeAvailabilityDto;
 import com.ozerler.marble.dto.BlockDto;
+import com.ozerler.marble.dto.FileStorageDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.enums.BlockStatus;
@@ -17,6 +18,7 @@ import com.ozerler.marble.model.response.Status;
 import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.service.BlockCustomerMarkService;
 import com.ozerler.marble.service.ExpenseService;
+import com.ozerler.marble.service.FileStorageService;
 import com.ozerler.marble.service.MachineFuelService;
 import com.ozerler.marble.service.QuarryBlockService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 @Slf4j
@@ -48,6 +52,7 @@ public class BlockController extends AbstractController {
     private final ExpenseService expenseService;
     private final CostCenterRepository costCenterRepository;
     private final MessageSource messageSource;
+    private final FileStorageService fileStorageService;
 
     @GetMapping
     public String blocksIndex(Model model) {
@@ -94,6 +99,7 @@ public class BlockController extends AbstractController {
     public String showCreateForm(Locale locale, Model model) {
         model.addAttribute("isEdit", false);
         model.addAttribute("currentLocationType", StockLocationType.PRODUCTION_YARD);
+        model.addAttribute("attachedFiles", Collections.emptyList());
         populateBlockForm(model, locale);
         return "erp/blocks/form";
     }
@@ -115,13 +121,14 @@ public class BlockController extends AbstractController {
                               @RequestParam("extractionCost") BigDecimal extractionCost,
                               @RequestParam(value = "notes", required = false) String notes,
                               @RequestParam(value = "photoUrls", required = false) String photoUrls,
+                              @RequestParam(value = "fileIds", required = false) List<Long> fileIds,
                               Locale locale,
                               Model model,
                               RedirectAttributes redirectAttributes) {
 
         try {
             quarryBlockService.registerBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
-                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls, locationType);
+                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls, locationType, fileIds);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.create.success", null, locale));
             return "redirect:/blocks";
@@ -129,6 +136,7 @@ public class BlockController extends AbstractController {
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
             model.addAttribute("isEdit", false);
+            model.addAttribute("attachedFiles", Collections.emptyList());
             populateBlockForm(model, locale);
             return "erp/blocks/form";
         }
@@ -145,6 +153,14 @@ public class BlockController extends AbstractController {
                 StockLocationType.PRODUCTION_YARD, StockLocationType.DISPATCH_YARD});
         model.addAttribute("weightWarning", quarryBlockService.isWeightDeviationWarning(block));
         model.addAttribute("canDelete", quarryBlockService.canDeleteBlock(block));
+
+        List<FileStorageDto> attachedFiles = fileStorageService.getFilesForEntity("BLOCK", id).stream()
+                .map(FileStorageDto::fromEntity)
+                .toList();
+        model.addAttribute("attachedFiles", attachedFiles);
+        model.addAttribute("imageFiles", attachedFiles.stream().filter(FileStorageDto::isImage).toList());
+        model.addAttribute("documentFiles", attachedFiles.stream().filter(f -> !f.isImage()).toList());
+
         return "erp/blocks/detail";
     }
 
@@ -154,6 +170,12 @@ public class BlockController extends AbstractController {
         model.addAttribute("block", block);
         model.addAttribute("currentLocationType", block.getCurrentLocation() != null ? block.getCurrentLocation().getLocationType() : StockLocationType.PRODUCTION_YARD);
         model.addAttribute("isEdit", true);
+
+        List<FileStorageDto> attachedFiles = fileStorageService.getFilesForEntity("BLOCK", id).stream()
+                .map(FileStorageDto::fromEntity)
+                .toList();
+        model.addAttribute("attachedFiles", attachedFiles);
+
         populateBlockForm(model, locale);
         model.addAttribute("pageTitle", "Blok Düzenle");
         return "erp/blocks/form";
@@ -177,13 +199,14 @@ public class BlockController extends AbstractController {
                               @RequestParam("extractionCost") BigDecimal extractionCost,
                               @RequestParam(value = "notes", required = false) String notes,
                               @RequestParam(value = "photoUrls", required = false) String photoUrls,
+                              @RequestParam(value = "fileIds", required = false) List<Long> fileIds,
                               Locale locale,
                               Model model,
                               RedirectAttributes redirectAttributes) {
 
         try {
             quarryBlockService.updateBlock(id, quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
-                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls, locationType);
+                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls, locationType, fileIds);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.update.success", null, locale));
             return "redirect:/blocks";
@@ -194,6 +217,10 @@ public class BlockController extends AbstractController {
                 var block = quarryBlockService.getBlockWithDetails(id);
                 model.addAttribute("block", block);
                 model.addAttribute("currentLocationType", block.getCurrentLocation() != null ? block.getCurrentLocation().getLocationType() : StockLocationType.PRODUCTION_YARD);
+                List<FileStorageDto> attachedFiles = fileStorageService.getFilesForEntity("BLOCK", id).stream()
+                        .map(FileStorageDto::fromEntity)
+                        .toList();
+                model.addAttribute("attachedFiles", attachedFiles);
             } catch (Exception ignored) {
             }
             model.addAttribute("isEdit", true);

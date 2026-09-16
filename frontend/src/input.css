@@ -487,7 +487,114 @@
   color: #0369a1;
 }
 
+.admin-topbar-health {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1.5px solid var(--admin-topbar-border, #d1d5db);
+  border-radius: 9px;
+  background: #ffffff;
+  color: #10b981;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.admin-topbar-health:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.08);
+}
+
+.admin-topbar-health.is-up {
+  color: #059669;
+  border-color: #a7f3d0;
+  background: #f0fdf4;
+}
+
+.admin-topbar-health.is-up:hover {
+  background: #dcfce7;
+  border-color: #34d399;
+  color: #047857;
+}
+
+.admin-topbar-health.is-down {
+  color: #dc2626;
+  border-color: #fca5a5;
+  background: #fef2f2;
+  animation: health-pulse 2s infinite;
+}
+
+.admin-topbar-health.is-down:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #b91c1c;
+}
+
+.admin-topbar-health .health-icon-svg {
+  width: 19px;
+  height: 19px;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.admin-topbar-health:hover .health-icon-svg {
+  transform: scale(1.08);
+}
+
+.admin-topbar-health .health-ping-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: currentColor;
+  box-shadow: 0 0 0 1.5px #ffffff;
+}
+
+.admin-topbar-health.is-up .health-ping-dot {
+  background-color: #10b981;
+}
+
+.admin-topbar-health.is-down .health-ping-dot {
+  background-color: #ef4444;
+  animation: ping-alert 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping-alert {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes health-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
 .admin-topbar-help:focus-visible,
+.admin-topbar-health:focus-visible,
 .admin-topbar-logout:not(.admin-mega-logout):focus-visible,
 .help-panel-close:focus-visible,
 .help-panel-vote:focus-visible {
@@ -3345,7 +3452,8 @@ textarea,
   }
 
   .admin-topbar-logout,
-  .admin-topbar-help {
+  .admin-topbar-help,
+  .admin-topbar-health {
     min-width: 44px;
     min-height: 44px;
     padding: 8px 10px;
@@ -4122,5 +4230,47 @@ textarea,
     flex: 1 1 calc(50% - 6px);
     white-space: normal;
     text-align: center;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   DataGrid / Table Index Column (#)
+   ------------------------------------------------------------------------- */
+.tabulator .tabulator-col.erp-col-index {
+  background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+}
+
+.tabulator .tabulator-col.erp-col-index .tabulator-col-title {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.tabulator .tabulator-cell.erp-col-index {
+  color: #64748b;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  background-color: rgba(248, 250, 252, 0.45);
+  border-right: 1px solid #f1f5f9;
+  user-select: none;
+  text-align: center;
+}
+
+.erp-grid-row-num {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+  display: inline-block;
+}
+
+@media (max-width: 767px) {
+  .tabulator .tabulator-col.erp-col-index,
+  .tabulator .tabulator-cell.erp-col-index {
+    display: none !important;
   }
 }

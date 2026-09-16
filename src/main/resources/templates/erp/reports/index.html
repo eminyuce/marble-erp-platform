@@ -117,15 +117,7 @@
             }
 
             function previewColumns(report) {
-                const columns = [erpResponsiveCollapseColumn(), {
-                    title: "#",
-                    width: 56,
-                    hozAlign: "center",
-                    headerSort: false,
-                    formatter: function (cell) {
-                        return String(cell.getRow().getPosition());
-                    }
-                }];
+                const columns = [erpResponsiveCollapseColumn(), erpIndexColumn()];
                 (report && Array.isArray(report.headers) ? report.headers : []).forEach((header, index) => {
                     columns.push({
                         title: header,

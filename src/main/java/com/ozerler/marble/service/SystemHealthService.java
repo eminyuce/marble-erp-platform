@@ -22,7 +22,8 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * Service orchestrating system diagnostic metrics, JVM runtime stats, and database health probes.
+ * Service orchestrating system diagnostic metrics, JVM runtime stats, database,
+ * and media storage directory health probes.
  */
 @Service
 @RequiredArgsConstructor
@@ -35,6 +36,7 @@ public class SystemHealthService {
     private final Environment environment;
     private final Optional<BuildProperties> buildProperties;
     private final org.springframework.context.MessageSource messageSource;
+    private final FileStorageService fileStorageService;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
@@ -64,7 +66,6 @@ public class SystemHealthService {
         metrics.put("activeProfiles", String.join(", ", activeProfiles));
         metrics.put("uptime", formattedUptime);
         metrics.put("startTime", Instant.ofEpochMilli(runtimeMX.getStartTime()).toString());
-        metrics.put("overallStatus", "UP");
 
         // 2. JVM Runtime & Memory
         Runtime runtime = Runtime.getRuntime();
@@ -131,9 +132,21 @@ public class SystemHealthService {
         metrics.put("usableDiskGb", usableDiskGb);
         metrics.put("diskPercent", diskPercent);
 
-        // 5. Component Subsystem Statuses
+        // 5. Media Storage Health (media/images & media/documents)
+        DependencyHealth mediaHealth = checkMediaStorageHealth();
+        String mediaStatus = mediaHealth.getStatus();
+        String mediaDesc = mediaHealth.getError() != null
+                ? mediaHealth.getError()
+                : "Görseller & belgeler klasörleri (media/images, media/documents) okuma/yazma aktif";
+
+        // Overall Status: DOWN if database or media storage is down
+        String overallStatus = ("UP".equals(dbStatus) && "UP".equals(mediaStatus)) ? "UP" : "DOWN";
+        metrics.put("overallStatus", overallStatus);
+
+        // 6. Component Subsystem Statuses
         List<Map<String, Object>> components = new ArrayList<>();
         components.add(Map.of("name", getMessage("system.health.comp.db.name"), "status", dbStatus, "latency", (dbLatencyMs >= 0 ? dbLatencyMs : 1) + " ms", "desc", getMessage("system.health.comp.db.desc")));
+        components.add(Map.of("name", "Medya Depolama (Görseller & Belgeler)", "status", mediaStatus, "latency", "<1 ms", "desc", mediaDesc));
         components.add(Map.of("name", getMessage("system.health.comp.quarry.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.quarry.desc")));
         components.add(Map.of("name", getMessage("system.health.comp.gangsaw.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.gangsaw.desc")));
         components.add(Map.of("name", getMessage("system.health.comp.workshop.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.workshop.desc")));
@@ -146,7 +159,7 @@ public class SystemHealthService {
 
         // JSON map matching /health/ format
         Map<String, Object> healthJson = new LinkedHashMap<>();
-        healthJson.put("status", "UP");
+        healthJson.put("status", overallStatus);
         healthJson.put("service", "ozerler-marble-erp");
         healthJson.put("version", version);
         healthJson.put("port", port);
@@ -155,6 +168,9 @@ public class SystemHealthService {
 
         Map<String, Object> compMap = new LinkedHashMap<>();
         compMap.put("db", Map.of("status", dbStatus, "database", dbName, "version", dbVersion, "pingMs", dbLatencyMs));
+        compMap.put("mediaStorage", Map.of(
+                "status", mediaStatus,
+                "error", mediaHealth.getError() != null ? mediaHealth.getError() : "None"));
         compMap.put("diskSpace", Map.of("status", "UP", "totalGb", totalDiskGb, "usableGb", usableDiskGb, "usedPercent", diskPercent + "%"));
         compMap.put("jvmMemory", Map.of("usedMb", usedMemMb, "totalMb", totalMemMb, "maxMb", maxMemMb, "percent", memPercent + "%"));
         compMap.put("threads", Map.of("active", Thread.activeCount(), "processors", runtime.availableProcessors()));
@@ -186,6 +202,7 @@ public class SystemHealthService {
         dependencies.put("factoryService", DependencyHealth.up());
         dependencies.put("costAccounting", DependencyHealth.up());
         dependencies.put("diskSpace", checkDiskSpaceHealth());
+        dependencies.put("mediaStorage", checkMediaStorageHealth());
 
         String overallStatus = dependencies.values().stream()
                 .allMatch(dependency -> "UP".equals(dependency.getStatus())) ? "UP" : "DOWN";
@@ -207,6 +224,13 @@ public class SystemHealthService {
     }
 
     private DependencyHealth checkDiskSpaceHealth() {
+        return DependencyHealth.up();
+    }
+
+    private DependencyHealth checkMediaStorageHealth() {
+        if (fileStorageService != null) {
+            return fileStorageService.checkStorageHealth();
+        }
         return DependencyHealth.up();
     }
 }

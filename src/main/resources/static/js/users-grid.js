@@ -37,6 +37,7 @@ function initUsersGrid() {
         placeholder: "Kullanıcı kaydı bulunamadı.",
         columns: [
             erpResponsiveCollapseColumn(),
+            erpIndexColumn(),
             {title: "ID", field: "id", width: 70, sorter: "number"},
             {
                 title: "Kullanıcı",

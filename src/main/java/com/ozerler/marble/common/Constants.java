@@ -499,6 +499,26 @@ public final class Constants {
     public static final String UPLOADS_URL_PREFIX = "/uploads/";
 
     /**
+     * Default local filesystem directory name for media files.
+     */
+    public static final String DEFAULT_MEDIA_DIRECTORY = "media";
+
+    /**
+     * Public URL prefix for media assets.
+     */
+    public static final String MEDIA_URL_PREFIX = "/media/";
+
+    /**
+     * Public URL prefix for media images.
+     */
+    public static final String MEDIA_IMAGES_URL_PREFIX = "/media/images/";
+
+    /**
+     * Public URL prefix for media documents.
+     */
+    public static final String MEDIA_DOCUMENTS_URL_PREFIX = "/media/documents/";
+
+    /**
      * Default fallback basename for exported CSV or Excel files.
      */
     public static final String FALLBACK_DOWNLOAD_FILENAME = "indirilen";

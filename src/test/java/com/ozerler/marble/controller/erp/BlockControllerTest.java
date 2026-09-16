@@ -28,6 +28,9 @@ class BlockControllerTest {
     @Mock
     private org.springframework.context.MessageSource messageSource;
 
+    @Mock
+    private com.ozerler.marble.service.FileStorageService fileStorageService;
+
     @InjectMocks
     private BlockController blockController;
 
@@ -194,33 +197,55 @@ class BlockControllerTest {
         String view = blockController.createBlock(
                 1L, "BLK-NEW-01", StockLocationType.DISPATCH_YARD, null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null,
+                new BigDecimal("5000"), "Not", null, null,
                 java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
         verify(quarryBlockService).registerBlock(
                 1L, "BLK-NEW-01", null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null, StockLocationType.DISPATCH_YARD);
+                new BigDecimal("5000"), "Not", null, StockLocationType.DISPATCH_YARD, null);
         assertThat(view).isEqualTo("redirect:/blocks");
     }
 
     @Test
-    @DisplayName("updateBlock passes locationType to quarryBlockService.updateBlock")
+    @DisplayName("createBlock passes fileIds to quarryBlockService.registerBlock")
+    void shouldPassFileIdsToRegisterBlock() {
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+        org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
+        java.util.List<Long> fileIds = java.util.List.of(55L, 56L);
+
+        String view = blockController.createBlock(
+                1L, "BLK-NEW-02", StockLocationType.PRODUCTION_YARD, null, 150, 250, 140,
+                new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
+                new BigDecimal("5000"), "Not", null, fileIds,
+                java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
+
+        verify(quarryBlockService).registerBlock(
+                1L, "BLK-NEW-02", null, 150, 250, 140,
+                new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
+                new BigDecimal("5000"), "Not", null, StockLocationType.PRODUCTION_YARD, fileIds);
+        assertThat(view).isEqualTo("redirect:/blocks");
+    }
+
+    @Test
+    @DisplayName("updateBlock passes locationType and fileIds to quarryBlockService.updateBlock")
     void shouldPassLocationTypeToUpdateBlock() {
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
                 new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
         org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
+        java.util.List<Long> fileIds = java.util.List.of(77L);
 
         String view = blockController.updateBlock(
                 10L, 1L, "BLK-UPD-01", StockLocationType.DISPATCH_YARD, null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null,
+                new BigDecimal("5000"), "Not", null, fileIds,
                 java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
         verify(quarryBlockService).updateBlock(
                 10L, 1L, "BLK-UPD-01", null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null, StockLocationType.DISPATCH_YARD);
+                new BigDecimal("5000"), "Not", null, StockLocationType.DISPATCH_YARD, fileIds);
         assertThat(view).isEqualTo("redirect:/blocks");
     }
 }

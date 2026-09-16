@@ -136,7 +136,7 @@ class HealthCheckControllerTest {
                 .containsExactly("status", "dependencies");
         org.assertj.core.api.Assertions.assertThat(tree.get("dependencies").fieldNames())
                 .toIterable()
-                .containsExactly("database", "quarryService", "factoryService", "costAccounting", "diskSpace");
+                .containsExactly("database", "quarryService", "factoryService", "costAccounting", "diskSpace", "mediaStorage");
     }
 
     private HealthResponse allUpHealthResponse() {
@@ -153,6 +153,7 @@ class HealthCheckControllerTest {
         dependencies.put("factoryService", DependencyHealth.up());
         dependencies.put("costAccounting", DependencyHealth.up());
         dependencies.put("diskSpace", DependencyHealth.up());
+        dependencies.put("mediaStorage", DependencyHealth.up());
         return dependencies;
     }
 }

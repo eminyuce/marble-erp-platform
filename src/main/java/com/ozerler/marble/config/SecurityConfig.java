@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 "/fonts/**",
                                 "/images/**",
                                 "/uploads/**",
+                                "/media/**",
                                 "/favicon.ico",
                                 "/error",
                                 "/login",
@@ -73,6 +74,11 @@ public class SecurityConfig {
                                 "/health",
                                 "/actuator/**"
                         ).permitAll()
+                        // System health dashboard accessible to all authenticated users
+                        .requestMatchers(
+                                "/admin/dashboard/systemhealth/**",
+                                "/admin/dashboard/systemhealth"
+                        ).authenticated()
                         // Admin area strictly restricted to ROLE_ADMIN & ROLE_EXECUTIVE
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "EXECUTIVE")
                         // OpenAPI / Swagger UI — authenticated admins only; disabled in prod via springdoc

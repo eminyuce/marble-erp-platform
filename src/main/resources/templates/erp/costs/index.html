@@ -51,6 +51,7 @@
                 <table class="w-full text-sm">
                     <thead>
                     <tr class="text-left text-xs text-slate-500">
+                        <th class="py-2 w-10 text-center text-slate-400 font-bold">#</th>
                         <th class="py-2">Şantiye</th>
                         <th class="py-2 text-right">Gelir</th>
                         <th class="py-2 text-right">Maliyet</th>
@@ -58,7 +59,8 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="sp : ${siteProfits}" class="border-t border-slate-100">
+                    <tr th:each="sp, spStat : ${siteProfits}" class="border-t border-slate-100">
+                        <td class="py-2 text-center text-xs font-mono text-slate-400" th:text="${spStat.count}">1</td>
                         <td class="py-2" th:text="${sp.projectName}">Şantiye</td>
                         <td class="py-2 text-right" th:text="${#numbers.formatDecimal(sp.realizedRevenue, 1, 'POINT', 2, 'COMMA')}">0</td>
                         <td class="py-2 text-right" th:text="${#numbers.formatDecimal(sp.totalCost, 1, 'POINT', 2, 'COMMA')}">0</td>

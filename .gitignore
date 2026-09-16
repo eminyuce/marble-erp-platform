@@ -47,6 +47,7 @@ Thumbs.db
 *.log
 *.tmp
 uploads/
+media/
 node_modules/
 test-results/
 playwright-report/

@@ -70,6 +70,8 @@ class QuarryBlockServiceTest {
     private CostTransactionRepository costTransactionRepository;
     @Mock
     private ShipmentItemRepository shipmentItemRepository;
+    @Mock
+    private FileStorageService fileStorageService;
 
     private QuarryBlockService quarryBlockService;
 
@@ -79,7 +81,8 @@ class QuarryBlockServiceTest {
                 blockRepository, quarryRepository, null, stockLocationRepository, movementRepository,
                 null, expenseService, costCenterRepository, customerRepository,
                 slabRepository, factoryWorkOrderRepository, productionOrderRepository,
-                blockCustomerMarkRepository, costTransactionRepository, shipmentItemRepository);
+                blockCustomerMarkRepository, costTransactionRepository, shipmentItemRepository,
+                fileStorageService);
     }
 
     @Test
@@ -370,5 +373,52 @@ class QuarryBlockServiceTest {
         verify(movementRepository).save(captor.capture());
         assertThat(captor.getValue().getFromLocation()).isEqualTo(prodYard);
         assertThat(captor.getValue().getToLocation()).isEqualTo(dispatchYard);
+    }
+
+    @Test
+    @DisplayName("deleteBlock should clean up all associated files from storage and disk")
+    void deleteBlock_CleansUpAttachedFiles() {
+        Long blockId = 50L;
+        Block block = Block.builder()
+                .id(blockId)
+                .blockCode("BLK-DEL-01")
+                .status(BlockStatus.PRODUCED)
+                .transportCost(BigDecimal.ZERO)
+                .build();
+
+        when(blockRepository.findById(blockId)).thenReturn(Optional.of(block));
+
+        quarryBlockService.deleteBlock(blockId);
+
+        verify(fileStorageService).deleteAllFilesForEntity("BLOCK", blockId);
+        verify(blockRepository).delete(block);
+    }
+
+    @Test
+    @DisplayName("registerBlock with fileIds should attach files to newly created block")
+    void registerBlock_AttachesFileIds() {
+        Quarry quarry = Quarry.builder().id(1L).code("Q1").name("Quarry 1").specificGravity(new BigDecimal("2.70")).build();
+        StockLocation prodYard = StockLocation.builder()
+                .id(1L).code("OCAK-URETIM").name("Üretim Sahası")
+                .locationType(StockLocationType.PRODUCTION_YARD).build();
+
+        when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
+        when(blockRepository.existsByBlockCode("BLK-NEW-FILES")).thenReturn(false);
+        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
+                .thenReturn(Optional.of(prodYard));
+        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> {
+            Block b = invocation.getArgument(0);
+            b.setId(99L);
+            return b;
+        });
+
+        List<Long> fileIds = List.of(101L, 102L);
+        Block saved = quarryBlockService.registerBlock(
+                1L, "BLK-NEW-FILES", null, 150, 250, 140,
+                null, "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
+                new BigDecimal("5000"), "Not", null, StockLocationType.PRODUCTION_YARD, fileIds);
+
+        assertThat(saved).isNotNull();
+        verify(fileStorageService).attachFilesToEntity(fileIds, "BLOCK", 99L);
     }
 }

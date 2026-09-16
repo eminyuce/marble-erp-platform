@@ -80,8 +80,10 @@ management:
       show-details: always
 
 app:
+  media:
+    dir: ${APP_MEDIA_DIR:media}
   upload:
-    dir: uploads
+    dir: ${APP_UPLOAD_DIR:media}
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"

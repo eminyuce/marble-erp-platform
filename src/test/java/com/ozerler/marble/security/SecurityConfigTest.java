@@ -216,4 +216,16 @@ class SecurityConfigTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("erp/passport/view"));
     }
+
+    @Test
+    @WithMockUser(username = "operator@example.com", roles = {"OPERATOR"})
+    @DisplayName("Any authenticated user should access system health dashboard and see health icon in navbar")
+    void systemHealth_accessibleToAnyAuthenticatedUserAndIconPresent() throws Exception {
+        mockMvc.perform(get("/admin/dashboard/systemhealth/"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/system-health"))
+                .andExpect(content().string(containsString("adminTopbarSystemHealth")))
+                .andExpect(content().string(containsString("admin-topbar-health")))
+                .andExpect(content().string(containsString("/admin/dashboard/systemhealth/")));
+    }
 }

@@ -23,7 +23,7 @@ import java.util.Map;
 @Slf4j
 @Controller
 @RequestMapping({"/admin/dashboard/systemhealth", "/admin/dashboard/systemhealth/"})
-@PreAuthorize("hasAnyRole('ADMIN', 'EXECUTIVE')")
+@PreAuthorize("isAuthenticated()")
 @RequiredArgsConstructor
 public class SystemHealthController extends AbstractController {
 
