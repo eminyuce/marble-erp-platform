@@ -53,4 +53,17 @@ class ErpToolbarLayoutTest {
         assertThat(searchableJs).contains("erp-ss--toolbar");
         assertThat(searchableJs).contains("erp-toolbar-filter");
     }
+
+    @Test
+    @DisplayName("Expenses toolbar keeps create, search, period filter and export on one row")
+    void expensesToolbarStaysOnSingleRow() throws Exception {
+        String expensesHtml = Files.readString(Path.of("src/main/resources/templates/erp/expenses/index.html"));
+        assertThat(expensesHtml).contains("class=\"erp-toolbar-actions\"");
+        assertThat(expensesHtml).contains("class=\"erp-toolbar-date\"");
+        assertThat(expensesHtml).contains("id=\"expenses-period-filter\"");
+        assertThat(expensesHtml).contains("exportDropdown('expenses-table', 'giderler')");
+
+        String css = Files.readString(Path.of("frontend/src/input.css"));
+        assertThat(css).contains(".erp-toolbar-date");
+    }
 }
