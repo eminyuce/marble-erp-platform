@@ -1454,15 +1454,61 @@ button.erp-btn-primary {
 }
 
 .tabulator .tabulator-footer {
+  display: flex !important;
+  flex-direction: column !important;
   background: linear-gradient(135deg, #1e4e8c 0%, #2b6cb0 55%, #3182ce 100%) !important;
   color: #fff !important;
   border: 0 !important;
+}
+
+.tabulator .tabulator-footer .tabulator-calcs-holder,
+.tabulator .tabulator-footer .tabulator-calcs-holder .tabulator-row,
+.tabulator .tabulator-footer .tabulator-calcs-holder .tabulator-cell,
+.tabulator .tabulator-tableholder .tabulator-calcs-bottom {
+  background: #fff7ed !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.tabulator .tabulator-footer .tabulator-calcs-holder {
+  width: 100%;
+  border-bottom: 1px solid #fdba74 !important;
+}
+
+.tabulator .tabulator-footer .tabulator-calcs-holder .erp-grid-calc-value,
+.tabulator .tabulator-tableholder .tabulator-calcs-bottom .erp-grid-calc-value {
+  color: #0f172a !important;
+}
+
+.tabulator .tabulator-footer .tabulator-footer-contents {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  padding: 8px 12px !important;
+}
+
+.tabulator .tabulator-footer .tabulator-page-counter {
+  color: #fff !important;
+  margin-right: auto;
 }
 
 .tabulator .tabulator-footer .tabulator-page,
 .tabulator .tabulator-footer .tabulator-paginator,
 .tabulator .tabulator-footer label {
   color: #fff !important;
+}
+
+.tabulator .tabulator-footer .tabulator-paginator {
+  margin-left: auto !important;
+  display: inline-flex !important;
+  align-items: center;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
 }
 
 .tabulator .tabulator-footer .tabulator-page {
@@ -1474,7 +1520,7 @@ button.erp-btn-primary {
 .tabulator .tabulator-footer .tabulator-page-size {
   color: #102a43 !important;
   background: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid #94a3b8 !important;
   border-radius: 6px !important;
   color-scheme: light;
 }
@@ -3605,16 +3651,18 @@ textarea,
     padding: 12px 14px;
   }
 
-  .tabulator .tabulator-footer {
+  .tabulator .tabulator-footer .tabulator-footer-contents {
     flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
+    justify-content: space-between;
     padding: 8px 10px !important;
   }
 
   .tabulator .tabulator-footer .tabulator-paginator {
     flex-wrap: wrap;
-    justify-content: center;
+    margin-left: auto !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    justify-content: flex-end;
     gap: 4px;
   }
 
@@ -4328,33 +4376,14 @@ textarea,
    Tabulator Pagination & Footer Controls
    ------------------------------------------------------------------------- */
 .tabulator .tabulator-footer {
-  background-color: #f8fafc;
-  border-top: 1px solid #e2e8f0;
-  color: #475569;
   font-size: 13px;
-  padding: 8px 12px;
-}
-
-.tabulator .tabulator-footer .tabulator-footer-contents {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
   padding: 0;
 }
 
 .tabulator .tabulator-footer .tabulator-page-counter {
   font-weight: 500;
-  color: #64748b;
   font-size: 12px;
   display: inline-block;
-}
-
-.tabulator .tabulator-footer .tabulator-paginator {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .tabulator .tabulator-footer .tabulator-page-size {
