@@ -190,4 +190,54 @@ class FileUploadControllerTest {
                 .contains("text/plain");
         assertThat(response.getBody()).isEqualTo(resource);
     }
+
+    @Test
+    @DisplayName("downloadFile should preserve XLSX filename and spreadsheet MIME type")
+    void downloadFile_Xlsx_PreservesOriginalFilename() {
+        FileStorage storage = FileStorage.builder()
+                .id(8L)
+                .fileName("blocks_88888888.xlsx")
+                .originalName("Blok_Analiz_Raporu_2026.xlsx")
+                .mimeType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .build();
+
+        ByteArrayResource resource = new ByteArrayResource("fake-xlsx-bytes".getBytes());
+
+        when(fileStorageService.getFileById(8L)).thenReturn(Optional.of(storage));
+        when(fileStorageService.loadAsResource(8L)).thenReturn(resource);
+
+        ResponseEntity<Resource> response = fileUploadController.downloadFile(8L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentDisposition().getFilename())
+                .isEqualTo("Blok_Analiz_Raporu_2026.xlsx");
+        assertThat(response.getHeaders().getContentType().toString())
+                .contains("spreadsheetml.sheet");
+        assertThat(response.getBody()).isEqualTo(resource);
+    }
+
+    @Test
+    @DisplayName("downloadFile should preserve CSV filename and text/csv MIME type")
+    void downloadFile_Csv_PreservesOriginalFilename() {
+        FileStorage storage = FileStorage.builder()
+                .id(9L)
+                .fileName("blocks_99999999.csv")
+                .originalName("blok_verileri.csv")
+                .mimeType("text/csv")
+                .build();
+
+        ByteArrayResource resource = new ByteArrayResource("id,code\n11,BLK-11".getBytes());
+
+        when(fileStorageService.getFileById(9L)).thenReturn(Optional.of(storage));
+        when(fileStorageService.loadAsResource(9L)).thenReturn(resource);
+
+        ResponseEntity<Resource> response = fileUploadController.downloadFile(9L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentDisposition().getFilename())
+                .isEqualTo("blok_verileri.csv");
+        assertThat(response.getHeaders().getContentType().toString())
+                .contains("text/csv");
+        assertThat(response.getBody()).isEqualTo(resource);
+    }
 }

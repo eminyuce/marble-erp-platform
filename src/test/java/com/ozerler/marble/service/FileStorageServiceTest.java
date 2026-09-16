@@ -160,6 +160,94 @@ class FileStorageServiceTest {
     }
 
     @Test
+    @DisplayName("storeFile should save XLSX document successfully in documents/")
+    void storeFile_Xlsx_Success() throws IOException {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "block_density_analysis.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "fake-xlsx-content".getBytes());
+
+        when(fileStorageRepository.save(any(FileStorage.class))).thenAnswer(invocation -> {
+            FileStorage fs = invocation.getArgument(0);
+            fs.setId(5L);
+            return fs;
+        });
+
+        FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 11L);
+
+        assertThat(saved).isNotNull();
+        assertThat(saved.getOriginalName()).isEqualTo("block_density_analysis.xlsx");
+        assertThat(saved.getFileName()).startsWith("blocks_");
+        assertThat(saved.getFilePath()).startsWith("/media/documents/");
+        assertThat(saved.isExcel()).isTrue();
+        assertThat(saved.isCsv()).isFalse();
+        assertThat(saved.isDocument()).isTrue();
+        assertThat(saved.isImage()).isFalse();
+
+        Path storedFile = tempUploadDir.resolve("documents").resolve(saved.getFileName());
+        assertThat(Files.exists(storedFile)).isTrue();
+    }
+
+    @Test
+    @DisplayName("storeFile should save XLS document successfully in documents/")
+    void storeFile_Xls_Success() throws IOException {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "quarry_measurements.xls",
+                "application/vnd.ms-excel",
+                "fake-xls-content".getBytes());
+
+        when(fileStorageRepository.save(any(FileStorage.class))).thenAnswer(invocation -> {
+            FileStorage fs = invocation.getArgument(0);
+            fs.setId(6L);
+            return fs;
+        });
+
+        FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 11L);
+
+        assertThat(saved).isNotNull();
+        assertThat(saved.getOriginalName()).isEqualTo("quarry_measurements.xls");
+        assertThat(saved.getFileName()).startsWith("blocks_");
+        assertThat(saved.getFilePath()).startsWith("/media/documents/");
+        assertThat(saved.isExcel()).isTrue();
+        assertThat(saved.isCsv()).isFalse();
+        assertThat(saved.isDocument()).isTrue();
+        assertThat(saved.isImage()).isFalse();
+
+        Path storedFile = tempUploadDir.resolve("documents").resolve(saved.getFileName());
+        assertThat(Files.exists(storedFile)).isTrue();
+    }
+
+    @Test
+    @DisplayName("storeFile should save CSV document successfully in documents/")
+    void storeFile_Csv_Success() throws IOException {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "spectrometry_data.csv",
+                "text/csv",
+                "sample_id,density,hardness\n1,2.71,3.5".getBytes());
+
+        when(fileStorageRepository.save(any(FileStorage.class))).thenAnswer(invocation -> {
+            FileStorage fs = invocation.getArgument(0);
+            fs.setId(7L);
+            return fs;
+        });
+
+        FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 11L);
+
+        assertThat(saved).isNotNull();
+        assertThat(saved.getOriginalName()).isEqualTo("spectrometry_data.csv");
+        assertThat(saved.getFileName()).startsWith("blocks_");
+        assertThat(saved.getFilePath()).startsWith("/media/documents/");
+        assertThat(saved.isCsv()).isTrue();
+        assertThat(saved.isExcel()).isFalse();
+        assertThat(saved.isDocument()).isTrue();
+        assertThat(saved.isImage()).isFalse();
+
+        Path storedFile = tempUploadDir.resolve("documents").resolve(saved.getFileName());
+        assertThat(Files.exists(storedFile)).isTrue();
+        assertThat(Files.readString(storedFile)).isEqualTo("sample_id,density,hardness\n1,2.71,3.5");
+    }
+
+    @Test
     @DisplayName("storeFile should reject empty file")
     void storeFile_EmptyFile_ThrowsException() {
         MockMultipartFile emptyFile = new MockMultipartFile(

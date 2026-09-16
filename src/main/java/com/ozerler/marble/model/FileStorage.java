@@ -98,8 +98,34 @@ public class FileStorage extends AuditableEntity {
     }
 
     @Transient
+    public boolean isExcel() {
+        if (mimeType != null) {
+            String lowerMime = mimeType.toLowerCase();
+            if (lowerMime.contains("excel") || lowerMime.contains("spreadsheetml")) {
+                return true;
+            }
+        }
+        if (originalName != null) {
+            String lower = originalName.toLowerCase();
+            return lower.endsWith(".xlsx") || lower.endsWith(".xls");
+        }
+        return false;
+    }
+
+    @Transient
+    public boolean isCsv() {
+        if (mimeType != null) {
+            String lowerMime = mimeType.toLowerCase();
+            if (lowerMime.contains("csv")) {
+                return true;
+            }
+        }
+        return originalName != null && originalName.toLowerCase().endsWith(".csv");
+    }
+
+    @Transient
     public boolean isDocument() {
-        return isPdf() || isWord() || isText();
+        return isPdf() || isWord() || isText() || isExcel() || isCsv();
     }
 
     @Transient
