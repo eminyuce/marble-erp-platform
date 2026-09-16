@@ -25,6 +25,7 @@ function initProductionGrid() {
         placeholder: "Fabrika iş emri kaydı bulunamadı.",
         columns: [
             erpResponsiveCollapseColumn(),
+            erpIndexColumn(),
             {
                 title: "İş Emri No",
                 field: "orderNo",

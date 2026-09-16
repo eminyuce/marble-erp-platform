@@ -75,6 +75,7 @@ function initBlocksGrid() {
         placeholder: "Blok kaydı bulunamadı.",
         columns: [
             erpResponsiveCollapseColumn(),
+            erpIndexColumn(),
             {
                 title: "Blok Kodu",
                 field: "blockCode",

@@ -4232,3 +4232,52 @@ textarea,
     text-align: center;
   }
 }
+
+/* -------------------------------------------------------------------------
+   DataGrid / Table Index Column (#)
+   ------------------------------------------------------------------------- */
+.tabulator .tabulator-col.erp-col-index {
+  background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+}
+
+.tabulator .tabulator-col.erp-col-index .tabulator-col-content {
+  padding: 8px 4px !important;
+  text-align: center;
+}
+
+.tabulator .tabulator-col.erp-col-index .tabulator-col-title {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.tabulator .tabulator-cell.erp-col-index {
+  color: #64748b;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  background-color: rgba(248, 250, 252, 0.45);
+  border-right: 1px solid #f1f5f9;
+  user-select: none;
+  padding: 8px 4px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.erp-grid-row-num {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 767px) {
+  .tabulator .tabulator-col.erp-col-index,
+  .tabulator .tabulator-cell.erp-col-index {
+    display: none !important;
+  }
+}

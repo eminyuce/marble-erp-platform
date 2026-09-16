@@ -343,6 +343,40 @@ function erpResponsiveCollapseColumn() {
     };
 }
 
+function erpIndexColumn(options) {
+    options = options || {};
+    var title = options.title !== undefined ? options.title : "#";
+    var continueGlobally = options.continueGlobally === true;
+
+    return {
+        title: title,
+        field: "_rowIndex",
+        formatter: function (cell) {
+            var row = cell.getRow();
+            var pos = row.getPosition(true);
+            if (continueGlobally) {
+                var table = cell.getTable();
+                var page = (typeof table.getPage === "function") ? (table.getPage() || 1) : 1;
+                var size = (typeof table.getPageSize === "function") ? (table.getPageSize() || 0) : 0;
+                if (typeof page === "number" && typeof size === "number" && size > 0) {
+                    pos = ((page - 1) * size) + pos;
+                }
+            }
+            return '<span class="erp-grid-row-num" aria-label="Sıra: ' + pos + '">' + (pos || "") + '</span>';
+        },
+        width: options.width || 56,
+        minWidth: 48,
+        maxWidth: 72,
+        hozAlign: "center",
+        headerHozAlign: "center",
+        resizable: false,
+        headerSort: false,
+        cssClass: "erp-col-index",
+        responsive: 0,
+        download: false
+    };
+}
+
 function gridActionsHtml(items) {
     var menu = items.map(function (item) {
         if (item.divider) return '<hr class="grid-actions-divider">';
