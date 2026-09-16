@@ -4241,11 +4241,6 @@ textarea,
   border-right: 1px solid #e2e8f0;
 }
 
-.tabulator .tabulator-col.erp-col-index .tabulator-col-content {
-  padding: 8px 4px !important;
-  text-align: center;
-}
-
 .tabulator .tabulator-col.erp-col-index .tabulator-col-title {
   color: #94a3b8;
   font-size: 11px;
@@ -4261,10 +4256,7 @@ textarea,
   background-color: rgba(248, 250, 252, 0.45);
   border-right: 1px solid #f1f5f9;
   user-select: none;
-  padding: 8px 4px !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-align: center;
 }
 
 .erp-grid-row-num {
@@ -4273,6 +4265,7 @@ textarea,
   font-weight: 500;
   font-family: var(--font-mono);
   letter-spacing: -0.02em;
+  display: inline-block;
 }
 
 @media (max-width: 767px) {
