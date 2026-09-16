@@ -62,9 +62,11 @@ public class QuarryBlockService {
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<BlockDto> getBlocksPaged(int page, int size, String search, String sortField, String sortDir) {
+    public TabulatorResponse<BlockDto> getBlocksPaged(int page, int size, String search, String sortField, String sortDir,
+                                                    StockLocationType locationType, BlockStatus status) {
         Page<Block> blockPage = GridPages.execute(page, size, sortField, sortDir, GridPages.BLOCK_SORTS,
-                pageable -> blockRepository.searchBlocks(GridPages.normalizeSearch(search), pageable));
+                pageable -> blockRepository.searchBlocks(
+                        GridPages.normalizeSearch(search), locationType, status, pageable));
         List<BlockDto> dtos = blockPage.getContent().stream()
                 .map(BlockDto::fromEntity)
                 .collect(Collectors.toList());

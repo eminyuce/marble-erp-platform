@@ -42,11 +42,17 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     long countByStatusIn(List<BlockStatus> statuses);
 
     @EntityGraph(attributePaths = {"quarry", "currentLocation", "soldCustomer"})
-    @Query("SELECT b FROM Block b WHERE " +
+    @Query("SELECT b FROM Block b LEFT JOIN b.currentLocation loc WHERE " +
             "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
             "LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(b.quarry.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
-    Page<Block> searchBlocks(@Param("search") String search, Pageable pageable);
+            "LOWER(b.quarry.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
+            "LOWER(COALESCE(b.soldCustomer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND " +
+            "(:locationType IS NULL OR loc.locationType = :locationType) AND " +
+            "(:status IS NULL OR b.status = :status)")
+    Page<Block> searchBlocks(@Param("search") String search,
+                             @Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
+                             @Param("status") BlockStatus status,
+                             Pageable pageable);
 
     @Query("SELECT b FROM Block b WHERE LOWER(b.blockCode) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Block> searchByBlockCode(@Param("query") String query, Pageable pageable);

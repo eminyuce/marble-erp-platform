@@ -56,7 +56,7 @@ class ProcurementServiceTest {
     @DisplayName("purchase orders require a business unit")
     void createPurchaseOrder_MissingUnit_Throws() {
         assertThatThrownBy(() -> procurementService.createPurchaseOrder(
-                "SIP-1", 1L, null, null, null, null))
+                "SIP-1", 1L, null, null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
         verify(purchaseOrderRepository, never()).save(any());
     }
@@ -65,7 +65,7 @@ class ProcurementServiceTest {
     @DisplayName("site purchases require a project")
     void createPurchaseOrder_SiteWithoutProject_Throws() {
         assertThatThrownBy(() -> procurementService.createPurchaseOrder(
-                "SIP-1", 1L, null, BusinessUnit.SITE, null, null))
+                "SIP-1", 1L, null, BusinessUnit.SITE, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
         verify(purchaseOrderRepository, never()).save(any());
     }
