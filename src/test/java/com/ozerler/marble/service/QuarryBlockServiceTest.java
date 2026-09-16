@@ -29,14 +29,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -126,7 +130,7 @@ class QuarryBlockServiceTest {
     @DisplayName("duplicate block codes are rejected on create")
     void registerBlock_DuplicateCode_Throws() {
         when(quarryRepository.findById(1L)).thenReturn(Optional.of(Quarry.builder().id(1L).name("Ocak").build()));
-        when(blockRepository.existsByBlockCode("BLK-1")).thenReturn(true);
+        when(blockRepository.existsByBlockCodeIgnoreCase("BLK-1")).thenReturn(true);
 
         assertThatThrownBy(() -> quarryBlockService.registerBlock(
                 1L, "BLK-1", null, 100, 100, 100, BigDecimal.TEN, "Beyaz", null,
@@ -219,7 +223,7 @@ class QuarryBlockServiceTest {
                 .build();
 
         when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
-        when(blockRepository.existsByBlockCode("BLK-AUTO-01")).thenReturn(false);
+        when(blockRepository.existsByBlockCodeIgnoreCase("BLK-AUTO-01")).thenReturn(false);
         when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
                 .thenReturn(Optional.of(production));
         when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -330,7 +334,7 @@ class QuarryBlockServiceTest {
                 .id(2L).code("OCAK-SEVK").name("Stok Sahası")
                 .locationType(StockLocationType.DISPATCH_YARD).businessUnit(BusinessUnit.QUARRY).build();
 
-        when(blockRepository.existsByBlockCode("BLK-REG-01")).thenReturn(false);
+        when(blockRepository.existsByBlockCodeIgnoreCase("BLK-REG-01")).thenReturn(false);
         when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
         when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.DISPATCH_YARD))
                 .thenReturn(Optional.of(dispatchYard));
@@ -408,7 +412,7 @@ class QuarryBlockServiceTest {
                 .locationType(StockLocationType.PRODUCTION_YARD).build();
 
         when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
-        when(blockRepository.existsByBlockCode("BLK-NEW-FILES")).thenReturn(false);
+        when(blockRepository.existsByBlockCodeIgnoreCase("BLK-NEW-FILES")).thenReturn(false);
         when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
                 .thenReturn(Optional.of(prodYard));
         when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> {
@@ -425,5 +429,53 @@ class QuarryBlockServiceTest {
 
         assertThat(saved).isNotNull();
         verify(fileStorageService).attachFilesToEntity(fileIds, "BLOCK", 99L);
+    }
+
+    @Test
+    @DisplayName("registerBlock stores lowercase block codes as uppercase")
+    void registerBlock_LowercaseCode_PersistsUppercase() {
+        Quarry quarry = Quarry.builder().id(1L).specificGravity(new BigDecimal("2.70")).build();
+        StockLocation production = StockLocation.builder()
+                .id(1L).code("OCAK-URETIM").name("Üretim Sahası")
+                .locationType(StockLocationType.PRODUCTION_YARD).businessUnit(BusinessUnit.QUARRY).build();
+
+        when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
+        when(blockRepository.existsByBlockCodeIgnoreCase("BLK-LOWER-01")).thenReturn(false);
+        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
+                .thenReturn(Optional.of(production));
+        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Block saved = quarryBlockService.registerBlock(
+                1L, "blk-lower-01", null, 100, 100, 100, BigDecimal.TEN, "Beyaz", null,
+                QualityGrade.A, 0, null, null);
+
+        assertThat(saved.getBlockCode()).isEqualTo("BLK-LOWER-01");
+    }
+
+    @Test
+    @DisplayName("normalizeBlockCode uppercases with Locale.ROOT so Turkish i becomes I")
+    void normalizeBlockCode_UsesRootLocale() {
+        assertThat(QuarryBlockService.normalizeBlockCode(" blk-i1 ")).isEqualTo("BLK-I1");
+    }
+
+    @Test
+    @DisplayName("getBlocksPaged puts filtered tonnage, m2, extraction and total cost into grid meta")
+    void getBlocksPaged_IncludesFooterTotalsInMeta() {
+        when(blockRepository.searchBlocks(isNull(), isNull(), isNull(), anyBoolean(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
+        when(blockCostCalculationService.expensePerTonByQuarry(any()))
+                .thenReturn(Map.of(1L, new BigDecimal("100")));
+        List<Object[]> metricRows = List.<Object[]>of(new Object[]{
+                1L, new BigDecimal("10"), new BigDecimal("4.50"), new BigDecimal("250")
+        });
+        when(blockRepository.sumGridMetricsByQuarry(isNull(), isNull(), isNull(), anyBoolean()))
+                .thenReturn(metricRows);
+
+        var response = quarryBlockService.getBlocksPaged(1, 25, null, null, null, null, null);
+
+        assertThat((BigDecimal) response.getMeta().get("totalTonnage")).isEqualByComparingTo("10");
+        assertThat((BigDecimal) response.getMeta().get("totalSurfaceM2")).isEqualByComparingTo("4.50");
+        assertThat((BigDecimal) response.getMeta().get("totalExtractionCost")).isEqualByComparingTo("1000.00");
+        assertThat((BigDecimal) response.getMeta().get("totalCost")).isEqualByComparingTo("1250.00");
     }
 }

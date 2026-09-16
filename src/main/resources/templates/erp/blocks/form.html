@@ -40,8 +40,8 @@
                             <input id="blockCode" type="text" name="blockCode" required
                                    th:value="${isEdit and block != null ? block.blockCode : ''}"
                                    th:attr="data-exclude-id=${isEdit and block != null ? block.id : ''}"
-                                   class="erp-form-input" style="font-family:var(--font-mono);"
-                                   placeholder="BLK-2026-00128" autocomplete="off">
+                                   class="erp-form-input" style="font-family:var(--font-mono);text-transform:uppercase;"
+                                   placeholder="BLK-2026-00128" autocomplete="off" autocapitalize="characters" spellcheck="false">
                             <p id="block-code-hint" class="erp-form-hint" role="status"></p>
                         </div>
                         <div class="erp-form-field">
@@ -303,12 +303,19 @@
             }
 
             input.addEventListener('input', function () {
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                input.value = (input.value || '').toLocaleUpperCase('en-US');
+                if (typeof start === 'number' && typeof end === 'number') {
+                    input.setSelectionRange(start, end);
+                }
                 hint.dataset.available = 'true';
                 clearTimeout(timer);
                 timer = setTimeout(checkCode, 300);
             });
             input.addEventListener('blur', checkCode);
             form.addEventListener('submit', function (event) {
+                input.value = (input.value || '').toLocaleUpperCase('en-US');
                 if (hint.dataset.available === 'false') {
                     event.preventDefault();
                     input.focus();

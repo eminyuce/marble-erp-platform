@@ -37,4 +37,20 @@ class BlockRepositoryQueryTest {
         assertThat(query.value()).doesNotContain("b.soldCustomer.companyName");
         assertThat(query.countQuery()).containsIgnoringCase("LEFT JOIN b.soldCustomer");
     }
+
+    @Test
+    @DisplayName("sumGridMetricsByQuarry groups filtered blocks so grid footer totals match the current view")
+    void sumGridMetricsByQuarryGroupsByQuarry() throws Exception {
+        Query query = BlockRepository.class
+                .getMethod("sumGridMetricsByQuarry", String.class,
+                        com.ozerler.marble.model.enums.StockLocationType.class,
+                        com.ozerler.marble.model.enums.BlockStatus.class,
+                        boolean.class)
+                .getAnnotation(Query.class);
+
+        assertThat(query).isNotNull();
+        assertThat(query.value()).containsIgnoringCase("GROUP BY b.quarry.id");
+        assertThat(query.value()).containsIgnoringCase("SUM(b.transportCost)");
+        assertThat(query.value()).containsIgnoringCase("LEFT JOIN b.soldCustomer");
+    }
 }
