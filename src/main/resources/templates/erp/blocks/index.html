@@ -8,6 +8,7 @@
 <div layout:fragment="content" class="erp-list-page space-y-5"
      x-data="quarryPage()"
      x-init="init()">
+    <script th:src="@{/js/blocks-grid.js(v=${assetVersion})}"></script>
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
@@ -67,7 +68,7 @@
         <button type="button" role="tab" class="erp-module-tab"
                 :class="activeTab === 'blocks' ? 'erp-module-tab--active' : ''"
                 :aria-selected="activeTab === 'blocks'"
-                @click="activeTab = 'blocks'">Blok Takibi</button>
+                @click="showBlocksTab()">Blok Takibi</button>
         <button type="button" role="tab" class="erp-module-tab"
                 :class="activeTab === 'sold' ? 'erp-module-tab--active' : ''"
                 :aria-selected="activeTab === 'sold'"
@@ -118,7 +119,10 @@
             </button>
             <button type="button" class="erp-yard-chip"
                     :class="yardFilter === 'FACTORY_BLOCK_YARD' ? 'erp-yard-chip--active' : ''"
-                    @click="setYardFilter('FACTORY_BLOCK_YARD')">Fabrika Blok Sahası</button>
+                    @click="setYardFilter('FACTORY_BLOCK_YARD')">
+                Fabrika Blok Sahası
+                <span class="erp-yard-chip-count" th:text="${summary != null ? summary.factoryYardCount : 0}">0</span>
+            </button>
         </div>
 
         <div class="erp-toolbar">
@@ -282,38 +286,6 @@
     </dialog>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script th:inline="javascript">
-        function quarryPage() {
-            return {
-                activeTab: 'blocks',
-                yardFilter: '',
-                statusFilter: '',
-                init() {
-                    window.quarryPageState = this;
-                },
-                setYardFilter(filter) {
-                    this.activeTab = 'blocks';
-                    this.yardFilter = filter;
-                    this.statusFilter = '';
-                    if (typeof reloadBlocksGrid === 'function') reloadBlocksGrid();
-                },
-                showSoldTab() {
-                    this.activeTab = 'sold';
-                    this.yardFilter = '';
-                    this.statusFilter = 'SOLD';
-                    if (typeof reloadBlocksGrid === 'function') reloadBlocksGrid();
-                },
-                gridExtraQuery() {
-                    let q = '';
-                    if (this.yardFilter) q += '&locationType=' + encodeURIComponent(this.yardFilter);
-                    if (this.statusFilter) q += '&status=' + encodeURIComponent(this.statusFilter);
-                    return q;
-                }
-            };
-        }
-    </script>
-    <script th:src="@{/js/blocks-grid.js(v=${assetVersion})}"></script>
-</th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>

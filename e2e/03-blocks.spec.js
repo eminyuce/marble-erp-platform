@@ -13,22 +13,46 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
   test('Blocks list page loads with Tabulator grid and filters', async ({ page }) => {
     const errorTracker = setupErrorTracking(page);
 
-    await page.goto('/blocks', { waitUntil: 'domcontentloaded' });
+    await page.goto('/blocks', { waitUntil: 'networkidle' });
     expect(page.url()).toContain('/blocks');
 
-    // Wait for Tabulator grid
-    const rowCount = await waitForTabulator(page, '#blocks-table');
-    expect(rowCount).toBeGreaterThan(0);
+    await page.waitForFunction(() => {
+      const section = document.querySelector('section[x-show*="blocks"]');
+      return section && window.getComputedStyle(section).display !== 'none';
+    }, { timeout: 10000 });
 
-    // Verify search and yard filters are present
-    const searchInput = page.locator('#search-input, input[type="search"], input[placeholder*="Ara"]');
-    if (await searchInput.count() > 0) {
-      await expect(searchInput.first()).toBeVisible();
-    }
-
-    // Verify New Block button
     const createBtn = page.locator('a[href*="/blocks/create"]');
     await expect(createBtn.first()).toBeVisible();
+
+    const api = await page.evaluate(async () => {
+      const res = await fetch('/blocks/api/data?page=1&size=25');
+      return { status: res.status, body: await res.json() };
+    });
+    expect(api.status).toBe(200);
+    expect(Array.isArray(api.body.data)).toBe(true);
+    expect(api.body.total, 'Grid API must return existing quarry blocks').toBeGreaterThan(0);
+    expect(api.body.data.length).toBeGreaterThan(0);
+    expect(api.body.data[0].blockCode || api.body.data[0].block_code).toBeTruthy();
+
+    const rowCount = await waitForTabulator(page, '#blocks-table', 1);
+    expect(rowCount).toBeGreaterThan(0);
+
+    const searchInput = page.locator('#search-input');
+    await expect(searchInput).toBeVisible();
+
+    const productionChip = page.getByRole('button', { name: /Üretim Sahası/ }).first();
+    await expect(productionChip).toBeVisible();
+    const yardFilterResponse = page.waitForResponse(res => res.url().includes('/blocks/api/data') && res.status() === 200);
+    await productionChip.click();
+    await yardFilterResponse;
+
+    const soldTab = page.getByRole('tab', { name: 'Satılan Bloklar' });
+    await soldTab.click();
+    await expect(page.getByText('Satılan bloklar', { exact: true })).toBeVisible();
+
+    const blocksTab = page.getByRole('tab', { name: 'Blok Takibi' });
+    await blocksTab.click();
+    await expect(page.getByText('Nasıl kullanılır?')).toBeVisible();
 
     await errorTracker.assertCleanState();
   });

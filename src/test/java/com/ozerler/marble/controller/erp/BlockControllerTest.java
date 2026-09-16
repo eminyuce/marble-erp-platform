@@ -32,7 +32,7 @@ class BlockControllerTest {
         Long blockId = 100L;
         BigDecimal transportCost = new BigDecimal("1500.00");
 
-        BackEndResponse response = blockController.transferToFactory(blockId, transportCost);
+        BackEndResponse response = blockController.transferToFactoryApi(blockId, transportCost);
 
         verify(quarryBlockService).transferToFactory(blockId, transportCost);
         assertThat(response).isNotNull();
@@ -48,7 +48,7 @@ class BlockControllerTest {
         BigDecimal transportCost = new BigDecimal("1500.00");
         doThrow(new RuntimeException("Database error")).when(quarryBlockService).transferToFactory(blockId, transportCost);
 
-        BackEndResponse response = blockController.transferToFactory(blockId, transportCost);
+        BackEndResponse response = blockController.transferToFactoryApi(blockId, transportCost);
 
         assertThat(response).isNotNull();
         assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -82,5 +82,36 @@ class BlockControllerTest {
         assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
         assertThat(response.getServiceStatus().getStatus().getMessage()).contains("sellBlock");
+    }
+
+    @Test
+    @DisplayName("moveToYardApi should return successful BackEndResponse")
+    void shouldReturnSuccessBackEndResponseOnMove() {
+        Long blockId = 100L;
+
+        BackEndResponse response = blockController.moveToYardApi(
+                blockId, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD, "Stok sahası");
+
+        verify(quarryBlockService).moveToYard(blockId, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD, "Stok sahası");
+        assertThat(response).isNotNull();
+        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
+        assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Move to yard successful");
+    }
+
+    @Test
+    @DisplayName("moveToYardApi should return fatal BackEndResponse on exception")
+    void shouldReturnFatalBackEndResponseOnMoveError() {
+        Long blockId = 100L;
+        doThrow(new RuntimeException("Not at quarry")).when(quarryBlockService)
+                .moveToYard(blockId, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD, "Stok sahası");
+
+        BackEndResponse response = blockController.moveToYardApi(
+                blockId, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD, "Stok sahası");
+
+        assertThat(response).isNotNull();
+        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
+        assertThat(response.getServiceStatus().getStatus().getMessage()).contains("moveToYard");
     }
 }

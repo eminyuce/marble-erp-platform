@@ -273,6 +273,34 @@ public class BlockController extends AbstractController {
         return "redirect:/blocks/" + id;
     }
 
+    @PostMapping("/{id}/api/move")
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
+    public @ResponseBody BackEndResponse moveToYardApi(@PathVariable("id") Long id,
+                                                       @RequestParam("targetType") StockLocationType targetType,
+                                                       @RequestParam(value = "description", required = false) String description) {
+        BackEndResponse ber = new BackEndResponse();
+        ServiceStatus serviceStatus = new ServiceStatus();
+        Status status = new Status();
+        status.setErrorCode(Constants.NO_ERR);
+
+        try {
+            log.info("Moving block {} to yard {}", id, targetType);
+            quarryBlockService.moveToYard(id, targetType, description);
+
+            ResponseEntity<Void> resp = ResponseEntity.ok().build();
+            ber.setResponse(resp);
+            serviceStatus.setHttpStatus(HttpStatus.OK);
+            status.setMessage("Move to yard successful");
+            serviceStatus.setStatus(status);
+            ber.setServiceStatus(serviceStatus);
+        } catch (Exception e) {
+            log.error("A serious error occurred in moveToYard block {}", id, e);
+            ber = buildFatalResponse(ber, serviceStatus, status, "moveToYard", Constants.ERR_FATAL);
+        }
+
+        return ber;
+    }
+
     @PostMapping("/{id}/sell-to-customer")
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     public String sellToCustomer(@PathVariable("id") Long id,

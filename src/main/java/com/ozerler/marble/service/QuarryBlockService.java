@@ -64,9 +64,10 @@ public class QuarryBlockService {
     @Transactional(readOnly = true)
     public TabulatorResponse<BlockDto> getBlocksPaged(int page, int size, String search, String sortField, String sortDir,
                                                     StockLocationType locationType, BlockStatus status) {
+        boolean unsoldOnly = status == null;
         Page<Block> blockPage = GridPages.execute(page, size, sortField, sortDir, GridPages.BLOCK_SORTS,
                 pageable -> blockRepository.searchBlocks(
-                        GridPages.normalizeSearch(search), locationType, status, pageable));
+                        GridPages.normalizeSearch(search), locationType, status, unsoldOnly, pageable));
         List<BlockDto> dtos = blockPage.getContent().stream()
                 .map(BlockDto::fromEntity)
                 .collect(Collectors.toList());
@@ -215,9 +216,12 @@ public class QuarryBlockService {
         Objects.requireNonNull(customerId, getMessage("error.block.sell.customer.required"));
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.customer.not_found", customerId)));
+        StockLocation from = block.getCurrentLocation();
         block.setStatus(BlockStatus.SOLD);
         block.setSoldCustomer(customer);
-        return blockRepository.save(block);
+        Block saved = blockRepository.save(block);
+        recordMovement(saved, from, from, "Satış: " + customer.getCompanyName());
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -284,6 +288,8 @@ public class QuarryBlockService {
                         StockLocationType.PRODUCTION_YARD, BlockStatus.SOLD))
                 .dispatchYardCount(blockRepository.countByCurrentLocation_LocationTypeAndStatusNot(
                         StockLocationType.DISPATCH_YARD, BlockStatus.SOLD))
+                .factoryYardCount(blockRepository.countByCurrentLocation_LocationTypeAndStatusNot(
+                        StockLocationType.FACTORY_BLOCK_YARD, BlockStatus.SOLD))
                 .soldCount(blockRepository.countByStatus(BlockStatus.SOLD))
                 .costPerTonThisMonth(analysis.getUnitCost() != null ? analysis.getUnitCost() : BigDecimal.ZERO)
                 .unallocatedCarryForward(analysis.isUnallocatedCarryForward())

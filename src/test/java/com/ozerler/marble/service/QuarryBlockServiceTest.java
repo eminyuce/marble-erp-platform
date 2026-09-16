@@ -168,5 +168,6 @@ class QuarryBlockServiceTest {
 
         assertThat(sold.getStatus()).isEqualTo(BlockStatus.SOLD);
         assertThat(sold.getSoldCustomer().getCompanyName()).isEqualTo("Mermer A.Ş.");
+        verify(movementRepository).save(any());
     }
 }

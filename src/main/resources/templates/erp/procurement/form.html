@@ -6,6 +6,36 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-form-page">
+    <script>
+        function procurementForm() {
+            return {
+                unit: '',
+                centerId: '',
+                centers: [],
+                loading: false,
+                init() {
+                    const pre = document.getElementById('businessUnit');
+                    if (pre && pre.value) {
+                        this.unit = pre.value;
+                        this.loadCenters();
+                    }
+                },
+                async loadCenters() {
+                    this.centerId = '';
+                    this.centers = [];
+                    if (!this.unit) return;
+                    this.loading = true;
+                    try {
+                        const res = await fetch('/procurement/api/cost-centers?businessUnit=' + encodeURIComponent(this.unit));
+                        if (res.ok) this.centers = await res.json();
+                    } finally {
+                        this.loading = false;
+                        if (window.lucide) window.lucide.createIcons();
+                    }
+                }
+            };
+        }
+    </script>
 
     <div th:replace="~{fragments/form-page :: breadcrumb('Satın Alma', @{/procurement}, 'Yeni kayıt')}"></div>
     <div th:replace="~{fragments/form-page :: heading(
@@ -114,38 +144,5 @@
         </form>
     </div>
 </div>
-
-<th:block layout:fragment="scripts">
-    <script>
-        function procurementForm() {
-            return {
-                unit: '',
-                centerId: '',
-                centers: [],
-                loading: false,
-                init() {
-                    const pre = document.getElementById('businessUnit');
-                    if (pre && pre.value) {
-                        this.unit = pre.value;
-                        this.loadCenters();
-                    }
-                },
-                async loadCenters() {
-                    this.centerId = '';
-                    this.centers = [];
-                    if (!this.unit) return;
-                    this.loading = true;
-                    try {
-                        const res = await fetch('/procurement/api/cost-centers?businessUnit=' + encodeURIComponent(this.unit));
-                        if (res.ok) this.centers = await res.json();
-                    } finally {
-                        this.loading = false;
-                        if (window.lucide) window.lucide.createIcons();
-                    }
-                }
-            };
-        }
-    </script>
-</th:block>
 </body>
 </html>

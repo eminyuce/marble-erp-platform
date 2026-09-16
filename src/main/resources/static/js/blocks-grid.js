@@ -5,6 +5,50 @@ let pendingTransferBlockId = null;
 let pendingMoveBlockId = null;
 let pendingMoveTargetType = null;
 
+function quarryPage() {
+    return {
+        activeTab: "blocks",
+        yardFilter: "",
+        statusFilter: "",
+        init() {
+            window.quarryPageState = this;
+        },
+        showBlocksTab() {
+            this.activeTab = "blocks";
+            this.statusFilter = "";
+            if (typeof reloadBlocksGrid === "function") {
+                reloadBlocksGrid();
+            }
+        },
+        setYardFilter(filter) {
+            this.activeTab = "blocks";
+            this.yardFilter = filter;
+            this.statusFilter = "";
+            if (typeof reloadBlocksGrid === "function") {
+                reloadBlocksGrid();
+            }
+        },
+        showSoldTab() {
+            this.activeTab = "sold";
+            this.yardFilter = "";
+            this.statusFilter = "SOLD";
+            if (typeof reloadBlocksGrid === "function") {
+                reloadBlocksGrid();
+            }
+        },
+        gridExtraQuery() {
+            let q = "";
+            if (this.yardFilter) {
+                q += "&locationType=" + encodeURIComponent(this.yardFilter);
+            }
+            if (this.statusFilter) {
+                q += "&status=" + encodeURIComponent(this.statusFilter);
+            }
+            return q;
+        }
+    };
+}
+
 function initBlocksGrid() {
     const tableElement = document.getElementById("blocks-table");
     if (!tableElement) return;
@@ -54,7 +98,9 @@ function initBlocksGrid() {
                         ? "bg-amber-100 text-amber-800"
                         : row.locationType === "DISPATCH_YARD"
                             ? "bg-sky-100 text-sky-800"
-                            : "bg-slate-100 text-slate-700";
+                            : row.locationType === "FACTORY_BLOCK_YARD"
+                                ? "bg-indigo-100 text-indigo-800"
+                                : "bg-slate-100 text-slate-700";
                     return `<span class="px-2 py-0.5 rounded text-xs font-semibold ${badge}">${name}</span>`;
                 }
             },
@@ -148,7 +194,9 @@ function initBlocksGrid() {
 }
 
 function reloadBlocksGrid() {
-    if (blocksTable) blocksTable.setPage(1).then(() => blocksTable.replaceData());
+    if (blocksTable) {
+        blocksTable.setPage(1);
+    }
 }
 
 function csrfHeaders() {
@@ -170,13 +218,29 @@ function showBlocksToast(message, ok) {
     setTimeout(() => toast.remove(), 4000);
 }
 
+function isSuccessfulBackendResponse(body) {
+    const code = body && body.serviceStatus && body.serviceStatus.status
+        ? body.serviceStatus.status.errorCode
+        : undefined;
+    return code === undefined || code === "0" || code === 0;
+}
+
 function handleBlockActionResponse(res, okMessage) {
-    if (res.ok) {
-        showBlocksToast(okMessage, true);
-        reloadBlocksGrid();
-        return;
-    }
-    showBlocksToast("İşlem tamamlanamadı. Lütfen tekrar deneyin veya blok detayından deneyin.", false);
+    return res.json().then(function (body) {
+        if (res.ok && isSuccessfulBackendResponse(body)) {
+            showBlocksToast(okMessage, true);
+            reloadBlocksGrid();
+            return;
+        }
+        showBlocksToast("İşlem tamamlanamadı. Lütfen tekrar deneyin veya blok detayından deneyin.", false);
+    }).catch(function () {
+        if (res.ok) {
+            showBlocksToast(okMessage, true);
+            reloadBlocksGrid();
+            return;
+        }
+        showBlocksToast("İşlem tamamlanamadı. Lütfen tekrar deneyin veya blok detayından deneyin.", false);
+    });
 }
 
 function openTransferBlock(id) {
@@ -211,7 +275,7 @@ function openMoveBlock(id, targetType, title) {
 }
 
 function moveBlock(id, targetType, description) {
-    fetch(`/blocks/${id}/move`, {
+    fetch(`/blocks/${id}/api/move`, {
         method: "POST",
         headers: csrfHeaders(),
         body: `targetType=${encodeURIComponent(targetType)}&description=${encodeURIComponent(description || "Saha hareketi")}`
@@ -262,8 +326,12 @@ document.addEventListener("DOMContentLoaded", function () {
         pendingTransferBlockId = null;
     });
 
-    document.getElementById("transfer-cancel")?.addEventListener("click", function () {
-        document.getElementById("transfer-block-dialog")?.close();
+    document.querySelectorAll(
+        "#sell-block-dialog button[value='cancel'], #move-block-dialog button[value='cancel'], #transfer-cancel"
+    ).forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            btn.closest("dialog")?.close();
+        });
     });
 
     document.getElementById("confirm-move-block")?.addEventListener("click", function () {

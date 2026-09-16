@@ -42,16 +42,32 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     long countByStatusIn(List<BlockStatus> statuses);
 
     @EntityGraph(attributePaths = {"quarry", "currentLocation", "soldCustomer"})
-    @Query("SELECT b FROM Block b LEFT JOIN b.currentLocation loc WHERE " +
-            "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(b.quarry.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(COALESCE(b.soldCustomer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND " +
-            "(:locationType IS NULL OR loc.locationType = :locationType) AND " +
-            "(:status IS NULL OR b.status = :status)")
+    @Query(value = "SELECT DISTINCT b FROM Block b "
+            + "LEFT JOIN b.currentLocation loc "
+            + "LEFT JOIN b.soldCustomer soldCust "
+            + "LEFT JOIN b.quarry q WHERE "
+            + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+            + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
+            + "(:status IS NULL OR b.status = :status) AND "
+            + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)",
+            countQuery = "SELECT COUNT(DISTINCT b) FROM Block b "
+                    + "LEFT JOIN b.currentLocation loc "
+                    + "LEFT JOIN b.soldCustomer soldCust "
+                    + "LEFT JOIN b.quarry q WHERE "
+                    + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+                    + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
+                    + "(:status IS NULL OR b.status = :status) AND "
+                    + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)")
     Page<Block> searchBlocks(@Param("search") String search,
                              @Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
                              @Param("status") BlockStatus status,
+                             @Param("unsoldOnly") boolean unsoldOnly,
                              Pageable pageable);
 
     @Query("SELECT b FROM Block b WHERE LOWER(b.blockCode) LIKE LOWER(CONCAT('%', :query, '%'))")
