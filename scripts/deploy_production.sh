@@ -23,6 +23,14 @@
 
 set -euo pipefail
 
+# systemd-run (in-app deploy) starts a clean environment: HOME is unset.
+# Maven (~/.m2) and npm need it, and `set -u` would abort on "$HOME".
+if [ -z "${HOME:-}" ]; then
+    HOME="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6 || true)"
+    HOME="${HOME:-/root}"
+    export HOME
+fi
+
 usage() {
     cat <<'EOF'
 Usage: ./scripts/deploy_production.sh [options]
@@ -261,7 +269,7 @@ if [ "$DEPLOY_DIR" != "/opt/marble-erp" ] && [ "${ALLOW_CUSTOM_DEPLOY_DIR:-}" !=
 fi
 
 case "$DEPLOY_DIR" in
-    /|/boot|/etc|/usr|/bin|/sbin|/home|"$HOME")
+    /|/boot|/etc|/usr|/bin|/sbin|/home|"${HOME:-}")
         die "DEPLOY_DIR '$DEPLOY_DIR' looks like a destructive mistake."
         ;;
 esac

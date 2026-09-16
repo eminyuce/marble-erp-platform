@@ -143,12 +143,18 @@ detach_into_independent_unit() {
         echo "A deploy is already running (${UNIT_NAME}.service)." >&2
         exit 2
     fi
+    local unit_home="${HOME:-}"
+    if [ -z "$unit_home" ]; then
+        unit_home="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6 || true)"
+    fi
+    unit_home="${unit_home:-/root}"
     systemd-run \
         --unit="${UNIT_NAME}" \
         --collect \
         --quiet \
         --property=KillMode=mixed \
         --working-directory="${REPO_ROOT}" \
+        --setenv=HOME="$unit_home" \
         --setenv=GIT_CONFIG_COUNT=1 \
         --setenv=GIT_CONFIG_KEY_0=safe.directory \
         --setenv=GIT_CONFIG_VALUE_0="$REPO_ROOT" \
