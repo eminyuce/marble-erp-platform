@@ -11,6 +11,7 @@ public class QuarrySummaryDto {
     BigDecimal producedTonsThisMonth;
     long productionYardCount;
     long dispatchYardCount;
+    long factoryYardCount;
     long soldCount;
     BigDecimal costPerTonThisMonth;
     boolean unallocatedCarryForward;

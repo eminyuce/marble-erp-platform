@@ -23,13 +23,14 @@
                 <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Ocak sahası ve blok kodu')}"></div>
-                    <div class="erp-form-grid">
+                    <div th:replace="~{fragments/form-page :: section('Kimlik', 'Ocak sahası, blok kodu ve depolama konumu')}"></div>
+                    <div class="erp-form-grid--3">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="quarryId">Ocak sahası <span class="req">*</span></label>
                             <select id="quarryId" name="quarryId" required class="erp-form-select">
-                                <option value="" disabled th:selected="${!(isEdit ?: false)}">Ocak seçin</option>
+                                <option value="" disabled th:selected="${!(isEdit ?: false)}" data-density="2.70">Ocak seçin</option>
                                 <option th:each="q : ${quarries}" th:value="${q.id}"
+                                        th:attr="data-density=${q.specificGravity}"
                                         th:selected="${isEdit and block != null and block.quarry != null and block.quarry.id == q.id}"
                                         th:text="${q.name + ' (' + q.location + ')'}"></option>
                             </select>
@@ -43,44 +44,103 @@
                                    placeholder="BLK-2026-00128" autocomplete="off">
                             <p id="block-code-hint" class="erp-form-hint" role="status"></p>
                         </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="locationType">Depolama sahası <span class="req">*</span></label>
+                            <select id="locationType" name="locationType" required class="erp-form-select">
+                                <option th:each="yard : ${quarryYards}"
+                                        th:value="${yard.name()}"
+                                        th:selected="${currentLocationType != null ? currentLocationType == yard : yard.name() == 'PRODUCTION_YARD'}"
+                                        th:text="${yard.label}">Üretim Sahası</option>
+                            </select>
+                            <p class="erp-form-hint">Bloğun ocaktaki depolama alanı</p>
+                        </div>
                     </div>
                 </section>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Ölçü ve tartım', 'Santimetre cinsinden 3 eksen ve kantar kilosu')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Ölçü ve tartım', 'Santimetre cinsinden 3 eksen ve otomatik tonaj hesabı')}"></div>
                     <div class="erp-form-grid--3">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="widthCm">En (cm) <span class="req">*</span></label>
-                            <input id="widthCm" type="number" name="widthCm" required
+                            <input id="widthCm" type="number" name="widthCm" min="1" required
                                    th:value="${isEdit and block != null ? block.widthCm : ''}"
                                    class="erp-form-input" placeholder="180">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="lengthCm">Boy (cm) <span class="req">*</span></label>
-                            <input id="lengthCm" type="number" name="lengthCm" required
+                            <input id="lengthCm" type="number" name="lengthCm" min="1" required
                                    th:value="${isEdit and block != null ? block.lengthCm : ''}"
                                    class="erp-form-input" placeholder="290">
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="heightCm">Yükseklik (cm) <span
                                     class="req">*</span></label>
-                            <input id="heightCm" type="number" name="heightCm" required
+                            <input id="heightCm" type="number" name="heightCm" min="1" required
                                    th:value="${isEdit and block != null ? block.heightCm : ''}"
                                    class="erp-form-input" placeholder="150">
                         </div>
                     </div>
-                    <div class="erp-form-grid">
+
+                    <!-- Dinamik Tonaj ve Hacim Hesaplama Kartı -->
+                    <div id="dynamic-tonnage-card" class="mt-4 p-4 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/80 to-indigo-50/60 transition-all duration-300">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-700 flex items-center justify-center font-bold text-xl shadow-xs">
+                                    ⚖️
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">Otomatik Tonaj Hesabı</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-100 text-blue-800">Canlı</span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-0.5">En × Boy × Yükseklik ve ocağın özgül ağırlığı ile anlık hesaplanır</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
+                                <div class="bg-white/80 px-3 py-2 rounded-lg border border-blue-100 shadow-2xs">
+                                    <span class="text-[11px] font-medium text-slate-500 block">Hacim</span>
+                                    <strong id="calc-volume" class="text-slate-800 text-sm font-semibold"
+                                            th:text="${(isEdit and block != null and block.volumeM3 != null) ? #numbers.formatDecimal(block.volumeM3, 1, 3) + ' m³' : '— m³'}">— m³</strong>
+                                </div>
+                                <div class="bg-white/80 px-3 py-2 rounded-lg border border-blue-100 shadow-2xs">
+                                    <span class="text-[11px] font-medium text-slate-500 block">Özgül Ağırlık</span>
+                                    <strong id="calc-density" class="text-slate-800 text-sm font-semibold"
+                                            th:text="${(isEdit and block != null and block.quarry != null) ? block.quarry.specificGravity + ' t/m³' : '2.70 t/m³'}">2.70 t/m³</strong>
+                                </div>
+                                <div class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm">
+                                    <span class="text-[11px] font-medium text-blue-100 block">Yaklaşık Tonaj</span>
+                                    <strong id="calc-tonnage" class="text-white text-lg font-bold"
+                                            th:text="${(isEdit and block != null and block.approximateTonnage != null) ? #numbers.formatDecimal(block.approximateTonnage, 1, 2) + ' ton' : '— ton'}">— ton</strong>
+                                </div>
+                                <div class="bg-white/80 px-3 py-2 rounded-lg border border-blue-100 shadow-2xs">
+                                    <span class="text-[11px] font-medium text-slate-500 block">Teorik Ağırlık</span>
+                                    <strong id="calc-theoretical-kg" class="text-slate-800 text-sm font-semibold"
+                                            th:text="${(isEdit and block != null and block.theoreticalWeightKg != null) ? #numbers.formatDecimal(block.theoreticalWeightKg, 1, 'POINT', 0, 'COMMA') + ' kg' : '— kg'}">— kg</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="erp-form-grid mt-4">
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="actualWeightKg">Kantar tartımı (kg) <span
-                                    class="req">*</span></label>
-                            <input id="actualWeightKg" type="number" step="0.01" name="actualWeightKg" required
-                                   th:value="${isEdit and block != null ? block.actualWeightKg : ''}"
-                                   class="erp-form-input" placeholder="20850.00">
+                            <div class="flex items-center justify-between">
+                                <label class="erp-form-label" for="actualWeightKg">Fiili kantar tartımı (kg)</label>
+                                <button type="button" id="btn-copy-weight" class="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline transition inline-flex items-center gap-1">
+                                    <span>Hesaplanan teorik ağırlığı aktar</span>
+                                </button>
+                            </div>
+                            <input id="actualWeightKg" type="number" step="0.01" min="0" name="actualWeightKg"
+                                   th:value="${isEdit and block != null and block.actualWeightKg != null and block.actualWeightKg > 0 ? block.actualWeightKg : ''}"
+                                   class="erp-form-input" placeholder="Ocakta kantar tartımı yapılmadıysa boş bırakabilirsiniz">
+                            <p id="weight-hint" class="erp-form-hint text-xs mt-1 text-slate-500">
+                                Ocakta kantar tartımı yapılmadıysa boş bırakabilirsiniz; sistem yukarıdaki yaklaşık tonajı esas alır.
+                            </p>
+                            <p id="weight-deviation-badge" class="text-xs font-semibold mt-1 hidden"></p>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="extractionCost">Ocak çıkarma maliyeti (TL) <span
                                     class="req">*</span></label>
-                            <input id="extractionCost" type="number" step="0.01" name="extractionCost" required
+                            <input id="extractionCost" type="number" step="0.01" min="0" name="extractionCost" required
                                    th:value="${isEdit and block != null ? block.extractionCost : ''}"
                                    class="erp-form-input" placeholder="42000.00">
                         </div>
@@ -190,6 +250,120 @@
                     input.focus();
                 }
             });
+        })();
+
+        // Dinamik Ölçü & Tonaj Hesaplama Motoru
+        (function () {
+            const quarrySelect = document.getElementById('quarryId');
+            const widthInput = document.getElementById('widthCm');
+            const lengthInput = document.getElementById('lengthCm');
+            const heightInput = document.getElementById('heightCm');
+            const actualWeightInput = document.getElementById('actualWeightKg');
+            const btnCopyWeight = document.getElementById('btn-copy-weight');
+
+            const calcVolumeEl = document.getElementById('calc-volume');
+            const calcDensityEl = document.getElementById('calc-density');
+            const calcTonnageEl = document.getElementById('calc-tonnage');
+            const calcTheoreticalEl = document.getElementById('calc-theoretical-kg');
+            const deviationBadge = document.getElementById('weight-deviation-badge');
+
+            if (!widthInput || !lengthInput || !heightInput) return;
+
+            let currentTheoreticalKg = null;
+
+            function getSelectedDensity() {
+                if (!quarrySelect) return 2.70;
+                const opt = quarrySelect.options[quarrySelect.selectedIndex];
+                if (!opt) return 2.70;
+                const densityAttr = opt.getAttribute('data-density');
+                const parsed = parseFloat(densityAttr);
+                return (!isNaN(parsed) && parsed > 0) ? parsed : 2.70;
+            }
+
+            function updateCalculations() {
+                const w = parseFloat(widthInput.value) || 0;
+                const l = parseFloat(lengthInput.value) || 0;
+                const h = parseFloat(heightInput.value) || 0;
+                const density = getSelectedDensity();
+
+                if (calcDensityEl) {
+                    calcDensityEl.textContent = density.toFixed(2) + ' t/m³';
+                }
+
+                if (w > 0 && l > 0 && h > 0) {
+                    const volumeM3 = (w * l * h) / 1000000;
+                    const tonnage = volumeM3 * density;
+                    const theoreticalKg = tonnage * 1000;
+                    currentTheoreticalKg = theoreticalKg;
+
+                    if (calcVolumeEl) calcVolumeEl.textContent = volumeM3.toFixed(3) + ' m³';
+                    if (calcTonnageEl) calcTonnageEl.textContent = tonnage.toFixed(2) + ' ton';
+                    if (calcTheoreticalEl) calcTheoreticalEl.textContent = Math.round(theoreticalKg).toLocaleString('tr-TR') + ' kg';
+
+                    if (actualWeightInput && (!actualWeightInput.value || parseFloat(actualWeightInput.value) <= 0)) {
+                        actualWeightInput.placeholder = 'Örn: ' + theoreticalKg.toFixed(2) + ' kg (Boş bırakılırsa yaklaşık tonaj geçerlidir)';
+                    }
+                } else {
+                    currentTheoreticalKg = null;
+                    if (calcVolumeEl) calcVolumeEl.textContent = '— m³';
+                    if (calcTonnageEl) calcTonnageEl.textContent = '— ton';
+                    if (calcTheoreticalEl) calcTheoreticalEl.textContent = '— kg';
+                }
+
+                updateDeviation();
+            }
+
+            function updateDeviation() {
+                if (!deviationBadge) return;
+                const actualVal = actualWeightInput ? actualWeightInput.value.trim() : '';
+                const actual = parseFloat(actualVal);
+
+                if (!actualVal || isNaN(actual) || actual <= 0 || !currentTheoreticalKg || currentTheoreticalKg <= 0) {
+                    deviationBadge.classList.add('hidden');
+                    deviationBadge.textContent = '';
+                    return;
+                }
+
+                const diff = actual - currentTheoreticalKg;
+                const devPct = (diff / currentTheoreticalKg) * 100;
+                const sign = devPct > 0 ? '+' : '';
+                const text = 'Kantar Sapması: ' + sign + devPct.toFixed(2) + '% (' + (diff > 0 ? '+' : '') + Math.round(diff).toLocaleString('tr-TR') + ' kg)';
+
+                deviationBadge.classList.remove('hidden');
+                if (Math.abs(devPct) > 5) {
+                    deviationBadge.textContent = '⚠️ ' + text + ' — %5 sapma toleransı aşıldı!';
+                    deviationBadge.className = 'text-xs font-semibold mt-1 text-rose-700 block';
+                } else {
+                    deviationBadge.textContent = '✓ ' + text + ' — Tolerans dahilinde (%5 altı)';
+                    deviationBadge.className = 'text-xs font-semibold mt-1 text-emerald-700 block';
+                }
+            }
+
+            [widthInput, lengthInput, heightInput].forEach(function (el) {
+                el.addEventListener('input', updateCalculations);
+                el.addEventListener('change', updateCalculations);
+            });
+
+            if (quarrySelect) {
+                quarrySelect.addEventListener('change', updateCalculations);
+            }
+
+            if (actualWeightInput) {
+                actualWeightInput.addEventListener('input', updateDeviation);
+                actualWeightInput.addEventListener('change', updateDeviation);
+            }
+
+            if (btnCopyWeight) {
+                btnCopyWeight.addEventListener('click', function () {
+                    if (currentTheoreticalKg && currentTheoreticalKg > 0) {
+                        actualWeightInput.value = currentTheoreticalKg.toFixed(2);
+                        updateDeviation();
+                    }
+                });
+            }
+
+            // Sayfa yüklendiğinde mevcut değerlerle ilk hesaplamayı yap
+            updateCalculations();
         })();
     </script>
 </th:block>
