@@ -193,6 +193,24 @@ public final class GridPages {
             Map.entry("createdAt", DEFAULT_SORT_PROPERTY)
     );
 
+    public static final Map<String, String> EXPENSE_SORTS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("entryDate", "entryDate"),
+            Map.entry("invoiceDate", "invoiceDate"),
+            Map.entry("amount", "amount"),
+            Map.entry("expenseType", "expenseType"),
+            Map.entry("expenseTypeLabel", "expenseType"),
+            Map.entry("expenseCategory", "expenseCategory"),
+            Map.entry("businessUnit", "businessUnit"),
+            Map.entry("businessUnitLabel", "businessUnit"),
+            Map.entry("costCenterCode", "costCenter.code"),
+            Map.entry("costCenterName", "costCenter.name"),
+            Map.entry("documentNo", "documentNo"),
+            Map.entry("expensePeriod", "expensePeriod"),
+            Map.entry("createdDate", DEFAULT_SORT_PROPERTY),
+            Map.entry("createdAt", DEFAULT_SORT_PROPERTY)
+    );
+
     private GridPages() {
     }
 

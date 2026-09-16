@@ -3,6 +3,8 @@ package com.ozerler.marble.repository;
 import com.ozerler.marble.model.CostTransaction;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -64,4 +66,57 @@ public interface CostTransactionRepository extends JpaRepository<CostTransaction
 
     List<CostTransaction> findByBusinessUnitAndExpensePeriodOrderByEntryDateDesc(
             BusinessUnit businessUnit, String expensePeriod);
+
+    @Query("SELECT c FROM CostTransaction c "
+            + "LEFT JOIN c.costCenter cc "
+            + "LEFT JOIN c.quarry q "
+            + "LEFT JOIN c.project p "
+            + "WHERE (:unit IS NULL OR c.businessUnit = :unit) "
+            + "AND (:period IS NULL OR :period = '' OR c.expensePeriod = :period) "
+            + "AND (:expenseType IS NULL OR c.expenseType = :expenseType) "
+            + "AND (:quarryId IS NULL OR (c.quarry IS NOT NULL AND c.quarry.id = :quarryId)) "
+            + "AND (:projectId IS NULL OR (c.project IS NOT NULL AND c.project.id = :projectId)) "
+            + "AND (:centerId IS NULL OR cc.id = :centerId) "
+            + "AND (:search IS NULL OR :search = '' OR "
+            + "     LOWER(COALESCE(c.documentNo, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "     LOWER(COALESCE(c.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "     LOWER(COALESCE(cc.name, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "     LOWER(COALESCE(cc.code, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "     LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<CostTransaction> searchExpenses(@Param("search") String search,
+                                         @Param("unit") BusinessUnit unit,
+                                         @Param("period") String period,
+                                         @Param("expenseType") ExpenseType expenseType,
+                                         @Param("centerId") Long centerId,
+                                         @Param("quarryId") Long quarryId,
+                                         @Param("projectId") Long projectId,
+                                         Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(c.amount), 0) FROM CostTransaction c "
+            + "LEFT JOIN c.costCenter cc "
+            + "LEFT JOIN c.quarry q "
+            + "LEFT JOIN c.project p "
+            + "WHERE (:unit IS NULL OR c.businessUnit = :unit) "
+            + "AND (:period IS NULL OR :period = '' OR c.expensePeriod = :period) "
+            + "AND (:expenseType IS NULL OR c.expenseType = :expenseType) "
+            + "AND (:quarryId IS NULL OR (c.quarry IS NOT NULL AND c.quarry.id = :quarryId)) "
+            + "AND (:projectId IS NULL OR (c.project IS NOT NULL AND c.project.id = :projectId)) "
+            + "AND (:centerId IS NULL OR cc.id = :centerId) "
+            + "AND (:search IS NULL OR :search = '' OR "
+            + "     LOWER(COALESCE(c.documentNo, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "     LOWER(COALESCE(c.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "     LOWER(COALESCE(cc.name, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "     LOWER(COALESCE(cc.code, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "     LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
+            + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', :search, '%')))")
+    BigDecimal sumFilteredExpenses(@Param("search") String search,
+                                   @Param("unit") BusinessUnit unit,
+                                   @Param("period") String period,
+                                   @Param("expenseType") ExpenseType expenseType,
+                                   @Param("centerId") Long centerId,
+                                   @Param("quarryId") Long quarryId,
+                                   @Param("projectId") Long projectId);
+
+    long countByExpensePeriod(String expensePeriod);
 }

@@ -94,4 +94,45 @@ class ExpenseServiceTest {
                 .isInstanceOf(IllegalArgumentException.class);
         verify(costTransactionRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("getExpenseSummary calculates unit totals and overall sum")
+    void getExpenseSummary_ReturnsCorrectTotals() {
+        when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, "2026-09")).thenReturn(new BigDecimal("10000"));
+        when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, "2026-09")).thenReturn(new BigDecimal("20000"));
+        when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, "2026-09")).thenReturn(new BigDecimal("5000"));
+        when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.SITE, "2026-09")).thenReturn(new BigDecimal("15000"));
+        when(costTransactionRepository.countByExpensePeriod("2026-09")).thenReturn(12L);
+
+        com.ozerler.marble.dto.ExpenseSummaryDto summary = expenseService.getExpenseSummary("2026-09");
+
+        assertThat(summary).isNotNull();
+        assertThat(summary.getPeriod()).isEqualTo("2026-09");
+        assertThat(summary.getQuarryTotal()).isEqualByComparingTo("10000");
+        assertThat(summary.getFactoryTotal()).isEqualByComparingTo("20000");
+        assertThat(summary.getWorkshopTotal()).isEqualByComparingTo("5000");
+        assertThat(summary.getSiteTotal()).isEqualByComparingTo("15000");
+        assertThat(summary.getTotalExpensesThisMonth()).isEqualByComparingTo("50000");
+        assertThat(summary.getTotalCount()).isEqualTo(12L);
+    }
+
+    @Test
+    @DisplayName("deleteExpense deletes open expense or throws when period is closed")
+    void deleteExpense_DeletesOrThrows() {
+        CostTransaction tx = CostTransaction.builder()
+                .id(99L)
+                .businessUnit(BusinessUnit.QUARRY)
+                .expensePeriod("2026-09")
+                .build();
+        when(costTransactionRepository.findById(99L)).thenReturn(Optional.of(tx));
+        when(costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(BusinessUnit.QUARRY, "2026-09")).thenReturn(false);
+
+        expenseService.deleteExpense(99L);
+        verify(costTransactionRepository).delete(tx);
+
+        // When period is closed
+        when(costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(BusinessUnit.QUARRY, "2026-09")).thenReturn(true);
+        assertThatThrownBy(() -> expenseService.deleteExpense(99L))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

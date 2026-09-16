@@ -16,7 +16,7 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20260916-expenses-megamenu-v4}")
+    @Value("${app.asset-version:20260916-expenses-grid-v1}")
     private String configuredAssetVersion;
 
     private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();

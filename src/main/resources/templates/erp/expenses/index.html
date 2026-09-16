@@ -5,169 +5,325 @@
     <title>Giderler ve Satın Alma | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-6" x-data="{ unit: '[[${selectedUnit.name()}]]' }">
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="expensesPage()"
+     x-init="init()">
+    <script th:src="@{/js/expenses-grid.js(v=${assetVersion})}"></script>
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Giderler ve Satın Alma')}"></div>
             <h2 class="admin-page-title">Giderler ve Satın Alma</h2>
             <p class="erp-list-lead">
-                Ocak, fabrika, atölye ve şantiye giderlerini günlük olarak kaydedin.
-                Ocak giderleri girildikçe blok çıkarma maliyeti otomatik hesaplanır.
+                Ocak, fabrika, atölye ve şantiye giderlerini kaydedin, filtreleyin ve analiz edin.
+                Ocak giderleri girildikçe blok çıkarma maliyeti ve dinamik maliyet analizi otomatik güncellenir.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Yeni bir masraf veya fatura kaydetmek için Yeni Gider Kaydı butonunu kullanın.')}"></span>
             </p>
         </div>
-        <form method="get" th:action="@{/expenses}" class="flex flex-wrap items-center gap-2">
-            <input type="hidden" name="unit" th:value="${selectedUnit.name()}">
-            <input type="hidden" name="quarryId" th:if="${selectedQuarryId != null}" th:value="${selectedQuarryId}">
-            <label class="text-xs font-semibold text-slate-600" for="period">Dönem</label>
-            <input id="period" type="month" name="period" th:value="${period}"
-                   class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
-            <button type="submit" class="px-3 py-2 text-sm font-semibold bg-slate-800 text-white rounded-lg">Uygula</button>
-        </form>
     </div>
 
-    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-800" th:text="${successMessage}"></div>
-    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-800" th:text="${errorMessage}"></div>
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3" th:if="${summary != null}">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="activeTab === '' ? 'erp-summary-card--active ring-2 ring-[#2b6cb0]' : ''"
+                @click="setUnitFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Bu Ay Toplam Gider</div>
+            <div class="text-lg font-black text-slate-900 mt-1 font-mono"
+                 th:text="${summary.totalExpensesThisMonth != null ? #numbers.formatDecimal(summary.totalExpensesThisMonth, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+        </button>
 
-    <nav class="erp-module-tabs" role="tablist">
-        <a th:each="u : ${businessUnits}"
-           th:href="@{/expenses(unit=${u.name()}, quarryId=${selectedQuarryId}, period=${period})}"
-           class="erp-module-tab"
-           th:classappend="${selectedUnit == u} ? ' erp-module-tab--active' : ''"
-           th:text="${u.label}">Birim</a>
-    </nav>
-
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div class="xl:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-            <div class="border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-900">Gider kaydı</h3>
-                <p class="text-xs text-slate-500 mt-0.5" th:text="${selectedUnit.label + ' birimi için günlük gider girişi'}">Gider</p>
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="activeTab === 'QUARRY' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setUnitFilter('QUARRY')">
+            <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
+                <i data-lucide="mountain" class="w-3.5 h-3.5"></i> Ocak Giderleri
             </div>
-            <form th:action="@{/expenses}" method="post" class="space-y-3">
-                <input type="hidden" name="businessUnit" th:value="${selectedUnit.name()}">
+            <div class="text-lg font-black text-slate-900 mt-1 font-mono"
+                 th:text="${summary.quarryTotal != null ? #numbers.formatDecimal(summary.quarryTotal, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+        </button>
 
-                <div th:if="${selectedUnit.name() == 'QUARRY'}" class="erp-form-field">
-                    <label class="erp-form-label" for="quarryId">Ocak <span class="req">*</span></label>
-                    <select id="quarryId" name="quarryId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                        <option value="" disabled th:selected="${selectedQuarryId == null}">Ocak seçin</option>
-                        <option th:each="q : ${quarries}" th:value="${q.id}"
-                                th:selected="${selectedQuarryId != null and selectedQuarryId == q.id}"
-                                th:text="${q.name + ' (' + q.code + ')'}"></option>
-                    </select>
-                </div>
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="activeTab === 'FACTORY' ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
+                @click="setUnitFilter('FACTORY')">
+            <div class="text-[11px] uppercase tracking-wide text-blue-600 font-semibold flex items-center gap-1">
+                <i data-lucide="factory" class="w-3.5 h-3.5"></i> Fabrika Giderleri
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1 font-mono"
+                 th:text="${summary.factoryTotal != null ? #numbers.formatDecimal(summary.factoryTotal, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+        </button>
 
-                <div th:if="${selectedUnit.name() == 'SITE'}" class="erp-form-field">
-                    <label class="erp-form-label" for="projectId">Şantiye / Proje <span class="req">*</span></label>
-                    <select id="projectId" name="projectId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                        <option value="" disabled selected>Proje seçin</option>
-                        <option th:each="p : ${projects}" th:value="${p.id}"
-                                th:text="${p.projectCode + ' — ' + p.name}"></option>
-                    </select>
-                </div>
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="activeTab === 'WORKSHOP' ? 'erp-summary-card--active ring-2 ring-rose-500' : ''"
+                @click="setUnitFilter('WORKSHOP')">
+            <div class="text-[11px] uppercase tracking-wide text-rose-600 font-semibold flex items-center gap-1">
+                <i data-lucide="scissors" class="w-3.5 h-3.5"></i> Atölye Giderleri
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1 font-mono"
+                 th:text="${summary.workshopTotal != null ? #numbers.formatDecimal(summary.workshopTotal, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+        </button>
 
-                <select name="centerId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <option value="" disabled selected>Masraf merkezi seçin</option>
-                    <option th:each="c : ${costCenters}" th:value="${c.id}" th:text="${c.code + ' — ' + c.name}"></option>
-                </select>
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="activeTab === 'SITE' ? 'erp-summary-card--active ring-2 ring-cyan-500' : ''"
+                @click="setUnitFilter('SITE')">
+            <div class="text-[11px] uppercase tracking-wide text-cyan-600 font-semibold flex items-center gap-1">
+                <i data-lucide="building-2" class="w-3.5 h-3.5"></i> Şantiye Giderleri
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1 font-mono"
+                 th:text="${summary.siteTotal != null ? #numbers.formatDecimal(summary.siteTotal, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+        </button>
+    </div>
 
-                <select name="expenseType" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
-                </select>
+    <!-- Unit Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="activeTab === '' ? 'erp-yard-chip--active' : ''"
+                @click="setUnitFilter('')">Tümü</button>
+        <button type="button" class="erp-yard-chip"
+                :class="activeTab === 'QUARRY' ? 'erp-yard-chip--active' : ''"
+                @click="setUnitFilter('QUARRY')">
+            <i data-lucide="mountain" class="w-3.5 h-3.5 inline mr-1"></i>Ocak
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="activeTab === 'FACTORY' ? 'erp-yard-chip--active' : ''"
+                @click="setUnitFilter('FACTORY')">
+            <i data-lucide="factory" class="w-3.5 h-3.5 inline mr-1"></i>Fabrika
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="activeTab === 'WORKSHOP' ? 'erp-yard-chip--active' : ''"
+                @click="setUnitFilter('WORKSHOP')">
+            <i data-lucide="scissors" class="w-3.5 h-3.5 inline mr-1"></i>Atölye
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="activeTab === 'SITE' ? 'erp-yard-chip--active' : ''"
+                @click="setUnitFilter('SITE')">
+            <i data-lucide="building-2" class="w-3.5 h-3.5 inline mr-1"></i>Şantiye
+        </button>
+    </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Tarih <span class="req">*</span></label>
-                        <input type="date" name="entryDate" required th:value="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}"
-                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg mt-1">
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Tutar (TL) <span class="req">*</span></label>
-                        <input type="number" step="0.01" min="0.01" name="amount" required placeholder="0.00"
-                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg mt-1">
-                    </div>
-                </div>
+    <!-- Dynamic Totals Bar -->
+    <div id="expenses-grid-totals" class="flex flex-wrap gap-4 text-sm text-slate-600 hidden bg-slate-50 p-3 rounded-lg border border-slate-200">
+        <span><strong>Filtrelenen Toplam Tutar:</strong> <span id="expenses-total-amount" class="font-mono font-bold text-slate-900">—</span></span>
+        <span><strong>Toplam Kayıt:</strong> <span id="expenses-total-count" class="font-bold text-slate-900">—</span></span>
+    </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input type="text" name="documentNo" placeholder="Belge / fatura no"
-                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <input type="date" name="invoiceDate" placeholder="Fatura tarihi"
-                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                </div>
+    <!-- Toolbar -->
+    <div class="erp-toolbar">
+        <button type="button" onclick="openCreateExpense()" class="erp-btn-primary">
+            <i data-lucide="plus"></i>
+            <span>Yeni Gider Kaydı</span>
+        </button>
 
-                <input type="month" name="expensePeriod" th:value="${period}"
-                       class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg"
-                       title="Giderin ait olduğu maliyet dönemi">
+        <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-sm">
+            <label class="text-xs font-semibold text-slate-500" for="expenses-period-filter">Dönem:</label>
+            <input type="month" id="expenses-period-filter" th:value="${period}"
+                   class="text-xs border-0 p-0 font-mono font-semibold text-slate-800 focus:ring-0">
+        </div>
 
-                <input type="text" name="description" placeholder="Açıklama (isteğe bağlı)"
-                       class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
+        <div th:replace="~{fragments/list-chrome :: search('Belge no, açıklama, masraf merkezi...', 'search-input')}"></div>
 
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">
-                    Gider kaydet
+        <div class="erp-toolbar-actions">
+            <div th:replace="~{fragments/list-chrome :: exportDropdown('expenses-table', 'giderler')}"></div>
+        </div>
+    </div>
+
+    <!-- Tabulator Grid Shell -->
+    <div th:replace="~{fragments/list-chrome :: gridShell('expenses-table')}"></div>
+
+    <!-- Create / Edit Modal Dialog -->
+    <dialog id="expense-modal-dialog" class="erp-dialog-panel max-w-xl w-full">
+        <form method="dialog" class="erp-dialog-body" id="expense-form">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="erp-dialog-title mb-0" id="expense-modal-title">Yeni Gider Kaydı</h3>
+                <button type="button" onclick="document.getElementById('expense-modal-dialog').close()"
+                        class="text-slate-400 hover:text-slate-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
-            </form>
-        </div>
-
-        <div class="space-y-4">
-            <div th:if="${quarryBreakdown != null}" class="bg-white rounded-xl border border-emerald-200 shadow-sm p-5 space-y-3">
-                <h3 class="font-bold text-slate-900">Ocak çıkarma maliyeti</h3>
-                <p class="text-xs text-slate-500" th:text="${quarryBreakdown.quarryName + ' · ' + quarryBreakdown.expensePeriod}">Ocak</p>
-                <dl class="text-sm space-y-2">
-                    <div class="flex justify-between gap-2">
-                        <dt class="text-slate-500">Toplam gider</dt>
-                        <dd class="font-semibold" th:text="${#numbers.formatDecimal(quarryBreakdown.totalExpenses, 1, 'POINT', 2, 'COMMA') + ' TL'}">0</dd>
-                    </div>
-                    <div class="flex justify-between gap-2">
-                        <dt class="text-slate-500">Toplam tonaj</dt>
-                        <dd class="font-semibold" th:text="${#numbers.formatDecimal(quarryBreakdown.totalTonnage, 1, 'POINT', 2, 'COMMA') + ' ton'}">0</dd>
-                    </div>
-                    <div class="flex justify-between gap-2">
-                        <dt class="text-slate-500">Toplam piyasa değeri</dt>
-                        <dd class="font-semibold" th:text="${quarryBreakdown.totalMarketValue != null ? #numbers.formatDecimal(quarryBreakdown.totalMarketValue, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">—</dd>
-                    </div>
-                    <div class="flex justify-between gap-2 border-t border-slate-100 pt-2">
-                        <dt class="text-slate-700 font-semibold">Ton başına çıkarma maliyeti</dt>
-                        <dd class="font-bold text-emerald-800"
-                            th:text="${quarryBreakdown.expensePerTon != null ? #numbers.formatDecimal(quarryBreakdown.expensePerTon, 1, 'POINT', 2, 'COMMA') + ' TL/ton' : '—'}">—</dd>
-                    </div>
-                </dl>
-                <details class="text-xs" th:if="${!#maps.isEmpty(quarryBreakdown.expenseByType)}">
-                    <summary class="cursor-pointer font-semibold text-slate-700">Gider alt kalemleri</summary>
-                    <ul class="mt-2 space-y-1">
-                        <li th:each="entry : ${quarryBreakdown.expenseByType}" class="flex justify-between gap-2">
-                            <span th:text="${entry.key}">Kalem</span>
-                            <span class="font-mono" th:text="${#numbers.formatDecimal(entry.value, 1, 'POINT', 2, 'COMMA') + ' TL'}">0</span>
-                        </li>
-                    </ul>
-                </details>
-                <p class="text-[11px] text-slate-400 leading-relaxed">
-                    Formül: (toplam tonaj × ort. piyasa değeri − toplam gider) / toplam tonaj =
-                    <span th:if="${quarryBreakdown.marginPerTon != null}"
-                          th:text="${#numbers.formatDecimal(quarryBreakdown.marginPerTon, 1, 'POINT', 2, 'COMMA') + ' TL/ton (marj)'}">—</span>
-                    <span th:unless="${quarryBreakdown.marginPerTon != null}">—</span>
-                </p>
             </div>
 
-            <div th:if="${selectedUnit.name() == 'QUARRY' and selectedQuarryId == null}"
-                 class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900">
-                Ocak çıkarma maliyetini görmek için formda ocak seçin veya listeden ocak filtreleyin.
-            </div>
-
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-                <h3 class="font-bold text-slate-900 mb-2">Son giderler</h3>
-                <div class="max-h-96 overflow-y-auto text-sm space-y-2">
-                    <div th:each="tx : ${recentExpenses}" class="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                        <div class="flex justify-between gap-2">
-                            <span class="font-semibold" th:text="${tx.expenseType != null ? tx.expenseType.label : 'Gider'}">Gider</span>
-                            <span th:text="${#numbers.formatDecimal(tx.amount, 1, 'POINT', 2, 'COMMA') + ' TL'}">0</span>
-                        </div>
-                        <div class="text-xs text-slate-500 mt-0.5"
-                             th:text="${(tx.entryDate != null ? tx.entryDate : '') + (tx.description != null ? ' · ' + tx.description : '')}">—</div>
+            <div class="space-y-3 pt-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="expense-form-businessUnit">İş Birimi <span class="req">*</span></label>
+                        <select id="expense-form-businessUnit" name="businessUnit" required
+                                class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                            <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}"></option>
+                        </select>
                     </div>
-                    <div th:if="${#lists.isEmpty(recentExpenses)}" class="text-slate-400 text-center py-4">Bu dönemde gider yok.</div>
+
+                    <div id="expense-form-quarry-group" class="erp-form-field">
+                        <label class="erp-form-label" for="expense-form-quarryId">Ocak <span class="req">*</span></label>
+                        <select id="expense-form-quarryId" name="quarryId"
+                                class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                            <option value="" disabled selected>Ocak seçin</option>
+                            <option th:each="q : ${quarries}" th:value="${q.id}" th:text="${q.name + ' (' + q.code + ')'}"></option>
+                        </select>
+                    </div>
+
+                    <div id="expense-form-project-group" class="erp-form-field" style="display:none;">
+                        <label class="erp-form-label" for="expense-form-projectId">Şantiye / Proje <span class="req">*</span></label>
+                        <select id="expense-form-projectId" name="projectId"
+                                class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                            <option value="" disabled selected>Proje seçin</option>
+                            <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.projectCode + ' — ' + p.name}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="expense-form-centerId">Masraf Merkezi <span class="req">*</span></label>
+                        <select id="expense-form-centerId" name="centerId" required
+                                class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                            <option value="" disabled selected>Masraf merkezi seçin</option>
+                            <option th:each="c : ${costCenters}" th:value="${c.id}" th:text="${c.code + ' — ' + c.name}"></option>
+                        </select>
+                    </div>
+
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="expense-form-expenseType">Gider Kalemi <span class="req">*</span></label>
+                        <select id="expense-form-expenseType" name="expenseType" required
+                                class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                            <option value="" disabled selected>Gider kalemi seçin</option>
+                            <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="expense-form-amount">Tutar (TL) <span class="req">*</span></label>
+                        <input type="number" step="0.01" min="0.01" id="expense-form-amount" name="amount" required placeholder="0.00"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono font-semibold">
+                    </div>
+
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="expense-form-entryDate">Kayıt Tarihi <span class="req">*</span></label>
+                        <input type="date" id="expense-form-entryDate" name="entryDate" required
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="expense-form-documentNo">Belge / Fatura No</label>
+                        <input type="text" id="expense-form-documentNo" name="documentNo" placeholder="Örn. GİB-2026-001"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    </div>
+
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="expense-form-invoiceDate">Fatura Tarihi</label>
+                        <input type="date" id="expense-form-invoiceDate" name="invoiceDate"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    </div>
+
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="expense-form-expensePeriod">Maliyet Dönemi</label>
+                        <input type="month" id="expense-form-expensePeriod" name="expensePeriod"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono">
+                    </div>
+                </div>
+
+                <div class="erp-form-field">
+                    <label class="erp-form-label" for="expense-form-description">Açıklama</label>
+                    <input type="text" id="expense-form-description" name="description" placeholder="Açıklama (isteğe bağlı)"
+                           class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
                 </div>
             </div>
-        </div>
-    </div>
+
+            <div class="erp-dialog-actions border-t border-slate-100 pt-3 mt-4">
+                <button type="button" class="erp-btn-secondary" onclick="document.getElementById('expense-modal-dialog').close()">Vazgeç</button>
+                <button type="submit" id="expense-form-submit" class="erp-btn-primary">
+                    Gideri Kaydet
+                </button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- View Expense Details Dialog -->
+    <dialog id="view-expense-dialog" class="erp-dialog-panel max-w-lg w-full">
+        <form method="dialog" class="erp-dialog-body">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="erp-dialog-title mb-0">Gider Detayları</h3>
+                <button type="button" onclick="document.getElementById('view-expense-dialog').close()"
+                        class="text-slate-400 hover:text-slate-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <dl class="text-sm divide-y divide-slate-100 mt-2">
+                <div class="py-2 flex justify-between">
+                    <dt class="text-slate-500">İş Birimi</dt>
+                    <dd id="view-exp-unit" class="font-semibold text-slate-800">—</dd>
+                </div>
+                <div class="py-2 flex justify-between">
+                    <dt class="text-slate-500">İlgili Yer</dt>
+                    <dd id="view-exp-target" class="font-semibold text-slate-800">—</dd>
+                </div>
+                <div class="py-2 flex justify-between">
+                    <dt class="text-slate-500">Masraf Merkezi</dt>
+                    <dd id="view-exp-center" class="font-semibold text-slate-800">—</dd>
+                </div>
+                <div class="py-2 flex justify-between">
+                    <dt class="text-slate-500">Gider Kalemi</dt>
+                    <dd id="view-exp-type" class="font-semibold text-slate-800">—</dd>
+                </div>
+                <div class="py-2 flex justify-between">
+                    <dt class="text-slate-500">Kayıt Tarihi</dt>
+                    <dd id="view-exp-date" class="font-mono text-slate-800">—</dd>
+                </div>
+                <div class="py-2 flex justify-between">
+                    <dt class="text-slate-500">Fatura Tarihi</dt>
+                    <dd id="view-exp-invdate" class="font-mono text-slate-800">—</dd>
+                </div>
+                <div class="py-2 flex justify-between">
+                    <dt class="text-slate-500">Belge / Fatura No</dt>
+                    <dd id="view-exp-docno" class="font-mono font-bold text-slate-800">—</dd>
+                </div>
+                <div class="py-2 flex justify-between">
+                    <dt class="text-slate-500">Maliyet Dönemi</dt>
+                    <dd id="view-exp-period" class="font-mono text-slate-800">—</dd>
+                </div>
+                <div class="py-2 flex justify-between bg-slate-50 px-2 rounded-lg">
+                    <dt class="text-slate-700 font-bold">Toplam Tutar</dt>
+                    <dd id="view-exp-amount" class="font-mono font-black text-slate-900">—</dd>
+                </div>
+                <div class="py-2">
+                    <dt class="text-slate-500 text-xs mb-1">Açıklama</dt>
+                    <dd id="view-exp-desc" class="text-slate-800 text-xs whitespace-pre-wrap">—</dd>
+                </div>
+            </dl>
+
+            <div class="erp-dialog-actions border-t border-slate-100 pt-3 mt-3">
+                <button type="button" class="erp-btn-secondary" onclick="document.getElementById('view-expense-dialog').close()">Kapat</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Delete Expense Dialog -->
+    <dialog id="delete-expense-dialog" class="erp-dialog-panel">
+        <form method="dialog" class="erp-dialog-body">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="erp-dialog-title mb-0">Gider Kaydını Sil</h3>
+                    <p class="text-xs text-slate-500 font-mono" id="delete-expense-doc">—</p>
+                    <p class="text-xs font-bold text-rose-700 font-mono mt-0.5" id="delete-expense-amount">—</p>
+                </div>
+            </div>
+            <p class="erp-dialog-lead text-slate-600 mt-2">Bu gider kaydını sistemden silmek istediğinize emin misiniz? Dönemi kapatılmış giderler silinemez.</p>
+            <div class="erp-dialog-actions">
+                <button value="cancel" type="button" class="erp-btn-secondary" onclick="document.getElementById('delete-expense-dialog').close()">Vazgeç</button>
+                <button type="button" id="confirm-delete-expense" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span>Evet, Gideri Sil</span>
+                </button>
+            </div>
+        </form>
+    </dialog>
+
 </div>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>
