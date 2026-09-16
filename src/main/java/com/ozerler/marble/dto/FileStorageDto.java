@@ -51,6 +51,9 @@ public class FileStorageDto {
     @JsonProperty("word")
     private boolean word;
 
+    @JsonProperty("text")
+    private boolean text;
+
     @JsonProperty("extension")
     private String extension;
 
@@ -74,6 +77,7 @@ public class FileStorageDto {
                 .image(entity.isImage())
                 .pdf(entity.isPdf())
                 .word(entity.isWord())
+                .text(entity.isText())
                 .extension(entity.getFileExtension())
                 .createdDate(entity.getCreatedDate())
                 .build();

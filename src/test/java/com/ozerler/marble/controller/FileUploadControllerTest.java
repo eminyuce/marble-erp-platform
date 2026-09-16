@@ -140,4 +140,54 @@ class FileUploadControllerTest {
         assertThat(response.getHeaders().getContentDisposition().toString()).contains("Rapor 2026.pdf");
         assertThat(response.getBody()).isEqualTo(resource);
     }
+
+    @Test
+    @DisplayName("downloadFile should preserve DOCX filename with Turkish characters")
+    void downloadFile_Docx_PreservesOriginalFilename() {
+        FileStorage storage = FileStorage.builder()
+                .id(6L)
+                .fileName("blocks_12345678.docx")
+                .originalName("Mermer Analiz Raporu (Şantiye & Ocak).docx")
+                .mimeType("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                .build();
+
+        ByteArrayResource resource = new ByteArrayResource("fake-docx-data".getBytes());
+
+        when(fileStorageService.getFileById(6L)).thenReturn(Optional.of(storage));
+        when(fileStorageService.loadAsResource(6L)).thenReturn(resource);
+
+        ResponseEntity<Resource> response = fileUploadController.downloadFile(6L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentDisposition().getFilename())
+                .isEqualTo("Mermer Analiz Raporu (Şantiye & Ocak).docx");
+        assertThat(response.getHeaders().getContentDisposition().getType())
+                .isEqualTo("attachment");
+        assertThat(response.getBody()).isEqualTo(resource);
+    }
+
+    @Test
+    @DisplayName("downloadFile should preserve TXT filename")
+    void downloadFile_Txt_PreservesOriginalFilename() {
+        FileStorage storage = FileStorage.builder()
+                .id(7L)
+                .fileName("blocks_98765432.txt")
+                .originalName("jeoloji_notlari.txt")
+                .mimeType("text/plain")
+                .build();
+
+        ByteArrayResource resource = new ByteArrayResource("notlar...".getBytes());
+
+        when(fileStorageService.getFileById(7L)).thenReturn(Optional.of(storage));
+        when(fileStorageService.loadAsResource(7L)).thenReturn(resource);
+
+        ResponseEntity<Resource> response = fileUploadController.downloadFile(7L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentDisposition().getFilename())
+                .isEqualTo("jeoloji_notlari.txt");
+        assertThat(response.getHeaders().getContentType().toString())
+                .contains("text/plain");
+        assertThat(response.getBody()).isEqualTo(resource);
+    }
 }

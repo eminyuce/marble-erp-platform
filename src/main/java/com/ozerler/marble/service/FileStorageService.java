@@ -33,11 +33,11 @@ public class FileStorageService {
     );
 
     private static final Set<String> ALLOWED_DOCUMENT_EXTENSIONS = Set.of(
-            "pdf", "docx", "doc"
+            "pdf", "docx", "doc", "txt"
     );
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
-            "jpg", "jpeg", "png", "webp", "gif", "bmp", "pdf", "docx", "doc"
+            "jpg", "jpeg", "png", "webp", "gif", "bmp", "pdf", "docx", "doc", "txt"
     );
 
     @Value("${app.media.dir:${app.upload.dir:media}}")
@@ -405,6 +405,7 @@ public class FileStorageService {
             case "pdf" -> "application/pdf";
             case "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             case "doc" -> "application/msword";
+            case "txt" -> "text/plain";
             case "jpg", "jpeg" -> "image/jpeg";
             case "png" -> "image/png";
             case "webp" -> "image/webp";

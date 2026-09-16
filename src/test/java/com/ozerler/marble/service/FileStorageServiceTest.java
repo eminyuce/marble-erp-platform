@@ -129,6 +129,37 @@ class FileStorageServiceTest {
     }
 
     @Test
+    @DisplayName("storeFile should save TXT document successfully in documents/")
+    void storeFile_Txt_Success() throws IOException {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "geology_notes.txt",
+                "text/plain",
+                "ocak jeolojik gozlemleri: kalsit damari var".getBytes());
+
+        when(fileStorageRepository.save(any(FileStorage.class))).thenAnswer(invocation -> {
+            FileStorage fs = invocation.getArgument(0);
+            fs.setId(4L);
+            return fs;
+        });
+
+        FileStorage saved = fileStorageService.storeFile(file, "BLOCK", null);
+
+        assertThat(saved).isNotNull();
+        assertThat(saved.getOriginalName()).isEqualTo("geology_notes.txt");
+        assertThat(saved.getFileName()).startsWith("blocks_");
+        assertThat(saved.getFilePath()).startsWith("/media/documents/");
+        assertThat(saved.isText()).isTrue();
+        assertThat(saved.isDocument()).isTrue();
+        assertThat(saved.isWord()).isFalse();
+        assertThat(saved.isPdf()).isFalse();
+        assertThat(saved.isImage()).isFalse();
+
+        Path storedFile = tempUploadDir.resolve("documents").resolve(saved.getFileName());
+        assertThat(Files.exists(storedFile)).isTrue();
+        assertThat(Files.readString(storedFile)).isEqualTo("ocak jeolojik gozlemleri: kalsit damari var");
+    }
+
+    @Test
     @DisplayName("storeFile should reject empty file")
     void storeFile_EmptyFile_ThrowsException() {
         MockMultipartFile emptyFile = new MockMultipartFile(

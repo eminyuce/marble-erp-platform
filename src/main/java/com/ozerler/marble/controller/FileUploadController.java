@@ -10,6 +10,7 @@ import com.ozerler.marble.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -182,16 +183,22 @@ public class FileUploadController extends AbstractController {
         Resource resource = fileStorageService.loadAsResource(id);
 
         String originalName = fileStorage.getOriginalName();
-        String encodedFilename = URLEncoder.encode(originalName, StandardCharsets.UTF_8).replace("+", "%20");
+        if (originalName == null || originalName.isBlank()) {
+            originalName = fileStorage.getFileName();
+        }
 
         String mime = fileStorage.getMimeType();
         if (mime == null || mime.isBlank()) {
             mime = "application/octet-stream";
         }
 
+        ContentDisposition contentDisposition = ContentDisposition.attachment()
+                .filename(originalName, StandardCharsets.UTF_8)
+                .build();
+
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(mime))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + originalName + "\"; filename*=UTF-8''" + encodedFilename)
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
                 .body(resource);
     }
 }

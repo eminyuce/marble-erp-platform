@@ -90,6 +90,19 @@ public class FileStorage extends AuditableEntity {
     }
 
     @Transient
+    public boolean isText() {
+        if ("text/plain".equalsIgnoreCase(mimeType)) {
+            return true;
+        }
+        return originalName != null && originalName.toLowerCase().endsWith(".txt");
+    }
+
+    @Transient
+    public boolean isDocument() {
+        return isPdf() || isWord() || isText();
+    }
+
+    @Transient
     public String getFormattedSize() {
         if (fileSize == null || fileSize <= 0) {
             return "0 B";

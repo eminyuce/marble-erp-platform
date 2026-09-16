@@ -189,7 +189,8 @@
                                         <img th:if="${file.image}" th:src="${file.filePath}" alt="Ek" class="w-full h-full object-cover">
                                         <span th:if="${file.pdf}" class="text-xs font-bold text-rose-600">PDF</span>
                                         <span th:if="${file.word}" class="text-xs font-bold text-blue-600">DOC</span>
-                                        <span th:if="${!file.image and !file.pdf and !file.word}" class="text-xs font-bold text-slate-600">DOS</span>
+                                        <span th:if="${file.text}" class="text-xs font-bold text-emerald-600">TXT</span>
+                                        <span th:if="${!file.image and !file.pdf and !file.word and !file.text}" class="text-xs font-bold text-slate-600">DOS</span>
                                     </div>
                                     <div class="min-w-0">
                                         <p class="text-xs font-semibold text-slate-800 truncate" th:text="${file.originalName}" th:title="${file.originalName}">Dosya Adı</p>
@@ -197,7 +198,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-1.5 shrink-0 ml-2">
-                                    <a th:href="@{'/api/upload/download/' + ${file.id}}" target="_blank"
+                                    <a th:href="@{'/api/upload/download/' + ${file.id}}" th:download="${file.originalName}" target="_blank"
                                        class="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition"
                                        title="İndir / Görüntüle">
                                         <i data-lucide="download" class="w-4 h-4"></i>
@@ -215,7 +216,7 @@
                     <!-- Çoklu Dosya Yükleme Alanı (FilePond) -->
                     <div class="erp-form-field">
                         <label class="erp-form-label" for="block-filepond">
-                            Dosya Ekle (Görsel, PDF, DOCX)
+                            Dosya Ekle (Görsel, PDF, DOCX, TXT)
                             <span class="text-xs font-normal text-slate-400 ml-1">Birden fazla dosya seçebilirsiniz</span>
                         </label>
                         <input type="file" id="block-filepond" name="file" multiple class="filepond">
