@@ -142,7 +142,7 @@ GRANT ALL ON SCHEMA public TO marbleuser;
 ### Step 4.3: Create System User & Application Directory
 ```bash
 sudo useradd -r -s /bin/false -m -d /opt/marble-erp marble
-sudo mkdir -p /opt/marble-erp/uploads /opt/marble-erp/logs
+sudo mkdir -p /opt/marble-erp/uploads /opt/marble-erp/media /opt/marble-erp/logs /opt/minio/data
 sudo chown -R marble:marble /opt/marble-erp
 ```
 
@@ -181,6 +181,10 @@ Environment="DB_URL=jdbc:postgresql://127.0.0.1:5432/marble_erp"
 Environment="DB_USERNAME=marbleuser"
 Environment="DB_PASSWORD=YOUR_STRONG_DB_PASSWORD_HERE"
 Environment="APP_UPLOAD_DIR=/opt/marble-erp/uploads"
+Environment="APP_MEDIA_DIR=/opt/marble-erp/media"
+Environment="STORAGE_TYPE=minio"
+Environment="MINIO_ENDPOINT=http://127.0.0.1:9000"
+Environment="MINIO_BUCKET=erp-files"
 
 ExecStart=/usr/bin/java \
     -server \

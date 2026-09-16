@@ -11,7 +11,7 @@ Ensure the following tools are installed on your workstation:
 | Dependency | Minimum Version | Notes |
 | :--- | :--- | :--- |
 | **Java Development Kit (JDK)** | **24+** | Recommended: [Eclipse Temurin 24](https://adoptium.net/) |
-| **Docker Desktop / Docker Engine** | **24.0+** | Required for running PostgreSQL 16 container |
+| **Docker Desktop / Docker Engine** | **24.0+** | Required for PostgreSQL 16 and MinIO containers |
 | **Node.js & npm** *(Optional)* | **22.x+** | Only needed if modifying Tailwind CSS in `frontend/` |
 | **Git** | Any modern version | Source code version control |
 
@@ -30,7 +30,7 @@ docker ps
 
 ### Option A: Hybrid Run (Docker PostgreSQL + Spring Boot Local) *(Recommended)*
 
-This setup runs PostgreSQL in Docker and executes the Spring Boot backend directly on your host machine, enabling hot reload and fast debugging.
+This setup runs PostgreSQL and MinIO in Docker and executes the Spring Boot backend directly on your host machine, enabling hot reload and fast debugging.
 
 #### On Windows (PowerShell):
 ```powershell
@@ -40,8 +40,8 @@ This setup runs PostgreSQL in Docker and executes the Spring Boot backend direct
 
 Or step-by-step manually:
 ```powershell
-# Start PostgreSQL 16 database container
-docker compose -f docker/docker-compose.yml up -d postgres
+# Start PostgreSQL 16 and MinIO containers
+docker compose -f docker/docker-compose.yml up -d postgres minio
 
 # Start Spring Boot application on port 8080 (dev profile)
 .\mvnw.cmd spring-boot:run
@@ -56,8 +56,8 @@ chmod +x scripts/run_local.sh
 
 Or step-by-step manually:
 ```bash
-# Start PostgreSQL container
-docker compose -f docker/docker-compose.yml up -d postgres
+# Start PostgreSQL and MinIO containers
+docker compose -f docker/docker-compose.yml up -d postgres minio
 
 # Start Spring Boot application
 ./mvnw spring-boot:run
@@ -69,7 +69,7 @@ The application will start on **`http://localhost:8080`**.
 
 ### Option B: Full Stack in Docker Compose
 
-Run both the Spring Boot app and PostgreSQL together in isolated containers.
+Run Spring Boot, PostgreSQL, and MinIO together in isolated containers.
 
 ```bash
 # Start both PostgreSQL and the application

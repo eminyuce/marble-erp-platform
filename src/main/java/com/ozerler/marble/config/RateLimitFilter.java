@@ -133,6 +133,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 || path.startsWith("/fonts/")
                 || path.startsWith("/images/")
                 || path.startsWith("/uploads/")
+                || path.startsWith("/media/")
+                || path.startsWith("/api/upload/view/")
                 || path.startsWith("/favicon.ico")
                 || path.startsWith("/error")
                 || path.startsWith("/actuator")

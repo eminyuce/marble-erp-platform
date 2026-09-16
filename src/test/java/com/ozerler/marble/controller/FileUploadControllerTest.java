@@ -19,7 +19,6 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -131,7 +130,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("pdf-content".getBytes());
 
-        when(fileStorageService.getFileById(5L)).thenReturn(Optional.of(storage));
+        when(fileStorageService.requireAccessibleFile(5L)).thenReturn(storage);
         when(fileStorageService.loadAsResource(5L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(5L);
@@ -153,7 +152,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("fake-docx-data".getBytes());
 
-        when(fileStorageService.getFileById(6L)).thenReturn(Optional.of(storage));
+        when(fileStorageService.requireAccessibleFile(6L)).thenReturn(storage);
         when(fileStorageService.loadAsResource(6L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(6L);
@@ -178,7 +177,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("notlar...".getBytes());
 
-        when(fileStorageService.getFileById(7L)).thenReturn(Optional.of(storage));
+        when(fileStorageService.requireAccessibleFile(7L)).thenReturn(storage);
         when(fileStorageService.loadAsResource(7L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(7L);
@@ -203,7 +202,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("fake-xlsx-bytes".getBytes());
 
-        when(fileStorageService.getFileById(8L)).thenReturn(Optional.of(storage));
+        when(fileStorageService.requireAccessibleFile(8L)).thenReturn(storage);
         when(fileStorageService.loadAsResource(8L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(8L);
@@ -228,7 +227,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("id,code\n11,BLK-11".getBytes());
 
-        when(fileStorageService.getFileById(9L)).thenReturn(Optional.of(storage));
+        when(fileStorageService.requireAccessibleFile(9L)).thenReturn(storage);
         when(fileStorageService.loadAsResource(9L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(9L);
@@ -239,5 +238,42 @@ class FileUploadControllerTest {
         assertThat(response.getHeaders().getContentType().toString())
                 .contains("text/csv");
         assertThat(response.getBody()).isEqualTo(resource);
+    }
+
+    @Test
+    @DisplayName("createDownloadUrl should return metadata and a presigned URL")
+    void createDownloadUrl_Success() {
+        when(fileStorageService.createPresignedDownloadUrl(12L))
+                .thenReturn("http://localhost:9000/erp-files/documents/block/1/a.pdf?sig=1");
+        when(fileStorageService.getPresignedUrlExpiry()).thenReturn(java.time.Duration.ofMinutes(15));
+
+        BackEndResponse response = fileUploadController.createDownloadUrl(12L);
+
+        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> body =
+                (java.util.Map<String, Object>) response.getResponse().getBody();
+        assertThat(body).containsEntry("fileId", 12L);
+        assertThat(body).containsEntry("url", "http://localhost:9000/erp-files/documents/block/1/a.pdf?sig=1");
+    }
+
+    @Test
+    @DisplayName("viewFile should return inline content disposition")
+    void viewFile_Success() {
+        FileStorage storage = FileStorage.builder()
+                .id(5L)
+                .fileName("uuid-photo.jpg")
+                .originalName("photo.jpg")
+                .mimeType("image/jpeg")
+                .fileSize(11L)
+                .build();
+        ByteArrayResource resource = new ByteArrayResource("image".getBytes());
+        when(fileStorageService.requireAccessibleFile(5L)).thenReturn(storage);
+        when(fileStorageService.loadAsResource(5L)).thenReturn(resource);
+
+        ResponseEntity<Resource> response = fileUploadController.viewFile(5L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentDisposition().getType()).isEqualTo("inline");
     }
 }

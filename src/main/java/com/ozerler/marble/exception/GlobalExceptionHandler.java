@@ -35,6 +35,36 @@ public class GlobalExceptionHandler {
         this.messageSource = messageSource;
     }
 
+    @ExceptionHandler(StoredFileNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleStoredFileNotFound(
+            StoredFileNotFoundException ex, HttpServletRequest request, Locale locale) {
+        log.info("Stored file not found on {}: {}", request.getRequestURI(), ex.getMessage());
+        return respond(HttpStatus.NOT_FOUND, ex.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(FileValidationException.class)
+    public ResponseEntity<ErrorResponse> handleFileValidation(
+            FileValidationException ex, HttpServletRequest request, Locale locale) {
+        log.warn("File validation failed on {}: {}", request.getRequestURI(), ex.getMessage());
+        return respond(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(FileAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleFileAccessDenied(
+            FileAccessDeniedException ex, HttpServletRequest request, Locale locale) {
+        log.warn("File access denied on {}: {}", request.getRequestURI(), ex.getMessage());
+        String accessDeniedMsg = resolveMessage("error.file.access_denied", null, ex.getMessage(), locale);
+        return respond(HttpStatus.FORBIDDEN, accessDeniedMsg, request, null);
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<ErrorResponse> handleStorageFailure(
+            StorageException ex, HttpServletRequest request, Locale locale) {
+        log.error("Object storage failure on {}", request.getRequestURI(), ex);
+        String genericInternalMsg = resolveMessage("error.file.storage_failed", null, Constants.ERROR_GENERIC_INTERNAL, locale);
+        return respond(HttpStatus.INTERNAL_SERVER_ERROR, genericInternalMsg, request, null);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(
             ResourceNotFoundException ex, HttpServletRequest request, Locale locale) {

@@ -82,7 +82,7 @@ function initMultiFilePond(inputSelector, containerSelector, entityType, entityI
         allowMultiple: true,
         maxFiles: 20,
         acceptedFileTypes: [
-            'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+            'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml',
             'application/pdf',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'application/vnd.ms-excel',
@@ -93,7 +93,7 @@ function initMultiFilePond(inputSelector, containerSelector, entityType, entityI
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'text/plain'
         ],
-        labelIdle: 'Dosyaları sürükleyin veya <span class="filepond--label-action">Gözatın</span> (Fotoğraf, PDF, Excel, CSV, DOCX, TXT)',
+        labelIdle: 'Dosyaları sürükleyin veya <span class="filepond--label-action">Gözatın</span> (Fotoğraf, SVG, PDF, Excel, CSV, DOCX, TXT)',
         labelFileProcessing: 'Yükleniyor...',
         labelFileProcessingComplete: 'Yükleme tamamlandı',
         labelTapToCancel: 'İptal etmek için dokunun',

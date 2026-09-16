@@ -103,15 +103,19 @@ if [ "$SKIP_POSTGRES" -eq 0 ]; then
     echo "[DOCKER] Starting PostgreSQL..."
     docker compose -f "$COMPOSE_FILE" up -d postgres
     wait_postgres_healthy
+    echo "[DOCKER] Starting MinIO..."
+    docker compose -f "$COMPOSE_FILE" up -d minio
 else
     echo "[SKIP] PostgreSQL Docker step skipped."
 fi
 
 echo ""
-echo "App:    http://localhost:$APP_PORT"
-echo "Admin:  http://localhost:$APP_PORT/account/adminlogin/"
-echo "Email:  admin@eimece.test"
-echo "Pass:   B2u5c8JB"
+echo "App:         http://localhost:$APP_PORT"
+echo "Admin:       http://localhost:$APP_PORT/account/adminlogin/"
+echo "MinIO API:   http://localhost:9000"
+echo "MinIO UI:    http://localhost:9001"
+echo "Email:       admin@eimece.test"
+echo "Pass:        B2u5c8JB"
 echo ""
 echo "[APP] Starting Spring Boot (dev profile)..."
 

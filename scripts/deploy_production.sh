@@ -190,9 +190,22 @@ DB_URL=jdbc:postgresql://127.0.0.1:5432/marble_erp
 DB_POOL_MAX=10
 DB_POOL_MIN_IDLE=2
 
-# Application Storage
+# Legacy filesystem paths — kept only so existing files can be migrated to MinIO.
+# New uploads go to MinIO, not these directories.
 APP_UPLOAD_DIR=/opt/marble-erp/uploads
 APP_MEDIA_DIR=/opt/marble-erp/media
+
+# MinIO object storage (S3-compatible). Required. Do not leave CHANGE_ME in production.
+STORAGE_TYPE=minio
+MINIO_ENDPOINT=http://127.0.0.1:9000
+MINIO_PUBLIC_ENDPOINT=http://127.0.0.1:9000
+MINIO_ACCESS_KEY=CHANGE_ME
+MINIO_SECRET_KEY=CHANGE_ME
+MINIO_BUCKET=erp-files
+MINIO_REGION=us-east-1
+MINIO_ROOT_USER=CHANGE_ME
+MINIO_ROOT_PASSWORD=CHANGE_ME
+MINIO_DATA_DIR=/opt/minio/data
 
 # Public Domain and CORS Configuration
 CORS_ALLOWED_ORIGIN=https://ozerler.naklink.com
@@ -248,7 +261,7 @@ esac
 # --- Dry run / interactive confirmation ------------------------------------
 if [ "$DRY_RUN" -eq 1 ]; then
     echo "Dry run preview. Actions that would be executed:"
-    echo "  1. Ensure Docker PostgreSQL (marble-erp-postgres) is running"
+    echo "  1. Ensure Docker PostgreSQL (marble-erp-postgres) and MinIO (marble-minio) are running"
     echo "  2. Build frontend (npm install && npm run build) unless --skip-frontend"
     echo "  3. Package backend (./mvnw clean package -DskipTests)"
     echo "  4. Stop systemd service ($SERVICE_NAME)"
@@ -290,58 +303,49 @@ fi
 [ -x "$REPO_ROOT/mvnw" ] || die "Maven wrapper not executable: $REPO_ROOT/mvnw"
 
 # --- Deploy directory & environment file -----------------------------------
-sudo_cmd mkdir -p "$DEPLOY_DIR/uploads" "$DEPLOY_DIR/logs"
+sudo_cmd mkdir -p "$DEPLOY_DIR/uploads" "$DEPLOY_DIR/logs" "$DEPLOY_DIR/media/images" "$DEPLOY_DIR/media/documents"
 
-# --- Media storage directories & permissions -------------------------------
+# Legacy media/uploads stay on disk so existing files can be migrated into MinIO.
+# They are no longer the live upload target.
 MEDIA_DIR="${DEPLOY_DIR}/media"
-MEDIA_IMAGES_DIR="${MEDIA_DIR}/images"
-MEDIA_DOCS_DIR="${MEDIA_DIR}/documents"
 TARGET_USER="${SERVICE_USER:-eyuce}"
 TARGET_GROUP="${SERVICE_GROUP:-eyuce}"
+echo "[STORAGE] Preserving legacy media directories for MinIO migration: $MEDIA_DIR and $DEPLOY_DIR/uploads"
+sudo_cmd chown -R "${TARGET_USER}:${TARGET_GROUP}" "$MEDIA_DIR" "$DEPLOY_DIR/uploads" || true
+sudo_cmd chmod -R u+rwX "$MEDIA_DIR" "$DEPLOY_DIR/uploads" || true
 
-# 1. Check if media folders exist; create only if missing
-media_created=0
-if [ ! -d "$MEDIA_IMAGES_DIR" ]; then
-    echo "[STORAGE] Media images directory not found. Creating: $MEDIA_IMAGES_DIR"
-    sudo_cmd mkdir -p "$MEDIA_IMAGES_DIR"
-    media_created=1
-fi
-
-if [ ! -d "$MEDIA_DOCS_DIR" ]; then
-    echo "[STORAGE] Media documents directory not found. Creating: $MEDIA_DOCS_DIR"
-    sudo_cmd mkdir -p "$MEDIA_DOCS_DIR"
-    media_created=1
-fi
-
-# 2. Check read and write permissions for the service user
-check_user_rw() {
-    local target_path="$1"
-    if [ "$(id -u)" -eq 0 ] && [ "$TARGET_USER" != "root" ]; then
-        sudo -u "$TARGET_USER" test -r "$target_path" && \
-        sudo -u "$TARGET_USER" test -w "$target_path" && \
-        sudo -u "$TARGET_USER" test -x "$target_path"
-    else
-        test -r "$target_path" && test -w "$target_path" && test -x "$target_path"
+ensure_minio_env_keys() {
+    if [ ! -f "$ENV_FILE" ]; then
+        return 0
     fi
-}
+    if grep -q '^MINIO_ENDPOINT=' "$ENV_FILE"; then
+        return 0
+    fi
+    echo "[ENV] Appending MinIO object-storage settings to $ENV_FILE"
+    sudo_cmd tee -a "$ENV_FILE" >/dev/null <<'EOF'
 
-if [ "$media_created" -eq 1 ] || \
-   ! check_user_rw "$MEDIA_DIR" || \
-   ! check_user_rw "$MEDIA_IMAGES_DIR" || \
-   ! check_user_rw "$MEDIA_DOCS_DIR"; then
-    echo "[STORAGE] Setting read/write permissions for ${TARGET_USER}:${TARGET_GROUP} on $MEDIA_DIR..."
-    sudo_cmd chown -R "${TARGET_USER}:${TARGET_GROUP}" "$MEDIA_DIR"
-    sudo_cmd chmod -R u+rwX "$MEDIA_DIR"
-else
-    echo "[STORAGE] Media directories and read/write permissions are OK for ${TARGET_USER}."
-fi
+# MinIO object storage (S3-compatible). Required after the filesystem-to-MinIO migration.
+STORAGE_TYPE=minio
+MINIO_ENDPOINT=http://127.0.0.1:9000
+MINIO_PUBLIC_ENDPOINT=http://127.0.0.1:9000
+MINIO_ACCESS_KEY=CHANGE_ME
+MINIO_SECRET_KEY=CHANGE_ME
+MINIO_BUCKET=erp-files
+MINIO_REGION=us-east-1
+MINIO_ROOT_USER=CHANGE_ME
+MINIO_ROOT_PASSWORD=CHANGE_ME
+MINIO_DATA_DIR=/opt/minio/data
+EOF
+}
 
 if [ ! -f "$ENV_FILE" ]; then
     echo "[ENV] Writing initial $ENV_FILE"
     write_env_template
+else
+    ensure_minio_env_keys
 fi
 if grep -Eq 'CHANGE_ME|YOUR_PUBLIC_HOST|YOUR_STRONG' "$ENV_FILE"; then
-    die "$ENV_FILE still contains placeholders (CHANGE_ME / YOUR_PUBLIC_HOST). Edit real values and re-run."
+    die "$ENV_FILE still contains placeholders (CHANGE_ME / YOUR_PUBLIC_HOST). Edit real values (including MinIO keys) and re-run."
 fi
 
 # Ensure correct base deploy directory permissions
@@ -361,6 +365,35 @@ if command -v docker >/dev/null 2>&1; then
         if docker exec marble-erp-postgres pg_isready -U marbleuser -d marble_erp -q 2>/dev/null; then
             echo "[DB] Docker container 'marble-erp-postgres' is healthy and ready."
         fi
+    fi
+
+    MINIO_DATA_DIR_VALUE="$(grep -E '^MINIO_DATA_DIR=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+    MINIO_DATA_DIR_VALUE="${MINIO_DATA_DIR_VALUE:-/opt/minio/data}"
+    sudo_cmd mkdir -p "$MINIO_DATA_DIR_VALUE"
+    if docker inspect marble-minio >/dev/null 2>&1; then
+        if ! docker inspect -f '{{.State.Running}}' marble-minio 2>/dev/null | grep -q "true"; then
+            echo "[MINIO] Starting Docker container 'marble-minio'..."
+            docker start marble-minio
+            sleep 2
+        fi
+    elif [ -f "$REPO_ROOT/docker/docker-compose.yml" ]; then
+        echo "[MINIO] Creating MinIO container from docker/docker-compose.yml (data: $MINIO_DATA_DIR_VALUE)"
+        MINIO_ROOT_USER_VALUE="$(grep -E '^MINIO_ROOT_USER=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+        MINIO_ROOT_PASSWORD_VALUE="$(grep -E '^MINIO_ROOT_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+        if [ -z "$MINIO_ROOT_USER_VALUE" ]; then
+            MINIO_ROOT_USER_VALUE="$(grep -E '^MINIO_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+        fi
+        if [ -z "$MINIO_ROOT_PASSWORD_VALUE" ]; then
+            MINIO_ROOT_PASSWORD_VALUE="$(grep -E '^MINIO_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+        fi
+        (cd "$REPO_ROOT" && \
+            MINIO_DATA_DIR="$MINIO_DATA_DIR_VALUE" \
+            MINIO_ROOT_USER="$MINIO_ROOT_USER_VALUE" \
+            MINIO_ROOT_PASSWORD="$MINIO_ROOT_PASSWORD_VALUE" \
+            docker compose -f docker/docker-compose.yml up -d minio)
+    fi
+    if docker inspect marble-minio >/dev/null 2>&1; then
+        echo "[MINIO] Docker container 'marble-minio' is present. Backup this data directory: $MINIO_DATA_DIR_VALUE"
     fi
 fi
 
