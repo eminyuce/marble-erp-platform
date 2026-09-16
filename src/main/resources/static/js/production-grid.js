@@ -86,8 +86,7 @@ function initProductionGrid() {
                     const row = cell.getRow().getData();
                     return gridActionsHtml([
                         {icon: 'eye', label: 'Detay', href: '/production/orders/' + row.id},
-                        {icon: 'edit-3', label: 'Düzenle', href: '/production/orders/' + row.id + '/edit'},
-                        {icon: 'git-branch', label: 'Soy Ağacı', href: '/genealogy?code=' + row.orderNo}
+                        {icon: 'edit-3', label: 'Düzenle', href: '/production/orders/' + row.id + '/edit'}
                     ]);
                 }
             }

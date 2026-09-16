@@ -24,7 +24,7 @@ Yazılımın ana menüsü, sayfa başlıkları, yardım metinleri, raporları ve
 4. **Şantiyeler**
 5. **Maliyet Analizi**
 
-`Satış`, `Satın Alma`, `Raporlar` ve `Soy Ağacı` destek işlevleridir. Ana üretim akışının yerine geçmez; ilgili ana modül içinde veya ortak işlemler altında gösterilir.
+`Satış`, `Satın Alma`, `Raporlar` ve `İzlenebilirlik` destek işlevleridir. Ana üretim akışının yerine geçmez; ilgili ana modül içinde veya ortak işlemler altında gösterilir.
 
 ### 2.1 Standart alt başlıklar
 
@@ -253,7 +253,7 @@ Yazılımın ana menüsü, sayfa başlıkları, yardım metinleri, raporları ve
 - `shipments` yük bilgisini taşımaz. Sevkiyatın hangi blok, palet veya ürün lotunu taşıdığı `shipment_items` ile zorunlu hale getirilmelidir.
 - `purchase_order_items.item_type` için enum bulunmasına rağmen alan serbest string’dir. Geçersiz değerler migration raporuyla düzeltilip `PurchaseItemType` ile eşlenmelidir.
 - `production_orders`, `cut_orders`, `cut_items`, `project_locations`, `pallets` ve `shipments` içinde bazı durumlar serbest string’dir. Geçmiş değerler korumalı biçimde typed enumlara geçirilmelidir.
-- Soy ağacı bugün Blok → Üretim Emri → Plaka → Ebatlı Mamul seviyesinde biter. Palet, sevkiyat, satış, şantiye/mahal, montaj, fire ve maliyet olayları da izlenebilir zincire katılmalıdır.
+- İzlenebilirlik bugün Blok → Üretim Emri → Plaka → Ebatlı Mamul seviyesinde biter. Palet, sevkiyat, satış, şantiye/mahal, montaj, fire ve maliyet olayları da izlenebilir zincire katılmalıdır.
 - Rapor yetkilendirmesinde kullanılan `ACCOUNTANT` ve `MANAGER` adları kayıtlı rollerle eşleşmez. Bunlar `FINANCE`, `FACTORY_MANAGER` ve gerekli diğer gerçek rollerle düzeltilmelidir.
 
 ## 5. Adlandırma Düzeltme Planı
@@ -370,7 +370,7 @@ Farklı fiziksel birimler zorla birbirine çevrilmemelidir. ST/Katrak girdisi to
 - stok konumu ve durum
 - birim/toplam maliyet
 
-Mevcut `slabs` kayıtları `SLAB`, mevcut uygun `cut_items` kayıtları `SIZED_PRODUCT` lotlarına bağlanmalı. QR/soy ağacı eski ve yeni kayıtları birlikte izlemelidir.
+Mevcut `slabs` kayıtları `SLAB`, mevcut uygun `cut_items` kayıtları `SIZED_PRODUCT` lotlarına bağlanmalı. QR ve izlenebilirlik sistemi eski ve yeni kayıtları birlikte izlemelidir.
 
 #### Palet ve sevkiyat
 
@@ -578,7 +578,7 @@ Her sekmede dönem filtresi, toplam gider, üretim miktarı, birim maliyet, önc
 
 - Dört ana maliyet analizini gerçek operasyon verisine bağla.
 - Dönem kapama ve yeniden hesaplama.
-- Dashboard KPI, global arama, yardım, soy ağacı ve pasaportu yeni modele geçir.
+- Dashboard KPI, global arama, yardım, izlenebilirlik ve pasaportu yeni modele geçir.
 - Excel/CSV raporlarını ekrandaki filtre ve Türkçe başlıklarla eşle.
 
 ## 10. Yetki Matrisi
@@ -673,7 +673,7 @@ Bir iş maddesi yalnızca tablo veya ekran eklendiğinde tamamlanmış sayılmaz
 - Türkçe ve standart terimli responsive ekran,
 - Rol bazlı backend yetkisi,
 - Audit kaydı,
-- Global arama/yardım/rapor/soy ağacı etkisi,
+- Global arama/yardım/rapor/izlenebilirlik etkisi,
 - Birim, entegrasyon, güvenlik ve gerekli E2E testleri,
 - Eski veri ve bağlantılar için geriye uyumluluk,
 - Sabit örnek yerine gerçek veriden hesaplanan sonuç.
@@ -701,7 +701,7 @@ Bir iş maddesi yalnızca tablo veya ekran eklendiğinde tamamlanmış sayılmaz
 - [ ] Ana başlıkları bu belgedeki haliyle kullan.
 - [ ] Mevcut özellik ile yalnızca demo metninde anlatılan özelliği birbirine karıştırma.
 - [ ] Birim ve dönem alanlarını açık tut; ton, kg ve m² arasında varsayımsal dönüşüm yapma.
-- [ ] Yeni kayıtları bloktan nihai sevkiyat/montaja kadar soy ağacına bağla.
+- [ ] Yeni kayıtları bloktan nihai sevkiyat/montaja kadar izlenebilirlik zincirine bağla.
 - [ ] Giderleri hem ait olduğu dönem hem girildiği dönemle sakla.
 - [ ] Serbest metin makine/durum/işlem alanlarını kontrollü referans veya enum yap.
 - [ ] Her migration için eski veri backfill ve rollback stratejisini belgele.

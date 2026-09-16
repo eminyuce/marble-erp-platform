@@ -93,9 +93,6 @@
             <a th:href="@{'/blocks/' + ${block.id} + '/edit'}" class="erp-btn-secondary">
                 <i data-lucide="edit-3"></i><span>Düzenle</span>
             </a>
-            <a th:href="@{/genealogy(code=${block.blockCode})}" class="erp-btn-secondary">
-                <i data-lucide="git-branch"></i><span>Soy Ağacı</span>
-            </a>
             <button th:if="${canDelete}" type="button" @click="deleteModalOpen = true"
                     class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer">
                 <i data-lucide="trash-2" class="w-4 h-4"></i><span>Bloğu Sil</span>

@@ -22,7 +22,7 @@ class ErpToolbarLayoutTest {
     @Test
     @DisplayName("List toolbar CSS keeps create, search, filter and export on one row")
     void toolbarCssUsesSingleRowGrid() throws Exception {
-        String css = Files.readString(Path.of("frontend/src/input.css"));
+        String css = Files.readString(Path.of("frontend/src/input.css")).replace("\r\n", "\n");
         assertThat(css).contains("grid-template-columns: auto minmax(8rem, 1fr) minmax(0, max-content)");
         assertThat(css).contains(".erp-toolbar-filter");
         assertThat(css).contains("min-width: 16rem");
