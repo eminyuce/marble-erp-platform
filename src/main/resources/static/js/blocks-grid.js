@@ -129,7 +129,7 @@ function initBlocksGrid() {
                 minWidth: 110,
                 bottomCalc: blocksMetaCalc("totalTonnage"),
                 bottomCalcFormatter: function (cell) {
-                    return `<strong>${formatBlocksMetric(cell.getValue(), "t")}</strong>`;
+                    return `<strong class="erp-grid-calc-value">${formatBlocksMetric(cell.getValue(), "t")}</strong>`;
                 },
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
@@ -149,7 +149,7 @@ function initBlocksGrid() {
                 minWidth: 90,
                 bottomCalc: blocksMetaCalc("totalSurfaceM2"),
                 bottomCalcFormatter: function (cell) {
-                    return `<strong>${formatBlocksMetric(cell.getValue(), "m²")}</strong>`;
+                    return `<strong class="erp-grid-calc-value">${formatBlocksMetric(cell.getValue(), "m²")}</strong>`;
                 },
                 formatter: (cell) => gridArea(cell.getValue())
             },
@@ -182,7 +182,7 @@ function initBlocksGrid() {
                 minWidth: 130,
                 bottomCalc: blocksMetaCalc("totalExtractionCost"),
                 bottomCalcFormatter: function (cell) {
-                    return `<strong>${gridMoney(cell.getValue())}</strong>`;
+                    return `<strong class="erp-grid-calc-value">${gridMoney(cell.getValue())}</strong>`;
                 },
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
@@ -196,7 +196,7 @@ function initBlocksGrid() {
                 minWidth: 120,
                 bottomCalc: blocksMetaCalc("totalCost"),
                 bottomCalcFormatter: function (cell) {
-                    return `<strong>${gridMoney(cell.getValue())}</strong>`;
+                    return `<strong class="erp-grid-calc-value">${gridMoney(cell.getValue())}</strong>`;
                 },
                 formatter: function (cell) {
                     return `<strong>${gridMoney(cell.getValue())}</strong>`;
