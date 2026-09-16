@@ -257,7 +257,6 @@ function showExpensesToast(message, ok) {
 }
 
 // Delete Expense Confirmation Management
-let pendingDeleteExpenseId = null;
 
 function openDeleteExpense(id, docNo, amount) {
     pendingDeleteExpenseId = id;
