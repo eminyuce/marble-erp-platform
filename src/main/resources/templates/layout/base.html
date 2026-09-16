@@ -457,10 +457,62 @@
             return '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">● '
                 + window.gridText(label || status) + '</span>';
         };
-    }
     if (typeof window.erpGridDefaults !== "function") {
         window.erpGridDefaults = function () {
             return { locale: "tr" };
+        };
+    }
+    if (typeof window.erpResponsiveCollapseColumn !== "function") {
+        window.erpResponsiveCollapseColumn = function () {
+            return {
+                title: "",
+                formatter: "responsiveCollapse",
+                width: 46,
+                minWidth: 46,
+                hozAlign: "center",
+                headerHozAlign: "center",
+                resizable: false,
+                headerSort: false,
+                responsive: 0,
+                download: false
+            };
+        };
+    }
+    if (typeof window.erpIndexColumn !== "function") {
+        window.erpIndexColumn = function (options) {
+            options = options || {};
+            var title = options.title !== undefined ? options.title : "#";
+            var continueGlobally = options.continueGlobally === true;
+            return {
+                title: title,
+                field: "_rowIndex",
+                formatter: function (cell) {
+                    var row = cell.getRow();
+                    var pos = (typeof row.getPosition === "function") ? row.getPosition(true) : false;
+                    if (pos === false || typeof pos !== "number") {
+                        pos = (typeof row.getPosition === "function") ? row.getPosition(false) : false;
+                    }
+                    if (continueGlobally && typeof pos === "number" && pos > 0) {
+                        var table = cell.getTable();
+                        var page = (typeof table.getPage === "function") ? (table.getPage() || 1) : 1;
+                        var size = (typeof table.getPageSize === "function") ? (table.getPageSize() || 0) : 0;
+                        if (typeof page === "number" && typeof size === "number" && size > 0) {
+                            pos = ((page - 1) * size) + pos;
+                        }
+                    }
+                    return '<span class="erp-grid-row-num" aria-label="Sıra: ' + (pos || "") + '">' + (pos || "") + '</span>';
+                },
+                width: options.width || 56,
+                minWidth: 48,
+                maxWidth: 72,
+                hozAlign: "center",
+                headerHozAlign: "center",
+                resizable: false,
+                headerSort: false,
+                cssClass: "erp-col-index",
+                responsive: 0,
+                download: false
+            };
         };
     }
 })(window);

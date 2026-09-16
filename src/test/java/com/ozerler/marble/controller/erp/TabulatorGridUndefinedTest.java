@@ -78,6 +78,7 @@ class TabulatorGridUndefinedTest {
         assertThat(fallbackBlock).contains("window.gridArea");
         assertThat(fallbackBlock).contains("window.erpStatusBadge");
         assertThat(fallbackBlock).contains("window.erpGridDefaults");
+        assertThat(fallbackBlock).contains("window.erpIndexColumn");
     }
 
     @Test
@@ -98,7 +99,10 @@ class TabulatorGridUndefinedTest {
         assertThat(blockForm).contains("@{/js/filepond-setup.js(v=${assetVersion})}");
 
         int filePondJsIndex = blockForm.indexOf("@{/vendor/filepond/filepond.min.js}");
-        int initIndex = blockForm.indexOf("initFilePond(");
+        int initIndex = blockForm.indexOf("initMultiFilePond(");
+        if (initIndex < 0) {
+            initIndex = blockForm.indexOf("initFilePond(");
+        }
         assertThat(filePondJsIndex).isGreaterThanOrEqualTo(0);
         assertThat(initIndex)
                 .as("block form must initialize FilePond only after local vendor scripts")
@@ -140,6 +144,17 @@ class TabulatorGridUndefinedTest {
                     .doesNotContain("Number(row.totalAreaM2).toFixed")
                     .doesNotContain("Number(row.totalSlabAreaM2).toFixed");
         }
+    }
+
+    @Test
+    @DisplayName("Asset version is configured, non-empty, and cache-busting all critical assets")
+    void assetVersionIsConfiguredAndConsistent() throws Exception {
+        String appYml = readResource("/application.yml");
+        assertThat(appYml).contains("asset-version:");
+
+        String layout = readResource("/templates/layout/base.html");
+        assertThat(layout).contains("@{/css/app.css(v=${assetVersion})}");
+        assertThat(layout).contains("@{/js/app.js(v=${assetVersion})}");
     }
 
     private static String readResource(String resource) throws Exception {

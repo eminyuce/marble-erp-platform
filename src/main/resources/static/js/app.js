@@ -58,6 +58,8 @@ function erpGridDefaults() {
         responsiveLayoutCollapseStartOpen: false,
         minHeight: 180,
         placeholder: "Kayıt bulunamadı.",
+        paginationCounter: "rows",
+        paginationButtonCount: 5,
         locale: "tr",
         langs: {
             tr: {
@@ -353,8 +355,11 @@ function erpIndexColumn(options) {
         field: "_rowIndex",
         formatter: function (cell) {
             var row = cell.getRow();
-            var pos = row.getPosition(true);
-            if (continueGlobally) {
+            var pos = (typeof row.getPosition === "function") ? row.getPosition(true) : false;
+            if (pos === false || typeof pos !== "number") {
+                pos = (typeof row.getPosition === "function") ? row.getPosition(false) : false;
+            }
+            if (continueGlobally && typeof pos === "number" && pos > 0) {
                 var table = cell.getTable();
                 var page = (typeof table.getPage === "function") ? (table.getPage() || 1) : 1;
                 var size = (typeof table.getPageSize === "function") ? (table.getPageSize() || 0) : 0;
@@ -362,7 +367,7 @@ function erpIndexColumn(options) {
                     pos = ((page - 1) * size) + pos;
                 }
             }
-            return '<span class="erp-grid-row-num" aria-label="Sıra: ' + pos + '">' + (pos || "") + '</span>';
+            return '<span class="erp-grid-row-num" aria-label="Sıra: ' + (pos || "") + '">' + (pos || "") + '</span>';
         },
         width: options.width || 56,
         minWidth: 48,
@@ -481,6 +486,7 @@ window.gridMoney = gridMoney;
 window.gridArea = gridArea;
 window.erpStatusBadge = erpStatusBadge;
 window.erpResponsiveCollapseColumn = erpResponsiveCollapseColumn;
+window.erpIndexColumn = erpIndexColumn;
 window.gridActionsHtml = gridActionsHtml;
 window.bindGridSearch = bindGridSearch;
 window.buildExportFilename = buildExportFilename;

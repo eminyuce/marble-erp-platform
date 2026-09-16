@@ -249,8 +249,14 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
         const blockId = /*[[${isEdit and block != null ? block.id : null}]]*/ null;
-        initMultiFilePond('#block-filepond', '#uploaded-files-container', 'BLOCK', blockId);
-        initDualEditor('dual-editor-container', 'notes-hidden-input');
+        if (typeof initMultiFilePond === 'function') {
+            initMultiFilePond('#block-filepond', '#uploaded-files-container', 'BLOCK', blockId);
+        } else if (typeof window.initMultiFilePond === 'function') {
+            window.initMultiFilePond('#block-filepond', '#uploaded-files-container', 'BLOCK', blockId);
+        }
+        if (typeof initDualEditor === 'function') {
+            initDualEditor('dual-editor-container', 'notes-hidden-input');
+        }
         /*]]>*/
 
         (function () {
