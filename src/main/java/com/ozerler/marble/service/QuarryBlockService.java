@@ -62,6 +62,7 @@ public class QuarryBlockService {
     private final BlockCustomerMarkRepository blockCustomerMarkRepository;
     private final CostTransactionRepository costTransactionRepository;
     private final ShipmentItemRepository shipmentItemRepository;
+    private final FileStorageService fileStorageService;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
@@ -155,6 +156,22 @@ public class QuarryBlockService {
     }
 
     @Transactional
+    public Block registerBlock(Long quarryId, String blockCode, LocalDate extractionDate,
+                               int widthCm, int lengthCm, int heightCm,
+                               BigDecimal actualWeightKg, String stoneType, String colorTone,
+                               QualityGrade qualityGrade, int crackLevel,
+                               BigDecimal extractionCost, String notes, String photoUrls,
+                               StockLocationType locationType, List<Long> fileIds) {
+        Block saved = registerBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
+                actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel,
+                extractionCost, notes, photoUrls, locationType);
+        if (fileIds != null && !fileIds.isEmpty()) {
+            fileStorageService.attachFilesToEntity(fileIds, "BLOCK", saved.getId());
+        }
+        return saved;
+    }
+
+    @Transactional
     public Block updateBlock(Long id, Long quarryId, String blockCode, LocalDate extractionDate,
                              int widthCm, int lengthCm, int heightCm,
                              BigDecimal actualWeightKg, String stoneType, String colorTone,
@@ -209,6 +226,22 @@ public class QuarryBlockService {
 
         block.calculateMetrics(block.getQuarry().getSpecificGravity());
         return blockRepository.save(block);
+    }
+
+    @Transactional
+    public Block updateBlock(Long id, Long quarryId, String blockCode, LocalDate extractionDate,
+                             int widthCm, int lengthCm, int heightCm,
+                             BigDecimal actualWeightKg, String stoneType, String colorTone,
+                             QualityGrade qualityGrade, int crackLevel,
+                             BigDecimal extractionCost, String notes, String photoUrls,
+                             StockLocationType locationType, List<Long> fileIds) {
+        Block updated = updateBlock(id, quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
+                actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel,
+                extractionCost, notes, photoUrls, locationType);
+        if (fileIds != null && !fileIds.isEmpty()) {
+            fileStorageService.attachFilesToEntity(fileIds, "BLOCK", updated.getId());
+        }
+        return updated;
     }
 
     @Transactional(readOnly = true)
@@ -266,6 +299,7 @@ public class QuarryBlockService {
         if (!movements.isEmpty()) {
             movementRepository.deleteAll(movements);
         }
+        fileStorageService.deleteAllFilesForEntity("BLOCK", blockId);
         blockRepository.delete(block);
     }
 
