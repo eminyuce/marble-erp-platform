@@ -71,7 +71,6 @@ function initBlocksGrid() {
             });
         },
         ajaxResponse: function (url, params, response) {
-            updateBlocksGridTotals(response);
             return erpGridAjaxResponse("blocks-table", response);
         },
         placeholder: "Blok kaydı bulunamadı.",
@@ -127,7 +126,7 @@ function initBlocksGrid() {
                 title: "Tonaj",
                 field: "approximateTonnage",
                 minWidth: 110,
-                bottomCalc: blocksMetaCalc("totalTonnage"),
+                bottomCalc: blocksPageCalc("totalTonnage"),
                 bottomCalcFormatter: function (cell) {
                     return `<strong class="erp-grid-calc-value">${formatBlocksMetric(cell.getValue(), "t")}</strong>`;
                 },
@@ -147,7 +146,7 @@ function initBlocksGrid() {
                 title: "m²",
                 field: "surfaceAreaM2",
                 minWidth: 90,
-                bottomCalc: blocksMetaCalc("totalSurfaceM2"),
+                bottomCalc: blocksPageCalc("totalSurfaceM2"),
                 bottomCalcFormatter: function (cell) {
                     return `<strong class="erp-grid-calc-value">${formatBlocksMetric(cell.getValue(), "m²")}</strong>`;
                 },
@@ -180,7 +179,7 @@ function initBlocksGrid() {
                 title: "Çıkarma Maliyeti",
                 field: "calculatedExtractionCost",
                 minWidth: 130,
-                bottomCalc: blocksMetaCalc("totalExtractionCost"),
+                bottomCalc: blocksPageCalc("totalExtractionCost"),
                 bottomCalcFormatter: function (cell) {
                     return `<strong class="erp-grid-calc-value">${gridMoney(cell.getValue())}</strong>`;
                 },
@@ -194,7 +193,7 @@ function initBlocksGrid() {
                 title: "Toplam Maliyet",
                 field: "totalCost",
                 minWidth: 120,
-                bottomCalc: blocksMetaCalc("totalCost"),
+                bottomCalc: blocksPageCalc("totalCost"),
                 bottomCalcFormatter: function (cell) {
                     return `<strong class="erp-grid-calc-value">${gridMoney(cell.getValue())}</strong>`;
                 },
@@ -250,9 +249,7 @@ function initBlocksGrid() {
 
     attachTabulatorPagingAnimation(blocksTable);
     bindGridSearch(blocksTable, "search-input");
-    blocksTable.on("renderComplete", () => {
-        if (window.lucide) window.lucide.createIcons();
-    });
+    bindBlocksPageTotals(blocksTable);
 }
 
 function reloadBlocksGrid() {
@@ -261,13 +258,63 @@ function reloadBlocksGrid() {
     }
 }
 
-let blocksGridMeta = {};
+let blocksGridMeta = {
+    totalTonnage: 0,
+    totalSurfaceM2: 0,
+    totalExtractionCost: 0,
+    totalCost: 0
+};
 
-function blocksMetaCalc(key) {
-    return function () {
-        const value = blocksGridMeta ? blocksGridMeta[key] : null;
-        const number = Number(value);
-        return Number.isFinite(number) ? number : 0;
+function toFiniteNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+}
+
+function isDataBlockRow(row) {
+    return !!(row && row.id != null);
+}
+
+function rowTonnage(row) {
+    const actual = toFiniteNumber(row.actualTonnage);
+    return actual > 0 ? actual : toFiniteNumber(row.approximateTonnage);
+}
+
+function rowExtractionCost(row) {
+    return row.calculatedExtractionCost != null
+        ? toFiniteNumber(row.calculatedExtractionCost)
+        : toFiniteNumber(row.extractionCost);
+}
+
+function sumBlockRows(rows) {
+    const totals = {
+        totalTonnage: 0,
+        totalSurfaceM2: 0,
+        totalExtractionCost: 0,
+        totalCost: 0
+    };
+    (rows || []).forEach(function (row) {
+        if (!isDataBlockRow(row)) {
+            return;
+        }
+        totals.totalTonnage += rowTonnage(row);
+        totals.totalSurfaceM2 += toFiniteNumber(row.surfaceAreaM2);
+        totals.totalExtractionCost += rowExtractionCost(row);
+        totals.totalCost += toFiniteNumber(row.totalCost);
+    });
+    return totals;
+}
+
+function visibleBlockRows() {
+    if (!blocksTable || typeof blocksTable.getData !== "function") {
+        return [];
+    }
+    return (blocksTable.getData() || []).filter(isDataBlockRow);
+}
+
+function blocksPageCalc(metricKey) {
+    return function (values, data) {
+        const totals = sumBlockRows(data);
+        return toFiniteNumber(totals[metricKey]);
     };
 }
 
@@ -281,9 +328,8 @@ function formatBlocksMetric(value, suffix) {
     return suffix ? formatted + " " + suffix : formatted;
 }
 
-function updateBlocksGridTotals(response) {
-    const meta = response && response.meta ? response.meta : {};
-    blocksGridMeta = meta;
+function applyBlocksGridTotals(totals) {
+    blocksGridMeta = totals || blocksGridMeta;
     const totalsEl = document.getElementById("blocks-grid-totals");
     const tonEl = document.getElementById("blocks-total-tonnage");
     const m2El = document.getElementById("blocks-total-m2");
@@ -292,24 +338,46 @@ function updateBlocksGridTotals(response) {
     if (totalsEl) {
         totalsEl.classList.remove("hidden");
         if (tonEl) {
-            tonEl.textContent = formatBlocksMetric(meta.totalTonnage, "ton");
+            tonEl.textContent = formatBlocksMetric(blocksGridMeta.totalTonnage, "ton");
         }
         if (m2El) {
-            m2El.textContent = formatBlocksMetric(meta.totalSurfaceM2, "m²");
+            m2El.textContent = formatBlocksMetric(blocksGridMeta.totalSurfaceM2, "m²");
         }
         if (extractionEl) {
-            extractionEl.textContent = gridMoney(meta.totalExtractionCost);
+            extractionEl.textContent = gridMoney(blocksGridMeta.totalExtractionCost);
         }
         if (costEl) {
-            costEl.textContent = gridMoney(meta.totalCost);
+            costEl.textContent = gridMoney(blocksGridMeta.totalCost);
         }
     }
-    window.setTimeout(function () {
-        if (blocksTable && typeof blocksTable.recalc === "function") {
-            blocksTable.recalc();
-        }
-    }, 0);
 }
+
+function refreshBlocksPageTotals() {
+    applyBlocksGridTotals(sumBlockRows(visibleBlockRows()));
+}
+
+function bindBlocksPageTotals(table) {
+    const refresh = function () {
+        refreshBlocksPageTotals();
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    };
+    table.on("dataLoaded", refresh);
+    table.on("dataProcessed", refresh);
+    table.on("pageLoaded", refresh);
+    table.on("renderComplete", refresh);
+    const root = table.element || document.getElementById("blocks-table");
+    if (root) {
+        root.addEventListener("change", function (event) {
+            if (event.target && event.target.classList.contains("tabulator-page-size")) {
+                refresh();
+            }
+        });
+    }
+}
+
+window.refreshBlocksPageTotals = refreshBlocksPageTotals;
 
 function csrfHeaders() {
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute("content");
