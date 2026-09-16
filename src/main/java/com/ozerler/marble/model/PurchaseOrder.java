@@ -39,10 +39,6 @@ public class PurchaseOrder extends AuditableEntity {
     @Column(name = "business_unit", length = 30)
     private BusinessUnit businessUnit;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cost_center_id")
-    private CostCenter costCenter;
-
     @Column(name = "order_date", nullable = false)
     @Builder.Default
     private LocalDate orderDate = LocalDate.now();

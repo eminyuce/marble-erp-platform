@@ -79,18 +79,9 @@ public class ProcurementService {
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.purchase_order.not_found", id)));
     }
 
-    @Transactional(readOnly = true)
-    public List<CostCenter> getCostCentersForUnit(BusinessUnit businessUnit) {
-        if (businessUnit == null) {
-            return List.of();
-        }
-        return costCenterRepository.findByBusinessUnit(businessUnit);
-    }
-
     @Transactional
     public PurchaseOrder createPurchaseOrder(String poNumber, Long supplierId, Long projectId,
-                                             BusinessUnit businessUnit, Long costCenterId,
-                                             LocalDate expectedDelivery, String notes) {
+                                             BusinessUnit businessUnit, LocalDate expectedDelivery, String notes) {
         Objects.requireNonNull(supplierId, getMessage("error.supplier.required"));
         if (businessUnit == null) {
             throw new IllegalArgumentException(getMessage("error.purchase.business_unit.required"));
@@ -108,14 +99,11 @@ public class ProcurementService {
                     .orElseThrow(() -> new IllegalArgumentException(getMessage("error.project.not_found", projectId)));
         }
 
-        CostCenter costCenter = resolveCostCenter(businessUnit, costCenterId);
-
         PurchaseOrder order = PurchaseOrder.builder()
                 .poNumber(poNumber != null ? poNumber.trim() : "SIP-" + System.currentTimeMillis())
                 .supplier(supplier)
                 .project(project)
                 .businessUnit(businessUnit)
-                .costCenter(costCenter)
                 .orderDate(LocalDate.now())
                 .expectedDelivery(expectedDelivery)
                 .status(PurchaseOrderStatus.DRAFT)
@@ -161,19 +149,6 @@ public class ProcurementService {
         return "SIP-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999));
     }
 
-    private CostCenter resolveCostCenter(BusinessUnit unit, Long costCenterId) {
-        if (costCenterId != null) {
-            CostCenter selected = costCenterRepository.findById(costCenterId)
-                    .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.not_found", costCenterId)));
-            if (selected.getBusinessUnit() != unit) {
-                throw new IllegalArgumentException(getMessage("error.cost_center.unit.mismatch", unit.getLabel()));
-            }
-            return selected;
-        }
-        return costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
-                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.unit.missing", unit.getLabel())));
-    }
-
     private void postPurchaseExpense(PurchaseOrder order) {
         if (order.getTotalAmount() == null || order.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0) {
             return;
@@ -185,9 +160,8 @@ public class ProcurementService {
         if (unit == BusinessUnit.SITE && order.getProject() == null) {
             throw new IllegalArgumentException(getMessage("error.purchase.site.project.required"));
         }
-        CostCenter center = order.getCostCenter() != null
-                ? order.getCostCenter()
-                : resolveCostCenter(unit, null);
+        CostCenter center = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
+                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.unit.missing", unit.getLabel())));
         String period = YearMonth.now().toString();
         expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 center.getId(), ExpenseType.MATERIAL, null, unit, order.getTotalAmount(),

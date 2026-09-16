@@ -11,17 +11,9 @@
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Satın Alma')}"></div>
             <h2 class="admin-page-title">Satın Alma Siparişleri</h2>
-            <p class="erp-list-lead">Tedarikçi yönetimi, satın alma siparişleri ve teslimat takibi. Onaylanan giderler seçilen masraf merkezine yazılır.</p>
+            <p class="erp-list-lead">Tedarikçi yönetimi, satın alma siparişleri ve teslimat takibi.</p>
         </div>
     </div>
-
-    <aside class="erp-callout" role="note">
-        <i data-lucide="pie-chart"></i>
-        <p>
-            <strong>Maliyet dağılımı:</strong> Sipariş oluştururken maliyet birimi (Ocak, Fabrika, Atölye, Şantiye) ve
-            masraf merkezini seçin. Onay sonrası toplam tutar ilgili masraf merkezine gider kaydı olarak aktarılır.
-        </p>
-    </aside>
 
     <div class="erp-toolbar">
         <a th:href="@{/procurement/create}" class="erp-btn-primary">

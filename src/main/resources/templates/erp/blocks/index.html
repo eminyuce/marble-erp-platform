@@ -5,55 +5,34 @@
     <title>Ocak | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-5"
-     x-data="quarryPage()"
-     x-init="init()">
+<div layout:fragment="content" class="erp-list-page space-y-6">
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Ocak')}"></div>
-            <h2 class="admin-page-title">Ocak — Blok Takibi</h2>
-            <p class="erp-list-lead">
-                Üretim Sahası ve Stok Sahasındaki blokları izleyin; saha değiştirin, fabrikaya sevk edin veya satın.
-                <span th:replace="~{fragments/erp-ops :: tip('', 'Saha fiziksel konumdur (Üretim / Stok). Durum ise bloğun iş akışındaki hâlidir (üretildi, işaretlendi, satıldı).')}"></span>
-            </p>
+            <h2 class="admin-page-title">Ocak</h2>
+            <p class="erp-list-lead">Blok üretimi ve stok sahası, müşteri işaretleme, mazot takibi ve ocak giderleri.</p>
         </div>
     </div>
 
-    <div th:replace="~{fragments/erp-ops :: quarryWorkflow}"></div>
-
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3" th:if="${summary != null}">
-        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4"
-                :class="yardFilter === '' && activeTab === 'blocks' ? 'erp-summary-card--active' : ''"
-                @click="setYardFilter(''); activeTab = 'blocks'">
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Bu ay üretilen</div>
             <div class="text-lg font-black text-slate-900 mt-1"
                  th:text="${#numbers.formatDecimal(summary.producedTonsThisMonth, 1, 'POINT', 2, 'COMMA')} + ' ton'">0 ton</div>
-        </button>
-        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4"
-                :class="yardFilter === 'PRODUCTION_YARD' ? 'erp-summary-card--active' : ''"
-                @click="setYardFilter('PRODUCTION_YARD')">
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Üretim Sahası</div>
-            <div class="text-lg font-black text-slate-900 mt-1">
-                <span th:text="${summary.productionYardCount}">0</span> blok
-            </div>
-        </button>
-        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4"
-                :class="yardFilter === 'DISPATCH_YARD' ? 'erp-summary-card--active' : ''"
-                @click="setYardFilter('DISPATCH_YARD')">
+            <div class="text-lg font-black text-slate-900 mt-1" th:text="${summary.productionYardCount} + ' blok'">0 blok</div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Stok Sahası</div>
-            <div class="text-lg font-black text-slate-900 mt-1">
-                <span th:text="${summary.dispatchYardCount}">0</span> blok
-            </div>
-        </button>
-        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4"
-                :class="activeTab === 'sold' ? 'erp-summary-card--active' : ''"
-                @click="showSoldTab()">
+            <div class="text-lg font-black text-slate-900 mt-1" th:text="${summary.dispatchYardCount} + ' blok'">0 blok</div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Satılan</div>
-            <div class="text-lg font-black text-slate-900 mt-1">
-                <span th:text="${summary.soldCount}">0</span> blok
-            </div>
-        </button>
+            <div class="text-lg font-black text-slate-900 mt-1" th:text="${summary.soldCount} + ' blok'">0 blok</div>
+        </div>
         <div class="bg-white rounded-xl border border-slate-200 p-4">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Ton maliyeti</div>
             <div class="text-lg font-black text-slate-900 mt-1"
@@ -63,256 +42,109 @@
         </div>
     </div>
 
-    <nav class="erp-module-tabs" role="tablist" aria-label="Ocak bölümleri">
-        <button type="button" role="tab" class="erp-module-tab"
-                :class="activeTab === 'blocks' ? 'erp-module-tab--active' : ''"
-                :aria-selected="activeTab === 'blocks'"
-                @click="activeTab = 'blocks'">Blok Takibi</button>
-        <button type="button" role="tab" class="erp-module-tab"
-                :class="activeTab === 'sold' ? 'erp-module-tab--active' : ''"
-                :aria-selected="activeTab === 'sold'"
-                @click="showSoldTab()">Satılan Bloklar</button>
-        <button type="button" role="tab" class="erp-module-tab"
-                :class="activeTab === 'expenses' ? 'erp-module-tab--active' : ''"
-                :aria-selected="activeTab === 'expenses'"
-                @click="activeTab = 'expenses'">Ocak Giderleri</button>
-        <button type="button" role="tab" class="erp-module-tab"
-                :class="activeTab === 'fuel' ? 'erp-module-tab--active' : ''"
-                :aria-selected="activeTab === 'fuel'"
-                @click="activeTab = 'fuel'">Mazot Takibi</button>
-    </nav>
+    <aside class="erp-callout" role="note">
+        <i data-lucide="info"></i>
+        <p><strong>Saha ve durum ayrıdır:</strong> Üretim Sahası ile Stok Sahası fiziksel konumdur. Kantar sapması
+            %5’i aşan bloklar listede uyarı alır. Elektrik faturası sonraki ay gelse bile önceki üretim ayına yazılır.
+            Fabrikaya sevk ocağı terk eder, bloğu Fabrika Blok Sahasına alır ve nakliyeyi fabrika maliyetine yazar.</p>
+    </aside>
 
-    <!-- Blok takibi -->
-    <section x-show="activeTab === 'blocks' || activeTab === 'sold'" x-cloak class="space-y-4">
-        <aside class="erp-callout" role="note" x-show="activeTab === 'blocks'">
-            <i data-lucide="map-pin"></i>
-            <p>
-                <strong>Nasıl kullanılır?</strong> Listeden bir bloğa tıklayın veya satır sonundaki
-                <strong>İşlemler</strong> menüsünden saha taşıma, fabrika sevki veya satış yapın.
-                Stok Sahasındaki bloklar sevkiyata hazırdır.
-            </p>
-        </aside>
-        <aside class="erp-callout" role="note" x-show="activeTab === 'sold'" style="display:none;">
-            <i data-lucide="users"></i>
-            <p>
-                <strong>Satılan bloklar</strong> burada listelenir. Müşteri sütunu, bloğu satın alan firmayı gösterir.
-                Detay sayfasından satış geçmişini ve işaretleme kayıtlarını inceleyebilirsiniz.
-            </p>
-        </aside>
-
-        <div class="erp-yard-filters" x-show="activeTab === 'blocks'">
-            <button type="button" class="erp-yard-chip"
-                    :class="yardFilter === '' ? 'erp-yard-chip--active' : ''"
-                    @click="setYardFilter('')">Tümü</button>
-            <button type="button" class="erp-yard-chip"
-                    :class="yardFilter === 'PRODUCTION_YARD' ? 'erp-yard-chip--active' : ''"
-                    @click="setYardFilter('PRODUCTION_YARD')">
-                Üretim Sahası
-                <span class="erp-yard-chip-count" th:text="${summary != null ? summary.productionYardCount : 0}">0</span>
-            </button>
-            <button type="button" class="erp-yard-chip"
-                    :class="yardFilter === 'DISPATCH_YARD' ? 'erp-yard-chip--active' : ''"
-                    @click="setYardFilter('DISPATCH_YARD')">
-                Stok Sahası
-                <span class="erp-yard-chip-count" th:text="${summary != null ? summary.dispatchYardCount : 0}">0</span>
-            </button>
-            <button type="button" class="erp-yard-chip"
-                    :class="yardFilter === 'FACTORY_BLOCK_YARD' ? 'erp-yard-chip--active' : ''"
-                    @click="setYardFilter('FACTORY_BLOCK_YARD')">Fabrika Blok Sahası</button>
+    <div class="erp-toolbar">
+        <a th:href="@{/blocks/create}" class="erp-btn-primary">
+            <i data-lucide="plus"></i>
+            <span>Yeni blok kaydı</span>
+        </a>
+        <div th:replace="~{fragments/list-chrome :: search('Blok kodu, taş cinsi veya ocak adı', 'search-input')}"></div>
+        <div class="erp-toolbar-actions">
+            <div th:replace="~{fragments/list-chrome :: exportDropdown('blocks-table', 'bloklar')}"></div>
         </div>
+    </div>
 
-        <div class="erp-toolbar">
-            <a th:href="@{/blocks/create}" class="erp-btn-primary">
-                <i data-lucide="plus"></i>
-                <span>Yeni blok kaydı</span>
-            </a>
-            <div th:replace="~{fragments/list-chrome :: search('Blok kodu, taş cinsi, ocak veya müşteri', 'search-input')}"></div>
-            <div class="erp-toolbar-actions">
-                <div th:replace="~{fragments/list-chrome :: exportDropdown('blocks-table', 'bloklar')}"></div>
-            </div>
-        </div>
+    <div th:replace="~{fragments/list-chrome :: gridShell('blocks-table')}"></div>
 
-        <div th:replace="~{fragments/list-chrome :: gridShell('blocks-table')}"></div>
-    </section>
-
-    <!-- Giderler -->
-    <section x-show="activeTab === 'expenses'" x-cloak class="grid grid-cols-1 xl:grid-cols-3 gap-6" style="display:none;">
-        <div class="xl:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-                <div>
-                    <h3 class="font-bold text-slate-900">Ocak giderleri</h3>
-                    <p class="text-xs text-slate-500">Elektrik, mazot dışı giderler ve işçilik — ocak masraf merkezine yazılır.</p>
-                </div>
-                <span th:replace="~{fragments/erp-ops :: tip('', 'Elektrik faturası sonraki ay gelse bile tüketimin ait olduğu üretim ayına yazılır.')}"></span>
-            </div>
-            <form th:action="@{/blocks/expenses}" method="post" class="space-y-3">
-                <select name="centerId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <option value="" disabled selected>Masraf merkezi seçin</option>
-                    <option th:each="c : ${costCenters}" th:value="${c.id}" th:text="${c.code + ' — ' + c.name}"></option>
-                </select>
-                <select name="expenseType" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
-                </select>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input type="number" step="0.01" name="amount" required placeholder="Tutar (TL)"
-                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <input type="text" name="documentNo" placeholder="Belge / fatura no"
-                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input type="date" name="invoiceDate" class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <input type="month" name="expensePeriod" th:value="${currentPeriod}"
-                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg"
-                           title="Giderin ait olduğu üretim ayı">
-                </div>
-                <input type="text" name="description" placeholder="Açıklama (isteğe bağlı)"
-                       class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Gider kaydet</button>
-            </form>
-        </div>
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <h3 class="font-bold text-slate-900">Ocak kartları</h3>
-            <p class="text-xs text-slate-500">Kayıtlı ocaklar ve özgül ağırlık bilgisi.</p>
-            <ul class="text-sm text-slate-700 space-y-2">
-                <li th:each="q : ${quarries}" class="p-2 rounded-lg bg-slate-50 border border-slate-100"
-                    th:text="${q.code + ' — ' + q.name + ' (' + q.specificGravity + ')'}">OC-01</li>
-            </ul>
-            <a th:href="@{/admin/definitions/quarries}" class="erp-btn-secondary w-full justify-center">
-                <i data-lucide="settings"></i>
-                <span>Ocak tanımları</span>
-            </a>
-        </div>
-    </section>
-
-    <!-- Mazot -->
-    <section x-show="activeTab === 'fuel'" x-cloak class="grid grid-cols-1 xl:grid-cols-2 gap-6" style="display:none;">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-                <div>
-                    <h3 class="font-bold text-slate-900">Makine mazot takibi</h3>
-                    <p class="text-xs text-slate-500">Ocak makinelerine yapılan mazot alımlarını kaydedin.</p>
-                </div>
-            </div>
-            <form th:action="@{/blocks/fuel}" method="post" class="space-y-3">
-                <select name="machineId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <option value="" disabled selected>Makine seçin</option>
-                    <option th:each="m : ${quarryMachines}" th:value="${m.id}" th:text="${m.name}"></option>
-                </select>
-                <input type="date" name="entryDate" class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="number" step="0.001" name="litres" required placeholder="Litre"
-                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <input type="number" step="0.01" name="pricePerLitre" required placeholder="TL/litre"
-                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                </div>
-                <input type="text" name="receiptNo" placeholder="Fiş no"
-                       class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="text" name="issuedBy" placeholder="Veren"
-                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <input type="text" name="receivedBy" placeholder="Alan"
-                           class="px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                </div>
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Mazot kaydet</button>
-            </form>
-        </div>
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-2">
-            <h3 class="font-bold text-slate-900">Son mazot kayıtları</h3>
-            <div class="max-h-80 overflow-y-auto text-sm space-y-2">
-                <div th:each="f : ${fuelEntries}" class="flex justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
-                    <span th:text="${f.machine != null ? f.machine.name : 'Makine'}">Makine</span>
-                    <span class="font-semibold text-slate-800" th:text="${f.litres + ' L · ' + f.totalAmount + ' TL'}">0 L</span>
-                </div>
-                <div th:if="${#lists.isEmpty(fuelEntries)}" class="text-slate-400 text-sm py-4 text-center">Henüz mazot kaydı yok.</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Satış diyaloğu -->
-    <dialog id="sell-block-dialog" class="erp-dialog-panel">
-        <form method="dialog" class="erp-dialog-body">
-            <h3 class="erp-dialog-title">Bloğu sat</h3>
-            <p class="erp-dialog-lead">Satılan blok ocak stokundan düşer. Müşteri bilgisi satış kaydında saklanır ve Satılan Bloklar sekmesinde görünür.</p>
-            <label class="block text-xs font-semibold text-slate-700 mb-1" for="sell-customer-id">Müşteri</label>
-            <select id="sell-customer-id" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
+    <dialog id="sell-block-dialog" class="rounded-xl border border-slate-200 p-0 shadow-xl w-[min(100%,24rem)]">
+        <form method="dialog" class="p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Bloğu sat</h3>
+            <p class="text-sm text-slate-500">Satılan stokta görünecek müşteriyi seçin.</p>
+            <select id="sell-customer-id" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
                 <option value="" disabled selected>Müşteri seçin</option>
                 <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}">Müşteri</option>
             </select>
-            <div class="erp-dialog-actions">
-                <button value="cancel" type="button" class="erp-btn-secondary">Vazgeç</button>
-                <button type="button" id="confirm-sell-block" class="erp-btn-primary" style="background:#15803d;border-color:#15803d;">Satışı kaydet</button>
+            <div class="flex justify-end gap-2">
+                <button value="cancel" class="px-3 py-2 text-sm rounded-lg border border-slate-200">Vazgeç</button>
+                <button type="button" id="confirm-sell-block" class="px-3 py-2 text-sm rounded-lg bg-emerald-700 text-white font-semibold">Sat</button>
             </div>
         </form>
     </dialog>
 
-    <!-- Fabrika sevki diyaloğu -->
-    <dialog id="transfer-block-dialog" class="erp-dialog-panel">
-        <form method="dialog" class="erp-dialog-body" id="transfer-block-form">
-            <h3 class="erp-dialog-title">Fabrikaya sevk et</h3>
-            <p class="erp-dialog-lead">Blok ocak stokundan çıkar ve Fabrika Blok Sahasına alınır. Nakliye bedeli fabrika maliyet hesabına (Nakliye masraf merkezi) yazılır.</p>
-            <label class="block text-xs font-semibold text-slate-700 mb-1" for="transfer-cost">
-                Nakliye bedeli (TL)
-                <span th:replace="~{fragments/erp-ops :: tip('', 'Taşıma maliyeti bloğun toplam maliyetine ve fabrika giderlerine eklenir.')}"></span>
-            </label>
-            <input type="number" step="0.01" min="0" id="transfer-cost" required placeholder="Örn. 12500"
-                   class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg font-mono">
-            <div class="erp-dialog-actions">
-                <button value="cancel" type="button" class="erp-btn-secondary" id="transfer-cancel">Vazgeç</button>
-                <button type="button" id="confirm-transfer-block" class="erp-btn-primary">
-                    <i data-lucide="truck"></i>
-                    <span>Sevki onayla</span>
-                </button>
-            </div>
-        </form>
-    </dialog>
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Ocak kartı</h3>
+            <form th:action="@{/blocks/quarries}" method="post" class="space-y-2">
+                <input type="text" name="code" required placeholder="Kod" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="text" name="name" required placeholder="Ocak adı" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="text" name="location" placeholder="Konum" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="number" step="0.01" name="specificGravity" required value="2.70" placeholder="Özgül ağırlık"
+                       class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="text" name="licenseNo" placeholder="Ruhsat no" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Ocağı kaydet</button>
+            </form>
+            <ul class="text-xs text-slate-600 space-y-1">
+                <li th:each="q : ${quarries}" th:text="${q.code + ' — ' + q.name + ' (' + q.specificGravity + ')'}">OC-01</li>
+            </ul>
+        </div>
 
-    <!-- Saha taşıma diyaloğu -->
-    <dialog id="move-block-dialog" class="erp-dialog-panel">
-        <form method="dialog" class="erp-dialog-body">
-            <h3 class="erp-dialog-title" id="move-block-title">Saha taşı</h3>
-            <p class="erp-dialog-lead" id="move-block-lead">Bloğu seçilen ocak sahasına taşıyın. Hareket geçmişi blok detayında görünür.</p>
-            <label class="block text-xs font-semibold text-slate-700 mb-1" for="move-description">Açıklama (isteğe bağlı)</label>
-            <input type="text" id="move-description" placeholder="Örn. Stok sahası A sırası"
-                   class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-            <div class="erp-dialog-actions">
-                <button value="cancel" type="button" class="erp-btn-secondary">Vazgeç</button>
-                <button type="button" id="confirm-move-block" class="erp-btn-primary">Taşımayı kaydet</button>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Makine mazot takibi</h3>
+            <form th:action="@{/blocks/fuel}" method="post" class="space-y-2">
+                <select name="machineId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Makine seçin</option>
+                    <option th:each="m : ${quarryMachines}" th:value="${m.id}" th:text="${m.name}"></option>
+                </select>
+                <input type="date" name="entryDate" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.001" name="litres" required placeholder="Litre" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="number" step="0.01" name="pricePerLitre" required placeholder="TL/litre" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                </div>
+                <input type="text" name="receiptNo" placeholder="Fiş no" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" name="issuedBy" placeholder="Veren" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="text" name="receivedBy" placeholder="Alan" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                </div>
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Mazot kaydet</button>
+            </form>
+            <div class="max-h-40 overflow-y-auto text-xs space-y-1">
+                <div th:each="f : ${fuelEntries}" class="flex justify-between gap-2 border-b border-slate-100 py-1">
+                    <span th:text="${f.machine != null ? f.machine.name : 'Makine'}">Makine</span>
+                    <span th:text="${f.litres + ' L · ' + f.totalAmount + ' TL'}">0 L</span>
+                </div>
             </div>
-        </form>
-    </dialog>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <h3 class="font-bold text-slate-900">Ocak giderleri</h3>
+            <form th:action="@{/blocks/expenses}" method="post" class="space-y-2">
+                <select name="centerId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Masraf merkezi</option>
+                    <option th:each="c : ${costCenters}" th:value="${c.id}" th:text="${c.code + ' — ' + c.name}"></option>
+                </select>
+                <select name="expenseType" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
+                </select>
+                <input type="number" step="0.01" name="amount" required placeholder="Tutar (TL)" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="text" name="documentNo" placeholder="Belge / fatura no" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="date" name="invoiceDate" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <input type="month" name="expensePeriod" th:value="${currentPeriod}"
+                       class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <p class="text-[11px] text-slate-500">Elektrik için tüketimin ait olduğu ayı seçin (fatura sonraki ay gelse bile).</p>
+                <input type="text" name="description" placeholder="Açıklama" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Gider kaydet</button>
+            </form>
+        </div>
+    </div>
 </div>
 
 <th:block layout:fragment="scripts">
-    <script th:inline="javascript">
-        function quarryPage() {
-            return {
-                activeTab: 'blocks',
-                yardFilter: '',
-                statusFilter: '',
-                init() {
-                    window.quarryPageState = this;
-                },
-                setYardFilter(filter) {
-                    this.activeTab = 'blocks';
-                    this.yardFilter = filter;
-                    this.statusFilter = '';
-                    if (typeof reloadBlocksGrid === 'function') reloadBlocksGrid();
-                },
-                showSoldTab() {
-                    this.activeTab = 'sold';
-                    this.yardFilter = '';
-                    this.statusFilter = 'SOLD';
-                    if (typeof reloadBlocksGrid === 'function') reloadBlocksGrid();
-                },
-                gridExtraQuery() {
-                    let q = '';
-                    if (this.yardFilter) q += '&locationType=' + encodeURIComponent(this.yardFilter);
-                    if (this.statusFilter) q += '&status=' + encodeURIComponent(this.statusFilter);
-                    return q;
-                }
-            };
-        }
-    </script>
     <script th:src="@{/js/blocks-grid.js(v=${assetVersion})}"></script>
 </th:block>
 </body>

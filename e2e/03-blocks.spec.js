@@ -78,10 +78,9 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
     // Verify specs section
     const content = await page.content();
     expect(content).toContain('Blok bilgisi');
-    expect(content).toContain('Maliyet');
-    expect(content).toContain('Saha hareket geçmişi');
-    expect(content).toContain('İşlemler');
-    expect(content).toContain('Müşteri işaretleme');
+    expect(content).toContain('Ocak ve maliyet');
+    expect(content).toContain('Saha hareketi');
+    expect(content).toContain('Müşteri işaretleme ve satış');
 
     // CRITICAL REGRESSION CHECK: No SpEL expression evaluation failure
     expect(content).not.toContain('Exception evaluating SpringEL expression');

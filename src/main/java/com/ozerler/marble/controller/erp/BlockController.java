@@ -5,7 +5,6 @@ import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.BlockCodeAvailabilityDto;
 import com.ozerler.marble.dto.BlockDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.model.enums.QualityGrade;
@@ -70,11 +69,9 @@ public class BlockController extends AbstractController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "sortField", required = false) String sortField,
-            @RequestParam(value = "sortDir", required = false) String sortDir,
-            @RequestParam(value = "locationType", required = false) StockLocationType locationType,
-            @RequestParam(value = "status", required = false) BlockStatus status) {
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
 
-        return quarryBlockService.getBlocksPaged(page, size, search, sortField, sortDir, locationType, status);
+        return quarryBlockService.getBlocksPaged(page, size, search, sortField, sortDir);
     }
 
     @GetMapping("/api/block-code-available")
@@ -196,20 +193,8 @@ public class BlockController extends AbstractController {
 
     @PostMapping("/{id}/transfer-to-factory")
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
-    public String transferToFactoryForm(@PathVariable("id") Long id,
-                                        @RequestParam("transportCost") BigDecimal transportCost,
-                                        Locale locale,
-                                        RedirectAttributes redirectAttributes) {
-        quarryBlockService.transferToFactory(id, transportCost);
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.block.transfer.success", null, locale));
-        return "redirect:/blocks/" + id;
-    }
-
-    @PostMapping("/{id}/api/transfer-to-factory")
-    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
-    public @ResponseBody BackEndResponse transferToFactoryApi(@PathVariable("id") Long id,
-                                                              @RequestParam("transportCost") BigDecimal transportCost) {
+    public @ResponseBody BackEndResponse transferToFactory(@PathVariable("id") Long id,
+                                                           @RequestParam("transportCost") BigDecimal transportCost) {
         BackEndResponse ber = new BackEndResponse();
         ServiceStatus serviceStatus = new ServiceStatus();
         Status status = new Status();

@@ -1,6 +1,5 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.dto.CostCenterDto;
 import com.ozerler.marble.dto.PurchaseOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.PurchaseOrder;
@@ -16,7 +15,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @Controller
 @RequestMapping("/procurement")
@@ -50,19 +48,10 @@ public class ProcurementController {
         return "erp/procurement/form";
     }
 
-    @GetMapping("/api/cost-centers")
-    @ResponseBody
-    public List<CostCenterDto> costCentersForUnit(@RequestParam("businessUnit") BusinessUnit businessUnit) {
-        return procurementService.getCostCentersForUnit(businessUnit).stream()
-                .map(CostCenterDto::fromEntity)
-                .toList();
-    }
-
     @PostMapping("/create")
     public String createOrder(@RequestParam("poNumber") String poNumber,
                               @RequestParam("supplierId") Long supplierId,
                               @RequestParam("businessUnit") BusinessUnit businessUnit,
-                              @RequestParam(value = "costCenterId", required = false) Long costCenterId,
                               @RequestParam(value = "projectId", required = false) Long projectId,
                               @RequestParam(value = "expectedDelivery", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expectedDelivery,
                               @RequestParam(value = "notes", required = false) String notes,
@@ -71,7 +60,7 @@ public class ProcurementController {
                               java.util.Locale locale) {
         try {
             PurchaseOrder order = procurementService.createPurchaseOrder(
-                    poNumber, supplierId, projectId, businessUnit, costCenterId, expectedDelivery, notes);
+                    poNumber, supplierId, projectId, businessUnit, expectedDelivery, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.procurement.create.success", new Object[]{order.getPoNumber()}, locale));
             return "redirect:/procurement";
@@ -123,9 +112,5 @@ public class ProcurementController {
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("generatedPoNumber", procurementService.generatePoNumber());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.procurement.title.create", null, locale));
-        PurchaseOrder record = (PurchaseOrder) model.getAttribute("record");
-        if (record != null && record.getBusinessUnit() != null) {
-            model.addAttribute("costCenters", procurementService.getCostCentersForUnit(record.getBusinessUnit()));
-        }
     }
 }

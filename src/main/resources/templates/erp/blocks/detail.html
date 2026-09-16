@@ -5,161 +5,38 @@
     <title th:text="${block.blockCode + ' | Özerler Mermer ERP'}">Blok Detay</title>
 </head>
 <body>
-<div layout:fragment="content" class="space-y-6"
-     th:with="
-        locType=${block.currentLocation != null and block.currentLocation.locationType != null ? block.currentLocation.locationType.name() : ''},
-        sold=${block.status != null and block.status.name() == 'SOLD'},
-        atQuarry=${block.canonicalStatus.atQuarry},
-        atProduction=${locType == 'PRODUCTION_YARD'},
-        atDispatch=${locType == 'DISPATCH_YARD'},
-        atFactory=${locType == 'FACTORY_BLOCK_YARD' or (block.status != null and (block.status.name() == 'AT_FACTORY' or block.status.name() == 'FACTORY_STOCK'))}">
+<div layout:fragment="content" class="space-y-6">
 
-    <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 border-b border-slate-200 pb-5">
-        <div class="min-w-0 flex-1">
-            <div class="flex items-start gap-2 flex-wrap">
-                <a th:href="@{/blocks}" class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 shrink-0"
-                   aria-label="Ocağa dön" title="Ocak listesine dön">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-start sm:items-center gap-2 flex-wrap">
+                <a th:href="@{/blocks}" class="p-2 -ml-2 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                   aria-label="Ocağa dön">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 </a>
-                <div class="min-w-0">
-                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight break-words font-mono"
-                        th:text="${block.blockCode}">BLK-2026-00125</h1>
-                    <div class="flex flex-wrap items-center gap-2 mt-2">
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"
-                              th:text="${block.status != null ? block.status.label : '—'}">Durum</span>
-                        <span th:if="${block.currentLocation != null}"
-                              class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800"
-                              th:text="${block.currentLocation.name}">Saha</span>
-                        <span th:if="${sold and block.soldCustomer != null}"
-                              class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                            Müşteri: <span th:text="${block.soldCustomer.companyName}">Müşteri</span>
-                        </span>
-                    </div>
-                </div>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight min-w-0 break-words font-mono"
+                    th:text="${block.blockCode}">BLK-2026-00125</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"
+                      th:text="${block.status != null ? block.status.label : block.status}">Ocak</span>
             </div>
-            <p class="text-sm text-slate-500 mt-2 ml-10 sm:ml-10">
-                <span th:text="${block.stoneType}">Taş</span>
-                <span th:if="${block.quarry != null}"> · <span th:text="${block.quarry.name}">Ocak</span></span>
-                <span th:if="${block.extractionDate != null}"> · <span th:text="${#temporals.format(block.extractionDate, 'dd.MM.yyyy')}">Tarih</span></span>
+            <p class="text-sm text-slate-500 mt-1">
+                <span th:text="${block.stoneType}">Burdur Bej</span>
+                <span th:if="${block.quarry != null}"> · <span th:text="${block.quarry.name}">Ana Ocak</span></span>
+                <span th:if="${block.currentLocation != null}"> · Saha: <span th:text="${block.currentLocation.name}">Üretim Sahası</span></span>
+                <span th:if="${block.status != null and block.status.name() == 'SOLD' and block.soldCustomer != null}">
+                    · Müşteri: <span th:text="${block.soldCustomer.companyName}">Müşteri</span>
+                </span>
             </p>
         </div>
-        <div class="flex flex-wrap items-center gap-2 shrink-0">
+        <div class="flex flex-wrap items-center gap-2">
             <a th:href="@{'/blocks/' + ${block.id} + '/edit'}" class="erp-btn-secondary">
-                <i data-lucide="edit-3"></i><span>Düzenle</span>
+                <i data-lucide="edit-3"></i>
+                <span>Düzenle</span>
             </a>
             <a th:href="@{/genealogy(code=${block.blockCode})}" class="erp-btn-secondary">
-                <i data-lucide="git-branch"></i><span>Soy Ağacı</span>
+                <i data-lucide="git-branch"></i>
+                <span>Soy Ağacı</span>
             </a>
-        </div>
-    </div>
-
-    <!-- Yaşam döngüsü -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-        <div class="flex items-center justify-between gap-2 flex-wrap">
-            <h2 class="font-bold text-slate-900 text-sm">Blok yolculuğu</h2>
-            <span th:replace="~{fragments/erp-ops :: tip('', 'Her adım tamamlandıkça bir sonraki işlem açılır. Saha ile durum farklı kavramlardır.')}"></span>
-        </div>
-        <div class="erp-step-track">
-            <div class="erp-step" th:classappend="${atProduction or atDispatch or atFactory or sold ? 'erp-step--done' : 'erp-step--current'}">
-                <span class="erp-step-dot">1</span>
-                <span class="erp-step-label">Üretim Sahası</span>
-            </div>
-            <div class="erp-step" th:classappend="${atDispatch or atFactory or sold ? 'erp-step--done' : (atProduction ? 'erp-step--current' : '')}">
-                <span class="erp-step-dot">2</span>
-                <span class="erp-step-label">Stok Sahası</span>
-            </div>
-            <div class="erp-step" th:classappend="${atFactory ? 'erp-step--done' : (atDispatch and !sold ? 'erp-step--current' : '')}"
-                 th:if="${!sold}">
-                <span class="erp-step-dot">3</span>
-                <span class="erp-step-label">Fabrika</span>
-            </div>
-            <div class="erp-step erp-step--done" th:if="${sold}">
-                <span class="erp-step-dot"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>
-                <span class="erp-step-label">Satıldı</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- İşlemler -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-        <div>
-            <h2 class="font-bold text-slate-900">İşlemler</h2>
-            <p class="text-xs text-slate-500 mt-1">Bu blok için yapabileceğiniz işlemler. Yalnızca ocaktaki bloklarda saha taşıma, satış ve fabrika sevki kullanılabilir.</p>
-        </div>
-
-        <div class="erp-ops-panel">
-            <!-- Saha taşıma -->
-            <div class="erp-ops-card erp-ops-card--primary" th:classappend="${!atQuarry ? 'erp-ops-card--muted' : ''}">
-                <div class="erp-ops-card-head">
-                    <span class="erp-ops-card-icon"><i data-lucide="map-pin"></i></span>
-                    <div>
-                        <h3 class="erp-ops-card-title">Saha taşı</h3>
-                        <p class="erp-ops-card-desc">Üretim Sahası ↔ Stok Sahası arasında taşıyın.</p>
-                    </div>
-                </div>
-                <form th:if="${atQuarry}" th:action="@{'/blocks/' + ${block.id} + '/move'}" method="post" class="space-y-2 mt-auto">
-                    <label class="block text-xs font-semibold text-slate-700">Hedef saha</label>
-                    <select name="targetType" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                        <option th:each="yard : ${quarryYards}" th:value="${yard.name()}"
-                                th:selected="${yard.name() == 'DISPATCH_YARD' and atProduction}"
-                                th:text="${yard.label + (yard.name() == 'PRODUCTION_YARD' ? ' — yeni çıkarılan bloklar' : ' — sevkiyata hazır stok')}">Saha</option>
-                    </select>
-                    <input type="text" name="description" placeholder="Konum notu (örn. B sırası, sol taraf)"
-                           class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg"
-                           title="Stok sahasındaki yaklaşık konumu yazabilirsiniz">
-                    <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">
-                        Sahayı güncelle
-                    </button>
-                </form>
-                <p th:unless="${atQuarry}" class="text-xs text-slate-500 mt-auto">Bu blok ocak dışına çıkmış; saha taşıma yapılamaz.</p>
-            </div>
-
-            <!-- Fabrika sevki -->
-            <div class="erp-ops-card" th:classappend="${!atQuarry ? 'erp-ops-card--muted' : ''}">
-                <div class="erp-ops-card-head">
-                    <span class="erp-ops-card-icon"><i data-lucide="truck"></i></span>
-                    <div>
-                        <h3 class="erp-ops-card-title">Fabrikaya sevk</h3>
-                        <p class="erp-ops-card-desc">Ocak stokundan çıkar; nakliye maliyeti fabrikaya yazılır.</p>
-                    </div>
-                </div>
-                <form th:if="${atQuarry}" th:action="@{'/blocks/' + ${block.id} + '/transfer-to-factory'}" method="post" class="space-y-2 mt-auto">
-                    <label class="block text-xs font-semibold text-slate-700">
-                        Nakliye bedeli (TL)
-                        <span th:replace="~{fragments/erp-ops :: tip('', 'Tutar fabrika Nakliye masraf merkezine gider kaydı olarak yazılır.')}"></span>
-                    </label>
-                    <input type="number" step="0.01" min="0" name="transportCost" required placeholder="12500"
-                           class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg font-mono">
-                    <button type="submit" class="w-full min-h-11 py-2.5 bg-slate-800 text-white text-sm font-semibold rounded-lg">
-                        Fabrikaya sevk et
-                    </button>
-                </form>
-                <p th:unless="${atQuarry}" class="text-xs text-slate-500 mt-auto">Fabrika sevki yalnızca ocaktaki bloklar için geçerlidir.</p>
-            </div>
-
-            <!-- Satış -->
-            <div class="erp-ops-card erp-ops-card--success" th:classappend="${!atQuarry ? 'erp-ops-card--muted' : ''}">
-                <div class="erp-ops-card-head">
-                    <span class="erp-ops-card-icon erp-ops-card-icon--success"><i data-lucide="handshake"></i></span>
-                    <div>
-                        <h3 class="erp-ops-card-title">Satış</h3>
-                        <p class="erp-ops-card-desc">Doğrudan satış veya müşteri işaretlemesi ile rezervasyon.</p>
-                    </div>
-                </div>
-                <form th:if="${atQuarry and !sold}" th:action="@{'/blocks/' + ${block.id} + '/sell-to-customer'}" method="post" class="space-y-2">
-                    <label class="block text-xs font-semibold text-slate-700">Hızlı satış — müşteri seçin</label>
-                    <select name="customerId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                        <option value="" disabled selected>Müşteri</option>
-                        <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
-                    </select>
-                    <button type="submit" class="w-full min-h-11 py-2.5 bg-emerald-700 text-white text-sm font-semibold rounded-lg">Satışı kaydet</button>
-                </form>
-                <p th:if="${sold}" class="text-sm font-semibold text-emerald-800 mt-auto">
-                    Bu blok satıldı
-                    <span th:if="${block.soldCustomer != null}" th:text="' — ' + ${block.soldCustomer.companyName}"></span>.
-                </p>
-                <p th:unless="${atQuarry or sold}" class="text-xs text-slate-500 mt-auto">Satış yalnızca ocaktaki bloklar için geçerlidir.</p>
-            </div>
         </div>
     </div>
 
@@ -172,15 +49,23 @@
             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div>
                     <dt class="text-xs font-semibold text-slate-500">Ebatlar</dt>
-                    <dd th:text="${block.widthCm + ' × ' + block.lengthCm + ' × ' + block.heightCm + ' cm'}">—</dd>
+                    <dd th:text="${block.widthCm + ' × ' + block.lengthCm + ' × ' + block.heightCm + ' cm'}">175 × 285 × 180 cm</dd>
                 </div>
                 <div>
                     <dt class="text-xs font-semibold text-slate-500">Hacim</dt>
-                    <dd th:text="${block.volumeM3 + ' m³'}">—</dd>
+                    <dd th:text="${block.volumeM3 + ' m³'}">9.000 m³</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Fiili ağırlık</dt>
+                    <dd th:text="${#numbers.formatDecimal(block.actualWeightKg, 1, 'POINT', 0, 'COMMA') + ' kg'}">24.300 kg</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Teorik ağırlık</dt>
+                    <dd th:text="${#numbers.formatDecimal(block.theoreticalWeightKg, 1, 'POINT', 0, 'COMMA') + ' kg'}">24.300 kg</dd>
                 </div>
                 <div>
                     <dt class="text-xs font-semibold text-slate-500">Yaklaşık / fiili tonaj</dt>
-                    <dd th:text="${block.approximateTonnage + ' / ' + block.actualTonnage + ' ton'}">—</dd>
+                    <dd th:text="${block.approximateTonnage + ' / ' + block.actualTonnage + ' ton'}">0 / 0 ton</dd>
                 </div>
                 <div>
                     <dt class="text-xs font-semibold text-slate-500">Sapma</dt>
@@ -193,19 +78,35 @@
                     <dt class="text-xs font-semibold text-slate-500">Kalite</dt>
                     <dd th:text="${block.qualityGrade != null ? block.qualityGrade.label : '—'}">A</dd>
                 </div>
+                <div th:if="${block.status != null and block.status.name() == 'SOLD'}">
+                    <dt class="text-xs font-semibold text-slate-500">Satılan müşteri</dt>
+                    <dd th:text="${block.soldCustomer != null ? block.soldCustomer.companyName : '—'}">Müşteri</dd>
+                </div>
                 <div>
                     <dt class="text-xs font-semibold text-slate-500">Renk / ton</dt>
-                    <dd th:text="${!#strings.isEmpty(block.colorTone) ? block.colorTone : '—'}">—</dd>
+                    <dd th:text="${!#strings.isEmpty(block.colorTone) ? block.colorTone : '—'}">Bej</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Çıkarma tarihi</dt>
+                    <dd th:text="${block.extractionDate != null ? #temporals.format(block.extractionDate, 'dd.MM.yyyy') : '—'}">01.09.2026</dd>
                 </div>
             </dl>
         </div>
 
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
             <div class="border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-900">Maliyet</h3>
-                <p class="text-xs text-slate-500">Çıkarma ve nakliye maliyetleri</p>
+                <h3 class="font-bold text-slate-900">Ocak ve maliyet</h3>
+                <p class="text-xs text-slate-500">Kaynak ocak ve birikmiş maliyet</p>
             </div>
             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Ocak</dt>
+                    <dd th:text="${block.quarry != null ? block.quarry.name : '—'}">Ana Ocak</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold text-slate-500">Lokasyon</dt>
+                    <dd th:text="${block.quarry != null ? block.quarry.location : '—'}">Burdur</dd>
+                </div>
                 <div>
                     <dt class="text-xs font-semibold text-slate-500">Çıkarma maliyeti</dt>
                     <dd th:text="${#numbers.formatDecimal(block.extractionCost, 1, 'POINT', 2, 'COMMA') + ' TL'}">0 TL</dd>
@@ -214,13 +115,13 @@
                     <dt class="text-xs font-semibold text-slate-500">Nakliye</dt>
                     <dd th:text="${#numbers.formatDecimal(block.transportCost, 1, 'POINT', 2, 'COMMA') + ' TL'}">0 TL</dd>
                 </div>
-                <div class="sm:col-span-2">
+                <div>
                     <dt class="text-xs font-semibold text-slate-500">Toplam maliyet</dt>
-                    <dd class="text-lg font-bold" th:text="${#numbers.formatDecimal(block.totalCost, 1, 'POINT', 2, 'COMMA') + ' TL'}">0 TL</dd>
+                    <dd class="font-bold" th:text="${#numbers.formatDecimal(block.totalCost, 1, 'POINT', 2, 'COMMA') + ' TL'}">0 TL</dd>
                 </div>
-                <div th:if="${sold}">
-                    <dt class="text-xs font-semibold text-slate-500">Satın alan müşteri</dt>
-                    <dd class="font-semibold" th:text="${block.soldCustomer != null ? block.soldCustomer.companyName : '—'}">—</dd>
+                <div th:if="${!#strings.isEmpty(block.notes)}">
+                    <dt class="text-xs font-semibold text-slate-500">Notlar</dt>
+                    <dd th:text="${block.notes}">Not</dd>
                 </div>
             </dl>
         </div>
@@ -228,59 +129,69 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <h3 class="font-bold text-slate-900">Saha hareket geçmişi</h3>
-            <div class="text-sm space-y-2 max-h-48 overflow-y-auto">
-                <div th:each="mv : ${movements}" class="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                    <div class="font-semibold text-slate-800"
-                         th:text="${(mv.fromLocation != null ? mv.fromLocation.name : '—') + ' → ' + (mv.toLocation != null ? mv.toLocation.name : '—')}"></div>
-                    <div th:if="${mv.description != null and !#strings.isEmpty(mv.description)}"
-                         class="text-xs text-slate-500 mt-0.5" th:text="${mv.description}"></div>
+            <h3 class="font-bold text-slate-900">Saha hareketi</h3>
+            <form th:if="${block.canonicalStatus.atQuarry}"
+                  th:action="@{'/blocks/' + ${block.id} + '/move'}" method="post" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <select name="targetType" required class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option th:each="yard : ${quarryYards}" th:value="${yard.name()}" th:text="${yard.label}">Saha</option>
+                </select>
+                <input type="text" name="description" placeholder="Açıklama" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <button type="submit" class="sm:col-span-2 min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Sahayı güncelle</button>
+            </form>
+            <p th:unless="${block.canonicalStatus.atQuarry}" class="text-xs text-slate-500">
+                Saha taşıma yalnızca ocaktaki (Üretim Sahası / Stok Sahası) bloklar için geçerlidir.
+            </p>
+            <div class="text-xs space-y-1 max-h-40 overflow-y-auto">
+                <div th:each="mv : ${movements}" class="border-b border-slate-100 py-1">
+                    <span th:text="${(mv.fromLocation != null ? mv.fromLocation.name : '—') + ' → ' + (mv.toLocation != null ? mv.toLocation.name : '—')}"></span>
+                    <span th:if="${mv.description != null and !#strings.isEmpty(mv.description)}"
+                          th:text="${' · ' + mv.description}"></span>
                 </div>
-                <div th:if="${#lists.isEmpty(movements)}" class="text-slate-400 text-sm">Henüz saha hareketi yok.</div>
+                <div th:if="${#lists.isEmpty(movements)}" class="text-slate-400">Henüz saha hareketi yok.</div>
             </div>
         </div>
 
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <div class="flex items-center justify-between gap-2">
-                <h3 class="font-bold text-slate-900">Müşteri işaretleme</h3>
-                <span th:replace="~{fragments/erp-ops :: tip('', 'İşaretleme bloğu bir müşteriye rezerve eder. Satışa çevirince teklif fiyatı ile satış siparişi oluşur.')}"></span>
-            </div>
-            <form th:if="${atQuarry and !sold}" th:action="@{'/blocks/' + ${block.id} + '/mark'}" method="post" class="space-y-2">
-                <select name="customerId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                    <option value="" disabled selected>Müşteri seçin</option>
+            <h3 class="font-bold text-slate-900">Müşteri işaretleme ve satış</h3>
+            <form th:if="${block.canonicalStatus.atQuarry}"
+                  th:action="@{'/blocks/' + ${block.id} + '/mark'}" method="post" class="space-y-2">
+                <select name="customerId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Müşteri</option>
                     <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
                 </select>
                 <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">İşaret tarihi</label>
-                        <input type="date" name="markedAt" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mt-1">
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Geçerlilik</label>
-                        <input type="date" name="validUntil" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mt-1">
-                    </div>
+                    <input type="date" name="markedAt" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="date" name="validUntil" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="number" step="0.01" name="offerPrice" required placeholder="Teklif (TL)"
-                           class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <input type="number" step="0.01" name="offerPrice" required placeholder="Teklif (TL)" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
                     <input type="text" name="currency" value="TRY" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
                 </div>
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Müşteriye işaretle</button>
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">İşaretle</button>
             </form>
-            <div class="text-sm space-y-2">
-                <div th:each="mark : ${marks}" class="p-3 rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <form th:if="${block.canonicalStatus.atQuarry}"
+                  th:action="@{'/blocks/' + ${block.id} + '/sell-to-customer'}" method="post" class="space-y-2 pt-2 border-t border-slate-100">
+                <p class="text-xs text-slate-500">Doğrudan satış (işaret olmadan).</p>
+                <select name="customerId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                    <option value="" disabled selected>Müşteri</option>
+                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                </select>
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-emerald-700 text-white text-sm font-semibold rounded-lg">Sat</button>
+            </form>
+            <div class="text-xs space-y-2">
+                <div th:each="mark : ${marks}" class="p-2 rounded-lg border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                         <div class="font-semibold" th:text="${mark.customer != null ? mark.customer.companyName : 'Müşteri'}">Müşteri</div>
-                        <div class="text-xs text-slate-500"
+                        <div class="text-slate-500"
                              th:text="${mark.offerPrice + ' ' + mark.currency + ' · ' + (mark.status != null ? mark.status.label : '')}">fiyat</div>
                     </div>
                     <form th:if="${mark.status != null and mark.status.name() == 'ACTIVE'}"
                           th:action="@{'/blocks/marks/' + ${mark.id} + '/sell'}" method="post">
                         <input type="hidden" name="blockId" th:value="${block.id}">
-                        <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-700 text-white text-xs font-semibold min-h-10">Satışa çevir</button>
+                        <button type="submit" class="px-3 py-1.5 rounded bg-emerald-700 text-white text-xs font-semibold">Satışa çevir</button>
                     </form>
                 </div>
-                <div th:if="${#lists.isEmpty(marks)}" class="text-slate-400 text-sm">İşaret kaydı yok.</div>
+                <div th:if="${#lists.isEmpty(marks)}" class="text-slate-400">İşaret kaydı yok.</div>
             </div>
         </div>
     </div>
