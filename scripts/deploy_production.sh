@@ -263,21 +263,42 @@ MEDIA_DOCS_DIR="${MEDIA_DIR}/documents"
 TARGET_USER="${SERVICE_USER:-eyuce}"
 TARGET_GROUP="${SERVICE_GROUP:-eyuce}"
 
-# If media folders do not exist, create them
+# 1. Check if media folders exist; create only if missing
+media_created=0
 if [ ! -d "$MEDIA_IMAGES_DIR" ]; then
-    echo "[STORAGE] Creating images directory: $MEDIA_IMAGES_DIR"
+    echo "[STORAGE] Media images directory not found. Creating: $MEDIA_IMAGES_DIR"
     sudo_cmd mkdir -p "$MEDIA_IMAGES_DIR"
+    media_created=1
 fi
 
 if [ ! -d "$MEDIA_DOCS_DIR" ]; then
-    echo "[STORAGE] Creating documents directory: $MEDIA_DOCS_DIR"
+    echo "[STORAGE] Media documents directory not found. Creating: $MEDIA_DOCS_DIR"
     sudo_cmd mkdir -p "$MEDIA_DOCS_DIR"
+    media_created=1
 fi
 
-# Ensure read and write permissions for the entire media directory
-echo "[STORAGE] Ensuring read/write permissions for ${TARGET_USER}:${TARGET_GROUP} on $MEDIA_DIR"
-sudo_cmd chown -R "${TARGET_USER}:${TARGET_GROUP}" "$MEDIA_DIR"
-sudo_cmd chmod -R u+rwX "$MEDIA_DIR"
+# 2. Check read and write permissions for the service user
+check_user_rw() {
+    local target_path="$1"
+    if [ "$(id -u)" -eq 0 ] && [ "$TARGET_USER" != "root" ]; then
+        sudo -u "$TARGET_USER" test -r "$target_path" && \
+        sudo -u "$TARGET_USER" test -w "$target_path" && \
+        sudo -u "$TARGET_USER" test -x "$target_path"
+    else
+        test -r "$target_path" && test -w "$target_path" && test -x "$target_path"
+    fi
+}
+
+if [ "$media_created" -eq 1 ] || \
+   ! check_user_rw "$MEDIA_DIR" || \
+   ! check_user_rw "$MEDIA_IMAGES_DIR" || \
+   ! check_user_rw "$MEDIA_DOCS_DIR"; then
+    echo "[STORAGE] Setting read/write permissions for ${TARGET_USER}:${TARGET_GROUP} on $MEDIA_DIR..."
+    sudo_cmd chown -R "${TARGET_USER}:${TARGET_GROUP}" "$MEDIA_DIR"
+    sudo_cmd chmod -R u+rwX "$MEDIA_DIR"
+else
+    echo "[STORAGE] Media directories and read/write permissions are OK for ${TARGET_USER}."
+fi
 
 if [ ! -f "$ENV_FILE" ]; then
     echo "[ENV] Writing initial $ENV_FILE"
@@ -287,8 +308,8 @@ if grep -Eq 'CHANGE_ME|YOUR_PUBLIC_HOST|YOUR_STRONG' "$ENV_FILE"; then
     die "$ENV_FILE still contains placeholders (CHANGE_ME / YOUR_PUBLIC_HOST). Edit real values and re-run."
 fi
 
-# Ensure correct permissions
-sudo_cmd chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "$DEPLOY_DIR"
+# Ensure correct base deploy directory permissions
+sudo_cmd chown "${SERVICE_USER}:${SERVICE_GROUP}" "$DEPLOY_DIR" "$DEPLOY_DIR/uploads" "$DEPLOY_DIR/logs" || true
 sudo_cmd chmod 640 "$ENV_FILE"
 
 # --- Database health check (Docker PostgreSQL) -----------------------------
