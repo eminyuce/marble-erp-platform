@@ -56,7 +56,9 @@ curl -sf http://127.0.0.1:8080/health/
 | `/opt/marble-erp/app.jar` | Live Spring Boot fat JAR |
 | `/opt/marble-erp/app.jar.bak.*` | Timestamped rollback copies |
 | `/opt/marble-erp/marble-erp.env` | Production environment (not committed) |
-| `/opt/marble-erp/uploads` | `APP_UPLOAD_DIR` |
+| `/opt/marble-erp/uploads` | Legacy `APP_UPLOAD_DIR` (MinIO migration source only) |
+| `/opt/marble-erp/media` | Legacy `APP_MEDIA_DIR` (MinIO migration source only) |
+| `/opt/minio/data` | MinIO persistent object data (`MINIO_DATA_DIR`) |
 | `/opt/marble-erp/logs` | Extra file logs if you add them later |
 | `/etc/systemd/system/marble-erp.service` | systemd unit |
 
@@ -91,7 +93,12 @@ Artifact: `target/marble-erp-platform-1.0.0.jar`.
 | `DB_HOST` / `DB_PORT` / `DB_NAME` | Used if `DB_URL` is unset | Prod default host is **`postgres`** (Docker Compose DNS). Native installs **must** set `DB_HOST=127.0.0.1` or a full `DB_URL`. |
 | `DB_USERNAME` | DB user | Default in YAML: `marbleuser` |
 | `DB_PASSWORD` | DB password | Default in YAML is a local placeholder — set a real password in `marble-erp.env` |
-| `APP_UPLOAD_DIR` | Upload directory | `/opt/marble-erp/uploads` |
+| `APP_UPLOAD_DIR` | Legacy upload directory | `/opt/marble-erp/uploads` (migration only) |
+| `APP_MEDIA_DIR` | Legacy media directory | `/opt/marble-erp/media` (migration only) |
+| `MINIO_ENDPOINT` | MinIO S3 API | `http://127.0.0.1:9000` for the native JAR |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | MinIO credentials | Set in `marble-erp.env`; never commit |
+| `MINIO_BUCKET` | Private bucket | `erp-files` |
+| `MINIO_DATA_DIR` | Persistent MinIO data | `/opt/minio/data` |
 | `CORS_ALLOWED_ORIGIN` | Allowed browser origin | e.g. `https://erp.example.com` |
 
 Example `/opt/marble-erp/marble-erp.env` (placeholders only):
@@ -103,6 +110,15 @@ DB_URL=jdbc:postgresql://127.0.0.1:5432/marble_erp
 DB_USERNAME=marbleuser
 DB_PASSWORD=CHANGE_ME
 APP_UPLOAD_DIR=/opt/marble-erp/uploads
+APP_MEDIA_DIR=/opt/marble-erp/media
+STORAGE_TYPE=minio
+MINIO_ENDPOINT=http://127.0.0.1:9000
+MINIO_PUBLIC_ENDPOINT=http://127.0.0.1:9000
+MINIO_ACCESS_KEY=CHANGE_ME
+MINIO_SECRET_KEY=CHANGE_ME
+MINIO_BUCKET=erp-files
+MINIO_REGION=us-east-1
+MINIO_DATA_DIR=/opt/minio/data
 CORS_ALLOWED_ORIGIN=https://YOUR_PUBLIC_HOST
 ```
 

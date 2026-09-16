@@ -34,6 +34,15 @@ app:
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:8080,http://127.0.0.1:8080}
     allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.trycloudflare.com}
+  storage:
+    type: ${STORAGE_TYPE:minio}
+    minio:
+      endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+      public-endpoint: ${MINIO_PUBLIC_ENDPOINT:http://localhost:9000}
+      access-key: ${MINIO_ACCESS_KEY:marbleminio}
+      secret-key: ${MINIO_SECRET_KEY:marbleminio_change_me}
+      bucket: ${MINIO_BUCKET:erp-files}
+      region: ${MINIO_REGION:us-east-1}
 
 rate-limiting:
   login:

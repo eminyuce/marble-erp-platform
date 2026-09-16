@@ -519,6 +519,16 @@ public final class Constants {
     public static final String MEDIA_DOCUMENTS_URL_PREFIX = "/media/documents/";
 
     /**
+     * Authenticated inline view URL prefix for stored files.
+     */
+    public static final String FILE_VIEW_URL_PREFIX = "/api/upload/view/";
+
+    /**
+     * Authenticated attachment download URL prefix for stored files.
+     */
+    public static final String FILE_DOWNLOAD_URL_PREFIX = "/api/upload/download/";
+
+    /**
      * Default fallback basename for exported CSV or Excel files.
      */
     public static final String FALLBACK_DOWNLOAD_FILENAME = "indirilen";

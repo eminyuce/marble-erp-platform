@@ -36,7 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && \
 
 # Create unprivileged user
 RUN useradd -m -u 1001 marbleuser && \
-    mkdir -p /app/uploads && \
+    mkdir -p /app/uploads /app/media && \
     chown -R marbleuser:marbleuser /app
 
 USER marbleuser
@@ -46,7 +46,8 @@ COPY --from=builder --chown=marbleuser:marbleuser /build/target/*.jar app.jar
 ENV SPRING_PROFILES_ACTIVE=prod \
     PORT=10000 \
     SERVER_PORT=10000 \
-    APP_UPLOAD_DIR=/app/uploads
+    APP_UPLOAD_DIR=/app/uploads \
+    APP_MEDIA_DIR=/app/media
 
 EXPOSE 10000 8080 81
 

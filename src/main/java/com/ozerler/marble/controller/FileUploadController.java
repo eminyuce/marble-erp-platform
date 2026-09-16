@@ -2,6 +2,8 @@ package com.ozerler.marble.controller;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.FileStorageDto;
+import com.ozerler.marble.exception.FileValidationException;
+import com.ozerler.marble.exception.StoredFileNotFoundException;
 import com.ozerler.marble.model.FileStorage;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
@@ -18,10 +20,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -55,6 +58,10 @@ public class FileUploadController extends AbstractController {
             status.setMessage("File upload successful");
             serviceStatus.setStatus(status);
             ber.setServiceStatus(serviceStatus);
+        } catch (FileValidationException e) {
+            log.warn("File upload rejected for {}: {}", file.getOriginalFilename(), e.getMessage());
+            ber = buildFatalResponse(ber, serviceStatus, status, e.getMessage(), Constants.ERR_BAD_REQUEST);
+            serviceStatus.setHttpStatus(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             log.error("File upload failed for {}", file.getOriginalFilename(), e);
             ber = buildFatalResponse(ber, serviceStatus, status, "uploadFile: " + e.getMessage(), Constants.ERR_FATAL);
@@ -92,6 +99,10 @@ public class FileUploadController extends AbstractController {
             status.setMessage("Multi-file upload successful");
             serviceStatus.setStatus(status);
             ber.setServiceStatus(serviceStatus);
+        } catch (FileValidationException e) {
+            log.warn("Multi-file upload rejected: {}", e.getMessage());
+            ber = buildFatalResponse(ber, serviceStatus, status, e.getMessage(), Constants.ERR_BAD_REQUEST);
+            serviceStatus.setHttpStatus(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             log.error("Multi-file upload failed", e);
             ber = buildFatalResponse(ber, serviceStatus, status, "uploadMultipleFiles: " + e.getMessage(), Constants.ERR_FATAL);
@@ -175,11 +186,55 @@ public class FileUploadController extends AbstractController {
         return ber;
     }
 
+    @GetMapping("/{id}/download-url")
+    public @ResponseBody BackEndResponse createDownloadUrl(@PathVariable("id") Long id) {
+        BackEndResponse ber = new BackEndResponse();
+        ServiceStatus serviceStatus = new ServiceStatus();
+        Status status = new Status();
+        status.setErrorCode(Constants.NO_ERR);
+
+        try {
+            String url = fileStorageService.createPresignedDownloadUrl(id);
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("fileId", id);
+            payload.put("expiresInSeconds", fileStorageService.getPresignedUrlExpiry().toSeconds());
+            payload.put("url", url);
+
+            HttpHeaders responseHeaders = new HttpHeaders();
+            ResponseEntity<Map<String, Object>> resp = new ResponseEntity<>(payload, responseHeaders, HttpStatus.OK);
+
+            ber.setResponse(resp);
+            serviceStatus.setHttpStatus(HttpStatus.OK);
+            status.setMessage("Download URL created");
+            serviceStatus.setStatus(status);
+            ber.setServiceStatus(serviceStatus);
+        } catch (StoredFileNotFoundException e) {
+            serviceStatus.setHttpStatus(HttpStatus.NOT_FOUND);
+            status.setErrorCode(Constants.ERR_NOT_FOUND);
+            status.setMessage(e.getMessage());
+            status.addError("Not found");
+            serviceStatus.setStatus(status);
+            ber.setServiceStatus(serviceStatus);
+        } catch (Exception e) {
+            log.error("Failed to create download URL for fileId={}", id, e);
+            ber = buildFatalResponse(ber, serviceStatus, status, "createDownloadUrl", Constants.ERR_FATAL);
+        }
+
+        return ber;
+    }
+
+    @GetMapping("/view/{id}")
+    public ResponseEntity<Resource> viewFile(@PathVariable("id") Long id) {
+        return serveFile(id, false);
+    }
+
     @GetMapping("/download/{id}")
     public ResponseEntity<Resource> downloadFile(@PathVariable("id") Long id) {
-        FileStorage fileStorage = fileStorageService.getFileById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı: " + id));
+        return serveFile(id, true);
+    }
 
+    private ResponseEntity<Resource> serveFile(Long id, boolean attachment) {
+        FileStorage fileStorage = fileStorageService.requireAccessibleFile(id);
         Resource resource = fileStorageService.loadAsResource(id);
 
         String originalName = fileStorage.getOriginalName();
@@ -192,13 +247,23 @@ public class FileUploadController extends AbstractController {
             mime = "application/octet-stream";
         }
 
-        ContentDisposition contentDisposition = ContentDisposition.attachment()
+        ContentDisposition contentDisposition = (attachment
+                ? ContentDisposition.attachment()
+                : ContentDisposition.inline())
                 .filename(originalName, StandardCharsets.UTF_8)
                 .build();
 
-        return ResponseEntity.ok()
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(mime))
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
-                .body(resource);
+                .header("X-Content-Type-Options", "nosniff");
+
+        if (mime.toLowerCase().contains("svg")) {
+            builder.header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+        }
+        if (fileStorage.getFileSize() != null && fileStorage.getFileSize() > 0) {
+            builder.contentLength(fileStorage.getFileSize());
+        }
+        return builder.body(resource);
     }
 }

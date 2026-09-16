@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 
 /**
  * Reusable entity representing uploaded file metadata stored in the database.
- * Files are physically saved in the file system (e.g. uploads/) and associated
- * with business entities using {@code entityType} and {@code entityId}.
+ * Metadata for binaries stored in S3-compatible object storage (MinIO).
+ * Associated with business entities using {@code entityType} and {@code entityId}.
  */
 @Entity
 @Table(name = "file_storage")
@@ -39,6 +39,15 @@ public class FileStorage extends AuditableEntity {
     @Column(name = "file_path", nullable = false, length = 500)
     private String filePath;
 
+    @Column(name = "object_key", length = 500)
+    private String objectKey;
+
+    @Column(name = "bucket_name", length = 100)
+    private String bucketName;
+
+    @Column(name = "checksum", length = 64)
+    private String checksum;
+
     @Column(name = "entity_type", nullable = false, length = 50)
     private String entityType;
 
@@ -61,7 +70,8 @@ public class FileStorage extends AuditableEntity {
             String lower = originalName.toLowerCase();
             return lower.endsWith(".jpg") || lower.endsWith(".jpeg")
                     || lower.endsWith(".png") || lower.endsWith(".webp")
-                    || lower.endsWith(".gif") || lower.endsWith(".bmp");
+                    || lower.endsWith(".gif") || lower.endsWith(".bmp")
+                    || lower.endsWith(".svg");
         }
         return false;
     }

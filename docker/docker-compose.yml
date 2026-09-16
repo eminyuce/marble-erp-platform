@@ -20,6 +20,28 @@ services:
     networks:
       - marble-network
 
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: marble-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-marbleminio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-marbleminio_change_me}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - ${MINIO_DATA_DIR:-minio_data}:/data
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - marble-network
+
   app:
     build:
       context: ..
@@ -29,16 +51,27 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-marble_erp}
       DB_USERNAME: ${DB_USERNAME:-marbleuser}
       DB_PASSWORD: ${DB_PASSWORD:-marblepass}
       APP_UPLOAD_DIR: /app/uploads
+      APP_MEDIA_DIR: /app/media
+      STORAGE_TYPE: minio
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-marbleminio}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-marbleminio_change_me}
+      MINIO_BUCKET: ${MINIO_BUCKET:-erp-files}
+      MINIO_REGION: ${MINIO_REGION:-us-east-1}
     ports:
       - "${APP_PORT:-81}:81"
     volumes:
       - uploads_data:/app/uploads
+      - media_data:/app/media
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:81/health/ || exit 1"]
       interval: 15s
@@ -52,6 +85,10 @@ volumes:
   postgres_data:
     driver: local
   uploads_data:
+    driver: local
+  media_data:
+    driver: local
+  minio_data:
     driver: local
 
 networks:

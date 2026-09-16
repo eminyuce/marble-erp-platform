@@ -180,7 +180,7 @@
                 </section>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Görseller, belgeler ve notlar', 'Blok fotoğrafları, PDF/Excel/CSV/DOCX teknik raporları ve jeolojik tanım')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Görseller, belgeler ve notlar', 'Blok fotoğrafları, SVG/PDF/Excel/CSV/DOCX teknik raporları ve jeolojik tanım')}"></div>
 
                     <!-- Mevcut Ekli Dosyalar (Düzenleme Modunda) -->
                     <div th:if="${isEdit and attachedFiles != null and !#lists.isEmpty(attachedFiles)}" class="erp-form-field erp-form-field--full">
@@ -226,7 +226,7 @@
                     <!-- Çoklu Dosya Yükleme Alanı (FilePond) -->
                     <div class="erp-form-field">
                         <label class="erp-form-label" for="block-filepond">
-                            Dosya Ekle (Görsel, PDF, Excel, CSV, DOCX, TXT)
+                            Dosya Ekle (Görsel, SVG, PDF, Excel, CSV, DOCX, TXT)
                             <span class="text-xs font-normal text-slate-400 ml-1">Birden fazla dosya seçebilirsiniz</span>
                         </label>
                         <input type="file" id="block-filepond" name="file" multiple class="filepond">

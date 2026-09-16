@@ -61,9 +61,11 @@ Executing [`scripts/deploy_production.sh`](file:///home/eyuce/marble-erp-platfor
 | `/opt/marble-erp/app.jar` | Production executable | Live Spring Boot fat JAR |
 | `/opt/marble-erp/app.jar.bak.*` | Rollback archives | Kept up to 8 timestamped backups |
 | `/opt/marble-erp/marble-erp.env` | Production environment | Database credentials, CORS origins, ports (`chmod 640`) |
-| `/opt/marble-erp/uploads` | Upload storage | User attachments, documents, and images |
+| `/opt/marble-erp/uploads` | Legacy upload storage | Kept for MinIO migration; not the live store |
+| `/opt/minio/data` | MinIO object data | Must be backed up together with PostgreSQL |
 | `/etc/systemd/system/marble-erp.service` | systemd service unit | Manages the live Java process under `eyuce:eyuce` |
 | `marble-erp-postgres` | Docker container | PostgreSQL 16 on port `5432` (`restart: always`) |
+| `marble-minio` | Docker container | MinIO S3 API `9000`, console `9001` |
 
 ### Active Environment Variables (`/opt/marble-erp/marble-erp.env`)
 
@@ -84,8 +86,14 @@ DB_URL=jdbc:postgresql://127.0.0.1:5432/marble_erp
 DB_POOL_MAX=10
 DB_POOL_MIN_IDLE=2
 
-# Storage & Uploads
+# Storage (MinIO is live; local dirs are migration sources only)
 APP_UPLOAD_DIR=/opt/marble-erp/uploads
+APP_MEDIA_DIR=/opt/marble-erp/media
+STORAGE_TYPE=minio
+MINIO_ENDPOINT=http://127.0.0.1:9000
+MINIO_PUBLIC_ENDPOINT=http://127.0.0.1:9000
+MINIO_BUCKET=erp-files
+MINIO_DATA_DIR=/opt/minio/data
 
 # Public Domain & CORS
 CORS_ALLOWED_ORIGIN=https://ozerler.naklink.com

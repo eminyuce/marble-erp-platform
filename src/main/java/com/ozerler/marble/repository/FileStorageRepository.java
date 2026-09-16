@@ -17,6 +17,12 @@ public interface FileStorageRepository extends JpaRepository<FileStorage, Long> 
 
     Optional<FileStorage> findByIdAndDeletedFalse(Long id);
 
+    Optional<FileStorage> findFirstByFileNameAndDeletedFalse(String fileName);
+
+    Optional<FileStorage> findByObjectKeyAndDeletedFalse(String objectKey);
+
+    List<FileStorage> findByDeletedFalse();
+
     List<FileStorage> findByEntityTypeAndEntityId(String entityType, Long entityId);
 
     void deleteByEntityTypeAndEntityId(String entityType, Long entityId);

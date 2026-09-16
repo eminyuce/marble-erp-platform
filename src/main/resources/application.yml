@@ -84,10 +84,26 @@ app:
     dir: ${APP_MEDIA_DIR:media}
   upload:
     dir: ${APP_UPLOAD_DIR:media}
+  storage:
+    type: ${STORAGE_TYPE:minio}
+    media-dir: ${APP_MEDIA_DIR:media}
+    upload-dir: ${APP_UPLOAD_DIR:media}
+    presigned-url-expiry: ${STORAGE_PRESIGNED_URL_EXPIRY:15m}
+    max-file-size-bytes: ${STORAGE_MAX_FILE_SIZE_BYTES:52428800}
+    minio:
+      endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+      public-endpoint: ${MINIO_PUBLIC_ENDPOINT:}
+      access-key: ${MINIO_ACCESS_KEY:}
+      secret-key: ${MINIO_SECRET_KEY:}
+      bucket: ${MINIO_BUCKET:erp-files}
+      region: ${MINIO_REGION:us-east-1}
+    migrate:
+      enabled: ${STORAGE_MIGRATE_ENABLED:false}
+      dry-run: ${STORAGE_MIGRATE_DRY_RUN:true}
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20260916-inapp-deploy"
+  asset-version: "20260916-minio-storage"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy

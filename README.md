@@ -8,6 +8,7 @@
 [![PMD](https://img.shields.io/badge/PMD-7.17.0%20(0%20Violations)-blueviolet.svg)](https://pmd.github.io/)
 [![JaCoCo](https://img.shields.io/badge/Coverage-JaCoCo%200.8.13-success.svg)](https://www.jacoco.org/)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%2016-336791.svg)](https://www.postgresql.org/)
+[![Storage](https://img.shields.io/badge/Storage-MinIO%20(S3)-red.svg)](https://min.io/)
 
 ---
 
@@ -27,6 +28,7 @@
 - **Enterprise System Settings & Security**: Database-backed dynamic controls for Two-Factor Authentication (2FA), Google reCAPTCHA v2/v3, dynamic SMTP dispatch, and customizable HTML email templates.
 - **Operational Report Center**: Multi-tab live reporting engine exporting 6 domain datasets to auto-formatted Excel (`.xlsx`) and UTF-8 BOM CSV (`.csv`).
 - **Structured JSON Observability**: Production-grade Logstash JSON logging over Logback with MDC diagnostic correlation (`traceId`, `userId`) and a dedicated `/admin/dashboard/systemhealth/` metric cockpit.
+- **Object File Storage**: Block photos, SVG, PDF, Excel, and Word attachments stored in private MinIO buckets (S3 API), with metadata in PostgreSQL.
 
 ---
 
@@ -36,6 +38,7 @@
 | :--- | :--- |
 | **Backend Framework** | Java 24 (Eclipse Temurin 24.0.2), Spring Boot 4.0.7, Spring Security 7.x, Spring Data JPA |
 | **Persistence & Migration** | PostgreSQL 16, Hibernate 7.x, Flyway 11.x, HikariCP |
+| **Object Storage** | MinIO (S3-compatible API), AWS SDK for Java v2 |
 | **Frontend & UI/UX** | Thymeleaf 3, Tailwind CSS 4, HTMX 2, Alpine.js 3, Tabulator 6, Lucide Icons |
 | **Rich Editing & Uploads**| TipTap Editor, CodeMirror 6, FilePond 4 with client-side image optimization |
 | **Reporting & Utilities** | Apache POI 5.3.0, Apache Commons (`commons-lang3`, `commons-collections4 4.5.0`) |
@@ -52,6 +55,7 @@ The platform adheres to **Layered Clean Architecture** and **Domain-Driven Desig
 - **Presentation Layer (`com.ozerler.marble.controller`)**: Dedicated controllers for Administrative operations, ERP domain modules, Public Digital Passports, and JSON REST endpoints.
 - **Data Transfer & Dual Mapping (`com.ozerler.marble.dto`)**: DTOs annotated with `@JsonProperty("snake_case")` paired with `@JsonAlias("camelCase")` and `@NotBlank(message = "Missing required field: {field_name}")` for complete client interoperability.
 - **Domain Service Layer (`com.ozerler.marble.service`)**: Encapsulates business logic, activity-based cost calculations, gangsaw transformations, and report synthesis.
+- **Object Storage (`com.ozerler.marble.storage`)**: `ObjectStorageService` abstraction over the S3 API; MinIO stores binaries, PostgreSQL stores `file_storage` metadata.
 - **Persistence Layer (`com.ozerler.marble.repository`)**: Strongly typed Spring Data JPA repositories with parameterized native/HQL queries.
 - **Cross-Cutting Concerns (`com.ozerler.marble.config`, `common`)**: Centralized [Constants.java](src/main/java/com/ozerler/marble/common/Constants.java), Spring Security RBAC filter chains, structured logging converters, and global exception handlers.
 
@@ -67,6 +71,8 @@ The platform adheres to **Layered Clean Architecture** and **Domain-Driven Desig
 
 ### Environment Variables
 
+Copy [`.env.example`](.env.example) for a full local template. Do not commit production secrets.
+
 | Variable | Description | Default (Local) |
 | :--- | :--- | :--- |
 | `SERVER_PORT` | Application HTTP port | `81` |
@@ -74,8 +80,16 @@ The platform adheres to **Layered Clean Architecture** and **Domain-Driven Desig
 | `DB_HOST` | PostgreSQL hostname | `localhost` |
 | `DB_PORT` | PostgreSQL port | `5432` |
 | `DB_NAME` | Database schema name | `marble_erp` |
-| `DB_USER` | Database username | `marbleuser` |
-| `DB_PASS` | Database password | `marblepass` |
+| `DB_USERNAME` | Database username | `marbleuser` |
+| `DB_PASSWORD` | Database password | `marblepass` |
+| `MINIO_ENDPOINT` | MinIO S3 API used by Spring Boot | `http://localhost:9000` (IDE) / `http://minio:9000` (Compose app) |
+| `MINIO_PUBLIC_ENDPOINT` | Browser-facing endpoint for presigned URLs | `http://localhost:9000` |
+| `MINIO_ACCESS_KEY` | MinIO access key | set locally (see `.env.example`) |
+| `MINIO_SECRET_KEY` | MinIO secret key | set locally (see `.env.example`) |
+| `MINIO_BUCKET` | Private bucket name | `erp-files` |
+| `MINIO_REGION` | S3 region string | `us-east-1` |
+| `APP_MEDIA_DIR` | Legacy local media dir (migration only) | `media` |
+| `APP_UPLOAD_DIR` | Legacy local upload dir (migration only) | `media` |
 
 ### Step-by-Step Local Setup
 
@@ -87,8 +101,11 @@ The platform adheres to **Layered Clean Architecture** and **Domain-Driven Desig
 
 2. **Start Infrastructure Services (Docker):**
    ```bash
-   docker compose -f docker/docker-compose.yml up -d postgres
+   docker compose -f docker/docker-compose.yml up -d postgres minio
    ```
+
+   MinIO API: `http://localhost:9000`  
+   MinIO Console: `http://localhost:9001`
 
 3. **Compile, Check Quality & Run Tests:**
    ```bash
@@ -103,7 +120,11 @@ The platform adheres to **Layered Clean Architecture** and **Domain-Driven Desig
    ```bash
    ./mvnw spring-boot:run
    ```
-   *Access the web application at `http://localhost:81`.*
+   *Access the web application at `http://localhost:81` (or `http://localhost:8080` with the local run scripts).*
+
+The `dev` profile talks to MinIO on `localhost:9000`. When the Spring Boot `app` container runs inside Compose, set `MINIO_ENDPOINT=http://minio:9000`.
+
+Full object-storage, backup, and filesystem-migration notes: [docs/storage.md](docs/storage.md).
 
 ---
 
@@ -136,6 +157,9 @@ Seeded via Flyway migration ([V4__add_settings_and_admin_eimece.sql](src/main/re
 | `/costs` | `GET` | `ROLE_FINANCE` | Multi-layer Activity-Based Costing & margin simulator |
 | `/reports` | `GET` | Authenticated | Operational Report Center (Quarry, Factory, Site, Cost) |
 | `/reports/export` | `GET` | Authenticated | Instant Excel (`.xlsx`) and CSV (`.csv`) export engine |
+| `/api/upload` | `POST` | Authenticated | Upload images, SVG, PDF, Excel, Word, CSV, TXT to MinIO |
+| `/api/upload/download/{id}` | `GET` | Authenticated | Stream a stored file as an attachment |
+| `/api/upload/{id}/download-url` | `GET` | Authenticated | Short-lived MinIO presigned download URL |
 | `/passport/{code}` | `GET` | Public | Digital Stone Passport & reverse genealogy by QR scan |
 
 ---
@@ -146,6 +170,25 @@ Seeded via Flyway migration ([V4__add_settings_and_admin_eimece.sql](src/main/re
 - **PMD 7.x Compliance**: Proactively validated against `maven-pmd-plugin:3.28.0` with **0 failures**.
 - **Dual DTO Serialization**: Full compatibility with both `snake_case` REST clients and `camelCase` data grids.
 - **Zero-Allocation Logging**: Parameterized Logstash JSON output with contextual MDC propagation.
+
+---
+
+## 📦 File Storage (MinIO)
+
+Uploads are stored in **MinIO** (S3 API). PostgreSQL keeps only metadata in `file_storage`. The MinIO bucket is private.
+
+```bash
+docker compose -f docker/docker-compose.yml up -d minio
+```
+
+| Service | URL |
+| :--- | :--- |
+| MinIO API | http://localhost:9000 |
+| MinIO Console | http://localhost:9001 |
+
+Production Ubuntu deploys (`scripts/deploy_production.sh`) start `marble-minio` in Docker with persistent data at `MINIO_DATA_DIR` (default `/opt/minio/data`). Legacy folders `/opt/marble-erp/media` and `/opt/marble-erp/uploads` are kept only so existing files can be migrated; they are no longer the live store.
+
+A PostgreSQL backup is not enough — back up the MinIO data directory as well. Details: [docs/storage.md](docs/storage.md).
 
 ---
 
