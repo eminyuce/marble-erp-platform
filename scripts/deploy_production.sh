@@ -72,8 +72,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DEPLOY_DIR="${DEPLOY_DIR:-/opt/marble-erp}"
 SERVICE_NAME="${SERVICE_NAME:-marble-erp}"
-SERVICE_USER="${SERVICE_USER:-$(id -un)}"
-SERVICE_GROUP="${SERVICE_GROUP:-$(id -gn)}"
+SERVICE_USER="${SERVICE_USER:-${SUDO_USER:-$(id -un)}}"
+if [ "$SERVICE_USER" = "root" ] && id -u eyuce >/dev/null 2>&1; then
+    SERVICE_USER="eyuce"
+fi
+SERVICE_GROUP="${SERVICE_GROUP:-$(id -gn "$SERVICE_USER" 2>/dev/null || echo "$SERVICE_USER")}"
 SERVER_PORT="${SERVER_PORT:-8080}"
 HEALTH_PATH="${HEALTH_PATH:-/health/}"
 ENV_FILE="${DEPLOY_DIR}/marble-erp.env"
@@ -153,6 +156,7 @@ DB_POOL_MIN_IDLE=2
 
 # Application Storage
 APP_UPLOAD_DIR=/opt/marble-erp/uploads
+APP_MEDIA_DIR=/opt/marble-erp/media
 
 # Public Domain and CORS Configuration
 CORS_ALLOWED_ORIGIN=https://ozerler.naklink.com
@@ -251,6 +255,51 @@ fi
 
 # --- Deploy directory & environment file -----------------------------------
 sudo_cmd mkdir -p "$DEPLOY_DIR/uploads" "$DEPLOY_DIR/logs"
+
+# --- Media storage directories & permissions -------------------------------
+MEDIA_DIR="${DEPLOY_DIR}/media"
+MEDIA_IMAGES_DIR="${MEDIA_DIR}/images"
+MEDIA_DOCS_DIR="${MEDIA_DIR}/documents"
+TARGET_USER="${SERVICE_USER:-eyuce}"
+TARGET_GROUP="${SERVICE_GROUP:-eyuce}"
+
+# 1. Check if media folders exist; create only if missing
+media_created=0
+if [ ! -d "$MEDIA_IMAGES_DIR" ]; then
+    echo "[STORAGE] Media images directory not found. Creating: $MEDIA_IMAGES_DIR"
+    sudo_cmd mkdir -p "$MEDIA_IMAGES_DIR"
+    media_created=1
+fi
+
+if [ ! -d "$MEDIA_DOCS_DIR" ]; then
+    echo "[STORAGE] Media documents directory not found. Creating: $MEDIA_DOCS_DIR"
+    sudo_cmd mkdir -p "$MEDIA_DOCS_DIR"
+    media_created=1
+fi
+
+# 2. Check read and write permissions for the service user
+check_user_rw() {
+    local target_path="$1"
+    if [ "$(id -u)" -eq 0 ] && [ "$TARGET_USER" != "root" ]; then
+        sudo -u "$TARGET_USER" test -r "$target_path" && \
+        sudo -u "$TARGET_USER" test -w "$target_path" && \
+        sudo -u "$TARGET_USER" test -x "$target_path"
+    else
+        test -r "$target_path" && test -w "$target_path" && test -x "$target_path"
+    fi
+}
+
+if [ "$media_created" -eq 1 ] || \
+   ! check_user_rw "$MEDIA_DIR" || \
+   ! check_user_rw "$MEDIA_IMAGES_DIR" || \
+   ! check_user_rw "$MEDIA_DOCS_DIR"; then
+    echo "[STORAGE] Setting read/write permissions for ${TARGET_USER}:${TARGET_GROUP} on $MEDIA_DIR..."
+    sudo_cmd chown -R "${TARGET_USER}:${TARGET_GROUP}" "$MEDIA_DIR"
+    sudo_cmd chmod -R u+rwX "$MEDIA_DIR"
+else
+    echo "[STORAGE] Media directories and read/write permissions are OK for ${TARGET_USER}."
+fi
+
 if [ ! -f "$ENV_FILE" ]; then
     echo "[ENV] Writing initial $ENV_FILE"
     write_env_template
@@ -259,8 +308,8 @@ if grep -Eq 'CHANGE_ME|YOUR_PUBLIC_HOST|YOUR_STRONG' "$ENV_FILE"; then
     die "$ENV_FILE still contains placeholders (CHANGE_ME / YOUR_PUBLIC_HOST). Edit real values and re-run."
 fi
 
-# Ensure correct permissions
-sudo_cmd chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "$DEPLOY_DIR"
+# Ensure correct base deploy directory permissions
+sudo_cmd chown "${SERVICE_USER}:${SERVICE_GROUP}" "$DEPLOY_DIR" "$DEPLOY_DIR/uploads" "$DEPLOY_DIR/logs" || true
 sudo_cmd chmod 640 "$ENV_FILE"
 
 # --- Database health check (Docker PostgreSQL) -----------------------------
@@ -363,12 +412,21 @@ ACTUATOR_URL="http://127.0.0.1:${SERVER_PORT}/actuator/health"
 echo "[HEALTH] Waiting for $HEALTH_URL"
 ok=0
 for i in $(seq 1 24); do
-    if curl -sf "$HEALTH_URL" | grep -q "UP"; then
-        echo "[OK] $HEALTH_URL is UP"
+    health_resp="$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$HEALTH_URL" 2>/dev/null || true)"
+    http_code="$(echo "$health_resp" | grep "HTTP_STATUS:" | cut -d':' -f2)"
+    health_body="$(echo "$health_resp" | grep -v "HTTP_STATUS:")"
+
+    if [ "$http_code" = "200" ] && echo "$health_body" | grep -q "UP"; then
+        echo "[OK] $HEALTH_URL is UP (HTTP 200)"
         ok=1
         break
     fi
-    echo "  ... waiting ($i/24)"
+
+    if [ -n "$health_body" ] && [ "$http_code" != "000" ] && [ -n "$http_code" ]; then
+        echo "  ... waiting ($i/24) [HTTP $http_code: $(echo "$health_body" | tr -d '\n\r' | cut -c1-140)]"
+    else
+        echo "  ... waiting ($i/24)"
+    fi
     sleep 5
 done
 
