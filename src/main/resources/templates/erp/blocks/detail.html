@@ -351,7 +351,7 @@
             </div>
         </div>
 
-        <!-- Belgeler (PDF, DOCX, TXT) -->
+        <!-- Belgeler (PDF, Excel, CSV, DOCX, TXT) -->
         <div th:if="${documentFiles != null and !#lists.isEmpty(documentFiles)}" class="space-y-2">
             <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider">Belgeler ve Raporlar</h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -359,11 +359,13 @@
                      class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white hover:border-slate-300 transition-all shadow-2xs">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs"
-                             th:classappend="${doc.pdf ? 'bg-rose-50 text-rose-700 border border-rose-200' : (doc.word ? 'bg-blue-50 text-blue-700 border border-blue-200' : (doc.text ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-700 border border-slate-200'))}">
+                             th:classappend="${doc.pdf ? 'bg-rose-50 text-rose-700 border border-rose-200' : (doc.excel ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (doc.csv ? 'bg-teal-50 text-teal-700 border border-teal-200' : (doc.word ? 'bg-blue-50 text-blue-700 border border-blue-200' : (doc.text ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-700 border border-slate-200'))))}">
                             <span th:if="${doc.pdf}">PDF</span>
+                            <span th:if="${doc.excel}">XLS</span>
+                            <span th:if="${doc.csv}">CSV</span>
                             <span th:if="${doc.word}">DOC</span>
                             <span th:if="${doc.text}">TXT</span>
-                            <span th:if="${!doc.pdf and !doc.word and !doc.text}">DOS</span>
+                            <span th:if="${!doc.pdf and !doc.excel and !doc.csv and !doc.word and !doc.text}">DOS</span>
                         </div>
                         <div class="min-w-0">
                             <p class="text-xs font-semibold text-slate-900 truncate" th:text="${doc.originalName}" th:title="${doc.originalName}">Dosya.pdf</p>
@@ -386,7 +388,7 @@
                 <i data-lucide="folder-open" class="w-5 h-5"></i>
             </div>
             <p class="text-xs font-medium text-slate-600">Bu bloğa ait ekli fotoğraf veya teknik belge bulunmuyor.</p>
-            <p class="text-[11px] text-slate-400 mt-0.5">Düzenle sayfasına giderek fotoğraf veya PDF/DOCX/TXT belgeleri ekleyebilirsiniz.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Düzenle sayfasına giderek fotoğraf veya PDF, Excel, CSV, DOCX belgeleri ekleyebilirsiniz.</p>
         </div>
     </div>
 

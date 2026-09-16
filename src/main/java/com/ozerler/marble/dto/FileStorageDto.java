@@ -54,6 +54,12 @@ public class FileStorageDto {
     @JsonProperty("text")
     private boolean text;
 
+    @JsonProperty("excel")
+    private boolean excel;
+
+    @JsonProperty("csv")
+    private boolean csv;
+
     @JsonProperty("extension")
     private String extension;
 
@@ -78,6 +84,8 @@ public class FileStorageDto {
                 .pdf(entity.isPdf())
                 .word(entity.isWord())
                 .text(entity.isText())
+                .excel(entity.isExcel())
+                .csv(entity.isCsv())
                 .extension(entity.getFileExtension())
                 .createdDate(entity.getCreatedDate())
                 .build();
