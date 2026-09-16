@@ -394,7 +394,7 @@ class FileStorageServiceTest {
     @DisplayName("checkStorageHealth should report DOWN when object storage is unavailable")
     void checkStorageHealth_WhenStorageDown_ReportsDown() {
         when(objectStorageService.checkHealth())
-                .thenReturn(DependencyHealth.down("Nesne depolama (MinIO) erişilemiyor"));
+                .thenReturn(DependencyHealth.down("MinIO erişilemiyor"));
 
         var health = fileStorageService.checkStorageHealth();
 

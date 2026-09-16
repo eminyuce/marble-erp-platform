@@ -3,6 +3,7 @@ package com.ozerler.marble.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ozerler.marble.dto.DependencyHealth;
 import com.ozerler.marble.dto.HealthResponse;
+import com.ozerler.marble.storage.ObjectStorageService;
 import com.ozerler.marble.util.DateTimes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ import java.util.*;
 
 /**
  * Service orchestrating system diagnostic metrics, JVM runtime stats, database,
- * and media storage directory health probes.
+ * and MinIO object-storage health probes.
  */
 @Service
 @RequiredArgsConstructor
@@ -36,7 +37,7 @@ public class SystemHealthService {
     private final Environment environment;
     private final Optional<BuildProperties> buildProperties;
     private final org.springframework.context.MessageSource messageSource;
-    private final FileStorageService fileStorageService;
+    private final ObjectStorageService objectStorageService;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
@@ -132,21 +133,26 @@ public class SystemHealthService {
         metrics.put("usableDiskGb", usableDiskGb);
         metrics.put("diskPercent", diskPercent);
 
-        // 5. Media Storage Health (media/images & media/documents)
-        DependencyHealth mediaHealth = checkMediaStorageHealth();
-        String mediaStatus = mediaHealth.getStatus();
-        String mediaDesc = mediaHealth.getError() != null
-                ? mediaHealth.getError()
-                : "Görseller & belgeler klasörleri (media/images, media/documents) okuma/yazma aktif";
+        // 5. MinIO object storage — required; DOWN marks the whole system DOWN
+        long minioStart = System.currentTimeMillis();
+        DependencyHealth minioHealth = checkMinioHealth();
+        long minioLatencyMs = System.currentTimeMillis() - minioStart;
+        String minioStatus = minioHealth.getStatus();
+        String minioDesc = minioHealth.getError() != null
+                ? minioHealth.getError()
+                : getMessage("system.health.comp.minio.desc");
 
-        // Overall Status: DOWN if database or media storage is down
-        String overallStatus = ("UP".equals(dbStatus) && "UP".equals(mediaStatus)) ? "UP" : "DOWN";
+        metrics.put("minioStatus", minioStatus);
+        metrics.put("minioLatencyMs", minioLatencyMs);
+        metrics.put("minioBucket", objectStorageService.getBucketName());
+
+        String overallStatus = ("UP".equals(dbStatus) && "UP".equals(minioStatus)) ? "UP" : "DOWN";
         metrics.put("overallStatus", overallStatus);
 
         // 6. Component Subsystem Statuses
         List<Map<String, Object>> components = new ArrayList<>();
         components.add(Map.of("name", getMessage("system.health.comp.db.name"), "status", dbStatus, "latency", (dbLatencyMs >= 0 ? dbLatencyMs : 1) + " ms", "desc", getMessage("system.health.comp.db.desc")));
-        components.add(Map.of("name", "Medya Depolama (Görseller & Belgeler)", "status", mediaStatus, "latency", "<1 ms", "desc", mediaDesc));
+        components.add(Map.of("name", getMessage("system.health.comp.minio.name"), "status", minioStatus, "latency", minioLatencyMs + " ms", "desc", minioDesc));
         components.add(Map.of("name", getMessage("system.health.comp.quarry.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.quarry.desc")));
         components.add(Map.of("name", getMessage("system.health.comp.gangsaw.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.gangsaw.desc")));
         components.add(Map.of("name", getMessage("system.health.comp.workshop.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.workshop.desc")));
@@ -155,7 +161,10 @@ public class SystemHealthService {
         components.add(Map.of("name", getMessage("system.health.comp.email.name"), "status", "UP", "latency", "UP", "desc", getMessage("system.health.comp.email.desc")));
         components.add(Map.of("name", getMessage("system.health.comp.actuator.name"), "status", "UP", "latency", "/health/", "desc", getMessage("system.health.comp.actuator.desc")));
 
+        int upComponentCount = (int) components.stream().filter(component -> "UP".equals(component.get("status"))).count();
         metrics.put("components", components);
+        metrics.put("componentCount", components.size());
+        metrics.put("upComponentCount", upComponentCount);
 
         // JSON map matching /health/ format
         Map<String, Object> healthJson = new LinkedHashMap<>();
@@ -168,9 +177,12 @@ public class SystemHealthService {
 
         Map<String, Object> compMap = new LinkedHashMap<>();
         compMap.put("db", Map.of("status", dbStatus, "database", dbName, "version", dbVersion, "pingMs", dbLatencyMs));
-        compMap.put("mediaStorage", Map.of(
-                "status", mediaStatus,
-                "error", mediaHealth.getError() != null ? mediaHealth.getError() : "None"));
+        Map<String, Object> minioJson = new LinkedHashMap<>();
+        minioJson.put("status", minioStatus);
+        minioJson.put("bucket", objectStorageService.getBucketName());
+        minioJson.put("pingMs", minioLatencyMs);
+        minioJson.put("error", minioHealth.getError() != null ? minioHealth.getError() : "None");
+        compMap.put("minio", minioJson);
         compMap.put("diskSpace", Map.of("status", "UP", "totalGb", totalDiskGb, "usableGb", usableDiskGb, "usedPercent", diskPercent + "%"));
         compMap.put("jvmMemory", Map.of("usedMb", usedMemMb, "totalMb", totalMemMb, "maxMb", maxMemMb, "percent", memPercent + "%"));
         compMap.put("threads", Map.of("active", Thread.activeCount(), "processors", runtime.availableProcessors()));
@@ -198,11 +210,11 @@ public class SystemHealthService {
     public HealthResponse buildHealthResponse() {
         Map<String, DependencyHealth> dependencies = new LinkedHashMap<>();
         dependencies.put("database", checkDatabaseHealth());
+        dependencies.put("minio", checkMinioHealth());
         dependencies.put("quarryService", DependencyHealth.up());
         dependencies.put("factoryService", DependencyHealth.up());
         dependencies.put("costAccounting", DependencyHealth.up());
         dependencies.put("diskSpace", checkDiskSpaceHealth());
-        dependencies.put("mediaStorage", checkMediaStorageHealth());
 
         String overallStatus = dependencies.values().stream()
                 .allMatch(dependency -> "UP".equals(dependency.getStatus())) ? "UP" : "DOWN";
@@ -227,10 +239,12 @@ public class SystemHealthService {
         return DependencyHealth.up();
     }
 
-    private DependencyHealth checkMediaStorageHealth() {
-        if (fileStorageService != null) {
-            return fileStorageService.checkStorageHealth();
+    private DependencyHealth checkMinioHealth() {
+        try {
+            return objectStorageService.checkHealth();
+        } catch (Exception ex) {
+            log.error("MinIO health check failed: {}", ex.getMessage());
+            return DependencyHealth.down("MinIO erişilemiyor");
         }
-        return DependencyHealth.up();
     }
 }

@@ -36,9 +36,10 @@ test.describe('Dashboard & System Health & Help Pages', () => {
     await page.goto('/admin/dashboard/systemhealth/', { waitUntil: 'networkidle' });
     expect(page.url()).toContain('/admin/dashboard/systemhealth');
 
-    // Page title and health indicator
+    // Page title and MinIO as a required health component
     const content = await page.content();
     expect(content.toLowerCase()).toContain('sistem');
+    expect(content).toContain('MinIO');
 
     // Verify system health API returns valid JSON
     const apiRes = await page.evaluate(async () => {
