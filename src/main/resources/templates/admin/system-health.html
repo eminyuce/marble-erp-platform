@@ -32,14 +32,17 @@
     <!-- Top Banner & Status Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div class="flex items-center gap-3">
-            <div class="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-700/20 ring-4 ring-emerald-100 flex items-center justify-center">
+            <div class="p-3 text-white rounded-2xl shadow-lg flex items-center justify-center"
+                 th:classappend="${overallStatus == 'UP'} ? 'bg-emerald-600 shadow-emerald-700/20 ring-4 ring-emerald-100' : 'bg-red-600 shadow-red-700/20 ring-4 ring-red-100'">
                 <i data-lucide="activity" class="w-6 h-6"></i>
             </div>
             <div>
                 <div class="flex items-center gap-2">
                     <h1 class="text-2xl font-black text-slate-900 tracking-tight">Sistem Sağlık ve İzleme Kokpiti</h1>
-                    <span class="px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 rounded-full border border-emerald-300 flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span class="px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wider rounded-full border flex items-center gap-1.5"
+                          th:classappend="${overallStatus == 'UP'} ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-red-100 text-red-800 border-red-300'">
+                        <span class="w-2 h-2 rounded-full"
+                              th:classappend="${overallStatus == 'UP'} ? 'bg-emerald-500 animate-ping' : 'bg-red-500'"></span>
                         <span id="overall-status-badge" th:text="${overallStatus}">UP</span>
                     </span>
                 </div>
@@ -77,8 +80,8 @@
         </div>
     </div>
 
-    <!-- Health Overview 4 Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Health Overview cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
 
         <!-- Card 1: Application Uptime -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden">
@@ -114,6 +117,29 @@
             <div class="mt-2 text-xs text-slate-500 flex items-center justify-between">
                 <span th:text="${dbName}">PostgreSQL</span>
                 <span class="font-mono text-[11px] text-slate-400" th:text="${dbVersion}">16</span>
+            </div>
+        </div>
+
+        <!-- Card: MinIO object storage -->
+        <div class="bg-white rounded-2xl p-5 border shadow-sm relative overflow-hidden"
+             th:classappend="${minioStatus == 'UP'} ? 'border-slate-200' : 'border-red-200'">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">MinIO Nesne Depolama</span>
+                <div class="p-2 rounded-xl"
+                     th:classappend="${minioStatus == 'UP'} ? 'bg-violet-50 text-violet-700' : 'bg-red-50 text-red-700'">
+                    <i data-lucide="cloud" class="w-4 h-4"></i>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-black text-slate-900" th:text="${minioLatencyMs}">1</span>
+                <span class="text-xs font-semibold text-slate-500">milisaniye</span>
+                <span class="ml-auto px-2 py-0.5 text-[10px] font-bold uppercase rounded-full"
+                      th:classappend="${minioStatus == 'UP'} ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'"
+                      th:text="${minioStatus}">UP</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-500 flex items-center justify-between">
+                <span>Bucket</span>
+                <span class="font-mono text-[11px] text-slate-400" th:text="${minioBucket}">erp-files</span>
             </div>
         </div>
 
@@ -178,27 +204,32 @@
         <div class="flex items-center justify-between pb-4 border-b border-slate-100">
             <div>
                 <h2 class="text-lg font-black text-slate-900">Mikroservis ve Modül Sağlık Durumları</h2>
-                <p class="text-xs text-slate-500 mt-0.5">ERP iş mantığı, veritabanı havuzu, atölye, şantiye ve maliyet
+                <p class="text-xs text-slate-500 mt-0.5">ERP iş mantığı, veritabanı, MinIO, atölye, şantiye ve maliyet
                     motoru</p>
             </div>
-            <span class="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-1.5">
-                <i data-lucide="check-check" class="w-4 h-4 text-emerald-600"></i>
-                <span>8 / 8 Bileşen Aktif</span>
+            <span class="px-3 py-1 text-xs font-bold rounded-xl flex items-center gap-1.5 border"
+                  th:classappend="${upComponentCount == componentCount} ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'">
+                <i data-lucide="check-check" class="w-4 h-4"
+                   th:classappend="${upComponentCount == componentCount} ? 'text-emerald-600' : 'text-red-600'"></i>
+                <span th:text="${upComponentCount} + ' / ' + ${componentCount} + ' Bileşen Aktif'">9 / 9 Bileşen Aktif</span>
             </span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div th:each="comp : ${components}"
-                 class="p-4 rounded-2xl border border-slate-200/80 hover:border-slate-300 bg-slate-50/50 hover:bg-slate-50 transition flex items-center justify-between gap-4">
+                 class="p-4 rounded-2xl border bg-slate-50/50 hover:bg-slate-50 transition flex items-center justify-between gap-4"
+                 th:classappend="${comp.status == 'UP'} ? 'border-slate-200/80 hover:border-slate-300' : 'border-red-200 bg-red-50/40'">
                 <div class="space-y-1">
                     <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm"></span>
+                        <span class="w-2.5 h-2.5 rounded-full shadow-sm"
+                              th:classappend="${comp.status == 'UP'} ? 'bg-emerald-500' : 'bg-red-500'"></span>
                         <h4 class="text-xs font-bold text-slate-900" th:text="${comp.name}">Bileşen Adı</h4>
                     </div>
                     <p class="text-[11px] text-slate-500 pl-4" th:text="${comp.desc}">Açıklama</p>
                 </div>
                 <div class="text-right flex-shrink-0">
-                    <span class="px-2.5 py-1 text-[11px] font-extrabold uppercase rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200"
+                    <span class="px-2.5 py-1 text-[11px] font-extrabold uppercase rounded-full border"
+                          th:classappend="${comp.status == 'UP'} ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-red-100 text-red-800 border-red-200'"
                           th:text="${comp.status}">UP</span>
                     <div class="text-[10px] font-mono text-slate-400 mt-1" th:text="${comp.latency}">1 ms</div>
                 </div>

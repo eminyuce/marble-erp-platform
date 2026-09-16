@@ -47,6 +47,7 @@ class HealthCheckControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.dependencies.database.status").value("UP"))
+                .andExpect(jsonPath("$.dependencies.minio.status").value("UP"))
                 .andExpect(jsonPath("$.dependencies.quarryService.status").value("UP"))
                 .andExpect(jsonPath("$.dependencies.factoryService.status").value("UP"))
                 .andExpect(jsonPath("$.dependencies.costAccounting.status").value("UP"))
@@ -97,10 +98,28 @@ class HealthCheckControllerTest {
     }
 
     @Test
+    @DisplayName("MinIO DOWN returns HTTP 503 and overall DOWN")
+    void minioDown_returnsServiceUnavailable() throws Exception {
+        Map<String, DependencyHealth> dependencies = healthyDependencies();
+        dependencies.put("minio", DependencyHealth.down("MinIO erişilemiyor"));
+
+        when(systemHealthService.buildHealthResponse()).thenReturn(
+                HealthResponse.builder().status("DOWN").dependencies(dependencies).build());
+
+        mockMvc.perform(get("/health"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value("DOWN"))
+                .andExpect(jsonPath("$.dependencies.minio.status").value("DOWN"))
+                .andExpect(jsonPath("$.dependencies.minio.error").value("MinIO erişilemiyor"))
+                .andExpect(jsonPath("$.dependencies.database.status").value("UP"));
+    }
+
+    @Test
     @DisplayName("Multiple dependencies DOWN include respective errors")
     void multipleDependenciesDown_includeAllErrors() throws Exception {
         Map<String, DependencyHealth> dependencies = new LinkedHashMap<>();
         dependencies.put("database", DependencyHealth.up());
+        dependencies.put("minio", DependencyHealth.up());
         dependencies.put("quarryService", DependencyHealth.down("Unable to connect to Quarry Service"));
         dependencies.put("factoryService", DependencyHealth.up());
         dependencies.put("costAccounting", DependencyHealth.down("Connection timeout"));
@@ -136,7 +155,7 @@ class HealthCheckControllerTest {
                 .containsExactly("status", "dependencies");
         org.assertj.core.api.Assertions.assertThat(tree.get("dependencies").fieldNames())
                 .toIterable()
-                .containsExactly("database", "quarryService", "factoryService", "costAccounting", "diskSpace", "mediaStorage");
+                .containsExactly("database", "minio", "quarryService", "factoryService", "costAccounting", "diskSpace");
     }
 
     private HealthResponse allUpHealthResponse() {
@@ -149,11 +168,11 @@ class HealthCheckControllerTest {
     private Map<String, DependencyHealth> healthyDependencies() {
         Map<String, DependencyHealth> dependencies = new LinkedHashMap<>();
         dependencies.put("database", DependencyHealth.up());
+        dependencies.put("minio", DependencyHealth.up());
         dependencies.put("quarryService", DependencyHealth.up());
         dependencies.put("factoryService", DependencyHealth.up());
         dependencies.put("costAccounting", DependencyHealth.up());
         dependencies.put("diskSpace", DependencyHealth.up());
-        dependencies.put("mediaStorage", DependencyHealth.up());
         return dependencies;
     }
 }

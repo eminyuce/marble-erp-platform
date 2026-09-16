@@ -167,7 +167,7 @@ public class S3ObjectStorageService implements ObjectStorageService {
             return DependencyHealth.up();
         } catch (Exception e) {
             log.error("Object storage health check failed bucket={}", bucket, e);
-            return DependencyHealth.down("Nesne depolama (MinIO) erişilemiyor");
+            return DependencyHealth.down("MinIO erişilemiyor");
         }
     }
 
