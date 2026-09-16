@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${record != null ? 'Gider Kaydını Düzenle' : 'Yeni Gider Kaydı'} + ' | Özerler Mermer ERP'"></title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+    <script th:inline="javascript">
+        function expenseForm() {
+            return {
+                unit: /*[[${record != null and record.businessUnit != null ? record.businessUnit.name() : 'FACTORY'}]]*/ 'FACTORY',
+                centers: [],
+                types: [],
+                loading: false,
+                init() {
+                    const pre = document.getElementById('expense-businessUnit');
+                    if (pre && pre.value) {
+                        this.unit = pre.value;
+                    }
+                    this.loadUnitOptions();
+                },
+                async loadUnitOptions() {
+                    if (!this.unit) return;
+                    this.loading = true;
+                    try {
+                        const res = await fetch('/expenses/api/options?unit=' + encodeURIComponent(this.unit));
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.centers = data.centers || [];
+                            this.types = data.types || [];
+                        }
+                    } catch (e) {
+                        console.error('Failed to load unit options', e);
+                    } finally {
+                        this.loading = false;
+                        if (window.lucide) window.lucide.createIcons();
+                    }
+                }
+            };
+        }
+    </script>
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Giderler ve Satın Alma', @{/expenses}, ${record != null ? 'Düzenle' : 'Yeni Gider Kaydı'})}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        ${record != null ? 'Gider Kaydını Düzenle' : 'Yeni Gider Kaydı'},
+        'Ocak, fabrika, atölye veya şantiye giderlerini kaydedin ve güncelleyin.',
+        ${record != null ? ('#' + record.id + ' — ' + (record.costCenterName != null ? record.costCenterName : '')) : ''},
+        @{/expenses})}"></div>
+
+    <div class="erp-form-card">
+        <form th:action="${record != null ? '/expenses/' + record.id + '/edit' : '/expenses/create'}" method="post" class="erp-form"
+              x-data="expenseForm()" x-init="init()">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <!-- 1. Birim ve Masraf Merkezi -->
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('İş Birimi & Masraf Merkezi', 'Giderin ait olduğu birim, ocak/şantiye hedefi ve masraf merkezini seçin.')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="expense-businessUnit">İş Birimi <span class="req">*</span></label>
+                            <select id="expense-businessUnit" name="businessUnit" required class="erp-form-select"
+                                    x-model="unit" @change="loadUnitOptions()">
+                                <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}"
+                                        th:selected="${record != null and record.businessUnit != null and record.businessUnit.name() == u.name()}"></option>
+                            </select>
+                        </div>
+
+                        <!-- Quarry Select (Only when unit == QUARRY) -->
+                        <div class="erp-form-field" x-show="unit === 'QUARRY'">
+                            <label class="erp-form-label" for="expense-quarryId">Ocak <span class="req">*</span></label>
+                            <select id="expense-quarryId" name="quarryId" :required="unit === 'QUARRY'" class="erp-form-select">
+                                <option value="" disabled th:selected="${record == null or record.quarryId == null}">Ocak seçin</option>
+                                <option th:each="q : ${quarries}" th:value="${q.id}" th:text="${q.name + ' (' + q.code + ')'}"
+                                        th:selected="${record != null and record.quarryId == q.id}"></option>
+                            </select>
+                        </div>
+
+                        <!-- Project Select (Only when unit == SITE) -->
+                        <div class="erp-form-field" x-show="unit === 'SITE'">
+                            <label class="erp-form-label" for="expense-projectId">Şantiye / Proje <span class="req">*</span></label>
+                            <select id="expense-projectId" name="projectId" :required="unit === 'SITE'" class="erp-form-select">
+                                <option value="" disabled th:selected="${record == null or record.projectId == null}">Proje seçin</option>
+                                <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.projectCode + ' — ' + p.name}"
+                                        th:selected="${record != null and record.projectId == p.id}"></option>
+                            </select>
+                        </div>
+
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="expense-centerId">Masraf Merkezi <span class="req">*</span></label>
+                            <select id="expense-centerId" name="centerId" required class="erp-form-select">
+                                <option value="" disabled th:selected="${record == null or record.centerId == null}">Masraf merkezi seçin</option>
+                                <option th:each="c : ${costCenters}" th:value="${c.id}"
+                                        th:text="${c.code + ' — ' + c.name}"
+                                        th:selected="${record != null and record.centerId == c.id}"></option>
+                            </select>
+                        </div>
+
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="expense-expenseType">Gider Türü <span class="req">*</span></label>
+                            <select id="expense-expenseType" name="expenseType" required class="erp-form-select">
+                                <option value="" disabled th:selected="${record == null or record.expenseType == null}">Gider türü seçin</option>
+                                <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"
+                                        th:selected="${record != null and record.expenseType != null and record.expenseType.name() == t.name()}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. Tutar ve Tarih Bilgileri -->
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Tutar ve Tarih', 'Harcama tutarı, fatura tarihi ve maliyet dönemini belirleyin.')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="expense-amount">Tutar (TL) <span class="req">*</span></label>
+                            <input id="expense-amount" type="number" step="0.01" min="0.01" name="amount"
+                                   th:value="${record != null ? record.amount : ''}" required class="erp-form-input font-mono"
+                                   placeholder="Örn. 15000.00">
+                        </div>
+
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="expense-entryDate">Kayıt Tarihi <span class="req">*</span></label>
+                            <input id="expense-entryDate" type="date" name="entryDate"
+                                   th:value="${record != null and record.entryDate != null ? record.entryDate : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                                   required class="erp-form-input font-mono">
+                        </div>
+
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="expense-expensePeriod">
+                                Dönem (YYYY-AA)
+                                <span th:replace="~{fragments/erp-ops :: tip('', 'Boş bırakılırsa fatura veya kayıt tarihine göre otomatik hesaplanır.')}"></span>
+                            </label>
+                            <input id="expense-expensePeriod" type="month" name="expensePeriod"
+                                   th:value="${record != null ? record.expensePeriod : ''}"
+                                   class="erp-form-input font-mono">
+                        </div>
+
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="expense-invoiceDate">Fatura / Belge Tarihi</label>
+                            <input id="expense-invoiceDate" type="date" name="invoiceDate"
+                                   th:value="${record != null ? record.invoiceDate : ''}"
+                                   class="erp-form-input font-mono">
+                        </div>
+
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="expense-documentNo">Fatura / Fiş No</label>
+                            <input id="expense-documentNo" type="text" name="documentNo"
+                                   th:value="${record != null ? record.documentNo : ''}"
+                                   class="erp-form-input font-mono" placeholder="Örn. GİB2026000001234">
+                        </div>
+
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="expense-description">Açıklama</label>
+                            <textarea id="expense-description" name="description" rows="3" class="erp-form-input"
+                                      th:text="${record != null ? record.description : ''}"
+                                      placeholder="Masraf veya fatura hakkında ek açıklama..."></textarea>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Standard Bottom Actions -->
+            <div th:replace="~{fragments/form-page :: actions(@{/expenses})}"></div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

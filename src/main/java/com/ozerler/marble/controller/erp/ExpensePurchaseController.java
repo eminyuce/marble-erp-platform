@@ -239,7 +239,29 @@ public class ExpensePurchaseController extends AbstractController {
         }
     }
 
-    @PostMapping
+    @GetMapping("/create")
+    public String createForm(Model model) {
+        model.addAttribute("record", null);
+        populateFormLookups(model);
+        return "erp/expenses/form";
+    }
+
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable("id") Long id, Model model) {
+        ExpenseDto dto = expenseService.getExpenseDto(id);
+        model.addAttribute("record", dto);
+        populateFormLookups(model);
+        return "erp/expenses/form";
+    }
+
+    @GetMapping("/{id}")
+    public String detail(@PathVariable("id") Long id, Model model) {
+        ExpenseDto dto = expenseService.getExpenseDto(id);
+        model.addAttribute("expense", dto);
+        return "erp/expenses/detail";
+    }
+
+    @PostMapping(path = {"", "/create"})
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     public String recordExpense(@RequestParam("businessUnit") BusinessUnit businessUnit,
                                 @RequestParam("centerId") Long centerId,
@@ -253,7 +275,8 @@ public class ExpensePurchaseController extends AbstractController {
                                 @RequestParam(value = "expensePeriod", required = false) String expensePeriod,
                                 @RequestParam(value = "description", required = false) String description,
                                 Locale locale,
-                                RedirectAttributes redirectAttributes) {
+                                RedirectAttributes redirectAttributes,
+                                Model model) {
         try {
             Project project = resolveProject(businessUnit, projectId, locale);
             Quarry quarry = resolveQuarry(businessUnit, quarryId, locale);
@@ -268,18 +291,63 @@ public class ExpensePurchaseController extends AbstractController {
 
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.expense.record.success", null, locale));
+            return "redirect:/expenses";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage",
+            model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            populateFormLookups(model);
+            return "erp/expenses/form";
         }
-        redirectAttributes.addAttribute("unit", businessUnit.name());
-        if (quarryId != null) {
-            redirectAttributes.addAttribute("quarryId", quarryId);
+    }
+
+    @PostMapping("/{id}/edit")
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
+    public String updateExpense(@PathVariable("id") Long id,
+                                @RequestParam("businessUnit") BusinessUnit businessUnit,
+                                @RequestParam("centerId") Long centerId,
+                                @RequestParam("expenseType") ExpenseType expenseType,
+                                @RequestParam("amount") BigDecimal amount,
+                                @RequestParam("entryDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
+                                @RequestParam(value = "quarryId", required = false) Long quarryId,
+                                @RequestParam(value = "projectId", required = false) Long projectId,
+                                @RequestParam(value = "documentNo", required = false) String documentNo,
+                                @RequestParam(value = "invoiceDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate invoiceDate,
+                                @RequestParam(value = "expensePeriod", required = false) String expensePeriod,
+                                @RequestParam(value = "description", required = false) String description,
+                                Locale locale,
+                                RedirectAttributes redirectAttributes,
+                                Model model) {
+        try {
+            Project project = resolveProject(businessUnit, projectId, locale);
+            Quarry quarry = resolveQuarry(businessUnit, quarryId, locale);
+            String period = expensePeriod != null && !expensePeriod.isBlank()
+                    ? ExpensePeriods.normalize(expensePeriod)
+                    : ExpensePeriods.expensePeriod(expenseType, invoiceDate, entryDate);
+
+            expenseService.updateExpense(id, new ExpenseService.ExpenseDraft(
+                    centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
+                    documentNo, invoiceDate, entryDate, period, YearMonth.now().toString(),
+                    null, quarry, null, project, null, null, null, null, description));
+
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.expense.update.success", null, locale));
+            return "redirect:/expenses";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            ExpenseDto dto = expenseService.getExpenseDto(id);
+            model.addAttribute("record", dto);
+            populateFormLookups(model);
+            return "erp/expenses/form";
         }
-        if (expensePeriod != null && !expensePeriod.isBlank()) {
-            redirectAttributes.addAttribute("period", expensePeriod);
-        }
-        return "redirect:/expenses";
+    }
+
+    private void populateFormLookups(Model model) {
+        model.addAttribute("businessUnits", BusinessUnit.values());
+        model.addAttribute("costCenters", costCenterRepository.findAll());
+        model.addAttribute("quarries", quarryRepository.findAll());
+        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("expenseTypes", ExpenseType.values());
     }
 
     private Project resolveProject(BusinessUnit unit, Long projectId, Locale locale) {

@@ -113,4 +113,92 @@ class ExpensePurchaseControllerTest {
         assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
     }
+
+    @Test
+    @DisplayName("createForm populates lookups and returns form view")
+    void createForm_ReturnsFormView() {
+        when(costCenterRepository.findAll()).thenReturn(Collections.emptyList());
+        when(quarryRepository.findAll()).thenReturn(Collections.emptyList());
+        when(projectRepository.findAll()).thenReturn(Collections.emptyList());
+
+        Model model = new ConcurrentModel();
+        String view = controller.createForm(model);
+
+        assertThat(view).isEqualTo("erp/expenses/form");
+        assertThat(model.getAttribute("record")).isNull();
+        assertThat(model.containsAttribute("businessUnits")).isTrue();
+        assertThat(model.containsAttribute("expenseTypes")).isTrue();
+    }
+
+    @Test
+    @DisplayName("editForm fetches expense dto and returns form view")
+    void editForm_ReturnsFormView() {
+        ExpenseDto dto = ExpenseDto.builder().id(99L).build();
+        when(expenseService.getExpenseDto(99L)).thenReturn(dto);
+        when(costCenterRepository.findAll()).thenReturn(Collections.emptyList());
+        when(quarryRepository.findAll()).thenReturn(Collections.emptyList());
+        when(projectRepository.findAll()).thenReturn(Collections.emptyList());
+
+        Model model = new ConcurrentModel();
+        String view = controller.editForm(99L, model);
+
+        assertThat(view).isEqualTo("erp/expenses/form");
+        assertThat(model.getAttribute("record")).isSameAs(dto);
+        assertThat(model.containsAttribute("businessUnits")).isTrue();
+    }
+
+    @Test
+    @DisplayName("detail fetches expense dto and returns detail view")
+    void detail_ReturnsDetailView() {
+        ExpenseDto dto = ExpenseDto.builder().id(55L).build();
+        when(expenseService.getExpenseDto(55L)).thenReturn(dto);
+
+        Model model = new ConcurrentModel();
+        String view = controller.detail(55L, model);
+
+        assertThat(view).isEqualTo("erp/expenses/detail");
+        assertThat(model.getAttribute("expense")).isSameAs(dto);
+    }
+
+    @Test
+    @DisplayName("recordExpense saves expense and redirects")
+    void recordExpense_Success() {
+        when(messageSource.getMessage(eq("erp.expense.record.success"), any(), any(Locale.class)))
+                .thenReturn("Gider kaydedildi");
+
+        org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap ra =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+        Model model = new ConcurrentModel();
+
+        String view = controller.recordExpense(
+                BusinessUnit.FACTORY, 1L, ExpenseType.CONSUMABLES, new BigDecimal("250.00"),
+                LocalDate.of(2026, 9, 16), null, null, "DOC1",
+                LocalDate.of(2026, 9, 16), "2026-09", "desc",
+                Locale.getDefault(), ra, model);
+
+        assertThat(view).isEqualTo("redirect:/expenses");
+        verify(expenseService).recordExpense(any());
+        assertThat(ra.getFlashAttributes()).containsKey("successMessage");
+    }
+
+    @Test
+    @DisplayName("updateExpense updates expense and redirects")
+    void updateExpense_Success() {
+        when(messageSource.getMessage(eq("erp.expense.update.success"), any(), any(Locale.class)))
+                .thenReturn("Gider güncellendi");
+
+        org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap ra =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+        Model model = new ConcurrentModel();
+
+        String view = controller.updateExpense(
+                10L, BusinessUnit.FACTORY, 1L, ExpenseType.CONSUMABLES, new BigDecimal("350.00"),
+                LocalDate.of(2026, 9, 16), null, null, "DOC1",
+                LocalDate.of(2026, 9, 16), "2026-09", "desc",
+                Locale.getDefault(), ra, model);
+
+        assertThat(view).isEqualTo("redirect:/expenses");
+        verify(expenseService).updateExpense(eq(10L), any());
+        assertThat(ra.getFlashAttributes()).containsKey("successMessage");
+    }
 }
