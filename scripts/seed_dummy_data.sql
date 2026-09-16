@@ -38,17 +38,21 @@ ON CONFLICT (id) DO NOTHING;
 -- 3. MERMER BLOKLARI (Blocks - Diverse Stone Types & Deviation Scenarios)
 -- ------------------------------------------------------------------------------
 INSERT INTO blocks (id, quarry_id, block_code, extraction_date, width_cm, length_cm, height_cm, volume_m3, theoretical_weight_kg, actual_weight_kg, weight_deviation_pct, stone_type, color_tone, quality_grade, crack_level, status, extraction_cost, transport_cost, total_cost, notes) VALUES
-(1, 1, 'BLK-2026-00125', '2026-08-28', 180, 290, 150, 7.830, 21141.00, 20850.00, -1.37, 'Muğla Beyaz', 'Ekstra Beyaz Kristalize', 'A', 0, 'FACTORY_STOCK', 42000.00, 7200.00, 49200.00, 'Homojen kristal yapıda, çatlaksız ayna bloğu.'),
-(2, 2, 'BLK-2026-00126', '2026-08-29', 170, 280, 140, 6.664, 18126.00, 18400.00, 1.51, 'Afyon Şeker', 'Açık Krem Damarlı', 'A', 1, 'SAWING', 38000.00, 6500.00, 44500.00, 'Kılcal yüzey çatlağı epoksi hattında telafi edilebilir.'),
-(3, 3, 'BLK-2026-00127', '2026-09-01', 190, 310, 160, 9.424, 25256.00, 25100.00, -0.62, 'Burdur Bej', 'Homojen Açık Bej', 'EXTRA', 0, 'QUARRY', 52000.00, 0.00, 52000.00, 'Ocak sahasında sevk bekliyor.'),
-(4, 4, 'BLK-2026-00128', '2026-09-02', 175, 300, 145, 7.612, 19030.00, 18800.00, -1.21, 'Denizli Traverten', 'Açık Ceviz Damar Kesim', 'A', 0, 'FACTORY_STOCK', 31000.00, 5400.00, 36400.00, 'Gözenek yapısı homojen, dolgulu imalat için uygun.'),
-(5, 1, 'BLK-2026-00129', '2026-09-03', 165, 275, 135, 6.126, 16540.00, 17550.00, 6.10, 'Muğla Beyaz', 'Gri Gölgeli Bulutlu', 'B', 2, 'FACTORY_STOCK', 34000.00, 6800.00, 40800.00, 'Kantar sapması %6.10 (>%5). Ayna nemli tartılmış olabilir.'),
-(6, 2, 'BLK-2026-00130', '2026-09-04', 195, 320, 155, 9.672, 26307.00, 26100.00, -0.79, 'Afyon Bal', 'Koyu Bal Sarısı', 'EXTRA', 0, 'FACTORY_STOCK', 58000.00, 8900.00, 66900.00, 'Birinci sınıf lüks otel lobisi için rezerve edildi.'),
-(7, 5, 'BLK-2026-00131', '2026-09-05', 185, 295, 150, 8.186, 20055.00, 19900.00, -0.77, 'Finike Limra', 'Beyaz Fosilli Homojen', 'A', 0, 'QUARRY', 28000.00, 0.00, 28000.00, 'Dış cephe mekanik montaj için uygun hafif taş.'),
-(8, 6, 'BLK-2026-00132', '2026-09-06', 170, 285, 140, 6.783, 18381.00, 18150.00, -1.26, 'Bilecik Rozaliya', 'Pembe Alevli Damarlı', 'B', 1, 'FACTORY_STOCK', 36000.00, 7100.00, 43100.00, 'Klasik rozaliya deseni; katrak kesimine alındı.'),
-(9, 3, 'BLK-2026-00133', '2026-09-07', 180, 305, 150, 8.235, 22069.00, 21900.00, -0.77, 'Burdur Bej', 'Açık Krem İnci Tane', 'A', 0, 'SAWING', 44000.00, 7500.00, 51500.00, 'Katrak 02 üzerinde kesim aşamasında.'),
-(10, 1, 'BLK-2026-00134', '2026-09-08', 160, 260, 130, 5.408, 14601.00, 14200.00, -2.75, 'Muğla Beyaz', 'Koyu Gri Çizgili', 'C', 3, 'SAWING', 24000.00, 5100.00, 29100.00, 'Yüksek kırık seviyesi; atölyede süpürgelik ve bordür ebatlamaya ayrıldı.')
+(1, 1, 'BLK-2026-00125', '2026-08-28', 180, 290, 150, 7.830, 21141.00, 20850.00, -1.37, 'Muğla Beyaz', 'Ekstra Beyaz Kristalize', 'A', 0, 'PRODUCED', 42000.00, 0.00, 42000.00, 'Homojen kristal yapıda, çatlaksız ayna bloğu.'),
+(2, 2, 'BLK-2026-00126', '2026-08-29', 170, 280, 140, 6.664, 18126.00, 18400.00, 1.51, 'Afyon Şeker', 'Açık Krem Damarlı', 'A', 1, 'PRODUCED', 38000.00, 0.00, 38000.00, 'Kılcal yüzey çatlağı epoksi hattında telafi edilebilir.'),
+(3, 3, 'BLK-2026-00127', '2026-09-01', 190, 310, 160, 9.424, 25256.00, 25100.00, -0.62, 'Burdur Bej', 'Homojen Açık Bej', 'EXTRA', 0, 'PRODUCED', 52000.00, 0.00, 52000.00, 'Ocak sahasında sevk bekliyor.'),
+(4, 4, 'BLK-2026-00128', '2026-09-02', 175, 300, 145, 7.612, 19030.00, 18800.00, -1.21, 'Denizli Traverten', 'Açık Ceviz Damar Kesim', 'A', 0, 'PRODUCED', 31000.00, 0.00, 31000.00, 'Gözenek yapısı homojen, dolgulu imalat için uygun.'),
+(5, 1, 'BLK-2026-00129', '2026-09-03', 165, 275, 135, 6.126, 16540.00, 17550.00, 6.10, 'Muğla Beyaz', 'Gri Gölgeli Bulutlu', 'B', 2, 'PRODUCED', 34000.00, 0.00, 34000.00, 'Kantar sapması %6.10 (>%5). Ayna nemli tartılmış olabilir.'),
+(6, 2, 'BLK-2026-00130', '2026-09-04', 195, 320, 155, 9.672, 26307.00, 26100.00, -0.79, 'Afyon Bal', 'Koyu Bal Sarısı', 'EXTRA', 0, 'PRODUCED', 58000.00, 0.00, 58000.00, 'Birinci sınıf lüks otel lobisi için rezerve edildi.'),
+(7, 5, 'BLK-2026-00131', '2026-09-05', 185, 295, 150, 8.186, 20055.00, 19900.00, -0.77, 'Finike Limra', 'Beyaz Fosilli Homojen', 'A', 0, 'PRODUCED', 28000.00, 0.00, 28000.00, 'Dış cephe mekanik montaj için uygun hafif taş.'),
+(8, 6, 'BLK-2026-00132', '2026-09-06', 170, 285, 140, 6.783, 18381.00, 18150.00, -1.26, 'Bilecik Rozaliya', 'Pembe Alevli Damarlı', 'B', 1, 'PRODUCED', 36000.00, 0.00, 36000.00, 'Klasik rozaliya deseni; stok sahasında.'),
+(9, 3, 'BLK-2026-00133', '2026-09-07', 180, 305, 150, 8.235, 22069.00, 21900.00, -0.77, 'Burdur Bej', 'Açık Krem İnci Tane', 'A', 0, 'PRODUCED', 44000.00, 0.00, 44000.00, 'Stok sahasında müşteri incelemesine hazır.'),
+(10, 1, 'BLK-2026-00134', '2026-09-08', 160, 260, 130, 5.408, 14601.00, 14200.00, -2.75, 'Muğla Beyaz', 'Koyu Gri Çizgili', 'C', 3, 'PRODUCED', 24000.00, 0.00, 24000.00, 'Üretim sahasında yeni blok.')
 ON CONFLICT (id) DO NOTHING;
+
+-- Set quarry storage areas (Üretim Sahası vs Stok Sahası)
+UPDATE blocks SET current_location_id = (SELECT id FROM stock_locations WHERE code = 'OCAK-URETIM') WHERE id IN (1, 2, 3, 7, 10);
+UPDATE blocks SET current_location_id = (SELECT id FROM stock_locations WHERE code = 'OCAK-SEVK') WHERE id IN (4, 5, 6, 8, 9);
 
 -- ------------------------------------------------------------------------------
 -- 4. PALETLER & AMBAR YERLEŞİMİ (Pallets & Warehouse)

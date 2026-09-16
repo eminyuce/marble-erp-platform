@@ -5,6 +5,7 @@ import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.BlockCodeAvailabilityDto;
 import com.ozerler.marble.dto.BlockDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
@@ -92,6 +93,7 @@ public class BlockController extends AbstractController {
     @GetMapping("/create")
     public String showCreateForm(Locale locale, Model model) {
         model.addAttribute("isEdit", false);
+        model.addAttribute("currentLocationType", StockLocationType.PRODUCTION_YARD);
         populateBlockForm(model, locale);
         return "erp/blocks/form";
     }
@@ -100,11 +102,12 @@ public class BlockController extends AbstractController {
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     public String createBlock(@RequestParam("quarryId") Long quarryId,
                               @RequestParam("blockCode") String blockCode,
+                              @RequestParam(value = "locationType", required = false) StockLocationType locationType,
                               @RequestParam(value = "extractionDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate extractionDate,
                               @RequestParam("widthCm") int widthCm,
                               @RequestParam("lengthCm") int lengthCm,
                               @RequestParam("heightCm") int heightCm,
-                              @RequestParam("actualWeightKg") BigDecimal actualWeightKg,
+                              @RequestParam(value = "actualWeightKg", required = false) BigDecimal actualWeightKg,
                               @RequestParam("stoneType") String stoneType,
                               @RequestParam(value = "colorTone", required = false) String colorTone,
                               @RequestParam("qualityGrade") QualityGrade qualityGrade,
@@ -118,7 +121,7 @@ public class BlockController extends AbstractController {
 
         try {
             quarryBlockService.registerBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
-                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls);
+                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls, locationType);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.create.success", null, locale));
             return "redirect:/blocks";
@@ -141,13 +144,15 @@ public class BlockController extends AbstractController {
         model.addAttribute("quarryYards", new StockLocationType[]{
                 StockLocationType.PRODUCTION_YARD, StockLocationType.DISPATCH_YARD});
         model.addAttribute("weightWarning", quarryBlockService.isWeightDeviationWarning(block));
+        model.addAttribute("canDelete", quarryBlockService.canDeleteBlock(block));
         return "erp/blocks/detail";
     }
 
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
-        var block = quarryBlockService.getBlockById(id);
+        var block = quarryBlockService.getBlockWithDetails(id);
         model.addAttribute("block", block);
+        model.addAttribute("currentLocationType", block.getCurrentLocation() != null ? block.getCurrentLocation().getLocationType() : StockLocationType.PRODUCTION_YARD);
         model.addAttribute("isEdit", true);
         populateBlockForm(model, locale);
         model.addAttribute("pageTitle", "Blok Düzenle");
@@ -159,11 +164,12 @@ public class BlockController extends AbstractController {
     public String updateBlock(@PathVariable("id") Long id,
                               @RequestParam("quarryId") Long quarryId,
                               @RequestParam("blockCode") String blockCode,
+                              @RequestParam(value = "locationType", required = false) StockLocationType locationType,
                               @RequestParam(value = "extractionDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate extractionDate,
                               @RequestParam("widthCm") int widthCm,
                               @RequestParam("lengthCm") int lengthCm,
                               @RequestParam("heightCm") int heightCm,
-                              @RequestParam("actualWeightKg") BigDecimal actualWeightKg,
+                              @RequestParam(value = "actualWeightKg", required = false) BigDecimal actualWeightKg,
                               @RequestParam("stoneType") String stoneType,
                               @RequestParam(value = "colorTone", required = false) String colorTone,
                               @RequestParam("qualityGrade") QualityGrade qualityGrade,
@@ -177,7 +183,7 @@ public class BlockController extends AbstractController {
 
         try {
             quarryBlockService.updateBlock(id, quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
-                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls);
+                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, extractionCost, notes, photoUrls, locationType);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.update.success", null, locale));
             return "redirect:/blocks";
@@ -185,13 +191,62 @@ public class BlockController extends AbstractController {
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
             try {
-                model.addAttribute("block", quarryBlockService.getBlockById(id));
+                var block = quarryBlockService.getBlockWithDetails(id);
+                model.addAttribute("block", block);
+                model.addAttribute("currentLocationType", block.getCurrentLocation() != null ? block.getCurrentLocation().getLocationType() : StockLocationType.PRODUCTION_YARD);
             } catch (Exception ignored) {
             }
             model.addAttribute("isEdit", true);
             populateBlockForm(model, locale);
             return "erp/blocks/form";
         }
+    }
+
+    @PostMapping("/{id}/delete")
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
+    public String deleteBlock(@PathVariable("id") Long id,
+                              Locale locale,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            Block block = quarryBlockService.getBlockById(id);
+            String code = block.getBlockCode();
+            quarryBlockService.deleteBlock(id);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.block.delete.success", new Object[]{code}, locale));
+            return "redirect:/blocks";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            return "redirect:/blocks/" + id;
+        }
+    }
+
+    @PostMapping("/{id}/api/delete")
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
+    public @ResponseBody BackEndResponse deleteBlockApi(@PathVariable("id") Long id, Locale locale) {
+        BackEndResponse ber = new BackEndResponse();
+        ServiceStatus serviceStatus = new ServiceStatus();
+        Status status = new Status();
+        status.setErrorCode(Constants.NO_ERR);
+
+        try {
+            log.info("Deleting block {}", id);
+            Block block = quarryBlockService.getBlockById(id);
+            String code = block.getBlockCode();
+            quarryBlockService.deleteBlock(id);
+
+            ResponseEntity<Void> resp = ResponseEntity.ok().build();
+            ber.setResponse(resp);
+            serviceStatus.setHttpStatus(HttpStatus.OK);
+            status.setMessage(messageSource.getMessage("erp.block.delete.success", new Object[]{code}, locale));
+            serviceStatus.setStatus(status);
+            ber.setServiceStatus(serviceStatus);
+        } catch (Exception e) {
+            log.error("A serious error occurred while deleting block {}", id, e);
+            ber = buildFatalResponse(ber, serviceStatus, status, "deleteBlock", Constants.ERR_FATAL);
+        }
+
+        return ber;
     }
 
     @PostMapping("/{id}/transfer-to-factory")
@@ -301,16 +356,47 @@ public class BlockController extends AbstractController {
         return ber;
     }
 
+    @GetMapping("/{id}/sell")
+    @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
+    public String showSellForm(@PathVariable("id") Long id,
+                               Locale locale,
+                               Model model,
+                               RedirectAttributes redirectAttributes) {
+        var block = quarryBlockService.getBlockWithDetails(id);
+        if (block.getStatus() == BlockStatus.SOLD) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("erp.block.already_sold",
+                            new Object[]{block.getSoldCustomer() != null ? block.getSoldCustomer().getCompanyName() : ""}, locale));
+            return "redirect:/blocks/" + id;
+        }
+        if (!block.getCanonicalStatus().isAtQuarry()) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("error.block.sell.not_at_quarry", null, locale));
+            return "redirect:/blocks/" + id;
+        }
+        model.addAttribute("block", block);
+        model.addAttribute("customers", blockCustomerMarkService.customers());
+        model.addAttribute("marks", blockCustomerMarkService.listForBlock(id));
+        model.addAttribute("pageTitle", "Blok Satışı - " + block.getBlockCode());
+        return "erp/blocks/sell";
+    }
+
     @PostMapping("/{id}/sell-to-customer")
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     public String sellToCustomer(@PathVariable("id") Long id,
                                  @RequestParam("customerId") Long customerId,
                                  Locale locale,
                                  RedirectAttributes redirectAttributes) {
-        quarryBlockService.sellBlockExternally(id, customerId);
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.block.sell.success", null, locale));
-        return "redirect:/blocks/" + id;
+        try {
+            quarryBlockService.sellBlockExternally(id, customerId);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.block.sell.success", null, locale));
+            return "redirect:/blocks/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            return "redirect:/blocks/" + id + "/sell";
+        }
     }
 
     @PostMapping("/{id}/mark")
@@ -398,6 +484,8 @@ public class BlockController extends AbstractController {
     private void populateBlockForm(Model model, Locale locale) {
         model.addAttribute("quarries", quarryBlockService.getAllQuarries());
         model.addAttribute("qualityGrades", QualityGrade.values());
+        model.addAttribute("quarryYards", new StockLocationType[]{
+                StockLocationType.PRODUCTION_YARD, StockLocationType.DISPATCH_YARD});
         model.addAttribute("pageTitle", messageSource.getMessage("erp.block.title.create", null, locale));
     }
 }

@@ -6,6 +6,7 @@
 </head>
 <body>
 <div layout:fragment="content" class="space-y-6"
+     x-data="{ deleteModalOpen: false }"
      th:with="
         locType=${block.currentLocation != null and block.currentLocation.locationType != null ? block.currentLocation.locationType.name() : ''},
         sold=${block.status != null and block.status.name() == 'SOLD'},
@@ -50,6 +51,10 @@
             <a th:href="@{/genealogy(code=${block.blockCode})}" class="erp-btn-secondary">
                 <i data-lucide="git-branch"></i><span>Soy Ağacı</span>
             </a>
+            <button th:if="${canDelete}" type="button" @click="deleteModalOpen = true"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer">
+                <i data-lucide="trash-2" class="w-4 h-4"></i><span>Bloğu Sil</span>
+            </button>
         </div>
     </div>
 
@@ -146,19 +151,40 @@
                         <p class="erp-ops-card-desc">Doğrudan satış veya müşteri işaretlemesi ile rezervasyon.</p>
                     </div>
                 </div>
-                <form th:if="${atQuarry and !sold}" th:action="@{'/blocks/' + ${block.id} + '/sell-to-customer'}" method="post" class="space-y-2">
-                    <label class="block text-xs font-semibold text-slate-700">Hızlı satış — müşteri seçin</label>
-                    <select name="customerId" required class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg">
-                        <option value="" disabled selected>Müşteri</option>
-                        <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
-                    </select>
-                    <button type="submit" class="w-full min-h-11 py-2.5 bg-emerald-700 text-white text-sm font-semibold rounded-lg">Satışı kaydet</button>
-                </form>
+                <div th:if="${atQuarry and !sold}" class="space-y-2 mt-auto">
+                    <a th:href="@{'/blocks/' + ${block.id} + '/sell'}"
+                       class="w-full min-h-11 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm">
+                        <i data-lucide="handshake" class="w-4 h-4"></i>
+                        <span>Satış Sayfasına Git</span>
+                    </a>
+                    <p class="text-xs text-slate-500 text-center">Müşteri seçimi, teklifler ve detaylı satış kaydı</p>
+                </div>
                 <p th:if="${sold}" class="text-sm font-semibold text-emerald-800 mt-auto">
                     Bu blok satıldı
                     <span th:if="${block.soldCustomer != null}" th:text="' — ' + ${block.soldCustomer.companyName}"></span>.
                 </p>
                 <p th:unless="${atQuarry or sold}" class="text-xs text-slate-500 mt-auto">Satış yalnızca ocaktaki bloklar için geçerlidir.</p>
+            </div>
+
+            <!-- Bloğu Sil -->
+            <div class="erp-ops-card" th:classappend="${canDelete != true ? 'erp-ops-card--muted' : ''}">
+                <div class="erp-ops-card-head">
+                    <span class="erp-ops-card-icon" th:classappend="${canDelete ? 'text-rose-600 bg-rose-50' : ''}">
+                        <i data-lucide="trash-2"></i>
+                    </span>
+                    <div>
+                        <h3 class="erp-ops-card-title text-rose-900">Bloğu Sil</h3>
+                        <p class="erp-ops-card-desc">Hiçbir üretim veya satış işleminde kullanılmamış bloğu kaldırın.</p>
+                    </div>
+                </div>
+                <div class="mt-auto pt-2">
+                    <button th:if="${canDelete}" type="button" @click="deleteModalOpen = true"
+                            class="w-full min-h-11 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <span>Bloğu Sil</span>
+                    </button>
+                    <p th:unless="${canDelete}" class="text-xs text-slate-500 mt-auto">Bu blok işlem gördüğü için (kesim, iş emri, sevk veya satış) silinemez.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -180,12 +206,12 @@
                 </div>
                 <div>
                     <dt class="text-xs font-semibold text-slate-500">Yaklaşık / fiili tonaj</dt>
-                    <dd th:text="${block.approximateTonnage + ' / ' + block.actualTonnage + ' ton'}">—</dd>
+                    <dd th:text="${(block.actualWeightKg != null and block.actualWeightKg > 0) ? (block.approximateTonnage + ' / ' + block.actualTonnage + ' ton') : (block.approximateTonnage + ' ton (Kantar tartımı yok)')}">—</dd>
                 </div>
                 <div>
                     <dt class="text-xs font-semibold text-slate-500">Sapma</dt>
                     <dd>
-                        <span th:text="${block.weightDeviationPct + '%'}">0%</span>
+                        <span th:text="${(block.actualWeightKg != null and block.actualWeightKg > 0) ? (block.weightDeviationPct + '%') : '—'}">0%</span>
                         <span th:if="${weightWarning}" class="ml-2 text-xs font-semibold text-rose-700">%5 kantar uyarısı</span>
                     </dd>
                 </div>
@@ -287,6 +313,38 @@
 
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
         <div th:replace="~{fragments/audit :: auditInfo(${block?.createdDate}, ${block?.updatedDate}, ${block?.addUserId}, ${block?.updateUserId})}"></div>
+    </div>
+
+    <!-- Blok Silme Onay Modalı -->
+    <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;" x-cloak>
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md p-6 space-y-4"
+             @click.outside="deleteModalOpen = false">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Bloğu Sil</h3>
+                    <p class="text-xs text-slate-500 font-mono" th:text="${block.blockCode}">BLK-2026-00125</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 leading-relaxed">
+                <strong class="font-semibold text-slate-900" th:text="${block.blockCode}">Bu bloğu</strong> sistemden kalıcı olarak silmek istediğinize emin misiniz?
+            </p>
+            <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 space-y-1">
+                <p class="font-semibold">⚠️ Dikkat:</p>
+                <p>Bu işlem geri alınamaz. Blok ve başlangıç stok hareket kayıtları sistemden tamamen kaldırılacaktır.</p>
+            </div>
+            <form th:action="@{'/blocks/' + ${block.id} + '/delete'}" method="post" class="flex items-center justify-end gap-3 pt-2">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="button" @click="deleteModalOpen = false" class="erp-btn-secondary">Vazgeç</button>
+                <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span>Evet, Bloğu Sil</span>
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 </body>

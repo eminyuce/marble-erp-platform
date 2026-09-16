@@ -3,6 +3,7 @@ package com.ozerler.marble.dto;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.enums.BlockStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -144,7 +145,18 @@ public class BlockDto {
     @JsonAlias("weightDeviationWarning")
     private boolean weightDeviationWarning;
 
+    @JsonProperty("canDelete")
+    @JsonAlias("canDelete")
+    private boolean canDelete;
+
     public static BlockDto fromEntity(Block b) {
+        boolean deletable = b.getStatus() == BlockStatus.PRODUCED
+                && b.getSoldCustomer() == null
+                && (b.getTransportCost() == null || b.getTransportCost().compareTo(BigDecimal.ZERO) <= 0);
+        return fromEntity(b, deletable);
+    }
+
+    public static BlockDto fromEntity(Block b, boolean canDelete) {
         return BlockDto.builder()
                 .id(b.getId())
                 .quarryId(b.getQuarry() != null ? b.getQuarry().getId() : null)
@@ -178,6 +190,7 @@ public class BlockDto {
                 .actualTonnage(b.getActualTonnage())
                 .canonicalStatus(b.getCanonicalStatus().name())
                 .weightDeviationWarning(b.isWeightDeviationWarning())
+                .canDelete(canDelete)
                 .build();
     }
 }

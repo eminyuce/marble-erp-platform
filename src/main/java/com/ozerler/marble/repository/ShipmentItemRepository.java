@@ -13,4 +13,5 @@ public interface ShipmentItemRepository extends JpaRepository<ShipmentItem, Long
     List<ShipmentItem> findByPalletId(Long palletId);
 
     List<ShipmentItem> findByMaterialLotId(Long materialLotId);
+    boolean existsByBlockId(Long blockId);
 }

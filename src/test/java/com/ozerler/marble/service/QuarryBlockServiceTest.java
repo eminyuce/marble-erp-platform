@@ -1,18 +1,26 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.BlockLocationMovement;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.Quarry;
 import com.ozerler.marble.model.StockLocation;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.repository.BlockCustomerMarkRepository;
 import com.ozerler.marble.repository.BlockLocationMovementRepository;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.CostTransactionRepository;
 import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.FactoryWorkOrderRepository;
+import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.QuarryRepository;
+import com.ozerler.marble.repository.ShipmentItemRepository;
+import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockLocationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,6 +58,18 @@ class QuarryBlockServiceTest {
     private CostCenterRepository costCenterRepository;
     @Mock
     private CustomerRepository customerRepository;
+    @Mock
+    private SlabRepository slabRepository;
+    @Mock
+    private FactoryWorkOrderRepository factoryWorkOrderRepository;
+    @Mock
+    private ProductionOrderRepository productionOrderRepository;
+    @Mock
+    private BlockCustomerMarkRepository blockCustomerMarkRepository;
+    @Mock
+    private CostTransactionRepository costTransactionRepository;
+    @Mock
+    private ShipmentItemRepository shipmentItemRepository;
 
     private QuarryBlockService quarryBlockService;
 
@@ -56,7 +77,9 @@ class QuarryBlockServiceTest {
     void setUp() {
         quarryBlockService = new QuarryBlockService(
                 blockRepository, quarryRepository, null, stockLocationRepository, movementRepository,
-                null, expenseService, costCenterRepository, customerRepository);
+                null, expenseService, costCenterRepository, customerRepository,
+                slabRepository, factoryWorkOrderRepository, productionOrderRepository,
+                blockCustomerMarkRepository, costTransactionRepository, shipmentItemRepository);
     }
 
     @Test
@@ -169,5 +192,183 @@ class QuarryBlockServiceTest {
         assertThat(sold.getStatus()).isEqualTo(BlockStatus.SOLD);
         assertThat(sold.getSoldCustomer().getCompanyName()).isEqualTo("Mermer A.Ş.");
         verify(movementRepository).save(any());
+    }
+
+    @Test
+    @DisplayName("registering a block without actual weighbridge weight calculates theoretical weight from dimensions and quarry specific gravity")
+    void registerBlock_WithoutActualWeight_CalculatesTheoreticalMetrics() {
+        Quarry quarry = Quarry.builder()
+                .id(1L)
+                .name("Afyon Ocağı")
+                .specificGravity(new BigDecimal("2.70"))
+                .build();
+        StockLocation production = StockLocation.builder()
+                .id(1L)
+                .code("OCAK-URETIM")
+                .name("Üretim Sahası")
+                .locationType(StockLocationType.PRODUCTION_YARD)
+                .businessUnit(BusinessUnit.QUARRY)
+                .build();
+
+        when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
+        when(blockRepository.existsByBlockCode("BLK-AUTO-01")).thenReturn(false);
+        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
+                .thenReturn(Optional.of(production));
+        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // En: 200 cm, Boy: 250 cm, Yükseklik: 150 cm -> Hacim: 7.500 m³ -> 7.5 * 2.70 = 20.25 ton = 20250.00 kg
+        Block saved = quarryBlockService.registerBlock(
+                1L, "BLK-AUTO-01", null, 200, 250, 150, null, "Beyaz Mermer", "Açık",
+                QualityGrade.A, 0, new BigDecimal("5000"), "Notlar", null);
+
+        assertThat(saved).isNotNull();
+        assertThat(saved.getVolumeM3()).isEqualByComparingTo(new BigDecimal("7.500"));
+        assertThat(saved.getTheoreticalWeightKg()).isEqualByComparingTo(new BigDecimal("20250.00"));
+        assertThat(saved.getActualWeightKg()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(saved.getApproximateTonnage()).isEqualByComparingTo(new BigDecimal("20.25"));
+        verify(blockRepository).save(any(Block.class));
+    }
+
+    @Test
+    @DisplayName("canDeleteBlock returns true when block is PRODUCED, unsold, has no transport cost and is unused downstream")
+    void canDeleteBlock_WhenUnused_ReturnsTrue() {
+        Block block = Block.builder()
+                .id(10L)
+                .blockCode("BLK-DELETE-01")
+                .status(BlockStatus.PRODUCED)
+                .transportCost(BigDecimal.ZERO)
+                .build();
+
+        when(blockRepository.findById(10L)).thenReturn(Optional.of(block));
+        when(slabRepository.existsByBlockId(10L)).thenReturn(false);
+        when(factoryWorkOrderRepository.findFirstByBlockIdOrderByIdDesc(10L)).thenReturn(Optional.empty());
+        when(productionOrderRepository.findByBlockId(10L)).thenReturn(List.of());
+        when(blockCustomerMarkRepository.existsByBlockId(10L)).thenReturn(false);
+        when(costTransactionRepository.findByBlockId(10L)).thenReturn(List.of());
+        when(shipmentItemRepository.existsByBlockId(10L)).thenReturn(false);
+
+        boolean canDelete = quarryBlockService.canDeleteBlock(10L);
+
+        assertThat(canDelete).isTrue();
+    }
+
+    @Test
+    @DisplayName("canDeleteBlock returns false when block has slabs cut from it")
+    void canDeleteBlock_WhenUsedInSlabs_ReturnsFalse() {
+        Block block = Block.builder()
+                .id(11L)
+                .blockCode("BLK-DELETE-02")
+                .status(BlockStatus.PRODUCED)
+                .transportCost(BigDecimal.ZERO)
+                .build();
+
+        when(blockRepository.findById(11L)).thenReturn(Optional.of(block));
+        when(slabRepository.existsByBlockId(11L)).thenReturn(true);
+
+        boolean canDelete = quarryBlockService.canDeleteBlock(11L);
+
+        assertThat(canDelete).isFalse();
+    }
+
+    @Test
+    @DisplayName("deleteBlock deletes block and its initial location movements when completely unused")
+    void deleteBlock_WhenUnused_DeletesSuccessfully() {
+        Block block = Block.builder()
+                .id(12L)
+                .blockCode("BLK-DELETE-03")
+                .status(BlockStatus.PRODUCED)
+                .transportCost(BigDecimal.ZERO)
+                .build();
+        BlockLocationMovement mv = BlockLocationMovement.builder().id(101L).block(block).build();
+
+        when(blockRepository.findById(12L)).thenReturn(Optional.of(block));
+        when(slabRepository.existsByBlockId(12L)).thenReturn(false);
+        when(factoryWorkOrderRepository.findFirstByBlockIdOrderByIdDesc(12L)).thenReturn(Optional.empty());
+        when(productionOrderRepository.findByBlockId(12L)).thenReturn(List.of());
+        when(blockCustomerMarkRepository.existsByBlockId(12L)).thenReturn(false);
+        when(costTransactionRepository.findByBlockId(12L)).thenReturn(List.of());
+        when(shipmentItemRepository.existsByBlockId(12L)).thenReturn(false);
+        when(movementRepository.findByBlockIdOrderByCreatedDateDesc(12L)).thenReturn(List.of(mv));
+
+        quarryBlockService.deleteBlock(12L);
+
+        verify(movementRepository).deleteAll(List.of(mv));
+        verify(blockRepository).delete(block);
+    }
+
+    @Test
+    @DisplayName("deleteBlock throws IllegalStateException when block is not deletable")
+    void deleteBlock_WhenUsed_ThrowsIllegalStateException() {
+        Block block = Block.builder()
+                .id(13L)
+                .blockCode("BLK-DELETE-04")
+                .status(BlockStatus.AT_FACTORY)
+                .build();
+
+        when(blockRepository.findById(13L)).thenReturn(Optional.of(block));
+
+        assertThatThrownBy(() -> quarryBlockService.deleteBlock(13L))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(blockRepository, never()).delete(any());
+        verify(movementRepository, never()).deleteAll(any());
+    }
+
+    @Test
+    @DisplayName("registerBlock with locationType assigns selected location and records initial movement")
+    void registerBlock_WithLocationType_AssignsSelectedLocationAndRecordsMovement() {
+        Quarry quarry = Quarry.builder().id(1L).specificGravity(new BigDecimal("2.70")).build();
+        StockLocation dispatchYard = StockLocation.builder()
+                .id(2L).code("OCAK-SEVK").name("Stok Sahası")
+                .locationType(StockLocationType.DISPATCH_YARD).businessUnit(BusinessUnit.QUARRY).build();
+
+        when(blockRepository.existsByBlockCode("BLK-REG-01")).thenReturn(false);
+        when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
+        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.DISPATCH_YARD))
+                .thenReturn(Optional.of(dispatchYard));
+        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Block result = quarryBlockService.registerBlock(
+                1L, "BLK-REG-01", null, 200, 200, 150,
+                null, "Beyaz", "Açık", QualityGrade.A, 0,
+                BigDecimal.valueOf(1000), "Not", null, StockLocationType.DISPATCH_YARD);
+
+        assertThat(result.getCurrentLocation()).isEqualTo(dispatchYard);
+        verify(movementRepository).save(any(BlockLocationMovement.class));
+    }
+
+    @Test
+    @DisplayName("updateBlock with locationType change updates location and records movement")
+    void updateBlock_WithLocationTypeChange_UpdatesLocationAndRecordsMovement() {
+        Quarry quarry = Quarry.builder().id(1L).specificGravity(new BigDecimal("2.70")).build();
+        StockLocation prodYard = StockLocation.builder()
+                .id(1L).code("OCAK-URETIM").name("Üretim Sahası")
+                .locationType(StockLocationType.PRODUCTION_YARD).businessUnit(BusinessUnit.QUARRY).build();
+        StockLocation dispatchYard = StockLocation.builder()
+                .id(2L).code("OCAK-SEVK").name("Stok Sahası")
+                .locationType(StockLocationType.DISPATCH_YARD).businessUnit(BusinessUnit.QUARRY).build();
+        Block block = Block.builder()
+                .id(20L)
+                .blockCode("BLK-UPD-01")
+                .quarry(quarry)
+                .currentLocation(prodYard)
+                .status(BlockStatus.PRODUCED)
+                .build();
+
+        when(blockRepository.findById(20L)).thenReturn(Optional.of(block));
+        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.DISPATCH_YARD))
+                .thenReturn(Optional.of(dispatchYard));
+        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Block updated = quarryBlockService.updateBlock(
+                20L, 1L, "BLK-UPD-01", null, 200, 200, 150,
+                null, "Beyaz", "Açık", QualityGrade.A, 0,
+                BigDecimal.valueOf(1000), "Not", null, StockLocationType.DISPATCH_YARD);
+
+        assertThat(updated.getCurrentLocation()).isEqualTo(dispatchYard);
+        ArgumentCaptor<BlockLocationMovement> captor = ArgumentCaptor.forClass(BlockLocationMovement.class);
+        verify(movementRepository).save(captor.capture());
+        assertThat(captor.getValue().getFromLocation()).isEqualTo(prodYard);
+        assertThat(captor.getValue().getToLocation()).isEqualTo(dispatchYard);
     }
 }

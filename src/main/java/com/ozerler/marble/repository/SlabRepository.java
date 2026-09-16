@@ -27,6 +27,8 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
 
     List<Slab> findByBlockId(Long blockId);
 
+    boolean existsByBlockId(Long blockId);
+
     List<Slab> findByProductionOrderId(Long orderId);
 
     List<Slab> findByStatus(SlabStatus status);

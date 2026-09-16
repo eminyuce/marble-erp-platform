@@ -1,9 +1,9 @@
 // Tabulator 6 Data Grid for quarry block production
 let blocksTable;
-let pendingSellBlockId = null;
 let pendingTransferBlockId = null;
 let pendingMoveBlockId = null;
 let pendingMoveTargetType = null;
+let pendingDeleteBlockId = null;
 
 function quarryPage() {
     return {
@@ -98,9 +98,7 @@ function initBlocksGrid() {
                         ? "bg-amber-100 text-amber-800"
                         : row.locationType === "DISPATCH_YARD"
                             ? "bg-sky-100 text-sky-800"
-                            : row.locationType === "FACTORY_BLOCK_YARD"
-                                ? "bg-indigo-100 text-indigo-800"
-                                : "bg-slate-100 text-slate-700";
+                            : "bg-slate-100 text-slate-700";
                     return `<span class="px-2 py-0.5 rounded text-xs font-semibold ${badge}">${name}</span>`;
                 }
             },
@@ -177,8 +175,16 @@ function initBlocksGrid() {
                                 onclick: "openMoveBlock(" + row.id + ", 'DISPATCH_YARD', 'Stok Sahasına taşı')"
                             });
                         }
-                        items.push({icon: "handshake", label: "Sat", onclick: "openSellBlock(" + row.id + ")"});
+                        items.push({icon: "handshake", label: "Sat", href: "/blocks/" + row.id + "/sell"});
                         items.push({icon: "truck", label: "Fabrikaya sevk", onclick: "openTransferBlock(" + row.id + ")"});
+                    }
+                    if (row.canDelete) {
+                        items.push({
+                            icon: "trash-2",
+                            label: "Bloğu Sil",
+                            danger: true,
+                            onclick: "openDeleteBlock(" + row.id + ", '" + (row.blockCode || "") + "')"
+                        });
                     }
                     return gridActionsHtml(items);
                 }
@@ -282,37 +288,27 @@ function moveBlock(id, targetType, description) {
     }).then(res => handleBlockActionResponse(res, "Saha güncellendi."));
 }
 
-function openSellBlock(id) {
-    pendingSellBlockId = id;
-    const dialog = document.getElementById("sell-block-dialog");
-    const select = document.getElementById("sell-customer-id");
-    if (select) select.selectedIndex = 0;
+function openDeleteBlock(id, blockCode) {
+    pendingDeleteBlockId = id;
+    const dialog = document.getElementById("delete-block-dialog");
+    const codeEl = document.getElementById("delete-block-code");
+    if (codeEl) codeEl.textContent = blockCode || ("ID: " + id);
     if (dialog && typeof dialog.showModal === "function") {
         dialog.showModal();
         return;
     }
-    showBlocksToast("Satış penceresi açılamadı.", false);
+    showBlocksToast("Silme onay penceresi açılamadı.", false);
 }
 
-function sellBlock(id, customerId) {
-    fetch(`/blocks/${id}/sell`, {
+function deleteBlock(id) {
+    fetch(`/blocks/${id}/api/delete`, {
         method: "POST",
-        headers: csrfHeaders(),
-        body: `customerId=${encodeURIComponent(customerId)}`
-    }).then(res => handleBlockActionResponse(res, "Satış kaydedildi."));
+        headers: csrfHeaders()
+    }).then(res => handleBlockActionResponse(res, "Blok başarıyla silindi."));
 }
 
 document.addEventListener("DOMContentLoaded", function () {
     initBlocksGrid();
-
-    document.getElementById("confirm-sell-block")?.addEventListener("click", function () {
-        const customerId = document.getElementById("sell-customer-id")?.value;
-        const dialog = document.getElementById("sell-block-dialog");
-        if (!customerId || !pendingSellBlockId) return;
-        sellBlock(pendingSellBlockId, customerId);
-        if (dialog) dialog.close();
-        pendingSellBlockId = null;
-    });
 
     document.getElementById("confirm-transfer-block")?.addEventListener("click", function () {
         const cost = document.getElementById("transfer-cost")?.value;
@@ -326,8 +322,16 @@ document.addEventListener("DOMContentLoaded", function () {
         pendingTransferBlockId = null;
     });
 
+    document.getElementById("confirm-delete-block")?.addEventListener("click", function () {
+        const dialog = document.getElementById("delete-block-dialog");
+        if (!pendingDeleteBlockId) return;
+        deleteBlock(pendingDeleteBlockId);
+        if (dialog) dialog.close();
+        pendingDeleteBlockId = null;
+    });
+
     document.querySelectorAll(
-        "#sell-block-dialog button[value='cancel'], #move-block-dialog button[value='cancel'], #transfer-cancel"
+        "#sell-block-dialog button[value='cancel'], #move-block-dialog button[value='cancel'], #transfer-cancel, #delete-cancel"
     ).forEach(function (btn) {
         btn.addEventListener("click", function () {
             btn.closest("dialog")?.close();

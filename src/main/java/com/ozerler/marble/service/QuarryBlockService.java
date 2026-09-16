@@ -16,11 +16,17 @@ import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.repository.BlockCustomerMarkRepository;
 import com.ozerler.marble.repository.BlockLocationMovementRepository;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.CostTransactionRepository;
 import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.FactoryWorkOrderRepository;
+import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.QuarryRepository;
+import com.ozerler.marble.repository.ShipmentItemRepository;
+import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockLocationRepository;
 import com.ozerler.marble.util.GridPages;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +56,12 @@ public class QuarryBlockService {
     private final ExpenseService expenseService;
     private final CostCenterRepository costCenterRepository;
     private final CustomerRepository customerRepository;
+    private final SlabRepository slabRepository;
+    private final FactoryWorkOrderRepository factoryWorkOrderRepository;
+    private final ProductionOrderRepository productionOrderRepository;
+    private final BlockCustomerMarkRepository blockCustomerMarkRepository;
+    private final CostTransactionRepository costTransactionRepository;
+    private final ShipmentItemRepository shipmentItemRepository;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
@@ -69,7 +81,7 @@ public class QuarryBlockService {
                 pageable -> blockRepository.searchBlocks(
                         GridPages.normalizeSearch(search), locationType, status, unsoldOnly, pageable));
         List<BlockDto> dtos = blockPage.getContent().stream()
-                .map(BlockDto::fromEntity)
+                .map(b -> BlockDto.fromEntity(b, canDeleteBlock(b)))
                 .collect(Collectors.toList());
 
         return TabulatorResponse.of(dtos, blockPage.getTotalPages(), blockPage.getTotalElements());
@@ -95,6 +107,18 @@ public class QuarryBlockService {
                                BigDecimal actualWeightKg, String stoneType, String colorTone,
                                QualityGrade qualityGrade, int crackLevel,
                                BigDecimal extractionCost, String notes, String photoUrls) {
+        return registerBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
+                actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel,
+                extractionCost, notes, photoUrls, StockLocationType.PRODUCTION_YARD);
+    }
+
+    @Transactional
+    public Block registerBlock(Long quarryId, String blockCode, LocalDate extractionDate,
+                               int widthCm, int lengthCm, int heightCm,
+                               BigDecimal actualWeightKg, String stoneType, String colorTone,
+                               QualityGrade qualityGrade, int crackLevel,
+                               BigDecimal extractionCost, String notes, String photoUrls,
+                               StockLocationType locationType) {
 
         Objects.requireNonNull(quarryId, getMessage("error.quarry.id.required"));
         Objects.requireNonNull(blockCode, getMessage("error.block.code.required"));
@@ -103,7 +127,7 @@ public class QuarryBlockService {
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.quarry.not_found", quarryId)));
         assertBlockCodeAvailable(blockCode.trim(), null);
 
-        StockLocation productionYard = requireLocation(StockLocationType.PRODUCTION_YARD);
+        StockLocation targetLocation = requireLocation(locationType != null ? locationType : StockLocationType.PRODUCTION_YARD);
         Block block = Block.builder()
                 .quarry(quarry)
                 .blockCode(blockCode.trim())
@@ -117,7 +141,7 @@ public class QuarryBlockService {
                 .qualityGrade(qualityGrade != null ? qualityGrade : QualityGrade.A)
                 .crackLevel(crackLevel)
                 .status(BlockStatus.PRODUCED)
-                .currentLocation(productionYard)
+                .currentLocation(targetLocation)
                 .extractionCost(extractionCost != null ? extractionCost : BigDecimal.ZERO)
                 .transportCost(BigDecimal.ZERO)
                 .notes(notes)
@@ -126,7 +150,7 @@ public class QuarryBlockService {
 
         block.calculateMetrics(quarry.getSpecificGravity());
         Block saved = blockRepository.save(block);
-        recordMovement(saved, null, productionYard, "Blok üretimi");
+        recordMovement(saved, null, targetLocation, "Blok üretimi - " + targetLocation.getName());
         return saved;
     }
 
@@ -136,6 +160,18 @@ public class QuarryBlockService {
                              BigDecimal actualWeightKg, String stoneType, String colorTone,
                              QualityGrade qualityGrade, int crackLevel,
                              BigDecimal extractionCost, String notes, String photoUrls) {
+        return updateBlock(id, quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
+                actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel,
+                extractionCost, notes, photoUrls, null);
+    }
+
+    @Transactional
+    public Block updateBlock(Long id, Long quarryId, String blockCode, LocalDate extractionDate,
+                             int widthCm, int lengthCm, int heightCm,
+                             BigDecimal actualWeightKg, String stoneType, String colorTone,
+                             QualityGrade qualityGrade, int crackLevel,
+                             BigDecimal extractionCost, String notes, String photoUrls,
+                             StockLocationType locationType) {
         Block block = getBlockById(id);
         assertBlockCodeAvailable(blockCode.trim(), id);
         if (quarryId != null && !quarryId.equals(block.getQuarry().getId())) {
@@ -162,8 +198,75 @@ public class QuarryBlockService {
         if (photoUrls != null && !photoUrls.isBlank()) {
             block.setPhotoUrls(photoUrls);
         }
+
+        // Move to specific area if changed in edit page
+        if (locationType != null && (block.getCurrentLocation() == null || block.getCurrentLocation().getLocationType() != locationType)) {
+            StockLocation oldLoc = block.getCurrentLocation();
+            StockLocation newLoc = requireLocation(locationType);
+            block.setCurrentLocation(newLoc);
+            recordMovement(block, oldLoc, newLoc, "Düzenleme formundan saha taşıma: " + newLoc.getName());
+        }
+
         block.calculateMetrics(block.getQuarry().getSpecificGravity());
         return blockRepository.save(block);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean canDeleteBlock(Long blockId) {
+        if (blockId == null) {
+            return false;
+        }
+        return blockRepository.findById(blockId).map(this::canDeleteBlock).orElse(false);
+    }
+
+    public boolean canDeleteBlock(Block block) {
+        if (block == null || block.getId() == null) {
+            return false;
+        }
+        // Sadece ocakta üretilmiş (PRODUCED) ve satılmamış bloklar silinebilir
+        if (block.getStatus() != BlockStatus.PRODUCED) {
+            return false;
+        }
+        if (block.getSoldCustomer() != null) {
+            return false;
+        }
+        if (block.getTransportCost() != null && block.getTransportCost().compareTo(BigDecimal.ZERO) > 0) {
+            return false;
+        }
+        Long id = block.getId();
+        if (slabRepository.existsByBlockId(id)) {
+            return false;
+        }
+        if (factoryWorkOrderRepository.findFirstByBlockIdOrderByIdDesc(id).isPresent()) {
+            return false;
+        }
+        if (!productionOrderRepository.findByBlockId(id).isEmpty()) {
+            return false;
+        }
+        if (blockCustomerMarkRepository.existsByBlockId(id)) {
+            return false;
+        }
+        if (!costTransactionRepository.findByBlockId(id).isEmpty()) {
+            return false;
+        }
+        if (shipmentItemRepository.existsByBlockId(id)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Transactional
+    public void deleteBlock(Long blockId) {
+        Objects.requireNonNull(blockId, getMessage("error.block.id.required"));
+        Block block = getBlockById(blockId);
+        if (!canDeleteBlock(block)) {
+            throw new IllegalStateException(getMessage("error.block.cannot_delete", block.getBlockCode()));
+        }
+        List<BlockLocationMovement> movements = movementRepository.findByBlockIdOrderByCreatedDateDesc(blockId);
+        if (!movements.isEmpty()) {
+            movementRepository.deleteAll(movements);
+        }
+        blockRepository.delete(block);
     }
 
     @Transactional
@@ -288,8 +391,7 @@ public class QuarryBlockService {
                         StockLocationType.PRODUCTION_YARD, BlockStatus.SOLD))
                 .dispatchYardCount(blockRepository.countByCurrentLocation_LocationTypeAndStatusNot(
                         StockLocationType.DISPATCH_YARD, BlockStatus.SOLD))
-                .factoryYardCount(blockRepository.countByCurrentLocation_LocationTypeAndStatusNot(
-                        StockLocationType.FACTORY_BLOCK_YARD, BlockStatus.SOLD))
+                .factoryYardCount(0L)
                 .soldCount(blockRepository.countByStatus(BlockStatus.SOLD))
                 .costPerTonThisMonth(analysis.getUnitCost() != null ? analysis.getUnitCost() : BigDecimal.ZERO)
                 .unallocatedCarryForward(analysis.isUnallocatedCarryForward())
