@@ -112,6 +112,27 @@ prepare_log() {
     chmod 644 "$LOG_FILE" 2>/dev/null || true
 }
 
+# Git 2.35.2+ refuses a work tree owned by another user (CVE-2022-24765).
+# Interactive SSH uses `sudo git pull` (root, clone owned by eyuce). systemd-run
+# starts a clean root service whose gitconfig does not yet trust that path.
+ensure_git_safe_directory() {
+    local dir="$1"
+    local existing=""
+    if [ "$(id -u)" -ne 0 ]; then
+        return 0
+    fi
+    existing="$(git config --system --get-all safe.directory 2>/dev/null || true)"
+    if printf '%s\n' "$existing" | grep -Fxq "$dir"; then
+        return 0
+    fi
+    git config --system --add safe.directory "$dir"
+}
+
+# Same effective command as: sudo git -c safe.directory=* ...
+git_cmd() {
+    git -c safe.directory="$REPO_ROOT" -c safe.directory='*' "$@"
+}
+
 detach_into_independent_unit() {
     if ! command -v systemd-run >/dev/null 2>&1; then
         echo "systemd-run is required so deploy survives marble-erp restart." >&2
@@ -128,6 +149,9 @@ detach_into_independent_unit() {
         --quiet \
         --property=KillMode=mixed \
         --working-directory="${REPO_ROOT}" \
+        --setenv=GIT_CONFIG_COUNT=1 \
+        --setenv=GIT_CONFIG_KEY_0=safe.directory \
+        --setenv=GIT_CONFIG_VALUE_0="$REPO_ROOT" \
         /bin/bash "$0" \
             --foreground \
             --repo "$REPO_ROOT" \
@@ -141,6 +165,7 @@ detach_into_independent_unit() {
 if [ "$FOREGROUND" -ne 1 ]; then
     prepare_log
     write_status "RUNNING" "$(iso_now)" "" ""
+    ensure_git_safe_directory "$REPO_ROOT"
     detach_into_independent_unit
     exit 0
 fi
@@ -193,15 +218,14 @@ if [ ! -x "$REPO_ROOT/scripts/deploy_production.sh" ]; then
 fi
 
 cd "$REPO_ROOT"
+ensure_git_safe_directory "$REPO_ROOT"
 
-echo "\$ git fetch ${GIT_REMOTE} ${GIT_BRANCH}"
-git fetch "$GIT_REMOTE" "$GIT_BRANCH"
-
+# Matches the host workflow: sudo git pull origin main
 echo "\$ git checkout ${GIT_BRANCH}"
-git checkout "$GIT_BRANCH"
+git_cmd checkout "$GIT_BRANCH"
 
 echo "\$ git pull ${GIT_REMOTE} ${GIT_BRANCH}"
-git pull "$GIT_REMOTE" "$GIT_BRANCH"
+git_cmd pull "$GIT_REMOTE" "$GIT_BRANCH"
 
 echo
 echo "\$ ./scripts/deploy_production.sh -y"

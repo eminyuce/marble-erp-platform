@@ -9,7 +9,7 @@
     <h3>İlk kurulum</h3>
     <ul class="help-panel-list">
         <li>Bu ekran yalnızca Linux üretim sunucusunda ve yönetici hesabıyla çalışır.</li>
-        <li>İlk kez SSH ile <code>sudo ./scripts/deploy_production.sh -y</code> çalıştırın; bu, sonraki yayınlar için şifresiz sudo ve yayın komutunu kurar.</li>
+        <li>İlk kez SSH ile <code>sudo git pull origin main</code> ve <code>sudo ./scripts/deploy_production.sh -y</code> çalıştırın. Bu, sonraki yayınlar için şifresiz sudo, yayın komutunu ve git <code>safe.directory</code> iznini kurar.</li>
         <li>Düğme kapalıysa sarı kutudaki nedeni okuyun.</li>
     </ul>
 </section>
