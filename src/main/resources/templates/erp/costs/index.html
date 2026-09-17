@@ -2,26 +2,36 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Maliyet Analizi | Özerler Mermer ERP</title>
+    <title>Maliyet Analizi & Kârlılık Yönetimi | Özerler Mermer ERP</title>
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-6" x-data="{ tab: 'quarry' }">
 
+    <!-- 1. Header & Lead Section -->
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Maliyet Analizi')}"></div>
-            <h2 class="admin-page-title">Maliyet Analizi</h2>
-            <p class="erp-list-lead">Ocak, fabrika, atölye ve şantiye sonuçları kayıtlı gider ve operasyonlardan hesaplanır.</p>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="calculator" class="w-6 h-6 text-amber-700"></i>
+                <span>Maliyet Analizi & Kârlılık Yönetimi</span>
+            </h2>
+            <p class="erp-list-lead">Ocak tonaj maliyeti, fabrika plaka maliyeti, atölye ebatlama ve şantiye montaj kâr/zararı canlı hesaplanır. 1 m² mermerin gerçek maliyetini ortaya çıkarır.</p>
         </div>
-        <form method="get" th:action="@{/costs}" class="flex items-center gap-2">
-            <label class="text-xs font-semibold text-slate-600" for="period">Dönem</label>
+        <form method="get" th:action="@{/costs}" class="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
+            <label class="text-xs font-bold text-slate-600 pl-2 flex items-center gap-1" for="period">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                <span>Dönem</span>
+            </label>
             <input id="period" type="month" name="period" th:value="${period}"
-                   class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
-            <button type="submit" class="px-3 py-2 text-sm font-semibold bg-slate-800 text-white rounded-lg">Uygula</button>
+                   class="px-2.5 py-1.5 text-xs font-mono font-semibold border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <button type="submit" class="px-3 py-1.5 text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-lg transition-colors flex items-center gap-1">
+                <i data-lucide="filter" class="w-3 h-3"></i>
+                <span>Uygula</span>
+            </button>
         </form>
     </div>
 
-    <!-- Blueprint Maliyet Formül Kartları -->
+    <!-- 2. Blueprint Formül Bilgi Şeridi -->
     <div class="rounded-2xl border border-stone-900 bg-stone-900 text-stone-100 p-5 md:p-6 shadow-xl space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
@@ -29,194 +39,533 @@
                     <i data-lucide="calculator" class="w-4 h-4"></i>
                 </div>
                 <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-white">Maliyet Analizinin Kalbi — Formül Kartları</h3>
-                    <p class="text-[11px] text-stone-400">1 m² mermerin gerçek maliyetini bilmek ve kârı görmek için canlı hesaplama modelleri</p>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white">Maliyet Analizinin Kalbi — Canlı Hesaplama Modelleri</h3>
+                    <p class="text-[11px] text-stone-400">Taşı ocaktan çıkarıp m²'ye ve montaja çevirene kadar fire ve maliyetin her operasyonda takibi</p>
                 </div>
             </div>
             <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold bg-white/10 text-amber-300 border border-white/10">
-                Dönem: <span th:text="${period}">2026-09</span>
+                Aktif Dönem: <span th:text="${period}">2026-09</span>
             </span>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="rounded-xl bg-white/[0.06] border border-white/10 p-3.5 backdrop-blur">
                 <div class="flex items-center justify-between text-xs">
-                    <span class="font-bold text-stone-200">Ton Başına Maliyet</span>
+                    <span class="font-bold text-stone-200">1. Ocak Ton Maliyeti</span>
                     <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-amber-300">₺ / Ton</span>
                 </div>
                 <div class="mt-2 rounded bg-black/40 border border-white/5 p-2 font-mono text-[11px] text-amber-200 leading-snug">
                     (Mazot + Elk + İşçilik + Sarf) / Tonaj
                 </div>
-                <div class="mt-2 text-[10px] text-stone-400 leading-tight">Ocak modülü. Elektrik 1 ay gecikmeli düzeltme dahil.</div>
+                <div class="mt-2 text-[10px] text-stone-400 leading-tight">Ocak modülü. Elektrik faturası 1 ay gecikmeli düzeltme ile eklenir.</div>
             </div>
 
             <div class="rounded-xl bg-white/[0.06] border border-white/10 p-3.5 backdrop-blur">
                 <div class="flex items-center justify-between text-xs">
-                    <span class="font-bold text-stone-200">m² Başına Maliyet</span>
+                    <span class="font-bold text-stone-200">2. Fabrika Plaka Maliyeti</span>
                     <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-cyan-300">₺ / m²</span>
                 </div>
                 <div class="mt-2 rounded bg-black/40 border border-white/5 p-2 font-mono text-[11px] text-cyan-200 leading-snug">
-                    (Blok Girişi + Fabrika Gideri) / Net Çıkan m²
+                    (Blok Girişi + Fabrika Gideri) / Net m²
                 </div>
-                <div class="mt-2 text-[10px] text-stone-400 leading-tight">Kesim + Cila + Ebatlama toplamı, fire düşülmüş.</div>
+                <div class="mt-2 text-[10px] text-stone-400 leading-tight">ST / Katrak kesim + cila toplamı, fire düşülmüş net alan.</div>
             </div>
 
             <div class="rounded-xl bg-white/[0.06] border border-white/10 p-3.5 backdrop-blur">
                 <div class="flex items-center justify-between text-xs">
-                    <span class="font-bold text-stone-200">Fire Oranı</span>
-                    <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-rose-300">% Fire</span>
+                    <span class="font-bold text-stone-200">3. Atölye Ebatlama Maliyeti</span>
+                    <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-purple-300">₺ / m² Mamul</span>
                 </div>
-                <div class="mt-2 rounded bg-black/40 border border-white/5 p-2 font-mono text-[11px] text-rose-200 leading-snug">
-                    (Giren m² - Çıkan m²) / Giren m² × 100
+                <div class="mt-2 rounded bg-black/40 border border-white/5 p-2 font-mono text-[11px] text-purple-200 leading-snug">
+                    (Plaka Giriş + Ebatlama Gideri) / Net Parça m²
                 </div>
-                <div class="mt-2 text-[10px] text-stone-400 leading-tight">ST/Katrak, Cila, Köprü Kesme her adımda izlenir.</div>
+                <div class="mt-2 text-[10px] text-stone-400 leading-tight">Köprü kesme, pah, su jeti ve kumlama işçilikleri bindirilir.</div>
             </div>
 
             <div class="rounded-xl bg-white/[0.06] border border-white/10 p-3.5 backdrop-blur">
                 <div class="flex items-center justify-between text-xs">
-                    <span class="font-bold text-stone-200">Şantiye Kârı</span>
-                    <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-emerald-300">₺ Kâr</span>
+                    <span class="font-bold text-stone-200">4. Şantiye Net Kârı</span>
+                    <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-emerald-300">₺ Net Kâr</span>
                 </div>
                 <div class="mt-2 rounded bg-black/40 border border-white/5 p-2 font-mono text-[11px] text-emerald-200 leading-snug">
                     Hakediş - (Mermer + Giderler + Nakliye)
                 </div>
-                <div class="mt-2 text-[10px] text-stone-400 leading-tight">Proje kapanışında mahal bazlı kesin kâr/zarar.</div>
+                <div class="mt-2 text-[10px] text-stone-400 leading-tight">Proje kapanışında mahal bazlı kesin kâr/zarar ve marj tablosu.</div>
             </div>
         </div>
     </div>
 
-    <div class="flex flex-wrap gap-2">
-        <button type="button" @click="tab = 'quarry'" class="px-3 py-2 rounded-lg text-sm font-semibold"
-                :class="tab === 'quarry' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'">Ocak Maliyet Analizi</button>
-        <button type="button" @click="tab = 'factory'" class="px-3 py-2 rounded-lg text-sm font-semibold"
-                :class="tab === 'factory' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'">Fabrika Maliyet Analizi</button>
-        <button type="button" @click="tab = 'workshop'" class="px-3 py-2 rounded-lg text-sm font-semibold"
-                :class="tab === 'workshop' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'">Atölye Maliyet Analizi</button>
-        <button type="button" @click="tab = 'site'" class="px-3 py-2 rounded-lg text-sm font-semibold"
-                :class="tab === 'site' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'">Şantiye Maliyet Analizi</button>
-        <button type="button" @click="tab = 'pricing'" class="px-3 py-2 rounded-lg text-sm font-semibold"
-                :class="tab === 'pricing' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'">Fiyat Simülasyonu</button>
+    <!-- 3. Top Summary KPI Cards (Blocks Style) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <!-- Ocak Ton Maliyeti -->
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="tab === 'quarry' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="tab = 'quarry'">
+            <div class="text-[11px] uppercase tracking-wide text-amber-700 font-semibold flex items-center justify-between">
+                <span>Ocak Ton Maliyeti</span>
+                <i data-lucide="mountain" class="w-4 h-4 text-amber-600"></i>
+            </div>
+            <div class="text-lg font-black text-amber-950 mt-1 font-mono">
+                <span th:text="${quarryAnalysis.unitCost != null ? #numbers.formatDecimal(quarryAnalysis.unitCost, 1, 'POINT', 0, 'COMMA') + ' ₺' : '—'}">—</span>
+                <span class="text-xs font-normal text-amber-800">/ Ton</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1 font-mono">
+                Üretim: <span class="text-slate-700 font-semibold" th:text="${quarryAnalysis.productionQuantity != null ? #numbers.formatDecimal(quarryAnalysis.productionQuantity, 1, 'POINT', 0, 'COMMA') + ' T' : '0 T'}">0 T</span>
+            </div>
+        </button>
+
+        <!-- Fabrika Plaka Maliyeti -->
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="tab === 'factory' ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
+                @click="tab = 'factory'">
+            <div class="text-[11px] uppercase tracking-wide text-blue-700 font-semibold flex items-center justify-between">
+                <span>Fabrika Plaka Maliyeti</span>
+                <i data-lucide="factory" class="w-4 h-4 text-blue-600"></i>
+            </div>
+            <div class="text-lg font-black text-blue-950 mt-1 font-mono">
+                <span th:text="${factoryAnalysis.unitCost != null ? #numbers.formatDecimal(factoryAnalysis.unitCost, 1, 'POINT', 1, 'COMMA') + ' ₺' : '—'}">—</span>
+                <span class="text-xs font-normal text-blue-800">/ m²</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1 font-mono">
+                Plaka: <span class="text-slate-700 font-semibold" th:text="${factoryAnalysis.productionQuantity != null ? #numbers.formatDecimal(factoryAnalysis.productionQuantity, 1, 'POINT', 0, 'COMMA') + ' m²' : '0 m²'}">0 m²</span>
+            </div>
+        </button>
+
+        <!-- Atölye Ebatlama Maliyeti -->
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="tab === 'workshop' ? 'erp-summary-card--active ring-2 ring-purple-500' : ''"
+                @click="tab = 'workshop'">
+            <div class="text-[11px] uppercase tracking-wide text-purple-700 font-semibold flex items-center justify-between">
+                <span>Atölye Ebatlama</span>
+                <i data-lucide="scissors" class="w-4 h-4 text-purple-600"></i>
+            </div>
+            <div class="text-lg font-black text-purple-950 mt-1 font-mono">
+                <span th:text="${workshopAnalysis.unitCost != null ? #numbers.formatDecimal(workshopAnalysis.unitCost, 1, 'POINT', 1, 'COMMA') + ' ₺' : '—'}">—</span>
+                <span class="text-xs font-normal text-purple-800">/ m²</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1 font-mono">
+                Ebatlı: <span class="text-slate-700 font-semibold" th:text="${workshopAnalysis.productionQuantity != null ? #numbers.formatDecimal(workshopAnalysis.productionQuantity, 1, 'POINT', 0, 'COMMA') + ' m²' : '0 m²'}">0 m²</span>
+            </div>
+        </button>
+
+        <!-- Dönem Toplam Gideri -->
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="tab === 'expenses' ? 'erp-summary-card--active ring-2 ring-slate-800' : ''"
+                @click="tab = 'expenses'">
+            <div class="text-[11px] uppercase tracking-wide text-slate-600 font-semibold flex items-center justify-between">
+                <span>Dönem Toplam Gideri</span>
+                <i data-lucide="receipt" class="w-4 h-4 text-slate-500"></i>
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1 font-mono"
+                 th:text="${totalPeriodExpense != null ? #numbers.formatDecimal(totalPeriodExpense, 1, 'POINT', 0, 'COMMA') + ' ₺' : '0 ₺'}">0 ₺</div>
+            <div class="text-[11px] text-slate-400 mt-1">4 Birim Konsolide Gider</div>
+        </button>
+
+        <!-- Şantiyeler Net Kârı -->
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="tab === 'site' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="tab = 'site'">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-700 font-semibold flex items-center justify-between">
+                <span>Şantiye Net Kârı</span>
+                <i data-lucide="building-2" class="w-4 h-4 text-emerald-600"></i>
+            </div>
+            <div class="text-lg font-black font-mono mt-1"
+                 th:classappend="${totalSiteNet != null && totalSiteNet >= 0 ? 'text-emerald-700' : 'text-rose-700'}"
+                 th:text="${totalSiteNet != null ? #numbers.formatDecimal(totalSiteNet, 1, 'POINT', 0, 'COMMA') + ' ₺' : '0 ₺'}">0 ₺</div>
+            <div class="text-[11px] text-slate-400 mt-1 font-mono">
+                Hakediş: <span class="text-slate-700 font-semibold" th:text="${totalSiteRevenue != null ? #numbers.formatDecimal(totalSiteRevenue, 1, 'POINT', 0, 'COMMA') + ' ₺' : '0 ₺'}">0 ₺</span>
+            </div>
+        </button>
     </div>
 
+    <!-- 4. Operational Filter Chips (Blocks Style) -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="tab === 'quarry' ? 'erp-yard-chip--active' : ''"
+                @click="tab = 'quarry'">
+            <i data-lucide="mountain" class="w-3.5 h-3.5 inline mr-1"></i>
+            Ocak Maliyet Analizi
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="tab === 'factory' ? 'erp-yard-chip--active' : ''"
+                @click="tab = 'factory'">
+            <i data-lucide="factory" class="w-3.5 h-3.5 inline mr-1"></i>
+            Fabrika Maliyet Analizi
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="tab === 'workshop' ? 'erp-yard-chip--active' : ''"
+                @click="tab = 'workshop'">
+            <i data-lucide="scissors" class="w-3.5 h-3.5 inline mr-1"></i>
+            Atölye Maliyet Analizi
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="tab === 'site' ? 'erp-yard-chip--active' : ''"
+                @click="tab = 'site'">
+            <i data-lucide="building-2" class="w-3.5 h-3.5 inline mr-1"></i>
+            Şantiye Maliyet Analizi
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="tab === 'pricing' ? 'erp-yard-chip--active' : ''"
+                @click="tab = 'pricing'">
+            <i data-lucide="calculator" class="w-3.5 h-3.5 inline mr-1"></i>
+            Fiyat Simülasyonu
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="tab === 'expenses' ? 'erp-yard-chip--active' : ''"
+                @click="tab = 'expenses'">
+            <i data-lucide="receipt" class="w-3.5 h-3.5 inline mr-1"></i>
+            Gider Girişi & Dönem Kapama
+        </button>
+    </div>
+
+    <!-- 5. Standard ERP Toolbar -->
+    <div class="erp-toolbar">
+        <button type="button" @click="tab = 'expenses'" class="erp-btn-primary">
+            <i data-lucide="plus"></i>
+            <span>Yeni Gider Kaydı Girişi</span>
+        </button>
+
+        <div class="text-xs text-slate-500 hidden md:flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Maliyet Analizi Gerçek Zamanlı Hesaplama Aktif</span>
+        </div>
+
+        <div class="erp-toolbar-actions">
+            <button type="button" @click="tab = 'pricing'" class="erp-btn-secondary">
+                <i data-lucide="trending-up"></i>
+                <span>Fiyat Simülasyonu</span>
+            </button>
+            <a th:href="@{/reports}" class="erp-btn-secondary">
+                <i data-lucide="file-spreadsheet"></i>
+                <span>Maliyet Raporları</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 6. Tab Content Panels -->
+
+    <!-- TAB 1: OCAK -->
     <div x-show="tab === 'quarry'">
         <th:block th:replace="~{erp/costs/analysis-panel :: panel(${quarryAnalysis})}"></th:block>
     </div>
+
+    <!-- TAB 2: FABRİKA -->
     <div x-show="tab === 'factory'" style="display:none">
         <th:block th:replace="~{erp/costs/analysis-panel :: panel(${factoryAnalysis})}"></th:block>
     </div>
+
+    <!-- TAB 3: ATÖLYE -->
     <div x-show="tab === 'workshop'" style="display:none">
         <th:block th:replace="~{erp/costs/analysis-panel :: panel(${workshopAnalysis})}"></th:block>
     </div>
-    <div x-show="tab === 'site'" style="display:none">
+
+    <!-- TAB 4: ŞANTİYE VE MAHAL KÂR/ZARAR -->
+    <div x-show="tab === 'site'" style="display:none" class="space-y-6">
         <th:block th:replace="~{erp/costs/analysis-panel :: panel(${siteAnalysis})}"></th:block>
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mt-4">
-            <h3 class="font-bold text-slate-900 mb-3">Şantiye kâr / zarar</h3>
+
+        <!-- Şantiyeler Kâr / Zarar & Hakediş Tablosu -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="building-2" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Şantiye Bazında Gerçekleşen Kâr / Zarar & Hakediş Tablosu</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Sözleşme hakediş bedeli ile harcanan mermer, işçilik, montaj ve nakliye giderlerinin karşılaştırması</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Net Kâr: <span class="font-mono font-bold" th:text="${totalSiteNet != null ? #numbers.formatDecimal(totalSiteNet, 1, 'POINT', 0, 'COMMA') + ' ₺' : '0 ₺'}">0 ₺</span>
+                    </span>
+                </div>
+            </div>
+
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+                <table class="w-full text-left border-collapse">
                     <thead>
-                    <tr class="text-left text-xs text-slate-500">
-                        <th class="py-2 w-10 text-center text-slate-400 font-bold">#</th>
-                        <th class="py-2">Şantiye</th>
-                        <th class="py-2 text-right">Gelir</th>
-                        <th class="py-2 text-right">Maliyet</th>
-                        <th class="py-2 text-right">Net</th>
+                    <tr class="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider font-semibold text-slate-600">
+                        <th class="py-3 px-4 w-12 text-center text-slate-400 font-mono">#</th>
+                        <th class="py-3 px-4">Şantiye / Proje</th>
+                        <th class="py-3 px-4 text-right">Hakediş Geliri</th>
+                        <th class="py-3 px-4 text-right">Mermer / Malzeme</th>
+                        <th class="py-3 px-4 text-right">İşçilik & Montaj</th>
+                        <th class="py-3 px-4 text-right">Nakliye & Sarf</th>
+                        <th class="py-3 px-4 text-right">Toplam Maliyet</th>
+                        <th class="py-3 px-4 text-right">Net Kâr / Zarar</th>
+                        <th class="py-3 px-4 text-center w-28">Durum</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <tr th:each="sp, spStat : ${siteProfits}" class="border-t border-slate-100">
-                        <td class="py-2 text-center text-xs font-mono text-slate-400" th:text="${spStat.count}">1</td>
-                        <td class="py-2" th:text="${sp.projectName}">Şantiye</td>
-                        <td class="py-2 text-right" th:text="${#numbers.formatDecimal(sp.realizedRevenue, 1, 'POINT', 2, 'COMMA')}">0</td>
-                        <td class="py-2 text-right" th:text="${#numbers.formatDecimal(sp.totalCost, 1, 'POINT', 2, 'COMMA')}">0</td>
-                        <td class="py-2 text-right font-bold" th:text="${#numbers.formatDecimal(sp.netProfitOrLoss, 1, 'POINT', 2, 'COMMA')}">0</td>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                    <tr th:each="sp, stat : ${siteProfits}" class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-3 px-4 text-center text-slate-400 font-mono" th:text="${stat.count}">1</td>
+                        <td class="py-3 px-4">
+                            <a th:href="@{'/projects/' + ${sp.projectId}}" class="font-bold text-slate-900 hover:text-amber-700 underline flex items-center gap-1.5">
+                                <span th:text="${sp.projectName}">Şantiye Adı</span>
+                            </a>
+                            <span class="text-[11px] font-mono text-slate-400" th:text="${sp.projectCode}">PRJ-001</span>
+                        </td>
+                        <td class="py-3 px-4 text-right font-mono font-bold text-slate-900"
+                            th:text="${#numbers.formatDecimal(sp.realizedRevenue, 1, 'POINT', 2, 'COMMA')} + ' ₺'">0,00 ₺</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-700"
+                            th:text="${#numbers.formatDecimal(sp.materialCost, 1, 'POINT', 2, 'COMMA')} + ' ₺'">0,00 ₺</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-700"
+                            th:text="${#numbers.formatDecimal(sp.laborCost, 1, 'POINT', 2, 'COMMA')} + ' ₺'">0,00 ₺</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-700"
+                            th:text="${#numbers.formatDecimal(sp.transportationCost.add(sp.consumableCost).add(sp.otherCost), 1, 'POINT', 2, 'COMMA')} + ' ₺'">0,00 ₺</td>
+                        <td class="py-3 px-4 text-right font-mono font-bold text-slate-900"
+                            th:text="${#numbers.formatDecimal(sp.totalCost, 1, 'POINT', 2, 'COMMA')} + ' ₺'">0,00 ₺</td>
+                        <td class="py-3 px-4 text-right font-mono font-bold text-sm"
+                            th:classappend="${sp.netProfitOrLoss >= 0 ? 'text-emerald-600' : 'text-rose-600'}"
+                            th:text="${(sp.netProfitOrLoss >= 0 ? '+' : '') + #numbers.formatDecimal(sp.netProfitOrLoss, 1, 'POINT', 2, 'COMMA')} + ' ₺'">
+                            0,00 ₺
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold font-mono"
+                                  th:classappend="${sp.netProfitOrLoss >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                <span th:text="${sp.realizedRevenue > 0 ? '%' + #numbers.formatDecimal((sp.netProfitOrLoss * 100 / sp.realizedRevenue), 1, 'POINT', 1, 'COMMA') : (sp.netProfitOrLoss >= 0 ? 'KÂRDA' : 'ZARAR')}">KÂR</span>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${siteProfits == null or siteProfits.isEmpty()}">
+                        <td colspan="9" class="py-8 text-center text-slate-400 text-xs">
+                            Kayıtlı şantiye veya proje kâr/zarar verisi bulunamadı.
+                        </td>
                     </tr>
                     </tbody>
+                    <tfoot th:if="${siteProfits != null and !siteProfits.isEmpty()}"
+                           class="border-t-2 border-slate-200 bg-slate-50 font-bold text-xs text-slate-900">
+                    <tr>
+                        <td colspan="2" class="py-3 px-4 text-right uppercase tracking-wider text-[11px] text-slate-600">Konsolide Toplam:</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-900"
+                            th:text="${totalSiteRevenue != null ? #numbers.formatDecimal(totalSiteRevenue, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-700"
+                            th:text="${totalMaterialCost != null ? #numbers.formatDecimal(totalMaterialCost, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-700"
+                            th:text="${totalLaborCost != null ? #numbers.formatDecimal(totalLaborCost, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-700"
+                            th:text="${totalOtherCost != null ? #numbers.formatDecimal(totalOtherCost, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-900"
+                            th:text="${totalSiteCost != null ? #numbers.formatDecimal(totalSiteCost, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
+                        <td class="py-3 px-4 text-right font-mono text-sm"
+                            th:classappend="${totalSiteNet != null && totalSiteNet >= 0 ? 'text-emerald-700' : 'text-rose-700'}"
+                            th:text="${totalSiteNet != null ? (totalSiteNet >= 0 ? '+' : '') + #numbers.formatDecimal(totalSiteNet, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
+                        <td class="py-3 px-4 text-center font-mono text-[11px]"
+                            th:classappend="${totalSiteNet != null && totalSiteNet >= 0 ? 'text-emerald-700' : 'text-rose-700'}">
+                            <span th:text="${totalSiteRevenue != null && totalSiteRevenue > 0 ? '%' + #numbers.formatDecimal((totalSiteNet * 100 / totalSiteRevenue), 1, 'POINT', 1, 'COMMA') : ''}">%0</span>
+                        </td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
     </div>
 
+    <!-- TAB 5: FİYAT VE MARJ SİMÜLASYONU -->
     <div x-show="tab === 'pricing'" style="display:none" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-            <h3 class="font-bold text-slate-900">Masraf merkezleri</h3>
-            <div class="space-y-3">
-                <div th:each="cc : ${costCenters}"
-                     class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex justify-between gap-2">
-                    <div>
-                        <span class="text-xs font-mono font-bold" th:text="${cc.code}">CC-001</span>
-                        <span class="text-xs font-bold" th:text="${cc.name}">Ocak Masraf Merkezi</span>
-                    </div>
-                    <div class="text-xs font-mono" th:text="${#numbers.formatDecimal(cc.monthlyBudget, 1, 'POINT', 0, 'COMMA')} + ' TL'">0</div>
+        <!-- Masraf Merkezleri Bütçe Tablosu -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="layers" class="w-4 h-4 text-slate-700"></i>
+                        <span>Masraf Merkezleri & Bütçe Planı</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Departman ve operasyonel birim bütçeleri</p>
                 </div>
+                <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700"
+                      th:text="${costCenters != null ? costCenters.size() : 0} + ' Merkez'">0 Merkez</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                    <tr class="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider font-semibold text-slate-600">
+                        <th class="py-3 px-4 w-24">Kod</th>
+                        <th class="py-3 px-4">Masraf Merkezi</th>
+                        <th class="py-3 px-4 text-right">Aylık Bütçe</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                    <tr th:each="cc : ${costCenters}" class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-2.5 px-4 font-mono font-bold text-amber-900" th:text="${cc.code}">CC-001</td>
+                        <td class="py-2.5 px-4 font-semibold text-slate-900" th:text="${cc.name}">Ocak Masraf Merkezi</td>
+                        <td class="py-2.5 px-4 text-right font-mono font-bold text-slate-900"
+                            th:text="${#numbers.formatDecimal(cc.monthlyBudget, 1, 'POINT', 0, 'COMMA')} + ' ₺'">0 ₺</td>
+                    </tr>
+                    <tr th:if="${costCenters == null or costCenters.isEmpty()}">
+                        <td colspan="3" class="py-6 text-center text-slate-400 text-xs">Tanımlı masraf merkezi bulunamadı.</td>
+                    </tr>
+                    </tbody>
+                    <tfoot th:if="${costCenters != null and !costCenters.isEmpty()}"
+                           class="border-t-2 border-slate-200 bg-slate-50 font-bold text-xs text-slate-900">
+                    <tr>
+                        <td colspan="2" class="py-3 px-4 text-right uppercase tracking-wider text-[11px] text-slate-600">Toplam Aylık Bütçe:</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-900"
+                            th:text="${totalMonthlyBudget != null ? #numbers.formatDecimal(totalMonthlyBudget, 1, 'POINT', 0, 'COMMA') + ' ₺' : '0 ₺'}">0 ₺</td>
+                    </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-            <h3 class="font-bold text-slate-900">Fiyat Simülasyonu</h3>
-            <p class="text-xs text-slate-500">İkincil araçtır; maliyet analizinin yerine geçmez. Formül: Fiyat = Maliyet / (1 - Hedef Marj)</p>
-            <form hx-post="/costs/simulate-pricing" hx-target="#pricing-result" class="space-y-3">
-                <label class="block text-xs font-semibold text-slate-700">Gerçek birim maliyet (TL/m²)</label>
-                <input type="number" step="0.5" name="unitCost" value="1365" required
-                       class="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-lg">
+
+        <!-- Fiyat & Kâr Marjı Simülatörü -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="calculator" class="w-4 h-4 text-amber-600"></i>
+                    <span>Fiyat & Kâr Marjı Simülatörü</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Gerçek birim maliyetin üzerine hedef kâr marjı ve iskonto simülasyonu (Formül: Fiyat = Maliyet / (1 - Hedef Marj))</p>
+            </div>
+
+            <form hx-post="/costs/simulate-pricing" hx-target="#pricing-result" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Gerçek Birim Maliyet (₺ / m² veya ₺ / Ton)</label>
+                    <input type="number" step="0.5" name="unitCost" value="1365" required
+                           class="w-full px-3 py-2 text-sm font-mono border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Hedef marj (%)</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Hedef Kâr Marjı (%)</label>
                         <input type="number" step="1" name="targetMarginPct" value="30" required
-                               class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                               class="w-full px-3 py-2 text-sm font-mono border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">İskonto (%)</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Maks. İskonto (%)</label>
                         <input type="number" step="1" name="discountPct" value="5"
-                               class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg">
+                               class="w-full px-3 py-2 text-sm font-mono border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
                     </div>
                 </div>
-                <button type="submit" class="w-full py-2 bg-[#2b6cb0] text-white text-xs font-semibold rounded-lg">Simüle et</button>
+                <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                    <span>Simülasyonu Çalıştır</span>
+                </button>
             </form>
-            <div id="pricing-result" class="p-4 bg-slate-50 rounded-xl border text-xs text-slate-500 text-center">
-                Değerleri girip simüle edin.
+
+            <div id="pricing-result" class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500 text-center">
+                Değerleri girip "Simülasyonu Çalıştır" butonuna basın.
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <h3 class="font-bold text-slate-900">Gider girişi</h3>
-            <form th:action="@{/costs/expenses}" method="post" class="space-y-2" x-data="{ unit: 'QUARRY' }">
-                <select name="centerId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option value="" disabled selected>Masraf merkezi</option>
-                    <option th:each="c : ${costCenters}" th:value="${c.id}" th:text="${c.code + ' — ' + c.name}"></option>
-                </select>
-                <select name="businessUnit" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" x-model="unit">
-                    <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}"></option>
-                </select>
-                <select name="projectId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
-                        :required="unit === 'SITE'">
-                    <option value="">Şantiye seçilmedi</option>
-                    <option th:each="p : ${projects}" th:value="${p.id}"
-                            th:text="${p.projectCode + ' — ' + p.name}">Proje</option>
-                </select>
-                <p class="text-[11px] text-slate-500" x-show="unit === 'SITE'">Şantiye gideri bir projeye bağlanmalıdır.</p>
-                <select name="expenseType" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
-                </select>
-                <input type="number" step="0.01" name="amount" required placeholder="Tutar" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <input type="text" name="documentNo" placeholder="Belge no" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <input type="date" name="invoiceDate" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <input type="month" name="expensePeriod" th:value="${period}" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <input type="text" name="description" placeholder="Açıklama" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Gider kaydet</button>
+    <!-- TAB 6: GİDER GİRİŞİ & DÖNEM KAPAMA -->
+    <div x-show="tab === 'expenses'" style="display:none" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Gider Giriş Formu -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-amber-600"></i>
+                    <span>Operasyonel ve Muhasebe Gideri Kaydet</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Ocak, fabrika, atölye veya şantiye için fiş/fatura gider kaydı oluşturun</p>
+            </div>
+
+            <form th:action="@{/costs/expenses}" method="post" class="space-y-3" x-data="{ unit: 'QUARRY' }">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Masraf Merkezi</label>
+                        <select name="centerId" required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <option value="" disabled selected>Masraf merkezi seçiniz</option>
+                            <option th:each="c : ${costCenters}" th:value="${c.id}" th:text="${c.code + ' — ' + c.name}"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">İş Birimi</label>
+                        <select name="businessUnit" required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none" x-model="unit">
+                            <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div x-show="unit === 'SITE'">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Bağlı Şantiye / Proje</label>
+                    <select name="projectId" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                            :required="unit === 'SITE'">
+                        <option value="">Şantiye seçiniz</option>
+                        <option th:each="p : ${projects}" th:value="${p.id}"
+                                th:text="${p.projectCode + ' — ' + p.name}">Proje</option>
+                    </select>
+                    <p class="text-[11px] text-amber-700 mt-1" x-show="unit === 'SITE'">Şantiye gideri bir projeye bağlanmalıdır.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Gider Türü / Kategorisi</label>
+                        <select name="expenseType" required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tutar (TL)</label>
+                        <input type="number" step="0.01" name="amount" required placeholder="0.00" class="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Belge / Fatura No</label>
+                        <input type="text" name="documentNo" placeholder="Örn: FAT-2026-001" class="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Fatura Tarihi</label>
+                        <input type="date" name="invoiceDate" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Gider Dönemi</label>
+                        <input type="month" name="expensePeriod" th:value="${period}" class="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Açıklama</label>
+                    <input type="text" name="description" placeholder="Gider fişi açıklaması..." class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>Gider Kaydını Onayla</span>
+                </button>
             </form>
         </div>
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <h3 class="font-bold text-slate-900">Dönem kapama</h3>
-            <form th:action="@{/costs/periods/close}" method="post" class="space-y-2">
-                <select name="businessUnit" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}"></option>
-                </select>
-                <input type="month" name="period" th:value="${period}" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <input type="text" name="notes" placeholder="Not" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-slate-800 text-white text-sm font-semibold rounded-lg">Dönemi kapat</button>
+
+        <!-- Dönem Kapama Formu -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="lock" class="w-4 h-4 text-slate-700"></i>
+                    <span>Maliyet Dönemi Kapatma</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Dönemi kapatıldığında birim maliyetler sabitlenir ve dağıtılmamış giderler devredilir</p>
+            </div>
+
+            <form th:action="@{/costs/periods/close}" method="post" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Kapatılacak İş Birimi</label>
+                    <select name="businessUnit" required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-800 focus:outline-none">
+                        <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Kapatılacak Dönem</label>
+                    <input type="month" name="period" th:value="${period}" required class="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-800 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Dönem Kapanış Notu</label>
+                    <input type="text" name="notes" placeholder="Dönem kapama mutabakat notu..." class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-800 focus:outline-none">
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                    <span>Dönemi Kesinleştir ve Kapat</span>
+                </button>
             </form>
-            <p class="text-xs text-slate-500">Toplam gider: <span th:text="${totalExpenses}">0</span></p>
+
+            <div class="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-600 font-semibold">Tüm Dönemler Toplam Gideri:</span>
+                    <span class="font-mono font-bold text-slate-900" th:text="${totalExpenses != null ? #numbers.formatDecimal(totalExpenses, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</span>
+                </div>
+            </div>
         </div>
     </div>
 

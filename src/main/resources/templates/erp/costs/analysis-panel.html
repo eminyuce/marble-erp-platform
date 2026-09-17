@@ -1,55 +1,252 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="panel(analysis)" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-            <h3 class="font-bold text-slate-900" th:text="${analysis.businessUnitLabel} + ' — ' + ${analysis.expensePeriod}">Ocak</h3>
-            <p class="text-xs text-slate-500">Önceki dönem: <span th:text="${analysis.previousPeriod}">—</span></p>
+<div th:fragment="panel(analysis)" class="space-y-6">
+
+    <!-- KPI Metric Summary Row for Business Unit -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold flex items-center justify-between">
+                <span>Dönem Toplam Gideri</span>
+                <i data-lucide="receipt" class="w-4 h-4 text-slate-400"></i>
+            </div>
+            <div class="text-xl font-black text-slate-900 mt-1 font-mono"
+                 th:text="${analysis.totalExpense != null ? #numbers.formatDecimal(analysis.totalExpense, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</div>
+            <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+                Önceki Dönem: <span class="font-mono text-slate-600" th:text="${analysis.previousExpense != null ? #numbers.formatDecimal(analysis.previousExpense, 1, 'POINT', 0, 'COMMA') + ' ₺' : '—'}">—</span>
+            </div>
         </div>
-        <a class="text-xs font-semibold text-amber-800 underline" th:href="@{/reports}">Excel / CSV dışa aktarma</a>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold flex items-center justify-between">
+                <span>Net Çıkan Üretim</span>
+                <i data-lucide="layers" class="w-4 h-4 text-slate-400"></i>
+            </div>
+            <div class="text-xl font-black text-slate-900 mt-1 font-mono">
+                <span th:text="${analysis.productionQuantity != null ? #numbers.formatDecimal(analysis.productionQuantity, 1, 'POINT', 1, 'COMMA') : '0'}">0</span>
+                <span class="text-xs font-semibold text-slate-500 ml-0.5" th:text="${analysis.productionUnit}">Birim</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1">
+                Dönem: <span class="font-semibold text-slate-700" th:text="${analysis.expensePeriod}">2026-09</span>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/40 p-4 shadow-sm">
+            <div class="text-[11px] uppercase tracking-wide text-amber-700 font-bold flex items-center justify-between">
+                <span>Gerçek Birim Maliyet</span>
+                <i data-lucide="target" class="w-4 h-4 text-amber-600"></i>
+            </div>
+            <div class="text-2xl font-black text-amber-950 mt-1 font-mono" th:if="${!analysis.unallocatedCarryForward}">
+                <span th:text="${analysis.unitCost != null ? #numbers.formatDecimal(analysis.unitCost, 1, 'POINT', 2, 'COMMA') : '—'}">—</span>
+                <span class="text-xs font-semibold text-amber-800" th:text="'₺ / ' + ${analysis.productionUnit}">₺ / Birim</span>
+            </div>
+            <div class="text-base font-bold text-rose-600 mt-1" th:if="${analysis.unallocatedCarryForward}">
+                Dağıtılmamış Gider Devri
+            </div>
+            <div class="text-[11px] text-amber-800/80 mt-1">
+                1 <span th:text="${analysis.productionUnit}">Birim</span> başına düşen net harcama
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold flex items-center justify-between">
+                <span>Önceki Dönem Birim Maliyet</span>
+                <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
+            </div>
+            <div class="text-xl font-black text-slate-700 mt-1 font-mono">
+                <span th:text="${analysis.previousUnitCost != null ? #numbers.formatDecimal(analysis.previousUnitCost, 1, 'POINT', 2, 'COMMA') + ' ₺' : '—'}">—</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+                Dönem: <span class="font-mono text-slate-600" th:text="${analysis.previousPeriod != null ? analysis.previousPeriod : '—'}">—</span>
+            </div>
+        </div>
     </div>
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-        <div>
-            <div class="text-[11px] text-slate-500">Toplam gider</div>
-            <div class="font-black" th:text="${#numbers.formatDecimal(analysis.totalExpense, 1, 'POINT', 2, 'COMMA')} + ' TL'">0</div>
+
+    <!-- 1. Kategori Bazlı Gider Dağılımı Tablosu -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-amber-600"></i>
+                    <span>Masraf ve Gider Kategorisi Dağılımı</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">İşletme giderlerinin harcama kalemlerine göre dağılımı ve birim maliyete etkisi</p>
+            </div>
+            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200"
+                  th:text="${analysis.businessUnitLabel} + ' · ' + ${analysis.expensePeriod}">Ocak</span>
         </div>
-        <div>
-            <div class="text-[11px] text-slate-500">Üretim</div>
-            <div class="font-black" th:text="${analysis.productionQuantity + ' ' + analysis.productionUnit}">0</div>
-        </div>
-        <div>
-            <div class="text-[11px] text-slate-500">Birim maliyet</div>
-            <div class="font-black" th:if="${analysis.unallocatedCarryForward}">Dağıtılmamış gider</div>
-            <div class="font-black" th:unless="${analysis.unallocatedCarryForward}"
-                 th:text="${analysis.unitCost != null ? #numbers.formatDecimal(analysis.unitCost, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
-        </div>
-        <div>
-            <div class="text-[11px] text-slate-500">Önceki birim</div>
-            <div class="font-bold text-slate-600"
-                 th:text="${analysis.previousUnitCost != null ? #numbers.formatDecimal(analysis.previousUnitCost, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                <tr class="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider font-semibold text-slate-600">
+                    <th class="py-3 px-4 w-12 text-center text-slate-400 font-mono">#</th>
+                    <th class="py-3 px-4">Gider / Masraf Kategorisi</th>
+                    <th class="py-3 px-4 text-right">Dönem Tutarı</th>
+                    <th class="py-3 px-4 text-right">Birim Katkısı</th>
+                    <th class="py-3 px-4 w-52">Pay (%)</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                <tr th:each="entry, stat : ${analysis.expenseByCategory}" class="hover:bg-slate-50/60 transition-colors">
+                    <td class="py-2.5 px-4 text-center text-slate-400 font-mono" th:text="${stat.count}">1</td>
+                    <td class="py-2.5 px-4 font-semibold text-slate-900 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span th:text="${entry.key.label}">İşçilik</span>
+                    </td>
+                    <td class="py-2.5 px-4 text-right font-mono font-bold text-slate-900"
+                        th:text="${#numbers.formatDecimal(entry.value, 1, 'POINT', 2, 'COMMA')} + ' ₺'">0,00 ₺</td>
+                    <td class="py-2.5 px-4 text-right font-mono text-slate-600"
+                        th:text="${analysis.productionQuantity != null && analysis.productionQuantity > 0 ? #numbers.formatDecimal(entry.value.divide(analysis.productionQuantity, 2, java.math.RoundingMode.HALF_UP), 1, 'POINT', 2, 'COMMA') + ' ₺' : '—'}">
+                        —
+                    </td>
+                    <td class="py-2.5 px-4">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-amber-500 rounded-full"
+                                     th:style="'width: ' + (${analysis.totalExpense != null && analysis.totalExpense > 0 ? (entry.value * 100 / analysis.totalExpense) : 0}) + '%'"></div>
+                            </div>
+                            <span class="w-12 text-right font-mono text-[11px] text-slate-600 font-semibold"
+                                  th:text="${analysis.totalExpense != null && analysis.totalExpense > 0 ? #numbers.formatDecimal((entry.value * 100 / analysis.totalExpense), 1, 'POINT', 1, 'COMMA') + '%' : '0%'}">0%</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${analysis.expenseByCategory == null or analysis.expenseByCategory.isEmpty()}">
+                    <td colspan="5" class="py-6 text-center text-slate-400 text-xs">
+                        Bu dönemde kategorize edilmiş gider kaydı bulunamadı.
+                    </td>
+                </tr>
+                </tbody>
+                <tfoot th:if="${analysis.expenseByCategory != null and !analysis.expenseByCategory.isEmpty()}"
+                       class="border-t-2 border-slate-200 bg-slate-50 font-bold text-xs text-slate-900">
+                <tr>
+                    <td colspan="2" class="py-3 px-4 text-right uppercase tracking-wider text-[11px] text-slate-600">Konsolide Toplam:</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-900"
+                        th:text="${analysis.totalExpense != null ? #numbers.formatDecimal(analysis.totalExpense, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-900"
+                        th:text="${analysis.unitCost != null ? #numbers.formatDecimal(analysis.unitCost, 1, 'POINT', 2, 'COMMA') + ' ₺' : '—'}">—</td>
+                    <td class="py-3 px-4 font-mono text-[11px] text-slate-700">100,0%</td>
+                </tr>
+                </tfoot>
+            </table>
         </div>
     </div>
-    <div>
-        <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Kategori kırılımı</h4>
-        <div th:each="entry : ${analysis.expenseByCategory}" class="flex justify-between text-sm border-b border-slate-100 py-1">
-            <span th:text="${entry.key.label}">Kategori</span>
-            <span th:text="${#numbers.formatDecimal(entry.value, 1, 'POINT', 2, 'COMMA')} + ' TL'">0</span>
+
+    <!-- 2. Üretim, Süreç ve Verim Analiz Tablosu (Varsa) -->
+    <div th:if="${analysis.yields != null and !analysis.yields.isEmpty()}"
+         class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="gauge" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Operasyon Verim & Fire Analizi</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Hammadde girdisinden net mamul çıkışına kadar gerçekleşen verim ve fire oranları</p>
+            </div>
+            <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                Canlı Operasyon Verisi
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                <tr class="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider font-semibold text-slate-600">
+                    <th class="py-3 px-4 w-12 text-center text-slate-400 font-mono">#</th>
+                    <th class="py-3 px-4">Operasyon / Süreç Adı</th>
+                    <th class="py-3 px-4 text-right">Giren Miktar</th>
+                    <th class="py-3 px-4 text-right">Çıkan Sağlam Miktar</th>
+                    <th class="py-3 px-4 text-right">Fire / Pasa</th>
+                    <th class="py-3 px-4 text-center">Verim & Performans</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                <tr th:each="y, stat : ${analysis.yields}" class="hover:bg-slate-50/60 transition-colors">
+                    <td class="py-2.5 px-4 text-center text-slate-400 font-mono" th:text="${stat.count}">1</td>
+                    <td class="py-2.5 px-4 font-bold text-slate-900" th:text="${y.processLabel}">Kesim</td>
+                    <td class="py-2.5 px-4 text-right font-mono text-slate-700">
+                        <span th:text="${y.inputQuantity != null ? #numbers.formatDecimal(y.inputQuantity, 1, 'POINT', 1, 'COMMA') : '—'}">—</span>
+                        <span class="text-[11px] text-slate-400 ml-0.5" th:text="${y.inputUnit}"></span>
+                    </td>
+                    <td class="py-2.5 px-4 text-right font-mono font-bold text-emerald-800">
+                        <span th:text="${y.outputQuantity != null ? #numbers.formatDecimal(y.outputQuantity, 1, 'POINT', 1, 'COMMA') : '—'}">—</span>
+                        <span class="text-[11px] text-slate-400 ml-0.5" th:text="${y.outputUnit}"></span>
+                    </td>
+                    <td class="py-2.5 px-4 text-right font-mono text-rose-700">
+                        <span th:text="${y.wasteQuantity != null ? #numbers.formatDecimal(y.wasteQuantity, 1, 'POINT', 1, 'COMMA') : '0'}">0</span>
+                        <span class="text-[11px] text-slate-400 ml-0.5" th:text="${y.wasteUnit}"></span>
+                    </td>
+                    <td class="py-2.5 px-4 text-center">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold font-mono"
+                              th:classappend="${y.yieldValue != null && y.yieldValue >= 70 ? 'bg-emerald-100 text-emerald-800' : (y.yieldValue != null && y.yieldValue >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800')}">
+                            <span th:text="${y.yieldLabel != null ? y.yieldLabel : 'Verim:'}">Verim:</span>
+                            <span th:text="${y.yieldValue != null ? #numbers.formatDecimal(y.yieldValue, 1, 'POINT', 1, 'COMMA') + '%' : '—'}">—</span>
+                        </span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
-    <div th:if="${analysis.yields != null and !analysis.yields.isEmpty()}">
-        <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Verim</h4>
-        <div th:each="y : ${analysis.yields}" class="text-xs border-b border-slate-100 py-1"
-             th:text="${y.processLabel + ' · ' + y.yieldLabel + ' ' + y.yieldValue}">verim</div>
-    </div>
-    <div>
-        <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Gider satırları</h4>
-        <div th:each="line : ${analysis.lines}" class="flex justify-between text-xs border-b border-slate-100 py-1">
-            <span th:text="${line.categoryLabel + ' — ' + line.description}">satır</span>
-            <span th:text="${#numbers.formatDecimal(line.amount, 1, 'POINT', 2, 'COMMA')}">0</span>
+
+    <!-- 3. Dönem Gider Satırları ve Faturalar Tablosu -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-4 h-4 text-slate-700"></i>
+                    <span>Dönem Gider Kalemleri ve Belgeler</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Muhasebe ve operasyonel gider fişlerinin satır bazlı dökümü</p>
+            </div>
+            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                Toplam <span th:text="${analysis.lines != null ? analysis.lines.size() : 0}">0</span> Kayıt
+            </span>
         </div>
-        <div th:if="${analysis.lines == null or analysis.lines.isEmpty()}" class="text-xs text-slate-400">Bu dönemde gider satırı yok.</div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                <tr class="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider font-semibold text-slate-600">
+                    <th class="py-3 px-4 w-12 text-center text-slate-400 font-mono">#</th>
+                    <th class="py-3 px-4 w-40">Kategori</th>
+                    <th class="py-3 px-4 w-36">Belge / Fatura No</th>
+                    <th class="py-3 px-4">Açıklama</th>
+                    <th class="py-3 px-4 text-right w-36">Tutar</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                <tr th:each="line, stat : ${analysis.lines}" class="hover:bg-slate-50/60 transition-colors">
+                    <td class="py-2.5 px-4 text-center text-slate-400 font-mono" th:text="${stat.count}">1</td>
+                    <td class="py-2.5 px-4">
+                        <span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-semibold"
+                              th:text="${line.categoryLabel}">Kategori</span>
+                    </td>
+                    <td class="py-2.5 px-4 font-mono font-bold text-amber-900"
+                        th:text="${line.documentNo != null && !line.documentNo.isBlank() ? line.documentNo : '—'}">—</td>
+                    <td class="py-2.5 px-4 text-slate-800" th:text="${line.description}">Açıklama</td>
+                    <td class="py-2.5 px-4 text-right font-mono font-bold text-slate-900"
+                        th:text="${#numbers.formatDecimal(line.amount, 1, 'POINT', 2, 'COMMA')} + ' ₺'">0,00 ₺</td>
+                </tr>
+                <tr th:if="${analysis.lines == null or analysis.lines.isEmpty()}">
+                    <td colspan="5" class="py-8 text-center text-slate-400 text-xs">
+                        <i data-lucide="inbox" class="w-8 h-8 mx-auto text-slate-300 mb-2"></i>
+                        Bu döneme ait detaylı gider fişi veya fatura kaydı bulunamadı.
+                    </td>
+                </tr>
+                </tbody>
+                <tfoot th:if="${analysis.lines != null and !analysis.lines.isEmpty()}"
+                       class="border-t-2 border-slate-200 bg-slate-50 font-bold text-xs text-slate-900">
+                <tr>
+                    <td colspan="4" class="py-3 px-4 text-right uppercase tracking-wider text-[11px] text-slate-600">Toplam Gider Belgeleri Tutarı:</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-900"
+                        th:text="${analysis.totalExpense != null ? #numbers.formatDecimal(analysis.totalExpense, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
+
 </div>
 </body>
 </html>

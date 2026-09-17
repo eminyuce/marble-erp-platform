@@ -43,16 +43,69 @@ public class CostController {
     public String costsIndex(@RequestParam(value = "period", required = false) String period, Model model) {
         String current = period != null && !period.isBlank() ? period : YearMonth.now().toString();
         model.addAttribute("period", current);
-        model.addAttribute("quarryAnalysis", costAnalysisService.analyze(BusinessUnit.QUARRY, current));
-        model.addAttribute("factoryAnalysis", costAnalysisService.analyze(BusinessUnit.FACTORY, current));
-        model.addAttribute("workshopAnalysis", costAnalysisService.analyze(BusinessUnit.WORKSHOP, current));
-        model.addAttribute("siteAnalysis", costAnalysisService.analyze(BusinessUnit.SITE, current));
-        model.addAttribute("siteProfits", costAnalysisService.siteProfits());
+        var quarry = costAnalysisService.analyze(BusinessUnit.QUARRY, current);
+        var factory = costAnalysisService.analyze(BusinessUnit.FACTORY, current);
+        var workshop = costAnalysisService.analyze(BusinessUnit.WORKSHOP, current);
+        var site = costAnalysisService.analyze(BusinessUnit.SITE, current);
+        var siteProfits = costAnalysisService.siteProfits();
+
+        model.addAttribute("quarryAnalysis", quarry);
+        model.addAttribute("factoryAnalysis", factory);
+        model.addAttribute("workshopAnalysis", workshop);
+        model.addAttribute("siteAnalysis", site);
+        model.addAttribute("siteProfits", siteProfits);
         model.addAttribute("costCenters", costAccountingService.getAllCostCenters());
         model.addAttribute("expenseTypes", ExpenseType.values());
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("projects", projectRepository.findAll());
         model.addAttribute("totalExpenses", costAccountingService.getTotalExpenses());
+
+        BigDecimal totalPeriodExpense = java.util.stream.Stream.of(
+                        quarry.getTotalExpense(), factory.getTotalExpense(),
+                        workshop.getTotalExpense(), site.getTotalExpense())
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        model.addAttribute("totalPeriodExpense", totalPeriodExpense);
+
+        BigDecimal totalSiteRevenue = siteProfits.stream()
+                .map(com.ozerler.marble.dto.SiteProfitDto::getRealizedRevenue)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalMaterialCost = siteProfits.stream()
+                .map(com.ozerler.marble.dto.SiteProfitDto::getMaterialCost)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalLaborCost = siteProfits.stream()
+                .map(com.ozerler.marble.dto.SiteProfitDto::getLaborCost)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalOtherCost = siteProfits.stream()
+                .map(p -> (p.getTransportationCost() != null ? p.getTransportationCost() : BigDecimal.ZERO)
+                        .add(p.getConsumableCost() != null ? p.getConsumableCost() : BigDecimal.ZERO)
+                        .add(p.getOtherCost() != null ? p.getOtherCost() : BigDecimal.ZERO))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalSiteCost = siteProfits.stream()
+                .map(com.ozerler.marble.dto.SiteProfitDto::getTotalCost)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalSiteNet = siteProfits.stream()
+                .map(com.ozerler.marble.dto.SiteProfitDto::getNetProfitOrLoss)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        model.addAttribute("totalSiteRevenue", totalSiteRevenue);
+        model.addAttribute("totalMaterialCost", totalMaterialCost);
+        model.addAttribute("totalLaborCost", totalLaborCost);
+        model.addAttribute("totalOtherCost", totalOtherCost);
+        model.addAttribute("totalSiteCost", totalSiteCost);
+        model.addAttribute("totalSiteNet", totalSiteNet);
+
+        BigDecimal totalMonthlyBudget = costAccountingService.getAllCostCenters().stream()
+                .map(com.ozerler.marble.model.CostCenter::getMonthlyBudget)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        model.addAttribute("totalMonthlyBudget", totalMonthlyBudget);
+
         return "erp/costs/index";
     }
 
