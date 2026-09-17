@@ -49,6 +49,10 @@ class ProductionGridActionsTest {
         assertThat(html).contains("exportDropdown('factory-accept-table', 'fabrika_blok_kabulleri')");
         assertThat(html).contains("name=\"blockId\"");
         assertThat(html).contains("name=\"responsibleName\"");
+        assertThat(html).contains("class=\"erp-form-actions\"");
+        assertThat(html).contains("type=\"submit\"");
+        assertThat(html).doesNotContain("form=\"factory-accept-form\"");
+        assertThat(html).contains("b.stoneType != null");
     }
 
     @Test

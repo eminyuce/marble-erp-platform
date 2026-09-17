@@ -90,7 +90,7 @@
                 </div>
                 <div th:if="${!#strings.isEmpty(order.notes)}">
                     <dt class="text-xs font-semibold text-slate-500">Notlar</dt>
-                    <dd class="text-slate-700" th:text="${order.notes}">Vardiya notu</dd>
+                    <dd class="text-slate-700 prose prose-slate max-w-none text-sm" th:utext="${order.notes}">Vardiya notu</dd>
                 </div>
             </dl>
         </div>

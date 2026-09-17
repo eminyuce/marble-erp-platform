@@ -236,7 +236,7 @@
                     </div>
                     <div class="erp-form-field">
                         <label class="erp-form-label">Jeolojik ayna notları</label>
-                        <div id="dual-editor-container"></div>
+                        <div id="dual-editor-container" data-html-notes data-hidden-id="notes-hidden-input"></div>
                         <input type="hidden" id="notes-hidden-input" name="notes"
                                th:value="${isEdit and block != null ? block.notes : ''}">
                     </div>
@@ -263,9 +263,6 @@
             initMultiFilePond('#block-filepond', '#uploaded-files-container', 'BLOCK', blockId);
         } else if (typeof window.initMultiFilePond === 'function') {
             window.initMultiFilePond('#block-filepond', '#uploaded-files-container', 'BLOCK', blockId);
-        }
-        if (typeof initDualEditor === 'function') {
-            initDualEditor('dual-editor-container', 'notes-hidden-input');
         }
         /*]]>*/
 

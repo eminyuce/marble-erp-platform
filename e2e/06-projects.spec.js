@@ -38,6 +38,7 @@ test.describe('Projects & Construction Sites (Projeler & Şantiyeler)', () => {
     await expect(codeInput).toBeVisible();
     await expect(nameInput).toBeVisible();
     await expect(customerInput).toBeVisible();
+    await expect(page.locator('#project-notes-editor [contenteditable="true"]')).toBeVisible();
 
     await errorTracker.assertCleanState();
   });

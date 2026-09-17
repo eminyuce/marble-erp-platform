@@ -188,12 +188,12 @@
 
                         <!-- Notlar -->
                         <div class="erp-form-field erp-form-field--full">
-                            <label class="erp-form-label" for="saleNotes">
+                            <label class="erp-form-label" for="sale-notes-hidden">
                                 <span>Satış / Sevk Notları</span>
                                 <span th:replace="~{fragments/erp-ops :: tip('', 'Ödeme vadesi, sözleşme referansı, nakliye aracı plakası veya teslimat şartları gibi özel notlar (opsiyonel).')}"></span>
                             </label>
-                            <textarea id="saleNotes" name="saleNotes" rows="3" class="erp-form-input"
-                                      placeholder="Örn: Nakliye alıcı firmaya aittir, 30 gün vadeli çek karşılığı teslim edildi. İrsaliye No: IRS-2026-0045"></textarea>
+                            <div id="sale-notes-editor" data-html-notes data-hidden-id="sale-notes-hidden"></div>
+                            <input type="hidden" id="sale-notes-hidden" name="saleNotes">
                             <p class="erp-form-hint text-xs text-slate-500 mt-1">Dahili takip amacıyla blok hareket geçmişine ve satış kaydına işlenir.</p>
                         </div>
                     </div>

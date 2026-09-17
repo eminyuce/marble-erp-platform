@@ -18,4 +18,19 @@ class ProjectGridActionsTest {
 
         assertThat(html).contains("{icon: 'edit-3', label: 'Düzenle', href: '/projects/' + row.id + '/edit'}");
     }
+
+    @Test
+    @DisplayName("Project form hosts şantiye notes as an HTML editor hidden field")
+    void projectFormUsesHtmlNotesEditor() throws Exception {
+        String html;
+        try (var in = getClass().getResourceAsStream("/templates/erp/projects/form.html")) {
+            assertThat(in).isNotNull();
+            html = new String(in.readAllBytes());
+        }
+
+        assertThat(html).contains("data-html-notes");
+        assertThat(html).contains("id=\"project-notes-hidden\"");
+        assertThat(html).contains("name=\"notes\"");
+        assertThat(html).doesNotContain("<textarea id=\"notes\"");
+    }
 }

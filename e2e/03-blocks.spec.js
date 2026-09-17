@@ -313,8 +313,9 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
 
     await page.locator('input[name="salePrice"]').fill('650000');
 
-    const notesTextarea = page.locator('textarea[name="saleNotes"]');
-    await notesTextarea.fill('E2E Test satışı başarıyla tamamlandı.');
+    const notesEditor = page.locator('#sale-notes-editor [contenteditable="true"], [data-html-notes] [contenteditable="true"]').first();
+    await expect(notesEditor).toBeVisible();
+    await notesEditor.fill('E2E Test satışı başarıyla tamamlandı.');
 
     const submitBtn = page.locator('#submit-sell-btn');
     await expect(submitBtn).toBeVisible();

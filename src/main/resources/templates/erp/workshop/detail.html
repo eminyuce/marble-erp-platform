@@ -61,7 +61,7 @@
             </div>
             <div th:if="${!#strings.isEmpty(order.notes)}">
                 <dt class="text-xs font-semibold text-slate-500">Notlar</dt>
-                <dd th:text="${order.notes}">Not</dd>
+                <dd class="prose prose-slate max-w-none text-sm" th:utext="${order.notes}">Not</dd>
             </div>
         </dl>
     </div>

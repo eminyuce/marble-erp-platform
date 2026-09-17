@@ -37,6 +37,8 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     List<Block> findByStatusIn(List<BlockStatus> statuses);
 
+    List<Block> findByStatusInOrderByBlockCodeAsc(List<BlockStatus> statuses);
+
     long countByStatus(BlockStatus status);
 
     long countByStatusIn(List<BlockStatus> statuses);

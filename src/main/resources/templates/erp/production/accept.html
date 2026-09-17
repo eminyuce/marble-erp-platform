@@ -28,16 +28,12 @@
     </aside>
 
     <div class="erp-toolbar">
-        <button type="submit" form="factory-accept-form" class="erp-btn-primary">
-            <i data-lucide="save"></i>
-            <span>Kabul et</span>
-        </button>
+        <a th:href="@{/production}" class="erp-btn-secondary">
+            <i data-lucide="factory"></i>
+            <span>Fabrika iş emirleri</span>
+        </a>
         <div th:replace="~{fragments/list-chrome :: search('İş emri no, blok kodu veya sorumlu', 'factory-accept-search')}"></div>
         <div class="erp-toolbar-actions">
-            <a th:href="@{/production}" class="erp-btn-secondary">
-                <i data-lucide="factory"></i>
-                <span>Fabrika iş emirleri</span>
-            </a>
             <div th:replace="~{fragments/list-chrome :: exportDropdown('factory-accept-table', 'fabrika_blok_kabulleri')}"></div>
         </div>
     </div>
@@ -49,13 +45,16 @@
 
                 <section class="erp-form-section">
                     <div th:replace="~{fragments/form-page :: section('Kabul bilgisi', 'Fabrika Blok Sahası, makine ve sorumlu')}"></div>
+                    <p th:if="${#lists.isEmpty(dispatchedBlocks)}" class="erp-form-hint">
+                        Kabul bekleyen blok yok. Ocak sevkindeki veya Fabrika Blok Sahasındaki stokları kontrol edin.
+                    </p>
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="accept-blockId">Blok <span class="req">*</span></label>
                             <select id="accept-blockId" name="blockId" required class="erp-form-select">
-                                <option value="" disabled selected>Fabrika Blok Sahası</option>
+                                <option value="" disabled selected>Blok seçin</option>
                                 <option th:each="b : ${dispatchedBlocks}" th:value="${b.id}"
-                                        th:text="${b.blockCode + ' (' + b.stoneType + ')'}">BLK</option>
+                                        th:text="${b.blockCode + ' (' + (b.stoneType != null and !#strings.isEmpty(b.stoneType) ? b.stoneType : '—') + ')'}">BLK</option>
                             </select>
                         </div>
                         <div class="erp-form-field">
@@ -72,6 +71,12 @@
                         </div>
                     </div>
                 </section>
+            </div>
+            <div class="erp-form-actions">
+                <button type="submit" class="erp-btn-primary">
+                    <i data-lucide="save"></i>
+                    <span>Kabul et</span>
+                </button>
             </div>
         </form>
     </div>

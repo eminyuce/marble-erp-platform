@@ -503,8 +503,9 @@ public class QuarryBlockService {
 
     @Transactional(readOnly = true)
     public List<Block> getDispatchedBlocks() {
-        return blockRepository.findByStatusIn(List.of(
-                BlockStatus.DISPATCHED, BlockStatus.IN_TRANSIT, BlockStatus.AT_FACTORY));
+        return blockRepository.findByStatusInOrderByBlockCodeAsc(List.of(
+                BlockStatus.DISPATCHED, BlockStatus.IN_TRANSIT,
+                BlockStatus.AT_FACTORY, BlockStatus.FACTORY_STOCK));
     }
 
     @Transactional(readOnly = true)
