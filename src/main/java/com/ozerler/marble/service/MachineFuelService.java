@@ -105,7 +105,83 @@ public class MachineFuelService {
     }
 
     @Transactional(readOnly = true)
-    public List<Machine> quarryMachines() {
-        return machineRepository.findByBusinessUnitAndActiveTrueOrderByNameAsc(BusinessUnit.QUARRY);
+    public com.ozerler.marble.dto.TabulatorResponse<com.ozerler.marble.dto.MachineFuelDto> getFuelPaged(
+            int page, int size, String search, String period, String unit, Long machineId, String sortField, String sortDir) {
+
+        List<MachineFuelEntry> allEntries = (period != null && !period.isBlank())
+                ? listByPeriod(period)
+                : listAll();
+
+        java.util.stream.Stream<MachineFuelEntry> stream = allEntries.stream();
+
+        if (machineId != null) {
+            stream = stream.filter(e -> e.getMachine() != null && e.getMachine().getId().equals(machineId));
+        }
+
+        if (unit != null && !unit.isBlank()) {
+            stream = stream.filter(e -> e.getMachine() != null && e.getMachine().getBusinessUnit() != null && e.getMachine().getBusinessUnit().name().equalsIgnoreCase(unit));
+        }
+
+        if (search != null && !search.isBlank()) {
+            String s = search.trim().toLowerCase(java.util.Locale.ROOT);
+            stream = stream.filter(e -> {
+                String mName = e.getMachine() != null ? e.getMachine().getName().toLowerCase(java.util.Locale.ROOT) : "";
+                String mCode = e.getMachine() != null ? e.getMachine().getCode().toLowerCase(java.util.Locale.ROOT) : "";
+                String receipt = e.getReceiptNo() != null ? e.getReceiptNo().toLowerCase(java.util.Locale.ROOT) : "";
+                String issued = e.getIssuedBy() != null ? e.getIssuedBy().toLowerCase(java.util.Locale.ROOT) : "";
+                String received = e.getReceivedBy() != null ? e.getReceivedBy().toLowerCase(java.util.Locale.ROOT) : "";
+                String notes = e.getNotes() != null ? e.getNotes().toLowerCase(java.util.Locale.ROOT) : "";
+                return mName.contains(s) || mCode.contains(s) || receipt.contains(s) || issued.contains(s) || received.contains(s) || notes.contains(s);
+            });
+        }
+
+        List<com.ozerler.marble.dto.MachineFuelDto> dtos = stream
+                .map(com.ozerler.marble.dto.MachineFuelDto::fromEntity)
+                .collect(java.util.stream.Collectors.toList());
+
+        // Sort
+        java.util.Comparator<com.ozerler.marble.dto.MachineFuelDto> comparator = java.util.Comparator.comparing(
+                com.ozerler.marble.dto.MachineFuelDto::getEntryDate,
+                java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())
+        );
+
+        if ("litres".equalsIgnoreCase(sortField)) {
+            comparator = java.util.Comparator.comparing(com.ozerler.marble.dto.MachineFuelDto::getLitres, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+        } else if ("totalAmount".equalsIgnoreCase(sortField)) {
+            comparator = java.util.Comparator.comparing(com.ozerler.marble.dto.MachineFuelDto::getTotalAmount, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+        } else if ("machineName".equalsIgnoreCase(sortField)) {
+            comparator = java.util.Comparator.comparing(com.ozerler.marble.dto.MachineFuelDto::getMachineName, java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("workingHoursOrKm".equalsIgnoreCase(sortField)) {
+            comparator = java.util.Comparator.comparing(com.ozerler.marble.dto.MachineFuelDto::getWorkingHoursOrKm, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+        }
+
+        if ("desc".equalsIgnoreCase(sortDir) && !"entryDate".equalsIgnoreCase(sortField)) {
+            comparator = comparator.reversed();
+        } else if ("asc".equalsIgnoreCase(sortDir) && "entryDate".equalsIgnoreCase(sortField)) {
+            comparator = comparator.reversed();
+        }
+
+        dtos.sort(comparator);
+
+        int totalElements = dtos.size();
+        int safeSize = size > 0 ? size : 25;
+        int safePage = Math.max(1, page);
+        int totalPages = (int) Math.ceil((double) totalElements / safeSize);
+
+        int fromIndex = Math.min((safePage - 1) * safeSize, totalElements);
+        int toIndex = Math.min(fromIndex + safeSize, totalElements);
+
+        List<com.ozerler.marble.dto.MachineFuelDto> pageData = dtos.subList(fromIndex, toIndex);
+
+        BigDecimal totalLitres = dtos.stream().map(com.ozerler.marble.dto.MachineFuelDto::getLitres).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalAmount = dtos.stream().map(com.ozerler.marble.dto.MachineFuelDto::getTotalAmount).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        java.util.Map<String, Object> meta = java.util.Map.of(
+                "totalLitres", totalLitres,
+                "totalAmount", totalAmount,
+                "count", totalElements
+        );
+
+        return com.ozerler.marble.dto.TabulatorResponse.of(pageData, totalPages, totalElements, meta);
     }
 }

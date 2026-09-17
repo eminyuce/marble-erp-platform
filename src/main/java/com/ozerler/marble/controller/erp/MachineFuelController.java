@@ -35,7 +35,32 @@ public class MachineFuelController extends AbstractController {
         model.addAttribute("fuelEntries", machineFuelService.listByPeriod(currentPeriod));
         model.addAttribute("monthlyReport", machineFuelService.getMonthlyReport(currentPeriod));
         model.addAttribute("machines", machineFuelService.quarryAndFactoryMachines());
+
+        var entries = machineFuelService.listByPeriod(currentPeriod);
+        BigDecimal totalLitres = entries.stream().map(MachineFuelEntry::getLitres).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalAmount = entries.stream().map(MachineFuelEntry::getTotalAmount).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        long machineCount = entries.stream().map(e -> e.getMachine().getId()).distinct().count();
+
+        model.addAttribute("summaryTotalLitres", totalLitres);
+        model.addAttribute("summaryTotalAmount", totalAmount);
+        model.addAttribute("summaryEntryCount", entries.size());
+        model.addAttribute("summaryMachineCount", machineCount);
+
         return "erp/machines/fuel-index";
+    }
+
+    @GetMapping("/api/data")
+    @ResponseBody
+    public com.ozerler.marble.dto.TabulatorResponse<com.ozerler.marble.dto.MachineFuelDto> getFuelData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "period", required = false) String period,
+            @RequestParam(value = "unit", required = false) String unit,
+            @RequestParam(value = "machineId", required = false) Long machineId,
+            @RequestParam(value = "sortField", required = false) String sortField,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
+        return machineFuelService.getFuelPaged(page, size, search, period, unit, machineId, sortField, sortDir);
     }
 
     @GetMapping("/create")

@@ -92,4 +92,15 @@ class MachineFuelControllerTest {
         assertThat(view).isEqualTo("redirect:/machines/fuel");
         assertThat(redirectAttributes.getFlashAttributes()).containsKey("successMessage");
     }
+
+    @Test
+    void getFuelData_ReturnsTabulatorResponse() {
+        when(machineFuelService.getFuelPaged(1, 25, "CAT", "2026-09", "QUARRY", 1L, "entryDate", "desc"))
+                .thenReturn(com.ozerler.marble.dto.TabulatorResponse.of(List.of(), 1, 0));
+
+        var response = controller.getFuelData(1, 25, "CAT", "2026-09", "QUARRY", 1L, "entryDate", "desc");
+
+        assertThat(response).isNotNull();
+        assertThat(response.getData()).isEmpty();
+    }
 }
