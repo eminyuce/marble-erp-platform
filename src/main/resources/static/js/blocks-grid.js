@@ -249,7 +249,7 @@ function initBlocksGrid() {
 
     attachTabulatorPagingAnimation(blocksTable);
     bindGridSearch(blocksTable, "search-input");
-    bindBlocksPageTotals(blocksTable);
+    bindBlocksGridIcons(blocksTable);
 }
 
 function reloadBlocksGrid() {
@@ -257,13 +257,6 @@ function reloadBlocksGrid() {
         blocksTable.setPage(1);
     }
 }
-
-let blocksGridMeta = {
-    totalTonnage: 0,
-    totalSurfaceM2: 0,
-    totalExtractionCost: 0,
-    totalCost: 0
-};
 
 function toFiniteNumber(value) {
     const number = Number(value);
@@ -304,13 +297,6 @@ function sumBlockRows(rows) {
     return totals;
 }
 
-function visibleBlockRows() {
-    if (!blocksTable || typeof blocksTable.getData !== "function") {
-        return [];
-    }
-    return (blocksTable.getData() || []).filter(isDataBlockRow);
-}
-
 function blocksPageCalc(metricKey) {
     return function (values, data) {
         const totals = sumBlockRows(data);
@@ -328,37 +314,8 @@ function formatBlocksMetric(value, suffix) {
     return suffix ? formatted + " " + suffix : formatted;
 }
 
-function applyBlocksGridTotals(totals) {
-    blocksGridMeta = totals || blocksGridMeta;
-    const totalsEl = document.getElementById("blocks-grid-totals");
-    const tonEl = document.getElementById("blocks-total-tonnage");
-    const m2El = document.getElementById("blocks-total-m2");
-    const extractionEl = document.getElementById("blocks-total-extraction");
-    const costEl = document.getElementById("blocks-total-cost");
-    if (totalsEl) {
-        totalsEl.classList.remove("hidden");
-        if (tonEl) {
-            tonEl.textContent = formatBlocksMetric(blocksGridMeta.totalTonnage, "ton");
-        }
-        if (m2El) {
-            m2El.textContent = formatBlocksMetric(blocksGridMeta.totalSurfaceM2, "m²");
-        }
-        if (extractionEl) {
-            extractionEl.textContent = gridMoney(blocksGridMeta.totalExtractionCost);
-        }
-        if (costEl) {
-            costEl.textContent = gridMoney(blocksGridMeta.totalCost);
-        }
-    }
-}
-
-function refreshBlocksPageTotals() {
-    applyBlocksGridTotals(sumBlockRows(visibleBlockRows()));
-}
-
-function bindBlocksPageTotals(table) {
+function bindBlocksGridIcons(table) {
     const refresh = function () {
-        refreshBlocksPageTotals();
         if (window.lucide) {
             window.lucide.createIcons();
         }
@@ -367,17 +324,11 @@ function bindBlocksPageTotals(table) {
     table.on("dataProcessed", refresh);
     table.on("pageLoaded", refresh);
     table.on("renderComplete", refresh);
-    const root = table.element || document.getElementById("blocks-table");
-    if (root) {
-        root.addEventListener("change", function (event) {
-            if (event.target && event.target.classList.contains("tabulator-page-size")) {
-                refresh();
-            }
-        });
-    }
 }
 
-window.refreshBlocksPageTotals = refreshBlocksPageTotals;
+window.quarryPage = quarryPage;
+window.initBlocksGrid = initBlocksGrid;
+window.reloadBlocksGrid = reloadBlocksGrid;
 
 function csrfHeaders() {
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute("content");

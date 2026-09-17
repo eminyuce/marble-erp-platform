@@ -103,7 +103,7 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20260917-ocak-blok-takibi"
+  asset-version: "20260917-blocks-no-page-totals"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy
