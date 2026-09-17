@@ -16,7 +16,7 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20260917-html-notes-all}")
+    @Value("${app.asset-version:20260917-marble-erp-core-flow}")
     private String configuredAssetVersion;
 
     private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();

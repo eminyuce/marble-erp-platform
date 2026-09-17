@@ -36,13 +36,19 @@
                             </select>
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="blockCode">Blok kodu <span class="req">*</span></label>
+                            <div class="flex items-center justify-between">
+                                <label class="erp-form-label" for="blockCode">Blok kodu <span class="req">*</span></label>
+                                <button type="button" id="btn-generate-code" th:if="${!(isEdit ?: false)}"
+                                        class="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline transition inline-flex items-center gap-1">
+                                    <span>Standart Kod Oluştur (OC-A3-...)</span>
+                                </button>
+                            </div>
                             <input id="blockCode" type="text" name="blockCode" required
                                    th:value="${isEdit and block != null ? block.blockCode : ''}"
                                    th:attr="data-exclude-id=${isEdit and block != null ? block.id : ''}"
                                    class="erp-form-input" style="font-family:var(--font-mono);text-transform:uppercase;"
-                                   placeholder="BLK-2026-00128" autocomplete="off" autocapitalize="characters" spellcheck="false">
-                            <p id="block-code-hint" class="erp-form-hint" role="status"></p>
+                                   placeholder="Örn: OC-A3-202609-0084" autocomplete="off" autocapitalize="characters" spellcheck="false">
+                            <p id="block-code-hint" class="erp-form-hint" role="status">Format: OC-[Bölge/Kademe]-[YılAy]-[SıraNo]</p>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="locationType">Depolama sahası <span class="req">*</span></label>
@@ -148,9 +154,16 @@
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="stoneType">Taş cinsi</label>
-                            <input id="stoneType" type="text" name="stoneType"
+                            <input id="stoneType" type="text" name="stoneType" list="stoneTypeOptions"
                                    th:value="${isEdit and block != null ? block.stoneType : ''}"
-                                   class="erp-form-input" placeholder="Örn: Muğla Beyaz">
+                                   class="erp-form-input" placeholder="Örn: Burdur / Klasik Bej (2.71)" autocomplete="off">
+                            <datalist id="stoneTypeOptions">
+                                <option th:each="st : ${stoneCatalog}"
+                                        th:value="${st.name}"
+                                        th:attr="data-density=${st.specificGravity}"
+                                        th:text="${st.description}"></option>
+                            </datalist>
+                            <p class="erp-form-hint text-xs">Seçtiğiniz taş cinsinin standart özgül ağırlığı otomatik yansır</p>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="colorTone">Seleksiyon</label>
@@ -335,17 +348,60 @@
             const calcTheoreticalEl = document.getElementById('calc-theoretical-kg');
             const deviationBadge = document.getElementById('weight-deviation-badge');
 
+            const stoneTypeInput = document.getElementById('stoneType');
+            const stoneDataList = document.getElementById('stoneTypeOptions');
+            const btnGenerateCode = document.getElementById('btn-generate-code');
+            const blockCodeInput = document.getElementById('blockCode');
+
             if (!widthInput || !lengthInput || !heightInput) return;
 
             let currentTheoreticalKg = null;
 
             function getSelectedDensity() {
-                if (!quarrySelect) return 2.70;
-                const opt = quarrySelect.options[quarrySelect.selectedIndex];
-                if (!opt) return 2.70;
-                const densityAttr = opt.getAttribute('data-density');
-                const parsed = parseFloat(densityAttr);
-                return (!isNaN(parsed) && parsed > 0) ? parsed : 2.70;
+                // 1. Önce seçili taş cinsinin özgül ağırlığına bak
+                if (stoneTypeInput && stoneDataList && stoneTypeInput.value.trim() !== '') {
+                    const val = stoneTypeInput.value.trim().toLowerCase();
+                    for (let opt of stoneDataList.options) {
+                        if (opt.value.toLowerCase() === val || opt.text.toLowerCase().includes(val)) {
+                            const d = parseFloat(opt.getAttribute('data-density'));
+                            if (!isNaN(d) && d > 0) return d;
+                        }
+                    }
+                }
+                // 2. Ardından ocağın özgül ağırlığına bak
+                if (quarrySelect && quarrySelect.selectedIndex >= 0) {
+                    const opt = quarrySelect.options[quarrySelect.selectedIndex];
+                    if (opt) {
+                        const densityAttr = opt.getAttribute('data-density');
+                        const parsed = parseFloat(densityAttr);
+                        if (!isNaN(parsed) && parsed > 0) return parsed;
+                    }
+                }
+                return 2.70;
+            }
+
+            if (btnGenerateCode && blockCodeInput) {
+                btnGenerateCode.addEventListener('click', async function () {
+                    const qId = quarrySelect ? quarrySelect.value : '';
+                    try {
+                        const url = '/blocks/api/generate-code' + (qId ? '?quarryId=' + encodeURIComponent(qId) : '');
+                        const res = await fetch(url);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data && data.code) {
+                                blockCodeInput.value = data.code;
+                                blockCodeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Kod oluşturulamadı', e);
+                    }
+                });
+            }
+
+            if (stoneTypeInput) {
+                stoneTypeInput.addEventListener('input', updateCalculations);
+                stoneTypeInput.addEventListener('change', updateCalculations);
             }
 
             function updateCalculations() {

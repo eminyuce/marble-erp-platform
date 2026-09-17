@@ -21,6 +21,70 @@
         </form>
     </div>
 
+    <!-- Blueprint Maliyet Formül Kartları -->
+    <div class="rounded-2xl border border-stone-900 bg-stone-900 text-stone-100 p-5 md:p-6 shadow-xl space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-500 text-stone-900 grid place-items-center font-bold">
+                    <i data-lucide="calculator" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white">Maliyet Analizinin Kalbi — Formül Kartları</h3>
+                    <p class="text-[11px] text-stone-400">1 m² mermerin gerçek maliyetini bilmek ve kârı görmek için canlı hesaplama modelleri</p>
+                </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold bg-white/10 text-amber-300 border border-white/10">
+                Dönem: <span th:text="${period}">2026-09</span>
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="rounded-xl bg-white/[0.06] border border-white/10 p-3.5 backdrop-blur">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-stone-200">Ton Başına Maliyet</span>
+                    <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-amber-300">₺ / Ton</span>
+                </div>
+                <div class="mt-2 rounded bg-black/40 border border-white/5 p-2 font-mono text-[11px] text-amber-200 leading-snug">
+                    (Mazot + Elk + İşçilik + Sarf) / Tonaj
+                </div>
+                <div class="mt-2 text-[10px] text-stone-400 leading-tight">Ocak modülü. Elektrik 1 ay gecikmeli düzeltme dahil.</div>
+            </div>
+
+            <div class="rounded-xl bg-white/[0.06] border border-white/10 p-3.5 backdrop-blur">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-stone-200">m² Başına Maliyet</span>
+                    <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-cyan-300">₺ / m²</span>
+                </div>
+                <div class="mt-2 rounded bg-black/40 border border-white/5 p-2 font-mono text-[11px] text-cyan-200 leading-snug">
+                    (Blok Girişi + Fabrika Gideri) / Net Çıkan m²
+                </div>
+                <div class="mt-2 text-[10px] text-stone-400 leading-tight">Kesim + Cila + Ebatlama toplamı, fire düşülmüş.</div>
+            </div>
+
+            <div class="rounded-xl bg-white/[0.06] border border-white/10 p-3.5 backdrop-blur">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-stone-200">Fire Oranı</span>
+                    <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-rose-300">% Fire</span>
+                </div>
+                <div class="mt-2 rounded bg-black/40 border border-white/5 p-2 font-mono text-[11px] text-rose-200 leading-snug">
+                    (Giren m² - Çıkan m²) / Giren m² × 100
+                </div>
+                <div class="mt-2 text-[10px] text-stone-400 leading-tight">ST/Katrak, Cila, Köprü Kesme her adımda izlenir.</div>
+            </div>
+
+            <div class="rounded-xl bg-white/[0.06] border border-white/10 p-3.5 backdrop-blur">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-stone-200">Şantiye Kârı</span>
+                    <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-emerald-300">₺ Kâr</span>
+                </div>
+                <div class="mt-2 rounded bg-black/40 border border-white/5 p-2 font-mono text-[11px] text-emerald-200 leading-snug">
+                    Hakediş - (Mermer + Giderler + Nakliye)
+                </div>
+                <div class="mt-2 text-[10px] text-stone-400 leading-tight">Proje kapanışında mahal bazlı kesin kâr/zarar.</div>
+            </div>
+        </div>
+    </div>
+
     <div class="flex flex-wrap gap-2">
         <button type="button" @click="tab = 'quarry'" class="px-3 py-2 rounded-lg text-sm font-semibold"
                 :class="tab === 'quarry' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'">Ocak Maliyet Analizi</button>

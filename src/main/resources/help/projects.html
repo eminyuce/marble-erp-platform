@@ -1,15 +1,39 @@
-<section class="help-page" data-title="Şantiyeler" data-updated="2026-09-15">
-    <p>Şantiye kaydı sözleşme, mahal metraj ağacı, taş planı, montaj ilerlemesi ve kâr / zarar içindir. Blok üretimi Ocak’ta, kesim Fabrika’da kalır.</p>
-    <h3>Liste ve kart</h3>
+<section class="help-page" data-title="Şantiye / Proje — Mahal Planlama & Kârlılık Rehberi" data-updated="2026-09-17">
+    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Mermer döşeme ve kaplama taahhüt projelerinin sözleşme, mahal bazlı m² planlama, fabrikadan sevk, montaj ilerleme ve nihai kârlılık süreçlerini tek merkezden yönetir.</p>
+
+    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
     <ul class="help-panel-list">
-        <li><strong>Yeni şantiye</strong> sözleşme ve bütçe formunu açar. Düzenle aynı formu günceller.</li>
-        <li>Kod, ad veya müşteri ile arayın. <strong>Dışa Aktar</strong> listeyi indirir.</li>
-        <li>Detayda mahal ağacı katman katman metraj tutar. Fiili maliyet tahmini bütçeyi aşarsa sapma uyarısı çıkar.</li>
+        <li><strong>Adım 1 — Yeni Proje Açma:</strong> Üstteki <strong>Yeni Proje</strong> butonuna tıklayarak müşteri adı, sözleşme bedeli, başlama ve bitiş tarihlerini girin.</li>
+        <li><strong>Adım 2 — Mahal Bazlı Metraj Planı Ekleme:</strong> Proje içine girerek mahaller tanımlayın:
+            <ul>
+                <li>Örnek: <em>Lobi Zemin &rarr; 120 m² &rarr; Burdur Bej &rarr; 60×60×2 cm &rarr; Cilalı & Pahlı</em></li>
+                <li>Örnek: <em>Genel Merdiven &rarr; 45 mtül Basamak + Rıht &rarr; Traverten &rarr; Pahlı</em></li>
+            </ul>
+        </li>
+        <li><strong>Adım 3 — İhtiyaç Listesi & Tedarik Rotası:</strong> Tanımlanan mahaller otomatik ihtiyaç listesi oluşturur. Malzemenin rotasını seçin:
+            <ul>
+                <li><em>Kendi Fabrikamız:</em> Katrak/ST kesimi için fabrikaya iş emri açar.</li>
+                <li><em>Atölyemiz:</em> Özel ebat ve pah işçiliği için atölyeye yönlendirir.</li>
+                <li><em>Dış Tedarik:</em> Satın almaya sipariş talebi iletir.</li>
+            </ul>
+        </li>
+        <li><strong>Adım 4 — Malzeme Kabul & Montaj Kaydı:</strong> Fabrikadan gelen barkodlu paletleri şantiyeye teslim alın. Ustaların döşediği günlük metrajı sisteme girerek mahal tamamlanma yüzdesini takip edin.</li>
+        <li><strong>Adım 5 — Şantiye Giderlerini Girme:</strong> Proje süresince oluşan montaj işçiliği, nakliye, vinç ve sarf malzemeleri (kum, çimento, kalekim/yapıştırıcı, derz dolgusu) projeye gider olarak işleyin.</li>
     </ul>
-    <h3>Taş planı ve montaj</h3>
+
+    <h3>2. Mermer İş Mantığı & Kritik Kurallar</h3>
     <ul class="help-panel-list">
-        <li>Taş planında taş cinsi, ölçü, planlanan m², fire payı ve tedarik rotası (iç üretim, dış sipariş veya karma) girilir.</li>
-        <li>Montaj kaydı sahadaki ilerlemeyi işler.</li>
-        <li>Net kâr / zarar malzeme, işçilik, vergi, sarf ve nakliye hareketlerinden hesaplanır; sabit örnek tutar değildir.</li>
+        <li><strong>Şantiye Net Kârı Formülü:</strong><br>
+            <code>Net Şantiye Kârı = Toplam Hakediş / Sözleşme Bedeli - (Giden Mermerlerin Taban Maliyeti + Montaj İşçiliği + Sarf Malzemeler + Nakliye + SSK / Vergi)</code>
+        </li>
+        <li><strong>Montaj Firesi Takibi:</strong> Şantiyede kesim kırığı veya montaj firesi oluşursa ek metraj talebi açılmalıdır. Bu ilave taşlar doğrudan şantiye maliyetini artırır ve kâr marjını düşürür.</li>
+        <li><strong>Mahal Kilidi:</strong> Tamamlanan mahaller kapatılarak son hakedişe hazır hale getirilir.</li>
+    </ul>
+
+    <h3>3. Butonlar & Tablo İşlevleri</h3>
+    <ul class="help-panel-list">
+        <li><strong>Proje Durumu:</strong> Teklif Aşamasında, Devam Eden, Montajda veya Tamamlandı durumlarına göre filtreleyin.</li>
+        <li><strong>Maliyet & Kâr Özeti:</strong> Her projenin satırında harcanan bütçe, giden metraj ve tahmini brüt kâr anında görünür.</li>
+        <li><strong>Dışa Aktar (Excel/CSV):</strong> Şantiye mahal listesini ve hakediş dökümünü tek tıkla tablo olarak indirin.</li>
     </ul>
 </section>

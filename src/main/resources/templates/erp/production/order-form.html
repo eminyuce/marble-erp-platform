@@ -29,7 +29,8 @@
                             <select id="blockId" name="blockId" required class="erp-form-select">
                                 <option value="" disabled selected>Blok seçin</option>
                                 <option th:each="b : ${availableBlocks}" th:value="${b.id}"
-                                        th:text="${b.blockCode + ' (' + b.stoneType + ', ' + b.actualTonnage + ' ton)'}"></option>
+                                        th:attr="data-tonnage=${b.actualTonnage != null and b.actualTonnage > 0 ? b.actualTonnage : b.approximateTonnage}"
+                                        th:text="${b.blockCode + ' (' + b.stoneType + ', ' + (b.actualTonnage != null and b.actualTonnage > 0 ? b.actualTonnage : b.approximateTonnage) + ' ton)'}"></option>
                             </select>
                         </div>
                         <div class="erp-form-field">
@@ -37,6 +38,9 @@
                             <select id="processType" name="processType" required class="erp-form-select">
                                 <option th:each="t : ${cuttingTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
                             </select>
+                            <div id="process-flow-badge" class="mt-1 p-2 rounded-lg text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200">
+                                Katrak → Plaka Cila akışına gider.
+                            </div>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="machineId">Kayıtlı makine</label>
@@ -99,25 +103,50 @@
                 </section>
 
                 <section class="erp-form-section" th:if="${!(isEdit ?: false)}">
-                    <div th:replace="~{fragments/form-page :: section('Giriş / çıkış / fire', 'Kesimde ton → m² dönüşümü yapılmaz')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Giriş / Çıkış / Otomatik Fire Hesabı', 'Giren blok tonajı karşılığı m² ve çıkan sağlam plaka üzerinden anlık fire hesabı')}"></div>
                     <div class="erp-form-grid--4">
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="inputQuantity">Giriş tonajı (ton)</label>
-                            <input id="inputQuantity" type="number" step="0.001" name="inputQuantity" class="erp-form-input" placeholder="Boşsa blok tonajı">
+                            <label class="erp-form-label" for="inputQuantity">Giriş tonajı (ton) <span class="req">*</span></label>
+                            <input id="inputQuantity" type="number" step="0.001" name="inputQuantity" class="erp-form-input font-bold" placeholder="Blok seçildiğinde otomatik gelir" oninput="calcYield()">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="outputQuantity">Çıkış (m²)</label>
-                            <input id="outputQuantity" type="number" step="0.01" name="outputQuantity" class="erp-form-input" placeholder="Boşsa plaka alanından">
+                            <label class="erp-form-label" for="outputQuantity">Çıkan Sağlam (m²) <span class="req">*</span></label>
+                            <input id="outputQuantity" type="number" step="0.01" name="outputQuantity" class="erp-form-input font-bold" placeholder="Üretilen net m²" oninput="calcYield()">
                         </div>
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="wasteQuantity">Fire miktarı</label>
-                            <input id="wasteQuantity" type="number" step="0.01" name="wasteQuantity" class="erp-form-input">
+                            <label class="erp-form-label" for="wasteQuantity">Hesaplanan Fire (m²)</label>
+                            <input id="wasteQuantity" type="number" step="0.01" name="wasteQuantity" class="erp-form-input bg-slate-50 font-mono" readonly>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="wasteUnit">Fire birimi</label>
                             <select id="wasteUnit" name="wasteUnit" class="erp-form-select">
                                 <option th:each="u : ${wasteUnits}" th:value="${u.name()}" th:text="${u.label}"></option>
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- Canlı Fire & Verim Gösterge Kartı -->
+                    <div id="live-cutting-yield-card" class="mt-4 p-4 rounded-xl border border-amber-200 bg-amber-50/70 flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">⚡</span>
+                            <div>
+                                <div class="text-xs font-bold uppercase tracking-wider text-amber-900">Otomatik Fire ve Verim Analizi</div>
+                                <p class="text-xs text-amber-700">Fire = Giren Tonaj Karşılığı m² - Çıkan m² (Standart 2cm plaka için ~18.5 m²/ton)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="bg-white px-3 py-2 rounded-lg border border-amber-200 text-center">
+                                <span class="text-[11px] text-slate-500 block">Teorik Brüt Alan</span>
+                                <strong id="cutting-theoretical-m2" class="text-slate-800 text-sm font-bold">— m²</strong>
+                            </div>
+                            <div class="bg-white px-3 py-2 rounded-lg border border-amber-200 text-center">
+                                <span class="text-[11px] text-slate-500 block">Net Fire</span>
+                                <strong id="cutting-fire-m2" class="text-rose-700 text-sm font-bold">— m²</strong>
+                            </div>
+                            <div class="bg-amber-500 text-white px-4 py-2 rounded-lg text-center shadow-xs">
+                                <span class="text-[11px] text-amber-100 block">Fire Oranı</span>
+                                <strong id="cutting-fire-pct" class="text-lg font-black">% —</strong>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -194,5 +223,87 @@
         </form>
     </div>
 </div>
+
+<th:block layout:fragment="scripts">
+<script>
+    (function () {
+        const blockSelect = document.getElementById('blockId');
+        const inputQuantity = document.getElementById('inputQuantity');
+        const outputQuantity = document.getElementById('outputQuantity');
+        const wasteQuantity = document.getElementById('wasteQuantity');
+        const processTypeSelect = document.getElementById('processType');
+        const processBadge = document.getElementById('process-flow-badge');
+        const thicknessInput = document.getElementById('thicknessCm');
+
+        const theoreticalM2El = document.getElementById('cutting-theoretical-m2');
+        const fireM2El = document.getElementById('cutting-fire-m2');
+        const firePctEl = document.getElementById('cutting-fire-pct');
+
+        function updateProcessBadge() {
+            if (!processTypeSelect || !processBadge) return;
+            const val = processTypeSelect.value;
+            if (val.includes('ST')) {
+                processBadge.textContent = 'ST Kesim → Dar Bant Cila akışına gider (Pahlı/Pahsız).';
+                processBadge.className = 'mt-1 p-2 rounded-lg text-xs font-semibold bg-blue-50 text-blue-900 border border-blue-200';
+            } else {
+                processBadge.textContent = 'Katrak (80 Lama) → Plaka Cila akışına gider (Büyük Plaka).';
+                processBadge.className = 'mt-1 p-2 rounded-lg text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200';
+            }
+        }
+
+        if (processTypeSelect) {
+            processTypeSelect.addEventListener('change', updateProcessBadge);
+            updateProcessBadge();
+        }
+
+        if (blockSelect) {
+            blockSelect.addEventListener('change', function () {
+                const opt = blockSelect.options[blockSelect.selectedIndex];
+                if (opt) {
+                    const tonnage = opt.getAttribute('data-tonnage');
+                    if (tonnage && inputQuantity && (!inputQuantity.value || parseFloat(inputQuantity.value) <= 0)) {
+                        inputQuantity.value = parseFloat(tonnage).toFixed(3);
+                        calcYield();
+                    }
+                }
+            });
+        }
+
+        window.calcYield = function () {
+            const inTon = parseFloat(inputQuantity ? inputQuantity.value : 0) || 0;
+            const outM2 = parseFloat(outputQuantity ? outputQuantity.value : 0) || 0;
+            const thickCm = parseFloat(thicknessInput ? thicknessInput.value : 2.0) || 2.0;
+            const density = 2.70; // ton / m3
+
+            if (inTon > 0) {
+                // Hacim (m3) = inTon / density. Kalınlık (m) = thickCm / 100
+                const theoreticalGrossM2 = inTon / (density * (thickCm / 100));
+                if (theoreticalM2El) {
+                    theoreticalM2El.textContent = theoreticalGrossM2.toFixed(1) + ' m²';
+                }
+
+                if (outM2 > 0) {
+                    const fire = Math.max(0, theoreticalGrossM2 - outM2);
+                    const firePct = (fire / theoreticalGrossM2) * 100;
+
+                    if (wasteQuantity) wasteQuantity.value = fire.toFixed(2);
+                    if (fireM2El) fireM2El.textContent = fire.toFixed(1) + ' m²';
+                    if (firePctEl) {
+                        firePctEl.textContent = '%' + firePct.toFixed(1);
+                        if (firePct > 20) {
+                            firePctEl.parentElement.className = 'bg-rose-600 text-white px-4 py-2 rounded-lg text-center shadow-xs';
+                        } else {
+                            firePctEl.parentElement.className = 'bg-amber-500 text-white px-4 py-2 rounded-lg text-center shadow-xs';
+                        }
+                    }
+                }
+            }
+        };
+
+        if (thicknessInput) thicknessInput.addEventListener('input', window.calcYield);
+        calcYield();
+    })();
+</script>
+</th:block>
 </body>
 </html>

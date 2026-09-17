@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Yeni Mazot Girişi | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+
+    <!-- Breadcrumb & Heading -->
+    <div th:replace="~{fragments/form-page :: breadcrumb('Makine Mazot', @{/machines/fuel}, 'Yeni Kayıt')}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        'Yeni Mazot Girişi',
+        'İş makinelerinin mazot ikmalini, litre fiyatını ve çalışma saati/kilometresini kaydedin. Tutar otomatik olarak ilgili birimin maliyetine yansır.',
+        '',
+        @{/machines/fuel})}"></div>
+
+    <div class="erp-form-card">
+        <form th:action="@{/machines/fuel/create}" method="post" class="erp-form" id="fuel-form">
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <!-- Makine & Tarih -->
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Makine & Tarih', 'İkmal yapılan makine ve fiş tarihi')}"></div>
+                    <div class="erp-form-grid--3">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="machineId">İş Makinesi <span class="req">*</span></label>
+                            <select id="machineId" name="machineId" required class="erp-form-select">
+                                <option value="" disabled selected>Makine seçin</option>
+                                <option th:each="m : ${machines}" th:value="${m.id}"
+                                        th:text="${m.name + ' (' + m.businessUnit.label + ' - ' + m.code + ')'}"></option>
+                            </select>
+                            <p class="erp-form-hint">Ocak kepçesi, ekskavatör, loder, kamyon vb.</p>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="entryDate">İkmal Tarihi <span class="req">*</span></label>
+                            <input id="entryDate" type="date" name="entryDate" th:value="${defaultDate}" required class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="receiptNo">Fiş / Fatura No</label>
+                            <input id="receiptNo" type="text" name="receiptNo" placeholder="Örn: MZT-2026-081" class="erp-form-input font-mono">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Miktar & Fiyat & Saat -->
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Tüketim & Sayaç Bilgisi', 'Litre, birim fiyat ve makinenin anlık saat/km sayacı')}"></div>
+                    <div class="erp-form-grid--4">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="litres">Alınan Litre <span class="req">*</span></label>
+                            <input id="litres" type="number" step="0.01" min="0.1" name="litres" required placeholder="Örn: 450" class="erp-form-input font-bold" oninput="calcTotal()">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="pricePerLitre">Litre Fiyatı (TL) <span class="req">*</span></label>
+                            <input id="pricePerLitre" type="number" step="0.01" min="0.1" name="pricePerLitre" required placeholder="Örn: 42.50" class="erp-form-input" oninput="calcTotal()">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="workingHoursOrKm">Makine Çalışma Saati / Km</label>
+                            <input id="workingHoursOrKm" type="number" step="0.1" min="0" name="workingHoursOrKm" placeholder="Örn: 1845.5" class="erp-form-input font-mono">
+                            <p class="erp-form-hint">Saat başına litre tüketim analizi için</p>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label">Toplam Tutar</label>
+                            <div id="display-total" class="h-10 px-3 flex items-center bg-amber-50 text-amber-900 border border-amber-200 rounded-lg font-mono font-bold text-base">
+                                0,00 ₺
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sorumlu & Not -->
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Teslim & Açıklama', 'İkmali yapan ve teslim alan personel')}"></div>
+                    <div class="erp-form-grid--3">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="receivedBy">Teslim Alan (Operatör / Şoför)</label>
+                            <input id="receivedBy" type="text" name="receivedBy" placeholder="Örn: Ahmet Usta" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="issuedBy">Teslim Eden (Yakıt Görevlisi)</label>
+                            <input id="issuedBy" type="text" name="issuedBy" placeholder="Örn: Ocak Sorumlusu" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="notes">Notlar</label>
+                            <input id="notes" type="text" name="notes" placeholder="Ek açıklama" class="erp-form-input">
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Standard Form Actions -->
+            <div th:replace="~{fragments/form-page :: actions(@{/machines/fuel})}"></div>
+        </form>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+    function calcTotal() {
+        const litres = parseFloat(document.getElementById('litres').value) || 0;
+        const price = parseFloat(document.getElementById('pricePerLitre').value) || 0;
+        const total = litres * price;
+        document.getElementById('display-total').textContent = total.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+    }
+</script>
+</th:block>
+</body>
+</html>

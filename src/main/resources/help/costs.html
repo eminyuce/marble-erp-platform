@@ -1,15 +1,49 @@
-<section class="help-page" data-title="Maliyet Analizi" data-updated="2026-09-15">
-    <p>Maliyet Analizi kayıtlı gider ve operasyonlardan dört sonuç üretir: Ocak, Fabrika, Atölye ve Şantiyeler. Tutarlar sabit örnek değildir.</p>
-    <h3>Dönem ve sekmeler</h3>
+<section class="help-page" data-title="Maliyet Analizi — 1 m² Mermerin Gerçek Maliyeti" data-updated="2026-09-17">
+    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Mermer sektörünün en kritik ihtiyacı olan; ocaktaki ton maliyetinden fabrikadaki m² maliyetine, fire kayıplarından şantiye kârlılığına kadar tüm finansal gerçekliği hesaplayan sistem beynidir.</p>
+
+    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
     <ul class="help-panel-list">
-        <li>Üstteki ay seçici gider dönemini (YYYY-AA) değiştirir. <strong>Uygula</strong> analizleri yeniden hesaplar.</li>
-        <li>Elektrik faturası sonraki ay gelse bile önceki üretim ayına yazılabilir; ocak ekranındaki kural buraya yansır.</li>
-        <li>Şantiye sekmesinde gelir, maliyet ve net kâr / zarar proje satırı olarak listelenir. Şantiye gideri bir projeye bağlanmalıdır.</li>
+        <li><strong>Adım 1 — Dönem Seçimi:</strong> Üst kısımdan hesaplama yapmak istediğiniz Yıl ve Ayı (Örn: 2026-09) seçin.</li>
+        <li><strong>Adım 2 — Giderleri Kontrol Etme:</strong> Seçilen döneme ait Ocak giderleri (mazot, elmas tel, personel, yemek, patlayıcı) ve Fabrika giderlerinin (elektrik, su, segman, cila taşı, bakım) tam girildiğinden emin olun.</li>
+        <li><strong>Adım 3 — 4 Ana Maliyet Kartını İnceleme:</strong>
+            <ul>
+                <li><strong>Ocak Ton Maliyeti:</strong> O ay ocakta üretilen 1 ton sağlam mermerin şirkete maliyeti.</li>
+                <li><strong>Fabrika m² Maliyeti:</strong> Katrak ve ST'den çıkan 1 m² mamulün tüm fabrika giderleri ve fire dahil maliyeti.</li>
+                <li><strong>Ortalama Fire Oranı (%):</strong> Kesim ve silimde taşa verilen kayıp oranı.</li>
+                <li><strong>Şantiye Kârlılığı:</strong> Teslim edilen projelerden elde edilen net nakit kâr.</li>
+            </ul>
+        </li>
+        <li><strong>Adım 4 — Maliyet Dağıtımı & Dönem Kapatma:</strong> Giderler kesinleştiğinde dönemi hesaplatın; sistem stoktaki her bloğun ve paletin maliyet kartını geriye dönük günceller.</li>
     </ul>
-    <h3>Fiyat ve masraf</h3>
+
+    <h3>2. Mermer Sektörünün 4 Altın Formülü</h3>
     <ul class="help-panel-list">
-        <li><strong>Fiyat Simülasyonu</strong> öneri üretir; maliyet analizinin yerine geçmez.</li>
-        <li>Masraf merkezleri ve dönem kapama finans yetkisiyle bu ekrandan yönetilir.</li>
-        <li>Tanımlardaki masraf merkezi kartı kod, birim ve bütçe içindir; fiili fiş burada ve ilgili modüllerde oluşur.</li>
+        <li><strong>1) Ocak Ton Maliyeti Formülü:</strong><br>
+            <code>Ocak Ton Maliyeti = (O Ayın Tüm Ocak Giderleri Toplamı) / (O Ay Üretilen Toplam Gerçek Tonaj)</code>
+        </li>
+        <li><strong>2) Fabrika 1 m² Maliyeti Formülü:</strong><br>
+            <code>Blok Fabrika Girişi = (Ocak Ton Maliyeti × Blok Gerçek Tonu) + Ocak &rarr; Fabrika Nakliyesi</code><br>
+            <code>1 m² Sağlam Maliyet = (Bloğun Fabrika Giriş Maliyeti + Fabrika Gider Payı) / Bloktan Çıkan Sağlam m²</code>
+        </li>
+        <li><strong>3) Fire Etkisi Formülü:</strong><br>
+            <code>Fire Oranı (%) = (Giren Tonaj Karşılığı m² - Çıkan Sağlam m²) / Giren m² × 100</code><br>
+            <em>*Unutmayın: Fire arttıkça çıkan sağlam m² azalır, bu da doğrudan birim m² maliyetini sıçratır!</em>
+        </li>
+        <li><strong>4) Şantiye Net Kârı Formülü:</strong><br>
+            <code>Net Kâr = Hakediş / Sözleşme Bedeli - (Giden Mermer Maliyeti + Montaj İşçiliği + Sarf + Taşıma + Vergi)</code>
+        </li>
+    </ul>
+
+    <h3>3. Çok Önemli: Elektrik Faturası 1 Ay Gecikme Kuralı</h3>
+    <ul class="help-panel-list">
+        <li>Fabrika ve ocak elektrik faturaları 1 ay sonra gelir (Örn: Mart ayında gelen fatura Şubat ayı üretimine aittir).</li>
+        <li>Gider girilirken <strong>"Fatura Tarihi"</strong> (Mart) ile <strong>"Hangi Ayın Üretimine Ait"</strong> (Şubat) ayrı seçilir.</li>
+        <li>Sistem elektrik bedelini Mart'a değil, ait olduğu Şubat ayının üretilen ton ve metrajına bölerek kesin maliyeti çıkarır.</li>
+    </ul>
+
+    <h3>4. Butonlar & Dışa Aktarım</h3>
+    <ul class="help-panel-list">
+        <li><strong>Gider Ekle:</strong> Eksik gider fişi veya fatura varsa doğrudan Masraflar sayfasına yönlendirir.</li>
+        <li><strong>Dışa Aktar (Excel/PDF):</strong> Yönetim kurulu ve muhasebe için detaylı maliyet analiz raporunu tam formatta indirir.</li>
     </ul>
 </section>

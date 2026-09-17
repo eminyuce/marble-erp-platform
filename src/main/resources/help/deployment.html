@@ -1,15 +1,23 @@
-<section class="help-page" data-title="Üretim yayını" data-updated="2026-09-16">
-    <p>Sistem Araçları içindeki <strong>Deployment</strong> ekranı, sunucuya SSH açmadan <code>main</code> dalından üretim yayını başlatır ve çıktıyı canlı gösterir.</p>
-    <h3>Ne çalışır</h3>
+<section class="help-page" data-title="Üretim Yayını (Deployment) Konsolu" data-updated="2026-09-17">
+    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Linux sunucusuna harici bir SSH veya terminal açmaya gerek kalmadan; sistemin en güncel yazılım kodunu (main dalından) tek tıkla çekip derleyen ve canlıya alan sistem yöneticisi yayın konsoludur.</p>
+
+    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
     <ul class="help-panel-list">
-        <li><code>git pull origin main</code> yeni kodu çeker.</li>
-        <li><code>./scripts/deploy_production.sh -y</code> derler, servisi durdurur, JAR’ı değiştirir ve sağlık kontrolü yapar.</li>
-        <li>Yayın sırasında uygulama kısa süre kapanır; bu sekme açık kalırsa günlük otomatik devam eder.</li>
+        <li><strong>Adım 1 — Sunucu & Versiyon Durumunu İnceleme:</strong> Ekrandaki mevcut aktif yazılım sürümünü ve sunucunun sağlık göstergelerini kontrol edin.</li>
+        <li><strong>Adım 2 — Yayını Tetikleme:</strong> <strong>"Üretim Yayınını Başlat"</strong> butonuna tıklayın.</li>
+        <li><strong>Adım 3 — Canlı Konsol Akışını İzleme:</strong> Butona basıldığında arka planda şu adımlar otomatik yürür:
+            <ul>
+                <li><code>git pull origin main</code>: GitHub üzerindeki en son onaylanmış güncellemeleri çeker.</li>
+                <li><code>./scripts/deploy_production.sh -y</code>: Maven ile projeyi derler, testleri koşar, eski servisi durdurup yeni JAR dosyasını ayağa kaldırır.</li>
+                <li><strong>Sağlık Kontrolü (Health Check):</strong> Veritabanı ve web servisinin ayakta olduğunu doğrular.</li>
+            </ul>
+        </li>
+        <li><strong>Adım 4 — Tamamlanma Onayı:</strong> Konsol akışının sonunda yeşil "Başarılı / Aktif" göstergesi belirdiğinde yeni sürüm tüm kullanıcılara açılmıştır.</li>
     </ul>
-    <h3>İlk kurulum</h3>
+
+    <h3>2. Kritik Güvenlik & İş Kuralları</h3>
     <ul class="help-panel-list">
-        <li>Bu ekran yalnızca Linux üretim sunucusunda ve yönetici hesabıyla çalışır.</li>
-        <li>İlk kez SSH ile <code>sudo git pull origin main</code> ve <code>sudo ./scripts/deploy_production.sh -y</code> çalıştırın. Bu, sonraki yayınlar için şifresiz sudo, yayın komutunu ve git <code>safe.directory</code> iznini kurar.</li>
-        <li>Düğme kapalıysa sarı kutudaki nedeni okuyun.</li>
+        <li><strong>Kısa Süreli Yeniden Başlatma:</strong> Yeni sürüm devreye girerken sistem yaklaşık 15–30 saniye yeniden başlar. Yayını fabrika veya ocak vardiya değişimi gibi sakin saatlerde yapmanız önerilir.</li>
+        <li><strong>Yalnızca Sunucu Ortamı:</strong> Bu fonksiyon sadece canlı Linux sunucusu üzerinde ve ADMIN rolüyle çalıştırılabilir; yerel geliştirici ortamında koruma amaçlı devre dışıdır.</li>
     </ul>
 </section>

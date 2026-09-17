@@ -59,7 +59,9 @@ public class HelpContentCatalog {
                     new PathMapping("/reports", "reports"),
                     new PathMapping("/cost-analysis", "costs"),
                     new PathMapping("/costs", "costs"),
-                    new PathMapping("/expenses", "costs")
+                    new PathMapping("/expenses", "costs"),
+                    new PathMapping("/machines/fuel", "blocks"),
+                    new PathMapping("/machines", "definitions")
             ).stream()
             .sorted(Comparator.comparingInt((PathMapping mapping) -> mapping.path().length()).reversed())
             .toList();

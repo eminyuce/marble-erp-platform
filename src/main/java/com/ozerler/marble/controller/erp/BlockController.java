@@ -67,6 +67,15 @@ public class BlockController extends AbstractController {
         return quarryBlockService.getBlocksPaged(page, size, search, sortField, sortDir, locationType, status);
     }
 
+    @GetMapping("/api/generate-code")
+    @ResponseBody
+    public java.util.Map<String, String> generateBlockCode(
+            @RequestParam(value = "quarryId", required = false) Long quarryId,
+            @RequestParam(value = "section", defaultValue = "A3") String section) {
+        String code = quarryBlockService.generateStandardBlockCode(quarryId, section);
+        return java.util.Map.of("code", code);
+    }
+
     @GetMapping("/api/block-code-available")
     @ResponseBody
     public BlockCodeAvailabilityDto checkBlockCode(@RequestParam("code") String code,
@@ -470,6 +479,7 @@ public class BlockController extends AbstractController {
     private void populateBlockForm(Model model, Locale locale) {
         model.addAttribute("quarries", quarryBlockService.getAllQuarries());
         model.addAttribute("qualityGrades", QualityGrade.values());
+        model.addAttribute("stoneCatalog", com.ozerler.marble.domain.StoneTypeCatalog.getAll());
         model.addAttribute("quarryYards", new StockLocationType[]{
                 StockLocationType.PRODUCTION_YARD, StockLocationType.DISPATCH_YARD});
         model.addAttribute("pageTitle", messageSource.getMessage("erp.block.title.create", null, locale));

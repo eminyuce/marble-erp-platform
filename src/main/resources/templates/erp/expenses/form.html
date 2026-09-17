@@ -129,21 +129,30 @@
                         </div>
 
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="expense-expensePeriod">
-                                Dönem (YYYY-AA)
-                                <span th:replace="~{fragments/erp-ops :: tip('', 'Boş bırakılırsa fatura veya kayıt tarihine göre otomatik hesaplanır.')}"></span>
-                            </label>
-                            <input id="expense-expensePeriod" type="month" name="expensePeriod"
-                                   th:value="${record != null ? record.expensePeriod : ''}"
-                                   class="erp-form-input font-mono">
-                        </div>
-
-                        <div class="erp-form-field">
                             <label class="erp-form-label" for="expense-invoiceDate">Fatura / Belge Tarihi</label>
                             <input id="expense-invoiceDate" type="date" name="invoiceDate"
                                    th:value="${record != null ? record.invoiceDate : ''}"
-                                   class="erp-form-input font-mono">
+                                   class="erp-form-input font-mono" onchange="handleInvoiceDateChange(this.value)">
                         </div>
+
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="expense-expensePeriod">
+                                Hangi Ayın Üretimine Ait (Dönem YYYY-AA) <span class="req">*</span>
+                                <span th:replace="~{fragments/erp-ops :: tip('', 'Maliyetin yazılacağı üretim dönemi')}"></span>
+                            </label>
+                            <input id="expense-expensePeriod" type="month" name="expensePeriod"
+                                   th:value="${record != null ? record.expensePeriod : ''}"
+                                   class="erp-form-input font-mono font-bold">
+                        </div>
+                    </div>
+
+                    <!-- Elektrik Kuralı Bilgi Kartı -->
+                    <div id="electricity-rule-alert" class="mt-4 p-4 rounded-xl border border-amber-200 bg-amber-50/80 text-xs text-amber-900 flex items-start gap-3">
+                        <i data-lucide="zap" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <strong>Elektrik Faturası Kuralı:</strong> Elektrik faturaları 1 ay geriden gelir. Fatura tarihi seçildiğinde, sistem maliyeti otomatik olarak <strong>bir önceki ayın üretimine</strong> bağlar ve ton/m² maliyetini geçmişe dönük kesinleştirir.
+                        </div>
+                    </div>
 
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="expense-documentNo">Fatura / Fiş No</label>
@@ -162,10 +171,52 @@
                 </section>
             </div>
 
-            <!-- Standard Bottom Actions -->
+            <!-- Standard Bottom Actions (Save / Cancel) -->
             <div th:replace="~{fragments/form-page :: actions(@{/expenses})}"></div>
         </form>
     </div>
 </div>
+
+<th:block layout:fragment="scripts">
+<script>
+    function handleInvoiceDateChange(val) {
+        const typeSelect = document.getElementById('expense-expenseType');
+        const periodInput = document.getElementById('expense-expensePeriod');
+        if (!val || !periodInput) return;
+
+        const date = new Date(val);
+        if (isNaN(date.getTime())) return;
+
+        const type = typeSelect ? typeSelect.value : '';
+        if (type === 'ELECTRICITY') {
+            // 1 ay geriye al
+            date.setMonth(date.getMonth() - 1);
+        }
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        periodInput.value = `${y}-${m}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('expense-expenseType');
+        const alertCard = document.getElementById('electricity-rule-alert');
+        if (typeSelect && alertCard) {
+            typeSelect.addEventListener('change', function () {
+                if (this.value === 'ELECTRICITY') {
+                    alertCard.style.display = 'flex';
+                    const invDate = document.getElementById('expense-invoiceDate');
+                    if (invDate && invDate.value) handleInvoiceDateChange(invDate.value);
+                } else {
+                    alertCard.style.display = 'none';
+                }
+            });
+            // İlk kontrol
+            if (typeSelect.value !== 'ELECTRICITY') {
+                alertCard.style.display = 'none';
+            }
+        }
+    });
+</script>
+</th:block>
 </body>
 </html>

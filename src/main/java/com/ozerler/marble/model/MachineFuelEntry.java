@@ -36,6 +36,9 @@ public class MachineFuelEntry extends AuditableEntity {
     @Column(name = "total_amount", nullable = false, precision = 14, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(name = "working_hours_or_km", precision = 12, scale = 2)
+    private BigDecimal workingHoursOrKm;
+
     @Column(name = "receipt_no", length = 60)
     private String receiptNo;
 

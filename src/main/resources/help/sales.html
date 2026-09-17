@@ -1,15 +1,31 @@
-<section class="help-page" data-title="Satış siparişleri" data-updated="2026-09-15">
-    <p>Satış siparişi müşteri carisine bağlanır. Taslak onaylanınca fatura ve tahsilat detay sayfasından yürür. Müşteri kartı mega menü <strong>Tanımlar</strong> → <strong>Müşteriler</strong> listesindedir.</p>
-    <h3>Liste</h3>
+<section class="help-page" data-title="Satış & Sevkiyat Yönetimi" data-updated="2026-09-17">
+    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktan ham blok satışı, stok sahasından büyük plaka satışı ve fabrikadan/atölyeden ihracat kasalı ebatlı palet satışlarının sözleşme, fatura, rezervasyon ve sevkiyat süreçlerini yönetir.</p>
+
+    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
     <ul class="help-panel-list">
-        <li><strong>Yeni sipariş</strong> formu müşteri, tarih ve kalemlerle sipariş oluşturur.</li>
-        <li>Sipariş no veya müşteri unvanı ile arayın. <strong>Dışa Aktar</strong> tabloyu indirir.</li>
-        <li>Satırdaki sipariş numarası detaya gider. Taslakta <strong>Onayla</strong> görünür; onaydan sonra kalemler kilitlenir.</li>
+        <li><strong>Adım 1 — Yeni Sipariş Açma:</strong> Üstteki <strong>Yeni Satış Siparişi</strong> butonuna tıklayın.</li>
+        <li><strong>Adım 2 — Müşteri Seçimi & Para Birimi:</strong> Müşteri carisini seçin. İhracat ise döviz cinsini (USD, EUR) ve teslimat şeklini (FOB, CIF, Fabrika Teslim) belirleyin.</li>
+        <li><strong>Adım 3 — Satış Kalemlerini Ekleme:</strong>
+            <ul>
+                <li><em>Blok Satışı:</em> Ocak veya sevk sahasındaki blok barkodu seçilir (Kantar tonajı üzerinden fiyatlandırılır).</li>
+                <li><em>Plaka Satışı:</em> Plaka stok sahasındaki cilalı/ham plaka barkodları seçilir (m² üzerinden).</li>
+                <li><em>Ebatlı Kasa/Palet Satışı:</em> 60×60, 30×60 vb. standart ebatlı kasalı paletler eklenir.</li>
+            </ul>
+        </li>
+        <li><strong>Adım 4 — Siparişi Onaylama & Rezervasyon:</strong> Sipariş onaylandığında seçilen taşlar otomatik olarak <strong>"Rezerve"</strong> durumuna geçer; başka bir müşteriye satılamaz.</li>
+        <li><strong>Adım 5 — Sevkiyat & Tahsilat:</strong> Tır veya konteyner yüklendiğinde sevk irsaliyesi kesilir, stoktan düşülür. Sipariş detayından tahsilat ve kalan alacak bakiyesi izlenir.</li>
     </ul>
-    <h3>Tahsilat</h3>
+
+    <h3>2. Mermer İş Mantığı & Kritik Kurallar</h3>
     <ul class="help-panel-list">
-        <li>Detay başlığında sipariş tutarı ve ödenen tutar yan yanadır.</li>
-        <li>Ödeme kaydı alacak bakiyesini düşürür. Blok satışı Ocak işlemlerinden gelir; bu ekran sipariş ve faturadır.</li>
-        <li>Müşteri kartı mega menü <strong>Tanımlar</strong> → <strong>Müşteriler</strong> listesindedir.</li>
+        <li><strong>Kantar Tonajı Esası:</strong> Blok satışlarında hacimsel hesap değil, resmi kantar fişi tonajı üzerinden faturalandırma esastır.</li>
+        <li><strong>Kasa / Palet İhracat Standartları:</strong> İhracata giden kasalı ürünlerin ISPM-15 ısıl işlem etiketli olması ve toplam konteyner yükünün maksimum yasal tonaj sınırını (yaklaşık 26–27 ton) aşmaması gerekir.</li>
+        <li><strong>Gerçek Kâr Göstergesi:</strong> Sipariş oluşturulduğunda sistem taşın arka plandaki gerçek üretim maliyetini bildiği için satıştan elde edilecek <strong>Net Kâr</strong>ı ve <strong>Kâr Marjı %</strong>sini anında hesaplar.</li>
+    </ul>
+
+    <h3>3. Butonlar & Tablo İşlevleri</h3>
+    <ul class="help-panel-list">
+        <li><strong>Durum Filtresi:</strong> Taslak, Onaylandı, Sevkiyatta veya Tamamlandı durumlarına göre siparişleri süzün.</li>
+        <li><strong>Dışa Aktar (Excel/CSV):</strong> Sevkiyat çeki listesi (Packing List) veya satış raporu almak için listeyi indirin.</li>
     </ul>
 </section>

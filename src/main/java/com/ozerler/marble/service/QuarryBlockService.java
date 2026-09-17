@@ -97,6 +97,28 @@ public class QuarryBlockService {
         return TabulatorResponse.of(dtos, blockPage.getTotalPages(), blockPage.getTotalElements(), meta);
     }
 
+    @Transactional(readOnly = true)
+    public String generateStandardBlockCode(Long quarryId, String section) {
+        String prefix = "OC";
+        if (quarryId != null) {
+            quarryRepository.findById(quarryId).ifPresent(q -> {
+                // Keep prefix clean
+            });
+        }
+        String cleanSection = (section != null && !section.isBlank()) ? section.trim().toUpperCase() : "A3";
+        String datePart = java.time.format.DateTimeFormatter.ofPattern("yyyyMM").format(LocalDate.now());
+        long countThisMonth = blockRepository.count();
+        long seq = (countThisMonth % 9999) + 1;
+        String seqStr = String.format("%04d", seq);
+        String candidate = prefix + "-" + cleanSection + "-" + datePart + "-" + seqStr;
+        while (blockRepository.existsByBlockCode(candidate)) {
+            seq++;
+            seqStr = String.format("%04d", seq);
+            candidate = prefix + "-" + cleanSection + "-" + datePart + "-" + seqStr;
+        }
+        return candidate;
+    }
+
     private BlockDto toBlockDto(Block block, Map<Long, BigDecimal> expensePerTonByQuarry) {
         Long quarryId = block.getQuarry() != null ? block.getQuarry().getId() : null;
         BigDecimal expensePerTon = quarryId != null ? expensePerTonByQuarry.get(quarryId) : null;

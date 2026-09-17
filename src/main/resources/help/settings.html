@@ -1,15 +1,25 @@
-<section class="help-page" data-title="Sistem ayarları" data-updated="2026-09-15">
-    <p>Sistem ve güvenlik ayarları tüm kurumu etkiler. Sol menüden kategori seçin; her bölüm kendi kaydet düğmesine sahiptir.</p>
-    <h3>Genel ve güvenlik</h3>
+<section class="help-page" data-title="Sistem Ayarları & Güvenlik Yönetimi" data-updated="2026-09-17">
+    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Tüm kurum genelinde geçerli olan temel sistem parametrelerini, kullanıcı güvenlik kurallarını (2FA, reCAPTCHA), kurumsal e-posta (SMTP) bildirimlerini ve sistem bakım araçlarını yapılandırdığınız merkezdir.</p>
+
+    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
     <ul class="help-panel-list">
-        <li><strong>Genel Ayarlar</strong> ızgara varsayılan sayfa boyutu gibi uygulama davranışını tutar.</li>
-        <li><strong>2FA ve reCAPTCHA</strong> giriş korumasını açar veya kapatır. <strong>İstek sınırlandırma</strong> kısa sürede çok denemeyi keser.</li>
-        <li>Yanlış güvenlik ayarı kullanıcıları kilitleyebilir; kaydetmeden önce etkiyi okuyun.</li>
+        <li><strong>Adım 1 — Ayar Kategorisini Seçme:</strong> Sol sekmelerden düzenlemek istediğiniz alanı seçin:
+            <ul>
+                <li><em>Genel Ayarlar:</em> Tablolardaki varsayılan satır sayısı, tarih ve sayı biçimleri, varsayılan para birimi.</li>
+                <li><em>Güvenlik (2FA & reCAPTCHA):</em> İki faktörlü kimlik doğrulama, robot koruması ve şifre zorluk politikası.</li>
+                <li><em>SMTP Posta Sunucusu:</em> Şirket e-posta sunucusunun (Host, Port, Kullanıcı adı, Şifre) kurulumu.</li>
+                <li><em>E-Posta Şablonları:</em> Sipariş onayı, şifre sıfırlama veya sevkiyat bilgi e-postalarının metin şablonları.</li>
+                <li><em>Sistem Araçları & Sağlık:</em> Veritabanı durumu, disk doluluğu ve yayın (Deployment) konsolu.</li>
+            </ul>
+        </li>
+        <li><strong>Adım 2 — Bilgileri Güncelleme:</strong> Gerekli alanları doldurun.</li>
+        <li><strong>Adım 3 — Kategori Bazlı Kaydetme:</strong> Her sekmenin altında bulunan kendi <strong>"Değişiklikleri Kaydet"</strong> butonuna basın.</li>
+        <li><strong>Adım 4 — E-Posta Testi Yapma:</strong> SMTP bilgilerini girdikten sonra <strong>"Test E-postası Gönder"</strong> butonuna basarak sunucunun çalıştığını doğrulayın.</li>
     </ul>
-    <h3>Posta ve araçlar</h3>
+
+    <h3>2. Güvenlik & Kritik Kurallar</h3>
     <ul class="help-panel-list">
-        <li><strong>SMTP Posta Sunucusu</strong> bildirim gönderimini kurar. Ayarları kaydettikten sonra test e-postası gönderin.</li>
-        <li><strong>E-Posta Şablonları</strong> konu ve gövdeyi önizler; yer tutucular canlı veriyle doldurulur.</li>
-        <li><strong>Sistem Araçları</strong> yedekleme, sağlık kontrolü ve <strong>Deployment</strong> yayın ekranına gider. Ayrıntılı sağlık sayfası mega menü <strong>Sistem</strong> kartındadır.</li>
+        <li><strong>Yetkisiz Erişim Koruması:</strong> Bu sayfa yalnızca Yönetici (ADMIN) yetkisine sahip hesaplar tarafından görüntülenebilir ve değiştirilebilir.</li>
+        <li><strong>İstek Sınırlandırma (Rate Limiting):</strong> Güvenlik sekmesindeki istek kısıtlamaları, art arda yapılan siber saldırı veya şifre denemelerini otomatik engeller.</li>
     </ul>
 </section>
