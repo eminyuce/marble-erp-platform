@@ -49,6 +49,7 @@ const PAGES_TO_TEST = [
 
     // Workshop
     { name: '15_workshop', path: '/workshop', isPublic: false },
+    { name: '15b_workshop_receipts', path: '/workshop/receipts', isPublic: false },
     { name: '16_workshop_create', path: '/workshop/create', isPublic: false },
     { name: '17_workshop_detail', path: '/workshop/1', isPublic: false },
     { name: '17b_workshop_edit', path: '/workshop/1/edit', isPublic: false },

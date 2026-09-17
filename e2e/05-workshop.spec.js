@@ -22,6 +22,15 @@ test.describe('Workshop Management (Atölye)', () => {
     const createBtn = page.locator('a[href*="/workshop/create"]');
     await expect(createBtn.first()).toBeVisible();
 
+    const receiptsLink = page.locator('a[href="/workshop/receipts"]');
+    await expect(receiptsLink.first()).toBeVisible();
+    await receiptsLink.first().click();
+    await expect(page).toHaveURL(/\/workshop\/receipts/);
+    await expect(page.locator('#workshop-receipt-form')).toBeVisible();
+    await expect(page.locator('a[href="/workshop"]').filter({ hasText: 'Atölye iş emirleri' })).toBeVisible();
+    await page.locator('a[href="/workshop"]').filter({ hasText: 'Atölye iş emirleri' }).click();
+    await expect(page).toHaveURL(/\/workshop\/?$/);
+
     await errorTracker.assertCleanState();
   });
 

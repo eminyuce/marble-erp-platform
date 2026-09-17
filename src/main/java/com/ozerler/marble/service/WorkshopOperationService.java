@@ -2,6 +2,7 @@ package com.ozerler.marble.service;
 
 import com.ozerler.marble.domain.OperationYield;
 import com.ozerler.marble.domain.WorkshopOrderCost;
+import com.ozerler.marble.dto.WorkshopReceiptDto;
 import com.ozerler.marble.model.CutOrder;
 import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.MaterialLot;
@@ -170,8 +171,10 @@ public class WorkshopOperationService {
     }
 
     @Transactional(readOnly = true)
-    public List<WorkshopMaterialReceipt> receipts() {
-        return receiptRepository.findAllByOrderByReceivedAtDesc();
+    public List<WorkshopReceiptDto> listReceipts() {
+        return receiptRepository.findAllWithLotAndSupplier().stream()
+                .map(WorkshopReceiptDto::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)

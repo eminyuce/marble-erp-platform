@@ -26,6 +26,9 @@ class WorkshopGridActionsTest {
 
         assertThat(html).contains("{icon: 'edit-3', label: 'Düzenle', href: '/workshop/' + row.id + '/edit'}");
         assertThat(html).contains("erpStatusBadge(row.status, row.statusLabel)");
+        assertThat(html).contains("th:href=\"@{/workshop/receipts}\"");
+        assertThat(html).contains("Malzeme kabulü");
+        assertThat(html).doesNotContain("th:action=\"@{/workshop/receipts}\"");
     }
 
     @Test
@@ -41,6 +44,22 @@ class WorkshopGridActionsTest {
         assertThat(html).contains("th:value=\"${isEdit and record != null ? record.machineName : ''}\"");
         assertThat(html).contains("s.surfaceFinish.label");
         assertThat(html).contains("s.qualityGrade.label");
+    }
+
+    @Test
+    @DisplayName("Workshop material receipt page posts to /workshop/receipts and returns to work orders")
+    void receiptsPageLinksBackToWorkshopList() throws Exception {
+        String html;
+        try (var in = getClass().getResourceAsStream("/templates/erp/workshop/receipts.html")) {
+            assertThat(in).isNotNull();
+            html = new String(in.readAllBytes());
+        }
+
+        assertThat(html).contains("th:action=\"@{/workshop/receipts}\"");
+        assertThat(html).contains("th:href=\"@{/workshop}\"");
+        assertThat(html).contains("Atölye iş emirleri");
+        assertThat(html).contains("exportDropdown('workshop-receipts-table', 'atelye_malzeme_kabulleri')");
+        assertThat(html).contains("name=\"stoneType\"");
     }
 
     @Test

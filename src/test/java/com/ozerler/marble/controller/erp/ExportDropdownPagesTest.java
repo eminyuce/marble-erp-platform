@@ -14,6 +14,7 @@ class ExportDropdownPagesTest {
             Map.entry("/templates/erp/production/index.html", "exportDropdown('production-table', 'uretim_emirleri')"),
             Map.entry("/templates/erp/production/slabs.html", "exportDropdown('slabs-table', 'plakalar')"),
             Map.entry("/templates/erp/workshop/index.html", "exportDropdown('workshop-table', 'atelye_is_emirleri')"),
+            Map.entry("/templates/erp/workshop/receipts.html", "exportDropdown('workshop-receipts-table', 'atelye_malzeme_kabulleri')"),
             Map.entry("/templates/erp/projects/index.html", "exportDropdown('projects-table', 'projeler')"),
             Map.entry("/templates/erp/procurement/index.html", "exportDropdown('procurement-table', 'satinalma')"),
             Map.entry("/templates/erp/sales/index.html", "exportDropdown('sales-table', 'satislar')"),

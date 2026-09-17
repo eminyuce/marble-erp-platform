@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Malzeme kabulü | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-5">
+
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Atölye', '/workshop', 'Malzeme kabulü')}"></div>
+            <h2 class="admin-page-title">Atölye — Malzeme kabulü</h2>
+            <p class="erp-list-lead">
+                İç fabrikadan veya dış tedarikçiden gelen taşı kaydedin.
+                Kabul edilen malzeme atölye iş emirlerinde kullanılır.
+            </p>
+        </div>
+    </div>
+
+    <aside class="erp-callout" role="note">
+        <i data-lucide="package-plus"></i>
+        <p>
+            <strong>Nasıl kullanılır?</strong> Kaynak, taş cinsi ve miktarı girip kabulü kaydedin.
+            Dış fabrikada tedarikçi zorunludur. İş emirlerine
+            <strong>Atölye iş emirleri</strong> ile dönün.
+        </p>
+    </aside>
+
+    <div class="erp-toolbar">
+        <button type="submit" form="workshop-receipt-form" class="erp-btn-primary">
+            <i data-lucide="save"></i>
+            <span>Kabul kaydet</span>
+        </button>
+        <div th:replace="~{fragments/list-chrome :: search('Kabul no, taş cinsi veya tedarikçi', 'workshop-receipt-search')}"></div>
+        <div class="erp-toolbar-actions">
+            <a th:href="@{/workshop}" class="erp-btn-secondary">
+                <i data-lucide="scissors"></i>
+                <span>Atölye iş emirleri</span>
+            </a>
+            <div th:replace="~{fragments/list-chrome :: exportDropdown('workshop-receipts-table', 'atelye_malzeme_kabulleri')}"></div>
+        </div>
+    </div>
+
+    <div class="erp-form-card">
+        <form id="workshop-receipt-form" th:action="@{/workshop/receipts}" method="post" class="erp-form"
+              x-data="{ source: 'INTERNAL_FACTORY' }">
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kabul bilgisi', 'Kaynak, taş cinsi ve alış tutarı')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="receipt-source">Kaynak <span class="req">*</span></label>
+                            <select id="receipt-source" name="source" required class="erp-form-select" x-model="source">
+                                <option th:each="s : ${receiptSources}" th:value="${s.name()}" th:text="${s.label}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="receipt-supplierId">Tedarikçi</label>
+                            <select id="receipt-supplierId" name="supplierId" class="erp-form-select"
+                                    :required="source === 'EXTERNAL_FACTORY'">
+                                <option value="">Tedarikçi (dış fabrika)</option>
+                                <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.companyName}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="receipt-stoneType">Taş cinsi <span class="req">*</span></label>
+                            <input id="receipt-stoneType" type="text" name="stoneType" required class="erp-form-input"
+                                   placeholder="Örn. Afyon Beyaz">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="receipt-quantity">Miktar</label>
+                            <input id="receipt-quantity" type="number" step="0.01" name="quantity" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="receipt-areaM2">m²</label>
+                            <input id="receipt-areaM2" type="number" step="0.01" name="areaM2" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="receipt-purchaseCost">Alış maliyeti</label>
+                            <input id="receipt-purchaseCost" type="number" step="0.01" name="purchaseCost" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="receipt-receivedAt">Kabul tarihi</label>
+                            <input id="receipt-receivedAt" type="date" name="receivedAt" class="erp-form-input">
+                        </div>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="receipt-notes">Not</label>
+                            <input id="receipt-notes" type="text" name="notes" class="erp-form-input"
+                                   placeholder="İsteğe bağlı açıklama">
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </form>
+    </div>
+
+    <div th:replace="~{fragments/list-chrome :: gridShell('workshop-receipts-table')}"></div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        const workshopReceiptRows = /*[[${receipts}]]*/ [];
+        document.addEventListener("DOMContentLoaded", () => {
+            const receiptsTable = new Tabulator("#workshop-receipts-table", {
+                ...erpGridDefaults(),
+                pagination: true,
+                paginationMode: "local",
+                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
+                paginationSizeSelector: [5, 10, 25, 50],
+                data: workshopReceiptRows || [],
+                placeholder: "Malzeme kabulü kaydı bulunamadı.",
+                columns: [
+                    erpResponsiveCollapseColumn(),
+                    erpIndexColumn(),
+                    {
+                        title: "Kabul No",
+                        field: "receiptNo",
+                        minWidth: 150,
+                        responsive: 0,
+                        formatter: (cell) => `<span class="font-mono font-bold">${gridText(cell.getValue())}</span>`
+                    },
+                    {title: "Kaynak", field: "sourceLabel", minWidth: 140, formatter: (cell) => gridText(cell.getValue())},
+                    {title: "Tedarikçi", field: "supplierName", minWidth: 150, formatter: (cell) => gridText(cell.getValue())},
+                    {title: "Taş cinsi", field: "stoneType", minWidth: 130, formatter: (cell) => gridText(cell.getValue())},
+                    {
+                        title: "Miktar",
+                        field: "quantity",
+                        minWidth: 90,
+                        formatter: (cell) => gridNumber(cell.getValue())
+                    },
+                    {
+                        title: "m²",
+                        field: "areaM2",
+                        minWidth: 90,
+                        formatter: (cell) => gridArea(cell.getValue())
+                    },
+                    {
+                        title: "Alış maliyeti",
+                        field: "purchaseCost",
+                        minWidth: 130,
+                        formatter: (cell) => gridMoney(cell.getValue())
+                    },
+                    {title: "Tarih", field: "receivedAt", minWidth: 120, formatter: (cell) => gridText(cell.getValue())},
+                    {title: "Not", field: "notes", minWidth: 160, formatter: (cell) => gridText(cell.getValue())}
+                ]
+            });
+            const searchInput = document.getElementById("workshop-receipt-search");
+            if (searchInput) {
+                searchInput.addEventListener("input", function () {
+                    const query = searchInput.value.trim().toLocaleLowerCase("tr-TR");
+                    if (!query) {
+                        receiptsTable.clearFilter();
+                        return;
+                    }
+                    receiptsTable.setFilter(function (data) {
+                        return [data.receiptNo, data.sourceLabel, data.supplierName, data.stoneType, data.notes]
+                            .filter(Boolean)
+                            .join(" ")
+                            .toLocaleLowerCase("tr-TR")
+                            .includes(query);
+                    });
+                });
+            }
+            receiptsTable.on("renderComplete", () => {
+                if (window.lucide) window.lucide.createIcons();
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

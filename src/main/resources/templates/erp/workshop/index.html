@@ -5,53 +5,27 @@
     <title>Atölye | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-6">
+<div layout:fragment="content" class="erp-list-page space-y-5">
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Atölye')}"></div>
-            <h2 class="admin-page-title">Atölye</h2>
-            <p class="erp-list-lead">Malzeme kabulü, atölye iş emri, köprü/kenar/pah makineleri ve manuel ince pah.</p>
+            <h2 class="admin-page-title">Atölye — İş Emirleri</h2>
+            <p class="erp-list-lead">
+                Atölye iş emirlerini izleyin; yeni ebatlama emri açın veya malzeme kabulüne geçin.
+                Köprü, kenar, pah ve manuel ince pah işlemleri iş emri detayındadır.
+            </p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <h3 class="font-bold text-slate-900">Malzeme kabulü</h3>
-            <form th:action="@{/workshop/receipts}" method="post" class="space-y-2">
-                <select name="source" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option th:each="s : ${receiptSources}" th:value="${s.name()}" th:text="${s.label}"></option>
-                </select>
-                <select name="supplierId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option value="">Tedarikçi (dış fabrika)</option>
-                    <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.companyName}"></option>
-                </select>
-                <input type="text" name="stoneType" required placeholder="Taş cinsi" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <div class="grid grid-cols-3 gap-2">
-                    <input type="number" step="0.01" name="quantity" placeholder="Miktar" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <input type="number" step="0.01" name="areaM2" placeholder="m²" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <input type="number" step="0.01" name="purchaseCost" placeholder="Alış maliyeti" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                </div>
-                <input type="date" name="receivedAt" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <input type="text" name="notes" placeholder="Not" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Kabul kaydet</button>
-            </form>
-            <div class="max-h-36 overflow-y-auto text-xs space-y-1">
-                <div th:each="r : ${receipts}" class="flex justify-between border-b border-slate-100 py-1">
-                    <span th:text="${r.receiptNo + ' · ' + (r.source != null ? r.source.label : '')}">Kabul</span>
-                    <span th:text="${r.areaM2 + ' m²'}">0 m²</span>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <h3 class="font-bold text-slate-900">Makine parkı</h3>
-            <ul class="text-sm space-y-1">
-                <li th:each="m : ${workshopMachines}"
-                    th:text="${m.name + ' — ' + (m.machineType != null ? m.machineType.label : '')}">Makine</li>
-            </ul>
-            <p th:if="${#lists.isEmpty(workshopMachines)}" class="text-xs text-slate-400">Kayıtlı atölye makinesi yok.</p>
-        </div>
-    </div>
+    <aside class="erp-callout" role="note">
+        <i data-lucide="hammer"></i>
+        <p>
+            <strong>Nasıl kullanılır?</strong> Listeden bir iş emrine tıklayın veya
+            <strong>İşlemler</strong> menüsünden detay ve düzenlemeye gidin.
+            Fabrikadan veya dış tedarikçiden gelen taşı <strong>Malzeme kabulü</strong> sayfasında kaydedin.
+        </p>
+    </aside>
 
     <div class="erp-toolbar">
         <a th:href="@{/workshop/create}" class="erp-btn-primary">
@@ -60,6 +34,10 @@
         </a>
         <div th:replace="~{fragments/list-chrome :: search('İş emri no veya şantiye adı', 'workshop-search-input')}"></div>
         <div class="erp-toolbar-actions">
+            <a th:href="@{/workshop/receipts}" class="erp-btn-secondary">
+                <i data-lucide="package-plus"></i>
+                <span>Malzeme kabulü</span>
+            </a>
             <div th:replace="~{fragments/list-chrome :: exportDropdown('workshop-table', 'atelye_is_emirleri')}"></div>
         </div>
     </div>
@@ -146,6 +124,7 @@
         function reloadWorkshopGrid() {
             if (workshopTable) workshopTable.replaceData();
         }
+        window.reloadWorkshopGrid = reloadWorkshopGrid;
     </script>
 </th:block>
 </body>

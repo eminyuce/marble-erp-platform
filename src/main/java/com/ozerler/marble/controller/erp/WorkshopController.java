@@ -15,7 +15,12 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
@@ -32,8 +37,7 @@ public class WorkshopController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public String workshopIndex(Model model) {
-        populateWorkshopExtras(model);
+    public String workshopIndex() {
         return "erp/workshop/index";
     }
 
@@ -47,6 +51,12 @@ public class WorkshopController {
             @RequestParam(value = "sortDir", required = false) String sortDir) {
 
         return workshopCutService.getCutOrdersPaged(page, size, search, sortField, sortDir);
+    }
+
+    @GetMapping("/receipts")
+    public String receiptsPage(Model model) {
+        populateReceiptsPage(model);
+        return "erp/workshop/receipts";
     }
 
     @GetMapping("/create")
@@ -147,12 +157,20 @@ public class WorkshopController {
                                   @RequestParam(value = "receivedAt", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate receivedAt,
                                   @RequestParam(value = "notes", required = false) String notes,
                                   Locale locale,
+                                  Model model,
                                   RedirectAttributes redirectAttributes) {
-        workshopOperationService.receiveMaterial(source, supplierId, purchaseOrderItemId, stoneType,
-                quantity, areaM2, purchaseCost, receivedAt, notes);
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.workshop.receipt.success", null, locale));
-        return "redirect:/workshop";
+        try {
+            workshopOperationService.receiveMaterial(source, supplierId, purchaseOrderItemId, stoneType,
+                    quantity, areaM2, purchaseCost, receivedAt, notes);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.workshop.receipt.success", null, locale));
+            return "redirect:/workshop/receipts";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            populateReceiptsPage(model);
+            return "erp/workshop/receipts";
+        }
     }
 
     @PostMapping("/{id}/operations")
@@ -192,10 +210,9 @@ public class WorkshopController {
                 messageSource.getMessage("erp.workshop.title.edit", null, locale) + ": " + order.getCutOrderNo());
     }
 
-    private void populateWorkshopExtras(Model model) {
-        model.addAttribute("receipts", workshopOperationService.receipts());
+    private void populateReceiptsPage(Model model) {
+        model.addAttribute("receipts", workshopOperationService.listReceipts());
         model.addAttribute("receiptSources", WorkshopReceiptSource.values());
-        model.addAttribute("workshopMachines", workshopOperationService.workshopMachines());
         model.addAttribute("suppliers", workshopOperationService.suppliers());
     }
 }
