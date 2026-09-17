@@ -40,6 +40,7 @@ public class UserController extends AbstractController {
     public String usersPage(Model model) {
         model.addAttribute("filterRoles", UserRole.values());
         model.addAttribute("roleLabelMap", UserRole.labelMap());
+        model.addAttribute("summary", userService.getUserSummary());
         return "admin/users/index";
     }
 

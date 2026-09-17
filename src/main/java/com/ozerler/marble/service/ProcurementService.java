@@ -50,12 +50,34 @@ public class ProcurementService {
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
+    public record ProcurementSummaryDto(long totalOrders, BigDecimal totalAmount, long pendingDeliveries, long completedDeliveries) {}
+
+    @Transactional(readOnly = true)
+    public ProcurementSummaryDto getProcurementSummary() {
+        List<PurchaseOrder> all = purchaseOrderRepository.findAll();
+        long total = all.size();
+        BigDecimal totalAmt = all.stream().map(PurchaseOrder::getTotalAmount).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        long pending = all.stream().filter(p -> p.getStatus() != null && ("DRAFT".equalsIgnoreCase(p.getStatus().name()) || "SENT".equalsIgnoreCase(p.getStatus().name()) || "CONFIRMED".equalsIgnoreCase(p.getStatus().name()))).count();
+        long completed = all.stream().filter(p -> p.getStatus() != null && "DELIVERED".equalsIgnoreCase(p.getStatus().name())).count();
+        return new ProcurementSummaryDto(total, totalAmt, pending, completed);
+    }
+
     @Transactional(readOnly = true)
     public TabulatorResponse<PurchaseOrderDto> getPurchaseOrdersPaged(int page, int size,
                                                                       String search, String sortField, String sortDir) {
+        return getPurchaseOrdersPaged(page, size, search, null, sortField, sortDir);
+    }
+
+    @Transactional(readOnly = true)
+    public TabulatorResponse<PurchaseOrderDto> getPurchaseOrdersPaged(int page, int size,
+                                                                      String search, String status, String sortField, String sortDir) {
         Page<PurchaseOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PURCHASE_ORDER_SORTS,
                 pageable -> purchaseOrderRepository.searchPurchaseOrders(GridPages.normalizeSearch(search), pageable));
-        List<PurchaseOrderDto> dtos = orderPage.getContent().stream()
+        List<PurchaseOrder> orders = orderPage.getContent();
+        if (status != null && !status.isBlank()) {
+            orders = orders.stream().filter(o -> o.getStatus() != null && o.getStatus().name().equalsIgnoreCase(status)).toList();
+        }
+        List<PurchaseOrderDto> dtos = orders.stream()
                 .map(PurchaseOrderDto::fromEntity)
                 .collect(Collectors.toList());
 

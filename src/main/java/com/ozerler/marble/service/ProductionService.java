@@ -49,12 +49,37 @@ public class ProductionService {
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
+    public record ProductionSummaryDto(long totalOrders, long activeOrders, long completedOrders, BigDecimal totalSlabAreaM2) {}
+
+    @Transactional(readOnly = true)
+    public ProductionSummaryDto getProductionSummary() {
+        long totalOrders = productionOrderRepository.count();
+        long activeOrders = productionOrderRepository.countActiveOrders();
+        long completedOrders = Math.max(0, totalOrders - activeOrders);
+        BigDecimal totalSlabArea = slabRepository.findAll().stream()
+                .map(com.ozerler.marble.model.Slab::getSurfaceAreaM2)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new ProductionSummaryDto(totalOrders, activeOrders, completedOrders, totalSlabArea);
+    }
+
     @Transactional(readOnly = true)
     public TabulatorResponse<ProductionOrderDto> getOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
+        return getOrdersPaged(page, size, search, null, sortField, sortDir);
+    }
+
+    @Transactional(readOnly = true)
+    public TabulatorResponse<ProductionOrderDto> getOrdersPaged(int page, int size, String search, String status, String sortField, String sortDir) {
         Page<ProductionOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PRODUCTION_ORDER_SORTS,
                 pageable -> productionOrderRepository.searchOrders(GridPages.normalizeSearch(search), pageable));
+        List<ProductionOrder> orders = orderPage.getContent();
+        if (status != null && !status.isBlank()) {
+            orders = orders.stream()
+                    .filter(o -> o.getStatus() != null && o.getStatus().equalsIgnoreCase(status))
+                    .toList();
+        }
         return TabulatorResponse.of(
-                toOrderDtos(orderPage.getContent()),
+                toOrderDtos(orders),
                 orderPage.getTotalPages(),
                 orderPage.getTotalElements());
     }
@@ -117,11 +142,43 @@ public class ProductionService {
                 scrapReason, scrapWeightKg, scrapNotes));
     }
 
+    public record SlabSummaryDto(long totalSlabs, BigDecimal totalAreaM2, BigDecimal avgCostPerM2, long reservedCount) {}
+
+    @Transactional(readOnly = true)
+    public SlabSummaryDto getSlabSummary() {
+        List<Slab> all = slabRepository.findAll();
+        long totalSlabs = all.size();
+        BigDecimal totalArea = all.stream()
+                .map(Slab::getSurfaceAreaM2)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalCost = all.stream()
+                .map(s -> (s.getCostPerM2() != null && s.getSurfaceAreaM2() != null) ? s.getCostPerM2().multiply(s.getSurfaceAreaM2()) : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal avgCost = (totalArea.compareTo(BigDecimal.ZERO) > 0)
+                ? totalCost.divide(totalArea, 2, java.math.RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+        long reserved = all.stream().filter(s -> s.getStatus() != null && "RESERVED".equalsIgnoreCase(s.getStatus().name())).count();
+        return new SlabSummaryDto(totalSlabs, totalArea, avgCost, reserved);
+    }
+
     @Transactional(readOnly = true)
     public TabulatorResponse<SlabDto> getSlabsPaged(int page, int size, String search, String sortField, String sortDir) {
+        return getSlabsPaged(page, size, search, null, null, sortField, sortDir);
+    }
+
+    @Transactional(readOnly = true)
+    public TabulatorResponse<SlabDto> getSlabsPaged(int page, int size, String search, String status, String quality, String sortField, String sortDir) {
         Page<Slab> slabPage = GridPages.execute(page, size, sortField, sortDir, GridPages.SLAB_SORTS,
                 pageable -> slabRepository.searchSlabs(GridPages.normalizeSearch(search), pageable));
-        List<SlabDto> dtos = slabPage.getContent().stream()
+        List<Slab> slabs = slabPage.getContent();
+        if (status != null && !status.isBlank()) {
+            slabs = slabs.stream().filter(s -> s.getStatus() != null && s.getStatus().name().equalsIgnoreCase(status)).toList();
+        }
+        if (quality != null && !quality.isBlank()) {
+            slabs = slabs.stream().filter(s -> s.getQualityGrade() != null && s.getQualityGrade().name().equalsIgnoreCase(quality)).toList();
+        }
+        List<SlabDto> dtos = slabs.stream()
                 .map(SlabDto::fromEntity)
                 .toList();
         return TabulatorResponse.of(dtos, slabPage.getTotalPages(), slabPage.getTotalElements());

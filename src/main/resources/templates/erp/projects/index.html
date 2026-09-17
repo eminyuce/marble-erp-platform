@@ -5,27 +5,106 @@
     <title>Şantiyeler | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page">
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        statusFilter: '',
+        setStatusFilter(st) {
+            this.statusFilter = st;
+            if (typeof reloadProjectsGrid === 'function') reloadProjectsGrid();
+        },
+        gridExtraQuery() {
+            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
+        }
+     }"
+     x-init="window.projectsPageState = $data">
 
+    <!-- Header Section -->
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Şantiyeler')}"></div>
-            <h2 class="admin-page-title">Şantiyeler</h2>
-            <p class="erp-list-lead">Mahal metraj ağacı, taş planı, montaj ve şantiye kâr/zararı.</p>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="building-2" class="w-7 h-7 text-cyan-600 inline-block"></i>
+                <span>Şantiyeler &amp; Mahal Planlama</span>
+            </h2>
+            <p class="erp-list-lead">
+                Mermer taahhüt projelerinin mahal bazlı metraj ağacı, taş siparişleri, montaj ilerlemesi ve şantiye net kârlılık takibi.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Proje içine girerek oda ve mahal bazında döşenecek mermerleri planlayabilirsiniz.')}"></span>
+            </p>
         </div>
     </div>
 
+    <!-- KPI Summary Cards (Blocks Standard) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === '' ? 'erp-summary-card--active' : ''"
+                @click="setStatusFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Şantiye</div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.totalProjects}">0</span> proje
+            </div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'IN_PROGRESS' ? 'erp-summary-card--active ring-2 ring-cyan-500' : ''"
+                @click="setStatusFilter('IN_PROGRESS')">
+            <div class="text-[11px] uppercase tracking-wide text-cyan-600 font-semibold flex items-center gap-1">
+                <i data-lucide="hard-hat" class="w-3.5 h-3.5"></i> Devam Eden Montaj
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.activeProjects}">0</span> aktif
+            </div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'COMPLETED' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setStatusFilter('COMPLETED')">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Tamamlanan Proje
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.completedProjects}">0</span> bitti
+            </div>
+        </button>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Sözleşme Bedeli</div>
+            <div class="text-lg font-black text-cyan-950 mt-1 font-mono"
+                 th:text="${summary.totalContractValue != null ? #numbers.formatDecimal(summary.totalContractValue, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</div>
+        </div>
+    </div>
+
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('')">Tüm Şantiyeler</button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'IN_PROGRESS' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('IN_PROGRESS')">
+            <i data-lucide="play" class="w-3.5 h-3.5 inline mr-1"></i>
+            Devam Edenler
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'COMPLETED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('COMPLETED')">
+            <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
+            Tamamlananlar
+        </button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
     <div class="erp-toolbar">
         <a th:href="@{/projects/create}" class="erp-btn-primary">
             <i data-lucide="plus"></i>
-            <span>Yeni şantiye</span>
+            <span>Yeni Şantiye</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Şantiye kodu, adı veya müşteri', 'project-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: search('Şantiye kodu, adı veya müşteri...', 'project-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('projects-table', 'projeler')}"></div>
         </div>
     </div>
 
+    <!-- DataGrid Shell -->
     <div th:replace="~{fragments/list-chrome :: gridShell('projects-table')}"></div>
 </div>
 
@@ -38,16 +117,18 @@
                 pagination: true,
                 paginationMode: "remote",
                 paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
+                paginationSizeSelector: [5, 10, 25, 50, 100],
                 ajaxURL: "/projects/api/data",
                 ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
                 ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "project-search-input");
+                    return erpGridAjaxUrl(url, params, "project-search-input", function () {
+                        return window.projectsPageState ? window.projectsPageState.gridExtraQuery() : "";
+                    });
                 },
                 ajaxResponse: function (url, params, response) {
                     return erpGridAjaxResponse("projects-table", response);
                 },
-                placeholder: "Şantiye kaydı bulunamadı.",
+                placeholder: "Kriterlere uygun şantiye kaydı bulunamadı.",
                 columns: [
                     erpResponsiveCollapseColumn(),
                     erpIndexColumn(),
@@ -145,8 +226,9 @@
         });
 
         function reloadProjectsGrid() {
-            if (projectsTable) projectsTable.replaceData();
+            if (projectsTable) projectsTable.setData();
         }
+        window.reloadProjectsGrid = reloadProjectsGrid;
     </script>
 </th:block>
 </body>

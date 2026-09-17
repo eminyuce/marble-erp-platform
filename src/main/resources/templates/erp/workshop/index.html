@@ -5,34 +5,101 @@
     <title>Atölye | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-5">
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        statusFilter: '',
+        setStatusFilter(st) {
+            this.statusFilter = st;
+            if (typeof reloadWorkshopGrid === 'function') reloadWorkshopGrid();
+        },
+        gridExtraQuery() {
+            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
+        }
+     }"
+     x-init="window.workshopPageState = $data">
 
+    <!-- Header Section -->
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Atölye')}"></div>
-            <h2 class="admin-page-title">Atölye — İş Emirleri</h2>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="scissors" class="w-7 h-7 text-rose-600 inline-block"></i>
+                <span>Atölye — Ebatlama &amp; Özel İmalat</span>
+            </h2>
             <p class="erp-list-lead">
-                Atölye iş emirlerini izleyin; yeni ebatlama emri açın veya malzeme kabulüne geçin.
-                Köprü, kenar, pah ve manuel ince pah işlemleri iş emri detayındadır.
+                Fabrika paletleri, dış alımlar veya müşteri taşlarının köprü kesme, yan kesme ve pah makinelerinde ebatlanması ve şantiyeye/satışa hazırlanması.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Dışarıdan gelen taşları Malzeme Kabulü sayfasından atölyeye teslim alın.')}"></span>
             </p>
         </div>
     </div>
 
-    <aside class="erp-callout" role="note">
-        <i data-lucide="hammer"></i>
-        <p>
-            <strong>Nasıl kullanılır?</strong> Listeden bir iş emrine tıklayın veya
-            <strong>İşlemler</strong> menüsünden detay ve düzenlemeye gidin.
-            Fabrikadan veya dış tedarikçiden gelen taşı <strong>Malzeme kabulü</strong> sayfasında kaydedin.
-        </p>
-    </aside>
+    <!-- KPI Summary Cards (Blocks Standard) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === '' ? 'erp-summary-card--active' : ''"
+                @click="setStatusFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam İş Emri</div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.totalOrders}">0</span> emir
+            </div>
+        </button>
 
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'IN_PROGRESS' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setStatusFilter('IN_PROGRESS')">
+            <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
+                <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> Devam Eden Kesim
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.activeOrders}">0</span> aktif
+            </div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'COMPLETED' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setStatusFilter('COMPLETED')">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Tamamlanan İmalat
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.completedOrders}">0</span> bitti
+            </div>
+        </button>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Ebatlı Parça</div>
+            <div class="text-lg font-black text-rose-950 mt-1 font-mono">
+                <span th:text="${summary.totalPieces}">0</span> adet
+            </div>
+        </div>
+    </div>
+
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('')">Tüm İş Emirleri</button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'IN_PROGRESS' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('IN_PROGRESS')">
+            <i data-lucide="play" class="w-3.5 h-3.5 inline mr-1"></i>
+            Devam Edenler
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'COMPLETED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('COMPLETED')">
+            <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
+            Tamamlananlar
+        </button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
     <div class="erp-toolbar">
         <a th:href="@{/workshop/create}" class="erp-btn-primary">
             <i data-lucide="scissors"></i>
-            <span>Yeni atölye iş emri</span>
+            <span>Yeni Atölye İş Emri</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('İş emri no veya şantiye adı', 'workshop-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: search('İş emri no veya şantiye adı...', 'workshop-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <a th:href="@{/workshop/receipts}" class="erp-btn-secondary">
                 <i data-lucide="package-plus"></i>
@@ -42,6 +109,7 @@
         </div>
     </div>
 
+    <!-- DataGrid Shell -->
     <div th:replace="~{fragments/list-chrome :: gridShell('workshop-table')}"></div>
 </div>
 
@@ -54,21 +122,23 @@
                 pagination: true,
                 paginationMode: "remote",
                 paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
+                paginationSizeSelector: [5, 10, 25, 50, 100],
                 ajaxURL: "/workshop/api/data",
                 ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
                 ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "workshop-search-input");
+                    return erpGridAjaxUrl(url, params, "workshop-search-input", function () {
+                        return window.workshopPageState ? window.workshopPageState.gridExtraQuery() : "";
+                    });
                 },
                 ajaxResponse: function (url, params, response) {
                     return erpGridAjaxResponse("workshop-table", response);
                 },
-                placeholder: "Atölye iş emri kaydı bulunamadı.",
+                placeholder: "Kriterlere uygun atölye iş emri kaydı bulunamadı.",
                 columns: [
                     erpResponsiveCollapseColumn(),
                     erpIndexColumn(),
                     {
-                        title: "Atölye İş Emri No",
+                        title: "İş Emri No",
                         field: "cutOrderNo",
                         width: 170,
                         responsive: 0,
@@ -122,7 +192,7 @@
         });
 
         function reloadWorkshopGrid() {
-            if (workshopTable) workshopTable.replaceData();
+            if (workshopTable) workshopTable.setData();
         }
         window.reloadWorkshopGrid = reloadWorkshopGrid;
     </script>

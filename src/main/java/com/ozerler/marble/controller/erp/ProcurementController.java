@@ -29,6 +29,7 @@ public class ProcurementController {
     @GetMapping
     public String procurementIndex(Model model) {
         model.addAttribute("statuses", PurchaseOrderStatus.values());
+        model.addAttribute("summary", procurementService.getProcurementSummary());
         return "erp/procurement/index";
     }
 
@@ -38,10 +39,11 @@ public class ProcurementController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir) {
 
-        return procurementService.getPurchaseOrdersPaged(page, size, search, sortField, sortDir);
+        return procurementService.getPurchaseOrdersPaged(page, size, search, status, sortField, sortDir);
     }
 
     @GetMapping("/create")

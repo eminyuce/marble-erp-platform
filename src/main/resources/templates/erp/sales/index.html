@@ -5,27 +5,106 @@
     <title>Satış Siparişleri | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page">
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        statusFilter: '',
+        setStatusFilter(st) {
+            this.statusFilter = st;
+            if (typeof reloadSalesGrid === 'function') reloadSalesGrid();
+        },
+        gridExtraQuery() {
+            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
+        }
+     }"
+     x-init="window.salesPageState = $data">
 
+    <!-- Header Section -->
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Satışlar')}"></div>
-            <h2 class="admin-page-title">Satış Siparişleri</h2>
-            <p class="erp-list-lead">Müşteri yönetimi, satış siparişleri, faturalama ve alacak takibi.</p>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="shopping-cart" class="w-7 h-7 text-blue-600 inline-block"></i>
+                <span>Satış Siparişleri &amp; Sevkiyat</span>
+            </h2>
+            <p class="erp-list-lead">
+                Müşteri carilerine bağlı ham blok, plaka ve kasalı ihracat paleti satışları; sipariş onayı, faturalandırma ve tahsilat takibi.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Onaylanan siparişlerdeki taşlar otomatik rezerve edilir ve çift satış engellenir.')}"></span>
+            </p>
         </div>
     </div>
 
+    <!-- KPI Summary Cards (Blocks Standard) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === '' ? 'erp-summary-card--active' : ''"
+                @click="setStatusFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Satış Cirosu</div>
+            <div class="text-lg font-black text-slate-900 mt-1 font-mono"
+                 th:text="${summary.totalAmount != null ? #numbers.formatDecimal(summary.totalAmount, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Tahsil Edilen
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1 font-mono"
+                 th:text="${summary.paidAmount != null ? #numbers.formatDecimal(summary.paidAmount, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300">
+            <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> Kalan Alacak Bakiyesi
+            </div>
+            <div class="text-lg font-black text-amber-950 mt-1 font-mono"
+                 th:text="${summary.remainingBalance != null ? #numbers.formatDecimal(summary.remainingBalance, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</div>
+        </button>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Sipariş Adedi</div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.totalOrders}">0</span> sipariş
+            </div>
+        </div>
+    </div>
+
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('')">Tüm Siparişler</button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'CONFIRMED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('CONFIRMED')">
+            <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
+            Onaylananlar
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'SHIPPED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('SHIPPED')">
+            <i data-lucide="truck" class="w-3.5 h-3.5 inline mr-1"></i>
+            Sevkiyattakiler
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'INVOICED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('INVOICED')">
+            <i data-lucide="file-text" class="w-3.5 h-3.5 inline mr-1"></i>
+            Faturalananlar
+        </button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
     <div class="erp-toolbar">
         <a th:href="@{/sales/create}" class="erp-btn-primary">
             <i data-lucide="plus"></i>
-            <span>Yeni sipariş</span>
+            <span>Yeni Satış Siparişi</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Sipariş no, müşteri adı', 'sales-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: search('Sipariş no veya müşteri adı...', 'sales-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('sales-table', 'satislar')}"></div>
         </div>
     </div>
 
+    <!-- DataGrid Shell -->
     <div th:replace="~{fragments/list-chrome :: gridShell('sales-table')}"></div>
 </div>
 
@@ -38,16 +117,18 @@
                 pagination: true,
                 paginationMode: "remote",
                 paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
+                paginationSizeSelector: [5, 10, 25, 50, 100],
                 ajaxURL: "/sales/api/data",
                 ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
                 ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "sales-search-input");
+                    return erpGridAjaxUrl(url, params, "sales-search-input", function () {
+                        return window.salesPageState ? window.salesPageState.gridExtraQuery() : "";
+                    });
                 },
                 ajaxResponse: function (url, params, response) {
                     return erpGridAjaxResponse("sales-table", response);
                 },
-                placeholder: "Satış siparişi bulunamadı.",
+                placeholder: "Kriterlere uygun satış siparişi bulunamadı.",
                 columns: [
                     erpResponsiveCollapseColumn(),
                     erpIndexColumn(),
@@ -78,7 +159,7 @@
                         field: "orderDate",
                         width: 130,
                         formatter: function (cell) {
-                            return `<span class="text-sm">${gridText(cell.getValue())}</span>`;
+                            return `<span class="text-sm font-mono text-slate-700">${gridText(cell.getValue())}</span>`;
                         }
                     },
                     {
@@ -86,7 +167,7 @@
                         field: "totalAmount",
                         width: 150,
                         formatter: function (cell) {
-                            return `<strong>${gridMoney(cell.getValue())}</strong>`;
+                            return `<strong class="font-mono">${gridMoney(cell.getValue())}</strong>`;
                         }
                     },
                     {
@@ -94,7 +175,7 @@
                         field: "paidAmount",
                         width: 130,
                         formatter: function (cell) {
-                            return `<span class="text-sm text-slate-600">${gridMoney(cell.getValue())}</span>`;
+                            return `<span class="text-sm font-mono text-slate-600">${gridMoney(cell.getValue())}</span>`;
                         }
                     },
                     {
@@ -139,8 +220,9 @@
         });
 
         function reloadSalesGrid() {
-            if (salesTable) salesTable.replaceData();
+            if (salesTable) salesTable.setData();
         }
+        window.reloadSalesGrid = reloadSalesGrid;
     </script>
 </th:block>
 </body>

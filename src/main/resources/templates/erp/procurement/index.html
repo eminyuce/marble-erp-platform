@@ -5,35 +5,106 @@
     <title>Satın Alma Siparişleri | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page">
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        statusFilter: '',
+        setStatusFilter(st) {
+            this.statusFilter = st;
+            if (typeof reloadProcurementGrid === 'function') reloadProcurementGrid();
+        },
+        gridExtraQuery() {
+            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
+        }
+     }"
+     x-init="window.procurementPageState = $data">
 
+    <!-- Header Section -->
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Satın Alma')}"></div>
-            <h2 class="admin-page-title">Satın Alma Siparişleri</h2>
-            <p class="erp-list-lead">Tedarikçi yönetimi, satın alma siparişleri ve teslimat takibi. Onaylanan giderler seçilen masraf merkezine yazılır.</p>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="shopping-bag" class="w-7 h-7 text-emerald-600 inline-block"></i>
+                <span>Satın Alma &amp; Tedarik Yönetimi</span>
+            </h2>
+            <p class="erp-list-lead">
+                Ocak makinelerinin mazotundan fabrika segman/tel sarfiyatına, şantiye yapıştırıcılarından fason blok alımlarına kadar tüm tedarik siparişleri.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Onaylanan satın almalar seçilen masraf merkezine otomatik gider kaydı olarak yazılır.')}"></span>
+            </p>
         </div>
     </div>
 
-    <aside class="erp-callout" role="note">
-        <i data-lucide="pie-chart"></i>
-        <p>
-            <strong>Maliyet dağılımı:</strong> Sipariş oluştururken maliyet birimi (Ocak, Fabrika, Atölye, Şantiye) ve
-            masraf merkezini seçin. Onay sonrası toplam tutar ilgili masraf merkezine gider kaydı olarak aktarılır.
-        </p>
-    </aside>
+    <!-- KPI Summary Cards (Blocks Standard) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === '' ? 'erp-summary-card--active' : ''"
+                @click="setStatusFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Tedarik Bütçesi</div>
+            <div class="text-lg font-black text-slate-900 mt-1 font-mono"
+                 th:text="${summary.totalAmount != null ? #numbers.formatDecimal(summary.totalAmount, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</div>
+        </button>
 
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'SENT' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setStatusFilter('SENT')">
+            <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> Bekleyen Teslimat
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.pendingDeliveries}">0</span> sipariş
+            </div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'DELIVERED' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setStatusFilter('DELIVERED')">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Teslim Alınan
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.completedDeliveries}">0</span> bitti
+            </div>
+        </button>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Sipariş Adedi</div>
+            <div class="text-lg font-black text-emerald-950 mt-1">
+                <span th:text="${summary.totalOrders}">0</span> sipariş
+            </div>
+        </div>
+    </div>
+
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('')">Tüm Siparişler</button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'SENT' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('SENT')">
+            <i data-lucide="clock" class="w-3.5 h-3.5 inline mr-1"></i>
+            Bekleyenler
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'DELIVERED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('DELIVERED')">
+            <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
+            Teslim Alınanlar
+        </button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
     <div class="erp-toolbar">
         <a th:href="@{/procurement/create}" class="erp-btn-primary">
             <i data-lucide="plus"></i>
-            <span>Yeni sipariş</span>
+            <span>Yeni Sipariş</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Sipariş no, tedarikçi adı', 'procurement-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: search('Sipariş no veya tedarikçi adı...', 'procurement-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('procurement-table', 'satinalma')}"></div>
         </div>
     </div>
 
+    <!-- DataGrid Shell -->
     <div th:replace="~{fragments/list-chrome :: gridShell('procurement-table')}"></div>
 </div>
 
@@ -46,16 +117,18 @@
                 pagination: true,
                 paginationMode: "remote",
                 paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
+                paginationSizeSelector: [5, 10, 25, 50, 100],
                 ajaxURL: "/procurement/api/data",
                 ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
                 ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "procurement-search-input");
+                    return erpGridAjaxUrl(url, params, "procurement-search-input", function () {
+                        return window.procurementPageState ? window.procurementPageState.gridExtraQuery() : "";
+                    });
                 },
                 ajaxResponse: function (url, params, response) {
                     return erpGridAjaxResponse("procurement-table", response);
                 },
-                placeholder: "Satın alma siparişi bulunamadı.",
+                placeholder: "Kriterlere uygun satın alma siparişi bulunamadı.",
                 columns: [
                     erpResponsiveCollapseColumn(),
                     erpIndexColumn(),
@@ -82,19 +155,15 @@
                         }
                     },
                     {
-                        title: "Proje",
+                        title: "Proje / Birim",
                         field: "projectName",
                         width: 150,
                         formatter: function (cell) {
-                            return `<span class="text-sm">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Birim",
-                        field: "businessUnitLabel",
-                        width: 130,
-                        formatter: function (cell) {
-                            return `<span class="text-sm">${gridText(cell.getValue())}</span>`;
+                            const row = cell.getRow().getData();
+                            return `<div>
+                        <div class="text-xs font-semibold text-slate-800">${gridText(cell.getValue())}</div>
+                        <div class="text-[11px] text-slate-500">${gridText(row.businessUnitLabel)}</div>
+                    </div>`;
                         }
                     },
                     {
@@ -102,7 +171,7 @@
                         field: "orderDate",
                         width: 130,
                         formatter: function (cell) {
-                            return `<span class="text-sm">${gridText(cell.getValue())}</span>`;
+                            return `<span class="text-sm font-mono text-slate-700">${gridText(cell.getValue())}</span>`;
                         }
                     },
                     {
@@ -110,7 +179,7 @@
                         field: "totalAmount",
                         width: 150,
                         formatter: function (cell) {
-                            return `<strong>${gridMoney(cell.getValue())}</strong>`;
+                            return `<strong class="font-mono">${gridMoney(cell.getValue())}</strong>`;
                         }
                     },
                     {
@@ -155,8 +224,9 @@
         });
 
         function reloadProcurementGrid() {
-            if (procurementTable) procurementTable.replaceData();
+            if (procurementTable) procurementTable.setData();
         }
+        window.reloadProcurementGrid = reloadProcurementGrid;
     </script>
 </th:block>
 </body>

@@ -40,12 +40,34 @@ public class SalesService {
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
+    public record SalesSummaryDto(long totalOrders, BigDecimal totalAmount, BigDecimal paidAmount, BigDecimal remainingBalance) {}
+
+    @Transactional(readOnly = true)
+    public SalesSummaryDto getSalesSummary() {
+        List<SalesOrder> all = salesOrderRepository.findAll();
+        long total = all.size();
+        BigDecimal totalAmt = all.stream().map(SalesOrder::getTotalAmount).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal paidAmt = all.stream().map(SalesOrder::getPaidAmount).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal remaining = totalAmt.subtract(paidAmt);
+        return new SalesSummaryDto(total, totalAmt, paidAmt, remaining);
+    }
+
     @Transactional(readOnly = true)
     public TabulatorResponse<SalesOrderDto> getSalesOrdersPaged(int page, int size,
                                                                 String search, String sortField, String sortDir) {
+        return getSalesOrdersPaged(page, size, search, null, sortField, sortDir);
+    }
+
+    @Transactional(readOnly = true)
+    public TabulatorResponse<SalesOrderDto> getSalesOrdersPaged(int page, int size,
+                                                                String search, String status, String sortField, String sortDir) {
         Page<SalesOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.SALES_ORDER_SORTS,
                 pageable -> salesOrderRepository.searchSalesOrders(GridPages.normalizeSearch(search), pageable));
-        List<SalesOrderDto> dtos = orderPage.getContent().stream()
+        List<SalesOrder> orders = orderPage.getContent();
+        if (status != null && !status.isBlank()) {
+            orders = orders.stream().filter(o -> o.getStatus() != null && o.getStatus().name().equalsIgnoreCase(status)).toList();
+        }
+        List<SalesOrderDto> dtos = orders.stream()
                 .map(SalesOrderDto::fromEntity)
                 .collect(Collectors.toList());
 

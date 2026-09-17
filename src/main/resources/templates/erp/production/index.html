@@ -5,34 +5,93 @@
     <title>Fabrika | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-5">
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="productionPage()"
+     x-init="init()">
+    <script th:src="@{/js/production-grid.js(v=${assetVersion})}"></script>
 
+    <!-- Header Section -->
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Fabrika')}"></div>
-            <h2 class="admin-page-title">Fabrika — İş Emirleri</h2>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="factory" class="w-7 h-7 text-indigo-600 inline-block"></i>
+                <span>Fabrika — Kesim İş Emirleri</span>
+            </h2>
             <p class="erp-list-lead">
-                ST ve Katrak kesim iş emirlerini izleyin; yeni kesim açın veya blok kabulüne geçin.
-                Silim, paletleme ve plaka stoku ayrı sayfalardadır.
+                ST (Dar Bant) ve Katrak (Büyük Plaka) kesim iş emirlerini izleyin; yeni kesim açın veya blok kabulüne geçin.
+                Silim, paletleme ve plaka stoku doğrudan bu kesimlerden beslenir.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Gelen blokları iş emrine almadan önce Blok Kabul sayfasından fabrikaya onaylayın.')}"></span>
             </p>
         </div>
     </div>
 
-    <aside class="erp-callout" role="note">
-        <i data-lucide="sparkles"></i>
-        <p>
-            <strong>Kalite çarpanı:</strong> Extra K=1.30, A kalite K=1.15, B kalite K=1.00, C kalite K=0.65 ile eşdeğer alan üzerinden
-            birim maliyet dağıtılır. Fabrika Blok Sahasındaki blokları
-            <strong>Blok kabul</strong> sayfasında iş emrine alın.
-        </p>
-    </aside>
+    <!-- KPI Summary Cards (Blocks Standard) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === '' ? 'erp-summary-card--active' : ''"
+                @click="setStatusFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam İş Emri</div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.totalOrders}">0</span> emir
+            </div>
+        </button>
 
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'IN_PROGRESS' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setStatusFilter('IN_PROGRESS')">
+            <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
+                <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> Devam Eden Kesim
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.activeOrders}">0</span> aktif
+            </div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'COMPLETED' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setStatusFilter('COMPLETED')">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Tamamlanan Kesim
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.completedOrders}">0</span> bitti
+            </div>
+        </button>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Üretilen Toplam Plaka</div>
+            <div class="text-lg font-black text-indigo-950 mt-1 font-mono"
+                 th:text="${summary.totalSlabAreaM2 != null ? #numbers.formatDecimal(summary.totalSlabAreaM2, 1, 'POINT', 1, 'COMMA') + ' m²' : '0 m²'}">0 m²</div>
+        </div>
+    </div>
+
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('')">Tüm İş Emirleri</button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'IN_PROGRESS' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('IN_PROGRESS')">
+            <i data-lucide="play" class="w-3.5 h-3.5 inline mr-1"></i>
+            Devam Edenler
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'COMPLETED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('COMPLETED')">
+            <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
+            Tamamlananlar
+        </button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
     <div class="erp-toolbar">
         <a th:href="@{/production/create}" class="erp-btn-primary">
             <i data-lucide="plus"></i>
-            <span>Yeni ST / Katrak kesim</span>
+            <span>Yeni ST / Katrak Kesim</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('İş emri no, makine veya blok kodu', 'search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: search('İş emri no, makine veya blok kodu...', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
             <a th:href="@{/production/accept}" class="erp-btn-secondary">
                 <i data-lucide="package-plus"></i>
@@ -40,15 +99,15 @@
             </a>
             <a th:href="@{/production/polish}" class="erp-btn-secondary">
                 <i data-lucide="sparkles"></i>
-                <span>Silim / ebatlama</span>
+                <span>Silim / Ebatlama</span>
             </a>
             <a th:href="@{/production/pallets}" class="erp-btn-secondary">
                 <i data-lucide="package"></i>
-                <span>Paletleme ve sevkiyat</span>
+                <span>Paletler</span>
             </a>
             <a th:href="@{/production/tablet}" class="erp-btn-secondary">
                 <i data-lucide="tablet"></i>
-                <span>Operatör tableti</span>
+                <span>Operatör Tableti</span>
             </a>
             <a th:href="@{/production/slabs}" class="erp-btn-secondary">
                 <i data-lucide="layers"></i>
@@ -58,11 +117,10 @@
         </div>
     </div>
 
+    <!-- DataGrid Shell -->
     <div th:replace="~{fragments/list-chrome :: gridShell('production-table')}"></div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script th:src="@{/js/production-grid.js(v=${assetVersion})}"></script>
-</th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>

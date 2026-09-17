@@ -41,7 +41,8 @@ public class ProductionController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public String productionIndex() {
+    public String productionIndex(org.springframework.ui.Model model) {
+        model.addAttribute("summary", productionService.getProductionSummary());
         return "erp/production/index";
     }
 
@@ -51,10 +52,11 @@ public class ProductionController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir) {
 
-        return productionService.getOrdersPaged(page, size, search, sortField, sortDir);
+        return productionService.getOrdersPaged(page, size, search, status, sortField, sortDir);
     }
 
     @GetMapping("/create")
@@ -308,7 +310,8 @@ public class ProductionController {
     }
 
     @GetMapping("/slabs")
-    public String slabsView() {
+    public String slabsView(org.springframework.ui.Model model) {
+        model.addAttribute("summary", productionService.getSlabSummary());
         return "erp/production/slabs";
     }
 
@@ -318,10 +321,12 @@ public class ProductionController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "quality", required = false) String quality,
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir) {
 
-        return productionService.getSlabsPaged(page, size, search, sortField, sortDir);
+        return productionService.getSlabsPaged(page, size, search, status, quality, sortField, sortDir);
     }
 
     @GetMapping("/slabs/{id}")

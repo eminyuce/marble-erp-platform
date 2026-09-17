@@ -43,6 +43,18 @@ public class UserService {
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
+    public record UserSummaryDto(long totalUsers, long activeUsers, long suspendedUsers, long adminCount) {}
+
+    @Transactional(readOnly = true)
+    public UserSummaryDto getUserSummary() {
+        List<User> all = userRepository.findAll();
+        long total = all.size();
+        long active = all.stream().filter(User::isEnabled).count();
+        long suspended = total - active;
+        long admins = all.stream().filter(u -> u.getRoles() != null && u.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equalsIgnoreCase(r.getName()))).count();
+        return new UserSummaryDto(total, active, suspended, admins);
+    }
+
     @Transactional(readOnly = true)
     public TabulatorResponse<UserDto> getUsersPaged(int page, int size, String search, String sortField, String sortDir,
                                                     Collection<String> roleNames, Boolean enabled) {

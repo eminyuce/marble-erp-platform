@@ -1,6 +1,28 @@
 // Tabulator 6 Data Grid for Factory Production Orders
 let productionTable;
 
+function productionPage() {
+    return {
+        statusFilter: "",
+        init() {
+            window.productionPageState = this;
+        },
+        setStatusFilter(st) {
+            this.statusFilter = st;
+            if (typeof reloadProductionGrid === "function") {
+                reloadProductionGrid();
+            }
+        },
+        gridExtraQuery() {
+            let q = "";
+            if (this.statusFilter) {
+                q += "&status=" + encodeURIComponent(this.statusFilter);
+            }
+            return q;
+        }
+    };
+}
+
 function initProductionGrid() {
     const tableElement = document.getElementById("production-table");
     if (!tableElement) return;
@@ -17,7 +39,9 @@ function initProductionGrid() {
             headers: {"Accept": "application/json"},
         },
         ajaxURLGenerator: function (url, config, params) {
-            return erpGridAjaxUrl(url, params, "search-input");
+            return erpGridAjaxUrl(url, params, "search-input", function () {
+                return window.productionPageState ? window.productionPageState.gridExtraQuery() : "";
+            });
         },
         ajaxResponse: function (url, params, response) {
             return erpGridAjaxResponse("production-table", response);
@@ -103,5 +127,8 @@ function initProductionGrid() {
 function reloadProductionGrid() {
     if (productionTable) productionTable.replaceData();
 }
+
+window.reloadProductionGrid = reloadProductionGrid;
+window.productionPage = productionPage;
 
 document.addEventListener("DOMContentLoaded", initProductionGrid);

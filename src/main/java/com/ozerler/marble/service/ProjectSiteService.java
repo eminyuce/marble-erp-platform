@@ -43,11 +43,35 @@ public class ProjectSiteService {
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
+    public record ProjectSummaryDto(long totalProjects, long activeProjects, long completedProjects, BigDecimal totalContractValue) {}
+
+    @Transactional(readOnly = true)
+    public ProjectSummaryDto getProjectSummary() {
+        List<Project> all = projectRepository.findAll();
+        long total = all.size();
+        long active = all.stream().filter(p -> p.getStatus() != null && "IN_PROGRESS".equalsIgnoreCase(p.getStatus().name())).count();
+        long completed = all.stream().filter(p -> p.getStatus() != null && "COMPLETED".equalsIgnoreCase(p.getStatus().name())).count();
+        BigDecimal totalContract = all.stream()
+                .map(Project::getContractValue)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new ProjectSummaryDto(total, active, completed, totalContract);
+    }
+
     @Transactional(readOnly = true)
     public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String sortField, String sortDir) {
+        return getProjectsPaged(page, size, search, null, sortField, sortDir);
+    }
+
+    @Transactional(readOnly = true)
+    public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String status, String sortField, String sortDir) {
         Page<Project> projectPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PROJECT_SORTS,
                 pageable -> projectRepository.searchProjects(GridPages.normalizeSearch(search), pageable));
-        List<ProjectDto> dtos = projectPage.getContent().stream()
+        List<Project> projects = projectPage.getContent();
+        if (status != null && !status.isBlank()) {
+            projects = projects.stream().filter(p -> p.getStatus() != null && p.getStatus().name().equalsIgnoreCase(status)).toList();
+        }
+        List<ProjectDto> dtos = projects.stream()
                 .map(ProjectDto::fromEntity)
                 .collect(Collectors.toList());
 

@@ -48,12 +48,33 @@ public class WorkshopCutService {
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
+    public record WorkshopSummaryDto(long totalOrders, long activeOrders, long completedOrders, long totalPieces) {}
+
+    @Transactional(readOnly = true)
+    public WorkshopSummaryDto getWorkshopSummary() {
+        List<CutOrder> all = cutOrderRepository.findAll();
+        long total = all.size();
+        long active = all.stream().filter(o -> o.getStatus() != null && "IN_PROGRESS".equalsIgnoreCase(o.getStatus())).count();
+        long completed = all.stream().filter(o -> o.getStatus() != null && "COMPLETED".equalsIgnoreCase(o.getStatus())).count();
+        long totalPieces = cutItemRepository.count();
+        return new WorkshopSummaryDto(total, active, completed, totalPieces);
+    }
+
     @Transactional(readOnly = true)
     public TabulatorResponse<CutOrderDto> getCutOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
+        return getCutOrdersPaged(page, size, search, null, sortField, sortDir);
+    }
+
+    @Transactional(readOnly = true)
+    public TabulatorResponse<CutOrderDto> getCutOrdersPaged(int page, int size, String search, String status, String sortField, String sortDir) {
         Page<CutOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.CUT_ORDER_SORTS,
                 pageable -> cutOrderRepository.searchCutOrders(GridPages.normalizeSearch(search), pageable));
+        List<CutOrder> orders = orderPage.getContent();
+        if (status != null && !status.isBlank()) {
+            orders = orders.stream().filter(o -> o.getStatus() != null && o.getStatus().equalsIgnoreCase(status)).toList();
+        }
         return TabulatorResponse.of(
-                toCutOrderDtos(orderPage.getContent()),
+                toCutOrderDtos(orders),
                 orderPage.getTotalPages(),
                 orderPage.getTotalElements());
     }

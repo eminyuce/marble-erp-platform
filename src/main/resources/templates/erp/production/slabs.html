@@ -5,27 +5,113 @@
     <title>Plaka Stok Sahası | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page">
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        statusFilter: '',
+        qualityFilter: '',
+        setStatusFilter(st) {
+            this.statusFilter = st;
+            if (typeof reloadSlabsGrid === 'function') reloadSlabsGrid();
+        },
+        gridExtraQuery() {
+            let q = '';
+            if (this.statusFilter) q += '&status=' + encodeURIComponent(this.statusFilter);
+            if (this.qualityFilter) q += '&quality=' + encodeURIComponent(this.qualityFilter);
+            return q;
+        }
+     }"
+     x-init="window.slabsPageState = $data">
 
+    <!-- Header Section -->
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Plaka Stok Sahası')}"></div>
-            <h2 class="admin-page-title">Plaka Stok Sahası</h2>
-            <p class="erp-list-lead">Ham, cilalı ve honlu plakalar, birim m² maliyetleri ve barkod etiketleri.</p>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="layers" class="w-7 h-7 text-amber-600 inline-block"></i>
+                <span>Plaka Stok Sahası</span>
+            </h2>
+            <p class="erp-list-lead">
+                Katrak ve ST kesiminden çıkan ham, epoksili, cilalı ve honlu büyük boy plakaların barkodlu takibi, seleksiyon ve birim m² maliyetleri.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Plakaları doğrudan satabilir veya Köprü Kesmeye ebatlama için sevk edebilirsiniz.')}"></span>
+            </p>
         </div>
     </div>
 
+    <!-- KPI Summary Cards (Blocks Standard) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === '' ? 'erp-summary-card--active' : ''"
+                @click="setStatusFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Plaka Metrajı</div>
+            <div class="text-lg font-black text-slate-900 mt-1 font-mono"
+                 th:text="${summary.totalAreaM2 != null ? #numbers.formatDecimal(summary.totalAreaM2, 1, 'POINT', 1, 'COMMA') + ' m²' : '0 m²'}">0 m²</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'AVAILABLE' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setStatusFilter('AVAILABLE')">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Stoktaki Plakalar
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.totalSlabs}">0</span> plaka
+            </div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'RESERVED' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setStatusFilter('RESERVED')">
+            <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
+                <i data-lucide="lock" class="w-3.5 h-3.5"></i> Rezerve Plakalar
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.reservedCount}">0</span> plaka
+            </div>
+        </button>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Ortalama Taban Maliyet</div>
+            <div class="text-lg font-black text-amber-950 mt-1 font-mono"
+                 th:text="${summary.avgCostPerM2 != null ? #numbers.formatDecimal(summary.avgCostPerM2, 1, 'POINT', 2, 'COMMA') + ' ₺/m²' : '0,00 ₺/m²'}">0,00 ₺/m²</div>
+        </div>
+    </div>
+
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('')">Tüm Plakalar</button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'AVAILABLE' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('AVAILABLE')">
+            <i data-lucide="layers" class="w-3.5 h-3.5 inline mr-1"></i>
+            Stokta Mevcut
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'RESERVED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('RESERVED')">
+            <i data-lucide="lock" class="w-3.5 h-3.5 inline mr-1"></i>
+            Rezerve
+        </button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
     <div class="erp-toolbar">
-        <a th:href="@{/production}" class="erp-btn-secondary">
+        <a th:href="@{/production}" class="erp-btn-primary">
             <i data-lucide="arrow-left"></i>
-            <span>Fabrika iş emirleri</span>
+            <span>Fabrika İş Emirleri</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Plaka kodu veya blok kodu', 'slab-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: search('Plaka kodu, blok kodu veya taş cinsi...', 'slab-search-input')}"></div>
         <div class="erp-toolbar-actions">
+            <a th:href="@{/production/create}" class="erp-btn-secondary">
+                <i data-lucide="plus"></i>
+                <span>Yeni Kesim Aç</span>
+            </a>
             <div th:replace="~{fragments/list-chrome :: exportDropdown('slabs-table', 'plakalar')}"></div>
         </div>
     </div>
 
+    <!-- DataGrid Shell -->
     <div th:replace="~{fragments/list-chrome :: gridShell('slabs-table')}"></div>
 </div>
 
@@ -38,16 +124,18 @@
                 pagination: true,
                 paginationMode: "remote",
                 paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
+                paginationSizeSelector: [5, 10, 25, 50, 100],
                 ajaxURL: "/production/api/slabs",
                 ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
                 ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "slab-search-input");
+                    return erpGridAjaxUrl(url, params, "slab-search-input", function () {
+                        return window.slabsPageState ? window.slabsPageState.gridExtraQuery() : "";
+                    });
                 },
                 ajaxResponse: function (url, params, response) {
                     return erpGridAjaxResponse("slabs-table", response);
                 },
-                placeholder: "Plaka kaydı bulunamadı.",
+                placeholder: "Kriterlere uygun plaka kaydı bulunamadı.",
                 columns: [
                     erpResponsiveCollapseColumn(),
                     erpIndexColumn(),
@@ -157,6 +245,11 @@
                 if (window.lucide) window.lucide.createIcons();
             });
         });
+
+        function reloadSlabsGrid() {
+            if (slabsTable) slabsTable.setData();
+        }
+        window.reloadSlabsGrid = reloadSlabsGrid;
     </script>
 </th:block>
 </body>

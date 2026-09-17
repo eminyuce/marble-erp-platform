@@ -12,9 +12,52 @@
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Kullanıcılar')}"></div>
-            <h2 class="admin-page-title">Kullanıcılar</h2>
-            <p class="erp-list-lead">Yönetici ve operasyon hesaplarını arayın, rol veya duruma göre filtreleyin ve işlem
-                menüsünden düzenleyin.</p>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="users" class="w-7 h-7 text-indigo-600 inline-block"></i>
+                <span>Sistem Kullanıcıları &amp; Roller</span>
+            </h2>
+            <p class="erp-list-lead">Yönetici, ocak/fabrika/atölye şefleri ve operasyon hesaplarını arayın, rol veya duruma göre filtreleyin.</p>
+        </div>
+    </div>
+
+    <!-- KPI Summary Cards (Blocks Standard) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="enabled === '' ? 'erp-summary-card--active' : ''"
+                @click="enabled = ''; $nextTick(() => reloadUsersGrid())">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Kullanıcı</div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.totalUsers}">0</span> hesap
+            </div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="enabled === 'true' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="enabled = 'true'; $nextTick(() => reloadUsersGrid())">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Aktif Hesaplar
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.activeUsers}">0</span> aktif
+            </div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="enabled === 'false' ? 'erp-summary-card--active ring-2 ring-rose-500' : ''"
+                @click="enabled = 'false'; $nextTick(() => reloadUsersGrid())">
+            <div class="text-[11px] uppercase tracking-wide text-rose-600 font-semibold flex items-center gap-1">
+                <i data-lucide="user-x" class="w-3.5 h-3.5"></i> Askıdaki Hesaplar
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">
+                <span th:text="${summary.suspendedUsers}">0</span> askıda
+            </div>
+        </button>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Sistem Yöneticileri</div>
+            <div class="text-lg font-black text-amber-950 mt-1">
+                <span th:text="${summary.adminCount}">0</span> yönetici
+            </div>
         </div>
     </div>
 

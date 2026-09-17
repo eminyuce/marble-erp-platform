@@ -28,6 +28,7 @@ public class SalesController {
     @GetMapping
     public String salesIndex(Model model) {
         model.addAttribute("statuses", SalesOrderStatus.values());
+        model.addAttribute("summary", salesService.getSalesSummary());
         return "erp/sales/index";
     }
 
@@ -37,10 +38,11 @@ public class SalesController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir) {
 
-        return salesService.getSalesOrdersPaged(page, size, search, sortField, sortDir);
+        return salesService.getSalesOrdersPaged(page, size, search, status, sortField, sortDir);
     }
 
     @GetMapping("/create")

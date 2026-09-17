@@ -37,7 +37,8 @@ public class WorkshopController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public String workshopIndex() {
+    public String workshopIndex(Model model) {
+        model.addAttribute("summary", workshopCutService.getWorkshopSummary());
         return "erp/workshop/index";
     }
 
@@ -47,10 +48,11 @@ public class WorkshopController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir) {
 
-        return workshopCutService.getCutOrdersPaged(page, size, search, sortField, sortDir);
+        return workshopCutService.getCutOrdersPaged(page, size, search, status, sortField, sortDir);
     }
 
     @GetMapping("/receipts")
