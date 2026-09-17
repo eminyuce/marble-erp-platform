@@ -9,9 +9,7 @@ import com.ozerler.marble.domain.SiteProfitAndLoss;
 import com.ozerler.marble.dto.CostAnalysisDto;
 import com.ozerler.marble.dto.SiteProfitDto;
 import com.ozerler.marble.model.CostTransaction;
-import com.ozerler.marble.model.FactoryOperation;
 import com.ozerler.marble.model.Project;
-import com.ozerler.marble.model.WorkshopOperation;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseCategory;
 import com.ozerler.marble.model.enums.FactoryProcessType;
@@ -30,10 +28,9 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -59,17 +56,27 @@ public class CostAnalysisService {
 
     @Transactional(readOnly = true)
     public List<SiteProfitDto> siteProfits() {
+        Map<Long, Map<ExpenseCategory, BigDecimal>> categoriesByProject = new HashMap<>();
+        for (Object[] row : costTransactionRepository.sumCategoriesGroupedByProjectId()) {
+            if (row[0] instanceof Long projectId && row[1] instanceof ExpenseCategory category) {
+                categoriesByProject
+                        .computeIfAbsent(projectId, ignored -> new EnumMap<>(ExpenseCategory.class))
+                        .put(category, zero((BigDecimal) row[2]));
+            }
+        }
         List<SiteProfitDto> rows = new ArrayList<>();
         for (Project project : projectRepository.findAll()) {
-            rows.add(profitFor(project));
+            rows.add(profitFor(project, categoriesByProject.getOrDefault(project.getId(), Map.of())));
         }
         return rows;
     }
 
     @Transactional(readOnly = true)
     public SiteProfitDto profitFor(Project project) {
-        Map<ExpenseCategory, BigDecimal> byCategory = categoryMap(
-                costTransactionRepository.sumCategoriesByProjectId(project.getId()));
+        return profitFor(project, categoryMap(costTransactionRepository.sumCategoriesByProjectId(project.getId())));
+    }
+
+    private SiteProfitDto profitFor(Project project, Map<ExpenseCategory, BigDecimal> byCategory) {
         BigDecimal material = byCategory.getOrDefault(ExpenseCategory.MATERIAL, BigDecimal.ZERO);
         BigDecimal labor = byCategory.getOrDefault(ExpenseCategory.LABOR, BigDecimal.ZERO);
         BigDecimal tax = byCategory.getOrDefault(ExpenseCategory.TAX, BigDecimal.ZERO);
@@ -133,11 +140,7 @@ public class CostAnalysisService {
     private CostAnalysisDto workshopAnalysis(String current, String previous) {
         BigDecimal expense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, current));
         BigDecimal previousExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, previous));
-        BigDecimal outputM2 = workshopOperationRepository.findAll().stream()
-                .filter(op -> op.getStatus() == OperationStatus.COMPLETED)
-                .map(WorkshopOperation::getOutputAreaM2)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal outputM2 = zero(workshopOperationRepository.sumOutputAreaM2ByStatus(OperationStatus.COMPLETED));
         BigDecimal unitCost = outputM2.compareTo(BigDecimal.ZERO) > 0
                 ? expense.divide(outputM2, Constants.COST_SCALE, java.math.RoundingMode.HALF_UP)
                 : null;
@@ -151,10 +154,7 @@ public class CostAnalysisService {
     private CostAnalysisDto siteAnalysis(String current, String previous) {
         BigDecimal expense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.SITE, current));
         BigDecimal previousExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.SITE, previous));
-        BigDecimal revenue = projectRepository.findAll().stream()
-                .map(Project::getContractValue)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal revenue = zero(projectRepository.sumContractValue());
         return base(BusinessUnit.SITE, current, previous, expense, previousExpense,
                 revenue, "TL gelir", null, null, false)
                 .expenseByCategory(categoryTotals(BusinessUnit.SITE, current))
@@ -163,21 +163,14 @@ public class CostAnalysisService {
     }
 
     private List<CostAnalysisDto.YieldRow> factoryYields() {
-        Map<FactoryProcessType, List<FactoryOperation>> grouped = new LinkedHashMap<>();
-        for (FactoryOperation operation : factoryOperationRepository.findAll()) {
-            grouped.computeIfAbsent(operation.getProcessType(), key -> new ArrayList<>()).add(operation);
-        }
         List<CostAnalysisDto.YieldRow> rows = new ArrayList<>();
-        for (Map.Entry<FactoryProcessType, List<FactoryOperation>> entry : grouped.entrySet()) {
-            FactoryProcessType type = entry.getKey();
-            BigDecimal input = BigDecimal.ZERO;
-            BigDecimal output = BigDecimal.ZERO;
-            BigDecimal waste = BigDecimal.ZERO;
-            for (FactoryOperation op : entry.getValue()) {
-                input = input.add(zero(op.getInputQuantity()));
-                output = output.add(zero(op.getOutputQuantity()));
-                waste = waste.add(zero(op.getWasteQuantity()));
+        for (Object[] row : factoryOperationRepository.aggregateQuantitiesByProcessType()) {
+            if (!(row[0] instanceof FactoryProcessType type)) {
+                continue;
             }
+            BigDecimal input = zero((BigDecimal) row[1]);
+            BigDecimal output = zero((BigDecimal) row[2]);
+            BigDecimal waste = zero((BigDecimal) row[3]);
             BigDecimal yieldValue;
             String yieldLabel;
             if (type.usesSamePhysicalUnit()) {

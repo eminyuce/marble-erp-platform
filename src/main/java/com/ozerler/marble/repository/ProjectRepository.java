@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,4 +31,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     @Query("SELECT p FROM Project p WHERE LOWER(p.projectCode) LIKE LOWER(CONCAT('%', :query, '%')) " +
             "OR LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Project> searchByCodeOrName(@Param("query") String query, Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(p.contractValue), 0) FROM Project p")
+    BigDecimal sumContractValue();
 }

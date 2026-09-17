@@ -105,6 +105,12 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     @Query("SELECT DISTINCT b.quarry.id FROM Block b WHERE b.quarry IS NOT NULL")
     List<Long> findDistinctQuarryIds();
 
+    @Query("SELECT b.quarry.id, COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg "
+            + "ELSE b.theoreticalWeightKg END), 0) FROM Block b WHERE b.quarry IS NOT NULL GROUP BY b.quarry.id")
+    List<Object[]> sumProductionTonnageKgByQuarry();
+
+    Optional<Block> findTop1ByOrderByIdAsc();
+
     boolean existsByBlockCodeIgnoreCase(String blockCode);
 
     boolean existsByBlockCodeIgnoreCaseAndIdNot(String blockCode, Long id);
