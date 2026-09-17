@@ -21,6 +21,37 @@ class ProductionGridActionsTest {
     }
 
     @Test
+    @DisplayName("Production list toolbar links to the block-accept page instead of posting there")
+    void indexLinksToAcceptPage() throws Exception {
+        String html;
+        try (var in = getClass().getResourceAsStream("/templates/erp/production/index.html")) {
+            assertThat(in).isNotNull();
+            html = new String(in.readAllBytes());
+        }
+
+        assertThat(html).contains("th:href=\"@{/production/accept}\"");
+        assertThat(html).contains("Blok kabul");
+        assertThat(html).doesNotContain("th:action=\"@{/production/accept}\"");
+    }
+
+    @Test
+    @DisplayName("Block-accept page posts to /production/accept and returns to factory work orders")
+    void acceptPageLinksBackToProductionList() throws Exception {
+        String html;
+        try (var in = getClass().getResourceAsStream("/templates/erp/production/accept.html")) {
+            assertThat(in).isNotNull();
+            html = new String(in.readAllBytes());
+        }
+
+        assertThat(html).contains("th:action=\"@{/production/accept}\"");
+        assertThat(html).contains("th:href=\"@{/production}\"");
+        assertThat(html).contains("Fabrika iş emirleri");
+        assertThat(html).contains("exportDropdown('factory-accept-table', 'fabrika_blok_kabulleri')");
+        assertThat(html).contains("name=\"blockId\"");
+        assertThat(html).contains("name=\"responsibleName\"");
+    }
+
+    @Test
     @DisplayName("Production order detail shows the Turkish status label")
     void detailPageUsesStatusLabel() throws Exception {
         String html;

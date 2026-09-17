@@ -39,6 +39,7 @@ const PAGES_TO_TEST = [
 
     // Production & Slabs
     { name: '10_production', path: '/production', isPublic: false },
+    { name: '10b_production_accept', path: '/production/accept', isPublic: false },
     { name: '11_production_create', path: '/production/create', isPublic: false },
     { name: '12_production_order_detail', path: '/production/orders/1', isPublic: false },
     { name: '12b_production_order_edit', path: '/production/orders/1/edit', isPublic: false },

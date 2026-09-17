@@ -22,6 +22,15 @@ test.describe('Production & Slabs (Fabrika & Plaka)', () => {
     const createBtn = page.locator('a[href*="/production/create"]');
     await expect(createBtn.first()).toBeVisible();
 
+    const acceptLink = page.locator('a[href="/production/accept"]');
+    await expect(acceptLink.first()).toBeVisible();
+    await acceptLink.first().click();
+    await expect(page).toHaveURL(/\/production\/accept/);
+    await expect(page.locator('#factory-accept-form')).toBeVisible();
+    await expect(page.locator('a[href="/production"]').filter({ hasText: 'Fabrika iş emirleri' })).toBeVisible();
+    await page.locator('a[href="/production"]').filter({ hasText: 'Fabrika iş emirleri' }).click();
+    await expect(page).toHaveURL(/\/production\/?$/);
+
     await errorTracker.assertCleanState();
   });
 

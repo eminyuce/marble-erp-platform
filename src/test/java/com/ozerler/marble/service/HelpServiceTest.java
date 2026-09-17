@@ -73,6 +73,7 @@ class HelpServiceTest {
         assertThat(helpService.resolvePageKey("/production/slabs")).contains("slabs");
         assertThat(helpService.resolvePageKey("/production/orders/1")).contains("production");
         assertThat(helpService.resolvePageKey("/production/polish")).contains("production");
+        assertThat(helpService.resolvePageKey("/production/accept")).contains("production");
         assertThat(helpService.resolvePageKey("/quarry")).contains("blocks");
         assertThat(helpService.resolvePageKey("/factory")).contains("production");
         assertThat(helpService.resolvePageKey("/sites")).contains("projects");

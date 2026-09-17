@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Blok kabul | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-5">
+
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Fabrika', '/production', 'Blok kabul')}"></div>
+            <h2 class="admin-page-title">Fabrika — Blok kabul</h2>
+            <p class="erp-list-lead">
+                Fabrika Blok Sahasındaki bloklar için iş emri açın ve isteğe bağlı ilk makineyi atayın.
+                Kabul edilen bloklar ST / Katrak kesiminde kullanılır.
+            </p>
+        </div>
+    </div>
+
+    <aside class="erp-callout" role="note">
+        <i data-lucide="package-plus"></i>
+        <p>
+            <strong>Nasıl kullanılır?</strong> Sahadaki bloğu seçip kabul edin.
+            Makine ve sorumlu adı isteğe bağlıdır. Kesim iş emirlerine
+            <strong>Fabrika iş emirleri</strong> ile dönün.
+        </p>
+    </aside>
+
+    <div class="erp-toolbar">
+        <button type="submit" form="factory-accept-form" class="erp-btn-primary">
+            <i data-lucide="save"></i>
+            <span>Kabul et</span>
+        </button>
+        <div th:replace="~{fragments/list-chrome :: search('İş emri no, blok kodu veya sorumlu', 'factory-accept-search')}"></div>
+        <div class="erp-toolbar-actions">
+            <a th:href="@{/production}" class="erp-btn-secondary">
+                <i data-lucide="factory"></i>
+                <span>Fabrika iş emirleri</span>
+            </a>
+            <div th:replace="~{fragments/list-chrome :: exportDropdown('factory-accept-table', 'fabrika_blok_kabulleri')}"></div>
+        </div>
+    </div>
+
+    <div class="erp-form-card">
+        <form id="factory-accept-form" th:action="@{/production/accept}" method="post" class="erp-form">
+            <div class="erp-form-body">
+                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
+
+                <section class="erp-form-section">
+                    <div th:replace="~{fragments/form-page :: section('Kabul bilgisi', 'Fabrika Blok Sahası, makine ve sorumlu')}"></div>
+                    <div class="erp-form-grid">
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="accept-blockId">Blok <span class="req">*</span></label>
+                            <select id="accept-blockId" name="blockId" required class="erp-form-select">
+                                <option value="" disabled selected>Fabrika Blok Sahası</option>
+                                <option th:each="b : ${dispatchedBlocks}" th:value="${b.id}"
+                                        th:text="${b.blockCode + ' (' + b.stoneType + ')'}">BLK</option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="accept-machineId">Makine</label>
+                            <select id="accept-machineId" name="machineId" class="erp-form-select">
+                                <option value="">Makine (isteğe bağlı)</option>
+                                <option th:each="m : ${factoryMachines}" th:value="${m.id}" th:text="${m.name}"></option>
+                            </select>
+                        </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="accept-responsibleName">Sorumlu</label>
+                            <input id="accept-responsibleName" type="text" name="responsibleName" class="erp-form-input"
+                                   placeholder="İsteğe bağlı sorumlu adı">
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </form>
+    </div>
+
+    <div th:replace="~{fragments/list-chrome :: gridShell('factory-accept-table')}"></div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        const factoryAcceptRows = /*[[${workOrders}]]*/ [];
+        document.addEventListener("DOMContentLoaded", () => {
+            const acceptTable = new Tabulator("#factory-accept-table", {
+                ...erpGridDefaults(),
+                pagination: true,
+                paginationMode: "local",
+                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
+                paginationSizeSelector: [5, 10, 25, 50],
+                data: factoryAcceptRows || [],
+                placeholder: "Blok kabul kaydı bulunamadı.",
+                columns: [
+                    erpResponsiveCollapseColumn(),
+                    erpIndexColumn(),
+                    {
+                        title: "İş Emri No",
+                        field: "orderNo",
+                        minWidth: 150,
+                        responsive: 0,
+                        formatter: (cell) => `<span class="font-mono font-bold">${gridText(cell.getValue())}</span>`
+                    },
+                    {title: "Blok", field: "blockCode", minWidth: 130, formatter: (cell) => gridText(cell.getValue())},
+                    {title: "Taş cinsi", field: "stoneType", minWidth: 130, formatter: (cell) => gridText(cell.getValue())},
+                    {title: "Makine", field: "machineName", minWidth: 140, formatter: (cell) => gridText(cell.getValue())},
+                    {title: "Sorumlu", field: "responsibleName", minWidth: 140, formatter: (cell) => gridText(cell.getValue())},
+                    {title: "Tarih", field: "acceptedAt", minWidth: 120, formatter: (cell) => gridText(cell.getValue())},
+                    {
+                        title: "Durum",
+                        field: "statusLabel",
+                        minWidth: 140,
+                        formatter: (cell) => {
+                            const row = cell.getRow().getData();
+                            return erpStatusBadge(row.status, row.statusLabel);
+                        }
+                    }
+                ]
+            });
+            const searchInput = document.getElementById("factory-accept-search");
+            if (searchInput) {
+                searchInput.addEventListener("input", function () {
+                    const query = searchInput.value.trim().toLocaleLowerCase("tr-TR");
+                    if (!query) {
+                        acceptTable.clearFilter();
+                        return;
+                    }
+                    acceptTable.setFilter(function (data) {
+                        return [data.orderNo, data.blockCode, data.stoneType, data.machineName, data.responsibleName, data.statusLabel]
+                            .filter(Boolean)
+                            .join(" ")
+                            .toLocaleLowerCase("tr-TR")
+                            .includes(query);
+                    });
+                });
+            }
+            acceptTable.on("renderComplete", () => {
+                if (window.lucide) window.lucide.createIcons();
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

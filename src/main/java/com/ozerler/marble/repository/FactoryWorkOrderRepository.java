@@ -21,7 +21,7 @@ public interface FactoryWorkOrderRepository extends JpaRepository<FactoryWorkOrd
 
     List<FactoryWorkOrder> findAllByOrderByIdDesc();
 
-    @EntityGraph(attributePaths = "block")
+    @EntityGraph(attributePaths = {"block", "assignedMachine"})
     @Query("SELECT wo FROM FactoryWorkOrder wo ORDER BY wo.id DESC")
     List<FactoryWorkOrder> findAllWithBlockOrderByIdDesc();
 }

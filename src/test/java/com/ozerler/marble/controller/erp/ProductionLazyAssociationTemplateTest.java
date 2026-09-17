@@ -11,11 +11,13 @@ class ProductionLazyAssociationTemplateTest {
     @DisplayName("Factory list and polish pages never touch lazy FactoryWorkOrder.block")
     void factoryPagesDoNotDereferenceLazyBlock() throws Exception {
         String index = read("/templates/erp/production/index.html");
+        String accept = read("/templates/erp/production/accept.html");
         String polish = read("/templates/erp/production/polish.html");
 
         assertDoesNotDereferenceLazyBlock(index);
-        assertThat(index).contains("wo.blockCode");
-        assertThat(index).contains("wo.statusLabel");
+        assertDoesNotDereferenceLazyBlock(accept);
+        assertThat(accept).contains("field: \"blockCode\"");
+        assertThat(accept).contains("field: \"statusLabel\"");
         assertDoesNotDereferenceLazyBlock(polish);
         assertThat(polish).contains("wo.blockCode");
     }

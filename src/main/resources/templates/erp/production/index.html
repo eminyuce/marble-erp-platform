@@ -5,54 +5,27 @@
     <title>Fabrika | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-6">
+<div layout:fragment="content" class="erp-list-page space-y-5">
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Fabrika')}"></div>
-            <h2 class="admin-page-title">Fabrika</h2>
-            <p class="erp-list-lead">Blok kabul, ST ve Katrak kesim, silim, paletleme ve sevkiyat. Atölye iş emirleri ayrı modüldedir.</p>
+            <h2 class="admin-page-title">Fabrika — İş Emirleri</h2>
+            <p class="erp-list-lead">
+                ST ve Katrak kesim iş emirlerini izleyin; yeni kesim açın veya blok kabulüne geçin.
+                Silim, paletleme ve plaka stoku ayrı sayfalardadır.
+            </p>
         </div>
     </div>
 
     <aside class="erp-callout" role="note">
         <i data-lucide="sparkles"></i>
-        <p><strong>Kalite çarpanı:</strong> Extra K=1.30, A kalite K=1.15, B kalite K=1.00, C kalite K=0.65 ile eşdeğer alan üzerinden
-            birim maliyet dağıtılır. Kesimde giriş ton, çıkış m² ve fire ayrı girilir; birimler birbirine çevrilmez.</p>
+        <p>
+            <strong>Kalite çarpanı:</strong> Extra K=1.30, A kalite K=1.15, B kalite K=1.00, C kalite K=0.65 ile eşdeğer alan üzerinden
+            birim maliyet dağıtılır. Fabrika Blok Sahasındaki blokları
+            <strong>Blok kabul</strong> sayfasında iş emrine alın.
+        </p>
     </aside>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <h3 class="font-bold text-slate-900">Blok kabul</h3>
-            <p class="text-xs text-slate-500">Fabrika Blok Sahasındaki bloklar için iş emri açın ve ilk makineyi atayın.</p>
-            <form th:action="@{/production/accept}" method="post" class="space-y-2">
-                <select name="blockId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option value="" disabled selected>Fabrika Blok Sahası</option>
-                    <option th:each="b : ${dispatchedBlocks}" th:value="${b.id}"
-                            th:text="${b.blockCode + ' (' + b.stoneType + ')'}">BLK</option>
-                </select>
-                <select name="machineId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option value="">Makine (isteğe bağlı)</option>
-                    <option th:each="m : ${factoryMachines}" th:value="${m.id}" th:text="${m.name}"></option>
-                </select>
-                <input type="text" name="responsibleName" placeholder="Sorumlu" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Kabul et</button>
-            </form>
-        </div>
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <h3 class="font-bold text-slate-900">Açık fabrika iş emirleri</h3>
-            <div class="max-h-52 overflow-y-auto text-xs space-y-2">
-                <div th:each="wo : ${workOrders}" class="p-2 rounded-lg border border-slate-100 flex justify-between gap-2">
-                    <div>
-                        <strong class="font-mono" th:text="${wo.orderNo}">FWO</strong>
-                        <div class="text-slate-500" th:text="${wo.blockCode}">BLK</div>
-                    </div>
-                    <span th:text="${wo.statusLabel}">Durum</span>
-                </div>
-                <div th:if="${#lists.isEmpty(workOrders)}" class="text-slate-400 py-4 text-center">Açık iş emri yok.</div>
-            </div>
-        </div>
-    </div>
 
     <div class="erp-toolbar">
         <a th:href="@{/production/create}" class="erp-btn-primary">
@@ -61,6 +34,10 @@
         </a>
         <div th:replace="~{fragments/list-chrome :: search('İş emri no, makine veya blok kodu', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
+            <a th:href="@{/production/accept}" class="erp-btn-secondary">
+                <i data-lucide="package-plus"></i>
+                <span>Blok kabul</span>
+            </a>
             <a th:href="@{/production/polish}" class="erp-btn-secondary">
                 <i data-lucide="sparkles"></i>
                 <span>Silim / ebatlama</span>

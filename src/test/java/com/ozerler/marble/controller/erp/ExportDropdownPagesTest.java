@@ -12,6 +12,7 @@ class ExportDropdownPagesTest {
     private static final Map<String, String> LIST_PAGES = Map.ofEntries(
             Map.entry("/templates/erp/blocks/index.html", "exportDropdown('blocks-table', 'bloklar')"),
             Map.entry("/templates/erp/production/index.html", "exportDropdown('production-table', 'uretim_emirleri')"),
+            Map.entry("/templates/erp/production/accept.html", "exportDropdown('factory-accept-table', 'fabrika_blok_kabulleri')"),
             Map.entry("/templates/erp/production/slabs.html", "exportDropdown('slabs-table', 'plakalar')"),
             Map.entry("/templates/erp/workshop/index.html", "exportDropdown('workshop-table', 'atelye_is_emirleri')"),
             Map.entry("/templates/erp/workshop/receipts.html", "exportDropdown('workshop-receipts-table', 'atelye_malzeme_kabulleri')"),

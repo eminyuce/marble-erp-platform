@@ -41,11 +41,7 @@ public class ProductionController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public String productionIndex(Model model) {
-        model.addAttribute("scrapReasons", ScrapReasonCode.values());
-        model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
-        model.addAttribute("dispatchedBlocks", quarryBlockService.getDispatchedBlocks());
-        model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
+    public String productionIndex() {
         return "erp/production/index";
     }
 
@@ -116,17 +112,31 @@ public class ProductionController {
         }
     }
 
+    @GetMapping("/accept")
+    public String acceptPage(Model model) {
+        populateAcceptPage(model);
+        return "erp/production/accept";
+    }
+
     @PostMapping("/accept")
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     public String acceptBlock(@RequestParam("blockId") Long blockId,
                               @RequestParam(value = "machineId", required = false) Long machineId,
                               @RequestParam(value = "responsibleName", required = false) String responsibleName,
                               Locale locale,
+                              Model model,
                               RedirectAttributes redirectAttributes) {
-        factoryProductionService.acceptBlock(blockId, machineId, responsibleName);
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.production.accept.success", null, locale));
-        return "redirect:/production";
+        try {
+            factoryProductionService.acceptBlock(blockId, machineId, responsibleName);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.production.accept.success", null, locale));
+            return "redirect:/production/accept";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            populateAcceptPage(model);
+            return "erp/production/accept";
+        }
     }
 
     @GetMapping("/orders/{id}")
@@ -370,6 +380,12 @@ public class ProductionController {
         model.addAttribute("quarryName", label.getQuarryName());
 
         return "erp/production/slab-label";
+    }
+
+    private void populateAcceptPage(Model model) {
+        model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
+        model.addAttribute("dispatchedBlocks", quarryBlockService.getDispatchedBlocks());
+        model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
     }
 
     private void populateProductionForm(Model model, Locale locale) {

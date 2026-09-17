@@ -41,6 +41,7 @@ class ErpModuleSecurityTest {
     void authenticatedGetIsAllowed() throws Exception {
         mockMvc.perform(get("/blocks")).andExpect(status().isOk());
         mockMvc.perform(get("/production")).andExpect(status().isOk());
+        mockMvc.perform(get("/production/accept")).andExpect(status().isOk());
         mockMvc.perform(get("/production/polish")).andExpect(status().isOk());
         mockMvc.perform(get("/production/pallets")).andExpect(status().isOk());
         mockMvc.perform(get("/production/tablet")).andExpect(status().isOk());
