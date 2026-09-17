@@ -88,11 +88,33 @@ public class BlockCostCalculationService {
 
     @Transactional(readOnly = true)
     public Map<Long, BigDecimal> expensePerTonByQuarry(String period) {
+        String normalized = ExpensePeriods.normalize(period != null ? period : YearMonth.now().toString());
+        BigDecimal unitExpenses = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, normalized));
+
+        Map<Long, BigDecimal> quarryExpenses = new LinkedHashMap<>();
+        for (Object[] row : costTransactionRepository.sumAmountGroupedByQuarryForPeriod(normalized)) {
+            if (row[0] instanceof Long quarryId) {
+                quarryExpenses.put(quarryId, zero((BigDecimal) row[1]));
+            }
+        }
+
+        Map<Long, BigDecimal> quarryTonnage = new LinkedHashMap<>();
+        for (Object[] row : blockRepository.sumProductionTonnageKgByQuarry()) {
+            if (row[0] instanceof Long quarryId) {
+                quarryTonnage.put(quarryId, BlockMeasurement.kilogramsToTons(zero((BigDecimal) row[1])));
+            }
+        }
+
         Map<Long, BigDecimal> cache = new ConcurrentHashMap<>();
         for (Long quarryId : blockRepository.findDistinctQuarryIds()) {
-            QuarryCostBreakdownDto breakdown = quarryBreakdown(quarryId, period);
-            if (breakdown.getExpensePerTon() != null) {
-                cache.put(quarryId, breakdown.getExpensePerTon());
+            BigDecimal totalExpenses = quarryExpenses.getOrDefault(quarryId, BigDecimal.ZERO);
+            if (totalExpenses.compareTo(BigDecimal.ZERO) == 0) {
+                totalExpenses = unitExpenses;
+            }
+            BigDecimal expensePerTon = BlockCostFormula.expensePerTon(
+                    totalExpenses, quarryTonnage.getOrDefault(quarryId, BigDecimal.ZERO));
+            if (expensePerTon != null) {
+                cache.put(quarryId, expensePerTon);
             }
         }
         return cache;

@@ -5,6 +5,7 @@ import com.ozerler.marble.model.enums.FactoryProcessType;
 import com.ozerler.marble.model.enums.OperationStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,4 +22,8 @@ public interface FactoryOperationRepository extends JpaRepository<FactoryOperati
 
     @EntityGraph(attributePaths = "workOrder")
     List<FactoryOperation> findByOperatorNameAndStatus(String operatorName, OperationStatus status);
+
+    @Query("SELECT o.processType, COALESCE(SUM(o.inputQuantity), 0), COALESCE(SUM(o.outputQuantity), 0), "
+            + "COALESCE(SUM(o.wasteQuantity), 0) FROM FactoryOperation o GROUP BY o.processType")
+    List<Object[]> aggregateQuantitiesByProcessType();
 }

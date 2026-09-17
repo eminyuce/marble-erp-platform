@@ -82,6 +82,7 @@ public class GenealogyService {
                 : cutItemRepository.findBySourceSlabIdIn(slabIds).stream()
                 .filter(i -> i.getSourceSlab() != null)
                 .collect(Collectors.groupingBy(i -> i.getSourceSlab().getId()));
+        LotEventContext lotEvents = preloadLotEvents(slabIds);
 
         for (ProductionOrder order : orders) {
             GenealogyNodeDto orderNode = buildProductionOrderNode(order);
@@ -94,8 +95,10 @@ public class GenealogyService {
                 for (CutItem item : items) {
                     slabNode.getChildren().add(buildCutItemNode(item));
                 }
-                materialLotRepository.findBySlabId(slab.getId()).ifPresent(lot ->
-                        attachLotEvents(slabNode, lot));
+                MaterialLot lot = lotEvents.lotBySlabId().get(slab.getId());
+                if (lot != null) {
+                    attachLotEvents(slabNode, lot, lotEvents);
+                }
 
                 orderNode.getChildren().add(slabNode);
             }
@@ -140,8 +143,42 @@ public class GenealogyService {
         return Optional.empty();
     }
 
-    private void attachLotEvents(GenealogyNodeDto parent, MaterialLot lot) {
-        for (PalletItem palletItem : palletItemRepository.findByMaterialLotId(lot.getId())) {
+    private LotEventContext preloadLotEvents(List<Long> slabIds) {
+        if (slabIds == null || slabIds.isEmpty()) {
+            return LotEventContext.empty();
+        }
+        Map<Long, MaterialLot> lotBySlabId = materialLotRepository.findBySlabIdIn(slabIds).stream()
+                .filter(lot -> lot.getSlab() != null)
+                .collect(Collectors.toMap(lot -> lot.getSlab().getId(), lot -> lot, (left, right) -> left));
+        if (lotBySlabId.isEmpty()) {
+            return new LotEventContext(lotBySlabId, Map.of(), Map.of(), Map.of());
+        }
+
+        List<Long> lotIds = lotBySlabId.values().stream().map(MaterialLot::getId).toList();
+        Map<Long, List<PalletItem>> palletItemsByLotId = palletItemRepository.findByMaterialLotIdIn(lotIds).stream()
+                .collect(Collectors.groupingBy(item -> item.getMaterialLot().getId()));
+
+        List<Long> palletIds = palletItemsByLotId.values().stream()
+                .flatMap(List::stream)
+                .map(item -> item.getPallet().getId())
+                .distinct()
+                .toList();
+        Map<Long, List<ShipmentItem>> shipmentItemsByPalletId = palletIds.isEmpty()
+                ? Map.of()
+                : shipmentItemRepository.findByPalletIdIn(palletIds).stream()
+                .filter(item -> item.getPallet() != null)
+                .collect(Collectors.groupingBy(item -> item.getPallet().getId()));
+
+        Map<Long, List<SiteInstallation>> installationsByLotId =
+                siteInstallationRepository.findByMaterialLotIdIn(lotIds).stream()
+                        .filter(installation -> installation.getMaterialLot() != null)
+                        .collect(Collectors.groupingBy(installation -> installation.getMaterialLot().getId()));
+
+        return new LotEventContext(lotBySlabId, palletItemsByLotId, shipmentItemsByPalletId, installationsByLotId);
+    }
+
+    private void attachLotEvents(GenealogyNodeDto parent, MaterialLot lot, LotEventContext lotEvents) {
+        for (PalletItem palletItem : lotEvents.palletItemsByLotId().getOrDefault(lot.getId(), List.of())) {
             GenealogyNodeDto palletNode = GenealogyNodeDto.builder()
                     .id("PAL-" + palletItem.getPallet().getId())
                     .type("PALLET")
@@ -152,7 +189,8 @@ public class GenealogyService {
                     .qrCode(palletItem.getPallet().getPalletCode())
                     .children(new ArrayList<>())
                     .build();
-            for (ShipmentItem shipmentItem : shipmentItemRepository.findByPalletId(palletItem.getPallet().getId())) {
+            for (ShipmentItem shipmentItem : lotEvents.shipmentItemsByPalletId()
+                    .getOrDefault(palletItem.getPallet().getId(), List.of())) {
                 palletNode.getChildren().add(GenealogyNodeDto.builder()
                         .id("SHP-" + shipmentItem.getShipment().getId())
                         .type("SHIPMENT")
@@ -168,7 +206,7 @@ public class GenealogyService {
             }
             parent.getChildren().add(palletNode);
         }
-        for (SiteInstallation installation : siteInstallationRepository.findByMaterialLotId(lot.getId())) {
+        for (SiteInstallation installation : lotEvents.installationsByLotId().getOrDefault(lot.getId(), List.of())) {
             parent.getChildren().add(GenealogyNodeDto.builder()
                     .id("INS-" + installation.getId())
                     .type("SITE")
@@ -179,6 +217,17 @@ public class GenealogyService {
                     .status(installation.getCrewName())
                     .children(new ArrayList<>())
                     .build());
+        }
+    }
+
+    private record LotEventContext(
+            Map<Long, MaterialLot> lotBySlabId,
+            Map<Long, List<PalletItem>> palletItemsByLotId,
+            Map<Long, List<ShipmentItem>> shipmentItemsByPalletId,
+            Map<Long, List<SiteInstallation>> installationsByLotId) {
+
+        static LotEventContext empty() {
+            return new LotEventContext(Map.of(), Map.of(), Map.of(), Map.of());
         }
     }
 
@@ -271,7 +320,7 @@ public class GenealogyService {
 
     @Transactional(readOnly = true)
     public Optional<GenealogyNodeDto> getDefaultTree() {
-        return blockRepository.findAll().stream().findFirst()
+        return blockRepository.findTop1ByOrderByIdAsc()
                 .map(block -> buildTreeForBlock(block.getId()));
     }
 }

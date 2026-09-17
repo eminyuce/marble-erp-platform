@@ -52,6 +52,14 @@ public interface CostTransactionRepository extends JpaRepository<CostTransaction
             + "WHERE c.project.id = :projectId GROUP BY c.expenseCategory")
     List<Object[]> sumCategoriesByProjectId(@Param("projectId") Long projectId);
 
+    @Query("SELECT c.project.id, c.expenseCategory, COALESCE(SUM(c.amount), 0) FROM CostTransaction c "
+            + "WHERE c.project IS NOT NULL GROUP BY c.project.id, c.expenseCategory")
+    List<Object[]> sumCategoriesGroupedByProjectId();
+
+    @Query("SELECT c.quarry.id, COALESCE(SUM(c.amount), 0) FROM CostTransaction c "
+            + "WHERE c.quarry IS NOT NULL AND c.expensePeriod = :period GROUP BY c.quarry.id")
+    List<Object[]> sumAmountGroupedByQuarryForPeriod(@Param("period") String period);
+
     @Query("SELECT COALESCE(SUM(c.amount), 0) FROM CostTransaction c "
             + "WHERE c.quarry.id = :quarryId AND c.expensePeriod = :period")
     BigDecimal sumByQuarryAndPeriod(@Param("quarryId") Long quarryId, @Param("period") String period);
