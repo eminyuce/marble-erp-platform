@@ -97,17 +97,17 @@
                     <td class="py-2.5 px-4 text-right font-mono font-bold text-slate-900"
                         th:text="${#numbers.formatDecimal(entry.value, 1, 'POINT', 2, 'COMMA')} + ' ₺'">0,00 ₺</td>
                     <td class="py-2.5 px-4 text-right font-mono text-slate-600"
-                        th:text="${analysis.productionQuantity != null && analysis.productionQuantity > 0 ? #numbers.formatDecimal(entry.value.divide(analysis.productionQuantity, 2, java.math.RoundingMode.HALF_UP), 1, 'POINT', 2, 'COMMA') + ' ₺' : '—'}">
+                        th:text="${analysis.calculateUnitContribution(entry.value) != null ? #numbers.formatDecimal(analysis.calculateUnitContribution(entry.value), 1, 'POINT', 2, 'COMMA') + ' ₺' : '—'}">
                         —
                     </td>
                     <td class="py-2.5 px-4">
                         <div class="flex items-center gap-2">
                             <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                                 <div class="h-full bg-amber-500 rounded-full"
-                                     th:style="'width: ' + (${analysis.totalExpense != null && analysis.totalExpense > 0 ? (entry.value * 100 / analysis.totalExpense) : 0}) + '%'"></div>
+                                     th:style="'width: ' + ${analysis.calculateCategorySharePct(entry.value)} + '%'"></div>
                             </div>
                             <span class="w-12 text-right font-mono text-[11px] text-slate-600 font-semibold"
-                                  th:text="${analysis.totalExpense != null && analysis.totalExpense > 0 ? #numbers.formatDecimal((entry.value * 100 / analysis.totalExpense), 1, 'POINT', 1, 'COMMA') + '%' : '0%'}">0%</span>
+                                  th:text="${analysis.calculateCategorySharePct(entry.value)} + '%'">0%</span>
                         </div>
                     </td>
                 </tr>

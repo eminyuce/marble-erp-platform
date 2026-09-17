@@ -322,7 +322,7 @@
                         <td class="py-3 px-4 text-center">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold font-mono"
                                   th:classappend="${sp.netProfitOrLoss >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-                                <span th:text="${sp.realizedRevenue > 0 ? '%' + #numbers.formatDecimal((sp.netProfitOrLoss * 100 / sp.realizedRevenue), 1, 'POINT', 1, 'COMMA') : (sp.netProfitOrLoss >= 0 ? 'KÂRDA' : 'ZARAR')}">KÂR</span>
+                                <span th:text="${sp.marginPct != null ? '%' + #numbers.formatDecimal(sp.marginPct, 1, 'POINT', 1, 'COMMA') : (sp.netProfitOrLoss >= 0 ? 'KÂRDA' : 'ZARAR')}">KÂR</span>
                             </span>
                         </td>
                     </tr>
@@ -351,7 +351,7 @@
                             th:text="${totalSiteNet != null ? (totalSiteNet >= 0 ? '+' : '') + #numbers.formatDecimal(totalSiteNet, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
                         <td class="py-3 px-4 text-center font-mono text-[11px]"
                             th:classappend="${totalSiteNet != null && totalSiteNet >= 0 ? 'text-emerald-700' : 'text-rose-700'}">
-                            <span th:text="${totalSiteRevenue != null && totalSiteRevenue > 0 ? '%' + #numbers.formatDecimal((totalSiteNet * 100 / totalSiteRevenue), 1, 'POINT', 1, 'COMMA') : ''}">%0</span>
+                            <span th:text="${totalSiteMarginPct != null ? '%' + #numbers.formatDecimal(totalSiteMarginPct, 1, 'POINT', 1, 'COMMA') : '—'}">—</span>
                         </td>
                     </tr>
                     </tfoot>

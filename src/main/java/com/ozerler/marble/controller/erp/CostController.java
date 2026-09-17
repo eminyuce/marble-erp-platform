@@ -100,6 +100,11 @@ public class CostController {
         model.addAttribute("totalSiteCost", totalSiteCost);
         model.addAttribute("totalSiteNet", totalSiteNet);
 
+        BigDecimal totalSiteMarginPct = (totalSiteRevenue != null && totalSiteRevenue.compareTo(BigDecimal.ZERO) > 0 && totalSiteNet != null)
+                ? totalSiteNet.multiply(BigDecimal.valueOf(100)).divide(totalSiteRevenue, 1, java.math.RoundingMode.HALF_UP)
+                : null;
+        model.addAttribute("totalSiteMarginPct", totalSiteMarginPct);
+
         BigDecimal totalMonthlyBudget = costAccountingService.getAllCostCenters().stream()
                 .map(com.ozerler.marble.model.CostCenter::getMonthlyBudget)
                 .filter(java.util.Objects::nonNull)

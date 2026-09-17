@@ -27,6 +27,20 @@ public class CostAnalysisDto {
     List<YieldRow> yields;
     List<Line> lines;
 
+    public BigDecimal calculateUnitContribution(BigDecimal amount) {
+        if (amount == null || productionQuantity == null || productionQuantity.compareTo(BigDecimal.ZERO) <= 0) {
+            return null;
+        }
+        return amount.divide(productionQuantity, 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal calculateCategorySharePct(BigDecimal amount) {
+        if (amount == null || totalExpense == null || totalExpense.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return amount.multiply(BigDecimal.valueOf(100)).divide(totalExpense, 1, java.math.RoundingMode.HALF_UP);
+    }
+
     @Value
     @Builder
     public static class YieldRow {
