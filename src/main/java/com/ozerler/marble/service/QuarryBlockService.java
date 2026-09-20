@@ -496,12 +496,6 @@ public class QuarryBlockService {
     @Transactional
     public Block sellBlockExternally(Long blockId, Long customerId, BigDecimal salePrice,
                                      LocalDate saleDate, String saleNotes) {
-        return sellBlockExternally(blockId, customerId, salePrice, saleDate, saleNotes, null);
-    }
-
-    @Transactional
-    public Block sellBlockExternally(Long blockId, Long customerId, BigDecimal salePrice,
-                                     LocalDate saleDate, String saleNotes, String brandingLabel) {
         Block block = getBlockById(blockId);
         if (!block.getCanonicalStatus().isAtQuarry()) {
             throw new IllegalArgumentException(getMessage("error.block.sell.not_at_quarry"));
@@ -520,9 +514,6 @@ public class QuarryBlockService {
         block.setSalePrice(salePrice);
         block.setSaleDate(saleDate != null ? saleDate : LocalDate.now());
         block.setSaleNotes(saleNotes);
-        if (brandingLabel != null && !brandingLabel.isBlank()) {
-            block.setBrandingLabel(brandingLabel.trim());
-        }
         Block saved = blockRepository.save(block);
         recordMovement(saved, from, from, "Satış: " + customer.getCompanyName()
                 + " — " + salePrice + " TL");

@@ -527,21 +527,4 @@ class QuarryBlockServiceTest {
         String second = quarryBlockService.generateStandardBlockCode(1L, "A-BLOK");
         assertThat(second).isEqualTo("A-BLOK-" + java.time.LocalDate.now().getYear() + "-002");
     }
-
-    @Test
-    @DisplayName("sale stores branding label")
-    void sellBlockExternally_StoresBrandingLabel() {
-        StockLocation dispatch = StockLocation.builder()
-                .locationType(StockLocationType.DISPATCH_YARD).businessUnit(BusinessUnit.QUARRY).build();
-        Block block = Block.builder().id(22L).status(BlockStatus.PRODUCED).currentLocation(dispatch).build();
-        Customer customer = Customer.builder().id(3L).companyName("Otel").build();
-        when(blockRepository.findById(22L)).thenReturn(Optional.of(block));
-        when(customerRepository.findById(3L)).thenReturn(Optional.of(customer));
-        when(blockRepository.save(any(Block.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        Block sold = quarryBlockService.sellBlockExternally(
-                22L, 3L, new BigDecimal("100"), java.time.LocalDate.now(), "not", "OTEL-A");
-
-        assertThat(sold.getBrandingLabel()).isEqualTo("OTEL-A");
-    }
 }

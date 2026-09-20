@@ -431,11 +431,10 @@ public class BlockController extends AbstractController {
                                  @RequestParam("salePrice") BigDecimal salePrice,
                                  @RequestParam(value = "saleDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate saleDate,
                                  @RequestParam(value = "saleNotes", required = false) String saleNotes,
-                                 @RequestParam(value = "brandingLabel", required = false) String brandingLabel,
                                  Locale locale,
                                  RedirectAttributes redirectAttributes) {
         try {
-            quarryBlockService.sellBlockExternally(id, customerId, salePrice, saleDate, saleNotes, brandingLabel);
+            quarryBlockService.sellBlockExternally(id, customerId, salePrice, saleDate, saleNotes);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.sell.success", null, locale));
             return "redirect:/blocks/" + id;

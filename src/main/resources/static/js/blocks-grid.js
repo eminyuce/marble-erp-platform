@@ -121,7 +121,6 @@ function initBlocksGrid() {
             },
             {title: "Ocak", field: "quarryName", minWidth: 120},
             {title: "Ocak Bölgesi", field: "quarrySection", minWidth: 110, formatter: (cell) => gridText(cell.getValue())},
-            {title: "Markalama", field: "brandingLabel", minWidth: 120, formatter: (cell) => gridText(cell.getValue())},
             {title: "Taş Cinsi", field: "stoneType", minWidth: 100, formatter: (cell) => gridText(cell.getValue())},
             {title: "Seleksiyon", field: "colorTone", minWidth: 100, formatter: (cell) => gridText(cell.getValue())},
             {

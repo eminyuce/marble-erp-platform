@@ -72,14 +72,13 @@
                 </section>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Ölçü ve tartım', 'İç kayıt santimetredir. Metre girmek için değeri 100 ile çarpın (1,80 m → 180).')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Ölçü ve tartım', 'Santimetre cinsinden 3 eksen ve otomatik tonaj hesabı')}"></div>
                     <div class="erp-form-grid--3">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="widthCm">En (cm) <span class="req">*</span></label>
                             <input id="widthCm" type="number" name="widthCm" min="1" required
                                    th:value="${isEdit and block != null ? block.widthCm : ''}"
                                    class="erp-form-input" placeholder="180">
-                            <p class="erp-form-hint">Santimetre. 1 m = 100 cm.</p>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="lengthCm">Boy (cm) <span class="req">*</span></label>

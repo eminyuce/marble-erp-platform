@@ -1,8 +1,7 @@
--- P1-2 branding label, P1-3 quarry section, P0-2 operation costs, P1-6 pallet stock location
+-- P1-3 quarry section, P0-2 operation costs, P1-6 pallet stock location
 
 ALTER TABLE blocks
-    ADD COLUMN IF NOT EXISTS quarry_section VARCHAR(50),
-    ADD COLUMN IF NOT EXISTS branding_label VARCHAR(120);
+    ADD COLUMN IF NOT EXISTS quarry_section VARCHAR(50);
 
 CREATE INDEX IF NOT EXISTS idx_blocks_quarry_section ON blocks (quarry_section);
 

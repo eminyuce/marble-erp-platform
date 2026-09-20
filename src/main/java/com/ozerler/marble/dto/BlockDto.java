@@ -42,10 +42,6 @@ public class BlockDto {
     @JsonAlias("quarrySection")
     private String quarrySection;
 
-    @JsonProperty("branding_label")
-    @JsonAlias("brandingLabel")
-    private String brandingLabel;
-
     @JsonProperty("extraction_date")
     @JsonAlias("extractionDate")
     private LocalDate extractionDate;
@@ -197,7 +193,6 @@ public class BlockDto {
                 .quarryName(b.getQuarry() != null ? b.getQuarry().getName() : "")
                 .blockCode(b.getBlockCode() != null ? b.getBlockCode().toUpperCase(Locale.ROOT) : "")
                 .quarrySection(b.getQuarrySection())
-                .brandingLabel(b.getBrandingLabel())
                 .extractionDate(b.getExtractionDate())
                 .widthCm(b.getWidthCm())
                 .lengthCm(b.getLengthCm())
