@@ -1,7 +1,7 @@
 package com.ozerler.marble.util;
 
+import java.time.Year;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 public final class UniqueCodes {
 
     private static final int MAX_ATTEMPTS = 10_000;
+    private static final int DEFAULT_TIME_SUFFIX_MODULUS = 100_000;
 
     private UniqueCodes() {
     }
@@ -24,12 +25,23 @@ public final class UniqueCodes {
                 return candidate;
             }
         }
-        throw new IllegalStateException("Could not allocate a unique document code");
+        throw new IllegalStateException("Could not allocate a unique document code after " + MAX_ATTEMPTS + " attempts");
+    }
+
+    public static String yearly(String prefix, Predicate<String> exists) {
+        return yearly(prefix, DEFAULT_TIME_SUFFIX_MODULUS, exists);
+    }
+
+    public static String yearly(String prefix, int modulus, Predicate<String> exists) {
+        int year = Year.now().getValue();
+        int safeModulus = Math.max(modulus, 1);
+        return allocate(() -> String.format("%s-%d-%d", prefix, year, System.nanoTime() % safeModulus), exists);
     }
 
     public static String sequential(String prefix, int year, int startSequence, int width, Predicate<String> exists) {
-        AtomicInteger sequence = new AtomicInteger(Math.max(startSequence, 1));
-        String format = "%s-%d-%0" + Math.max(width, 1) + "d";
-        return allocate(() -> String.format(format, prefix, year, sequence.getAndIncrement()), exists);
+        int[] sequence = {Math.max(startSequence, 1)};
+        int paddedWidth = Math.max(width, 1);
+        String format = "%s-%d-%0" + paddedWidth + "d";
+        return allocate(() -> String.format(format, prefix, year, sequence[0]++), exists);
     }
 }

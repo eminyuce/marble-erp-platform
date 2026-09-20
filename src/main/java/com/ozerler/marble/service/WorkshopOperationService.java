@@ -39,7 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Year;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Objects;
@@ -74,9 +73,7 @@ public class WorkshopOperationService {
                 ? purchaseOrderItemRepository.findById(purchaseOrderItemId).orElse(null)
                 : null;
         MaterialLot lot = materialLotRepository.save(MaterialLot.builder()
-                .lotCode(UniqueCodes.allocate(
-                        () -> String.format("WML-%d-%d", Year.now().getValue(), System.nanoTime() % 100000),
-                        materialLotRepository::existsByLotCode))
+                .lotCode(UniqueCodes.yearly("WML", materialLotRepository::existsByLotCode))
                 .productForm(ProductForm.SLAB)
                 .stoneType(stoneType)
                 .quantity(quantity != null ? quantity.intValue() : 1)
@@ -90,9 +87,7 @@ public class WorkshopOperationService {
                 .totalCost(purchaseCost != null ? purchaseCost : BigDecimal.ZERO)
                 .build());
         WorkshopMaterialReceipt receipt = receiptRepository.save(WorkshopMaterialReceipt.builder()
-                .receiptNo(UniqueCodes.allocate(
-                        () -> String.format("WMR-%d-%d", Year.now().getValue(), System.nanoTime() % 100000),
-                        receiptRepository::existsByReceiptNo))
+                .receiptNo(UniqueCodes.yearly("WMR", receiptRepository::existsByReceiptNo))
                 .source(source)
                 .supplier(supplier)
                 .purchaseOrderItem(purchaseItem)

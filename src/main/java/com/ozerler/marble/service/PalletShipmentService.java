@@ -28,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.Year;
 import java.util.List;
 
 @Service
@@ -57,9 +56,7 @@ public class PalletShipmentService {
         Pallet pallet = palletRepository.save(Pallet.builder()
                 .palletCode(palletCode != null && !palletCode.isBlank()
                         ? palletCode
-                        : UniqueCodes.allocate(
-                                () -> String.format("PAL-%d-%d", Year.now().getValue(), System.nanoTime() % 100000),
-                                palletRepository::existsByPalletCode))
+                        : UniqueCodes.yearly("PAL", palletRepository::existsByPalletCode))
                 .warehouseLocation(warehouseLocation)
                 .currentLocation(yard)
                 .status("PREPARING")
@@ -100,9 +97,7 @@ public class PalletShipmentService {
         Shipment shipment = shipmentRepository.save(Shipment.builder()
                 .waybillNo(waybillNo != null && !waybillNo.isBlank()
                         ? waybillNo
-                        : UniqueCodes.allocate(
-                                () -> String.format("IRS-%d-%d", Year.now().getValue(), System.nanoTime() % 100000),
-                                shipmentRepository::existsByWaybillNo))
+                        : UniqueCodes.yearly("IRS", shipmentRepository::existsByWaybillNo))
                 .project(project)
                 .customer(customer)
                 .vehiclePlate(vehiclePlate)

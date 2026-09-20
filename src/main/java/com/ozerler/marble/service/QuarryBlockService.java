@@ -30,6 +30,7 @@ import com.ozerler.marble.repository.ShipmentItemRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockLocationRepository;
 import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.UniqueCodes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -50,6 +51,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class QuarryBlockService {
+
+    private static final String DEFAULT_QUARRY_SECTION = "A3";
+    private static final int BLOCK_CODE_SEQUENCE_WIDTH = 3;
 
     private final BlockRepository blockRepository;
     private final QuarryRepository quarryRepository;
@@ -102,20 +106,24 @@ public class QuarryBlockService {
         String cleanSection = normalizeQuarrySection(section);
         int year = LocalDate.now().getYear();
         LocalDate yearStart = LocalDate.of(year, 1, 1);
-        long seq = blockRepository.countByQuarrySectionAndYear(quarryId, cleanSection, yearStart, yearStart.plusYears(1)) + 1;
-        String candidate = cleanSection + "-" + year + "-" + String.format("%03d", seq);
-        while (blockRepository.existsByBlockCode(candidate) || blockRepository.existsByBlockCodeIgnoreCase(candidate)) {
-            seq++;
-            candidate = cleanSection + "-" + year + "-" + String.format("%03d", seq);
-        }
-        return candidate;
+        int startSequence = (int) blockRepository.countByQuarrySectionAndYear(
+                quarryId, cleanSection, yearStart, yearStart.plusYears(1)) + 1;
+        return UniqueCodes.sequential(cleanSection, year, startSequence, BLOCK_CODE_SEQUENCE_WIDTH,
+                code -> blockRepository.existsByBlockCode(code) || blockRepository.existsByBlockCodeIgnoreCase(code));
     }
 
     public static String normalizeQuarrySection(String section) {
         if (section == null || section.isBlank()) {
-            return "A3";
+            return DEFAULT_QUARRY_SECTION;
         }
         return section.trim().toUpperCase(java.util.Locale.ROOT).replace(' ', '-');
+    }
+
+    private static String optionalQuarrySection(String quarrySection) {
+        if (quarrySection == null || quarrySection.isBlank()) {
+            return null;
+        }
+        return normalizeQuarrySection(quarrySection);
     }
 
     private BlockDto toBlockDto(Block block, Map<Long, BigDecimal> expensePerTonByQuarry) {
@@ -250,7 +258,7 @@ public class QuarryBlockService {
         Block block = Block.builder()
                 .quarry(quarry)
                 .blockCode(normalizedCode)
-                .quarrySection(quarrySection != null && !quarrySection.isBlank() ? normalizeQuarrySection(quarrySection) : null)
+                .quarrySection(optionalQuarrySection(quarrySection))
                 .extractionDate(extractionDate != null ? extractionDate : LocalDate.now())
                 .widthCm(widthCm)
                 .lengthCm(lengthCm)
@@ -348,8 +356,9 @@ public class QuarryBlockService {
         if (photoUrls != null && !photoUrls.isBlank()) {
             block.setPhotoUrls(photoUrls);
         }
-        if (quarrySection != null && !quarrySection.isBlank()) {
-            block.setQuarrySection(normalizeQuarrySection(quarrySection));
+        String normalizedSection = optionalQuarrySection(quarrySection);
+        if (normalizedSection != null) {
+            block.setQuarrySection(normalizedSection);
         }
 
         // Move to specific area if changed in edit page

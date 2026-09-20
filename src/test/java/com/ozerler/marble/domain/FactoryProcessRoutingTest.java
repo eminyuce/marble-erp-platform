@@ -33,4 +33,14 @@ class FactoryProcessRoutingTest {
                 FactoryProcessType.GANGSAW_CUTTING, FactoryProcessType.STRIP_POLISHING))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    @DisplayName("bridge saw is allowed after either cutting type")
+    void bridgeSawIsAlwaysAllowed() {
+        FactoryProcessRouting.requireValidSurfaceRouting(FactoryProcessType.ST_CUTTING, FactoryProcessType.BRIDGE_SAW_SIZING);
+        FactoryProcessRouting.requireValidSurfaceRouting(FactoryProcessType.GANGSAW_CUTTING, FactoryProcessType.BRIDGE_SAW_SIZING);
+        assertThat(FactoryProcessRouting.allowedSurfaceTypes(FactoryProcessType.ST_CUTTING))
+                .contains(FactoryProcessType.STRIP_POLISHING, FactoryProcessType.BRIDGE_SAW_SIZING)
+                .doesNotContain(FactoryProcessType.SLAB_POLISHING);
+    }
 }

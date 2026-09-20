@@ -14,6 +14,7 @@ import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseCategory;
 import com.ozerler.marble.model.enums.FactoryProcessType;
 import com.ozerler.marble.model.enums.OperationStatus;
+import com.ozerler.marble.model.enums.StockLocationType;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CostTransactionRepository;
 import com.ozerler.marble.repository.FactoryOperationRepository;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -132,7 +134,7 @@ public class CostAnalysisService {
                 .map(CostAnalysisDto.YieldRow::getOutputQuantity)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal unitCost = outputM2.compareTo(BigDecimal.ZERO) > 0
-                ? expense.divide(outputM2, Constants.COST_SCALE, java.math.RoundingMode.HALF_UP)
+                ? expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP)
                 : null;
         return base(BusinessUnit.FACTORY, current, previous, expense, previousExpense,
                 outputM2, "m²", unitCost, null, outputM2.compareTo(BigDecimal.ZERO) == 0 && expense.compareTo(BigDecimal.ZERO) > 0)
@@ -146,7 +148,7 @@ public class CostAnalysisService {
     private BigDecimal incomingFactoryBlockCost(String period) {
         YearMonth yearMonth = ExpensePeriods.parse(period);
         return zero(blockRepository.sumExtractionCostMovedTo(
-                com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD,
+                StockLocationType.FACTORY_BLOCK_YARD,
                 yearMonth.atDay(1).atStartOfDay(),
                 yearMonth.plusMonths(1).atDay(1).atStartOfDay()));
     }
@@ -156,7 +158,7 @@ public class CostAnalysisService {
         BigDecimal previousExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, previous));
         BigDecimal outputM2 = zero(workshopOperationRepository.sumOutputAreaM2ByStatus(OperationStatus.COMPLETED));
         BigDecimal unitCost = outputM2.compareTo(BigDecimal.ZERO) > 0
-                ? expense.divide(outputM2, Constants.COST_SCALE, java.math.RoundingMode.HALF_UP)
+                ? expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP)
                 : null;
         return base(BusinessUnit.WORKSHOP, current, previous, expense, previousExpense,
                 outputM2, "m²", unitCost, null, outputM2.compareTo(BigDecimal.ZERO) == 0 && expense.compareTo(BigDecimal.ZERO) > 0)

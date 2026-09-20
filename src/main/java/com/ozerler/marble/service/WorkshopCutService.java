@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -208,9 +207,7 @@ public class WorkshopCutService {
 
     private CutOrder buildCutOrderEntity(Project project, ProjectLocation location,
                                          String machineName, String operatorName, String notes) {
-        String cutOrderNo = UniqueCodes.allocate(
-                () -> String.format("CUT-%d-%d", Year.now().getValue(), System.nanoTime() % 100000),
-                cutOrderRepository::existsByCutOrderNo);
+        String cutOrderNo = UniqueCodes.yearly("CUT", cutOrderRepository::existsByCutOrderNo);
         return CutOrder.builder()
                 .cutOrderNo(cutOrderNo)
                 .project(project)
@@ -228,24 +225,31 @@ public class WorkshopCutService {
     }
 
     private BigDecimal calculateLoadedUnitCost(CutOrder order, Slab sourceSlab) {
-        BigDecimal baseCostPerM2 = sourceSlab != null ? sourceSlab.getCostPerM2() : BigDecimal.ZERO;
-        if (baseCostPerM2 == null) {
-            baseCostPerM2 = BigDecimal.ZERO;
-        }
-        BigDecimal posted = BigDecimal.ZERO;
-        if (costTransactionRepository != null && order != null && order.getId() != null) {
-            posted = posted.add(zero(costTransactionRepository.sumByCutOrderId(order.getId())));
-        }
-        if (costTransactionRepository != null && sourceSlab != null && sourceSlab.getId() != null) {
-            posted = posted.add(zero(costTransactionRepository.sumWorkshopAmountBySlabId(sourceSlab.getId())));
-        }
-        BigDecimal area = sourceSlab != null && sourceSlab.getSurfaceAreaM2() != null
-                ? sourceSlab.getSurfaceAreaM2() : BigDecimal.ZERO;
+        BigDecimal baseCostPerM2 = zero(sourceSlab != null ? sourceSlab.getCostPerM2() : null);
+        BigDecimal posted = postedWorkshopCost(order, sourceSlab);
+        BigDecimal area = sourceSlab != null ? zero(sourceSlab.getSurfaceAreaM2()) : BigDecimal.ZERO;
         if (posted.compareTo(BigDecimal.ZERO) > 0 && area.compareTo(BigDecimal.ZERO) > 0) {
             return baseCostPerM2.add(posted.divide(area, Constants.COST_SCALE, RoundingMode.HALF_UP))
                     .setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
         }
-        // Fallback: no posted workshop expenses for this cut/slab — keep the documented 15% overhead.
+        return applyWorkshopOverheadFallback(order, baseCostPerM2);
+    }
+
+    private BigDecimal postedWorkshopCost(CutOrder order, Slab sourceSlab) {
+        if (costTransactionRepository == null) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal posted = BigDecimal.ZERO;
+        if (order != null && order.getId() != null) {
+            posted = posted.add(zero(costTransactionRepository.sumByCutOrderId(order.getId())));
+        }
+        if (sourceSlab != null && sourceSlab.getId() != null) {
+            posted = posted.add(zero(costTransactionRepository.sumWorkshopAmountBySlabId(sourceSlab.getId())));
+        }
+        return posted;
+    }
+
+    private BigDecimal applyWorkshopOverheadFallback(CutOrder order, BigDecimal baseCostPerM2) {
         log.info("No posted workshop expenses for cut order {}; applying {} overhead fallback",
                 order != null ? order.getCutOrderNo() : "new", Constants.WORKSHOP_OVERHEAD_FACTOR);
         return baseCostPerM2.multiply(Constants.WORKSHOP_OVERHEAD_FACTOR).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
@@ -266,9 +270,7 @@ public class WorkshopCutService {
 
         List<CutItem> items = new ArrayList<>(piecesCount);
         for (int i = 1; i <= piecesCount; i++) {
-            String itemCode = UniqueCodes.allocate(
-                    () -> String.format("ITM-%d-%d", Year.now().getValue(), System.nanoTime() % 10000),
-                    cutItemRepository::existsByItemCode);
+            String itemCode = UniqueCodes.yearly("ITM", 10_000, cutItemRepository::existsByItemCode);
             CutItem item = CutItem.builder()
                     .itemCode(itemCode)
                     .cutOrder(order)

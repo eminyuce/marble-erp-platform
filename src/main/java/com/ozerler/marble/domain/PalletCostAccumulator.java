@@ -34,13 +34,10 @@ public final class PalletCostAccumulator {
                                             BigDecimal operationCost) {
         BigDecimal previousCostPerM2 = zero(currentCostPerM2);
         BigDecimal inputArea = positiveOrZero(currentAreaM2);
-        BigDecimal remaining = remainingAreaM2 != null ? remainingAreaM2 : inputArea;
-        if (remaining.compareTo(BigDecimal.ZERO) < 0) {
-            remaining = BigDecimal.ZERO;
-        }
+        BigDecimal remaining = remainingAreaOrInput(remainingAreaM2, inputArea);
         BigDecimal added = zero(operationCost);
-        BigDecimal previousTotal = previousCostPerM2.multiply(inputArea).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
-        BigDecimal newTotal = previousTotal.add(added).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
+        BigDecimal previousTotal = money(previousCostPerM2.multiply(inputArea));
+        BigDecimal newTotal = money(previousTotal.add(added));
         BigDecimal newUnit = remaining.compareTo(BigDecimal.ZERO) > 0
                 ? newTotal.divide(remaining, Constants.COST_SCALE, RoundingMode.HALF_UP)
                 : previousCostPerM2;
@@ -65,6 +62,14 @@ public final class PalletCostAccumulator {
             return BigDecimal.ZERO;
         }
         return totalCost.divide(totalArea, Constants.COST_SCALE, RoundingMode.HALF_UP);
+    }
+
+    private static BigDecimal remainingAreaOrInput(BigDecimal remainingAreaM2, BigDecimal inputArea) {
+        return positiveOrZero(remainingAreaM2 != null ? remainingAreaM2 : inputArea);
+    }
+
+    private static BigDecimal money(BigDecimal value) {
+        return value.setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
     }
 
     private static BigDecimal zero(BigDecimal value) {

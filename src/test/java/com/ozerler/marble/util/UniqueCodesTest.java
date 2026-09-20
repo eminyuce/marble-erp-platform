@@ -31,4 +31,11 @@ class UniqueCodesTest {
         assertThat(first).isEqualTo("A-BLOK-2026-001");
         assertThat(second).isEqualTo("A-BLOK-2026-002");
     }
+
+    @Test
+    @DisplayName("yearly codes keep prefix and current year")
+    void yearlyCodes() {
+        String code = UniqueCodes.yearly("FWO", candidate -> false);
+        assertThat(code).startsWith("FWO-" + java.time.Year.now().getValue() + "-");
+    }
 }

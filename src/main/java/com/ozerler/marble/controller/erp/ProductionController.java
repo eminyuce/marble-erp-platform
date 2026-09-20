@@ -1,6 +1,7 @@
 package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.domain.FactoryProcessRouting;
 import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.SlabLabelDto;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Locale;
 
 @Controller
@@ -180,15 +182,14 @@ public class ProductionController {
     public String polishForm(Model model) {
         model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
         model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
-        model.addAttribute("processTypes", new FactoryProcessType[]{
-                FactoryProcessType.SLAB_POLISHING, FactoryProcessType.STRIP_POLISHING, FactoryProcessType.BRIDGE_SAW_SIZING});
+        model.addAttribute("processTypes", FactoryProcessRouting.SURFACE_TYPES.toArray(FactoryProcessType[]::new));
         model.addAttribute("chamferStatuses", ChamferStatus.values());
         return "erp/production/polish";
     }
 
     @GetMapping("/api/allowed-surface-processes")
     @ResponseBody
-    public java.util.List<String> allowedSurfaceProcesses(@RequestParam("workOrderId") Long workOrderId) {
+    public List<String> allowedSurfaceProcesses(@RequestParam("workOrderId") Long workOrderId) {
         return factoryProductionService.allowedSurfaceProcesses(workOrderId).stream()
                 .map(Enum::name)
                 .toList();

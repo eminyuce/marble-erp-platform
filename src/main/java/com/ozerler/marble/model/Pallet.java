@@ -68,15 +68,20 @@ public class Pallet extends AuditableEntity {
 
     @Transient
     public BigDecimal getCurrentCostPerM2() {
-        List<PalletCostAccumulator.AreaCost> lines = new ArrayList<>();
-        if (slabs != null) {
-            for (Slab slab : slabs) {
-                if (slab == null || slab.getSurfaceAreaM2() == null) {
-                    continue;
-                }
-                lines.add(PalletCostAccumulator.line(slab.getSurfaceAreaM2(), slab.getCostPerM2()));
-            }
+        return PalletCostAccumulator.weightedAverageCostPerM2(areaCosts());
+    }
+
+    private List<PalletCostAccumulator.AreaCost> areaCosts() {
+        if (slabs == null || slabs.isEmpty()) {
+            return List.of();
         }
-        return PalletCostAccumulator.weightedAverageCostPerM2(lines);
+        List<PalletCostAccumulator.AreaCost> lines = new ArrayList<>();
+        for (Slab slab : slabs) {
+            if (slab == null || slab.getSurfaceAreaM2() == null) {
+                continue;
+            }
+            lines.add(PalletCostAccumulator.line(slab.getSurfaceAreaM2(), slab.getCostPerM2()));
+        }
+        return lines;
     }
 }
