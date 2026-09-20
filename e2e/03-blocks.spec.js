@@ -157,6 +157,7 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
     await page.goto('/blocks/create', { waitUntil: 'networkidle' });
 
     await page.locator('select[name="quarryId"]').selectOption({ index: 1 });
+    await page.locator('input[name="quarrySection"]').fill('A-BLOK');
     await page.locator('input[name="blockCode"]').fill(testCode);
 
     const locationSelect = page.locator('select[name="locationType"]');
@@ -239,6 +240,7 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
     // 1. Create a fresh test block to sell
     await page.goto('/blocks/create', { waitUntil: 'networkidle' });
     await page.locator('select[name="quarryId"]').selectOption({ index: 1 });
+    await page.locator('input[name="quarrySection"]').fill('A-BLOK');
     await page.locator('input[name="blockCode"]').fill(testCode);
     await page.locator('select[name="locationType"]').selectOption('DISPATCH_YARD');
     await page.locator('input[name="widthCm"]').fill('150');

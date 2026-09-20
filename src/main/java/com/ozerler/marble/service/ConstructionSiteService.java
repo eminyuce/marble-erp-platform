@@ -207,7 +207,8 @@ public class ConstructionSiteService {
                 categories.getOrDefault(ExpenseCategory.TAX, BigDecimal.ZERO),
                 categories.getOrDefault(ExpenseCategory.CONSUMABLE, BigDecimal.ZERO),
                 categories.getOrDefault(ExpenseCategory.TRANSPORTATION, BigDecimal.ZERO),
-                categories.getOrDefault(ExpenseCategory.OTHER, BigDecimal.ZERO),
+                categories.getOrDefault(ExpenseCategory.OTHER, BigDecimal.ZERO)
+                        .add(categories.getOrDefault(ExpenseCategory.MAINTENANCE, BigDecimal.ZERO)),
                 project.getContractValue());
     }
 

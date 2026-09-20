@@ -2,7 +2,10 @@ package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.domain.BlockMeasurement;
+import com.ozerler.marble.domain.FactoryProcessRouting;
 import com.ozerler.marble.domain.OperationYield;
+import com.ozerler.marble.domain.PalletCostAccumulator;
+import com.ozerler.marble.util.UniqueCodes;
 import com.ozerler.marble.dto.FactoryWorkOrderSummaryDto;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.FactoryOperation;
@@ -89,7 +92,9 @@ public class FactoryProductionService {
         }
         Machine machine = machineId != null ? machine(machineId) : null;
         FactoryWorkOrder order = FactoryWorkOrder.builder()
-                .orderNo(String.format("FWO-%d-%d", Year.now().getValue(), System.currentTimeMillis() % 100000))
+                .orderNo(UniqueCodes.allocate(
+                        () -> String.format("FWO-%d-%d", Year.now().getValue(), System.nanoTime() % 100000),
+                        workOrderRepository::existsByOrderNo))
                 .block(block)
                 .acceptedAt(LocalDate.now())
                 .stockLocation(factoryYard)
@@ -126,8 +131,10 @@ public class FactoryProductionService {
         OperationYield.requireNonNegative("waste", waste);
 
         Machine machine = request.machineId() != null ? machine(request.machineId()) : null;
+        FactoryOperation previous = lastCompletedOperation(workOrder.getId());
         FactoryOperation operation = FactoryOperation.builder()
                 .workOrder(workOrder)
+                .previousOperation(previous)
                 .processType(processType)
                 .machine(machine)
                 .operatorName(request.operatorName())
@@ -163,6 +170,17 @@ public class FactoryProductionService {
                                                    Long machineId, String operatorName,
                                                    BigDecimal inputM2, BigDecimal outputM2, BigDecimal wasteM2,
                                                    ChamferStatus chamferStatus, String notes) {
+        return recordSurfaceOperation(workOrderId, processType, machineId, operatorName,
+                inputM2, outputM2, wasteM2, chamferStatus, notes, null, null, null);
+    }
+
+    @Transactional
+    public FactoryOperation recordSurfaceOperation(Long workOrderId, FactoryProcessType processType,
+                                                   Long machineId, String operatorName,
+                                                   BigDecimal inputM2, BigDecimal outputM2, BigDecimal wasteM2,
+                                                   ChamferStatus chamferStatus, String notes,
+                                                   BigDecimal laborCost, BigDecimal electricityCost,
+                                                   BigDecimal consumableCost) {
         if (processType != FactoryProcessType.SLAB_POLISHING
                 && processType != FactoryProcessType.STRIP_POLISHING
                 && processType != FactoryProcessType.BRIDGE_SAW_SIZING) {
@@ -170,12 +188,19 @@ public class FactoryProductionService {
         }
         FactoryWorkOrder workOrder = workOrderRepository.findById(workOrderId)
                 .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.factory.work_order.not_found", workOrderId)));
+        FactoryOperation previous = lastCompletedOperation(workOrder.getId());
+        FactoryProcessType previousCutting = lastCompletedCuttingType(workOrder.getId());
+        FactoryProcessRouting.requireValidSurfaceRouting(previousCutting, processType);
         OperationYield.validateSameUnitBalance(inputM2, outputM2, wasteM2);
         ChamferStatus chamfer = processType == FactoryProcessType.STRIP_POLISHING
                 ? (chamferStatus != null ? chamferStatus : ChamferStatus.UNCHAMFERED)
                 : ChamferStatus.NOT_APPLICABLE;
+        BigDecimal labor = zero(laborCost);
+        BigDecimal electricity = zero(electricityCost);
+        BigDecimal consumable = zero(consumableCost);
         FactoryOperation operation = FactoryOperation.builder()
                 .workOrder(workOrder)
+                .previousOperation(previous)
                 .processType(processType)
                 .machine(machineId != null ? machine(machineId) : null)
                 .operatorName(operatorName)
@@ -189,9 +214,14 @@ public class FactoryProductionService {
                 .wasteUnit(QuantityUnit.SQUARE_METER)
                 .chamferStatus(chamfer)
                 .status(OperationStatus.COMPLETED)
+                .laborCost(labor)
+                .electricityCost(electricity)
+                .consumableCost(consumable)
+                .totalOperationCost(labor.add(electricity).add(consumable))
                 .notes(notes)
                 .build();
         FactoryOperation saved = operationRepository.save(operation);
+        applyOperationCostToSlabs(workOrder, saved, inputM2, outputM2);
         workOrder.setStatus(FactoryWorkOrderStatus.WAITING_NEXT_STEP);
         if (processType == FactoryProcessType.BRIDGE_SAW_SIZING) {
             workOrder.setStatus(FactoryWorkOrderStatus.COMPLETED);
@@ -236,8 +266,13 @@ public class FactoryProductionService {
         }
         operation.setFinishedAt(LocalDateTime.now());
         operation.setStatus(OperationStatus.COMPLETED);
-        operation.getWorkOrder().setStatus(FactoryWorkOrderStatus.WAITING_NEXT_STEP);
-        return operationRepository.save(operation);
+        operation.setTotalOperationCost(operation.operationCostTotal());
+        FactoryOperation saved = operationRepository.save(operation);
+        if (operation.getProcessType().usesSamePhysicalUnit()) {
+            applyOperationCostToSlabs(operation.getWorkOrder(), saved, input, output);
+        }
+        saved.getWorkOrder().setStatus(FactoryWorkOrderStatus.WAITING_NEXT_STEP);
+        return saved;
     }
 
     @Transactional
@@ -279,8 +314,13 @@ public class FactoryProductionService {
         FactoryWorkOrder workOrder = workOrderRepository.findById(workOrderId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         MessageUtils.getMessage("error.factory.work_order.not_found", workOrderId)));
+        FactoryOperation previous = lastCompletedOperation(workOrder.getId());
+        if (FactoryProcessRouting.isPolishing(processType)) {
+            FactoryProcessRouting.requireValidSurfaceRouting(lastCompletedCuttingType(workOrder.getId()), processType);
+        }
         FactoryOperation operation = FactoryOperation.builder()
                 .workOrder(workOrder)
+                .previousOperation(previous)
                 .processType(processType)
                 .machine(machineId != null ? machine(machineId) : null)
                 .operatorName(operatorName)
@@ -322,11 +362,18 @@ public class FactoryProductionService {
         return machineRepository.findByBusinessUnitAndActiveTrueOrderByNameAsc(BusinessUnit.FACTORY);
     }
 
+    @Transactional(readOnly = true)
+    public List<FactoryProcessType> allowedSurfaceProcesses(Long workOrderId) {
+        return FactoryProcessRouting.allowedSurfaceTypes(lastCompletedCuttingType(workOrderId));
+    }
+
     private ProductionOrder saveLegacyProductionOrder(Block block, FactoryWorkOrder workOrder, FactoryOperation operation,
                                                       CuttingRequest request, Machine machine) {
         String orderNo = (request.orderNo() != null && !request.orderNo().isBlank())
                 ? request.orderNo()
-                : String.format("PRD-%d-%d", Year.now().getValue(), System.currentTimeMillis() % 100000);
+                : UniqueCodes.allocate(
+                        () -> String.format("PRD-%d-%d", Year.now().getValue(), System.nanoTime() % 100000),
+                        productionOrderRepository::existsByOrderNo);
         ProductionOrder order = ProductionOrder.builder()
                 .orderNo(orderNo)
                 .block(block)
@@ -368,7 +415,7 @@ public class FactoryProductionService {
                 : BigDecimal.ZERO;
 
         List<Slab> slabs = new ArrayList<>();
-        long sequence = System.currentTimeMillis() % 10000;
+        long sequence = System.nanoTime() % 10000;
         sequence = addGrade(slabs, order, block, extra, QualityGrade.EXTRA, thickness, width, length, singleArea, base, sequence);
         sequence = addGrade(slabs, order, block, countA, QualityGrade.A, thickness, width, length, singleArea, base, sequence);
         sequence = addGrade(slabs, order, block, countB, QualityGrade.B, thickness, width, length, singleArea, base, sequence);
@@ -385,7 +432,7 @@ public class FactoryProductionService {
         BigDecimal cost = base.multiply(grade.getMultiplier()).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
         for (int i = 0; i < count; i++) {
             slabs.add(Slab.builder()
-                    .slabCode(String.format("SLB-%d-%d", Year.now().getValue(), sequence + i))
+                    .slabCode(nextSlabCode(sequence + i))
                     .productionOrder(order)
                     .block(block)
                     .thicknessCm(thickness)
@@ -434,7 +481,9 @@ public class FactoryProductionService {
         }
         BigDecimal direct = request.directCuttingExpense() != null ? request.directCuttingExpense() : BigDecimal.ZERO;
         scrapLogRepository.save(ScrapLog.builder()
-                .scrapCode(String.format("SCRAP-%d-%d", Year.now().getValue(), System.currentTimeMillis() % 10000))
+                .scrapCode(UniqueCodes.allocate(
+                        () -> String.format("SCRAP-%d-%d", Year.now().getValue(), System.nanoTime() % 10000),
+                        scrapLogRepository::existsByScrapCode))
                 .productionOrder(order)
                 .block(block)
                 .reasonCode(request.scrapReason())
@@ -467,6 +516,71 @@ public class FactoryProductionService {
         return request.slabWidthCm().multiply(request.slabLengthCm())
                 .divide(Constants.SQUARE_CENTIMETERS_PER_SQUARE_METER, Constants.AREA_SCALE, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(total));
+    }
+
+    private FactoryOperation lastCompletedOperation(Long workOrderId) {
+        if (workOrderId == null) {
+            return null;
+        }
+        return operationRepository.findTopByWorkOrderIdAndStatusOrderByIdDesc(workOrderId, OperationStatus.COMPLETED)
+                .orElse(null);
+    }
+
+    private FactoryProcessType lastCompletedCuttingType(Long workOrderId) {
+        if (workOrderId == null) {
+            return null;
+        }
+        return operationRepository.findTopByWorkOrderIdAndProcessTypeInAndStatusOrderByIdDesc(
+                        workOrderId,
+                        List.of(FactoryProcessType.ST_CUTTING, FactoryProcessType.GANGSAW_CUTTING),
+                        OperationStatus.COMPLETED)
+                .map(FactoryOperation::getProcessType)
+                .orElse(null);
+    }
+
+    private void applyOperationCostToSlabs(FactoryWorkOrder workOrder, FactoryOperation operation,
+                                           BigDecimal inputM2, BigDecimal outputM2) {
+        if (workOrder == null || workOrder.getBlock() == null || workOrder.getBlock().getId() == null) {
+            return;
+        }
+        List<Slab> slabs = slabRepository.findByBlockId(workOrder.getBlock().getId());
+        if (slabs.isEmpty()) {
+            return;
+        }
+        BigDecimal added = operation != null ? zero(operation.getTotalOperationCost()) : BigDecimal.ZERO;
+        BigDecimal share = added.divide(BigDecimal.valueOf(slabs.size()), Constants.COST_SCALE, RoundingMode.HALF_UP);
+        BigDecimal input = inputM2 != null && inputM2.compareTo(BigDecimal.ZERO) > 0 ? inputM2 : BigDecimal.ZERO;
+        BigDecimal output = outputM2 != null ? outputM2 : input;
+        BigDecimal areaRatio = input.compareTo(BigDecimal.ZERO) > 0
+                ? output.divide(input, Constants.AREA_SCALE, RoundingMode.HALF_UP)
+                : BigDecimal.ONE;
+        for (Slab slab : slabs) {
+            BigDecimal currentArea = slab.getSurfaceAreaM2() != null ? slab.getSurfaceAreaM2() : BigDecimal.ZERO;
+            BigDecimal remaining = currentArea.multiply(areaRatio).setScale(Constants.AREA_SCALE, RoundingMode.HALF_UP);
+            PalletCostAccumulator.StepResult step = PalletCostAccumulator.applyOperation(
+                    slab.getCostPerM2(), currentArea, remaining, share);
+            slab.setCostPerM2(step.newCostPerM2());
+            if (remaining.compareTo(BigDecimal.ZERO) > 0 && remaining.compareTo(currentArea) != 0) {
+                slab.setSurfaceAreaM2(remaining);
+            }
+            materialLotRepository.findBySlabId(slab.getId()).ifPresent(lot -> {
+                lot.setUnitCost(slab.getCostPerM2());
+                BigDecimal area = slab.getSurfaceAreaM2() != null ? slab.getSurfaceAreaM2() : BigDecimal.ZERO;
+                lot.setTotalAreaM2(area);
+                lot.setTotalCost(slab.getCostPerM2().multiply(area).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP));
+            });
+        }
+        slabRepository.saveAll(slabs);
+    }
+
+    private String nextSlabCode(long sequenceHint) {
+        return UniqueCodes.allocate(
+                () -> String.format("SLB-%d-%d", Year.now().getValue(), Math.abs(sequenceHint + System.nanoTime() % 1000)),
+                slabRepository::existsBySlabCode);
+    }
+
+    private static BigDecimal zero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 
     private Machine machine(Long id) {

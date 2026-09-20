@@ -15,6 +15,8 @@ public interface FactoryWorkOrderRepository extends JpaRepository<FactoryWorkOrd
 
     Optional<FactoryWorkOrder> findByOrderNo(String orderNo);
 
+    boolean existsByOrderNo(String orderNo);
+
     Optional<FactoryWorkOrder> findFirstByBlockIdOrderByIdDesc(Long blockId);
 
     List<FactoryWorkOrder> findByStatusOrderByAcceptedAtDesc(FactoryWorkOrderStatus status);

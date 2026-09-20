@@ -19,6 +19,8 @@ public interface CutOrderRepository extends JpaRepository<CutOrder, Long> {
 
     Optional<CutOrder> findByCutOrderNo(String cutOrderNo);
 
+    boolean existsByCutOrderNo(String cutOrderNo);
+
     @EntityGraph(attributePaths = {"project", "location", "items", "items.sourceSlab"})
     Optional<CutOrder> findWithDetailsById(Long id);
 

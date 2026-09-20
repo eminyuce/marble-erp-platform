@@ -120,6 +120,8 @@ function initBlocksGrid() {
                 }
             },
             {title: "Ocak", field: "quarryName", minWidth: 120},
+            {title: "Ocak Bölgesi", field: "quarrySection", minWidth: 110, formatter: (cell) => gridText(cell.getValue())},
+            {title: "Markalama", field: "brandingLabel", minWidth: 120, formatter: (cell) => gridText(cell.getValue())},
             {title: "Taş Cinsi", field: "stoneType", minWidth: 100, formatter: (cell) => gridText(cell.getValue())},
             {title: "Seleksiyon", field: "colorTone", minWidth: 100, formatter: (cell) => gridText(cell.getValue())},
             {
@@ -230,8 +232,10 @@ function initBlocksGrid() {
                                 onclick: "openMoveBlock(" + row.id + ", 'DISPATCH_YARD', 'Stok Sahasına taşı')"
                             });
                         }
-                        items.push({icon: "handshake", label: "Sat", href: "/blocks/" + row.id + "/sell"});
-                        items.push({icon: "truck", label: "Fabrikaya sevk", onclick: "openTransferBlock(" + row.id + ")"});
+                        if (row.locationType === "DISPATCH_YARD") {
+                            items.push({icon: "handshake", label: "Sat", href: "/blocks/" + row.id + "/sell"});
+                            items.push({icon: "truck", label: "Fabrikaya sevk", onclick: "openTransferBlock(" + row.id + ")"});
+                        }
                     }
                     if (row.canDelete) {
                         items.push({

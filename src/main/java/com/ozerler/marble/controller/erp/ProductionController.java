@@ -186,6 +186,14 @@ public class ProductionController {
         return "erp/production/polish";
     }
 
+    @GetMapping("/api/allowed-surface-processes")
+    @ResponseBody
+    public java.util.List<String> allowedSurfaceProcesses(@RequestParam("workOrderId") Long workOrderId) {
+        return factoryProductionService.allowedSurfaceProcesses(workOrderId).stream()
+                .map(Enum::name)
+                .toList();
+    }
+
     @PostMapping("/polish")
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     public String recordPolish(@RequestParam("workOrderId") Long workOrderId,
@@ -197,10 +205,13 @@ public class ProductionController {
                                @RequestParam("wasteM2") BigDecimal wasteM2,
                                @RequestParam(value = "chamferStatus", required = false) ChamferStatus chamferStatus,
                                @RequestParam(value = "notes", required = false) String notes,
+                               @RequestParam(value = "laborCost", required = false) BigDecimal laborCost,
+                               @RequestParam(value = "electricityCost", required = false) BigDecimal electricityCost,
+                               @RequestParam(value = "consumableCost", required = false) BigDecimal consumableCost,
                                Locale locale,
                                RedirectAttributes redirectAttributes) {
         factoryProductionService.recordSurfaceOperation(workOrderId, processType, machineId, operatorName,
-                inputM2, outputM2, wasteM2, chamferStatus, notes);
+                inputM2, outputM2, wasteM2, chamferStatus, notes, laborCost, electricityCost, consumableCost);
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.production.polish.success", null, locale));
         return "redirect:/production/polish";
@@ -209,6 +220,9 @@ public class ProductionController {
     @GetMapping("/pallets")
     public String pallets(Model model) {
         model.addAttribute("pallets", palletShipmentService.pallets());
+        model.addAttribute("palletLocationTypes", new com.ozerler.marble.model.enums.StockLocationType[]{
+                com.ozerler.marble.model.enums.StockLocationType.PALLET_STOCK_YARD,
+                com.ozerler.marble.model.enums.StockLocationType.WORKSHOP_STOCK});
         model.addAttribute("shipments", palletShipmentService.shipments());
         model.addAttribute("lots", palletShipmentService.availableLots());
         model.addAttribute("customers", palletShipmentService.customers());

@@ -30,6 +30,12 @@ public class Block extends AuditableEntity {
     @Column(name = "block_code", nullable = false, unique = true, length = 50)
     private String blockCode;
 
+    @Column(name = "quarry_section", length = 50)
+    private String quarrySection;
+
+    @Column(name = "branding_label", length = 120)
+    private String brandingLabel;
+
     @Column(name = "extraction_date", nullable = false)
     private LocalDate extractionDate;
 

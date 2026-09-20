@@ -40,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -144,9 +145,9 @@ class QuarryBlockServiceTest {
     @DisplayName("factory transfer leaves quarry stock, enters factory yard and posts nakliye")
     void transferToFactory_MovesToFactoryYardAndPostsExpense() {
         Quarry quarry = Quarry.builder().id(1L).name("Ocak").specificGravity(new BigDecimal("2.70")).build();
-        StockLocation production = StockLocation.builder()
-                .id(1L).code("OCAK-URETIM").name("Üretim Sahası")
-                .locationType(StockLocationType.PRODUCTION_YARD).businessUnit(BusinessUnit.QUARRY).build();
+        StockLocation dispatch = StockLocation.builder()
+                .id(2L).code("OCAK-SEVK").name("Stok Sahası")
+                .locationType(StockLocationType.DISPATCH_YARD).businessUnit(BusinessUnit.QUARRY).build();
         StockLocation factoryYard = StockLocation.builder()
                 .id(3L).code("FAB-BLOK").name("Fabrika Blok Sahası")
                 .locationType(StockLocationType.FACTORY_BLOCK_YARD).businessUnit(BusinessUnit.FACTORY).build();
@@ -155,7 +156,7 @@ class QuarryBlockServiceTest {
                 .blockCode("BLK-008")
                 .quarry(quarry)
                 .status(BlockStatus.PRODUCED)
-                .currentLocation(production)
+                .currentLocation(dispatch)
                 .widthCm(100)
                 .lengthCm(100)
                 .heightCm(100)
@@ -188,10 +189,14 @@ class QuarryBlockServiceTest {
     @Test
     @DisplayName("external sale stores the customer on the sold block")
     void sellBlockExternally_SetsCustomer() {
+        StockLocation dispatch = StockLocation.builder()
+                .id(2L).code("OCAK-SEVK").name("Stok Sahası")
+                .locationType(StockLocationType.DISPATCH_YARD).businessUnit(BusinessUnit.QUARRY).build();
         Block block = Block.builder()
                 .id(4L)
                 .blockCode("BLK-004")
                 .status(BlockStatus.PRODUCED)
+                .currentLocation(dispatch)
                 .build();
         Customer customer = Customer.builder().id(2L).companyName("Mermer A.Ş.").build();
         when(blockRepository.findById(4L)).thenReturn(Optional.of(block));
@@ -477,5 +482,66 @@ class QuarryBlockServiceTest {
         assertThat((BigDecimal) response.getMeta().get("totalSurfaceM2")).isEqualByComparingTo("4.50");
         assertThat((BigDecimal) response.getMeta().get("totalExtractionCost")).isEqualByComparingTo("1000.00");
         assertThat((BigDecimal) response.getMeta().get("totalCost")).isEqualByComparingTo("1250.00");
+    }
+
+    @Test
+    @DisplayName("sell from production yard is rejected")
+    void sellBlockExternally_NotInDispatchYard_Throws() {
+        StockLocation production = StockLocation.builder()
+                .locationType(StockLocationType.PRODUCTION_YARD).businessUnit(BusinessUnit.QUARRY).build();
+        Block block = Block.builder().id(20L).status(BlockStatus.PRODUCED).currentLocation(production).build();
+        when(blockRepository.findById(20L)).thenReturn(Optional.of(block));
+
+        assertThatThrownBy(() -> quarryBlockService.sellBlockExternally(
+                20L, 2L, new BigDecimal("10"), java.time.LocalDate.now(), null))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(blockRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("factory transfer from production yard is rejected")
+    void transferToFactory_NotInDispatchYard_Throws() {
+        StockLocation production = StockLocation.builder()
+                .locationType(StockLocationType.PRODUCTION_YARD).businessUnit(BusinessUnit.QUARRY).build();
+        Block block = Block.builder().id(21L).status(BlockStatus.PRODUCED).currentLocation(production).build();
+        when(blockRepository.findById(21L)).thenReturn(Optional.of(block));
+
+        assertThatThrownBy(() -> quarryBlockService.transferToFactory(21L, BigDecimal.TEN))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(blockRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("block codes increment per section and year")
+    void generateStandardBlockCode_UsesSectionYearSequence() {
+        when(blockRepository.countByQuarrySectionAndYear(eq(1L), eq("A-BLOK"), any(), any())).thenReturn(0L);
+        when(blockRepository.existsByBlockCode("A-BLOK-2026-001")).thenReturn(false);
+        when(blockRepository.existsByBlockCodeIgnoreCase("A-BLOK-2026-001")).thenReturn(false);
+
+        String first = quarryBlockService.generateStandardBlockCode(1L, "a-blok");
+        assertThat(first).isEqualTo("A-BLOK-" + java.time.LocalDate.now().getYear() + "-001");
+
+        when(blockRepository.countByQuarrySectionAndYear(eq(1L), eq("A-BLOK"), any(), any())).thenReturn(1L);
+        when(blockRepository.existsByBlockCode(any())).thenReturn(false);
+        when(blockRepository.existsByBlockCodeIgnoreCase(any())).thenReturn(false);
+        String second = quarryBlockService.generateStandardBlockCode(1L, "A-BLOK");
+        assertThat(second).isEqualTo("A-BLOK-" + java.time.LocalDate.now().getYear() + "-002");
+    }
+
+    @Test
+    @DisplayName("sale stores branding label")
+    void sellBlockExternally_StoresBrandingLabel() {
+        StockLocation dispatch = StockLocation.builder()
+                .locationType(StockLocationType.DISPATCH_YARD).businessUnit(BusinessUnit.QUARRY).build();
+        Block block = Block.builder().id(22L).status(BlockStatus.PRODUCED).currentLocation(dispatch).build();
+        Customer customer = Customer.builder().id(3L).companyName("Otel").build();
+        when(blockRepository.findById(22L)).thenReturn(Optional.of(block));
+        when(customerRepository.findById(3L)).thenReturn(Optional.of(customer));
+        when(blockRepository.save(any(Block.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Block sold = quarryBlockService.sellBlockExternally(
+                22L, 3L, new BigDecimal("100"), java.time.LocalDate.now(), "not", "OTEL-A");
+
+        assertThat(sold.getBrandingLabel()).isEqualTo("OTEL-A");
     }
 }

@@ -14,7 +14,8 @@ public enum ExpenseType {
     TAX("enum.expense_type.tax"),
     FIXTURE_CONSUMABLE("enum.expense_type.fixture_consumable"),
     MATERIAL("enum.expense_type.material"),
-    TRANSPORTATION("enum.expense_type.transportation");
+    TRANSPORTATION("enum.expense_type.transportation"),
+    MAINTENANCE("enum.expense_type.maintenance");
 
     private final String messageKey;
 
@@ -35,6 +36,7 @@ public enum ExpenseType {
             case TAX -> ExpenseCategory.TAX;
             case MATERIAL, DIRECT_RAW -> ExpenseCategory.MATERIAL;
             case TRANSPORTATION, LOGISTICS -> ExpenseCategory.TRANSPORTATION;
+            case MAINTENANCE -> ExpenseCategory.MAINTENANCE;
             case DEPRECIATION, OVERHEAD -> ExpenseCategory.OTHER;
         };
     }

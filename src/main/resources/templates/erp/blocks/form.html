@@ -26,6 +26,14 @@
                     <div th:replace="~{fragments/form-page :: section('Kimlik', 'Ocak sahası, blok kodu ve depolama konumu')}"></div>
                     <div class="erp-form-grid--3">
                         <div class="erp-form-field">
+                            <label class="erp-form-label" for="quarrySection">Ocak bölgesi <span class="req">*</span></label>
+                            <input id="quarrySection" type="text" name="quarrySection" required
+                                   th:value="${isEdit and block != null ? block.quarrySection : ''}"
+                                   class="erp-form-input" style="text-transform:uppercase;"
+                                   placeholder="Örn: A-BLOK" autocomplete="off">
+                            <p class="erp-form-hint">Zorunlu. Kod formatı: [Bölge]-[Yıl]-[Sıra] (A-BLOK-2026-001)</p>
+                        </div>
+                        <div class="erp-form-field">
                             <label class="erp-form-label" for="quarryId">Ocak sahası <span class="req">*</span></label>
                             <select id="quarryId" name="quarryId" required class="erp-form-select">
                                 <option value="" disabled th:selected="${!(isEdit ?: false)}" data-density="2.70">Ocak seçin</option>
@@ -40,15 +48,15 @@
                                 <label class="erp-form-label" for="blockCode">Blok kodu <span class="req">*</span></label>
                                 <button type="button" id="btn-generate-code" th:if="${!(isEdit ?: false)}"
                                         class="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline transition inline-flex items-center gap-1">
-                                    <span>Standart Kod Oluştur (OC-A3-...)</span>
+                                    <span>Standart Kod Oluştur (Bölge-Yıl-Sıra)</span>
                                 </button>
                             </div>
                             <input id="blockCode" type="text" name="blockCode" required
                                    th:value="${isEdit and block != null ? block.blockCode : ''}"
                                    th:attr="data-exclude-id=${isEdit and block != null ? block.id : ''}"
                                    class="erp-form-input" style="font-family:var(--font-mono);text-transform:uppercase;"
-                                   placeholder="Örn: OC-A3-202609-0084" autocomplete="off" autocapitalize="characters" spellcheck="false">
-                            <p id="block-code-hint" class="erp-form-hint" role="status">Format: OC-[Bölge/Kademe]-[YılAy]-[SıraNo]</p>
+                                   placeholder="Örn: A-BLOK-2026-001" autocomplete="off" autocapitalize="characters" spellcheck="false">
+                            <p id="block-code-hint" class="erp-form-hint" role="status">Format: [Ocak Bölgesi]-[Yıl]-[Sıra]</p>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="locationType">Depolama sahası <span class="req">*</span></label>
@@ -64,13 +72,14 @@
                 </section>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Ölçü ve tartım', 'Santimetre cinsinden 3 eksen ve otomatik tonaj hesabı')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Ölçü ve tartım', 'İç kayıt santimetredir. Metre girmek için değeri 100 ile çarpın (1,80 m → 180).')}"></div>
                     <div class="erp-form-grid--3">
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="widthCm">En (cm) <span class="req">*</span></label>
                             <input id="widthCm" type="number" name="widthCm" min="1" required
                                    th:value="${isEdit and block != null ? block.widthCm : ''}"
                                    class="erp-form-input" placeholder="180">
+                            <p class="erp-form-hint">Santimetre. 1 m = 100 cm.</p>
                         </div>
                         <div class="erp-form-field">
                             <label class="erp-form-label" for="lengthCm">Boy (cm) <span class="req">*</span></label>
@@ -384,7 +393,12 @@
                 btnGenerateCode.addEventListener('click', async function () {
                     const qId = quarrySelect ? quarrySelect.value : '';
                     try {
-                        const url = '/blocks/api/generate-code' + (qId ? '?quarryId=' + encodeURIComponent(qId) : '');
+                        const sectionEl = document.getElementById('quarrySection');
+                        const section = sectionEl && sectionEl.value ? sectionEl.value.trim() : 'A3';
+                        const params = [];
+                        if (qId) params.push('quarryId=' + encodeURIComponent(qId));
+                        if (section) params.push('section=' + encodeURIComponent(section));
+                        const url = '/blocks/api/generate-code' + (params.length ? '?' + params.join('&') : '');
                         const res = await fetch(url);
                         if (res.ok) {
                             const data = await res.json();

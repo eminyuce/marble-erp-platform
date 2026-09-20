@@ -1,6 +1,9 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.util.UniqueCodes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.TabulatorResponse;
@@ -30,12 +33,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class WorkshopCutService {
 
+    private static final Logger log = LoggerFactory.getLogger(WorkshopCutService.class);
+
     private final CutOrderRepository cutOrderRepository;
     private final CutItemRepository cutItemRepository;
     private final SlabRepository slabRepository;
     private final ProjectRepository projectRepository;
     private final ProjectLocationRepository projectLocationRepository;
     private final ScrapLogRepository scrapLogRepository;
+    private final CostTransactionRepository costTransactionRepository;
     private final org.springframework.context.MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
@@ -144,7 +150,7 @@ public class WorkshopCutService {
         order = cutOrderRepository.save(order);
 
         BigDecimal itemArea = calculateItemArea(targetWidthCm, targetLengthCm);
-        BigDecimal unitCost = calculateLoadedUnitCost(sourceSlab.getCostPerM2());
+        BigDecimal unitCost = calculateLoadedUnitCost(order, sourceSlab);
 
         List<CutItem> items = generateCutItems(order, sourceSlab, location, piecesCount,
                 targetWidthCm, targetLengthCm, itemArea, unitCost, edgeFinish, targetLocationDesc);
@@ -202,7 +208,9 @@ public class WorkshopCutService {
 
     private CutOrder buildCutOrderEntity(Project project, ProjectLocation location,
                                          String machineName, String operatorName, String notes) {
-        String cutOrderNo = String.format("CUT-%d-%d", Year.now().getValue(), System.currentTimeMillis() % 100000);
+        String cutOrderNo = UniqueCodes.allocate(
+                () -> String.format("CUT-%d-%d", Year.now().getValue(), System.nanoTime() % 100000),
+                cutOrderRepository::existsByCutOrderNo);
         return CutOrder.builder()
                 .cutOrderNo(cutOrderNo)
                 .project(project)
@@ -219,11 +227,32 @@ public class WorkshopCutService {
         return widthCm.multiply(lengthCm).divide(Constants.SQUARE_CENTIMETERS_PER_SQUARE_METER, Constants.AREA_SCALE, RoundingMode.HALF_UP);
     }
 
-    private BigDecimal calculateLoadedUnitCost(BigDecimal baseCostPerM2) {
+    private BigDecimal calculateLoadedUnitCost(CutOrder order, Slab sourceSlab) {
+        BigDecimal baseCostPerM2 = sourceSlab != null ? sourceSlab.getCostPerM2() : BigDecimal.ZERO;
         if (baseCostPerM2 == null) {
-            return BigDecimal.ZERO;
+            baseCostPerM2 = BigDecimal.ZERO;
         }
+        BigDecimal posted = BigDecimal.ZERO;
+        if (costTransactionRepository != null && order != null && order.getId() != null) {
+            posted = posted.add(zero(costTransactionRepository.sumByCutOrderId(order.getId())));
+        }
+        if (costTransactionRepository != null && sourceSlab != null && sourceSlab.getId() != null) {
+            posted = posted.add(zero(costTransactionRepository.sumWorkshopAmountBySlabId(sourceSlab.getId())));
+        }
+        BigDecimal area = sourceSlab != null && sourceSlab.getSurfaceAreaM2() != null
+                ? sourceSlab.getSurfaceAreaM2() : BigDecimal.ZERO;
+        if (posted.compareTo(BigDecimal.ZERO) > 0 && area.compareTo(BigDecimal.ZERO) > 0) {
+            return baseCostPerM2.add(posted.divide(area, Constants.COST_SCALE, RoundingMode.HALF_UP))
+                    .setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
+        }
+        // Fallback: no posted workshop expenses for this cut/slab — keep the documented 15% overhead.
+        log.info("No posted workshop expenses for cut order {}; applying {} overhead fallback",
+                order != null ? order.getCutOrderNo() : "new", Constants.WORKSHOP_OVERHEAD_FACTOR);
         return baseCostPerM2.multiply(Constants.WORKSHOP_OVERHEAD_FACTOR).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
+    }
+
+    private static BigDecimal zero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 
     private List<CutItem> generateCutItems(CutOrder order, Slab sourceSlab, ProjectLocation location,
@@ -236,10 +265,10 @@ public class WorkshopCutService {
                 : location != null ? location.getLocationName() : Constants.DEFAULT_TARGET_LOCATION;
 
         List<CutItem> items = new ArrayList<>(piecesCount);
-        long sequence = System.currentTimeMillis() % 10000;
-
         for (int i = 1; i <= piecesCount; i++) {
-            String itemCode = String.format("ITM-%d-%d", Year.now().getValue(), sequence++);
+            String itemCode = UniqueCodes.allocate(
+                    () -> String.format("ITM-%d-%d", Year.now().getValue(), System.nanoTime() % 10000),
+                    cutItemRepository::existsByItemCode);
             CutItem item = CutItem.builder()
                     .itemCode(itemCode)
                     .cutOrder(order)
@@ -261,11 +290,12 @@ public class WorkshopCutService {
     private void recordNestingScrapIfApplicable(CutOrder order, Slab sourceSlab, BigDecimal totalCutArea, String operatorName) {
         BigDecimal scrapArea = sourceSlab.getSurfaceAreaM2().subtract(totalCutArea);
         if (scrapArea.compareTo(BigDecimal.ZERO) > 0) {
-            long sequence = System.currentTimeMillis() % 10000;
             BigDecimal costImpact = scrapArea.multiply(sourceSlab.getCostPerM2()).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
 
             ScrapLog scrap = ScrapLog.builder()
-                    .scrapCode("SCRAP-W-" + sequence)
+                    .scrapCode(UniqueCodes.allocate(
+                            () -> "SCRAP-W-" + (System.nanoTime() % 10000),
+                            scrapLogRepository::existsByScrapCode))
                     .cutOrder(order)
                     .slab(sourceSlab)
                     .block(sourceSlab.getBlock())

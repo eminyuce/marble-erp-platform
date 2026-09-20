@@ -11,6 +11,7 @@ public enum ExpenseCategory {
     TAX("enum.expense_category.tax"),
     CONSUMABLE("enum.expense_category.consumable"),
     TRANSPORTATION("enum.expense_category.transportation"),
+    MAINTENANCE("enum.expense_category.maintenance"),
     OTHER("enum.expense_category.other");
 
     private final String messageKey;

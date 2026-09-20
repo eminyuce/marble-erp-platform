@@ -15,6 +15,10 @@
             <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
                 Önceki Dönem: <span class="font-mono text-slate-600" th:text="${analysis.previousExpense != null ? #numbers.formatDecimal(analysis.previousExpense, 1, 'POINT', 0, 'COMMA') + ' ₺' : '—'}">—</span>
             </div>
+            <div class="text-[11px] text-amber-800 mt-1" th:if="${analysis.incomingBlockCost != null}">
+                Gelen blok maliyeti: <span class="font-mono font-semibold"
+                      th:text="${#numbers.formatDecimal(analysis.incomingBlockCost, 1, 'POINT', 2, 'COMMA') + ' ₺'}">0 ₺</span>
+            </div>
         </div>
 
         <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">

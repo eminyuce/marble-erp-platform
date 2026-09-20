@@ -22,6 +22,7 @@ public final class ExpenseLineItems {
                     ExpenseType.CONSUMABLES,
                     ExpenseType.TAX,
                     ExpenseType.OVERHEAD,
+                    ExpenseType.MAINTENANCE,
                     ExpenseType.FIXTURE_CONSUMABLE),
             BusinessUnit.FACTORY, List.of(
                     ExpenseType.DIESEL,
@@ -30,6 +31,7 @@ public final class ExpenseLineItems {
                     ExpenseType.CONSUMABLES,
                     ExpenseType.TAX,
                     ExpenseType.OVERHEAD,
+                    ExpenseType.MAINTENANCE,
                     ExpenseType.FIXTURE_CONSUMABLE),
             BusinessUnit.WORKSHOP, List.of(
                     ExpenseType.DIRECT_LABOR,
@@ -38,6 +40,7 @@ public final class ExpenseLineItems {
                     ExpenseType.CONSUMABLES,
                     ExpenseType.TAX,
                     ExpenseType.OVERHEAD,
+                    ExpenseType.MAINTENANCE,
                     ExpenseType.FIXTURE_CONSUMABLE),
             BusinessUnit.SITE, List.of(
                     ExpenseType.DIRECT_LABOR,
@@ -46,6 +49,7 @@ public final class ExpenseLineItems {
                     ExpenseType.CONSUMABLES,
                     ExpenseType.TAX,
                     ExpenseType.OVERHEAD,
+                    ExpenseType.MAINTENANCE,
                     ExpenseType.FIXTURE_CONSUMABLE));
 
     public static List<ExpenseType> forUnit(BusinessUnit unit) {
