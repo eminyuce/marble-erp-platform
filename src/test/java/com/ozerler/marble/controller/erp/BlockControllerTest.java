@@ -208,13 +208,13 @@ class BlockControllerTest {
         String view = blockController.createBlock(
                 1L, "BLK-NEW-01", StockLocationType.DISPATCH_YARD, null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                "Not", null, null,
+                "Not", null, null, "A-BLOK",
                 java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
         verify(quarryBlockService).registerBlock(
                 1L, "BLK-NEW-01", null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                "Not", null, StockLocationType.DISPATCH_YARD, null);
+                "Not", null, StockLocationType.DISPATCH_YARD, null, "A-BLOK");
         assertThat(view).isEqualTo("redirect:/blocks");
     }
 
@@ -229,13 +229,13 @@ class BlockControllerTest {
         String view = blockController.createBlock(
                 1L, "BLK-NEW-02", StockLocationType.PRODUCTION_YARD, null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                "Not", null, fileIds,
+                "Not", null, fileIds, "A3",
                 java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
         verify(quarryBlockService).registerBlock(
                 1L, "BLK-NEW-02", null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                "Not", null, StockLocationType.PRODUCTION_YARD, fileIds);
+                "Not", null, StockLocationType.PRODUCTION_YARD, fileIds, "A3");
         assertThat(view).isEqualTo("redirect:/blocks");
     }
 
@@ -250,13 +250,13 @@ class BlockControllerTest {
         String view = blockController.updateBlock(
                 10L, 1L, "BLK-UPD-01", StockLocationType.DISPATCH_YARD, null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null, fileIds,
+                new BigDecimal("5000"), "Not", null, fileIds, "A-BLOK",
                 java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
         verify(quarryBlockService).updateBlock(
                 10L, 1L, "BLK-UPD-01", null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
-                new BigDecimal("5000"), "Not", null, StockLocationType.DISPATCH_YARD, fileIds);
+                new BigDecimal("5000"), "Not", null, StockLocationType.DISPATCH_YARD, fileIds, "A-BLOK");
         assertThat(view).isEqualTo("redirect:/blocks");
     }
 }

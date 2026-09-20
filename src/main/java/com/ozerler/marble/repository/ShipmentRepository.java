@@ -12,5 +12,7 @@ import java.util.Optional;
 public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     Optional<Shipment> findByWaybillNo(String waybillNo);
 
+    boolean existsByWaybillNo(String waybillNo);
+
     Page<Shipment> findAllByOrderByDepartureTimeDesc(Pageable pageable);
 }

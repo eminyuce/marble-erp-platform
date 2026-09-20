@@ -23,6 +23,7 @@ public class CostAnalysisDto {
     BigDecimal unitCost;
     BigDecimal previousUnitCost;
     boolean unallocatedCarryForward;
+    BigDecimal incomingBlockCost;
     Map<ExpenseCategory, BigDecimal> expenseByCategory;
     List<YieldRow> yields;
     List<Line> lines;

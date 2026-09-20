@@ -127,4 +127,12 @@ public interface CostTransactionRepository extends JpaRepository<CostTransaction
                                    @Param("projectId") Long projectId);
 
     long countByExpensePeriod(String expensePeriod);
+
+    @Query("SELECT COALESCE(SUM(c.amount), 0) FROM CostTransaction c "
+            + "WHERE c.workshopOperation.cutOrder.id = :cutOrderId")
+    BigDecimal sumByCutOrderId(@Param("cutOrderId") Long cutOrderId);
+
+    @Query("SELECT COALESCE(SUM(c.amount), 0) FROM CostTransaction c "
+            + "WHERE c.slab.id = :slabId AND c.businessUnit = com.ozerler.marble.model.enums.BusinessUnit.WORKSHOP")
+    BigDecimal sumWorkshopAmountBySlabId(@Param("slabId") Long slabId);
 }

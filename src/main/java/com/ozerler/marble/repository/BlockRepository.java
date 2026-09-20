@@ -51,7 +51,8 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
             + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
             + "(:status IS NULL OR b.status = :status) AND "
             + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)",
@@ -62,7 +63,8 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                     + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
                     + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
                     + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+                    + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
                     + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
                     + "(:status IS NULL OR b.status = :status) AND "
                     + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)")
@@ -115,6 +117,23 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     boolean existsByBlockCodeIgnoreCaseAndIdNot(String blockCode, Long id);
 
+    @Query("SELECT COUNT(b) FROM Block b WHERE "
+            + "(:quarryId IS NULL OR b.quarry.id = :quarryId) AND "
+            + "UPPER(COALESCE(b.quarrySection, '')) = UPPER(:section) AND "
+            + "b.extractionDate >= :yearStart AND b.extractionDate < :yearEnd")
+    long countByQuarrySectionAndYear(@Param("quarryId") Long quarryId,
+                                     @Param("section") String section,
+                                     @Param("yearStart") java.time.LocalDate yearStart,
+                                     @Param("yearEnd") java.time.LocalDate yearEnd);
+
+    @Query("SELECT COALESCE(SUM(b.extractionCost), 0) FROM Block b WHERE b.id IN ("
+            + "SELECT DISTINCT m.block.id FROM BlockLocationMovement m "
+            + "WHERE m.toLocation.locationType = :locationType "
+            + "AND m.createdDate >= :start AND m.createdDate < :end)")
+    java.math.BigDecimal sumExtractionCostMovedTo(@Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
+                                                  @Param("start") java.time.LocalDateTime start,
+                                                  @Param("end") java.time.LocalDateTime end);
+
     @Query("SELECT b.quarry.id, "
             + "COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg END), 0) / 1000.0, "
             + "COALESCE(SUM((b.widthCm * b.lengthCm) / 10000.0), 0), "
@@ -126,7 +145,8 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
             + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
             + "(:status IS NULL OR b.status = :status) AND "
             + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD) "

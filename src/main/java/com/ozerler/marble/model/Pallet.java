@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.domain.PalletCostAccumulator;
 import com.ozerler.marble.model.enums.PackagingType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,6 +28,10 @@ public class Pallet extends AuditableEntity {
 
     @Column(name = "warehouse_location", length = 100)
     private String warehouseLocation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_location_id")
+    private StockLocation currentLocation;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "packaging_type", nullable = false, length = 50)
@@ -59,5 +64,19 @@ public class Pallet extends AuditableEntity {
     @Transient
     public String getStatusLabel() {
         return com.ozerler.marble.model.enums.PalletStatus.labelOf(status);
+    }
+
+    @Transient
+    public BigDecimal getCurrentCostPerM2() {
+        List<PalletCostAccumulator.AreaCost> lines = new ArrayList<>();
+        if (slabs != null) {
+            for (Slab slab : slabs) {
+                if (slab == null || slab.getSurfaceAreaM2() == null) {
+                    continue;
+                }
+                lines.add(PalletCostAccumulator.line(slab.getSurfaceAreaM2(), slab.getCostPerM2()));
+            }
+        }
+        return PalletCostAccumulator.weightedAverageCostPerM2(lines);
     }
 }

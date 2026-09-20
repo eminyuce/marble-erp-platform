@@ -31,6 +31,7 @@ import com.ozerler.marble.repository.SupplierRepository;
 import com.ozerler.marble.repository.WorkshopMaterialReceiptRepository;
 import com.ozerler.marble.repository.WorkshopOperationRepository;
 import com.ozerler.marble.util.MessageUtils;
+import com.ozerler.marble.util.UniqueCodes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,7 +74,9 @@ public class WorkshopOperationService {
                 ? purchaseOrderItemRepository.findById(purchaseOrderItemId).orElse(null)
                 : null;
         MaterialLot lot = materialLotRepository.save(MaterialLot.builder()
-                .lotCode(String.format("WML-%d-%d", Year.now().getValue(), System.currentTimeMillis() % 100000))
+                .lotCode(UniqueCodes.allocate(
+                        () -> String.format("WML-%d-%d", Year.now().getValue(), System.nanoTime() % 100000),
+                        materialLotRepository::existsByLotCode))
                 .productForm(ProductForm.SLAB)
                 .stoneType(stoneType)
                 .quantity(quantity != null ? quantity.intValue() : 1)
@@ -87,7 +90,9 @@ public class WorkshopOperationService {
                 .totalCost(purchaseCost != null ? purchaseCost : BigDecimal.ZERO)
                 .build());
         WorkshopMaterialReceipt receipt = receiptRepository.save(WorkshopMaterialReceipt.builder()
-                .receiptNo(String.format("WMR-%d-%d", Year.now().getValue(), System.currentTimeMillis() % 100000))
+                .receiptNo(UniqueCodes.allocate(
+                        () -> String.format("WMR-%d-%d", Year.now().getValue(), System.nanoTime() % 100000),
+                        receiptRepository::existsByReceiptNo))
                 .source(source)
                 .supplier(supplier)
                 .purchaseOrderItem(purchaseItem)

@@ -18,6 +18,8 @@ public interface ScrapLogRepository extends JpaRepository<ScrapLog, Long> {
 
     Optional<ScrapLog> findByScrapCode(String scrapCode);
 
+    boolean existsByScrapCode(String scrapCode);
+
     List<ScrapLog> findByReasonCode(ScrapReasonCode reasonCode);
 
     List<ScrapLog> findByBlockId(Long blockId);

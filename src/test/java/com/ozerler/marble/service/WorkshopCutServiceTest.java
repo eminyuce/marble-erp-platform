@@ -47,7 +47,7 @@ class WorkshopCutServiceTest {
     void setUp() {
         workshopCutService = new WorkshopCutService(
                 cutOrderRepository, cutItemRepository, slabRepository,
-                projectRepository, projectLocationRepository, scrapLogRepository, null
+                projectRepository, projectLocationRepository, scrapLogRepository, null, null
         );
     }
 

@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface WorkshopMaterialReceiptRepository extends JpaRepository<WorkshopMaterialReceipt, Long> {
     Optional<WorkshopMaterialReceipt> findByReceiptNo(String receiptNo);
 
+    boolean existsByReceiptNo(String receiptNo);
+
     @Query("""
             select distinct receipt from WorkshopMaterialReceipt receipt
             left join fetch receipt.supplier

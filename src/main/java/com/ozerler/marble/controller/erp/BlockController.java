@@ -114,13 +114,18 @@ public class BlockController extends AbstractController {
                               @RequestParam(value = "notes", required = false) String notes,
                               @RequestParam(value = "photoUrls", required = false) String photoUrls,
                               @RequestParam(value = "fileIds", required = false) List<Long> fileIds,
+                              @RequestParam("quarrySection") String quarrySection,
                               Locale locale,
                               Model model,
                               RedirectAttributes redirectAttributes) {
 
         try {
+            if (quarrySection == null || quarrySection.isBlank()) {
+                throw new IllegalArgumentException(messageSource.getMessage("error.block.section.required", null, locale));
+            }
             quarryBlockService.registerBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
-                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, notes, photoUrls, locationType, fileIds);
+                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, notes, photoUrls,
+                    locationType, fileIds, quarrySection);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.create.success", null, locale));
             return "redirect:/blocks";
@@ -202,13 +207,15 @@ public class BlockController extends AbstractController {
                               @RequestParam(value = "notes", required = false) String notes,
                               @RequestParam(value = "photoUrls", required = false) String photoUrls,
                               @RequestParam(value = "fileIds", required = false) List<Long> fileIds,
+                              @RequestParam(value = "quarrySection", required = false) String quarrySection,
                               Locale locale,
                               Model model,
                               RedirectAttributes redirectAttributes) {
 
         try {
             quarryBlockService.updateBlock(id, quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
-                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, unitMarketValuePerTon, notes, photoUrls, locationType, fileIds);
+                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, unitMarketValuePerTon, notes, photoUrls,
+                    locationType, fileIds, quarrySection);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.update.success", null, locale));
             return "redirect:/blocks";
@@ -402,6 +409,12 @@ public class BlockController extends AbstractController {
         if (!block.getCanonicalStatus().isAtQuarry()) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     messageSource.getMessage("error.block.sell.not_at_quarry", null, locale));
+            return "redirect:/blocks/" + id;
+        }
+        if (block.getCurrentLocation() == null
+                || block.getCurrentLocation().getLocationType() != StockLocationType.DISPATCH_YARD) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("error.block.sell.not_in_dispatch_yard", null, locale));
             return "redirect:/blocks/" + id;
         }
         model.addAttribute("block", block);

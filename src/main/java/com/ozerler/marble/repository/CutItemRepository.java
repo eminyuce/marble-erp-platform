@@ -16,6 +16,8 @@ public interface CutItemRepository extends JpaRepository<CutItem, Long> {
 
     Optional<CutItem> findByItemCode(String itemCode);
 
+    boolean existsByItemCode(String itemCode);
+
     List<CutItem> findByCutOrderId(Long cutOrderId);
 
     List<CutItem> findBySourceSlabId(Long slabId);

@@ -85,7 +85,8 @@ public class CostAnalysisService {
         BigDecimal other = byCategory.getOrDefault(ExpenseCategory.OTHER, BigDecimal.ZERO)
                 .add(byCategory.getOrDefault(ExpenseCategory.FIXTURE_CONSUMABLE, BigDecimal.ZERO))
                 .add(byCategory.getOrDefault(ExpenseCategory.DIESEL, BigDecimal.ZERO))
-                .add(byCategory.getOrDefault(ExpenseCategory.ELECTRICITY, BigDecimal.ZERO));
+                .add(byCategory.getOrDefault(ExpenseCategory.ELECTRICITY, BigDecimal.ZERO))
+                .add(byCategory.getOrDefault(ExpenseCategory.MAINTENANCE, BigDecimal.ZERO));
         BigDecimal revenue = project.getContractValue() != null ? project.getContractValue() : BigDecimal.ZERO;
         SiteProfitAndLoss.Result result = SiteProfitAndLoss.calculate(
                 material, labor, tax, consumable, transport, other, revenue);
@@ -120,8 +121,12 @@ public class CostAnalysisService {
     }
 
     private CostAnalysisDto factoryAnalysis(String current, String previous) {
-        BigDecimal expense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, current));
-        BigDecimal previousExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, previous));
+        BigDecimal factoryExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, current));
+        BigDecimal previousFactoryExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, previous));
+        BigDecimal incomingBlockCost = incomingFactoryBlockCost(current);
+        BigDecimal previousIncoming = incomingFactoryBlockCost(previous);
+        BigDecimal expense = factoryExpense.add(incomingBlockCost);
+        BigDecimal previousExpense = previousFactoryExpense.add(previousIncoming);
         List<CostAnalysisDto.YieldRow> yields = factoryYields();
         BigDecimal outputM2 = yields.stream()
                 .map(CostAnalysisDto.YieldRow::getOutputQuantity)
@@ -131,10 +136,19 @@ public class CostAnalysisService {
                 : null;
         return base(BusinessUnit.FACTORY, current, previous, expense, previousExpense,
                 outputM2, "m²", unitCost, null, outputM2.compareTo(BigDecimal.ZERO) == 0 && expense.compareTo(BigDecimal.ZERO) > 0)
+                .incomingBlockCost(incomingBlockCost)
                 .yields(yields)
                 .expenseByCategory(categoryTotals(BusinessUnit.FACTORY, current))
                 .lines(lines(BusinessUnit.FACTORY, current))
                 .build();
+    }
+
+    private BigDecimal incomingFactoryBlockCost(String period) {
+        YearMonth yearMonth = ExpensePeriods.parse(period);
+        return zero(blockRepository.sumExtractionCostMovedTo(
+                com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD,
+                yearMonth.atDay(1).atStartOfDay(),
+                yearMonth.plusMonths(1).atDay(1).atStartOfDay()));
     }
 
     private CostAnalysisDto workshopAnalysis(String current, String previous) {

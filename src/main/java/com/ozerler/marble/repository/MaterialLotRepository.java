@@ -16,6 +16,8 @@ public interface MaterialLotRepository extends JpaRepository<MaterialLot, Long> 
 
     Optional<MaterialLot> findByLotCode(String lotCode);
 
+    boolean existsByLotCode(String lotCode);
+
     Optional<MaterialLot> findBySlabId(Long slabId);
 
     Optional<MaterialLot> findByCutItemId(Long cutItemId);

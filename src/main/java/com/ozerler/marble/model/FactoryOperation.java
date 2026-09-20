@@ -83,6 +83,30 @@ public class FactoryOperation extends AuditableEntity {
     @Builder.Default
     private OperationStatus status = OperationStatus.PLANNED;
 
+    @Column(name = "labor_cost", precision = 14, scale = 2)
+    @Builder.Default
+    private BigDecimal laborCost = BigDecimal.ZERO;
+
+    @Column(name = "electricity_cost", precision = 14, scale = 2)
+    @Builder.Default
+    private BigDecimal electricityCost = BigDecimal.ZERO;
+
+    @Column(name = "consumable_cost", precision = 14, scale = 2)
+    @Builder.Default
+    private BigDecimal consumableCost = BigDecimal.ZERO;
+
+    @Column(name = "total_operation_cost", precision = 14, scale = 2)
+    @Builder.Default
+    private BigDecimal totalOperationCost = BigDecimal.ZERO;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    public BigDecimal operationCostTotal() {
+        return zero(laborCost).add(zero(electricityCost)).add(zero(consumableCost));
+    }
+
+    private static BigDecimal zero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
+    }
 }

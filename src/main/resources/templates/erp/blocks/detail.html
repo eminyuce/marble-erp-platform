@@ -86,6 +86,7 @@
             <p class="text-sm text-slate-500 mt-2 ml-10 sm:ml-10">
                 <span th:text="${block.stoneType}">Taş</span>
                 <span th:if="${block.quarry != null}"> · <span th:text="${block.quarry.name}">Ocak</span></span>
+                <span th:if="${block.quarrySection != null}"> · Bölge: <span th:text="${block.quarrySection}">A-BLOK</span></span>
                 <span th:if="${block.extractionDate != null}"> · <span th:text="${#temporals.format(block.extractionDate, 'dd.MM.yyyy')}">Tarih</span></span>
             </p>
         </div>

@@ -19,6 +19,8 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
 
     Optional<Slab> findBySlabCode(String slabCode);
 
+    boolean existsBySlabCode(String slabCode);
+
     @Query("SELECT s FROM Slab s JOIN FETCH s.block WHERE s.slabCode = :slabCode")
     Optional<Slab> findBySlabCodeWithBlock(@Param("slabCode") String slabCode);
 
