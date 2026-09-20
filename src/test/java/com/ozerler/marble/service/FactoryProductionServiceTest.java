@@ -7,7 +7,6 @@ import com.ozerler.marble.model.enums.OperationStatus;
 import com.ozerler.marble.model.enums.QuantityUnit;
 import com.ozerler.marble.repository.FactoryOperationRepository;
 import com.ozerler.marble.repository.FactoryWorkOrderRepository;
-import com.ozerler.marble.repository.SlabRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,15 +60,13 @@ class FactoryProductionServiceRoutingTest {
     private FactoryWorkOrderRepository workOrderRepository;
     @Mock
     private FactoryOperationRepository operationRepository;
-    @Mock
-    private SlabRepository slabRepository;
 
     private FactoryProductionService service;
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
         service = new FactoryProductionService(
-                null, workOrderRepository, operationRepository, null, null, null, slabRepository,
+                null, workOrderRepository, operationRepository, null, null, null, null,
                 null, null, null, null, null);
     }
 
@@ -84,7 +80,6 @@ class FactoryProductionServiceRoutingTest {
         when(operationRepository.findTopByWorkOrderIdAndProcessTypeInAndStatusOrderByIdDesc(
                 eq(3L), any(), eq(OperationStatus.COMPLETED)))
                 .thenReturn(Optional.of(FactoryOperation.builder().processType(FactoryProcessType.ST_CUTTING).build()));
-        when(slabRepository.findByBlockId(any())).thenReturn(List.of());
 
         assertThatThrownBy(() -> service.recordSurfaceOperation(3L, FactoryProcessType.SLAB_POLISHING, null, "Op",
                 BigDecimal.TEN, BigDecimal.TEN, BigDecimal.ZERO, null, null))
@@ -112,7 +107,6 @@ class FactoryProductionServiceRoutingTest {
 
         when(operationRepository.findTopByWorkOrderIdAndStatusOrderByIdDesc(4L, OperationStatus.COMPLETED))
                 .thenReturn(Optional.of(FactoryOperation.builder().processType(FactoryProcessType.GANGSAW_CUTTING).build()));
-        when(slabRepository.findByBlockId(any())).thenReturn(List.of());
         when(operationRepository.save(any(FactoryOperation.class))).thenAnswer(inv -> inv.getArgument(0));
         FactoryOperation saved = service.recordSurfaceOperation(4L, FactoryProcessType.SLAB_POLISHING, null, "Op",
                 BigDecimal.TEN, BigDecimal.TEN, BigDecimal.ZERO, null, null);
