@@ -1,25 +1,39 @@
-<section class="help-page" data-title="Sistem Ayarları & Güvenlik Yönetimi" data-updated="2026-09-17">
-    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Tüm kurum genelinde geçerli olan temel sistem parametrelerini, kullanıcı güvenlik kurallarını (2FA, reCAPTCHA), kurumsal e-posta (SMTP) bildirimlerini ve sistem bakım araçlarını yapılandırdığınız merkezdir.</p>
+<section class="help-page" data-title="Sistem Ayarları & Güvenlik Yönetimi" data-updated="2026-09-20">
+    <div class="help-lead">
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Tüm şirket genelinde geçerli olan temel sistem parametrelerini, kullanıcı güvenlik kurallarını (2FA, reCAPTCHA), kurumsal e-posta (SMTP) bildirimlerini ve sistem araçlarını yapılandırdığınız yönetim ekranıdır.
+    </div>
 
-    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
+    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
     <ul class="help-panel-list">
-        <li><strong>Adım 1 — Ayar Kategorisini Seçme:</strong> Sol sekmelerden düzenlemek istediğiniz alanı seçin:
-            <ul>
-                <li><em>Genel Ayarlar:</em> Tablolardaki varsayılan satır sayısı, tarih ve sayı biçimleri, varsayılan para birimi.</li>
-                <li><em>Güvenlik (2FA & reCAPTCHA):</em> İki faktörlü kimlik doğrulama, robot koruması ve şifre zorluk politikası.</li>
-                <li><em>SMTP Posta Sunucusu:</em> Şirket e-posta sunucusunun (Host, Port, Kullanıcı adı, Şifre) kurulumu.</li>
-                <li><em>E-Posta Şablonları:</em> Sipariş onayı, şifre sıfırlama veya sevkiyat bilgi e-postalarının metin şablonları.</li>
-                <li><em>Sistem Araçları & Sağlık:</em> Veritabanı durumu, disk doluluğu ve yayın (Deployment) konsolu.</li>
-            </ul>
-        </li>
-        <li><strong>Adım 2 — Bilgileri Güncelleme:</strong> Gerekli alanları doldurun.</li>
-        <li><strong>Adım 3 — Kategori Bazlı Kaydetme:</strong> Her sekmenin altında bulunan kendi <strong>"Değişiklikleri Kaydet"</strong> butonuna basın.</li>
-        <li><strong>Adım 4 — E-Posta Testi Yapma:</strong> SMTP bilgilerini girdikten sonra <strong>"Test E-postası Gönder"</strong> butonuna basarak sunucunun çalıştığını doğrulayın.</li>
+        <li>Tablolardaki varsayılan satır sayısını, para birimini ve tarih formatlarını belirleyebilirsiniz.</li>
+        <li>İki faktörlü doğrulama (2FA) ve bot koruması gibi kurumsal güvenlik kurallarını açıp kapatabilirsiniz.</li>
+        <li>Şirketin giden e-posta (SMTP) sunucusunu tanımlayıp anında test postası gönderebilirsiniz.</li>
+        <li>Şifre sıfırlama ve sevkiyat bildirim e-postalarının metin şablonlarını özelleştirebilirsiniz.</li>
     </ul>
 
-    <h3>2. Güvenlik & Kritik Kurallar</h3>
+    <h3>Bu Buton Ne İşe Yarar?</h3>
     <ul class="help-panel-list">
-        <li><strong>Yetkisiz Erişim Koruması:</strong> Bu sayfa yalnızca Yönetici (ADMIN) yetkisine sahip hesaplar tarafından görüntülenebilir ve değiştirilebilir.</li>
-        <li><strong>İstek Sınırlandırma (Rate Limiting):</strong> Güvenlik sekmesindeki istek kısıtlamaları, art arda yapılan siber saldırı veya şifre denemelerini otomatik engeller.</li>
+        <li><code>Ayar Sekmeleri</code>: Genel Ayarlar, Güvenlik (2FA), E-Posta (SMTP) ve Şablonlar arasında geçiş yapar.</li>
+        <li><code>Değişiklikleri Kaydet</code>: Bulunduğunuz sekmedeki güncellenen ayarları kalıcı olarak sisteme kaydeder.</li>
+        <li><code>Test E-postası Gönder</code>: Girilen SMTP sunucu bilgilerinin doğru çalışıp çalışmadığını tek tıkla test eder.</li>
+        <li><code>Şablonu Düzenle</code>: Otomatik giden e-postaların başlık ve gövde metinlerini değiştirmek için formu açar.</li>
     </ul>
+
+    <h3>Adım Adım E-Posta Sunucusu Nasıl Yapılandırılır?</h3>
+    <ol>
+        <li>Sol sekmelerden <strong>"E-Posta (SMTP)"</strong> başlığına tıklayın.</li>
+        <li>Şirket e-posta sunucu adresini (Host, Örn: <em>smtp.office365.com</em>) ve port numarasını (Örn: <em>587</em>) yazın.</li>
+        <li>Sistem bildirimlerini gönderecek kullanıcı adı ve şifreyi girin.</li>
+        <li><strong>"Değişiklikleri Kaydet"</strong>e bastıktan sonra <strong>"Test E-postası Gönder"</strong> butonuna tıklayarak kurulumu doğrulayın.</li>
+    </ol>
+
+    <div class="help-example">
+        <strong>Gerçek Kullanım Örneği:</strong><br>
+        Sistemden müşterilere otomatik sevk irsaliyesi ve personele şifre sıfırlama linki gitmesi için IT sorumlusu SMTP sekmesine şirket Microsoft 365 posta bilgilerini girer. "Test E-postası Gönder"e bastığında yeşil "Başarılı" uyarısı alır ve sistem bildirimleri devreye girer.
+    </div>
+
+    <div class="help-tip">
+        <strong>Güvenlik Kuralı:</strong><br>
+        Sistem Ayarları sayfası şirket güvenliği ve kritik altyapı parametreleri nedeniyle yalnızca Yönetici (ADMIN) rolüne açık bir ekrandır.
+    </div>
 </section>

@@ -1,26 +1,51 @@
-<section class="help-page" data-title="Kullanıcılar & Mermer Rol Yetkileri Rehberi" data-updated="2026-09-17">
-    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Şirket personelinin (Ocak Şefi, Fabrika Operatörü, Atölye Şefi, Şantiye Şefi, Muhasebe ve Yönetici) sisteme giriş hesaplarını açtığınız, rollerini ve yetkilerini belirlediğiniz yönetim ekranıdır.</p>
+<section class="help-page" data-title="Kullanıcılar & Rol Yetkileri Rehberi" data-updated="2026-09-20">
+    <div class="help-lead">
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Şirket personelinin (Ocak Şefi, Fabrika Operatörü, Atölye Şefi, Şantiye Şefi, Muhasebe ve Yönetici) sisteme giriş hesaplarını açtığınız, rollerini belirlediğiniz ve şifrelerini yönettiğiniz yetki merkezidir.
+    </div>
 
-    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
+    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
     <ul class="help-panel-list">
-        <li><strong>Adım 1 — Yeni Kullanıcı Ekleme:</strong> Üstteki <strong>Yeni Kullanıcı Tanımla</strong> butonuna tıklayın. (Modal açılmaz, temiz tam ekran form gelir).</li>
-        <li><strong>Adım 2 — Bilgileri Doldurma:</strong> Ad, soyad, kullanıcı adı, şirket e-postası ve en az 6 karakterli geçici bir şifre belirleyin. (Personel ilk girişinde şifresini değiştirebilir).</li>
-        <li><strong>Adım 3 — Rolü Doğru Seçme (Çok Önemli):</strong> Personelin fabrikadaki gerçek görevine uygun rolü atayın:
+        <li>Şirket çalışanlarına ad, soyad ve kurumsal e-posta ile yeni kullanıcı hesabı açabilirsiniz.</li>
+        <li>Personelin sahadaki gerçek görevine uygun rolü (Ocak, Fabrika, Şantiye, Muhasebe vb.) atayabilirsiniz.</li>
+        <li>Şifresini unutan personelin parolasını tek tıkla sıfırlayabilirsiniz.</li>
+        <li>İşten ayrılan personelin hesabını silmeden "Askıya Al"arak sisteme girişini anında engelleyebilirsiniz.</li>
+    </ul>
+
+    <h3>Bu Buton Ne İşe Yarar?</h3>
+    <ul class="help-panel-list">
+        <li><code>+ Yeni Kullanıcı Tanımla</code>: Yeni bir çalışan hesabı oluşturmak için tam ekran kullanıcı formunu açar.</li>
+        <li><code>Rol Filtresi</code>: Yalnızca belirli bir roldeki personeli (Örn: Sadece Fabrika Operatörleri) listeler.</li>
+        <li><code>Durum Filtresi</code>: Aktif veya Askıya Alınmış kullanıcıları filtreler.</li>
+        <li><code>İşlemler &rarr; Düzenle</code>: Kullanıcının e-posta adresini veya rol yetkisini değiştirir.</li>
+        <li><code>İşlemler &rarr; Şifre Sıfırla</code>: Kullanıcıya yeni bir geçici şifre tanımlar.</li>
+        <li><code>İşlemler &rarr; Askıya Al / Aktifleştir</code>: Personelin ERP'ye giriş iznini anında durdurur veya yeniden açar.</li>
+    </ul>
+
+    <h3>Adım Adım Yeni Kullanıcı Nasıl Açılır?</h3>
+    <ol>
+        <li>Sağ üstteki <strong>"Yeni Kullanıcı Tanımla"</strong> butonuna tıklayın.</li>
+        <li>Ad, Soyad, Kullanıcı Adı ve Şirket E-postasını yazın.</li>
+        <li>En az 6 karakterli geçici bir şifre belirleyin.</li>
+        <li>Personelin sahadaki yetkisine uygun <strong>Rol</strong>ü seçin:
             <ul>
-                <li><strong>Ocak Şefi:</strong> Dağda blok üretir, ebat ve kantar tonajı girer, saha nakliyesi yapar, iş makinesi mazot ve saat/km fişi işler.</li>
-                <li><strong>Fabrika Operatörü (Tablet):</strong> Sadece kendi makinesine (Katrak/ST/Cila) gelen iş emrini görür; giren tonaj/m² ve çıkan sağlam m² girer.</li>
-                <li><strong>Fabrika / Atölye Şefi:</strong> Tüm kesim sıralarını planlar, köprü kesme iş emirlerini yönetir, plaka ve palet stok sahalarını kontrol eder.</li>
-                <li><strong>Şantiye Şefi:</strong> Şantiyeye gelen paletleri kabul eder, mahal döşeme metrajını ve montaj sarfiyatını (kum, çimento, yapıştırıcı) girer.</li>
-                <li><strong>Muhasebe & Finans:</strong> Satın alma, satış faturaları, tahsilat, elektrik ve genel giderler ile maliyet analizini yönetir.</li>
-                <li><strong>Yönetici (Admin):</strong> Tüm ERP modüllerine, kullanıcı açma/kapamaya ve sistem ayarlarına tam yetkilidir.</li>
+                <li><strong>Ocak Şefi:</strong> Blok üretimi, boyut/kantar girişi, saha nakliyesi ve makine mazot takibi.</li>
+                <li><strong>Fabrika Operatörü:</strong> Makine başında kesim/cila başlatan ve bitiren dokunmatik tablet ekranı.</li>
+                <li><strong>Fabrika / Atölye Şefi:</strong> Tüm kesim sıraları, köprü kesme iş emirleri, plaka ve palet yönetimi.</li>
+                <li><strong>Şantiye Şefi:</strong> Şantiyeye gelen paletleri karşılama, mahal döşeme metrajı ve harç sarfiyatı.</li>
+                <li><strong>Muhasebe & Finans:</strong> Satın alma, satış faturaları, tahsilat ve aylık maliyet analizi.</li>
+                <li><strong>Yönetici (Admin):</strong> Tüm ERP modüllerine ve sistem ayarlarına tam yetki.</li>
             </ul>
         </li>
-        <li><strong>Adım 4 — Askıya Alma & Şifre Sıfırlama:</strong> İşten ayrılan personelin hesabını silmek yerine satırdaki menüden <strong>"Askıya Al"</strong> yapın. Şifresini unutan personele <strong>"Şifre Sıfırla"</strong> ile yeni şifre belirleyin.</li>
-    </ul>
+        <li><strong>Kaydet</strong> butonuna basarak hesabı oluşturun.</li>
+    </ol>
 
-    <h3>2. Güvenlik Kuralları</h3>
-    <ul class="help-panel-list">
-        <li><strong>Yetki İhlali Önleme:</strong> Operatörlere veya ustalara asla gereksiz yere Yönetici (ADMIN) rolü verilmemelidir. Herkes yalnızca kendi sahasının verisini girmelidir.</li>
-        <li><strong>Kendi Şifrenizi Değiştirme:</strong> Kendi şifrenizi güncellemek için sağ üstteki kullanıcı profil menünüzden <strong>"Şifre Değiştir"</strong> sayfasına gidin.</li>
-    </ul>
+    <div class="help-example">
+        <strong>Gerçek Kullanım Örneği:</strong><br>
+        Fabrikadaki Katrak-1 makinesine yeni bir kesim ustası işe başladı. "Yeni Kullanıcı Tanımla" butonuna basılır. Adı girilir ve rol olarak <em>ROLE_FACTORY_OPERATOR</em> seçilir. Operatör tabletten kendi kullanıcı adıyla girdiğinde yalnızca kendi makinesine atanmış kesim iş emirlerini görür; şirketin ticari veya maliyet verilerine erişemez.
+    </div>
+
+    <div class="help-tip">
+        <strong>Güvenlik Kuralı:</strong><br>
+        İşten ayrılan personelin hesabı sistemden asla silinmez; satırdaki menüden <strong>"Askıya Al"</strong> yapılır. Böylece personelin geçmişte yaptığı kantar veya kesim kayıtlarının imza izi korunurken, sisteme girişi hemen kesilir.
+    </div>
 </section>

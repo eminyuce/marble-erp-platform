@@ -1,34 +1,43 @@
-<section class="help-page" data-title="Sistem Tanımları & Ana Veri Yönetimi" data-updated="2026-09-17">
-    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Mermer ERP sisteminin temel yapı taşlarını oluşturan; Makineler, Ocak Sahaları, Stok Depoları, Müşteriler, Tedarikçiler ve Masraf Merkezlerinin tanımlandığı yönetim merkezidir.</p>
+<section class="help-page" data-title="Sistem Tanımları & Ana Veri Yönetimi" data-updated="2026-09-20">
+    <div class="help-lead">
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Mermer ERP sisteminin temel omurgasını oluşturan; Makineler, Ocak Sahaları, Stok Depoları, Müşteriler, Tedarikçiler ve Masraf Merkezlerinin tanımlandığı ana veri merkezidir.
+    </div>
 
-    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
+    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
     <ul class="help-panel-list">
-        <li><strong>Adım 1 — Tanım Kategorisini Seçme:</strong> Mega menüdeki <strong>Tanımlar</strong> sekmesinden işlem yapacağınız ana veriyi seçin:
-            <ul>
-                <li><em>Makineler:</em> Ocak iş makineleri (Ekskavatör, Loder), Fabrika katrakları, ST'ler, cila hatları ve atölye köprü kesmeleri.</li>
-                <li><em>Ocaklar & Kademeler:</em> Mermer ocakları ve ocak içi ayna/kademe kodları (Örn: A-3, B-1).</li>
-                <li><em>Stok Sahaları:</em> Blok sahası, plaka sundurması, palet ambarı ve sevk sahaları.</li>
-                <li><em>Cariler:</em> Müşteriler ve hammadde/sarf tedarikçileri.</li>
-                <li><em>Masraf Merkezleri:</em> Giderlerin dağıtılacağı maliyet birimleri (Ocak Üretim, Fabrika Kesim, Şantiye vb.).</li>
-            </ul>
-        </li>
-        <li><strong>Adım 2 — Yeni Kayıt Ekleme:</strong> Sağ üstteki <strong>Yeni ... Tanımla</strong> butonuna tıklayın. Açılan temiz tam ekran formunda zorunlu alanları doldurup kaydedin. (Sistemde asla kaybolan modal pencere açılmaz).</li>
-        <li><strong>Adım 3 — Düzenleme & Güncelleme:</strong> Bilgisi değişen kaydı tablodan bulun ve <strong>Düzenle</strong> butonuna basarak güncelleyin.</li>
+        <li>Fabrika katrakları, ST'ler, cila hatları ve ocak ekskavatörlerini sisteme tanıtabilirsiniz.</li>
+        <li>Şirketin mermer ocaklarını ve ocak içi üretim kademelerini (ayna kodlarını) açabilirsiniz.</li>
+        <li>Blok sahası, plaka ambarı veya şantiye deposu gibi stok konumlarını belirleyebilirsiniz.</li>
+        <li>Müşteri ve tedarikçi cari kartlarını vergi no ve iletişim bilgileriyle kaydedebilirsiniz.</li>
+        <li>Giderlerin dağıtılacağı operasyonel masraf merkezlerini yönetebilirsiniz.</li>
     </ul>
 
-    <h3>2. Mermer İş Mantığı & Kritik Kurallar</h3>
+    <h3>Bu Buton Ne İşe Yarar?</h3>
     <ul class="help-panel-list">
-        <li><strong>Dokunulamaz Çekirdek Stok Sahaları:</strong> Sistemin otomatik mermer transfer zincirini yöneten şu 6 çekirdek depo kodu ASLA silinemez ve kodu değiştirilemez:
-            <code>OCAK-URETIM</code>, <code>OCAK-SEVK</code>, <code>FAB-BLOK</code>, <code>FAB-PLAKA</code>, <code>FAB-PALET</code>, <code>ATL-STOK</code>.
-        </li>
-        <li><strong>Silme Yerine Pasife Alma Güvencesi:</strong> Üzerinde blok kaydı olan ocak, mazot fişi kesilen ekskavatör, kesim yapılmış katrak veya siparişi olan cari <strong>SİLİNEMEZ</strong>. Bunun yerine <strong>"Pasif"</strong> duruma getirilir; böylece geçmiş maliyet ve üretim raporları bozulmaz.</li>
-        <li><strong>Benzersiz Kod Kuralı:</strong> Her makineye ve her sahaya şirkette karışmayacak standart bir kod (Örn: <code>M-KATRAK-01</code>, <code>M-EXC-390</code>) verilmelidir.</li>
+        <li><code>Kategori Sekmeleri</code>: Makineler, Ocaklar, Stok Depoları, Müşteriler, Tedarikçiler veya Masraf Merkezleri listeleri arasında geçiş yapar.</li>
+        <li><code>+ Yeni ... Tanımla</code>: Seçili kategoride yeni bir ana veri kartı açmak için formu getirir.</li>
+        <li><code>Aktif / Pasif Filtresi</code>: Artık kullanılmayan eski makineleri gizleyip yalnızca sahada faal olanları listeler.</li>
+        <li><code>Dışa Aktar (Excel/CSV)</code>: Demirbaş, makine veya cari listesini tek tıkla tablo olarak indirir.</li>
+        <li><code>İşlemler &rarr; Düzenle</code>: Makine adı, cari unvanı veya kademe kodundaki güncellemeleri kaydeder.</li>
+        <li><code>İşlemler &rarr; Pasife Al</code>: Kullanımdan kalkan bir kaydı silmeden arşive kaldırır.</li>
     </ul>
 
-    <h3>3. Butonlar & Tablo İşlevleri</h3>
-    <ul class="help-panel-list">
-        <li><strong>Arama:</strong> Tanım adı veya koduna göre anında filtreleme yapar.</li>
-        <li><strong>Aktif / Pasif Filtresi:</strong> Kullanımdan kalkan eski makineleri gizleyip yalnızca sahada çalışanları listelemenizi sağlar.</li>
-        <li><strong>Dışa Aktar (Excel/CSV):</strong> Demirbaş ve cari listesini anında indirir.</li>
-    </ul>
+    <h3>Adım Adım Yeni Tanım Nasıl Eklenir?</h3>
+    <ol>
+        <li>Üst menüden işlem yapacağınız <strong>Tanım Kategorisi</strong>ni (Örn: <em>Makineler</em> veya <em>Müşteriler</em>) seçin.</li>
+        <li>Sağ üstteki <strong>"Yeni ... Tanımla"</strong> butonuna tıklayın.</li>
+        <li>Zorunlu alanları doldurun (Kod, İsim, Birim vb.).</li>
+        <li><strong>Kaydet</strong> butonuna basarak ana veriyi sisteme kazandırın.</li>
+    </ol>
+
+    <div class="help-example">
+        <strong>Gerçek Kullanım Örneği:</strong><br>
+        Fabrikaya yeni bir 80 lamalı katrak makinesi alındı. Tanımlar &rarr; Makineler sekmesinden <em>"Yeni Makine Tanımla"</em> butonuna basılır. Kod: <code>M-KATRAK-03</code>, Ad: <em>Katrak 3 (Gangsaw 80 Lama)</em>, Birim: <em>Fabrika</em> seçilerek kaydedilir. Artık kesim iş emri açılırken bu yeni makine listeden seçilebilir hale gelir.
+    </div>
+
+    <div class="help-tip">
+        <strong>Kritik Kurallar & Püf Noktaları:</strong><br>
+        • <strong>Silinemez 6 Çekirdek Depo:</strong> Sistemin otomatik blok ve plaka transferini sağlayan şu 6 çekirdek depo kodu ASLA silinemez ve değiştirilemez: <code>OCAK-URETIM</code>, <code>OCAK-SEVK</code>, <code>FAB-BLOK</code>, <code>FAB-PLAKA</code>, <code>FAB-PALET</code>, <code>ATL-STOK</code>.<br>
+        • <strong>Silme Yerine Pasife Alma:</strong> Geçmişte kesim yapılmış bir katrak veya blok kaydı olan bir ocak sistemden silinemez. Bunun yerine <em>Pasife Alınır</em>; böylece geçmiş raporlar ve maliyet kayıtları bozulmaz.
+    </div>
 </section>

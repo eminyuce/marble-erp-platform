@@ -1,49 +1,46 @@
-<section class="help-page" data-title="Fabrika — Kesim, Cila, Ebatlama & Paletleme" data-updated="2026-09-17">
-    <div class="help-intro-box">
-        <p><strong>Bu Sayfanın Amacı:</strong> Ocağın sevk ettiği blokların hammadde olarak kabulünden, ST/Katrak kesimine, silim hattına, köprü kesme ile ebatlamaya ve barkodlu paletlemeye kadar tüm fabrika aşamalarını yönetmektir.</p>
+<section class="help-page" data-title="Fabrika — Kesim, Cila & Üretim Yönetimi" data-updated="2026-09-20">
+    <div class="help-lead">
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktan sevk edilen ham blokların hammadde stoğuna kabul edildiği, Katrak ve ST makinelerinde plaka veya şerit olarak kesildiği, silim/cila hatlarının ve barkodlu paletleme süreçlerinin yönetildiği fabrika merkezidir.
     </div>
 
-    <h3>Adım Adım Fabrika İşleyişi</h3>
-    <ol class="help-steps-list">
-        <li><strong>Adım 1: Blok Kabulü:</strong>
-            Ocak'tan sevk edilen blok fabrikaya ulaştığında araç çubuğundaki <strong>"Blok Kabul"</strong> linkine gidin. Bloğu fabrika hammadde stokuna kabul edin (İsteğe bağlı kesilecek makine ve sorumlu atayın).
-        </li>
-        <li><strong>Adım 2: Kesim İş Emri (ST mi Katrak mı?):</strong>
-            <strong>"Yeni Kesim İş Emri"</strong> butonuna basın:
-            <ul>
-                <li><strong>Blok Seçimi:</strong> Kesilecek bloğu seçin; bloğun tonajı otomatik gelecektir.</li>
-                <li><strong>Makine & Kesim Türü:</strong> <em>Katrak</em> (80 lamalı) veya <em>ST</em> (dikey/yatay disk) seçin. Katrak büyük plaka üretir, ST ise dar bant üretir.</li>
-                <li><strong>Giriş Tonajı & Çıkış m²:</strong> Çıkan sağlam m²'yi yazın. Sistem otomatik olarak: <code>Fire (m²) = Giren Tonaj Karşılığı m² - Çıkan m²</code> formülüyle fireyi ve fire oranını hesaplar.</li>
-            </ul>
-        </li>
-        <li><strong>Adım 3: Cila & Silim Hattı:</strong>
-            Araç çubuğundaki <strong>"Silim / Ebatlama"</strong> bağlantısına gidin:
-            <ul>
-                <li><strong>Zorunlu Kural:</strong> Katrak kesiminden çıkan plakalar <em>Plaka Cila</em> hattına girer. ST kesiminden çıkan ürünler <em>Dar Bant Cila</em> hattına girer.</li>
-                <li><strong>Pah Seçimi:</strong> Dar bant cilada ürünün <strong>Pahlı</strong> mı yoksa <strong>Pahsız</strong> mı olduğu mutlaka seçilmelidir.</li>
-                <li>Giren m² ve çıkan sağlam m² girilir; fire anlık hesaplanır.</li>
-            </ul>
-        </li>
-        <li><strong>Adım 4: Ebatlama (Köprü Kesme):</strong>
-            Ciladan çıkan ürün iki yoldan birine ayrılır:
-            <ul>
-                <li><strong>A) Plaka Stok:</strong> Büyük plaka olarak doğrudan satılır (Plaka Stok Sahası).</li>
-                <li><strong>B) Köprü Kesme:</strong> Köprü kesmede 60x60, 30x60 vb. ölçülerde ebatlanır; giren m², çıkan m² ve fire kaydedilir.</li>
-            </ul>
-        </li>
-        <li><strong>Adım 5: Paletleme & Barkod (QR):</strong>
-            Çıkan ebatlı ürünler paletlenir. Sistem otomatik <strong>Palet No = Barkod/QR</strong> üretir. Palet kartında kaynak blok, net m², ortalama maliyet ve pah durumu görünür.
-        </li>
-        <li><strong>Operatör Tableti:</strong>
-            Makinelerin başındaki tabletler için <strong>"Operatör Tableti"</strong> ekranı vardır. Büyük dokunmatik butonlarla sadece operatöre atanan iş görünür; sadece "Başlat" ve iş bitince "Giriş - Çıkış - Fire" girilerek "Bitir"e basılır.
-        </li>
+    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
+    <ul class="help-panel-list">
+        <li>Ocaktan gelen blokları fabrika hammadde deposuna (FAB-BLOK) teslim alabilirsiniz.</li>
+        <li>Katrak veya ST makinelerine kesim iş emri açıp operatör ve makine atayabilirsiniz.</li>
+        <li>Kesim sonrası çıkan plaka adetlerini (Ekstra, 1. Kalite, 2. Kalite) ve kesim firesini kaydedebilirsiniz.</li>
+        <li>Silim ve cila hattında yüzey işlemi (Cilalı, Honlu, Fırçalı) ve pah açma operasyonlarını yönetebilirsiniz.</li>
+        <li>Ebatlanan taşları barkodlu paletlere yükleyip sevk irsaliyesiyle müşteriye veya şantiyeye gönderebilirsiniz.</li>
+        <li>Makinelerin başındaki operatörlerin tablet ekranından anlık iş takibi yapmasını sağlayabilirsiniz.</li>
+    </ul>
+
+    <h3>Bu Buton Ne İşe Yarar?</h3>
+    <ul class="help-panel-list">
+        <li><code>+ Yeni Kesim İş Emri</code>: Fabrika stoğundaki bir bloğu katrak veya ST makinesine kesime vermek için formu açar.</li>
+        <li><code>Blok Kabul</code>: Ocağın fabrikaya kamyonla gönderdiği blokları kontrol edip hammadde stoğuna almak için kullanılır.</li>
+        <li><code>Silim / Cila Hattı</code>: Kesilmiş plakaların ve dar bantların silim, cila ve pah işlemlerini kaydeder.</li>
+        <li><code>Paletler & Sevkiyat</code>: Üretilen mamul taşları barkodlu ahşap paletlere yerleştirme ve sevkiyat irsaliyesi kesme ekranıdır.</li>
+        <li><code>Operatör Tableti</code>: Kesim ve cila ustalarının makine başında kullandığı dokunmatik, sade tablet ekranını açar.</li>
+        <li><code>İşlemler &rarr; İncele / Düzenle</code>: İlgili kesim iş emrinin detaylarını, elektrik/sarf tüketimini ve çıkan plaka listesini gösterir.</li>
+        <li><code>Dışa Aktar (Excel/CSV)</code>: Fabrika kesim performansını ve fire oranlarını tablo olarak indirir.</li>
+    </ul>
+
+    <h3>Adım Adım Kesim İş Emri Nasıl Oluşturulur?</h3>
+    <ol>
+        <li>Sağ üstteki <strong>"Yeni Kesim İş Emri"</strong> butonuna tıklayın.</li>
+        <li>Kesilecek <strong>Blok</strong>u listeden seçin (Bloğun kantar tonajı otomatik gelecektir).</li>
+        <li><strong>Kesim Türü</strong>nü seçin: Büyük plaka için <em>Katrak (GANGSAW)</em>, dar bant veya ebatlı taş için <em>ST Kesimi</em>.</li>
+        <li>Çalışacak <strong>Makine</strong>yi ve <strong>Operatör</strong>ü belirleyin.</li>
+        <li>Çıkan plaka ölçülerini (En, Boy, Kalınlık cm) ve kalite adetlerini yazın.</li>
+        <li>Kesim süresini, harcanan elektriği ve varsa hurda nedenini girip <strong>Kaydet</strong>e basın. Sistem sağlam çıkan m²'yi ve fire oranını anında hesaplar.</li>
     </ol>
 
-    <h3>Maliyetin Püf Noktası</h3>
-    <ul class="help-panel-list">
-        <li><strong>Fabrika 1 m² Maliyet Formülü:</strong><br>
-            <code>1 m² Maliyeti = (Bloğun Fabrika Giriş Maliyeti + O Ayki Fabrika Giderleri Payı) / Net Sağlam Çıkan m²</code>
-        </li>
-        <li><strong>Fire Cezası:</strong> Kesimde ve cilada fire arttıkça sağlam çıkan metraj azalır, bu da m² maliyetini doğrudan yukarı çeker. Fireyi azaltmak kârı doğrudan artırır!</li>
-    </ul>
+    <div class="help-example">
+        <strong>Gerçek Kullanım Örneği:</strong><br>
+        Fabrika sahasındaki 21,4 tonluk Burdur Bej bloğu 80 lamalı Katrak-1 makinesine bağlandı. 2 cm kalınlığında 68 adet sağlam plaka (ortalama 275×155 cm) kesildi. Çıkan sağlam alan 289,85 m² oldu. Sistem otomatik olarak giren tonaj karşılığı metraja göre fire oranını %14,2 olarak hesapladı ve plakaları Plaka Stok Sahası'na aktardı.
+    </div>
+
+    <div class="help-tip">
+        <strong>Püf Noktası (Fire ve m² Maliyeti):</strong><br>
+        Katrak veya ST kesiminde fire arttıkça bloktan çıkan sağlam m² azalır. Bu durum 1 m² sağlam mermerin fabrikaya maliyetini doğrudan yükseltir. Fire sebebini (çatlak, makine arızası, kullanıcı hatası) sisteme doğru girmek üretim kayıplarını kontrol altına almanın ilk kuralıdır.
+    </div>
 </section>

@@ -42,6 +42,9 @@ class HelpServiceTest {
         assertThat(helpService.getHelpPage("settings")).isPresent();
         assertThat(helpService.getHelpPage("deployment")).isPresent();
         assertThat(helpService.getHelpPage("change-password")).isPresent();
+        assertThat(helpService.getHelpPage("expenses")).isPresent();
+        assertThat(helpService.getHelpPage("machine-fuel")).isPresent();
+        assertThat(helpService.getHelpPage("system-health")).isPresent();
     }
 
     @Test
@@ -81,6 +84,9 @@ class HelpServiceTest {
         assertThat(helpService.resolvePageKey("/admin/definitions")).contains("definitions");
         assertThat(helpService.resolvePageKey("/admin/deployment")).contains("deployment");
         assertThat(helpService.resolvePageKey("/account/change-password?x=1")).contains("change-password");
+        assertThat(helpService.resolvePageKey("/expenses")).contains("expenses");
+        assertThat(helpService.resolvePageKey("/machines/fuel")).contains("machine-fuel");
+        assertThat(helpService.resolvePageKey("/admin/dashboard/systemhealth")).contains("system-health");
         assertThat(helpService.resolvePageKey("/unknown")).isEmpty();
         assertThat(helpService.resolvePageKey("/roles")).isEmpty();
     }

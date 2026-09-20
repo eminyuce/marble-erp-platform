@@ -1,0 +1,36 @@
+<section class="help-page" data-title="Sistem Sağlığı & Performans Metrikleri" data-updated="2026-09-20">
+    <div class="help-lead">
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> ERP platformunun üzerinde çalıştığı sunucunun bellek (JVM RAM), sabit disk alanı, veritabanı bağlantı havuzu ve çalışma süresi (uptime) göstergelerinin canlı olarak izlendiği teknik sağlık merkezidir.
+    </div>
+
+    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
+    <ul class="help-panel-list">
+        <li>Sunucunun anlık bellek kullanımını, boşta kalan RAM miktarını ve tavan sınırını takip edebilirsiniz.</li>
+        <li>Sunucu diskinde kalan boş depolama alanını inceleyip disk doluluk risklerini önceden fark edebilirsiniz.</li>
+        <li>Veritabanına bağlı aktif kullanıcı sorgularını ve boşta bekleyen bağlantı havuzu durumunu izleyebilirsiniz.</li>
+        <li>Sistemin kesintisiz ne kadar süredir ayakta olduğunu (Uptime) ve anlık yanıt sürelerini kontrol edebilirsiniz.</li>
+    </ul>
+
+    <h3>Bu Buton Ne İşe Yarar?</h3>
+    <ul class="help-panel-list">
+        <li><code>JSON Metrikleri Gör / API</code>: Canlı sunucu metriklerini harici izleme araçları (Prometheus/Grafana) veya teknik analiz için ham JSON formatında açar.</li>
+        <li><code>Sayfayı Yenile (F5)</code>: Sunucudan o anki en güncel bellek ve işlemci göstergelerini yeniden çeker.</li>
+    </ul>
+
+    <h3>Adım Adım Sistem Sağlığı Nasıl Kontrol Edilir?</h3>
+    <ol>
+        <li><strong>JVM Bellek Kartı:</strong> Kullanılan bellek oranının %85'in altında olduğundan emin olun.</li>
+        <li><strong>Disk Durumu:</strong> Blok fotoğrafları, irsaliyeler ve evraklar için yeterli boş disk alanı (en az 5 GB) bulunduğunu teyit edin.</li>
+        <li><strong>Veritabanı Havuzu:</strong> Aktif bağlantı sayısının havuz tavanına dayanıp dayanmadığını kontrol edin.</li>
+    </ol>
+
+    <div class="help-example">
+        <strong>Gerçek Kullanım Örneği:</strong><br>
+        Fabrikadaki operatörler veya ocak şefleri sistemde hafif bir yavaşlık bildirdiğinde, sistem yöneticisi bu ekrana girer. RAM kullanımının %60, disk boş alanının 42 GB ve veritabanı aktif bağlantısının 3/10 olduğunu görerek altyapısal bir kilitlenme olmadığını, durumun internet bağlantısı kaynaklı olabileceğini saniyeler içinde anlar.
+    </div>
+
+    <div class="help-tip">
+        <strong>Güvenlik Kuralı:</strong><br>
+        Sistem Sağlığı sayfası şirket veri güvenliği ve sunucu gizliliği nedeniyle yalnızca Yönetici (ADMIN) rolüne açık bir ekrandır.
+    </div>
+</section>

@@ -1,23 +1,44 @@
-<section class="help-page" data-title="Üretim Yayını (Deployment) Konsolu" data-updated="2026-09-17">
-    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Linux sunucusuna harici bir SSH veya terminal açmaya gerek kalmadan; sistemin en güncel yazılım kodunu (main dalından) tek tıkla çekip derleyen ve canlıya alan sistem yöneticisi yayın konsoludur.</p>
+<section class="help-page" data-title="Üretim Yayını (Deployment) Konsolu" data-updated="2026-09-20">
+    <div class="help-lead">
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Linux sunucusuna harici terminal veya SSH açmaya gerek kalmadan; sistemin en güncel yazılım kodunu tek tıkla çekip derleyen, test eden ve canlıya alan sistem yöneticisi yayın konsoludur.
+    </div>
 
-    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
+    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
     <ul class="help-panel-list">
-        <li><strong>Adım 1 — Sunucu & Versiyon Durumunu İnceleme:</strong> Ekrandaki mevcut aktif yazılım sürümünü ve sunucunun sağlık göstergelerini kontrol edin.</li>
-        <li><strong>Adım 2 — Yayını Tetikleme:</strong> <strong>"Üretim Yayınını Başlat"</strong> butonuna tıklayın.</li>
-        <li><strong>Adım 3 — Canlı Konsol Akışını İzleme:</strong> Butona basıldığında arka planda şu adımlar otomatik yürür:
+        <li>Canlı sunucuda çalışan güncel yazılım sürümünü ve Git commit numarasını görebilirsiniz.</li>
+        <li>GitHub üzerindeki onaylanmış en son yazılım güncellemelerini tek tıkla canlıya alabilirsiniz.</li>
+        <li>Derleme, otomatik test ve servis yeniden başlatma adımlarını canlı konsol ekranından izleyebilirsiniz.</li>
+        <li>Yayın sonrası sistemin ayakta olduğunu (Health Check) doğrulayabilirsiniz.</li>
+    </ul>
+
+    <h3>Bu Buton Ne İşe Yarar?</h3>
+    <ul class="help-panel-list">
+        <li><code>Üretim Yayınını Başlat</code>: Sunucu üzerinde güncelleme betiğini (<code>./scripts/deploy_production.sh -y</code>) güvenli şekilde tetikler.</li>
+        <li><code>Canlı Konsol Akışı</code>: Arka planda yürütülen Maven derlemesi ve sistem kontrollerinin anlık loglarını gösterir.</li>
+    </ul>
+
+    <h3>Adım Adım Üretim Yayını Nasıl Yapılır?</h3>
+    <ol>
+        <li>Ekrandaki mevcut aktif sürüm bilgisini kontrol edin.</li>
+        <li>Sağ üstteki <strong>"Üretim Yayınını Başlat"</strong> butonuna tıklayın.</li>
+        <li>Konsol akışında otomatik yürütülen adımları izleyin:
             <ul>
-                <li><code>git pull origin main</code>: GitHub üzerindeki en son onaylanmış güncellemeleri çeker.</li>
-                <li><code>./scripts/deploy_production.sh -y</code>: Maven ile projeyi derler, testleri koşar, eski servisi durdurup yeni JAR dosyasını ayağa kaldırır.</li>
-                <li><strong>Sağlık Kontrolü (Health Check):</strong> Veritabanı ve web servisinin ayakta olduğunu doğrular.</li>
+                <li><code>git pull origin main</code>: En son güncellemeleri çeker.</li>
+                <li>Maven ile projeyi derler ve otomatik testleri çalıştırır.</li>
+                <li>Eski servisi kapatıp yeni JAR dosyasını ayağa kaldırır.</li>
+                <li>Veritabanı ve web servisinin ayakta olduğunu doğrular.</li>
             </ul>
         </li>
-        <li><strong>Adım 4 — Tamamlanma Onayı:</strong> Konsol akışının sonunda yeşil "Başarılı / Aktif" göstergesi belirdiğinde yeni sürüm tüm kullanıcılara açılmıştır.</li>
-    </ul>
+        <li>Akışın sonunda yeşil <strong>"Başarılı / Aktif"</strong> ibaresi çıktığında yayın tamamlanmıştır.</li>
+    </ol>
 
-    <h3>2. Kritik Güvenlik & İş Kuralları</h3>
-    <ul class="help-panel-list">
-        <li><strong>Kısa Süreli Yeniden Başlatma:</strong> Yeni sürüm devreye girerken sistem yaklaşık 15–30 saniye yeniden başlar. Yayını fabrika veya ocak vardiya değişimi gibi sakin saatlerde yapmanız önerilir.</li>
-        <li><strong>Yalnızca Sunucu Ortamı:</strong> Bu fonksiyon sadece canlı Linux sunucusu üzerinde ve ADMIN rolüyle çalıştırılabilir; yerel geliştirici ortamında koruma amaçlı devre dışıdır.</li>
-    </ul>
+    <div class="help-example">
+        <strong>Gerçek Kullanım Örneği:</strong><br>
+        Yazılım ekibi ERP'ye yeni bir raporlama özelliği eklediğinde, sistem yöneticisi mesai bitiminde veya vardiya değişiminde bu sayfaya girip "Üretim Yayınını Başlat" butonuna basar. Sistem 40 saniye içinde tüm testleri tamamlayıp yeni sürümü kesintisiz olarak canlıya alır.
+    </div>
+
+    <div class="help-tip">
+        <strong>Kritik Güvenlik Kuralı:</strong><br>
+        Yeni sürüm devreye girerken web servisi yaklaşık 15–30 saniye yeniden başlar. Bu nedenle yayının ocak ve fabrika vardiya değişim saatlerinde veya sakin saatlerde yapılması tavsiye edilir.
+    </div>
 </section>

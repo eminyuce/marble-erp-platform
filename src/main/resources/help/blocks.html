@@ -1,39 +1,47 @@
-<section class="help-page" data-title="Ocak — Blok Takibi & Üretim Rehberi" data-updated="2026-09-17">
-    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktan kesilip çıkarılan ham mermer bloklarının kayıt altına alınması, standart barkod/kod verilmesi, sahalar arası transferleri (Üretim &rarr; Sevk &rarr; Fabrika/Satış) ve ocak iş makinelerinin mazot ve saat/km tüketimlerinin takip edilmesidir.</p>
+<section class="help-page" data-title="Ocak — Blok Takibi & Hammadde Yönetimi" data-updated="2026-09-20">
+    <div class="help-lead">
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktan kesilip çıkarılan ham mermer bloklarının ebat, tonaj ve kantar tartımıyla sisteme kaydedildiği, ocak içi ve fabrika transferlerinin yapıldığı ve doğrudan blok satışlarının yönetildiği ana ekrandır.
+    </div>
 
-    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
+    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
     <ul class="help-panel-list">
-        <li><strong>Adım 1 — Yeni Blok Kaydetmek:</strong>
-            Sağ üstteki <strong>"Yeni Blok Kaydı"</strong> butonuna basın. Açılan tam sayfada:
-            <ul>
-                <li><strong>Ocak Sahası</strong> seçin (Muğla, Afyon, Burdur vb.).</li>
-                <li><strong>"Standart Kod Oluştur"</strong> butonuna tıklayarak otomatik benzersiz kod alın (Örn: <code>OC-A3-202609-0084</code>).</li>
-                <li><strong>Taş Cinsi</strong> alanından taşı seçin (Örn: Burdur Klasik Bej). Seçtiğiniz taşın standart özgül ağırlığı (2.71 t/m³) otomatik olarak hesaplama motoruna bağlanır.</li>
-                <li><strong>En, Boy, Yükseklik (cm):</strong> Bloğun 3 eksenli ölçülerini girin. Sistem anında hacmi (m³) ve teorik yaklaşık tonajı hesaplar.</li>
-                <li><strong>Kantar Tartımı (Fiili kg):</strong> Blok tartıldıysa gerçek kantar ağırlığını yazın veya "Teorik ağırlığı aktar"a basın. Sistem kantar farkını ve sapma yüzdesini anında hesaplar.</li>
-            </ul>
-        </li>
-        <li><strong>Adım 2 — Saha Değişimi & Transfer:</strong>
-            Bloğun satırındaki İşlemler &rarr; <strong>"Sahaya Taşı"</strong> ile bloğu <strong>Üretim Sahası</strong>ndan <strong>Sevk Sahası</strong>na çekebilirsiniz.
-        </li>
-        <li><strong>Adım 3 — Fabrikaya Blok Sevkiyatı:</strong>
-            İşlemler &rarr; <strong>"Fabrikaya Gönder"</strong> seçeneğini kullanın. Nakliye bedelini girin; blok ocağın stokundan düşer, fabrikanın hammadde blok sahasına girer ve nakliye maliyeti fabrika üretim maliyetine eklenir.</li>
-        <li><strong>Adım 4 — Doğrudan Blok Satışı:</strong>
-            İşlemler &rarr; <strong>"Blok Sat"</strong> ile müşteriyi ve satış fiyatını girin. Blok satıldı statüsüne geçer, hangi sahadayken satıldığı arşivde saklanır.</li>
-        <li><strong>Adım 5 — Makine Mazot & Çalışma Saati Girişi:</strong>
-            Menüdeki <strong>"Makine Mazot Takibi"</strong> butonuna tıklayarak ekskavatör, loder veya jeneratörün aldığı litreyi, tutarı ve o anki <strong>Çalışma Saati / Km</strong> göstergesini kaydedin.</li>
+        <li>Ocaktan çıkan yeni blokları standart kod ve kantar fişiyle envantere ekleyebilirsiniz.</li>
+        <li>Ocak içi sahalar arasında (Üretim Sahası &rarr; Sevk Sahası) blok taşıyabilirsiniz.</li>
+        <li>İşlenmek üzere fabrikaya gidecek blokların nakliye bedeliyle sevkiyatını yapabilirsiniz.</li>
+        <li>Müşteriye ocaktan doğrudan ham blok satışı gerçekleştirebilirsiniz.</li>
+        <li>Tüm blok stok listesini filtreleyip Excel veya CSV formatında indirebilirsiniz.</li>
     </ul>
 
-    <h3>2. Kritik Mermer Kuralları & Püf Noktaları</h3>
+    <h3>Bu Buton Ne İşe Yarar?</h3>
     <ul class="help-panel-list">
-        <li><strong>Standart Blok Kod Formatı:</strong> <code>OC-[Bölge/Kademe]-[YılAy]-[SıraNo]</code> şeklindedir (Örn: <code>OC-A3-202609-0084</code>). Bu format sayesinde 2 yıl sonra müşteriye giden mermerde damar çatlağı çıkarsa bloğun ocağın hangi kademesinden çıktığı saniyesinde bulunur.</li>
-        <li><strong>Kantar Toleransı (%5):</strong> Kantar tartımı ile teorik ağırlık arasında %5'ten fazla sapma varsa sistem satırda ⚠️ uyarısı verir. Maliyet gerçek kantar tonajı üzerinden hesaplanır.</li>
-        <li><strong>Ocak Ton Başına Maliyet:</strong> Ay kapanışında <code>(O Ayın Tüm Ocak Giderleri Toplamı) / (O Ay Üretilen Toplam Gerçek Tonaj)</code> olarak hesaplanır. Elektrik faturası 1 ay geriden gelse bile o üretim ayına işlenerek geriye dönük kesinleştirilir.</li>
+        <li><code>+ Yeni Blok Kaydı</code>: Yeni bir mermer bloğunu ölçüleri ve kantar tartımıyla kaydetmek için tam ekran formu açar.</li>
+        <li><code>Makine Mazot Takibi</code>: Ocak iş makinelerinin akaryakıt ve çalışma saati takip ekranına hızlı geçiş sağlar.</li>
+        <li><code>Dışa Aktar (Excel/CSV)</code>: Tablodaki blok listesini, tonajlarını ve durumlarını tek tıkla dosya olarak indirir.</li>
+        <li><code>Ocak / Saha Filtresi</code>: Yalnızca belirli bir ocağın veya sahanın (Üretim, Sevk, Satıldı) bloklarını listeler.</li>
+        <li><code>İşlemler &rarr; İncele</code>: Bloğun ölçülerini, kantar fişini, fotoğraf eklerini ve dijital taş pasaportunu gösterir.</li>
+        <li><code>İşlemler &rarr; Düzenle</code>: Bloğun ebat veya kantar bilgilerinde düzeltme yapmayı sağlar.</li>
+        <li><code>İşlemler &rarr; Fabrikaya Gönder</code>: Bloğu ocak stokundan düşüp fabrikanın hammadde sahasına nakleder.</li>
+        <li><code>İşlemler &rarr; Sahaya Taşı</code>: Bloğu ocak içi Üretim sahasından Sevk sahasına transfer eder.</li>
+        <li><code>İşlemler &rarr; Blok Sat</code>: Bloğu seçilen müşteriye kantar tonajı üzerinden satar ve "Satıldı" durumuna alır.</li>
     </ul>
 
-    <h3>3. Butonlar & Tablo İşlevleri</h3>
-    <ul class="help-panel-list">
-        <li><strong>Ocak & Saha Filtresi:</strong> Hangi ocağın hangi sahasında (Üretim, Sevk, Satıldı) kaç ton blok olduğunu anında süzün.</li>
-        <li><strong>Dışa Aktar (Excel/CSV):</strong> Blok stok ve tonaj envanterini anında Excel olarak indirin.</li>
-    </ul>
+    <h3>Adım Adım Yeni Blok Nasıl Kaydedilir?</h3>
+    <ol>
+        <li>Sağ üstteki <strong>"Yeni Blok Kaydı"</strong> butonuna tıklayın.</li>
+        <li><strong>Ocak Sahası</strong>nı seçin ve <strong>"Standart Kod Oluştur"</strong>a basarak benzersiz blok kodu alın.</li>
+        <li><strong>Taş Cinsi</strong>ni seçin (Mermerin özgül ağırlığı olan 2,71 t/m³ otomatik bağlanır).</li>
+        <li><strong>En, Boy, Yükseklik (cm)</strong> değerlerini girin; sistem hacmi ve teorik tonajı otomatik hesaplar.</li>
+        <li>Kantar fişindeki <strong>Fiili Kantar Tartımı (kg)</strong> değerini yazın ve <strong>Kaydet</strong> butonuna basın.</li>
+    </ol>
+
+    <div class="help-example">
+        <strong>Gerçek Kullanım Örneği:</strong><br>
+        Burdur ocağı A-3 kademesinden 280 cm boy, 160 cm en ve 150 cm yükseklikte bir Burdur Bej bloğu çıkarıldı. Ölçüler girildiğinde sistem hacmi 6,72 m³, teorik ağırlığı ise 18.211 kg olarak hesaplar. Kantar fişinde gerçek ağırlık 18.450 kg gelmiştir; kantar farkı %1,3 ile güvenli tolerans içindedir ve blok kaydı tamamlanır.
+    </div>
+
+    <div class="help-tip">
+        <strong>Kritik Kurallar & Püf Noktaları:</strong><br>
+        • <strong>Kantar Toleransı (%5):</strong> Kantar tartımı ile teorik ağırlık arasında %5'ten fazla sapma olursa sistem satırda uyarı verir. Maliyet her zaman kantar fişi tonajı üzerinden hesaplanır.<br>
+        • <strong>Standart Kod Formatı:</strong> Kodlar <code>OC-[Bölge]-[YılAy]-[SıraNo]</code> şeklindedir (Örn: <code>OC-A3-202609-0084</code>). Bu sayede satılan bir taşın ocakta hangi kademeden çıktığı yıllar sonra bile anında bulunur.
+    </div>
 </section>

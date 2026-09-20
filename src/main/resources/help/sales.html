@@ -1,31 +1,43 @@
-<section class="help-page" data-title="Satış & Sevkiyat Yönetimi" data-updated="2026-09-17">
-    <p class="lead"><strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktan ham blok satışı, stok sahasından büyük plaka satışı ve fabrikadan/atölyeden ihracat kasalı ebatlı palet satışlarının sözleşme, fatura, rezervasyon ve sevkiyat süreçlerini yönetir.</p>
+<section class="help-page" data-title="Satış & Sevkiyat Yönetimi" data-updated="2026-09-20">
+    <div class="help-lead">
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktan ham blok, plaka stok sundurmasından cilalı plaka veya fabrikadan kasalı ebatlı palet satışlarının sözleşme, rezervasyon, fatura ve tır/konteyner sevkiyat süreçlerini yönettiğiniz merkezdir.
+    </div>
 
-    <h3>1. Bu Sayfada Ne Yapmalısınız? (Adım Adım)</h3>
+    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
     <ul class="help-panel-list">
-        <li><strong>Adım 1 — Yeni Sipariş Açma:</strong> Üstteki <strong>Yeni Satış Siparişi</strong> butonuna tıklayın.</li>
-        <li><strong>Adım 2 — Müşteri Seçimi & Para Birimi:</strong> Müşteri carisini seçin. İhracat ise döviz cinsini (USD, EUR) ve teslimat şeklini (FOB, CIF, Fabrika Teslim) belirleyin.</li>
-        <li><strong>Adım 3 — Satış Kalemlerini Ekleme:</strong>
-            <ul>
-                <li><em>Blok Satışı:</em> Ocak veya sevk sahasındaki blok barkodu seçilir (Kantar tonajı üzerinden fiyatlandırılır).</li>
-                <li><em>Plaka Satışı:</em> Plaka stok sahasındaki cilalı/ham plaka barkodları seçilir (m² üzerinden).</li>
-                <li><em>Ebatlı Kasa/Palet Satışı:</em> 60×60, 30×60 vb. standart ebatlı kasalı paletler eklenir.</li>
-            </ul>
-        </li>
-        <li><strong>Adım 4 — Siparişi Onaylama & Rezervasyon:</strong> Sipariş onaylandığında seçilen taşlar otomatik olarak <strong>"Rezerve"</strong> durumuna geçer; başka bir müşteriye satılamaz.</li>
-        <li><strong>Adım 5 — Sevkiyat & Tahsilat:</strong> Tır veya konteyner yüklendiğinde sevk irsaliyesi kesilir, stoktan düşülür. Sipariş detayından tahsilat ve kalan alacak bakiyesi izlenir.</li>
+        <li>Müşterileriniz için blok, plaka veya ebatlı mamul satış siparişleri açabilirsiniz.</li>
+        <li>Siparişe eklenen taşları otomatik "Rezerve" durumuna alarak çift satışı engelleyebilirsiniz.</li>
+        <li>İhracat satışlarında döviz cinsi (USD, EUR) ve teslimat şekli (FOB, Fabrika Teslim) belirleyebilirsiniz.</li>
+        <li>Konteyner veya tır yüklendiğinde çeki listesi (Packing List) ve sevk irsaliyesi oluşturabilirsiniz.</li>
+        <li>Satış listesini ve ciro raporlarını Excel olarak bilgisayarınıza indirebilirsiniz.</li>
     </ul>
 
-    <h3>2. Mermer İş Mantığı & Kritik Kurallar</h3>
+    <h3>Bu Buton Ne İşe Yarar?</h3>
     <ul class="help-panel-list">
-        <li><strong>Kantar Tonajı Esası:</strong> Blok satışlarında hacimsel hesap değil, resmi kantar fişi tonajı üzerinden faturalandırma esastır.</li>
-        <li><strong>Kasa / Palet İhracat Standartları:</strong> İhracata giden kasalı ürünlerin ISPM-15 ısıl işlem etiketli olması ve toplam konteyner yükünün maksimum yasal tonaj sınırını (yaklaşık 26–27 ton) aşmaması gerekir.</li>
-        <li><strong>Gerçek Kâr Göstergesi:</strong> Sipariş oluşturulduğunda sistem taşın arka plandaki gerçek üretim maliyetini bildiği için satıştan elde edilecek <strong>Net Kâr</strong>ı ve <strong>Kâr Marjı %</strong>sini anında hesaplar.</li>
+        <li><code>+ Yeni Satış Siparişi</code>: Yeni bir müşteri sözleşmesi ve satış fişi oluşturmak için formu açar.</li>
+        <li><code>Durum Filtresi</code>: Taslak, Onaylandı, Sevkiyatta veya Tamamlandı siparişleri ayırır.</li>
+        <li><code>Dışa Aktar (Excel/CSV)</code>: Satış listesini, müşteri bakiyelerini ve metrajları tablo olarak indirir.</li>
+        <li><code>İşlemler &rarr; İncele / Sevk Et</code>: Siparişteki taşları, irsaliye bilgilerini ve sevkiyat durumunu yönetir.</li>
+        <li><code>İşlemler &rarr; Düzenle</code>: Henüz sevk edilmemiş siparişin fiyat veya miktar detaylarını günceller.</li>
     </ul>
 
-    <h3>3. Butonlar & Tablo İşlevleri</h3>
-    <ul class="help-panel-list">
-        <li><strong>Durum Filtresi:</strong> Taslak, Onaylandı, Sevkiyatta veya Tamamlandı durumlarına göre siparişleri süzün.</li>
-        <li><strong>Dışa Aktar (Excel/CSV):</strong> Sevkiyat çeki listesi (Packing List) veya satış raporu almak için listeyi indirin.</li>
-    </ul>
+    <h3>Adım Adım Satış Siparişi Nasıl Açılır?</h3>
+    <ol>
+        <li>Sağ üstteki <strong>"Yeni Satış Siparişi"</strong> butonuna tıklayın.</li>
+        <li>Taşın satılacağı <strong>Müşteri Carisi</strong>ni seçin.</li>
+        <li>Para birimini (TRY, USD, EUR) ve fatura vadesini belirleyin.</li>
+        <li>Satış kalemini seçin: <em>Ham Blok</em> (Kantar tonu üzerinden), <em>Plaka</em> (m² üzerinden) veya <em>Ebatlı Palet</em>.</li>
+        <li>Siparişi onaylayın; seçilen taşlar otomatik olarak <strong>"Rezerve"</strong> durumuna kilitlenir.</li>
+        <li>Taşlar tıra yüklendiğinde sevk irsaliyesini onaylayıp işlemi tamamlayın.</li>
+    </ol>
+
+    <div class="help-example">
+        <strong>Gerçek Kullanım Örneği:</strong><br>
+        İtalya'daki bir alıcıya 480 m² cilalı 60×60 cm Burdur Bej ebatlı kasa taş satıldı (Metrekaresi 38 USD). Siparişe 16 adet palet eklendi. Sipariş onaylandığında paletler depoda rezerve edildi. Konteyner fabrikaya yanaştığında araç plakası ve konteyner no girilerek sevk irsaliyesi kesildi ve taşlar stoktan otomatik düşüldü.
+    </div>
+
+    <div class="help-tip">
+        <strong>Önemli Kural (Kantar Tonajı ve Çeki Listesi):</strong><br>
+        Blok satışlarında teorik hesap değil, kantar tartım fişindeki gerçek tonaj üzerinden fatura kesilir. İhracat kasalarında ise toplam tır tonajının yasal sınır olan 26–27 tonu aşmaması için sistem palet ağırlıklarını otomatik toplar.
+    </div>
 </section>

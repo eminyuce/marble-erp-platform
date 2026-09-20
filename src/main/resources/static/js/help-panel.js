@@ -96,7 +96,10 @@ function renderSimpleMarkdown(source) {
 
 const HELP_PATH_PREFIXES = [
     ['/account/change-password', 'change-password'],
+    ['/admin/dashboard/systemhealth', 'system-health'],
     ['/production/slabs', 'slabs'],
+    ['/admin/definitions', 'definitions'],
+    ['/admin/deployment', 'deployment'],
     ['/admin/settings', 'settings'],
     ['/admin/users', 'users'],
     ['/admin/dashboard', 'dashboard'],
@@ -108,7 +111,10 @@ const HELP_PATH_PREFIXES = [
     ['/blocks', 'blocks'],
     ['/genealogy', 'genealogy'],
     ['/reports', 'reports'],
-    ['/costs', 'costs']
+    ['/costs', 'costs'],
+    ['/expenses', 'expenses'],
+    ['/machines/fuel', 'machine-fuel'],
+    ['/machines', 'definitions']
 ].sort((left, right) => right[0].length - left[0].length);
 
 function pageKeyFromPath(pathname) {
