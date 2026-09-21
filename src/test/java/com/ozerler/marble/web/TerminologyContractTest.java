@@ -127,5 +127,8 @@ class TerminologyContractTest {
                 .contains("Şantiye Maliyet Analizi")
                 .contains("Fiyat Simülasyonu")
                 .contains("Şantiye gideri bir projeye bağlanmalıdır");
+
+        String settings = Files.readString(root.resolve("templates/admin/settings/index.html"));
+        assertThat(settings).doesNotContain(">Deployment<").contains(">Üretim Yayını<");
     }
 }
