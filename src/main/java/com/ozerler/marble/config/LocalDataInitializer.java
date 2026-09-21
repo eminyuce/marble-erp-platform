@@ -2,17 +2,14 @@ package com.ozerler.marble.config;
 
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CostCenter;
+import com.ozerler.marble.model.FactoryOperation;
+import com.ozerler.marble.model.FactoryWorkOrder;
+import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.Quarry;
 import com.ozerler.marble.model.Role;
 import com.ozerler.marble.model.User;
-import com.ozerler.marble.model.enums.BlockStatus;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.QualityGrade;
-import com.ozerler.marble.repository.BlockRepository;
-import com.ozerler.marble.repository.CostCenterRepository;
-import com.ozerler.marble.repository.QuarryRepository;
-import com.ozerler.marble.repository.RoleRepository;
-import com.ozerler.marble.repository.UserRepository;
+import com.ozerler.marble.model.enums.*;
+import com.ozerler.marble.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -23,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +36,9 @@ public class LocalDataInitializer implements CommandLineRunner {
     private final CostCenterRepository costCenterRepository;
     private final QuarryRepository quarryRepository;
     private final BlockRepository blockRepository;
+    private final MachineRepository machineRepository;
+    private final FactoryWorkOrderRepository factoryWorkOrderRepository;
+    private final FactoryOperationRepository factoryOperationRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -59,6 +60,10 @@ public class LocalDataInitializer implements CommandLineRunner {
 
         if (quarryRepository.count() == 0) {
             initQuarriesAndBlocks();
+        }
+
+        if (machineRepository.count() == 0) {
+            initFactoryOperations();
         }
 
         log.info("Local database initialization completed successfully.");
@@ -236,5 +241,122 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .build();
 
         blockRepository.saveAll(List.of(b1, b2, b3));
+    }
+
+    private void initFactoryOperations() {
+        log.info("Seeding factory machines, work orders and operations...");
+        Machine m1 = Machine.builder()
+                .code("M-KAT-01")
+                .name("Katrak-01 (80 Lama)")
+                .businessUnit(BusinessUnit.FACTORY)
+                .machineType(MachineType.GANGSAW)
+                .active(true)
+                .notes("Ana katrak kesim tezgahı")
+                .build();
+
+        Machine m2 = Machine.builder()
+                .code("M-KAT-02")
+                .name("Katrak-02 (Simel)")
+                .businessUnit(BusinessUnit.FACTORY)
+                .machineType(MachineType.GANGSAW)
+                .active(true)
+                .notes("İkinci katrak kesim tezgahı")
+                .build();
+
+        Machine m3 = Machine.builder()
+                .code("M-ST-01")
+                .name("ST Kesim-01")
+                .businessUnit(BusinessUnit.FACTORY)
+                .machineType(MachineType.ST)
+                .active(true)
+                .notes("Blok dilme ve şerit kesme")
+                .build();
+
+        Machine m4 = Machine.builder()
+                .code("M-POL-01")
+                .name("Plaka Silim Hattı (Barsanti)")
+                .businessUnit(BusinessUnit.FACTORY)
+                .machineType(MachineType.SLAB_POLISHING)
+                .active(true)
+                .notes("16 kafalı plaka silim ve cila")
+                .build();
+
+        machineRepository.saveAll(List.of(m1, m2, m3, m4));
+
+        List<Block> blocks = blockRepository.findAll();
+        if (blocks.isEmpty()) {
+            return;
+        }
+
+        Block b1 = blocks.get(0);
+        b1.setStatus(BlockStatus.SAWING);
+        blockRepository.save(b1);
+
+        FactoryWorkOrder fwo1 = FactoryWorkOrder.builder()
+                .orderNo("FWO-2026-001")
+                .block(b1)
+                .acceptedAt(LocalDate.now().minusDays(2))
+                .assignedMachine(m1)
+                .status(FactoryWorkOrderStatus.IN_PROGRESS)
+                .responsibleName("Ahmet Kaya")
+                .notes("2 cm plaka kesim iş emri")
+                .build();
+
+        FactoryWorkOrder fwo2 = null;
+        if (blocks.size() > 1) {
+            Block b2 = blocks.get(1);
+            fwo2 = FactoryWorkOrder.builder()
+                    .orderNo("FWO-2026-002")
+                    .block(b2)
+                    .acceptedAt(LocalDate.now().minusDays(1))
+                    .assignedMachine(m2)
+                    .status(FactoryWorkOrderStatus.ASSIGNED)
+                    .responsibleName("Ahmet Kaya")
+                    .notes("2 cm plaka kesim iş emri")
+                    .build();
+        }
+
+        factoryWorkOrderRepository.save(fwo1);
+        if (fwo2 != null) {
+            factoryWorkOrderRepository.save(fwo2);
+        }
+
+        FactoryOperation op1 = FactoryOperation.builder()
+                .workOrder(fwo1)
+                .processType(FactoryProcessType.GANGSAW_CUTTING)
+                .machine(m1)
+                .operatorName("Ahmet Usta")
+                .inputQuantity(b1.getActualTonnage() != null ? b1.getActualTonnage() : new BigDecimal("20.85"))
+                .inputUnit(QuantityUnit.TON)
+                .outputQuantity(BigDecimal.ZERO)
+                .outputUnit(QuantityUnit.SQUARE_METER)
+                .wasteQuantity(BigDecimal.ZERO)
+                .wasteUnit(QuantityUnit.TON)
+                .status(OperationStatus.IN_PROGRESS)
+                .startedAt(LocalDateTime.now().minusHours(3))
+                .build();
+
+        FactoryOperation op2 = null;
+        if (fwo2 != null) {
+            Block b2 = blocks.get(1);
+            op2 = FactoryOperation.builder()
+                    .workOrder(fwo2)
+                    .processType(FactoryProcessType.GANGSAW_CUTTING)
+                    .machine(m2)
+                    .operatorName("Mehmet Usta")
+                    .inputQuantity(b2.getActualTonnage() != null ? b2.getActualTonnage() : new BigDecimal("18.40"))
+                    .inputUnit(QuantityUnit.TON)
+                    .outputQuantity(BigDecimal.ZERO)
+                    .outputUnit(QuantityUnit.SQUARE_METER)
+                    .wasteQuantity(BigDecimal.ZERO)
+                    .wasteUnit(QuantityUnit.TON)
+                    .status(OperationStatus.PLANNED)
+                    .build();
+        }
+
+        factoryOperationRepository.save(op1);
+        if (op2 != null) {
+            factoryOperationRepository.save(op2);
+        }
     }
 }

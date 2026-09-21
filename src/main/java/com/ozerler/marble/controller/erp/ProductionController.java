@@ -279,6 +279,8 @@ public class ProductionController {
         model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
         model.addAttribute("processTypes", FactoryProcessType.values());
         model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
+        model.addAttribute("chamferStatuses", ChamferStatus.values());
+        model.addAttribute("wasteUnits", QuantityUnit.values());
         return "erp/production/tablet";
     }
 
@@ -293,6 +295,9 @@ public class ProductionController {
         factoryProductionService.planOperation(workOrderId, processType, machineId, operatorName);
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.production.plan.success", null, locale));
+        if (operatorName != null && !operatorName.isBlank()) {
+            return "redirect:/production/tablet?operatorName=" + java.net.URLEncoder.encode(operatorName, java.nio.charset.StandardCharsets.UTF_8);
+        }
         return "redirect:/production/tablet";
     }
 
@@ -305,6 +310,9 @@ public class ProductionController {
         factoryProductionService.startAssignedOperation(id, operatorName);
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.production.tablet.start.success", null, locale));
+        if (operatorName != null && !operatorName.isBlank()) {
+            return "redirect:/production/tablet?operatorName=" + java.net.URLEncoder.encode(operatorName, java.nio.charset.StandardCharsets.UTF_8);
+        }
         return "redirect:/production/tablet";
     }
 
@@ -316,11 +324,15 @@ public class ProductionController {
                            @RequestParam("wasteQuantity") BigDecimal waste,
                            @RequestParam(value = "wasteUnit", required = false) QuantityUnit wasteUnit,
                            @RequestParam(value = "chamferStatus", required = false) ChamferStatus chamferStatus,
+                           @RequestParam(value = "operatorName", required = false) String operatorName,
                            Locale locale,
                            RedirectAttributes redirectAttributes) {
         factoryProductionService.finishAssignedOperation(id, input, output, waste, wasteUnit, chamferStatus);
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.production.tablet.finish.success", null, locale));
+        if (operatorName != null && !operatorName.isBlank()) {
+            return "redirect:/production/tablet?operatorName=" + java.net.URLEncoder.encode(operatorName, java.nio.charset.StandardCharsets.UTF_8);
+        }
         return "redirect:/production/tablet";
     }
 

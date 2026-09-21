@@ -16,6 +16,8 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
+  thymeleaf:
+    cache: false
 
 server:
   port: 8080

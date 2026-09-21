@@ -5,69 +5,620 @@
     <title>Operatör Tableti | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-6 max-w-3xl mx-auto">
-    <div class="erp-list-header">
-        <div class="erp-list-header-main">
-            <div th:replace="~{fragments/list-chrome :: breadcrumb('Operatör tableti')}"></div>
-            <h2 class="admin-page-title">Operatör tableti</h2>
-            <p class="erp-list-lead">Yalnızca atanan iş, büyük dokunma alanları, başlat / bitir, giriş-çıkış-fire.</p>
-        </div>
-    </div>
+<div layout:fragment="content" class="erp-list-page space-y-6 max-w-5xl mx-auto pb-16">
 
-    <form method="get" th:action="@{/production/tablet}" class="flex gap-2">
-        <input type="text" name="operatorName" th:value="${operatorName}" placeholder="Operatör adı"
-               class="flex-1 px-4 py-3 text-base border border-slate-200 rounded-xl">
-        <button type="submit" class="px-5 py-3 bg-slate-800 text-white font-semibold rounded-xl">Filtrele</button>
-    </form>
-
-    <form th:action="@{/production/tablet/plan}" method="post" class="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
-        <h2 class="font-bold">İş ata</h2>
-        <select name="workOrderId" required class="w-full px-4 py-3 text-base border rounded-xl">
-            <option value="" disabled selected>Fabrika iş emri</option>
-            <option th:each="wo : ${workOrders}" th:value="${wo.id}" th:text="${wo.orderNo}"></option>
-        </select>
-        <select name="processType" required class="w-full px-4 py-3 text-base border rounded-xl">
-            <option th:each="t : ${processTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
-        </select>
-        <select name="machineId" class="w-full px-4 py-3 text-base border rounded-xl">
-            <option value="">Makine</option>
-            <option th:each="m : ${factoryMachines}" th:value="${m.id}" th:text="${m.name}"></option>
-        </select>
-        <input type="hidden" name="operatorName" th:value="${operatorName}">
-        <button type="submit" class="w-full min-h-14 py-4 bg-[#2b6cb0] text-white text-lg font-bold rounded-2xl">Tablete ata</button>
-    </form>
-
-    <div th:each="op : ${operations}" class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
-        <div class="flex justify-between gap-2">
+    <!-- Üst Başlık ve Operatör Terminali Bilgi Çubuğu -->
+    <div class="erp-list-header bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <div class="text-lg font-black" th:text="${op.processType != null ? op.processType.label : 'Operasyon'}">Kesim</div>
-                <div class="text-sm text-slate-500" th:text="${op.workOrder != null ? op.workOrder.orderNo : ''}">FWO</div>
+                <div th:replace="~{fragments/list-chrome :: breadcrumb('Operatör tableti')}"></div>
+                <div class="flex items-center gap-3 mt-1">
+                    <h2 class="admin-page-title text-2xl font-black text-slate-900 tracking-tight">Operatör Tableti</h2>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                        Fabrika Terminali Aktif
+                    </span>
+                </div>
+                <p class="text-sm text-slate-500 mt-1">
+                    Katrak, ST, Plaka Silim ve Ebatlama operasyonlarını yönetin. Giren ve çıkan malzeme miktarını girdiğinizde fire otomatik hesaplanır.
+                </p>
             </div>
-            <span class="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100"
-                  th:text="${op.status != null ? op.status.label : ''}">Planlandı</span>
+
+            <!-- Hızlı Bağlantı / Geri Dön -->
+            <div class="flex items-center gap-2">
+                <a th:href="@{/production}" class="erp-btn-secondary inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span>Fabrika Ana Ekranı</span>
+                </a>
+            </div>
         </div>
-        <form th:action="@{'/production/tablet/' + ${op.id} + '/start'}" method="post">
-            <input type="hidden" name="operatorName" th:value="${operatorName}">
-            <button type="submit" class="w-full min-h-16 py-4 bg-emerald-700 text-white text-xl font-black rounded-2xl">Başlat</button>
-        </form>
-        <form th:action="@{'/production/tablet/' + ${op.id} + '/finish'}" method="post" class="space-y-3">
-            <input type="number" step="0.01" name="inputQuantity" required placeholder="Giriş" class="w-full px-4 py-4 text-lg border rounded-xl">
-            <input type="number" step="0.01" name="outputQuantity" required placeholder="Çıkış" class="w-full px-4 py-4 text-lg border rounded-xl">
-            <input type="number" step="0.01" name="wasteQuantity" required placeholder="Fire" class="w-full px-4 py-4 text-lg border rounded-xl">
-            <select name="wasteUnit" class="w-full px-4 py-4 text-lg border rounded-xl">
-                <option value="SQUARE_METER">m²</option>
-                <option value="KG">kg</option>
-                <option value="TON">ton</option>
-            </select>
-            <select name="chamferStatus" class="w-full px-4 py-4 text-lg border rounded-xl">
-                <option value="NOT_APPLICABLE">Pah uygulanmaz</option>
-                <option value="CHAMFERED">Pahlı</option>
-                <option value="UNCHAMFERED">Pahsız</option>
-            </select>
-            <button type="submit" class="w-full min-h-16 py-4 bg-slate-900 text-white text-xl font-black rounded-2xl">Bitir</button>
-        </form>
     </div>
-    <div th:if="${#lists.isEmpty(operations)}" class="text-center text-slate-400 py-10">Atanmış operasyon yok.</div>
+
+    <!-- Operatör Seçici ve Filtre Çubuğu -->
+    <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-4 text-white shadow-md">
+        <form method="get" th:action="@{/production/tablet}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div class="flex items-center gap-2 text-slate-300 font-semibold shrink-0">
+                <i data-lucide="user-check" class="w-5 h-5 text-emerald-400"></i>
+                <span class="text-sm">Aktif Operatör:</span>
+            </div>
+            <div class="relative flex-1">
+                <input type="text" name="operatorName" th:value="${operatorName}"
+                       placeholder="Operatör adı yazın (Örn: Ahmet Usta)..."
+                       class="w-full px-4 py-3 pl-10 text-base text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-4"></i>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="submit" class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow flex items-center justify-center gap-2">
+                    <i data-lucide="filter" class="w-4 h-4"></i>
+                    <span>Filtrele</span>
+                </button>
+                <a th:if="${operatorName != null && !operatorName.isEmpty()}" th:href="@{/production/tablet}"
+                   class="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-xl transition flex items-center justify-center gap-1.5"
+                   title="Tüm operatörlerin işlerini göster">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                    <span>Tümü</span>
+                </a>
+                <a th:href="@{/production/tablet(operatorName=${operatorName})}"
+                   class="p-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-xl transition flex items-center justify-center"
+                   title="Sayfayı Yenile">
+                    <i data-lucide="rotate-cw" class="w-5 h-5"></i>
+                </a>
+            </div>
+        </form>
+        <div th:if="${operatorName != null && !operatorName.isEmpty()}" class="mt-2 text-xs text-slate-300 flex items-center gap-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span>
+            <span>Şu anda yalnızca <strong><span th:text="${operatorName}">Ahmet Usta</span></strong> operatörüne atanmış işler listeleniyor.</span>
+        </div>
+    </div>
+
+    <!-- Yeni İş Emri Tablete Ata (Katlanabilir Kart) -->
+    <div x-data="{ open: false }" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <button type="button" @click="open = !open"
+                class="w-full p-4 text-left flex items-center justify-between hover:bg-slate-50 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Yeni İş Emri Ata (Makineye Yönlendir)</h3>
+                    <p class="text-xs text-slate-500">Mevcut bir fabrika iş emrini makineye ve operatöre atayarak tablete gönderin</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-sm font-semibold text-blue-700">
+                <span x-text="open ? 'Kapat' : 'İş Ata'">İş Ata</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+            </div>
+        </button>
+
+        <div x-show="open" x-collapse x-cloak class="p-5 border-t border-slate-200 bg-slate-50/60">
+            <form th:action="@{/production/tablet/plan}" method="post" class="space-y-4 max-w-3xl">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- İş Emri Seçimi -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Fabrika İş Emri (Blok Bilgisiyle) <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="workOrderId" required class="w-full px-4 py-3 text-sm bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="" disabled selected>Fabrika iş emri seçin...</option>
+                            <option th:each="wo : ${workOrders}" th:value="${wo.id}"
+                                    th:text="${wo.orderNo + (wo.blockCode != null ? ' — Blok: ' + wo.blockCode : '') + (wo.stoneType != null ? ' (' + wo.stoneType + ')' : '')}">
+                            </option>
+                        </select>
+                        <p class="text-xs text-slate-500 mt-1">İş emri kodu, kesilecek blok kodu ve taş cinsi birlikte gösterilmektedir.</p>
+                    </div>
+
+                    <!-- Operasyon Türü -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Operasyon Türü <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="processType" required class="w-full px-4 py-3 text-sm bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option th:each="t : ${processTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Makine Seçimi -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Atanacak Makine
+                        </label>
+                        <select name="machineId" class="w-full px-4 py-3 text-sm bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="">Makine Seçin (İsteğe Bağlı)</option>
+                            <option th:each="m : ${factoryMachines}" th:value="${m.id}" th:text="${m.name}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Operatör Adı -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Görevlendirilen Operatör
+                        </label>
+                        <input type="text" name="operatorName" th:value="${operatorName}"
+                               placeholder="Operatör adı (Örn: Ahmet Usta)"
+                               class="w-full px-4 py-3 text-sm bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full min-h-12 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow transition flex items-center justify-center gap-2">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    <span>Operasyonu Tablete Ata</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Operasyon Kuyruğu Başlığı -->
+    <div class="flex items-center justify-between pt-2">
+        <div class="flex items-center gap-2">
+            <i data-lucide="layers" class="w-5 h-5 text-slate-700"></i>
+            <h3 class="text-lg font-bold text-slate-900">Atanmış Operasyonlar</h3>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-slate-200 text-slate-800"
+                  th:text="${#lists.size(operations)}">0</span>
+        </div>
+        <span class="text-xs text-slate-500">Büyük butonlara dokunarak işlem yapabilirsiniz</span>
+    </div>
+
+    <!-- Operasyon Kartları -->
+    <div class="space-y-6">
+        <div th:each="op : ${operations}"
+             th:id="'op-card-' + ${op.id}"
+             th:data-op-id="${op.id}"
+             th:data-process-type="${op.processType != null ? op.processType.name() : ''}"
+             class="bg-white rounded-2xl border-2 border-slate-200 shadow-md p-6 space-y-5 transition-all hover:border-blue-300">
+
+            <!-- 1. Operasyon Başlığı ve Durum Rozeti -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                         th:classappend="${op.processType != null && (op.processType.name() == 'GANGSAW_CUTTING' || op.processType.name() == 'ST_CUTTING')} ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800'">
+                        <i th:if="${op.processType != null && (op.processType.name() == 'GANGSAW_CUTTING' || op.processType.name() == 'ST_CUTTING')}"
+                           data-lucide="scissors" class="w-6 h-6"></i>
+                        <i th:unless="${op.processType != null && (op.processType.name() == 'GANGSAW_CUTTING' || op.processType.name() == 'ST_CUTTING')}"
+                           data-lucide="sparkles" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h4 class="text-xl font-black text-slate-900"
+                                th:text="${op.processType != null ? op.processType.label : 'Operasyon'}">Katrak Kesim</h4>
+                            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600"
+                                  th:text="'#OP-' + ${op.id}">#OP-1</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Giriş Birimi: <strong th:text="${op.processType != null && op.processType.defaultInputUnit != null ? op.processType.defaultInputUnit.label : 'Ton'}">Ton</strong> |
+                            Çıkış Birimi: <strong th:text="${op.processType != null && op.processType.defaultOutputUnit != null ? op.processType.defaultOutputUnit.label : 'm²'}">m²</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Durum Rozeti -->
+                <div>
+                    <span th:if="${op.status != null && op.status.name() == 'PLANNED'}"
+                          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-700"></i>
+                        <span>Planlandı (Başlatılmayı Bekliyor)</span>
+                    </span>
+                    <span th:if="${op.status != null && op.status.name() == 'IN_PROGRESS'}"
+                          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 animate-pulse">
+                        <i data-lucide="play-circle" class="w-4 h-4 text-emerald-700"></i>
+                        <span>Kesim / Üretim Devam Ediyor</span>
+                    </span>
+                    <span th:if="${op.status != null && op.status.name() == 'COMPLETED'}"
+                          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-bold bg-slate-100 text-slate-700 border border-slate-300">
+                        <i data-lucide="check" class="w-4 h-4 text-slate-600"></i>
+                        <span th:text="${op.status.label}">Tamamlandı</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- 2. Açıklamalı İş Emri ve Blok Bilgileri Kartı (Kullanıcının sorduğu kodun net açıklaması) -->
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- 1. İş Emri Numarası -->
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="clipboard-list" class="w-4 h-4 text-blue-600"></i>
+                            Fabrika İş Emri No
+                        </span>
+                        <div class="text-lg font-black text-slate-900 font-mono"
+                             th:text="${op.workOrder != null ? op.workOrder.orderNo : '-'}">FWO-2026-001</div>
+                        <p class="text-[11px] text-slate-500">Merkezi fabrika üretim takip numarası</p>
+                    </div>
+
+                    <!-- 2. İşlenen Mermer Bloğu -->
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="box" class="w-4 h-4 text-indigo-600"></i>
+                            İşlenen Mermer Bloğu
+                        </span>
+                        <div class="text-lg font-black text-indigo-900 font-mono"
+                             th:text="${op.workOrder != null && op.workOrder.block != null ? op.workOrder.block.blockCode : 'Blok Belirtilmedi'}">BLK-2026-001</div>
+                        <p class="text-xs text-indigo-700 font-semibold"
+                           th:text="${op.workOrder != null && op.workOrder.block != null && op.workOrder.block.stoneType != null ? op.workOrder.block.stoneType : 'Taş cinsi belirtilmedi'}">Afyon Beyaz</p>
+                    </div>
+
+                    <!-- 3. Kantar Tonajı / Giriş Kütlesi -->
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="scale" class="w-4 h-4 text-emerald-600"></i>
+                            Blok Kantar Tonajı
+                        </span>
+                        <div class="text-lg font-black text-emerald-900"
+                             th:text="${op.workOrder != null && op.workOrder.block != null && op.workOrder.block.actualTonnage != null ? #numbers.formatDecimal(op.workOrder.block.actualTonnage, 1, 2) + ' Ton' : (op.workOrder != null && op.workOrder.block != null && op.workOrder.block.approximateTonnage != null ? #numbers.formatDecimal(op.workOrder.block.approximateTonnage, 1, 2) + ' Ton (Tahmini)' : 'Kantar Kaydı Yok')}">24.50 Ton</div>
+                        <p class="text-[11px] text-slate-500">Kesime giren net blok tonajı</p>
+                    </div>
+
+                    <!-- 4. Atanan Makine ve Operatör -->
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="cpu" class="w-4 h-4 text-amber-600"></i>
+                            Makine &amp; Operatör
+                        </span>
+                        <div class="text-lg font-black text-slate-900"
+                             th:text="${op.machine != null ? op.machine.name : 'Makine Seçilmedi'}">Katrak-01</div>
+                        <p class="text-xs text-slate-600 font-medium flex items-center gap-1">
+                            <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                            <span th:text="${op.operatorName != null && !op.operatorName.isEmpty() ? op.operatorName : 'Operatör Henüz Atanmadı'}">Ahmet Usta</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Blok Boyutları Ek Bilgisi (varsa) -->
+                <div th:if="${op.workOrder != null && op.workOrder.block != null && op.workOrder.block.lengthCm != null}"
+                     class="mt-3 pt-3 border-t border-slate-200/80 flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                    <span><strong>Blok Ebatları:</strong> <span th:text="${op.workOrder.block.lengthCm + ' x ' + op.workOrder.block.widthCm + ' x ' + op.workOrder.block.heightCm + ' cm'}"></span></span>
+                    <span th:if="${op.workOrder.block.volumeM3 != null}"><strong>Hacim:</strong> <span th:text="${#numbers.formatDecimal(op.workOrder.block.volumeM3, 1, 2) + ' m³'}"></span></span>
+                    <span th:if="${op.startedAt != null}" class="text-blue-700 font-semibold">
+                        <strong>Başlangıç Zamanı:</strong> <span th:text="${#temporals.format(op.startedAt, 'dd.MM.yyyy HH:mm')}"></span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- 3. DURUM: PLANLANDI -> BAŞLATMA BUTONU -->
+            <div th:if="${op.status != null && op.status.name() == 'PLANNED'}" class="space-y-3 pt-2">
+                <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center gap-3">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-amber-600 shrink-0"></i>
+                    <div>
+                        <strong>Operasyon Başlatılmaya Hazır:</strong> Blok makineye bağlandıktan ve kesim başladığında aşağıdaki butona basarak süreyi başlatın. Çıkış ve fire miktarları kesim tamamlandığında girilecektir.
+                    </div>
+                </div>
+
+                <form th:action="@{'/production/tablet/' + ${op.id} + '/start'}" method="post">
+                    <input type="hidden" name="operatorName" th:value="${operatorName != null ? operatorName : op.operatorName}">
+                    <button type="submit"
+                            class="w-full min-h-16 py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xl font-black rounded-2xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-3 active:scale-[0.99]">
+                        <i data-lucide="play" class="w-6 h-6 fill-current"></i>
+                        <span>▶ Operasyonu Başlat</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 4. DURUM: DEVAM EDİYOR -> TAMAMLAMA VE OTOMATİK FİRE FORMU -->
+            <div th:if="${op.status != null && op.status.name() == 'IN_PROGRESS'}" class="space-y-4 pt-2">
+                <div class="p-4 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="calculator" class="w-4 h-4 text-blue-600 shrink-0"></i>
+                        <span><strong>Otomatik Fire Hesaplama Aktif:</strong> Giren kütle ve çıkan sağlam plaka miktarını yazdığınızda fire otomatik hesaplanır.</span>
+                    </div>
+                    <span class="px-2.5 py-1 rounded bg-blue-200 text-blue-900 font-bold text-[11px]">Canlı Hesap</span>
+                </div>
+
+                <form th:action="@{'/production/tablet/' + ${op.id} + '/finish'}" method="post"
+                      th:id="'finish-form-' + ${op.id}"
+                      class="space-y-5">
+                    <input type="hidden" name="operatorName" th:value="${operatorName != null ? operatorName : op.operatorName}">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <!-- 1. Giren Malzeme Miktarı (Birimli & Açıklamalı) -->
+                        <div>
+                            <label th:for="'input-' + ${op.id}" class="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
+                                <span th:if="${op.processType != null && (op.processType.name() == 'GANGSAW_CUTTING' || op.processType.name() == 'ST_CUTTING')}">
+                                    1. Giren Blok Tonajı (Kantar Ağırlığı)
+                                </span>
+                                <span th:unless="${op.processType != null && (op.processType.name() == 'GANGSAW_CUTTING' || op.processType.name() == 'ST_CUTTING')}">
+                                    1. Giren Malzeme Miktarı (Ham Plaka Alanı)
+                                </span>
+                                <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative flex rounded-xl shadow-sm">
+                                <input th:id="'input-' + ${op.id}"
+                                       type="number" step="0.01" min="0.01" name="inputQuantity" required
+                                       th:value="${op.workOrder != null && op.workOrder.block != null && op.workOrder.block.actualTonnage != null ? op.workOrder.block.actualTonnage : (op.workOrder != null && op.workOrder.block != null && op.workOrder.block.approximateTonnage != null ? op.workOrder.block.approximateTonnage : '')}"
+                                       placeholder="Örn: 24.50"
+                                       th:oninput="'recalculateTabletFire(' + ${op.id} + ')'"
+                                       class="w-full px-4 py-3.5 text-lg font-black text-slate-900 bg-white border border-slate-300 rounded-l-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <span class="inline-flex items-center px-4 rounded-r-xl border border-l-0 border-slate-300 bg-slate-100 text-slate-800 text-base font-bold shrink-0"
+                                      th:text="${op.processType != null && op.processType.defaultInputUnit != null ? op.processType.defaultInputUnit.label : 'Ton'}">Ton</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                <span th:if="${op.processType != null && (op.processType.name() == 'GANGSAW_CUTTING' || op.processType.name() == 'ST_CUTTING')}">
+                                    Makineye bağlanan bloğun kantar fişindeki net ağırlığı (Ton).
+                                </span>
+                                <span th:unless="${op.processType != null && (op.processType.name() == 'GANGSAW_CUTTING' || op.processType.name() == 'ST_CUTTING')}">
+                                    Hatta giren ham plaka veya şeritlerin toplam alanı (m²).
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- 2. Çıkan Malzeme Miktarı (Birimli & Açıklamalı) -->
+                        <div>
+                            <label th:for="'output-' + ${op.id}" class="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
+                                2. Çıkan Sağlam Malzeme Miktarı (Net Plaka Alanı) <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative flex rounded-xl shadow-sm">
+                                <input th:id="'output-' + ${op.id}"
+                                       type="number" step="0.01" min="0" name="outputQuantity" required
+                                       placeholder="Örn: 350.00"
+                                       th:oninput="'recalculateTabletFire(' + ${op.id} + ')'"
+                                       class="w-full px-4 py-3.5 text-lg font-black text-slate-900 bg-white border border-slate-300 rounded-l-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <span class="inline-flex items-center px-4 rounded-r-xl border border-l-0 border-slate-300 bg-slate-100 text-slate-800 text-base font-bold shrink-0"
+                                      th:text="${op.processType != null && op.processType.defaultOutputUnit != null ? op.processType.defaultOutputUnit.label : 'm²'}">m²</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Kesim veya işlem sonrasında elde edilen sağlam plakaların toplam net alanı (m²).
+                            </p>
+                        </div>
+
+                        <!-- 3. Otomatik Hesaplanan Fire Miktarı -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label th:for="'waste-' + ${op.id}" class="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                                    3. Otomatik Hesaplanan Fire Miktarı <span class="text-rose-500">*</span>
+                                </label>
+                                <button type="button" th:onclick="'recalculateTabletFire(' + ${op.id} + ')'"
+                                        class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                                    <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                                    <span>Yeniden Hesapla</span>
+                                </button>
+                            </div>
+                            <div class="relative flex rounded-xl shadow-sm">
+                                <input th:id="'waste-' + ${op.id}"
+                                       type="number" step="0.01" min="0" name="wasteQuantity" required
+                                       placeholder="Otomatik hesaplanır..."
+                                       class="w-full px-4 py-3.5 text-lg font-black text-rose-700 bg-rose-50/50 border border-slate-300 rounded-l-xl focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                                <span th:id="'waste-badge-' + ${op.id}"
+                                      class="inline-flex items-center px-4 rounded-r-xl border border-l-0 border-slate-300 bg-rose-100 text-rose-800 text-base font-bold shrink-0">
+                                    Ton
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Talaş, moloz, kesim payı ve kırık miktarıdır. Formülden otomatik hesaplanır, gerekirse elle de düzenlenebilir.
+                            </p>
+                        </div>
+
+                        <!-- 4. Fire Ölçü Birimi Seçimi -->
+                        <div>
+                            <label th:for="'wasteUnit-' + ${op.id}" class="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
+                                4. Fire Ölçü Birimi <span class="text-rose-500">*</span>
+                            </label>
+                            <select th:id="'wasteUnit-' + ${op.id}" name="wasteUnit" required
+                                    th:onchange="'recalculateTabletFire(' + ${op.id} + ')'"
+                                    class="w-full px-4 py-3.5 text-base font-bold text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="TON" selected>Ton (Ağırlık Cinsinden Fire - Önerilen)</option>
+                                <option value="KG">kg (Kilogram Cinsinden Fire)</option>
+                                <option value="SQUARE_METER">m² (Alan Cinsinden Eşdeğer Fire)</option>
+                            </select>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Fire miktarının hangi birimde kaydedileceğini belirler.
+                            </p>
+                        </div>
+
+                        <!-- 5. Pah Durumu (Yalnızca Dar Bant Silim için) -->
+                        <div th:if="${op.processType != null && op.processType.name() == 'STRIP_POLISHING'}" class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
+                                5. Pah Durumu (Dar Bant Cilalama için)
+                            </label>
+                            <select name="chamferStatus" class="w-full px-4 py-3 text-base border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option th:each="c : ${chamferStatuses}" th:value="${c.name()}" th:text="${c.label}"></option>
+                            </select>
+                            <p class="text-xs text-slate-500 mt-1">Dar bant cilada pahlı veya pahsız olarak belirtilmelidir.</p>
+                        </div>
+                        <input th:unless="${op.processType != null && op.processType.name() == 'STRIP_POLISHING'}"
+                               type="hidden" name="chamferStatus" value="NOT_APPLICABLE">
+                    </div>
+
+                    <!-- Canlı Hesaplama Sonuç Özeti (JS tarafından dinamik doldurulur) -->
+                    <div th:id="'calc-summary-' + ${op.id}"
+                         class="hidden p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-start gap-3">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"></i>
+                        <div class="calc-summary-text flex-1">
+                            Hesaplama sonucu burada görünecek.
+                        </div>
+                    </div>
+
+                    <!-- Tamamlama Butonu -->
+                    <button type="submit"
+                            class="w-full min-h-16 py-4 bg-slate-900 hover:bg-black text-white text-xl font-black rounded-2xl shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-3 active:scale-[0.99]">
+                        <i data-lucide="check-circle-2" class="w-6 h-6 text-emerald-400"></i>
+                        <span>✓ Operasyonu Tamamla ve Üretimi Kaydet</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Atanmış Operasyon Yoksa Gösterilecek Boş Durum Kartı -->
+    <div th:if="${#lists.isEmpty(operations)}"
+         class="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-12 text-center space-y-4 shadow-sm">
+        <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+            <i data-lucide="inbox" class="w-8 h-8"></i>
+        </div>
+        <div class="space-y-1">
+            <h4 class="text-lg font-bold text-slate-800">Şu Anda Atanmış Operasyon Yok</h4>
+            <p class="text-sm text-slate-500 max-w-md mx-auto">
+                <span th:if="${operatorName != null && !operatorName.isEmpty()}">
+                    <strong><span th:text="${operatorName}">Operatör</span></strong> adına atanmış bekleyen veya aktif bir operasyon bulunamadı.
+                </span>
+                <span th:unless="${operatorName != null && !operatorName.isEmpty()}">
+                    Tablette bekleyen veya aktif bir fabrika operasyonu bulunmamaktadır.
+                </span>
+            </p>
+        </div>
+        <div class="pt-2">
+            <a th:if="${operatorName != null && !operatorName.isEmpty()}" th:href="@{/production/tablet}"
+               class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 text-white text-sm font-bold hover:bg-slate-700">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                <span>Tüm Operatörlerin İşlerini Göster</span>
+            </a>
+        </div>
+    </div>
+
 </div>
+
+<!-- Sayfa İçi Canlı Fire Hesaplama Scripti -->
+<th:block layout:fragment="page-scripts">
+<script>
+    /**
+     * Mermer Fabrikası Katrak & ST Kesim ve Silim Fire Hesaplama Motoru
+     * Mermer birim hacim ağırlığı / yoğunluğu: ~2.70 ton/m3
+     * 2 cm plaka için: 1 m2 = 0.02 m * 2.70 ton/m3 = 0.054 Ton (54 kg)
+     */
+    function recalculateTabletFire(opId) {
+        const card = document.getElementById('op-card-' + opId);
+        if (!card) return;
+
+        const processType = card.getAttribute('data-process-type') || '';
+        const inputEl = document.getElementById('input-' + opId);
+        const outputEl = document.getElementById('output-' + opId);
+        const wasteEl = document.getElementById('waste-' + opId);
+        const wasteUnitEl = document.getElementById('wasteUnit-' + opId);
+        const wasteBadgeEl = document.getElementById('waste-badge-' + opId);
+        const summaryCard = document.getElementById('calc-summary-' + opId);
+
+        if (!inputEl || !outputEl || !wasteEl) return;
+
+        const inp = parseFloat(inputEl.value) || 0;
+        const out = parseFloat(outputEl.value) || 0;
+        const unit = wasteUnitEl ? wasteUnitEl.value : 'TON';
+
+        // Rozet birimini güncelle
+        if (wasteBadgeEl) {
+            if (unit === 'TON') wasteBadgeEl.textContent = 'Ton';
+            else if (unit === 'KG') wasteBadgeEl.textContent = 'kg';
+            else if (unit === 'SQUARE_METER') wasteBadgeEl.textContent = 'm²';
+            else wasteBadgeEl.textContent = unit;
+        }
+
+        if (inp <= 0 && out <= 0) {
+            if (summaryCard) summaryCard.classList.add('hidden');
+            return;
+        }
+
+        let waste = 0;
+        let summaryHtml = '';
+        const isCutting = processType === 'GANGSAW_CUTTING' || processType === 'ST_CUTTING';
+
+        if (isCutting) {
+            // Katrak & ST Kesimi: Giren Ton, Çıkan m2
+            // 2 cm standart plaka: 1 m2 = 0.054 Ton taş
+            const density = 2.70; // ton/m3
+            const thicknessM = 0.02; // 2 cm
+            const stoneTonPerM2 = thicknessM * density; // 0.054 Ton/m2
+            const stoneKgPerM2 = stoneTonPerM2 * 1000; // 54 kg/m2
+
+            const stoneWeightTon = out * stoneTonPerM2;
+
+            if (unit === 'TON') {
+                waste = Math.max(0, inp - stoneWeightTon);
+                const firePct = inp > 0 ? (waste / inp) * 100 : 0;
+                const yieldPct = inp > 0 ? (stoneWeightTon / inp) * 100 : 0;
+                const m2PerTon = inp > 0 ? (out / inp) : 0;
+
+                summaryHtml = `
+                    <div class="space-y-1">
+                        <div class="font-bold text-slate-900 text-sm">
+                            Otomatik Katrak Firesi Hesaplandı: <strong>${waste.toFixed(2)} Ton</strong>
+                        </div>
+                        <div class="text-xs text-slate-700">
+                            <strong>Giren Blok:</strong> ${inp.toFixed(2)} Ton &nbsp;|&nbsp;
+                            <strong>Çıkan Plaka:</strong> ${out.toFixed(2)} m² (Net Taş: ~${stoneWeightTon.toFixed(2)} Ton) &nbsp;|&nbsp;
+                            <strong>Fire Oranı:</strong> %${firePct.toFixed(1)}
+                        </div>
+                        <div class="text-[11px] text-emerald-800 font-semibold">
+                            ✓ Verimlilik / Randıman: %${yieldPct.toFixed(1)} (1 Ton mermer bloğundan ${m2PerTon.toFixed(2)} m² plaka elde edildi)
+                        </div>
+                    </div>`;
+            } else if (unit === 'KG') {
+                const inpKg = inp * 1000;
+                const stoneWeightKg = out * stoneKgPerM2;
+                waste = Math.max(0, inpKg - stoneWeightKg);
+                const firePct = inpKg > 0 ? (waste / inpKg) * 100 : 0;
+
+                summaryHtml = `
+                    <div class="space-y-1">
+                        <div class="font-bold text-slate-900 text-sm">
+                            Otomatik Katrak Firesi Hesaplandı: <strong>${waste.toFixed(0)} kg</strong>
+                        </div>
+                        <div class="text-xs text-slate-700">
+                            <strong>Giren Blok:</strong> ${inpKg.toFixed(0)} kg &nbsp;|&nbsp;
+                            <strong>Çıkan Plaka:</strong> ${out.toFixed(2)} m² (~${stoneWeightKg.toFixed(0)} kg net taş) &nbsp;|&nbsp;
+                            <strong>Fire Oranı:</strong> %${firePct.toFixed(1)}
+                        </div>
+                    </div>`;
+            } else { // SQUARE_METER
+                const theorTotalM2 = inp / stoneTonPerM2;
+                waste = Math.max(0, theorTotalM2 - out);
+                const firePct = theorTotalM2 > 0 ? (waste / theorTotalM2) * 100 : 0;
+
+                summaryHtml = `
+                    <div class="space-y-1">
+                        <div class="font-bold text-slate-900 text-sm">
+                            Otomatik Katrak Firesi Hesaplandı: <strong>${waste.toFixed(2)} m²</strong>
+                        </div>
+                        <div class="text-xs text-slate-700">
+                            <strong>Giren Potansiyel Alan:</strong> ~${theorTotalM2.toFixed(1)} m² &nbsp;|&nbsp;
+                            <strong>Kesilen Sağlam Plaka:</strong> ${out.toFixed(2)} m² &nbsp;|&nbsp;
+                            <strong>Fire Oranı:</strong> %${firePct.toFixed(1)}
+                        </div>
+                    </div>`;
+            }
+        } else {
+            // Silim / Ebatlama (Aynı birim: m2 in, m2 out)
+            waste = Math.max(0, inp - out);
+            const firePct = inp > 0 ? (waste / inp) * 100 : 0;
+            const yieldPct = inp > 0 ? (out / inp) * 100 : 0;
+
+            summaryHtml = `
+                <div class="space-y-1">
+                    <div class="font-bold text-slate-900 text-sm">
+                        Otomatik Fire Hesaplandı: <strong>${waste.toFixed(2)} m²</strong>
+                    </div>
+                    <div class="text-xs text-slate-700">
+                        <strong>Giriş Alanı:</strong> ${inp.toFixed(2)} m² &nbsp;|&nbsp;
+                        <strong>Çıkış Sağlam Alan:</strong> ${out.toFixed(2)} m² &nbsp;|&nbsp;
+                        <strong>Fire Oranı:</strong> %${firePct.toFixed(1)} &nbsp;|&nbsp;
+                        <strong>Verim:</strong> %${yieldPct.toFixed(1)}
+                    </div>
+                </div>`;
+        }
+
+        wasteEl.value = (Math.round(waste * 100) / 100).toFixed(2);
+
+        if (summaryCard) {
+            summaryCard.classList.remove('hidden');
+            const contentDiv = summaryCard.querySelector('.calc-summary-text');
+            if (contentDiv) {
+                contentDiv.innerHTML = summaryHtml;
+            }
+        }
+    }
+
+    // Sayfa yüklendiğinde mevcut operasyon kartları için hesaplamayı başlat
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-op-id]').forEach(function (card) {
+            const opId = card.getAttribute('data-op-id');
+            const outputInput = document.getElementById('output-' + opId);
+            if (outputInput && outputInput.value) {
+                recalculateTabletFire(opId);
+            }
+        });
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    });
+
+    window.recalculateTabletFire = recalculateTabletFire;
+</script>
+</th:block>
 </body>
 </html>

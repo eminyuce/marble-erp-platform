@@ -24,10 +24,10 @@ public interface FactoryOperationRepository extends JpaRepository<FactoryOperati
 
     List<FactoryOperation> findByProcessTypeAndStatusOrderByIdDesc(FactoryProcessType processType, OperationStatus status);
 
-    @EntityGraph(attributePaths = "workOrder")
+    @EntityGraph(attributePaths = {"workOrder", "workOrder.block", "machine"})
     List<FactoryOperation> findByStatusOrderByIdDesc(OperationStatus status);
 
-    @EntityGraph(attributePaths = "workOrder")
+    @EntityGraph(attributePaths = {"workOrder", "workOrder.block", "machine"})
     List<FactoryOperation> findByOperatorNameAndStatus(String operatorName, OperationStatus status);
 
     @Query("SELECT o.processType, COALESCE(SUM(o.inputQuantity), 0), COALESCE(SUM(o.outputQuantity), 0), "
