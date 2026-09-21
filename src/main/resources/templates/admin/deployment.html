@@ -230,18 +230,23 @@
                 </div>
                 <div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Üretim Yayını</h1>
+                        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Yeni Gelişmeleri Sahaya Taşı <span class="text-base font-normal text-slate-400">/ Üretim Yayını</span></h1>
                         <span class="px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wider rounded-full border flex items-center gap-1.5"
                               :class="badgeClass()">
                             <span class="w-2 h-2 rounded-full" :class="dotClass()"></span>
                             <span x-text="badgeLabel()"></span>
                         </span>
                     </div>
-                    <p class="text-xs text-slate-500 font-medium mt-1">
-                        SSH olmadan <strong>main</strong> dalını çekip üretim paketini kurar.
-                        Araçlar: <code class="font-mono text-[11px]">git pull origin main</code>
-                        ve <code class="font-mono text-[11px]">./scripts/deploy_production.sh -y</code>
-                    </p>
+                    <div class="space-y-1 mt-1.5">
+                        <p class="text-xs text-slate-700 font-medium leading-relaxed">
+                            Yazılım ekibinin sisteme eklediği en güncel özellikleri, ekran yeniliklerini ve hata düzeltmelerini tek bir tuşla canlı sisteme aktararak tüm personelin kullanımına hazır hale getirir.
+                        </p>
+                        <p class="text-[11px] text-slate-500 font-medium">
+                            SSH olmadan <strong>main</strong> dalını çekip üretim paketini kurar.
+                            Araçlar: <code class="font-mono text-[11px]">git pull origin main</code>
+                            ve <code class="font-mono text-[11px]">./scripts/deploy_production.sh -y</code>
+                        </p>
+                    </div>
                 </div>
             </div>
             <a th:href="@{/admin/settings?tab=tools}"

@@ -103,7 +103,7 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20260921-turkish-settings-deploy"
+  asset-version: "20260921-sahaya-tasi-deploy"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy

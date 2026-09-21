@@ -146,8 +146,8 @@
                     <a th:href="@{/admin/deployment}"
                        class="settings-sidebar-item settings-sidebar-item--idle">
                         <i data-lucide="rocket" class="w-4 h-4 flex-shrink-0"></i>
-                        <span class="flex-1 text-left">Üretim Yayını</span>
-                        <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-100 text-violet-700 flex-shrink-0">Yayın</span>
+                        <span class="flex-1 text-left">Yeni Gelişmeleri Sahaya Taşı</span>
+                        <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-100 text-violet-700 flex-shrink-0">Canlı</span>
                     </a>
                 </div>
             </nav>
@@ -601,15 +601,18 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
 
-                        <!-- Üretim Yayını -->
+                        <!-- Yeni Gelişmeleri Sahaya Taşı -->
                         <div class="p-5 rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50/70 to-white space-y-3">
                             <div class="flex items-center gap-3">
                                 <div class="p-2 bg-violet-100 text-violet-700 rounded-xl">
                                     <i data-lucide="rocket" class="w-5 h-5"></i>
                                 </div>
-                                <h4 class="text-sm font-bold text-slate-900">Üretim Yayını</h4>
+                                <h4 class="text-sm font-bold text-slate-900">Yeni Gelişmeleri Sahaya Taşı</h4>
                             </div>
-                            <p class="text-xs text-slate-600 leading-relaxed">
+                            <p class="text-xs text-slate-700 leading-relaxed font-medium">
+                                Yazılım ekibinin sisteme eklediği en güncel özellikleri, ekran yeniliklerini ve düzeltmeleri tek tıkla canlı sisteme aktararak çalışanların kullanımına sunar.
+                            </p>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">
                                 SSH olmadan <span class="font-semibold">main</span> dalından üretim yayını başlatın.
                                 Git pull ve güncelleme betiği çıktısını canlı izleyin.
                             </p>
@@ -620,8 +623,8 @@
                             <div class="mt-2">
                                 <a th:href="@{/admin/deployment}"
                                    class="w-full px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition">
-                                    <i data-lucide="terminal" class="w-4 h-4"></i>
-                                    Yayın Ekranını Aç
+                                    <i data-lucide="rocket" class="w-4 h-4"></i>
+                                    Sahaya Taşıma Ekranını Aç
                                 </a>
                             </div>
                         </div>

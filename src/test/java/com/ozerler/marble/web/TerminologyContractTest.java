@@ -129,6 +129,6 @@ class TerminologyContractTest {
                 .contains("Şantiye gideri bir projeye bağlanmalıdır");
 
         String settings = Files.readString(root.resolve("templates/admin/settings/index.html"));
-        assertThat(settings).doesNotContain(">Deployment<").contains(">Üretim Yayını<");
+        assertThat(settings).doesNotContain(">Deployment<").contains(">Yeni Gelişmeleri Sahaya Taşı<");
     }
 }
