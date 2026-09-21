@@ -156,8 +156,6 @@ public class BlockController extends AbstractController {
         model.addAttribute("movements", quarryBlockService.getMovements(id));
         model.addAttribute("marks", blockCustomerMarkService.listForBlock(id));
         model.addAttribute("customers", blockCustomerMarkService.customers());
-        model.addAttribute("quarryYards", new StockLocationType[]{
-                StockLocationType.PRODUCTION_YARD, StockLocationType.DISPATCH_YARD});
         model.addAttribute("weightWarning", quarryBlockService.isWeightDeviationWarning(block));
         model.addAttribute("canDelete", quarryBlockService.canDeleteBlock(block));
 
@@ -285,16 +283,42 @@ public class BlockController extends AbstractController {
         return ber;
     }
 
+    @GetMapping("/{id}/transfer-to-factory")
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
+    public String showTransferForm(@PathVariable("id") Long id,
+                                   Locale locale,
+                                   Model model,
+                                   RedirectAttributes redirectAttributes) {
+        var block = quarryBlockService.getBlockWithDetails(id);
+        if (redirectIfBlockCannotLeaveQuarry(block, locale, redirectAttributes, "error.block.move.not_at_quarry")) {
+            return "redirect:/blocks/" + id;
+        }
+        if (!isInDispatchYard(block)) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("error.block.dispatch.not_in_dispatch_yard", null, locale));
+            return "redirect:/blocks/" + id;
+        }
+        populateBlockOperationPage(model, block);
+        model.addAttribute("pageTitle", "Fabrikaya Sevk - " + block.getBlockCode());
+        return "erp/blocks/transfer";
+    }
+
     @PostMapping("/{id}/transfer-to-factory")
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     public String transferToFactoryForm(@PathVariable("id") Long id,
                                         @RequestParam("transportCost") BigDecimal transportCost,
                                         Locale locale,
                                         RedirectAttributes redirectAttributes) {
-        quarryBlockService.transferToFactory(id, transportCost);
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.block.transfer.success", null, locale));
-        return "redirect:/blocks/" + id;
+        try {
+            quarryBlockService.transferToFactory(id, transportCost);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.block.transfer.success", null, locale));
+            return "redirect:/blocks/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            return "redirect:/blocks/" + id + "/transfer-to-factory";
+        }
     }
 
     @PostMapping("/{id}/api/transfer-to-factory")
@@ -352,6 +376,24 @@ public class BlockController extends AbstractController {
         return ber;
     }
 
+    @GetMapping("/{id}/move")
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
+    public String showMoveForm(@PathVariable("id") Long id,
+                               @RequestParam(value = "targetType", required = false) StockLocationType targetType,
+                               Locale locale,
+                               Model model,
+                               RedirectAttributes redirectAttributes) {
+        var block = quarryBlockService.getBlockWithDetails(id);
+        if (redirectIfBlockCannotLeaveQuarry(block, locale, redirectAttributes, "error.block.move.not_at_quarry")) {
+            return "redirect:/blocks/" + id;
+        }
+        StockLocationType selectedTarget = resolveMoveTarget(block, targetType);
+        populateBlockOperationPage(model, block);
+        model.addAttribute("selectedTargetType", selectedTarget);
+        model.addAttribute("pageTitle", "Saha Taşıma - " + block.getBlockCode());
+        return "erp/blocks/move";
+    }
+
     @PostMapping("/{id}/move")
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     public String moveToYard(@PathVariable("id") Long id,
@@ -359,10 +401,17 @@ public class BlockController extends AbstractController {
                              @RequestParam(value = "description", required = false) String description,
                              Locale locale,
                              RedirectAttributes redirectAttributes) {
-        quarryBlockService.moveToYard(id, targetType, description);
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.block.move.success", null, locale));
-        return "redirect:/blocks/" + id;
+        try {
+            quarryBlockService.moveToYard(id, targetType, description);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.block.move.success", null, locale));
+            return "redirect:/blocks/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
+            String targetQuery = targetType != null ? "?targetType=" + targetType.name() : "";
+            return "redirect:/blocks/" + id + "/move" + targetQuery;
+        }
     }
 
     @PostMapping("/{id}/api/move")
@@ -400,19 +449,10 @@ public class BlockController extends AbstractController {
                                Model model,
                                RedirectAttributes redirectAttributes) {
         var block = quarryBlockService.getBlockWithDetails(id);
-        if (block.getStatus() == BlockStatus.SOLD) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    messageSource.getMessage("erp.block.already_sold",
-                            new Object[]{block.getSoldCustomer() != null ? block.getSoldCustomer().getCompanyName() : ""}, locale));
+        if (redirectIfBlockCannotLeaveQuarry(block, locale, redirectAttributes, "error.block.sell.not_at_quarry")) {
             return "redirect:/blocks/" + id;
         }
-        if (!block.getCanonicalStatus().isAtQuarry()) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    messageSource.getMessage("error.block.sell.not_at_quarry", null, locale));
-            return "redirect:/blocks/" + id;
-        }
-        if (block.getCurrentLocation() == null
-                || block.getCurrentLocation().getLocationType() != StockLocationType.DISPATCH_YARD) {
+        if (!isInDispatchYard(block)) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     messageSource.getMessage("error.block.sell.not_in_dispatch_yard", null, locale));
             return "redirect:/blocks/" + id;
@@ -493,8 +533,50 @@ public class BlockController extends AbstractController {
         model.addAttribute("quarries", quarryBlockService.getAllQuarries());
         model.addAttribute("qualityGrades", QualityGrade.values());
         model.addAttribute("stoneCatalog", com.ozerler.marble.domain.StoneTypeCatalog.getAll());
-        model.addAttribute("quarryYards", new StockLocationType[]{
-                StockLocationType.PRODUCTION_YARD, StockLocationType.DISPATCH_YARD});
+        model.addAttribute("quarryYards", quarryYards());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.block.title.create", null, locale));
+    }
+
+    private void populateBlockOperationPage(Model model, Block block) {
+        model.addAttribute("block", block);
+        model.addAttribute("quarryYards", quarryYards());
+    }
+
+    private StockLocationType[] quarryYards() {
+        return new StockLocationType[]{StockLocationType.PRODUCTION_YARD, StockLocationType.DISPATCH_YARD};
+    }
+
+    private boolean redirectIfBlockCannotLeaveQuarry(Block block, Locale locale,
+                                                     RedirectAttributes redirectAttributes,
+                                                     String notAtQuarryMessageKey) {
+        if (block.getStatus() == BlockStatus.SOLD) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage("erp.block.already_sold",
+                            new Object[]{block.getSoldCustomer() != null ? block.getSoldCustomer().getCompanyName() : ""},
+                            locale));
+            return true;
+        }
+        if (!block.getCanonicalStatus().isAtQuarry()) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage(notAtQuarryMessageKey, null, locale));
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isInDispatchYard(Block block) {
+        return block.getCurrentLocation() != null
+                && block.getCurrentLocation().getLocationType() == StockLocationType.DISPATCH_YARD;
+    }
+
+    private StockLocationType resolveMoveTarget(Block block, StockLocationType requested) {
+        if (requested == StockLocationType.PRODUCTION_YARD || requested == StockLocationType.DISPATCH_YARD) {
+            return requested;
+        }
+        if (block.getCurrentLocation() != null
+                && block.getCurrentLocation().getLocationType() == StockLocationType.PRODUCTION_YARD) {
+            return StockLocationType.DISPATCH_YARD;
+        }
+        return StockLocationType.PRODUCTION_YARD;
     }
 }

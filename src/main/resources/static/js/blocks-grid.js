@@ -1,8 +1,5 @@
 // Tabulator 6 Data Grid for quarry block production
 let blocksTable;
-let pendingTransferBlockId = null;
-let pendingMoveBlockId = null;
-let pendingMoveTargetType = null;
 let pendingDeleteBlockId = null;
 
 function quarryPage() {
@@ -221,19 +218,19 @@ function initBlocksGrid() {
                             items.push({
                                 icon: "pickaxe",
                                 label: "Üretim Sahasına taşı",
-                                onclick: "openMoveBlock(" + row.id + ", 'PRODUCTION_YARD', 'Üretim Sahasına taşı')"
+                                href: "/blocks/" + row.id + "/move?targetType=PRODUCTION_YARD"
                             });
                         }
                         if (row.locationType !== "DISPATCH_YARD") {
                             items.push({
                                 icon: "warehouse",
                                 label: "Stok Sahasına taşı",
-                                onclick: "openMoveBlock(" + row.id + ", 'DISPATCH_YARD', 'Stok Sahasına taşı')"
+                                href: "/blocks/" + row.id + "/move?targetType=DISPATCH_YARD"
                             });
                         }
                         if (row.locationType === "DISPATCH_YARD") {
                             items.push({icon: "handshake", label: "Sat", href: "/blocks/" + row.id + "/sell"});
-                            items.push({icon: "truck", label: "Fabrikaya sevk", onclick: "openTransferBlock(" + row.id + ")"});
+                            items.push({icon: "truck", label: "Fabrikaya sevk", href: "/blocks/" + row.id + "/transfer-to-factory"});
                         }
                     }
                     if (row.canDelete) {
@@ -377,45 +374,6 @@ function handleBlockActionResponse(res, okMessage) {
     });
 }
 
-function openTransferBlock(id) {
-    pendingTransferBlockId = id;
-    const dialog = document.getElementById("transfer-block-dialog");
-    const costInput = document.getElementById("transfer-cost");
-    if (costInput) costInput.value = "";
-    if (dialog && typeof dialog.showModal === "function") {
-        dialog.showModal();
-    }
-}
-
-function transferBlock(id, cost) {
-    fetch(`/blocks/${id}/api/transfer-to-factory`, {
-        method: "POST",
-        headers: csrfHeaders(),
-        body: `transportCost=${encodeURIComponent(cost)}`
-    }).then(res => handleBlockActionResponse(res, "Blok fabrikaya sevk edildi."));
-}
-
-function openMoveBlock(id, targetType, title) {
-    pendingMoveBlockId = id;
-    pendingMoveTargetType = targetType;
-    const dialog = document.getElementById("move-block-dialog");
-    const titleEl = document.getElementById("move-block-title");
-    const descInput = document.getElementById("move-description");
-    if (titleEl) titleEl.textContent = title || "Saha taşı";
-    if (descInput) descInput.value = "";
-    if (dialog && typeof dialog.showModal === "function") {
-        dialog.showModal();
-    }
-}
-
-function moveBlock(id, targetType, description) {
-    fetch(`/blocks/${id}/api/move`, {
-        method: "POST",
-        headers: csrfHeaders(),
-        body: `targetType=${encodeURIComponent(targetType)}&description=${encodeURIComponent(description || "Saha hareketi")}`
-    }).then(res => handleBlockActionResponse(res, "Saha güncellendi."));
-}
-
 function openDeleteBlock(id, blockCode) {
     pendingDeleteBlockId = id;
     const dialog = document.getElementById("delete-block-dialog");
@@ -438,18 +396,6 @@ function deleteBlock(id) {
 document.addEventListener("DOMContentLoaded", function () {
     initBlocksGrid();
 
-    document.getElementById("confirm-transfer-block")?.addEventListener("click", function () {
-        const cost = document.getElementById("transfer-cost")?.value;
-        const dialog = document.getElementById("transfer-block-dialog");
-        if (!cost || !pendingTransferBlockId) {
-            showBlocksToast("Nakliye bedeli girin.", false);
-            return;
-        }
-        transferBlock(pendingTransferBlockId, cost);
-        if (dialog) dialog.close();
-        pendingTransferBlockId = null;
-    });
-
     document.getElementById("confirm-delete-block")?.addEventListener("click", function () {
         const dialog = document.getElementById("delete-block-dialog");
         if (!pendingDeleteBlockId) return;
@@ -458,21 +404,10 @@ document.addEventListener("DOMContentLoaded", function () {
         pendingDeleteBlockId = null;
     });
 
-    document.querySelectorAll(
-        "#sell-block-dialog button[value='cancel'], #move-block-dialog button[value='cancel'], #transfer-cancel, #delete-cancel"
-    ).forEach(function (btn) {
-        btn.addEventListener("click", function () {
-            btn.closest("dialog")?.close();
+    document.querySelectorAll("#delete-block-dialog button[value='cancel'], #delete-cancel")
+        .forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                btn.closest("dialog")?.close();
+            });
         });
-    });
-
-    document.getElementById("confirm-move-block")?.addEventListener("click", function () {
-        const description = document.getElementById("move-description")?.value || "";
-        const dialog = document.getElementById("move-block-dialog");
-        if (!pendingMoveBlockId || !pendingMoveTargetType) return;
-        moveBlock(pendingMoveBlockId, pendingMoveTargetType, description);
-        if (dialog) dialog.close();
-        pendingMoveBlockId = null;
-        pendingMoveTargetType = null;
-    });
 });
