@@ -1,6 +1,7 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.EmailPlaceholderSample;
 import com.ozerler.marble.dto.EmailPreviewDto;
 import com.ozerler.marble.exception.ResourceNotFoundException;
 import com.ozerler.marble.model.EmailTemplate;
@@ -23,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Service managing corporate email templates, dynamic rendering engine,
@@ -32,6 +34,9 @@ import java.util.regex.Matcher;
 @RequiredArgsConstructor
 @Slf4j
 public class EmailService {
+
+    private static final Pattern PLACEHOLDER_TOKEN = Pattern.compile(
+            "\\{\\{\\s*([A-Za-z0-9_]+)\\s*\\}\\}|\\$\\{\\s*([A-Za-z0-9_]+)\\s*\\}");
 
     private final EmailTemplateRepository templateRepository;
     private final SettingService settingService;
@@ -224,6 +229,67 @@ public class EmailService {
                 .rawSubject(t.getSubject())
                 .rawHtml(t.getBodyHtml())
                 .build());
+    }
+
+    /**
+     * Ordered placeholder keys declared on the template, plus any tokens found in subject/body.
+     */
+    public List<String> placeholderKeys(EmailTemplate template) {
+        LinkedHashSet<String> keys = new LinkedHashSet<>();
+        if (template != null && StringUtils.isNotBlank(template.getPlaceholders())) {
+            for (String part : template.getPlaceholders().split("[,;]+")) {
+                String key = normalizePlaceholderKey(part);
+                if (!key.isEmpty()) {
+                    keys.add(key);
+                }
+            }
+        }
+        if (template != null) {
+            collectPlaceholderKeys(template.getSubject(), keys);
+            collectPlaceholderKeys(template.getBodyHtml(), keys);
+        }
+        return List.copyOf(keys);
+    }
+
+    /**
+     * Sample values used to render the live preview, in the same order as {@link #placeholderKeys}.
+     */
+    public List<EmailPlaceholderSample> placeholderSamples(EmailTemplate template) {
+        Map<String, String> samples = getDefaultSampleVariables();
+        List<EmailPlaceholderSample> result = new ArrayList<>();
+        for (String key : placeholderKeys(template)) {
+            String value = samples.get(key);
+            result.add(EmailPlaceholderSample.builder()
+                    .key(key)
+                    .sampleValue(value != null ? value : "—")
+                    .known(value != null)
+                    .build());
+        }
+        return result;
+    }
+
+    private static String normalizePlaceholderKey(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        return raw.replace("{{", "")
+                .replace("}}", "")
+                .replace("${", "")
+                .replace("}", "")
+                .trim();
+    }
+
+    private static void collectPlaceholderKeys(String text, Set<String> keys) {
+        if (StringUtils.isBlank(text)) {
+            return;
+        }
+        Matcher matcher = PLACEHOLDER_TOKEN.matcher(text);
+        while (matcher.find()) {
+            String key = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+            if (StringUtils.isNotBlank(key)) {
+                keys.add(key);
+            }
+        }
     }
 
     /**

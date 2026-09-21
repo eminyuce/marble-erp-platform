@@ -96,7 +96,9 @@ function renderSimpleMarkdown(source) {
 
 const HELP_PATH_ACTIONS = [
     [/^\/blocks\/\d+\/move$/, 'block-move'],
-    [/^\/blocks\/\d+\/transfer-to-factory$/, 'block-transfer']
+    [/^\/blocks\/\d+\/transfer-to-factory$/, 'block-transfer'],
+    [/^\/blocks\/\d+\/photos(?:\/\d+)?$/, 'block-photos'],
+    [/^\/admin\/settings\/templates\/\d+\/preview$/, 'email-preview']
 ];
 
 const HELP_PATH_PREFIXES = [

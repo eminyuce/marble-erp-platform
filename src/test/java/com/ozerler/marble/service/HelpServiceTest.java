@@ -49,6 +49,10 @@ class HelpServiceTest {
         assertThat(helpService.getHelpPage("block-move").orElseThrow().getTitle()).isEqualTo("Blok Saha Taşıma");
         assertThat(helpService.getHelpPage("block-transfer")).isPresent();
         assertThat(helpService.getHelpPage("block-transfer").orElseThrow().getTitle()).isEqualTo("Fabrikaya Sevk");
+        assertThat(helpService.getHelpPage("block-photos")).isPresent();
+        assertThat(helpService.getHelpPage("block-photos").orElseThrow().getTitle()).isEqualTo("Blok Fotoğraf İncelemesi");
+        assertThat(helpService.getHelpPage("email-preview")).isPresent();
+        assertThat(helpService.getHelpPage("email-preview").orElseThrow().getTitle()).isEqualTo("E-posta Şablon Önizleme");
     }
 
     @Test
@@ -97,6 +101,9 @@ class HelpServiceTest {
         assertThat(helpService.resolvePageKey("/blocks/12/move")).contains("block-move");
         assertThat(helpService.resolvePageKey("/blocks/12/move?targetType=DISPATCH_YARD")).contains("block-move");
         assertThat(helpService.resolvePageKey("/blocks/12/transfer-to-factory")).contains("block-transfer");
+        assertThat(helpService.resolvePageKey("/blocks/12/photos")).contains("block-photos");
+        assertThat(helpService.resolvePageKey("/blocks/12/photos/8")).contains("block-photos");
+        assertThat(helpService.resolvePageKey("/admin/settings/templates/3/preview")).contains("email-preview");
         assertThat(helpService.resolvePageKey("/unknown")).isEmpty();
         assertThat(helpService.resolvePageKey("/roles")).isEmpty();
     }

@@ -8,11 +8,23 @@
 <div layout:fragment="content" class="erp-form-page">
 
     <div th:replace="~{fragments/form-page :: breadcrumb('Sistem Ayarları', @{/admin/settings(tab='templates')}, 'Şablon düzenle')}"></div>
-    <div th:replace="~{fragments/form-page :: heading(
-        'E-posta şablonunu düzenle',
-        ${template.templateName},
-        ${'Anahtar: ' + template.templateKey},
-        @{/admin/settings(tab='templates')})}"></div>
+    <div class="erp-form-heading">
+        <div class="erp-form-heading-main">
+            <h2 class="admin-page-title">E-posta şablonunu düzenle</h2>
+            <p class="erp-list-lead" th:text="${template.templateName}">Şablon</p>
+            <span class="erp-form-entity" th:text="${'Anahtar: ' + template.templateKey}">Anahtar</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a th:href="@{/admin/settings/templates/{id}/preview(id=${template.id})}" class="erp-btn-secondary">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+                <span>Canlı önizleme</span>
+            </a>
+            <a th:href="@{/admin/settings(tab='templates')}" class="erp-btn-secondary erp-form-back">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Şablonlara dön</span>
+            </a>
+        </div>
+    </div>
 
     <div th:replace="~{fragments/alerts :: alerts}"></div>
 

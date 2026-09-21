@@ -169,6 +169,58 @@ public class BlockController extends AbstractController {
         return "erp/blocks/detail";
     }
 
+    @GetMapping("/{id}/photos")
+    public String blockPhotos(@PathVariable("id") Long id,
+                              Locale locale,
+                              RedirectAttributes redirectAttributes) {
+        quarryBlockService.getBlockWithDetails(id);
+        List<FileStorageDto> images = listBlockImages(id);
+        if (images.isEmpty()) {
+            redirectAttributes.addFlashAttribute("warningMessage",
+                    messageSource.getMessage("erp.block.photos.empty", null, locale));
+            return "redirect:/blocks/" + id;
+        }
+        return "redirect:/blocks/" + id + "/photos/" + images.get(0).getId();
+    }
+
+    @GetMapping("/{id}/photos/{fileId}")
+    public String blockPhoto(@PathVariable("id") Long id,
+                             @PathVariable("fileId") Long fileId,
+                             Locale locale,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
+        var block = quarryBlockService.getBlockWithDetails(id);
+        List<FileStorageDto> images = listBlockImages(id);
+        if (images.isEmpty()) {
+            redirectAttributes.addFlashAttribute("warningMessage",
+                    messageSource.getMessage("erp.block.photos.empty", null, locale));
+            return "redirect:/blocks/" + id;
+        }
+
+        int currentIndex = indexOfImage(images, fileId);
+        if (currentIndex < 0) {
+            return "redirect:/blocks/" + id + "/photos/" + images.get(0).getId();
+        }
+
+        FileStorageDto currentImage = images.get(currentIndex);
+        boolean hasSiblings = images.size() > 1;
+        FileStorageDto previousImage = hasSiblings
+                ? images.get((currentIndex - 1 + images.size()) % images.size())
+                : null;
+        FileStorageDto nextImage = hasSiblings
+                ? images.get((currentIndex + 1) % images.size())
+                : null;
+
+        model.addAttribute("block", block);
+        model.addAttribute("imageFiles", images);
+        model.addAttribute("currentImage", currentImage);
+        model.addAttribute("currentIndex", currentIndex);
+        model.addAttribute("previousImage", previousImage);
+        model.addAttribute("nextImage", nextImage);
+        model.addAttribute("pageTitle", block.getBlockCode() + " fotoğrafları");
+        return "erp/blocks/photos";
+    }
+
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
         var block = quarryBlockService.getBlockWithDetails(id);
@@ -578,5 +630,24 @@ public class BlockController extends AbstractController {
             return StockLocationType.DISPATCH_YARD;
         }
         return StockLocationType.PRODUCTION_YARD;
+    }
+
+    private List<FileStorageDto> listBlockImages(Long blockId) {
+        return fileStorageService.getFilesForEntity("BLOCK", blockId).stream()
+                .map(FileStorageDto::fromEntity)
+                .filter(FileStorageDto::isImage)
+                .toList();
+    }
+
+    private static int indexOfImage(List<FileStorageDto> images, Long fileId) {
+        if (fileId == null) {
+            return -1;
+        }
+        for (int i = 0; i < images.size(); i++) {
+            if (fileId.equals(images.get(i).getId())) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

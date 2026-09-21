@@ -4332,6 +4332,7 @@ textarea,
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
   width: min(100%, 28rem);
   max-width: calc(100vw - 2rem);
+  margin: auto;
 }
 
 .erp-dialog-panel::backdrop {
@@ -4515,4 +4516,40 @@ textarea,
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.email-preview-frame {
+  min-height: 520px;
+  height: 62vh;
+  border: 0;
+}
+
+.photo-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+}
+
+.photo-nav:hover {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.photo-nav--prev {
+  left: 16px;
+}
+
+.photo-nav--next {
+  right: 16px;
+}
+
 

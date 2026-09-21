@@ -103,7 +103,7 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20260921-block-ops-pages"
+  asset-version: "20260921-modals-to-pages-2"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy

@@ -388,6 +388,78 @@ class BlockControllerTest {
         assertThat(view).isEqualTo("redirect:/blocks/100/transfer-to-factory");
     }
 
+    @Test
+    @DisplayName("blockPhotos redirects to the first image when photos exist")
+    void blockPhotosRedirectsToFirstImage() {
+        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L)).thenReturn(quarryBlock(
+                com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
+        org.mockito.Mockito.when(fileStorageService.getFilesForEntity("BLOCK", 100L))
+                .thenReturn(java.util.List.of(sampleImage(7L), sampleImage(8L)));
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.blockPhotos(100L, java.util.Locale.forLanguageTag("tr"), redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/blocks/100/photos/7");
+    }
+
+    @Test
+    @DisplayName("blockPhotos redirects to detail when the block has no images")
+    void blockPhotosRedirectsWhenEmpty() {
+        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L)).thenReturn(quarryBlock(
+                com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
+        org.mockito.Mockito.when(fileStorageService.getFilesForEntity("BLOCK", 100L))
+                .thenReturn(java.util.List.of());
+        org.mockito.Mockito.when(messageSource.getMessage(
+                        org.mockito.ArgumentMatchers.eq("erp.block.photos.empty"),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("no photos");
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.blockPhotos(100L, java.util.Locale.forLanguageTag("tr"), redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/blocks/100");
+        assertThat(redirectAttributes.getFlashAttributes().get("warningMessage")).isEqualTo("no photos");
+    }
+
+    @Test
+    @DisplayName("blockPhoto renders the dedicated photo page for a matching file")
+    void blockPhotoRendersViewer() {
+        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L)).thenReturn(quarryBlock(
+                com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
+        org.mockito.Mockito.when(fileStorageService.getFilesForEntity("BLOCK", 100L))
+                .thenReturn(java.util.List.of(sampleImage(7L), sampleImage(8L)));
+        org.springframework.ui.ExtendedModelMap model = new org.springframework.ui.ExtendedModelMap();
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.blockPhoto(
+                100L, 8L, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
+
+        assertThat(view).isEqualTo("erp/blocks/photos");
+        assertThat(model.get("currentIndex")).isEqualTo(1);
+        com.ozerler.marble.dto.FileStorageDto current =
+                (com.ozerler.marble.dto.FileStorageDto) model.get("currentImage");
+        assertThat(current.getId()).isEqualTo(8L);
+        assertThat(model.get("previousImage")).isNotNull();
+        assertThat(model.get("nextImage")).isNotNull();
+    }
+
+    private static com.ozerler.marble.model.FileStorage sampleImage(Long id) {
+        return com.ozerler.marble.model.FileStorage.builder()
+                .id(id)
+                .fileName("block-" + id + ".png")
+                .originalName("cephe-" + id + ".png")
+                .mimeType("image/png")
+                .fileSize(2048L)
+                .filePath("/media/block-" + id + ".png")
+                .entityType("BLOCK")
+                .entityId(100L)
+                .build();
+    }
+
     private static com.ozerler.marble.model.Block quarryBlock(
             com.ozerler.marble.model.enums.BlockStatus status,
             StockLocationType locationType) {

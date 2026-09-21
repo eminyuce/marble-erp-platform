@@ -126,4 +126,39 @@ test.describe('Admin Settings & Master Definitions (Tanımlar & Ayarlar)', () =>
     await errorTracker.assertCleanState();
   });
 
+  test('Email template preview is a dedicated page, not a modal', async ({ page }) => {
+    const errorTracker = setupErrorTracking(page);
+
+    await page.goto('/admin/settings?tab=templates', { waitUntil: 'networkidle' });
+    const previewLink = page.locator('a[href*="/admin/settings/templates/"][href$="/preview"]').first();
+    await expect(previewLink).toBeVisible();
+    await previewLink.click();
+    await expect(page).toHaveURL(/\/admin\/settings\/templates\/\d+\/preview$/);
+    await expect(page.locator('body')).toHaveAttribute('data-help-page-key', 'email-preview');
+    await expect(page.locator('#email-preview-frame')).toBeVisible();
+    await expect(page.locator('#email-preview-subject')).not.toHaveText('');
+    await expect(page.locator('.admin-page-title')).toContainText('E-posta şablonu canlı önizleme');
+
+    await errorTracker.assertCleanState();
+  });
+
+  test('User delete uses a confirmation dialog, not a native confirm popup', async ({ page }) => {
+    const errorTracker = setupErrorTracking(page);
+
+    await page.goto('/admin/users', { waitUntil: 'domcontentloaded' });
+    await waitForTabulator(page, '#users-table');
+    const actionsBtn = page.locator('#users-table .grid-actions-btn').first();
+    await actionsBtn.scrollIntoViewIfNeeded();
+    await actionsBtn.evaluate(btn => /** @type {HTMLElement} */ (btn).click());
+    const deleteBtn = page.locator('#grid-actions-portal button:has-text("Sil")').first();
+    await expect(deleteBtn).toBeVisible();
+    await deleteBtn.click();
+    const dialog = page.locator('#delete-user-dialog');
+    await expect(dialog).toBeVisible();
+    await dialog.locator('button:has-text("Vazgeç")').click();
+    await expect(dialog).toBeHidden();
+
+    await errorTracker.assertCleanState();
+  });
+
 });

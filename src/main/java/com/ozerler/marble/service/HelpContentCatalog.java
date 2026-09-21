@@ -37,7 +37,9 @@ public class HelpContentCatalog {
 
     private static final List<ActionPathMapping> ACTION_PATH_MAPPINGS = List.of(
             new ActionPathMapping(Pattern.compile("^/blocks/[0-9]+/move$"), "block-move"),
-            new ActionPathMapping(Pattern.compile("^/blocks/[0-9]+/transfer-to-factory$"), "block-transfer")
+            new ActionPathMapping(Pattern.compile("^/blocks/[0-9]+/transfer-to-factory$"), "block-transfer"),
+            new ActionPathMapping(Pattern.compile("^/blocks/[0-9]+/photos(/[0-9]+)?$"), "block-photos"),
+            new ActionPathMapping(Pattern.compile("^/admin/settings/templates/[0-9]+/preview$"), "email-preview")
     );
 
     private static final List<PathMapping> PATH_MAPPINGS = List.of(

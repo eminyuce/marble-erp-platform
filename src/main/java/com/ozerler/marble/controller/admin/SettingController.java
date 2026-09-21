@@ -2,7 +2,9 @@ package com.ozerler.marble.controller.admin;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.dto.EmailPlaceholderSample;
 import com.ozerler.marble.dto.EmailPreviewDto;
+import com.ozerler.marble.exception.ResourceNotFoundException;
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
@@ -107,6 +109,28 @@ public class SettingController extends AbstractController {
         model.addAttribute("template", template);
         model.addAttribute("pageTitle", messageSource.getMessage("admin.settings.template.title.edit", null, locale));
         return "admin/settings/template-form";
+    }
+
+    @GetMapping("/templates/{id}/preview")
+    public String previewTemplatePage(@PathVariable("id") Long id, Model model) {
+        EmailTemplate template = emailService.getTemplateById(id);
+        EmailPreviewDto preview = emailService.previewTemplate(template.getTemplateKey())
+                .orElseThrow(() -> new ResourceNotFoundException("EmailTemplate", id));
+        List<EmailPlaceholderSample> samples = emailService.placeholderSamples(template);
+        List<EmailTemplate> templates = emailService.getAllTemplates();
+
+        model.addAttribute("template", template);
+        model.addAttribute("preview", preview);
+        model.addAttribute("placeholderSamples", samples);
+        model.addAttribute("templates", templates);
+        model.addAttribute("previewFromName",
+                settingService.getSetting("smtp.from_name",
+                        settingService.getSetting("mail.smtp.from_name", "Özerler Mermer ERP")));
+        model.addAttribute("previewFromAddress",
+                settingService.getSetting("smtp.from_address",
+                        settingService.getSetting("mail.smtp.from", "info@ozerlermermer.com")));
+        model.addAttribute("previewToAddress", "ahmet.yilmaz@ozerler.test");
+        return "admin/settings/template-preview";
     }
 
     @PostMapping("/templates/{id}/save")
