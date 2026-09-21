@@ -35,6 +35,11 @@ public class HelpContentCatalog {
     private static final Pattern INNER_HTML = Pattern.compile(
             "(?s)<section[^>]*>(.*)</section>", Pattern.CASE_INSENSITIVE);
 
+    private static final List<ActionPathMapping> ACTION_PATH_MAPPINGS = List.of(
+            new ActionPathMapping(Pattern.compile("^/blocks/[0-9]+/move$"), "block-move"),
+            new ActionPathMapping(Pattern.compile("^/blocks/[0-9]+/transfer-to-factory$"), "block-transfer")
+    );
+
     private static final List<PathMapping> PATH_MAPPINGS = List.of(
                     new PathMapping("/account/change-password", "change-password"),
                     new PathMapping("/admin/dashboard/systemhealth", "system-health"),
@@ -113,6 +118,11 @@ public class HelpContentCatalog {
         if (path.length() > 1 && path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
         }
+        for (ActionPathMapping mapping : ACTION_PATH_MAPPINGS) {
+            if (mapping.pattern().matcher(path).matches()) {
+                return Optional.of(mapping.pageKey());
+            }
+        }
         for (PathMapping mapping : PATH_MAPPINGS) {
             if (path.equals(mapping.path()) || path.startsWith(mapping.path() + "/")) {
                 return Optional.of(mapping.pageKey());
@@ -175,5 +185,8 @@ public class HelpContentCatalog {
     }
 
     private record PathMapping(String path, String pageKey) {
+    }
+
+    private record ActionPathMapping(Pattern pattern, String pageKey) {
     }
 }

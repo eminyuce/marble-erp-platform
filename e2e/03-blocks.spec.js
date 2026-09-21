@@ -341,5 +341,171 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
     await errorTracker.assertCleanState();
   });
 
+  test('Dedicated block move page: navigate from datagrid, verify help banner and complete yard move', async ({ page }) => {
+    const errorTracker = setupErrorTracking(page);
+    const testCode = 'BLK-MOVE-' + Date.now().toString().slice(-6);
+
+    await page.goto('/blocks/create', { waitUntil: 'networkidle' });
+    await page.locator('select[name="quarryId"]').selectOption({ index: 1 });
+    await page.locator('input[name="quarrySection"]').fill('A-BLOK');
+    await page.locator('input[name="blockCode"]').fill(testCode);
+    await page.locator('select[name="locationType"]').selectOption('PRODUCTION_YARD');
+    await page.locator('input[name="widthCm"]').fill('150');
+    await page.locator('input[name="lengthCm"]').fill('250');
+    await page.locator('input[name="heightCm"]').fill('130');
+    await page.locator('input[name="stoneType"]').fill('Burdur Bej');
+    await page.locator('select[name="qualityGrade"]').selectOption('A');
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle' }),
+      page.locator('#block-form button[type="submit"]').click()
+    ]);
+
+    await page.goto('/blocks', { waitUntil: 'networkidle' });
+    const searchResponse = page.waitForResponse(res => res.url().includes('/blocks/api/data') && res.status() === 200);
+    await page.locator('#search-input').fill(testCode);
+    await searchResponse;
+    await waitForTabulator(page, '#blocks-table', 1);
+
+    const actionsBtn = page.locator('#blocks-table .grid-actions-btn').first();
+    await actionsBtn.scrollIntoViewIfNeeded();
+    await expect(actionsBtn).toBeVisible();
+    await actionsBtn.evaluate(btn => /** @type {HTMLElement} */ (btn).click());
+
+    const moveLink = page.locator('#grid-actions-portal a:has-text("Stok Sahasına taşı")');
+    await expect(moveLink).toBeVisible();
+    const moveHref = await moveLink.getAttribute('href');
+    expect(moveHref).toMatch(/\/blocks\/\d+\/move\?targetType=DISPATCH_YARD$/);
+
+    await expect(page.locator('#move-block-dialog')).toHaveCount(0);
+    await expect(page.locator('#transfer-block-dialog')).toHaveCount(0);
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle' }),
+      moveLink.evaluate(a => /** @type {HTMLElement} */ (a).click())
+    ]);
+
+    expect(page.url()).toMatch(/\/blocks\/\d+\/move/);
+    await expect(page.locator('body')).toHaveAttribute('data-help-page-key', 'block-move');
+    await expect(page.locator('.admin-page-title')).toContainText('Blok Saha Taşıma İşlemi');
+    await expect(page.locator('.erp-form-entity')).toContainText(testCode);
+
+    const infoCallout = page.locator('.erp-ops-info-callout');
+    await expect(infoCallout).toBeVisible();
+    await expect(infoCallout).toContainText('Üretim Sahası');
+    await expect(infoCallout).toContainText('Stok Sahası');
+    await expect(infoCallout).toContainText('Hareket kaydı');
+
+    const tips = page.locator('.erp-tip');
+    expect(await tips.count()).toBeGreaterThanOrEqual(3);
+
+    await expect(page.locator('#targetType')).toHaveValue('DISPATCH_YARD');
+    await page.locator('input[name="description"]').fill('E2E stok sahası A sırası');
+
+    const helpBtn = page.locator('.admin-topbar-help');
+    await expect(helpBtn).toBeVisible();
+    await helpBtn.click();
+    const helpPanel = page.locator('#helpPanelDialog');
+    await expect(helpPanel).toBeVisible();
+    await expect(page.locator('#helpPanelTitle')).toContainText('Blok Saha Taşıma', { timeout: 8000 });
+    await expect(page.locator('.help-panel-content')).toContainText('Hedef Saha');
+    await page.locator('.help-panel-close').click();
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle' }),
+      page.locator('#submit-move-btn').click()
+    ]);
+
+    expect(page.url()).toMatch(/\/blocks\/\d+$/);
+    const detailContent = await page.content();
+    expect(detailContent).toContain('Stok Sahası');
+    expect(detailContent).toContain('E2E stok sahası A sırası');
+
+    await errorTracker.assertCleanState();
+  });
+
+  test('Dedicated factory transfer page: navigate from datagrid, verify help banner and complete dispatch', async ({ page }) => {
+    const errorTracker = setupErrorTracking(page);
+    const testCode = 'BLK-TRN-' + Date.now().toString().slice(-6);
+
+    await page.goto('/blocks/create', { waitUntil: 'networkidle' });
+    await page.locator('select[name="quarryId"]').selectOption({ index: 1 });
+    await page.locator('input[name="quarrySection"]').fill('A-BLOK');
+    await page.locator('input[name="blockCode"]').fill(testCode);
+    await page.locator('select[name="locationType"]').selectOption('DISPATCH_YARD');
+    await page.locator('input[name="widthCm"]').fill('160');
+    await page.locator('input[name="lengthCm"]').fill('240');
+    await page.locator('input[name="heightCm"]').fill('140');
+    await page.locator('input[name="stoneType"]').fill('Muğla Beyaz');
+    await page.locator('select[name="qualityGrade"]').selectOption('A');
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle' }),
+      page.locator('#block-form button[type="submit"]').click()
+    ]);
+
+    await page.goto('/blocks', { waitUntil: 'networkidle' });
+    const searchResponse = page.waitForResponse(res => res.url().includes('/blocks/api/data') && res.status() === 200);
+    await page.locator('#search-input').fill(testCode);
+    await searchResponse;
+    await waitForTabulator(page, '#blocks-table', 1);
+
+    const actionsBtn = page.locator('#blocks-table .grid-actions-btn').first();
+    await actionsBtn.scrollIntoViewIfNeeded();
+    await expect(actionsBtn).toBeVisible();
+    await actionsBtn.evaluate(btn => /** @type {HTMLElement} */ (btn).click());
+
+    const transferLink = page.locator('#grid-actions-portal a:has-text("Fabrikaya sevk")');
+    await expect(transferLink).toBeVisible();
+    const transferHref = await transferLink.getAttribute('href');
+    expect(transferHref).toMatch(/\/blocks\/\d+\/transfer-to-factory$/);
+
+    await expect(page.locator('#transfer-block-dialog')).toHaveCount(0);
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle' }),
+      transferLink.evaluate(a => /** @type {HTMLElement} */ (a).click())
+    ]);
+
+    expect(page.url()).toMatch(/\/blocks\/\d+\/transfer-to-factory$/);
+    await expect(page.locator('body')).toHaveAttribute('data-help-page-key', 'block-transfer');
+    await expect(page.locator('.admin-page-title')).toContainText('Fabrikaya Sevk İşlemi');
+    await expect(page.locator('.erp-form-entity')).toContainText(testCode);
+
+    const infoCallout = page.locator('.erp-ops-info-callout');
+    await expect(infoCallout).toBeVisible();
+    await expect(infoCallout).toContainText('Stok çıkışı');
+    await expect(infoCallout).toContainText('Nakliye maliyeti');
+    await expect(infoCallout).toContainText('Önkoşul');
+
+    const tips = page.locator('.erp-tip');
+    expect(await tips.count()).toBeGreaterThanOrEqual(3);
+
+    await page.locator('input[name="transportCost"]').fill('12500');
+
+    const helpBtn = page.locator('.admin-topbar-help');
+    await helpBtn.click();
+    await expect(page.locator('#helpPanelDialog')).toBeVisible();
+    await expect(page.locator('#helpPanelTitle')).toContainText('Fabrikaya Sevk', { timeout: 8000 });
+    await expect(page.locator('.help-panel-content')).toContainText('Nakliye bedeli');
+    await page.locator('.help-panel-close').click();
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle' }),
+      page.locator('#submit-transfer-btn').click()
+    ]);
+
+    expect(page.url()).toMatch(/\/blocks\/\d+$/);
+    const detailContent = await page.content();
+    expect(detailContent).toMatch(/Fabrika|fabrikada|AT_FACTORY|Fabrikada/i);
+
+    const transferredId = page.url().split('/').pop();
+    await page.goto(`/blocks/${transferredId}/transfer-to-factory`, { waitUntil: 'networkidle' });
+    expect(page.url()).toContain(`/blocks/${transferredId}`);
+    expect(page.url()).not.toContain('/transfer-to-factory');
+
+    await errorTracker.assertCleanState();
+  });
+
 });
 

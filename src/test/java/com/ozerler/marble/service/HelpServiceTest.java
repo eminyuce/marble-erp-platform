@@ -45,6 +45,10 @@ class HelpServiceTest {
         assertThat(helpService.getHelpPage("expenses")).isPresent();
         assertThat(helpService.getHelpPage("machine-fuel")).isPresent();
         assertThat(helpService.getHelpPage("system-health")).isPresent();
+        assertThat(helpService.getHelpPage("block-move")).isPresent();
+        assertThat(helpService.getHelpPage("block-move").orElseThrow().getTitle()).isEqualTo("Blok Saha Taşıma");
+        assertThat(helpService.getHelpPage("block-transfer")).isPresent();
+        assertThat(helpService.getHelpPage("block-transfer").orElseThrow().getTitle()).isEqualTo("Fabrikaya Sevk");
     }
 
     @Test
@@ -87,6 +91,12 @@ class HelpServiceTest {
         assertThat(helpService.resolvePageKey("/expenses")).contains("expenses");
         assertThat(helpService.resolvePageKey("/machines/fuel")).contains("machine-fuel");
         assertThat(helpService.resolvePageKey("/admin/dashboard/systemhealth")).contains("system-health");
+        assertThat(helpService.resolvePageKey("/blocks")).contains("blocks");
+        assertThat(helpService.resolvePageKey("/blocks/12")).contains("blocks");
+        assertThat(helpService.resolvePageKey("/blocks/12/edit")).contains("blocks");
+        assertThat(helpService.resolvePageKey("/blocks/12/move")).contains("block-move");
+        assertThat(helpService.resolvePageKey("/blocks/12/move?targetType=DISPATCH_YARD")).contains("block-move");
+        assertThat(helpService.resolvePageKey("/blocks/12/transfer-to-factory")).contains("block-transfer");
         assertThat(helpService.resolvePageKey("/unknown")).isEmpty();
         assertThat(helpService.resolvePageKey("/roles")).isEmpty();
     }

@@ -81,7 +81,7 @@ test.describe('Dashboard & System Health & Help Pages', () => {
   test('Help catalog API returns documentation cleanly', async ({ page }) => {
     const errorTracker = setupErrorTracking(page);
 
-    const helpKeys = ['blocks', 'production', 'workshop', 'projects', 'sales', 'expenses', 'machine-fuel', 'system-health'];
+    const helpKeys = ['blocks', 'production', 'workshop', 'projects', 'sales', 'expenses', 'machine-fuel', 'system-health', 'block-move', 'block-transfer'];
     for (const key of helpKeys) {
       const res = await page.evaluate(async (k) => {
         const r = await fetch(`/api/help/${k}`);

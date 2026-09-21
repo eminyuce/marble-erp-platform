@@ -259,4 +259,151 @@ class BlockControllerTest {
                 new BigDecimal("5000"), "Not", null, StockLocationType.DISPATCH_YARD, fileIds, "A-BLOK");
         assertThat(view).isEqualTo("redirect:/blocks");
     }
+
+    @Test
+    @DisplayName("showMoveForm opens dedicated page with requested target yard")
+    void shouldOpenMoveFormForQuarryBlock() {
+        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L))
+                .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
+        org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.showMoveForm(
+                100L, StockLocationType.DISPATCH_YARD, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
+
+        assertThat(view).isEqualTo("erp/blocks/move");
+        assertThat(model.getAttribute("selectedTargetType")).isEqualTo(StockLocationType.DISPATCH_YARD);
+        assertThat(model.getAttribute("block")).isNotNull();
+    }
+
+    @Test
+    @DisplayName("showMoveForm defaults target to opposite quarry yard")
+    void shouldDefaultMoveTargetToOppositeYard() {
+        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L))
+                .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
+        org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.showMoveForm(
+                100L, null, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
+
+        assertThat(view).isEqualTo("erp/blocks/move");
+        assertThat(model.getAttribute("selectedTargetType")).isEqualTo(StockLocationType.DISPATCH_YARD);
+    }
+
+    @Test
+    @DisplayName("showMoveForm redirects sold blocks to detail")
+    void shouldRedirectSoldBlockAwayFromMoveForm() {
+        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L))
+                .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.SOLD, StockLocationType.DISPATCH_YARD));
+        org.mockito.Mockito.when(messageSource.getMessage(
+                        org.mockito.ArgumentMatchers.eq("erp.block.already_sold"),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("already sold");
+        org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.showMoveForm(
+                100L, StockLocationType.PRODUCTION_YARD, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/blocks/100");
+    }
+
+    @Test
+    @DisplayName("moveToYard form redirects to move page on error")
+    void shouldRedirectToMovePageOnMoveFormError() {
+        doThrow(new IllegalArgumentException("Blok ocak sahasında değil")).when(quarryBlockService)
+                .moveToYard(100L, StockLocationType.DISPATCH_YARD, "Stok sahası");
+        org.mockito.Mockito.when(messageSource.getMessage(
+                        org.mockito.ArgumentMatchers.eq("common.error.prefix"),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("Error: Blok ocak sahasında değil");
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.moveToYard(
+                100L, StockLocationType.DISPATCH_YARD, "Stok sahası",
+                java.util.Locale.forLanguageTag("tr"), redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/blocks/100/move?targetType=DISPATCH_YARD");
+    }
+
+    @Test
+    @DisplayName("showTransferForm opens dedicated page for dispatch-yard blocks")
+    void shouldOpenTransferFormForDispatchYardBlock() {
+        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L))
+                .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.DISPATCH_YARD));
+        org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.showTransferForm(
+                100L, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
+
+        assertThat(view).isEqualTo("erp/blocks/transfer");
+        assertThat(model.getAttribute("block")).isNotNull();
+    }
+
+    @Test
+    @DisplayName("showTransferForm redirects production-yard blocks to detail")
+    void shouldRedirectProductionYardBlockAwayFromTransferForm() {
+        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L))
+                .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
+        org.mockito.Mockito.when(messageSource.getMessage(
+                        org.mockito.ArgumentMatchers.eq("error.block.dispatch.not_in_dispatch_yard"),
+                        org.mockito.ArgumentMatchers.isNull(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("only dispatch");
+        org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.showTransferForm(
+                100L, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/blocks/100");
+    }
+
+    @Test
+    @DisplayName("transferToFactory form redirects to transfer page on error")
+    void shouldRedirectToTransferPageOnTransferFormError() {
+        doThrow(new IllegalArgumentException("only dispatch")).when(quarryBlockService)
+                .transferToFactory(100L, new BigDecimal("12500"));
+        org.mockito.Mockito.when(messageSource.getMessage(
+                        org.mockito.ArgumentMatchers.eq("common.error.prefix"),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("Error: only dispatch");
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.transferToFactoryForm(
+                100L, new BigDecimal("12500"), java.util.Locale.forLanguageTag("tr"), redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/blocks/100/transfer-to-factory");
+    }
+
+    private static com.ozerler.marble.model.Block quarryBlock(
+            com.ozerler.marble.model.enums.BlockStatus status,
+            StockLocationType locationType) {
+        com.ozerler.marble.model.StockLocation location = locationType == null ? null
+                : com.ozerler.marble.model.StockLocation.builder()
+                .id(1L)
+                .code(locationType.name())
+                .name(locationType.name())
+                .businessUnit(locationType.getBusinessUnit())
+                .locationType(locationType)
+                .build();
+        return com.ozerler.marble.model.Block.builder()
+                .id(100L)
+                .blockCode("BLK-100")
+                .status(status)
+                .currentLocation(location)
+                .build();
+    }
 }

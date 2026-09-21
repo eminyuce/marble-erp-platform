@@ -94,6 +94,11 @@ function renderSimpleMarkdown(source) {
     return html;
 }
 
+const HELP_PATH_ACTIONS = [
+    [/^\/blocks\/\d+\/move$/, 'block-move'],
+    [/^\/blocks\/\d+\/transfer-to-factory$/, 'block-transfer']
+];
+
 const HELP_PATH_PREFIXES = [
     ['/account/change-password', 'change-password'],
     ['/admin/dashboard/systemhealth', 'system-health'],
@@ -119,6 +124,11 @@ const HELP_PATH_PREFIXES = [
 
 function pageKeyFromPath(pathname) {
     const path = (pathname || '').split('?')[0].replace(/\/+$/, '') || '/';
+    for (const [pattern, key] of HELP_PATH_ACTIONS) {
+        if (pattern.test(path)) {
+            return key;
+        }
+    }
     for (const [prefix, key] of HELP_PATH_PREFIXES) {
         if (path === prefix || path.startsWith(prefix + '/')) {
             return key;
