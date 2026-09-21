@@ -52,6 +52,10 @@ class BlockOperationPagesTest {
                 .contains("id=\"block-move-form\"")
                 .contains("name=\"targetType\"")
                 .contains("name=\"description\"")
+                .contains("id=\"submit-move-list-btn\"")
+                .contains("id=\"submit-move-btn\"")
+                .contains("Kaydet ve Listeye Dön")
+                .contains("Kaydet ve Detaya Dön")
                 .contains("Saha Taşıma Süreci");
 
         assertThat(transfer)
@@ -61,6 +65,10 @@ class BlockOperationPagesTest {
                 .contains("fragments/erp-ops :: tip")
                 .contains("id=\"block-transfer-form\"")
                 .contains("name=\"transportCost\"")
+                .contains("id=\"submit-transfer-list-btn\"")
+                .contains("id=\"submit-transfer-btn\"")
+                .contains("Kaydet ve Listeye Dön")
+                .contains("Kaydet ve Detaya Dön")
                 .contains("Fabrika Sevkiyatı Süreci");
     }
 

@@ -389,6 +389,78 @@ class BlockControllerTest {
     }
 
     @Test
+    @DisplayName("moveToYard form redirects to list when redirectTarget is list")
+    void shouldRedirectToListOnMoveFormSuccessWhenTargetIsList() {
+        org.mockito.Mockito.when(messageSource.getMessage(
+                        org.mockito.ArgumentMatchers.eq("erp.block.move.success"),
+                        org.mockito.ArgumentMatchers.isNull(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("Taşıma başarılı");
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.moveToYard(
+                100L, StockLocationType.DISPATCH_YARD, "Stok sahası", "list",
+                java.util.Locale.forLanguageTag("tr"), redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/blocks");
+    }
+
+    @Test
+    @DisplayName("moveToYard form redirects to detail when redirectTarget is detail")
+    void shouldRedirectToDetailOnMoveFormSuccessWhenTargetIsDetail() {
+        org.mockito.Mockito.when(messageSource.getMessage(
+                        org.mockito.ArgumentMatchers.eq("erp.block.move.success"),
+                        org.mockito.ArgumentMatchers.isNull(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("Taşıma başarılı");
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.moveToYard(
+                100L, StockLocationType.DISPATCH_YARD, "Stok sahası", "detail",
+                java.util.Locale.forLanguageTag("tr"), redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/blocks/100");
+    }
+
+    @Test
+    @DisplayName("transferToFactory form redirects to list when redirectTarget is list")
+    void shouldRedirectToListOnTransferFormSuccessWhenTargetIsList() {
+        org.mockito.Mockito.when(messageSource.getMessage(
+                        org.mockito.ArgumentMatchers.eq("erp.block.transfer.success"),
+                        org.mockito.ArgumentMatchers.isNull(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("Sevk başarılı");
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.transferToFactoryForm(
+                100L, new BigDecimal("12500"), "list",
+                java.util.Locale.forLanguageTag("tr"), redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/blocks");
+    }
+
+    @Test
+    @DisplayName("transferToFactory form redirects to detail when redirectTarget is detail")
+    void shouldRedirectToDetailOnTransferFormSuccessWhenTargetIsDetail() {
+        org.mockito.Mockito.when(messageSource.getMessage(
+                        org.mockito.ArgumentMatchers.eq("erp.block.transfer.success"),
+                        org.mockito.ArgumentMatchers.isNull(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("Sevk başarılı");
+        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
+                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        String view = blockController.transferToFactoryForm(
+                100L, new BigDecimal("12500"), "detail",
+                java.util.Locale.forLanguageTag("tr"), redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/blocks/100");
+    }
+
+    @Test
     @DisplayName("blockPhotos redirects to the first image when photos exist")
     void blockPhotosRedirectsToFirstImage() {
         org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L)).thenReturn(quarryBlock(

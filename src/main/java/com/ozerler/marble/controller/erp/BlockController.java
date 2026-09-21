@@ -359,18 +359,29 @@ public class BlockController extends AbstractController {
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     public String transferToFactoryForm(@PathVariable("id") Long id,
                                         @RequestParam("transportCost") BigDecimal transportCost,
+                                        @RequestParam(value = "redirectTarget", required = false, defaultValue = "detail") String redirectTarget,
                                         Locale locale,
                                         RedirectAttributes redirectAttributes) {
         try {
             quarryBlockService.transferToFactory(id, transportCost);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.transfer.success", null, locale));
+            if ("list".equalsIgnoreCase(redirectTarget)) {
+                return "redirect:/blocks";
+            }
             return "redirect:/blocks/" + id;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
             return "redirect:/blocks/" + id + "/transfer-to-factory";
         }
+    }
+
+    public String transferToFactoryForm(Long id,
+                                        BigDecimal transportCost,
+                                        Locale locale,
+                                        RedirectAttributes redirectAttributes) {
+        return transferToFactoryForm(id, transportCost, "detail", locale, redirectAttributes);
     }
 
     @PostMapping("/{id}/api/transfer-to-factory")
@@ -451,12 +462,16 @@ public class BlockController extends AbstractController {
     public String moveToYard(@PathVariable("id") Long id,
                              @RequestParam("targetType") StockLocationType targetType,
                              @RequestParam(value = "description", required = false) String description,
+                             @RequestParam(value = "redirectTarget", required = false, defaultValue = "detail") String redirectTarget,
                              Locale locale,
                              RedirectAttributes redirectAttributes) {
         try {
             quarryBlockService.moveToYard(id, targetType, description);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.move.success", null, locale));
+            if ("list".equalsIgnoreCase(redirectTarget)) {
+                return "redirect:/blocks";
+            }
             return "redirect:/blocks/" + id;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage",
@@ -464,6 +479,14 @@ public class BlockController extends AbstractController {
             String targetQuery = targetType != null ? "?targetType=" + targetType.name() : "";
             return "redirect:/blocks/" + id + "/move" + targetQuery;
         }
+    }
+
+    public String moveToYard(Long id,
+                             StockLocationType targetType,
+                             String description,
+                             Locale locale,
+                             RedirectAttributes redirectAttributes) {
+        return moveToYard(id, targetType, description, "detail", locale, redirectAttributes);
     }
 
     @PostMapping("/{id}/api/move")

@@ -107,10 +107,16 @@
                         <span>Blok Detayı</span>
                     </a>
                 </div>
-                <button type="submit" id="submit-transfer-btn" class="w-full sm:w-auto px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer">
-                    <i data-lucide="truck" class="w-4 h-4"></i>
-                    <span>Sevki Onayla ve Kaydet</span>
-                </button>
+                <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+                    <button type="submit" name="redirectTarget" value="list" id="submit-transfer-list-btn" class="w-full sm:w-auto px-5 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                        <i data-lucide="list" class="w-4 h-4"></i>
+                        <span>Kaydet ve Listeye Dön</span>
+                    </button>
+                    <button type="submit" name="redirectTarget" value="detail" id="submit-transfer-btn" class="w-full sm:w-auto px-6 py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                        <i data-lucide="truck" class="w-4 h-4"></i>
+                        <span>Kaydet ve Detaya Dön</span>
+                    </button>
+                </div>
             </div>
         </form>
     </div>
