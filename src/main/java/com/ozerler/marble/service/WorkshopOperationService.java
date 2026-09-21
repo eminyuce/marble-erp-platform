@@ -158,7 +158,7 @@ public class WorkshopOperationService {
 
     @Transactional(readOnly = true)
     public BigDecimal orderCost(Long cutOrderId) {
-        CutOrder order = cutOrderRepository.findById(cutOrderId)
+        cutOrderRepository.findById(cutOrderId)
                 .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.cut_order.not_found", cutOrderId)));
         BigDecimal material = cutItemRepository.findByCutOrderId(cutOrderId).stream()
                 .map(item -> item.getUnitCost() != null && item.getAreaM2() != null

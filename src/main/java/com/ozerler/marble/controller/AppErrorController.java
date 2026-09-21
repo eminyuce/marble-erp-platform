@@ -40,7 +40,6 @@ public class AppErrorController implements ErrorController {
     );
 
     private final ErrorAttributes errorAttributes;
-    private final org.springframework.context.MessageSource messageSource;
 
     @RequestMapping(produces = MediaType.TEXT_HTML_VALUE)
     public String errorHtml(HttpServletRequest request, HttpServletResponse response, Model model) {

@@ -46,12 +46,10 @@ class UserServiceTest {
     private UserService userService;
 
     private Role roleAdmin;
-    private Role roleUser;
 
     @BeforeEach
     void setUp() {
         roleAdmin = Role.builder().id(1L).name("ROLE_ADMIN").description("Admin").build();
-        roleUser = Role.builder().id(2L).name("ROLE_USER").description("User").build();
     }
 
     @Test

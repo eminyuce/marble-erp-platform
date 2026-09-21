@@ -1,7 +1,6 @@
 package com.ozerler.marble.controller;
 
 import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.FileStorageDto;
 import com.ozerler.marble.model.FileStorage;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.service.FileStorageService;

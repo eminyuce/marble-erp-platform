@@ -163,8 +163,8 @@ public class BlockController extends AbstractController {
                 .map(FileStorageDto::fromEntity)
                 .toList();
         model.addAttribute("attachedFiles", attachedFiles);
-        model.addAttribute("imageFiles", attachedFiles.stream().filter(FileStorageDto::isImage).toList());
-        model.addAttribute("documentFiles", attachedFiles.stream().filter(f -> !f.isImage()).toList());
+        model.addAttribute("imageFiles", attachedFiles.stream().filter(f -> f != null && f.isImage()).toList());
+        model.addAttribute("documentFiles", attachedFiles.stream().filter(f -> f != null && !f.isImage()).toList());
 
         return "erp/blocks/detail";
     }
@@ -658,7 +658,7 @@ public class BlockController extends AbstractController {
     private List<FileStorageDto> listBlockImages(Long blockId) {
         return fileStorageService.getFilesForEntity("BLOCK", blockId).stream()
                 .map(FileStorageDto::fromEntity)
-                .filter(FileStorageDto::isImage)
+                .filter(f -> f != null && f.isImage())
                 .toList();
     }
 
