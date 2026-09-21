@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * do not require a live MinIO process.
  */
 @Service
-@Profile("test")
+@Profile({"test", "local"})
 @ConditionalOnProperty(name = "app.storage.type", havingValue = "memory")
 public class InMemoryObjectStorageService implements ObjectStorageService {
 
