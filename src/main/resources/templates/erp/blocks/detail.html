@@ -6,52 +6,7 @@
 </head>
 <body>
 <div layout:fragment="content" class="space-y-6"
-     x-data="{
-         deleteModalOpen: false,
-         galleryOpen: false,
-         currentIndex: 0,
-         images: [],
-         init() {
-             this.initGallery();
-             this.$watch('galleryOpen', val => {
-                 document.body.classList.toggle('overflow-hidden', val);
-                 if (val) {
-                     this.$nextTick(() => {
-                         if (window.lucide) window.lucide.createIcons();
-                     });
-                 }
-             });
-         },
-         initGallery() {
-             this.images = Array.from(document.querySelectorAll('.block-gallery-item')).map(el => ({
-                 url: el.getAttribute('data-url'),
-                 name: el.getAttribute('data-name'),
-                 size: el.getAttribute('data-size'),
-                 downloadUrl: el.getAttribute('data-download-url')
-             }));
-         },
-         openGallery(index) {
-             if (!this.images || this.images.length === 0) {
-                 this.initGallery();
-             }
-             this.currentIndex = Number(index) || 0;
-             this.galleryOpen = true;
-         },
-         closeGallery() {
-             this.galleryOpen = false;
-         },
-         prevImage() {
-             if (!this.images || this.images.length <= 1) return;
-             this.currentIndex = (this.currentIndex - 1 + this.images.length) % this.images.length;
-         },
-         nextImage() {
-             if (!this.images || this.images.length <= 1) return;
-             this.currentIndex = (this.currentIndex + 1) % this.images.length;
-         }
-     }"
-     @keydown.window.escape="closeGallery()"
-     @keydown.window.arrow-left="if (galleryOpen) prevImage()"
-     @keydown.window.arrow-right="if (galleryOpen) nextImage()"
+     x-data="{ deleteModalOpen: false }"
      th:with="
         locType=${block.currentLocation != null and block.currentLocation.locationType != null ? block.currentLocation.locationType.name() : ''},
         sold=${block.status != null and block.status.name() == 'SOLD'},
@@ -310,20 +265,18 @@
 
         <!-- Fotoğraf Galerisi -->
         <div th:if="${imageFiles != null and !#lists.isEmpty(imageFiles)}" class="space-y-2">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
                 <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider">Fotoğraflar</h4>
-                <span class="text-xs text-slate-400">Büyütmek ve galeriyi açmak için tıklayın</span>
+                <a th:href="@{'/blocks/' + ${block.id} + '/photos'}"
+                   class="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-800 hover:text-sky-950">
+                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                    <span>Tam sayfada incele</span>
+                </a>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                <div th:each="img, iter : ${imageFiles}" class="group relative rounded-xl border border-slate-200 overflow-hidden bg-slate-100 shadow-2xs">
-                    <button type="button"
-                            class="block w-full aspect-square overflow-hidden relative cursor-pointer block-gallery-item focus:outline-hidden"
-                            th:data-index="${iter.index}"
-                            th:data-url="${img.filePath}"
-                            th:data-name="${img.originalName}"
-                            th:data-size="${img.formattedSize}"
-                            th:data-download-url="@{'/api/upload/download/' + ${img.id}}"
-                            @click="openGallery(Number($el.getAttribute('data-index')))">
+                <div th:each="img : ${imageFiles}" class="group relative rounded-xl border border-slate-200 overflow-hidden bg-slate-100 shadow-2xs">
+                    <a th:href="@{'/blocks/' + ${block.id} + '/photos/' + ${img.id}}"
+                       class="block w-full aspect-square overflow-hidden relative cursor-pointer focus:outline-hidden">
                         <img th:src="${img.filePath}" th:alt="${img.originalName}"
                              class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                         <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
@@ -331,7 +284,7 @@
                                 <i data-lucide="maximize-2" class="w-4 h-4"></i>
                             </span>
                         </div>
-                    </button>
+                    </a>
                     <div class="p-2 bg-white text-xs">
                         <p class="font-medium text-slate-800 truncate" th:text="${img.originalName}" th:title="${img.originalName}">Fotoğraf</p>
                         <div class="flex items-center justify-between mt-1 text-[11px] text-slate-500">
@@ -481,98 +434,6 @@
         </div>
     </div>
 
-    <!-- Fotoğraf Lightbox Galerisi Modalı -->
-    <template x-teleport="body">
-        <div x-show="galleryOpen"
-             class="fixed inset-0 select-none flex flex-col justify-between"
-             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 99999; background-color: rgba(10, 15, 29, 0.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: none;"
-             x-cloak
-             @click.self="closeGallery()">
-
-            <!-- Üst Kontrol Çubuğu -->
-            <div class="h-16 px-4 sm:px-6 flex items-center justify-between text-white border-b border-white/10 shrink-0 bg-slate-900/60 z-30"
-                 @click.self="closeGallery()">
-                <div class="flex items-center gap-3 min-w-0">
-                    <div class="px-3 py-1 rounded-full bg-white/10 text-xs font-mono font-semibold text-emerald-400 border border-white/10 shrink-0"
-                         x-text="images.length > 0 ? ((currentIndex + 1) + ' / ' + images.length) : '0 / 0'">
-                        1 / 1
-                    </div>
-                    <div class="min-w-0 truncate">
-                        <p class="text-sm font-semibold truncate text-white" x-text="images[currentIndex]?.name">Fotoğraf Adı</p>
-                        <p class="text-xs text-slate-400" x-text="images[currentIndex]?.size">1.2 MB</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <a :href="images[currentIndex]?.downloadUrl" :download="images[currentIndex]?.name"
-                       class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition flex items-center gap-2 text-xs font-semibold cursor-pointer border border-white/10"
-                       title="Fotoğrafı İndir">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <span class="hidden sm:inline">İndir</span>
-                    </a>
-                    <button type="button" @click="closeGallery()"
-                            id="gallery-close-btn"
-                            class="p-2 rounded-xl bg-white/10 hover:bg-rose-600/80 text-white transition cursor-pointer border border-white/10"
-                            title="Kapat (Esc)">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Orta Alan: Ana Görsel ve Sağ / Sol Butonları -->
-            <div class="relative flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden" @click.self="closeGallery()">
-                <!-- Önceki Butonu (<) -->
-                <button type="button"
-                        id="gallery-prev-btn"
-                        x-show="images.length > 1"
-                        @click.stop="prevImage()"
-                        style="position: absolute; left: 24px; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 9999px; background-color: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 50; box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);"
-                        title="Önceki Görsel (Sol Ok)">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </button>
-
-                <!-- Aktif Fotoğraf -->
-                <img :src="images[currentIndex]?.url"
-                     :alt="images[currentIndex]?.name"
-                     class="object-contain rounded-xl shadow-2xl transition duration-200 select-none border border-white/10"
-                     style="max-height: calc(100vh - 180px); max-width: calc(100vw - 160px);"
-                     @click.stop>
-
-                <!-- Sonraki Butonu (>) -->
-                <button type="button"
-                        id="gallery-next-btn"
-                        x-show="images.length > 1"
-                        @click.stop="nextImage()"
-                        style="position: absolute; right: 24px; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 9999px; background-color: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 50; box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);"
-                        title="Sonraki Görsel (Sağ Ok)">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Alt Alan: Küçük Önizleme Şeridi (Thumbnail Strip) -->
-            <div x-show="images.length > 1"
-                 class="h-20 px-4 py-2 bg-slate-900/60 border-t border-white/10 flex items-center justify-center gap-2.5 shrink-0 overflow-x-auto z-30">
-                <template x-for="(item, idx) in images" :key="idx">
-                    <button type="button"
-                            @click.stop="currentIndex = idx"
-                            class="w-14 h-14 rounded-lg overflow-hidden border-2 transition-all shrink-0 cursor-pointer"
-                            :class="currentIndex === idx ? 'border-emerald-400 scale-105 ring-2 ring-emerald-400/50 opacity-100' : 'border-white/10 opacity-40 hover:opacity-80'">
-                        <img :src="item.url" :alt="item.name" class="w-full h-full object-cover">
-                    </button>
-                </template>
-            </div>
-        </div>
-    </template>
 </div>
 </body>
 </html>

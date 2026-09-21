@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${template.templateName + ' — Canlı önizleme | Özerler Mermer ERP'}">E-posta önizleme</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page space-y-6">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Sistem Ayarları', @{/admin/settings(tab='templates')}, 'Canlı önizleme')}"></div>
+
+    <div class="erp-form-heading">
+        <div class="erp-form-heading-main">
+            <h2 class="admin-page-title">E-posta şablonu canlı önizleme</h2>
+            <p class="erp-list-lead">
+                Örnek verilerle üretilmiş bir gelen kutusu görünümü. Gerçek alıcıya posta gitmez; SMTP testi Ayarlar &gt; E-Posta sekmesindedir.
+            </p>
+            <span class="erp-form-entity" th:text="${'Anahtar: ' + template.templateKey}">Anahtar</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a th:href="@{/admin/settings/templates/{id}/edit(id=${template.id})}" class="erp-btn-primary">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                <span>Şablonu düzenle</span>
+            </a>
+            <a th:href="@{/admin/settings(tab='templates')}" class="erp-btn-secondary">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Şablonlara dön</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="erp-ops-info-callout p-5 rounded-2xl bg-gradient-to-r from-sky-50 via-amber-50/50 to-slate-50 border border-sky-200/80 shadow-xs">
+        <div class="flex items-start gap-3.5">
+            <div class="w-10 h-10 rounded-xl bg-sky-600/10 text-sky-700 flex items-center justify-center shrink-0 mt-0.5">
+                <i data-lucide="info" class="w-5 h-5"></i>
+            </div>
+            <div class="space-y-2 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <h4 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                    <span>Önizleme nasıl okunur?</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-800">Bilgi</span>
+                </h4>
+                <ul class="space-y-1.5 list-disc list-inside text-slate-600">
+                    <li><strong>Örnek veri:</strong> Soldaki tablodaki değerler gerçek müşteri veya kullanıcı bilgisi değildir; şablonun nasıl görüneceğini gösterir.</li>
+                    <li><strong>Konu satırı:</strong> Gelen kutusunda görünen başlık, değişkenler doldurulduktan sonraki halidir.</li>
+                    <li><strong>Düzenleme:</strong> Metni değiştirmek için <em>Şablonu düzenle</em> sayfasına gidin; bu ekran yalnızca okuma amaçlıdır.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)] gap-6 items-start">
+        <aside class="space-y-4">
+            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Şablon</p>
+                        <h3 class="text-base font-bold text-slate-900 mt-0.5" th:text="${template.templateName}">Ad</h3>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0"
+                          th:classappend="${template.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}"
+                          th:text="${template.isActive ? 'Aktif' : 'Pasif'}">Aktif</span>
+                </div>
+                <dl class="space-y-2 text-sm">
+                    <div>
+                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ham konu</dt>
+                        <dd class="mt-1 font-mono text-xs text-slate-700 break-words bg-slate-50 border border-slate-100 rounded-lg px-3 py-2"
+                            th:text="${preview.rawSubject}">{{fullName}}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">Örnek değişkenler</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Önizlemede kullanılan değerler. Gerçek gönderimde alıcıya göre doldurulur.</p>
+                </div>
+                <div th:if="${placeholderSamples == null or #lists.isEmpty(placeholderSamples)}"
+                     class="text-xs text-slate-500">Bu şablonda değişken tanımlanmamış.</div>
+                <div class="overflow-hidden rounded-xl border border-slate-200">
+                    <table class="w-full text-xs" th:if="${placeholderSamples != null and !#lists.isEmpty(placeholderSamples)}">
+                        <thead class="bg-slate-50 text-slate-500 uppercase tracking-wide">
+                        <tr>
+                            <th class="text-left font-semibold px-3 py-2">Değişken</th>
+                            <th class="text-left font-semibold px-3 py-2">Örnek değer</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="sample : ${placeholderSamples}" class="border-t border-slate-100">
+                            <td class="px-3 py-2 font-mono font-semibold text-amber-800 whitespace-nowrap"
+                                th:text="${'{{' + sample.key + '}}'}">{{fullName}}</td>
+                            <td class="px-3 py-2 text-slate-700 break-all"
+                                th:classappend="${!sample.known} ? 'text-rose-600 font-semibold' : ''"
+                                th:text="${sample.sampleValue}">Ahmet Yılmaz</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3"
+                     th:if="${templates != null and #lists.size(templates) > 1}">
+                <h3 class="text-sm font-bold text-slate-900">Diğer şablonlar</h3>
+                <p class="text-xs text-slate-500">Aynı örnek verilerle başka bir şablonu açın.</p>
+                <ul class="space-y-1.5">
+                    <li th:each="tpl : ${templates}" th:if="${tpl.id != template.id}">
+                        <a th:href="@{/admin/settings/templates/{id}/preview(id=${tpl.id})}"
+                           class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-slate-200 hover:border-amber-300 hover:bg-amber-50/60 transition text-xs">
+                            <span class="font-semibold text-slate-800 truncate" th:text="${tpl.templateName}">Şablon</span>
+                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                        </a>
+                    </li>
+                </ul>
+            </section>
+        </aside>
+
+        <section class="email-preview-stage min-w-0">
+            <div class="email-preview-window bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-4 sm:px-5 py-3 bg-slate-900 text-white flex items-center gap-2">
+                    <span class="flex gap-1.5 shrink-0" aria-hidden="true">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                    </span>
+                    <span class="text-xs font-semibold truncate">Gelen kutusu — örnek mesaj</span>
+                </div>
+                <dl class="px-4 sm:px-6 py-4 space-y-2 border-b border-slate-100 bg-slate-50/80 text-sm">
+                    <div class="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-2">
+                        <dt class="text-[11px] font-bold uppercase tracking-wide text-slate-500 pt-0.5">Kimden</dt>
+                        <dd class="text-slate-800 min-w-0">
+                            <span class="font-semibold" th:text="${previewFromName}">Özerler Mermer ERP</span>
+                            <span class="text-slate-500 text-xs">
+                                &lt;<span th:text="${previewFromAddress}">info@ozerlermermer.com</span>&gt;
+                            </span>
+                        </dd>
+                    </div>
+                    <div class="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-2">
+                        <dt class="text-[11px] font-bold uppercase tracking-wide text-slate-500 pt-0.5">Kime</dt>
+                        <dd class="text-slate-700 font-mono text-xs break-all" th:text="${previewToAddress}">ahmet.yilmaz@ozerler.test</dd>
+                    </div>
+                    <div class="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-2">
+                        <dt class="text-[11px] font-bold uppercase tracking-wide text-slate-500 pt-0.5">Konu</dt>
+                        <dd id="email-preview-subject" class="font-bold text-slate-900 break-words" th:text="${preview.subject}">Konu</dd>
+                    </div>
+                </dl>
+                <div class="bg-slate-100 p-3 sm:p-5">
+                    <iframe id="email-preview-frame"
+                            class="email-preview-frame w-full bg-white rounded-xl border border-slate-200 shadow-inner"
+                            sandbox=""
+                            title="E-posta gövdesi önizlemesi"
+                            th:attr="srcdoc=${preview.html}"></iframe>
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-3 flex items-start gap-1.5">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5"></i>
+                <span>Gövde betik çalıştırmadan gösterilir. Bu sayfa SMTP üzerinden e-posta göndermez.</span>
+            </p>
+        </section>
+    </div>
+</div>
+</body>
+</html>

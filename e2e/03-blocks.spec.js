@@ -507,5 +507,66 @@ test.describe('Block Management (Ocak & Bloklar)', () => {
     await errorTracker.assertCleanState();
   });
 
+  test('Block photos open on a dedicated page instead of a lightbox modal', async ({ page }) => {
+    const errorTracker = setupErrorTracking(page);
+    const testCode = 'BLK-PHOTO-' + Date.now().toString().slice(-6);
+    const fs = require('fs');
+    const os = require('os');
+    const path = require('path');
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64'
+    );
+    const pngPath = path.join(os.tmpdir(), 'e2e-block-photo.png');
+    fs.writeFileSync(pngPath, png);
+
+    await page.goto('/blocks/create', { waitUntil: 'networkidle' });
+    await page.locator('select[name="quarryId"]').selectOption({ index: 1 });
+    await page.locator('input[name="quarrySection"]').fill('A-BLOK');
+    await page.locator('input[name="blockCode"]').fill(testCode);
+    await page.locator('select[name="locationType"]').selectOption('PRODUCTION_YARD');
+    await page.locator('input[name="widthCm"]').fill('150');
+    await page.locator('input[name="lengthCm"]').fill('250');
+    await page.locator('input[name="heightCm"]').fill('130');
+    await page.locator('input[name="stoneType"]').fill('Burdur Bej');
+    await page.locator('select[name="qualityGrade"]').selectOption('A');
+
+    const fileInput = page.locator('input.filepond--browser').first();
+    await expect(page.locator('#block-filepond')).toBeVisible({ timeout: 15000 });
+    await fileInput.setInputFiles(pngPath);
+    await expect(page.locator('input[name="fileIds"]').first()).toHaveValue(/\d+/, { timeout: 20000 });
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle' }),
+      page.locator('#block-form button[type="submit"]').click()
+    ]);
+
+    await page.goto('/blocks', { waitUntil: 'networkidle' });
+    const searchResponse = page.waitForResponse(res => res.url().includes('/blocks/api/data') && res.status() === 200);
+    await page.locator('#search-input').fill(testCode);
+    await searchResponse;
+    await waitForTabulator(page, '#blocks-table', 1);
+
+    const codeLink = page.locator('#blocks-table a[href*="/blocks/"]').first();
+    await expect(codeLink).toBeVisible();
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle' }),
+      codeLink.click()
+    ]);
+    expect(page.url()).toMatch(/\/blocks\/\d+$/);
+
+    await expect(page.locator('text=galleryOpen')).toHaveCount(0);
+    const photoLink = page.locator('a[href*="/photos/"]').first();
+    await expect(photoLink).toBeVisible();
+    await photoLink.click();
+    await expect(page).toHaveURL(/\/blocks\/\d+\/photos\/\d+$/);
+    await expect(page.locator('body')).toHaveAttribute('data-help-page-key', 'block-photos');
+    await expect(page.locator('#photo-main')).toBeVisible();
+    await expect(page.locator('.admin-page-title')).toContainText('Blok fotoğraf incelemesi');
+    await expect(page.locator('#gallery-close-btn')).toHaveCount(0);
+
+    await errorTracker.assertCleanState();
+  });
+
 });
 

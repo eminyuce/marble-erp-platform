@@ -149,6 +149,28 @@
             <div th:replace="~{fragments/roles-info :: cards}"></div>
         </div>
     </section>
+
+    <dialog id="delete-user-dialog" class="erp-dialog-panel">
+        <form method="dialog" class="erp-dialog-body">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="erp-dialog-title mb-0">Kullanıcıyı Sil</h3>
+                    <p class="text-xs text-slate-500 font-mono" id="delete-user-name">—</p>
+                </div>
+            </div>
+            <p class="erp-dialog-lead text-slate-600 mt-2">Bu kullanıcıyı silmek (arşivlemek) istediğinizden emin misiniz? Oturum açma yetkisi kalkar.</p>
+            <div class="erp-dialog-actions">
+                <button value="cancel" type="button" class="erp-btn-secondary">Vazgeç</button>
+                <button type="button" id="confirm-delete-user" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span>Evet, Kullanıcıyı Sil</span>
+                </button>
+            </div>
+        </form>
+    </dialog>
 </div>
 
 <th:block layout:fragment="scripts">

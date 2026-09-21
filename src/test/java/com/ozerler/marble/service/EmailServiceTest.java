@@ -134,6 +134,28 @@ class EmailServiceTest {
     }
 
     @Test
+    @DisplayName("placeholderSamples lists declared keys with sample values")
+    void placeholderSamples_UsesDeclaredKeysAndSampleValues() {
+        EmailTemplate template = EmailTemplate.builder()
+                .id(1L)
+                .templateKey("USER_WELCOME")
+                .templateName("Hoş Geldiniz")
+                .subject("Merhaba {{fullName}}")
+                .bodyHtml("<p>{{email}}</p>")
+                .placeholders("fullName, email")
+                .isActive(true)
+                .build();
+
+        var samples = emailService.placeholderSamples(template);
+
+        assertThat(samples).extracting(com.ozerler.marble.dto.EmailPlaceholderSample::getKey)
+                .containsExactly("fullName", "email");
+        assertThat(samples.get(0).isKnown()).isTrue();
+        assertThat(samples.get(0).getSampleValue()).contains("Ahmet");
+        assertThat(samples.get(1).getSampleValue()).isEqualTo("ahmet.yilmaz@ozerler.test");
+    }
+
+    @Test
     @DisplayName("updateTemplate validates syntax and persists clean template")
     void updateTemplate_ValidatesAndSaves() {
         EmailTemplate template = EmailTemplate.builder()

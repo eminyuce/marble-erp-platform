@@ -93,13 +93,16 @@ function initUsersGrid() {
                 headerSort: false,
                 responsive: 0,
                 formatter: function (cell) {
-                    const id = cell.getRow().getData().id;
+                    const row = cell.getRow().getData();
+                    const id = row.id;
+                    const label = gridText(row.fullName || row.username);
+                    const safeLabel = String(label).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
                     return gridActionsHtml([
                         {icon: 'eye', label: 'Detay', href: '/admin/users/' + id},
                         {icon: 'edit-3', label: 'Düzenle', href: '/admin/users/' + id + '/edit'},
                         {icon: 'key', label: 'Şifre Sıfırla', href: '/admin/users/' + id + '/reset-password'},
                         {divider: true},
-                        {icon: 'trash-2', label: 'Sil', onclick: 'deleteUser(' + id + ')', danger: true}
+                        {icon: 'trash-2', label: 'Sil', onclick: "openDeleteUser(" + id + ", '" + safeLabel + "')", danger: true}
                     ]);
                 }
             }
@@ -182,21 +185,66 @@ function toggleUserStatus(id) {
     });
 }
 
-function deleteUser(id) {
-    if (!confirm("Bu kullanıcıyı silmek (arşivlemek) istediğinizden emin misiniz?")) return;
+let pendingDeleteUserId = null;
 
+function openDeleteUser(id, displayName) {
+    pendingDeleteUserId = id;
+    const dialog = document.getElementById("delete-user-dialog");
+    const nameEl = document.getElementById("delete-user-name");
+    if (nameEl) {
+        nameEl.textContent = displayName || ("#" + id);
+    }
+    if (dialog && typeof dialog.showModal === "function") {
+        dialog.showModal();
+        return;
+    }
+    if (confirm("Bu kullanıcıyı silmek (arşivlemek) istediğinizden emin misiniz?")) {
+        confirmDeleteUser();
+    }
+}
+
+function confirmDeleteUser() {
+    if (!pendingDeleteUserId) {
+        return;
+    }
+    const dialog = document.getElementById("delete-user-dialog");
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
-
     const headers = {};
-    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+    if (csrfHeader && csrfToken) {
+        headers[csrfHeader] = csrfToken;
+    }
 
-    fetch(`/admin/users/${id}/delete`, {
+    fetch(`/admin/users/${pendingDeleteUserId}/delete`, {
         method: 'POST',
         headers: headers
     }).then(res => {
-        if (res.ok) reloadUsersGrid();
+        if (res.ok) {
+            if (dialog) {
+                dialog.close();
+            }
+            pendingDeleteUserId = null;
+            reloadUsersGrid();
+        }
     });
 }
 
-document.addEventListener("DOMContentLoaded", initUsersGrid);
+document.addEventListener("DOMContentLoaded", function () {
+    initUsersGrid();
+    const confirmBtn = document.getElementById("confirm-delete-user");
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", confirmDeleteUser);
+    }
+    document.querySelectorAll("#delete-user-dialog button[value='cancel']").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            btn.closest("dialog")?.close();
+            pendingDeleteUserId = null;
+        });
+    });
+});
+
+window.initUsersGrid = initUsersGrid;
+window.reloadUsersGrid = reloadUsersGrid;
+window.toggleUserStatus = toggleUserStatus;
+window.openDeleteUser = openDeleteUser;
+window.confirmDeleteUser = confirmDeleteUser;

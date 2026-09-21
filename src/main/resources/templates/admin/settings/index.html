@@ -7,32 +7,7 @@
 </head>
 <body>
 <div layout:fragment="content" class="space-y-5" x-data="{
-    activeTab: new URLSearchParams(window.location.search).get('tab') || 'general',
-    previewModalOpen: false,
-    previewSubject: '',
-    previewHtml: '',
-    previewKey: '',
-    async openPreview(key) {
-        this.previewKey = key;
-        const formData = new FormData();
-        formData.append('templateKey', key);
-        const resp = await fetch('/admin/settings/templates/preview', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('input[name=_csrf]') ? document.querySelector('input[name=_csrf]').value : ''
-            }
-        });
-        if (resp.ok) {
-            const data = await resp.json();
-            const preview = (data && data.response && data.response.body) ? data.response.body : data;
-            this.previewSubject = preview.subject;
-            this.previewHtml = preview.html;
-            this.previewModalOpen = true;
-        } else {
-            alert('Şablon önizleme yüklenemedi');
-        }
-    }
+    activeTab: new URLSearchParams(window.location.search).get('tab') || 'general'
 }">
 
     <!-- Page Header -->
@@ -591,13 +566,11 @@
                             </div>
 
                             <div class="flex items-center gap-2 pt-3 border-t border-slate-200">
-                                <button type="button"
-                                        th:data-template-key="${tpl.templateKey}"
-                                        @click="openPreview($el.dataset.templateKey)"
-                                        class="flex-1 py-1.5 px-3 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <a th:href="@{/admin/settings/templates/{id}/preview(id=${tpl.id})}"
+                                   class="flex-1 py-1.5 px-3 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
                                     <i data-lucide="eye" class="w-3.5 h-3.5 text-amber-700"></i>
                                     <span>Canlı Önizleme</span>
-                                </button>
+                                </a>
                                 <a th:href="@{/admin/settings/templates/{id}/edit(id=${tpl.id})}"
                                    class="py-1.5 px-3 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
                                     <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
@@ -701,48 +674,6 @@
 
         </div><!-- /main content -->
     </div><!-- /sidebar+content -->
-
-    <!-- ═══════════════════════════════════════════════════════════════
-         MODALS
-         ═══════════════════════════════════════════════════════════════ -->
-
-    <!-- PREVIEW MODAL -->
-    <div x-show="previewModalOpen"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         style="display: none;"
-         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div @click.outside="previewModalOpen = false"
-             class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
-            <div class="p-4 bg-[#2b6cb0] text-white flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="mail-check" class="w-5 h-5 text-white"></i>
-                    <span class="text-sm font-bold">E-Posta Şablon Canlı Önizleme</span>
-                    <span class="text-xs font-mono text-sky-100" x-text="previewKey"></span>
-                </div>
-                <button @click="previewModalOpen = false" class="text-sky-100 hover:text-white cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="p-4 border-b border-slate-100 bg-slate-50">
-                <div class="text-xs text-slate-500 font-semibold uppercase">Oluşturulan Konu:</div>
-                <div class="text-sm font-bold text-slate-800" x-text="previewSubject"></div>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1 bg-slate-100">
-                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200" x-html="previewHtml"></div>
-            </div>
-            <div class="p-4 bg-white border-t border-slate-200 flex justify-end">
-                <button @click="previewModalOpen = false"
-                        class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition cursor-pointer">
-                    Kapat
-                </button>
-            </div>
-        </div>
-    </div>
 
 </div>
 </body>

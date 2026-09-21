@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${block.blockCode + ' fotoğrafları | Özerler Mermer ERP'}">Blok fotoğrafları</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page space-y-6"
+     th:with="photoCount=${#lists.size(imageFiles)}, position=${currentIndex + 1}">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Ocak & Bloklar', @{/blocks}, 'Fotoğraflar')}"></div>
+
+    <div class="erp-form-heading">
+        <div class="erp-form-heading-main">
+            <h2 class="admin-page-title">Blok fotoğraf incelemesi</h2>
+            <p class="erp-list-lead">
+                Damar, çatlak ve cephe fotoğraflarını tam sayfada inceleyin. Bağlantıyı paylaşabilir, klavye oklarıyla gezinebilirsiniz.
+            </p>
+            <span class="erp-form-entity" th:text="${'Blok #' + block.blockCode}">Blok</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a th:href="@{'/api/upload/download/' + ${currentImage.id}}"
+               th:download="${currentImage.originalName}"
+               class="erp-btn-secondary">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>İndir</span>
+            </a>
+            <a th:href="@{'/blocks/' + ${block.id} + '/edit'}" class="erp-btn-secondary">
+                <i data-lucide="image-plus" class="w-4 h-4"></i>
+                <span>Fotoğraf ekle</span>
+            </a>
+            <a th:href="@{'/blocks/' + ${block.id}}" class="erp-btn-secondary">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Blok detayına dön</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="erp-ops-info-callout p-5 rounded-2xl bg-gradient-to-r from-slate-50 via-sky-50/70 to-amber-50/40 border border-slate-200 shadow-xs">
+        <div class="flex items-start gap-3.5">
+            <div class="w-10 h-10 rounded-xl bg-slate-800/10 text-slate-700 flex items-center justify-center shrink-0 mt-0.5">
+                <i data-lucide="info" class="w-5 h-5"></i>
+            </div>
+            <div class="space-y-2 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <h4 class="font-bold text-slate-900 text-sm sm:text-base">Fotoğraf nasıl incelenir?</h4>
+                <ul class="space-y-1.5 list-disc list-inside text-slate-600">
+                    <li>Koyu zemin damar ve çatlağı daha net gösterir; büyütmek için görsele tıklayıp yeni sekmede açın.</li>
+                    <li>Birden fazla fotoğraf varsa alttaki şeritten seçin veya klavyede <strong>sol / sağ ok</strong> kullanın.</li>
+                    <li>Bu sayfanın adresi bu fotoğrafa özeldir; saha veya kalite kontrol ile paylaşılabilir.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,280px)] gap-6 items-start">
+        <section class="photo-viewer min-w-0">
+            <div class="photo-viewer-stage relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-lg">
+                <div class="absolute top-3 left-3 z-10 flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-full bg-black/60 text-emerald-300 text-xs font-mono font-semibold border border-white/10"
+                          th:text="${position + ' / ' + photoCount}">1 / 1</span>
+                </div>
+                <a th:if="${previousImage != null}"
+                   id="photo-prev"
+                   th:href="@{'/blocks/' + ${block.id} + '/photos/' + ${previousImage.id}}"
+                   class="photo-nav photo-nav--prev"
+                   title="Önceki fotoğraf (Sol ok)"
+                   aria-label="Önceki fotoğraf">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </a>
+                <a th:href="${currentImage.filePath}" target="_blank" rel="noopener"
+                   class="block w-full" title="Tam boyutta aç">
+                    <img id="photo-main"
+                         th:src="${currentImage.filePath}"
+                         th:alt="${currentImage.originalName}"
+                         class="w-full max-h-[70vh] object-contain select-none">
+                </a>
+                <a th:if="${nextImage != null}"
+                   id="photo-next"
+                   th:href="@{'/blocks/' + ${block.id} + '/photos/' + ${nextImage.id}}"
+                   class="photo-nav photo-nav--next"
+                   title="Sonraki fotoğraf (Sağ ok)"
+                   aria-label="Sonraki fotoğraf">
+                    <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                </a>
+            </div>
+
+            <div th:if="${photoCount > 1}" class="photo-thumb-strip mt-4 flex gap-2 overflow-x-auto pb-1">
+                <a th:each="img, iter : ${imageFiles}"
+                   th:href="@{'/blocks/' + ${block.id} + '/photos/' + ${img.id}}"
+                   class="photo-thumb shrink-0 rounded-xl overflow-hidden border-2 w-20 h-20"
+                   th:classappend="${img.id == currentImage.id} ? 'is-active border-emerald-400 ring-2 ring-emerald-400/40' : 'border-slate-200 opacity-70 hover:opacity-100'"
+                   th:title="${img.originalName}">
+                    <img th:src="${img.filePath}" th:alt="${img.originalName}" class="w-full h-full object-cover">
+                </a>
+            </div>
+        </section>
+
+        <aside class="space-y-4">
+            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+                <h3 class="text-sm font-bold text-slate-900">Dosya bilgisi</h3>
+                <dl class="text-sm space-y-2">
+                    <div>
+                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Dosya adı</dt>
+                        <dd class="mt-0.5 font-medium text-slate-800 break-all" th:text="${currentImage.originalName}">foto.jpg</dd>
+                    </div>
+                    <div>
+                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Boyut</dt>
+                        <dd class="mt-0.5 text-slate-700" th:text="${currentImage.formattedSize}">1.2 MB</dd>
+                    </div>
+                    <div th:if="${currentImage.mimeType}">
+                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tür</dt>
+                        <dd class="mt-0.5 font-mono text-xs text-slate-600" th:text="${currentImage.mimeType}">image/jpeg</dd>
+                    </div>
+                </dl>
+            </section>
+            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-2">
+                <h3 class="text-sm font-bold text-slate-900">Blok özeti</h3>
+                <p class="text-xs text-slate-500">Fotoğrafın ait olduğu stok kaydı.</p>
+                <a th:href="@{'/blocks/' + ${block.id}}"
+                   class="block mt-2 px-3 py-2 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 transition">
+                    <span class="block font-mono font-bold text-slate-900" th:text="${block.blockCode}">BLK</span>
+                    <span class="block text-xs text-slate-500 mt-0.5"
+                          th:text="${(block.stoneType != null ? block.stoneType : 'Taş') + (block.quarry != null ? ' · ' + block.quarry.name : '')}">Taş</span>
+                </a>
+            </section>
+        </aside>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        document.addEventListener('keydown', function (event) {
+            const tag = event.target && event.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (event.target && event.target.isContentEditable)) {
+                return;
+            }
+            if (event.key === 'ArrowLeft') {
+                const prev = document.getElementById('photo-prev');
+                if (prev) {
+                    event.preventDefault();
+                    prev.click();
+                }
+            } else if (event.key === 'ArrowRight') {
+                const next = document.getElementById('photo-next');
+                if (next) {
+                    event.preventDefault();
+                    next.click();
+                }
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>
