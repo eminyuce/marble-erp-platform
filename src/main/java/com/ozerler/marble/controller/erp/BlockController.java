@@ -621,6 +621,17 @@ public class BlockController extends AbstractController {
                 && block.getCurrentLocation().getLocationType() == StockLocationType.DISPATCH_YARD;
     }
 
+    private StockLocationType resolveMoveTarget(Block block, StockLocationType requested) {
+        if (requested == StockLocationType.PRODUCTION_YARD || requested == StockLocationType.DISPATCH_YARD) {
+            return requested;
+        }
+        if (block.getCurrentLocation() != null
+                && block.getCurrentLocation().getLocationType() == StockLocationType.PRODUCTION_YARD) {
+            return StockLocationType.DISPATCH_YARD;
+        }
+        return StockLocationType.PRODUCTION_YARD;
+    }
+
     private List<FileStorageDto> listBlockImages(Long blockId) {
         return fileStorageService.getFilesForEntity("BLOCK", blockId).stream()
                 .map(FileStorageDto::fromEntity)

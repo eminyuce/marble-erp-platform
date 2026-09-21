@@ -16,7 +16,6 @@ import org.springframework.web.context.WebApplicationContext;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -59,11 +58,16 @@ class EmailTemplatePreviewPageTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("admin can open the email template preview page")
     void adminCanOpenPreviewPage() throws Exception {
-        List<EmailTemplate> templates = emailService.getAllTemplates();
-        assertThat(templates).isNotEmpty();
-        Long id = templates.get(0).getId();
+        EmailTemplate template = emailService.saveTemplate(EmailTemplate.builder()
+                .templateKey("E2E_PREVIEW_" + System.nanoTime())
+                .templateName("Önizleme Testi")
+                .subject("Merhaba {{fullName}}")
+                .bodyHtml("<p>E-posta: {{email}}</p>")
+                .placeholders("fullName, email")
+                .isActive(true)
+                .build());
 
-        mockMvc.perform(get("/admin/settings/templates/" + id + "/preview"))
+        mockMvc.perform(get("/admin/settings/templates/" + template.getId() + "/preview"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/settings/template-preview"));
     }
