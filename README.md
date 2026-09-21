@@ -197,3 +197,4 @@ A PostgreSQL backup is not enough — back up the MinIO data directory as well. 
 Copyright &copy; 2026 Özerler Mermer A.Ş. All rights reserved.  
 Internal Enterprise Resource Planning Platform developed to BRD/SRS v1.0 specifications.
 <!-- Git erişim ve katkı yetkisi doğrulandı: Hakan Özer (hakanozer61@gmail.com) -->
+<!-- Local git CLI push test verified: Hakan Özer -->
