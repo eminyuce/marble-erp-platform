@@ -4332,6 +4332,7 @@ textarea,
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
   width: min(100%, 28rem);
   max-width: calc(100vw - 2rem);
+  margin: auto;
 }
 
 .erp-dialog-panel::backdrop {
