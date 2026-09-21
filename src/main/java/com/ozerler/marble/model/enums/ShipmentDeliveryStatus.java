@@ -19,6 +19,6 @@ public enum ShipmentDeliveryStatus {
     }
 
     public static String labelOf(String code) {
-        return NamedEnumLabels.labelOf(ShipmentDeliveryStatus.class, code, ShipmentDeliveryStatus::getLabel);
+        return NamedEnumLabels.labelOf(ShipmentDeliveryStatus.class, code, status -> status.getLabel());
     }
 }

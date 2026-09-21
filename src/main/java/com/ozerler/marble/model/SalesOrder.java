@@ -60,7 +60,7 @@ public class SalesOrder extends AuditableEntity {
 
     public void recalculateTotal() {
         this.totalAmount = items.stream()
-                .map(SalesOrderItem::getLineTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(item -> item.getLineTotal())
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
     }
 }

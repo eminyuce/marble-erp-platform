@@ -22,6 +22,6 @@ public enum CutItemStatus {
     }
 
     public static String labelOf(String code) {
-        return NamedEnumLabels.labelOf(CutItemStatus.class, code, CutItemStatus::getLabel);
+        return NamedEnumLabels.labelOf(CutItemStatus.class, code, status -> status.getLabel());
     }
 }

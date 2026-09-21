@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mail.javamail.JavaMailSender;
+
 
 import java.util.Map;
 import java.util.Optional;
@@ -28,14 +28,12 @@ class EmailServiceTest {
     @Mock
     private SettingService settingService;
 
-    @Mock
-    private JavaMailSender mailSender;
 
     private EmailService emailService;
 
     @BeforeEach
     void setUp() {
-        emailService = new EmailService(templateRepository, settingService, Optional.of(mailSender), null);
+        emailService = new EmailService(templateRepository, settingService, null);
     }
 
     @Test
@@ -148,7 +146,7 @@ class EmailServiceTest {
 
         var samples = emailService.placeholderSamples(template);
 
-        assertThat(samples).extracting(com.ozerler.marble.dto.EmailPlaceholderSample::getKey)
+        assertThat(samples).extracting(sample -> sample.getKey())
                 .containsExactly("fullName", "email");
         assertThat(samples.get(0).isKnown()).isTrue();
         assertThat(samples.get(0).getSampleValue()).contains("Ahmet");

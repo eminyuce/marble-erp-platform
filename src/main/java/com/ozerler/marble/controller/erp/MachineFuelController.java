@@ -37,8 +37,8 @@ public class MachineFuelController extends AbstractController {
         model.addAttribute("machines", machineFuelService.quarryAndFactoryMachines());
 
         var entries = machineFuelService.listByPeriod(currentPeriod);
-        BigDecimal totalLitres = entries.stream().map(MachineFuelEntry::getLitres).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalAmount = entries.stream().map(MachineFuelEntry::getTotalAmount).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalLitres = entries.stream().map(entry -> entry.getLitres()).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal totalAmount = entries.stream().map(entry -> entry.getTotalAmount()).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         long machineCount = entries.stream().map(e -> e.getMachine().getId()).distinct().count();
 
         model.addAttribute("summaryTotalLitres", totalLitres);

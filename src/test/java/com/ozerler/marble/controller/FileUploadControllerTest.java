@@ -71,7 +71,7 @@ class FileUploadControllerTest {
 
         assertThat(response).isNotNull();
         assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getResponse().getBody()).asList().hasSize(2);
+        assertThat(response.getResponse().getBody()).asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.LIST).hasSize(2);
     }
 
     @Test

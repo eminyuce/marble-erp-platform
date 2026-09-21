@@ -56,7 +56,7 @@ public class ProcurementService {
     public ProcurementSummaryDto getProcurementSummary() {
         List<PurchaseOrder> all = purchaseOrderRepository.findAll();
         long total = all.size();
-        BigDecimal totalAmt = all.stream().map(PurchaseOrder::getTotalAmount).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalAmt = all.stream().map(order -> order.getTotalAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         long pending = all.stream().filter(p -> p.getStatus() != null && ("DRAFT".equalsIgnoreCase(p.getStatus().name()) || "SENT".equalsIgnoreCase(p.getStatus().name()) || "CONFIRMED".equalsIgnoreCase(p.getStatus().name()))).count();
         long completed = all.stream().filter(p -> p.getStatus() != null && "DELIVERED".equalsIgnoreCase(p.getStatus().name())).count();
         return new ProcurementSummaryDto(total, totalAmt, pending, completed);

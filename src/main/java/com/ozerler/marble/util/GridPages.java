@@ -268,7 +268,7 @@ public final class GridPages {
             }
             Sort.Direction direction = pageable.getSort().stream()
                     .findFirst()
-                    .map(Sort.Order::getDirection)
+                    .map(order -> order.getDirection())
                     .orElse(Sort.Direction.DESC);
             Pageable fallback = PageRequest.of(
                     pageable.getPageNumber(),

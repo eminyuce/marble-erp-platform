@@ -163,10 +163,10 @@ public class WorkshopOperationService {
         BigDecimal material = cutItemRepository.findByCutOrderId(cutOrderId).stream()
                 .map(item -> item.getUnitCost() != null && item.getAreaM2() != null
                         ? item.getUnitCost().multiply(item.getAreaM2()) : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal extra = operationRepository.findByCutOrderIdOrderByIdAsc(cutOrderId).stream()
                 .map(op -> op.getExtraExpense() != null ? op.getExtraExpense() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         return WorkshopOrderCost.total(material, extra, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
     }
 

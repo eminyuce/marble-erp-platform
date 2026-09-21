@@ -59,7 +59,7 @@ class GlobalSearchServiceTest {
                 blockRepository, projectRepository, slabRepository, productionOrderRepository,
                 cutOrderRepository, salesOrderRepository, purchaseOrderRepository, userRepository,
                 customerRepository, supplierRepository, costCenterRepository, cutItemRepository,
-                quarryRepository, null, new TaskExecutorAdapter(Runnable::run));
+                quarryRepository, null, new TaskExecutorAdapter(task -> task.run()));
     }
 
     @Test

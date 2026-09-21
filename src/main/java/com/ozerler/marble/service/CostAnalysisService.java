@@ -131,8 +131,8 @@ public class CostAnalysisService {
         BigDecimal previousExpense = previousFactoryExpense.add(previousIncoming);
         List<CostAnalysisDto.YieldRow> yields = factoryYields();
         BigDecimal outputM2 = yields.stream()
-                .map(CostAnalysisDto.YieldRow::getOutputQuantity)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(row -> row.getOutputQuantity())
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal unitCost = outputM2.compareTo(BigDecimal.ZERO) > 0
                 ? expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP)
                 : null;

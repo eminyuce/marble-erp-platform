@@ -72,7 +72,7 @@ public class PurchaseOrder extends AuditableEntity {
 
     public void recalculateTotal() {
         this.totalAmount = items.stream()
-                .map(PurchaseOrderItem::getLineTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(item -> item.getLineTotal())
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
     }
 }

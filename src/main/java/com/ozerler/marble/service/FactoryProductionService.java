@@ -511,7 +511,7 @@ public class FactoryProductionService {
                         workOrderId,
                         FactoryProcessRouting.CUTTING_TYPES,
                         OperationStatus.COMPLETED)
-                .map(FactoryOperation::getProcessType)
+                .map(op -> op.getProcessType())
                 .orElse(null);
     }
 

@@ -191,7 +191,7 @@ public class ProductionController {
     @ResponseBody
     public List<String> allowedSurfaceProcesses(@RequestParam("workOrderId") Long workOrderId) {
         return factoryProductionService.allowedSurfaceProcesses(workOrderId).stream()
-                .map(Enum::name)
+                .map(type -> type.name())
                 .toList();
     }
 

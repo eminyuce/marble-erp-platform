@@ -40,7 +40,6 @@ public class EmailService {
 
     private final EmailTemplateRepository templateRepository;
     private final SettingService settingService;
-    private final Optional<JavaMailSender> mailSender;
     private final org.springframework.context.MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {

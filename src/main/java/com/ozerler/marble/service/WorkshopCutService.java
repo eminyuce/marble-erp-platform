@@ -101,9 +101,9 @@ public class WorkshopCutService {
         if (orders.isEmpty()) {
             return Map.of();
         }
-        List<Long> orderIds = orders.stream().map(CutOrder::getId).toList();
+        List<Long> orderIds = orders.stream().map(order -> order.getId()).toList();
         return cutOrderRepository.aggregateItemMetrics(orderIds).stream()
-                .collect(Collectors.toMap(OrderChildAggregate::getParentId, Function.identity()));
+                .collect(Collectors.toMap(agg -> agg.getParentId(), Function.identity()));
     }
 
     @Transactional(readOnly = true)

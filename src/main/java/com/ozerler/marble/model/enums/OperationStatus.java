@@ -23,6 +23,6 @@ public enum OperationStatus {
     }
 
     public static String labelOf(String code) {
-        return NamedEnumLabels.labelOf(OperationStatus.class, code, OperationStatus::getLabel);
+        return NamedEnumLabels.labelOf(OperationStatus.class, code, status -> status.getLabel());
     }
 }

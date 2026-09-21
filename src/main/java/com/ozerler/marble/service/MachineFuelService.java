@@ -141,18 +141,18 @@ public class MachineFuelService {
 
         // Sort
         java.util.Comparator<com.ozerler.marble.dto.MachineFuelDto> comparator = java.util.Comparator.comparing(
-                com.ozerler.marble.dto.MachineFuelDto::getEntryDate,
+                dto -> dto.getEntryDate(),
                 java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())
         );
 
         if ("litres".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(com.ozerler.marble.dto.MachineFuelDto::getLitres, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            comparator = java.util.Comparator.comparing(dto -> dto.getLitres(), java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
         } else if ("totalAmount".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(com.ozerler.marble.dto.MachineFuelDto::getTotalAmount, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            comparator = java.util.Comparator.comparing(dto -> dto.getTotalAmount(), java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
         } else if ("machineName".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(com.ozerler.marble.dto.MachineFuelDto::getMachineName, java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+            comparator = java.util.Comparator.comparing(dto -> dto.getMachineName(), java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("workingHoursOrKm".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(com.ozerler.marble.dto.MachineFuelDto::getWorkingHoursOrKm, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            comparator = java.util.Comparator.comparing(dto -> dto.getWorkingHoursOrKm(), java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
         }
 
         if ("desc".equalsIgnoreCase(sortDir) && !"entryDate".equalsIgnoreCase(sortField)) {
@@ -173,8 +173,8 @@ public class MachineFuelService {
 
         List<com.ozerler.marble.dto.MachineFuelDto> pageData = dtos.subList(fromIndex, toIndex);
 
-        BigDecimal totalLitres = dtos.stream().map(com.ozerler.marble.dto.MachineFuelDto::getLitres).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalAmount = dtos.stream().map(com.ozerler.marble.dto.MachineFuelDto::getTotalAmount).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalLitres = dtos.stream().map(dto -> dto.getLitres()).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal totalAmount = dtos.stream().map(dto -> dto.getTotalAmount()).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         java.util.Map<String, Object> meta = java.util.Map.of(
                 "totalLitres", totalLitres,

@@ -94,13 +94,13 @@ public class ProjectDto {
         BigDecimal plannedArea = p.getLocations() != null ?
                 p.getLocations().stream()
                         .map(l -> l.getPlannedAreaM2() != null ? l.getPlannedAreaM2() : BigDecimal.ZERO)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b))
                 : BigDecimal.ZERO;
 
         BigDecimal installedArea = p.getLocations() != null ?
                 p.getLocations().stream()
                         .map(l -> l.getInstalledAreaM2() != null ? l.getInstalledAreaM2() : BigDecimal.ZERO)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b))
                 : BigDecimal.ZERO;
 
         return ProjectDto.builder()

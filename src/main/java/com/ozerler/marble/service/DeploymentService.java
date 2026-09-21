@@ -352,7 +352,7 @@ public class DeploymentService {
         if (text == null || text.isBlank()) {
             return "";
         }
-        return text.lines().map(String::trim).filter(line -> !line.isBlank()).findFirst().orElse("");
+        return text.lines().map(line -> line.trim()).filter(line -> !line.isBlank()).findFirst().orElse("");
     }
 
     private static String emptyToNull(String value) {

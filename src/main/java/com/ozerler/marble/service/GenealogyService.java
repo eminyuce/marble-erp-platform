@@ -76,7 +76,7 @@ public class GenealogyService {
                 .filter(s -> s.getProductionOrder() != null)
                 .collect(Collectors.groupingBy(s -> s.getProductionOrder().getId()));
 
-        List<Long> slabIds = allSlabs.stream().map(Slab::getId).toList();
+        List<Long> slabIds = allSlabs.stream().map(slab -> slab.getId()).toList();
         Map<Long, List<CutItem>> itemsBySlabId = slabIds.isEmpty()
                 ? Collections.emptyMap()
                 : cutItemRepository.findBySourceSlabIdIn(slabIds).stream()
@@ -154,12 +154,12 @@ public class GenealogyService {
             return new LotEventContext(lotBySlabId, Map.of(), Map.of(), Map.of());
         }
 
-        List<Long> lotIds = lotBySlabId.values().stream().map(MaterialLot::getId).toList();
+        List<Long> lotIds = lotBySlabId.values().stream().map(lot -> lot.getId()).toList();
         Map<Long, List<PalletItem>> palletItemsByLotId = palletItemRepository.findByMaterialLotIdIn(lotIds).stream()
                 .collect(Collectors.groupingBy(item -> item.getMaterialLot().getId()));
 
         List<Long> palletIds = palletItemsByLotId.values().stream()
-                .flatMap(List::stream)
+                .flatMap(list -> list.stream())
                 .map(item -> item.getPallet().getId())
                 .distinct()
                 .toList();

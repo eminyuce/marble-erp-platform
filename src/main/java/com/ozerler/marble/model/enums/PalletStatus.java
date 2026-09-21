@@ -28,6 +28,6 @@ public enum PalletStatus {
             case "PACKED" -> READY.name();
             default -> code.trim();
         };
-        return NamedEnumLabels.labelOf(PalletStatus.class, normalized, PalletStatus::getLabel);
+        return NamedEnumLabels.labelOf(PalletStatus.class, normalized, status -> status.getLabel());
     }
 }

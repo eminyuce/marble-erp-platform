@@ -46,7 +46,7 @@ class AsyncLoggingAppenderTest {
         async.stop();
 
         assertThat(nested.list)
-                .extracting(ILoggingEvent::getFormattedMessage)
+                .extracting(event -> event.getFormattedMessage())
                 .containsExactly("order-created");
         assertThat(async.metrics().droppedTotal()).isZero();
     }
@@ -97,7 +97,7 @@ class AsyncLoggingAppenderTest {
         async.stop();
 
         assertThat(nested.recorded)
-                .extracting(ILoggingEvent::getFormattedMessage)
+                .extracting(event -> event.getFormattedMessage())
                 .contains("must-preserve-error");
     }
 

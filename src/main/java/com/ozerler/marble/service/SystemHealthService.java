@@ -54,7 +54,7 @@ public class SystemHealthService {
 
         // 1. Application & Environment Info
         String appName = getMessage("system.health.app_name");
-        String version = buildProperties.map(BuildProperties::getVersion).orElse("1.0.0");
+        String version = buildProperties.map(props -> props.getVersion()).orElse("1.0.0");
         String[] activeProfiles = environment.getActiveProfiles().length > 0 ? environment.getActiveProfiles() : new String[]{"default"};
         int port = 81;
 

@@ -41,7 +41,7 @@ public class SettingService {
     @Transactional(readOnly = true)
     public String getSettingValue(String key) {
         return settingRepository.findByKey(key)
-                .map(SystemSetting::getValue)
+                .map(setting -> setting.getValue())
                 .orElse(null);
     }
 

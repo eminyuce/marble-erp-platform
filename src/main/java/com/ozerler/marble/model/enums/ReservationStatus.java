@@ -18,6 +18,6 @@ public enum ReservationStatus {
     }
 
     public static String labelOf(String code) {
-        return NamedEnumLabels.labelOf(ReservationStatus.class, code, ReservationStatus::getLabel);
+        return NamedEnumLabels.labelOf(ReservationStatus.class, code, status -> status.getLabel());
     }
 }

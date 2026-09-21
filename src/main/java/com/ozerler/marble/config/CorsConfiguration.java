@@ -41,7 +41,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
             return new String[0];
         }
         return Arrays.stream(value.split(","))
-                .map(String::trim)
+                .map(s -> s.trim())
                 .filter(part -> !part.isEmpty())
                 .filter(part -> !"*".equals(part))
                 .toArray(String[]::new);

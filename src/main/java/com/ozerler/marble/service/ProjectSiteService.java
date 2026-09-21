@@ -52,9 +52,9 @@ public class ProjectSiteService {
         long active = all.stream().filter(p -> p.getStatus() != null && "IN_PROGRESS".equalsIgnoreCase(p.getStatus().name())).count();
         long completed = all.stream().filter(p -> p.getStatus() != null && "COMPLETED".equalsIgnoreCase(p.getStatus().name())).count();
         BigDecimal totalContract = all.stream()
-                .map(Project::getContractValue)
+                .map(proj -> proj.getContractValue())
                 .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         return new ProjectSummaryDto(total, active, completed, totalContract);
     }
 

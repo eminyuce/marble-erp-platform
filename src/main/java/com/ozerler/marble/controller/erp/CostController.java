@@ -64,34 +64,34 @@ public class CostController {
                         quarry.getTotalExpense(), factory.getTotalExpense(),
                         workshop.getTotalExpense(), site.getTotalExpense())
                 .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         model.addAttribute("totalPeriodExpense", totalPeriodExpense);
 
         BigDecimal totalSiteRevenue = siteProfits.stream()
-                .map(com.ozerler.marble.dto.SiteProfitDto::getRealizedRevenue)
+                .map(dto -> dto.getRealizedRevenue())
                 .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalMaterialCost = siteProfits.stream()
-                .map(com.ozerler.marble.dto.SiteProfitDto::getMaterialCost)
+                .map(dto -> dto.getMaterialCost())
                 .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalLaborCost = siteProfits.stream()
-                .map(com.ozerler.marble.dto.SiteProfitDto::getLaborCost)
+                .map(dto -> dto.getLaborCost())
                 .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalOtherCost = siteProfits.stream()
                 .map(p -> (p.getTransportationCost() != null ? p.getTransportationCost() : BigDecimal.ZERO)
                         .add(p.getConsumableCost() != null ? p.getConsumableCost() : BigDecimal.ZERO)
                         .add(p.getOtherCost() != null ? p.getOtherCost() : BigDecimal.ZERO))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalSiteCost = siteProfits.stream()
-                .map(com.ozerler.marble.dto.SiteProfitDto::getTotalCost)
+                .map(dto -> dto.getTotalCost())
                 .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalSiteNet = siteProfits.stream()
-                .map(com.ozerler.marble.dto.SiteProfitDto::getNetProfitOrLoss)
+                .map(dto -> dto.getNetProfitOrLoss())
                 .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         model.addAttribute("totalSiteRevenue", totalSiteRevenue);
         model.addAttribute("totalMaterialCost", totalMaterialCost);
@@ -106,9 +106,9 @@ public class CostController {
         model.addAttribute("totalSiteMarginPct", totalSiteMarginPct);
 
         BigDecimal totalMonthlyBudget = costAccountingService.getAllCostCenters().stream()
-                .map(com.ozerler.marble.model.CostCenter::getMonthlyBudget)
+                .map(cc -> cc.getMonthlyBudget())
                 .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         model.addAttribute("totalMonthlyBudget", totalMonthlyBudget);
 
         return "erp/costs/index";

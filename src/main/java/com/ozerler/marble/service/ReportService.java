@@ -347,8 +347,6 @@ public class ReportService {
 
             workbook.write(out);
             return out.toByteArray();
-        } finally {
-            workbook.dispose();
         }
     }
 

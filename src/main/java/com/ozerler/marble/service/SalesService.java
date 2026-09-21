@@ -46,8 +46,8 @@ public class SalesService {
     public SalesSummaryDto getSalesSummary() {
         List<SalesOrder> all = salesOrderRepository.findAll();
         long total = all.size();
-        BigDecimal totalAmt = all.stream().map(SalesOrder::getTotalAmount).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal paidAmt = all.stream().map(SalesOrder::getPaidAmount).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalAmt = all.stream().map(order -> order.getTotalAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal paidAmt = all.stream().map(order -> order.getPaidAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal remaining = totalAmt.subtract(paidAmt);
         return new SalesSummaryDto(total, totalAmt, paidAmt, remaining);
     }

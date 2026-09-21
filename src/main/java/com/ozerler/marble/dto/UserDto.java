@@ -2,7 +2,6 @@ package com.ozerler.marble.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ozerler.marble.model.Role;
 import com.ozerler.marble.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -87,7 +86,7 @@ public class UserDto {
                 .lastName(user.getLastName())
                 .fullName(user.getFullName())
                 .enabled(user.isEnabled())
-                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()))
+                .roles(user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet()))
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .createdDate(user.getCreatedDate())

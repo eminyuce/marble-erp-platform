@@ -57,9 +57,9 @@ public class ProductionService {
         long activeOrders = productionOrderRepository.countActiveOrders();
         long completedOrders = Math.max(0, totalOrders - activeOrders);
         BigDecimal totalSlabArea = slabRepository.findAll().stream()
-                .map(com.ozerler.marble.model.Slab::getSurfaceAreaM2)
+                .map(slab -> slab.getSurfaceAreaM2())
                 .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         return new ProductionSummaryDto(totalOrders, activeOrders, completedOrders, totalSlabArea);
     }
 
@@ -101,9 +101,9 @@ public class ProductionService {
         if (orders.isEmpty()) {
             return Map.of();
         }
-        List<Long> orderIds = orders.stream().map(ProductionOrder::getId).toList();
+        List<Long> orderIds = orders.stream().map(order -> order.getId()).toList();
         return productionOrderRepository.aggregateSlabMetrics(orderIds).stream()
-                .collect(Collectors.toMap(OrderChildAggregate::getParentId, Function.identity()));
+                .collect(Collectors.toMap(agg -> agg.getParentId(), Function.identity()));
     }
 
     @Transactional(readOnly = true)
@@ -149,12 +149,12 @@ public class ProductionService {
         List<Slab> all = slabRepository.findAll();
         long totalSlabs = all.size();
         BigDecimal totalArea = all.stream()
-                .map(Slab::getSurfaceAreaM2)
+                .map(slab -> slab.getSurfaceAreaM2())
                 .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalCost = all.stream()
                 .map(s -> (s.getCostPerM2() != null && s.getSurfaceAreaM2() != null) ? s.getCostPerM2().multiply(s.getSurfaceAreaM2()) : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal avgCost = (totalArea.compareTo(BigDecimal.ZERO) > 0)
                 ? totalCost.divide(totalArea, 2, java.math.RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;

@@ -77,11 +77,11 @@ public class GlobalSearchService {
                         supplyAsync(() -> searchQuarries(query, limit)))
                 .stream()
                 .map(this::joinHits)
-                .flatMap(List::stream)
+                .flatMap(list -> list.stream())
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        hits.sort(Comparator.comparingInt(GlobalSearchHit::getScore).reversed()
-                .thenComparing(GlobalSearchHit::getTitle, String.CASE_INSENSITIVE_ORDER));
+        hits.sort(Comparator.comparingInt((GlobalSearchHit hit) -> hit.getScore()).reversed()
+                .thenComparing(hit -> hit.getTitle(), String.CASE_INSENSITIVE_ORDER));
 
         return GlobalSearchResponse.builder()
                 .query(query)

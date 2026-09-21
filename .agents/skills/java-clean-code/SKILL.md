@@ -89,13 +89,44 @@ catch (Exception e) {
 }
 ```
 
-## Null Handling
+## Null Handling & Null Type Safety
 
 * Avoid unnecessary `null`.
 * Use `Optional` where it improves API semantics, particularly for return values.
 * Do not blindly use `Optional` for every field or method parameter.
 * Validate required inputs at system boundaries.
 * Make nullability expectations obvious.
+
+### Lambda Expressions vs. Method References for Null Safety
+
+Under Spring Boot 4.x / Spring Framework 7 / Java 24, annotation-based null analysis (JSpecify / Eclipse JDT) inspects receiver parameters (`this`) in unbound instance method references. When an instance method is passed as a method reference (e.g. `String::trim`, `BigDecimal::add`), the receiver parameter `this` produces unchecked conversion warnings:
+`Null type safety: parameter 'this' provided via method descriptor ... needs unchecked conversion to conform to '@NonNull ...'`
+
+**Strict Policy:**
+* **Always prefer explicit lambdas** instead of unbound instance method references in `Stream.map()`, `Stream.reduce()`, `Stream.filter()`, `Stream.flatMap()`, `Optional.map()`, `Comparator.comparing()`, and AssertJ `extracting()`:
+  * Use `s -> s.trim()` instead of `String::trim`
+  * Use `(a, b) -> a.add(b)` instead of `BigDecimal::add`
+  * Use `dto -> dto.getAmount()` instead of `Dto::getAmount`
+  * Use `entity -> entity.getId()` instead of `Entity::getId`
+  * Use `item -> item.getLineTotal()` instead of `PurchaseOrderItem::getLineTotal`
+  * Use `type -> type.name()` instead of `Enum::name`
+  * Use `user -> user.isEnabled()` instead of `User::isEnabled`
+  * Use `list -> list.stream()` instead of `List::stream`
+  * Use `task -> task.run()` instead of `Runnable::run`
+* **Never leave unused imports** when converting method references to lambdas (e.g., remove `import ...Role;` if `Role` was only referenced in `Role::getName`).
+
+## Modernization, Deprecations & Zero-Warning Standards
+
+* **Zero Warnings Policy:** Every class must compile with **zero warnings** in both Maven and Eclipse JDT (no null safety warnings, no deprecation warnings, no unused field or import warnings).
+* **Spring Boot 4.x Modernization:**
+  * Use `org.springframework.boot.EnvironmentPostProcessor` — the legacy interface `org.springframework.boot.env.EnvironmentPostProcessor` is deprecated since version 4.0.0 and marked for removal in 4.2.0.
+  * Register processors in `META-INF/spring/org.springframework.boot.EnvironmentPostProcessor.imports`.
+* **Apache POI (`SXSSFWorkbook`):**
+  * Do not call deprecated `workbook.dispose()`. Use `try-with-resources` (`try (workbook; ...)`) where `workbook.close()` automatically disposes temporary files.
+* **AssertJ Assertions:**
+  * Do not use deprecated `asList()` from `AbstractAssert`. Use `asInstanceOf(InstanceOfAssertFactories.LIST)` instead.
+* **Unused Fields:**
+  * Never leave dead or unused fields (such as unused service injections or mail senders) in Spring `@Service`, `@Component`, `@Controller`, or model classes. If a component uses dynamic runtime configuration (e.g. database-driven SMTP), remove unused injected fields.
 
 ## Collections and Streams
 

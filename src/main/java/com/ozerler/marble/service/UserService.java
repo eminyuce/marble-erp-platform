@@ -49,7 +49,7 @@ public class UserService {
     public UserSummaryDto getUserSummary() {
         List<User> all = userRepository.findAll();
         long total = all.size();
-        long active = all.stream().filter(User::isEnabled).count();
+        long active = all.stream().filter(user -> user.isEnabled()).count();
         long suspended = total - active;
         long admins = all.stream().filter(u -> u.getRoles() != null && u.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equalsIgnoreCase(r.getName()))).count();
         return new UserSummaryDto(total, active, suspended, admins);
