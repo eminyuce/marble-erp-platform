@@ -180,17 +180,15 @@
                                    class="erp-form-input">
                             <p class="erp-form-hint text-xs text-slate-500 mt-1">Varsayılan olarak bugünün tarihi seçilidir.</p>
                         </div>
-
-                        <!-- Notlar -->
-                        <div class="erp-form-field erp-form-field--full">
-                            <label class="erp-form-label" for="sale-notes-hidden">
-                                <span>Satış / Sevk Notları</span>
-                                <span th:replace="~{fragments/erp-ops :: tip('', 'Ödeme vadesi, sözleşme referansı, nakliye aracı plakası veya teslimat şartları gibi özel notlar (opsiyonel).')}"></span>
-                            </label>
-                            <div id="sale-notes-editor" data-html-notes data-hidden-id="sale-notes-hidden"></div>
-                            <input type="hidden" id="sale-notes-hidden" name="saleNotes">
-                            <p class="erp-form-hint text-xs text-slate-500 mt-1">Dahili takip amacıyla blok hareket geçmişine ve satış kaydına işlenir.</p>
-                        </div>
+                    </div>
+                    <div class="erp-form-field erp-notes-band">
+                        <label class="erp-form-label" for="sale-notes-hidden">
+                            <span>Satış / Sevk Notları</span>
+                            <span th:replace="~{fragments/erp-ops :: tip('', 'Ödeme vadesi, sözleşme referansı, nakliye aracı plakası veya teslimat şartları gibi özel notlar (opsiyonel).')}"></span>
+                        </label>
+                        <div id="sale-notes-editor" class="w-full" data-html-notes data-hidden-id="sale-notes-hidden"></div>
+                        <input type="hidden" id="sale-notes-hidden" name="saleNotes">
+                        <p class="erp-form-hint text-xs text-slate-500 mt-1">Dahili takip amacıyla blok hareket geçmişine ve satış kaydına işlenir.</p>
                     </div>
                 </section>
             </div>

@@ -10,6 +10,7 @@ import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
 import com.ozerler.marble.service.EmailService;
+import com.ozerler.marble.service.NoticeDismissDuration;
 import com.ozerler.marble.service.SettingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,6 +75,20 @@ public class SettingController extends AbstractController {
 
         // Remove CSRF or other non-setting parameters
         toUpdate.remove("_csrf");
+
+        if (toUpdate.containsKey(NoticeDismissDuration.SETTING_KEY)) {
+            String duration = toUpdate.get(NoticeDismissDuration.SETTING_KEY);
+            if (!NoticeDismissDuration.isAcceptable(duration)) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        messageSource.getMessage("admin.settings.notice.duration.invalid",
+                                new Object[]{NoticeDismissDuration.MINIMUM_SECONDS, NoticeDismissDuration.MAXIMUM_SECONDS},
+                                locale));
+                redirectAttributes.addFlashAttribute("invalidFields", List.of(NoticeDismissDuration.SETTING_KEY));
+                return "redirect:/admin/settings";
+            }
+            toUpdate.put(NoticeDismissDuration.SETTING_KEY,
+                    Integer.toString(NoticeDismissDuration.seconds(duration)));
+        }
 
         settingService.updateSettings(toUpdate);
         redirectAttributes.addFlashAttribute("successMessage",

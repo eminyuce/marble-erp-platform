@@ -32,7 +32,8 @@
                 return;
             }
             window.erpNoticeDismissScheduled = true;
-            var dismissAfterMs = 100000;
+            var dismissAfterSeconds = /*[[${noticeDismissSeconds}]]*/ 100;
+            var dismissAfterMs = dismissAfterSeconds * 1000;
 
             function fieldLabel(name) {
                 var escape = window.CSS && CSS.escape ? function (value) { return CSS.escape(value); } : function (value) { return value; };

@@ -12,7 +12,7 @@ A rejected submit stays on the form. The user fixes the wrong value. They do not
 
 ## Rules
 
-1. Publish only the notice types that apply, including combinations: `successMessage` → Tamamlandı, `errorMessage` → İşlem tamamlanamadı, `warningMessage` or `invalidFields` → Kontrol edin. Empty types are omitted. Never send `IllegalArgumentException` or `RejectedInputException` to the developer error page.
+1. Publish only the notice types that apply, including combinations: `successMessage` → Tamamlandı, `errorMessage` → İşlem tamamlanamadı, `warningMessage` or `invalidFields` → Kontrol edin. Empty types are omitted. Each published notice leaves after the seconds in `ui.notice.dismiss_seconds` (Sistem Ayarları, default 100). Never send `IllegalArgumentException` or `RejectedInputException` to the developer error page.
 2. Keep every posted value except passwords, CSRF (`_csrf`), and file inputs. `UserFacingExceptionHandler` and `FormDraftInterceptor` copy the request into `preservedForm`. The layout script writes those values back.
 3. When one input is wrong, name it. Pass the HTML `name` to `RejectedInputException` so that input gets `is-invalid`, a hint, and focus.
 4. The sentence must use the same words as the labels on that screen (Turkish in `messages_tr.properties`).

@@ -16,7 +16,7 @@ function initDualEditor(containerId, hiddenInputId, options) {
 
     container.dataset.editorReady = "1";
     container.innerHTML = `
-        <div class="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+        <div class="w-full border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
             <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2">
                 <div class="flex items-center gap-2">
                     <button type="button" data-editor-tab="visual"

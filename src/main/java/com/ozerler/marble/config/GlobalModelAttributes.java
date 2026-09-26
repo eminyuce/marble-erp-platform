@@ -1,6 +1,7 @@
 package com.ozerler.marble.config;
 
 import com.ozerler.marble.service.HelpService;
+import com.ozerler.marble.service.NoticeDismissDuration;
 import com.ozerler.marble.service.SettingService;
 import com.ozerler.marble.util.Ints;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,7 +17,7 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20260926-notice-types}")
+    @Value("${app.asset-version:20260926-notes-span}")
     private String configuredAssetVersion;
 
     private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();
@@ -26,6 +27,14 @@ public class GlobalModelAttributes {
         String val = settingService.getSetting("grid.default_page_size", "25");
         int size = Ints.parseOrDefault(val, 25);
         return (size > 0 && size <= 100) ? size : 25;
+    }
+
+    @ModelAttribute("noticeDismissSeconds")
+    public int noticeDismissSeconds() {
+        String stored = settingService.getSetting(
+                NoticeDismissDuration.SETTING_KEY,
+                String.valueOf(NoticeDismissDuration.DEFAULT_SECONDS));
+        return NoticeDismissDuration.seconds(stored);
     }
 
     @ModelAttribute("isEdit")

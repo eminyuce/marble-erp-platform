@@ -253,9 +253,9 @@
                         <input type="hidden" id="photo-urls-input" name="photoUrls"
                                th:value="${isEdit and block != null ? block.photoUrls : ''}">
                     </div>
-                    <div class="erp-form-field">
+                    <div class="erp-form-field erp-notes-band">
                         <label class="erp-form-label">Jeolojik ayna notları</label>
-                        <div id="dual-editor-container" data-html-notes data-hidden-id="notes-hidden-input"></div>
+                        <div id="dual-editor-container" class="w-full" data-html-notes data-hidden-id="notes-hidden-input"></div>
                         <input type="hidden" id="notes-hidden-input" name="notes"
                                th:value="${isEdit and block != null ? block.notes : ''}">
                     </div>

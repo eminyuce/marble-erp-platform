@@ -124,12 +124,12 @@
                             <input id="expectedDelivery" type="date" name="expectedDelivery" class="erp-form-input"
                                    th:value="${record != null ? record.expectedDelivery : ''}">
                         </div>
-                        <div class="erp-form-field erp-form-field--full">
-                            <label class="erp-form-label" for="notes">Notlar</label>
-                            <textarea id="notes" name="notes" class="erp-form-textarea"
-                                      th:text="${record != null ? record.notes : ''}"
-                                      placeholder="Sipariş detayları, teslimat adresi..."></textarea>
-                        </div>
+                    </div>
+                    <div class="erp-form-field erp-notes-band">
+                        <label class="erp-form-label" for="notes">Notlar</label>
+                        <textarea id="notes" name="notes" class="erp-form-textarea"
+                                  th:text="${record != null ? record.notes : ''}"
+                                  placeholder="Sipariş detayları, teslimat adresi..."></textarea>
                     </div>
                 </section>
 

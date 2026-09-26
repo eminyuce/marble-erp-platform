@@ -79,12 +79,12 @@
                             <input id="deliveryDate" type="date" name="deliveryDate" class="erp-form-input"
                                    th:value="${record != null ? record.deliveryDate : ''}">
                         </div>
-                        <div class="erp-form-field erp-form-field--full">
-                            <label class="erp-form-label" for="project-notes-hidden">Şantiye notları</label>
-                            <div id="project-notes-editor" data-html-notes data-hidden-id="project-notes-hidden"></div>
-                            <input type="hidden" id="project-notes-hidden" name="notes"
-                                   th:value="${record != null ? record.notes : ''}">
-                        </div>
+                    </div>
+                    <div class="erp-form-field erp-notes-band">
+                        <label class="erp-form-label" for="project-notes-hidden">Şantiye notları</label>
+                        <div id="project-notes-editor" class="w-full" data-html-notes data-hidden-id="project-notes-hidden"></div>
+                        <input type="hidden" id="project-notes-hidden" name="notes"
+                               th:value="${record != null ? record.notes : ''}">
                     </div>
                 </section>
 

@@ -110,12 +110,12 @@
                                    placeholder="Pahlı cilalı"
                                    th:value="${isEdit and record != null and !#lists.isEmpty(record.items) ? record.items[0].edgeFinish : ''}">
                         </div>
-                        <div class="erp-form-field">
-                            <label class="erp-form-label" for="notes">Notlar</label>
-                            <input id="notes" type="text" name="notes" class="erp-form-input"
-                                   placeholder="Özel kesim notu"
-                                   th:value="${isEdit and record != null ? record.notes : ''}">
-                        </div>
+                    </div>
+                    <div class="erp-form-field erp-notes-band">
+                        <label class="erp-form-label" for="notes">Notlar</label>
+                        <input id="notes" type="text" name="notes" class="erp-form-input"
+                               placeholder="Özel kesim notu"
+                               th:value="${isEdit and record != null ? record.notes : ''}">
                     </div>
                 </section>
 

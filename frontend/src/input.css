@@ -3354,6 +3354,22 @@ a.settings-sidebar-item {
   grid-column: 1 / -1;
 }
 
+.erp-notes-band {
+  width: 100%;
+  margin-top: 1.15rem;
+}
+
+.erp-form-grid > .erp-form-field:has([data-html-notes]),
+.erp-form-grid--3 > .erp-form-field:has([data-html-notes]),
+.erp-form-grid--4 > .erp-form-field:has([data-html-notes]) {
+  grid-column: 1 / -1;
+}
+
+[data-html-notes] {
+  display: block;
+  width: 100%;
+}
+
 .erp-form-label {
   font-size: 0.8125rem;
   font-weight: 650;

@@ -203,12 +203,12 @@
                                    th:value="${record != null ? record.operatorName : ''}" required
                                    class="erp-form-input" placeholder="Operatör adı">
                         </div>
-                        <div class="erp-form-field">
-                            <label class="erp-form-label" for="notes">Vardiya / notlar</label>
-                            <input id="notes" type="text" name="notes"
-                                   th:value="${record != null ? record.notes : ''}"
-                                   class="erp-form-input" placeholder="Vardiya notu">
-                        </div>
+                    </div>
+                    <div class="erp-form-field erp-notes-band">
+                        <label class="erp-form-label" for="notes">Vardiya / notlar</label>
+                        <input id="notes" type="text" name="notes"
+                               th:value="${record != null ? record.notes : ''}"
+                               class="erp-form-input" placeholder="Vardiya notu">
                     </div>
                 </section>
 
