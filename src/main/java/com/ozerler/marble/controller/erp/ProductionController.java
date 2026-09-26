@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -285,6 +286,52 @@ public class ProductionController {
             return "redirect:/production/polish/" + id + "/edit";
         }
         return "redirect:/production/polish";
+    }
+
+    @GetMapping("/api/shipments")
+    @ResponseBody
+    public TabulatorResponse<Map<String, Object>> shipmentsApi(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "sortField", required = false) String sortField,
+            @RequestParam(value = "sortDir", required = false) String sortDir) {
+        List<com.ozerler.marble.model.Shipment> allShipments = palletShipmentService.shipments();
+        if (search != null && !search.isBlank()) {
+            String q = search.trim().toLowerCase();
+            allShipments = allShipments.stream().filter(s ->
+                (s.getWaybillNo() != null && s.getWaybillNo().toLowerCase().contains(q)) ||
+                (s.getVehiclePlate() != null && s.getVehiclePlate().toLowerCase().contains(q)) ||
+                (s.getDriverName() != null && s.getDriverName().toLowerCase().contains(q)) ||
+                (s.getCustomer() != null && s.getCustomer().getCompanyName().toLowerCase().contains(q)) ||
+                (s.getProject() != null && s.getProject().getName().toLowerCase().contains(q))
+            ).toList();
+        }
+        int totalElements = allShipments.size();
+        int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 1;
+        int fromIndex = Math.min((page - 1) * size, totalElements);
+        int toIndex = Math.min(fromIndex + size, totalElements);
+        List<com.ozerler.marble.model.Shipment> paged = (fromIndex <= toIndex) ? allShipments.subList(fromIndex, toIndex) : List.of();
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        List<Map<String, Object>> list = paged.stream().map(s -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", s.getId());
+            map.put("waybillNo", s.getWaybillNo());
+            map.put("departureTime", s.getDepartureTime() != null ? s.getDepartureTime().format(dtf) : "-");
+            map.put("customerName", s.getCustomer() != null ? s.getCustomer().getCompanyName() : "-");
+            map.put("projectName", s.getProject() != null ? s.getProject().getName() : "-");
+            map.put("target", s.getCustomer() != null ? s.getCustomer().getCompanyName()
+                    : (s.getProject() != null ? s.getProject().getName() : "-"));
+            map.put("vehiclePlate", s.getVehiclePlate());
+            map.put("driverName", s.getDriverName());
+            map.put("freightCost", s.getFreightCost());
+            map.put("deliveryStatus", s.getDeliveryStatus());
+            map.put("deliveryStatusLabel", s.getDeliveryStatusLabel());
+            return map;
+        }).toList();
+
+        return TabulatorResponse.of(list, totalPages, totalElements);
     }
 
     @GetMapping("/pallets")

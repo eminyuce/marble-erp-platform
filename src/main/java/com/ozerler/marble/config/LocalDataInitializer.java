@@ -1,13 +1,7 @@
 package com.ozerler.marble.config;
 
-import com.ozerler.marble.model.Block;
-import com.ozerler.marble.model.CostCenter;
-import com.ozerler.marble.model.FactoryOperation;
-import com.ozerler.marble.model.FactoryWorkOrder;
-import com.ozerler.marble.model.Machine;
-import com.ozerler.marble.model.Quarry;
-import com.ozerler.marble.model.Role;
-import com.ozerler.marble.model.User;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +34,13 @@ public class LocalDataInitializer implements CommandLineRunner {
     private final FactoryWorkOrderRepository factoryWorkOrderRepository;
     private final FactoryOperationRepository factoryOperationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final StockLocationRepository stockLocationRepository;
+    private final CustomerRepository customerRepository;
+    private final ProjectRepository projectRepository;
+    private final MaterialLotRepository materialLotRepository;
+    private final PalletRepository palletRepository;
+    private final PalletItemRepository palletItemRepository;
+    private final ShipmentRepository shipmentRepository;
 
     @Override
     @Transactional
@@ -66,6 +67,18 @@ public class LocalDataInitializer implements CommandLineRunner {
 
         if (machineRepository.count() == 0) {
             initFactoryOperations();
+        }
+
+        if (stockLocationRepository.count() == 0) {
+            initStockLocations();
+        }
+
+        if (customerRepository.count() == 0) {
+            initCustomersAndProjects();
+        }
+
+        if (palletRepository.count() == 0) {
+            initPalletsAndShipments();
         }
 
         log.info("Local database initialization completed successfully.");
@@ -391,5 +404,136 @@ public class LocalDataInitializer implements CommandLineRunner {
         if (op2 != null) {
             factoryOperationRepository.save(op2);
         }
+    }
+
+    private void initStockLocations() {
+        log.info("Seeding stock locations...");
+        stockLocationRepository.saveAll(List.of(
+                StockLocation.builder()
+                        .code(Constants.STOCK_LOCATION_PALLET_STOCK_YARD)
+                        .name("Paletli Stok Sahası")
+                        .businessUnit(BusinessUnit.FACTORY)
+                        .locationType(StockLocationType.PALLET_STOCK_YARD)
+                        .active(true)
+                        .build(),
+                StockLocation.builder()
+                        .code("FAB-MAMUL")
+                        .name("Fabrika Mamul Depo")
+                        .businessUnit(BusinessUnit.FACTORY)
+                        .locationType(StockLocationType.WORKSHOP_STOCK)
+                        .active(true)
+                        .build()
+        ));
+    }
+
+    private void initCustomersAndProjects() {
+        log.info("Seeding customers and projects...");
+        Customer c1 = customerRepository.save(Customer.builder()
+                .customerCode("MST-001")
+                .companyName("Özbay Yapı Mimarlık A.Ş.")
+                .contactPerson("Mehmet Özbay")
+                .phone("0532 111 22 33")
+                .email("info@ozbayyapi.com")
+                .customerType(CustomerType.CONSTRUCTION)
+                .build());
+
+        Customer c2 = customerRepository.save(Customer.builder()
+                .customerCode("MST-002")
+                .companyName("Akkaya Proje & Mühendislik Ltd.")
+                .contactPerson("Selin Akkaya")
+                .phone("0533 444 55 66")
+                .email("selin@akkayaproje.com")
+                .customerType(CustomerType.DEALER)
+                .build());
+
+        projectRepository.save(Project.builder()
+                .projectCode("PRJ-001")
+                .name("Vadi Konakları Projesi")
+                .customerName(c1.getCompanyName())
+                .customer(c1)
+                .status(ProjectStatus.ACTIVE)
+                .build());
+
+        projectRepository.save(Project.builder()
+                .projectCode("PRJ-002")
+                .name("Marina Towers Projesi")
+                .customerName(c2.getCompanyName())
+                .customer(c2)
+                .status(ProjectStatus.ACTIVE)
+                .build());
+    }
+
+    private void initPalletsAndShipments() {
+        log.info("Seeding pallets, lots, and shipments...");
+        Customer c1 = customerRepository.findByCustomerCode("MST-001").orElse(null);
+        Customer c2 = customerRepository.findByCustomerCode("MST-002").orElse(null);
+        StockLocation yard = stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PALLET_STOCK_YARD).orElse(null);
+
+        MaterialLot lot1 = materialLotRepository.save(MaterialLot.builder()
+                .lotCode("LOT-2026-001")
+                .productForm(ProductForm.SLAB)
+                .stoneType("Muğla Beyaz")
+                .quantity(20)
+                .totalAreaM2(BigDecimal.valueOf(45.50))
+                .unitCost(BigDecimal.valueOf(750.00))
+                .totalCost(BigDecimal.valueOf(34125.00))
+                .status(MaterialLotStatus.AVAILABLE)
+                .build());
+
+        MaterialLot lot2 = materialLotRepository.save(MaterialLot.builder()
+                .lotCode("LOT-2026-002")
+                .productForm(ProductForm.SIZED_PRODUCT)
+                .stoneType("Afyon Bal")
+                .quantity(50)
+                .totalAreaM2(BigDecimal.valueOf(32.00))
+                .unitCost(BigDecimal.valueOf(920.00))
+                .totalCost(BigDecimal.valueOf(29440.00))
+                .status(MaterialLotStatus.PALLETIZED)
+                .build());
+
+        Pallet p1 = palletRepository.save(Pallet.builder()
+                .palletCode("PAL-2026-001")
+                .customer(c1)
+                .warehouseLocation("A Blok - 1. Koridor")
+                .currentLocation(yard)
+                .packagingType(PackagingType.EXPORT_CRATE)
+                .status("READY")
+                .build());
+
+        palletItemRepository.save(PalletItem.builder()
+                .pallet(p1)
+                .materialLot(lot2)
+                .quantity(50)
+                .areaM2(BigDecimal.valueOf(32.00))
+                .build());
+
+        palletRepository.save(Pallet.builder()
+                .palletCode("PAL-2026-002")
+                .customer(c2)
+                .warehouseLocation("B Blok - 3. Koridor")
+                .currentLocation(yard)
+                .packagingType(PackagingType.A_FRAME)
+                .status("SHIPPED")
+                .build());
+
+        shipmentRepository.save(Shipment.builder()
+                .waybillNo("IRS-2026-0081")
+                .customer(c1)
+                .vehiclePlate("34 OZR 101")
+                .driverName("Mehmet Yılmaz")
+                .departureTime(LocalDateTime.now().minusHours(3))
+                .freightCost(BigDecimal.valueOf(4500.00))
+                .deliveryStatus("IN_TRANSIT")
+                .build());
+
+        shipmentRepository.save(Shipment.builder()
+                .waybillNo("IRS-2026-0074")
+                .customer(c2)
+                .vehiclePlate("06 MRB 450")
+                .driverName("Ali Çelik")
+                .departureTime(LocalDateTime.now().minusDays(1))
+                .freightCost(BigDecimal.valueOf(6200.00))
+                .deliveryStatus("DELIVERED")
+                .build());
     }
 }

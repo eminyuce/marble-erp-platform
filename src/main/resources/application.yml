@@ -103,7 +103,7 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20260926-polish-editor-fullwidth"
+  asset-version: "20260926-pallets-shipments-datagrid"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy
