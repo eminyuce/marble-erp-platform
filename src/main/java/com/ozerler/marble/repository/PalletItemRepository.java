@@ -16,4 +16,7 @@ public interface PalletItemRepository extends JpaRepository<PalletItem, Long> {
 
     @EntityGraph(attributePaths = {"pallet", "materialLot"})
     List<PalletItem> findByMaterialLotIdIn(Collection<Long> materialLotIds);
+
+    @EntityGraph(attributePaths = {"pallet", "materialLot"})
+    List<PalletItem> findByPalletIn(Collection<com.ozerler.marble.model.Pallet> pallets);
 }

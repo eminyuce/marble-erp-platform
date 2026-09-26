@@ -216,6 +216,48 @@ public class FactoryProductionService {
         return saved;
     }
 
+    @Transactional(readOnly = true)
+    public List<FactoryOperation> surfaceOperations() {
+        return operationRepository.findByProcessTypeInOrderByIdDesc(FactoryProcessRouting.SURFACE_TYPES);
+    }
+
+    @Transactional(readOnly = true)
+    public FactoryOperation getOperation(Long id) {
+        return operationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.factory.operation.not_found", id)));
+    }
+
+    @Transactional
+    public FactoryOperation updateSurfaceOperation(Long operationId,
+                                                   Long machineId, String operatorName,
+                                                   BigDecimal inputM2, BigDecimal outputM2, BigDecimal wasteM2,
+                                                   ChamferStatus chamferStatus, String notes,
+                                                   BigDecimal laborCost, BigDecimal electricityCost,
+                                                   BigDecimal consumableCost) {
+        FactoryOperation operation = getOperation(operationId);
+        FactoryProcessRouting.requireSurface(operation.getProcessType());
+        OperationYield.validateSameUnitBalance(inputM2, outputM2, wasteM2);
+        ChamferStatus chamfer = resolveSurfaceChamfer(operation.getProcessType(), chamferStatus);
+
+        BigDecimal labor = zero(laborCost);
+        BigDecimal electricity = zero(electricityCost);
+        BigDecimal consumable = zero(consumableCost);
+
+        operation.setMachine(machineId != null ? machine(machineId) : null);
+        operation.setOperatorName(operatorName);
+        operation.setInputQuantity(inputM2);
+        operation.setOutputQuantity(outputM2);
+        operation.setWasteQuantity(wasteM2);
+        operation.setChamferStatus(chamfer);
+        operation.setLaborCost(labor);
+        operation.setElectricityCost(electricity);
+        operation.setConsumableCost(consumable);
+        operation.setTotalOperationCost(labor.add(electricity).add(consumable));
+        operation.setNotes(notes);
+
+        return operationRepository.save(operation);
+    }
+
     @Transactional
     public FactoryOperation startAssignedOperation(Long operationId, String operatorName) {
         FactoryOperation operation = operationRepository.findById(operationId)

@@ -6,10 +6,11 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-6">
+    <!-- Header -->
     <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Paletleme ve sevkiyat')}"></div>
-            <h2 class="admin-page-title">Paletleme ve sevkiyat</h2>
+            <h2 class="admin-page-title">Paletleme ve Sevkiyat</h2>
             <p class="erp-list-lead">Bant silim ve ebatlama çıkışlarını palete ekleyin; müşteri veya şirket şantiyesine sevk edin.</p>
         </div>
         <a th:href="@{/production}" class="erp-btn-secondary">
@@ -18,84 +19,449 @@
         </a>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <h3 class="font-bold text-slate-900">Yeni palet</h3>
-            <form th:action="@{/production/pallets}" method="post" class="space-y-2">
-                <input type="text" name="palletCode" placeholder="Palet kodu (boşsa otomatik)" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <select name="customerId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option value="">Müşteri</option>
-                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
-                </select>
-                <select name="projectId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option value="">Şantiye</option>
-                    <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
-                </select>
-                <input type="text" name="warehouseLocation" placeholder="Palet stok sahası / konum" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Palet oluştur</button>
-            </form>
-        </div>
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-            <h3 class="font-bold text-slate-900">Sevkiyat</h3>
-            <form th:action="@{/production/shipments}" method="post" class="space-y-2">
-                <select name="palletId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option value="" disabled selected>Palet</option>
-                    <option th:each="pal : ${pallets}" th:value="${pal.id}"
-                            th:text="${pal.palletCode + ' — ' + pal.statusLabel}"></option>
-                </select>
-                <select name="customerId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option value="">Müşteri</option>
-                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
-                </select>
-                <select name="projectId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <option value="">Şantiye</option>
-                    <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
-                </select>
-                <input type="text" name="waybillNo" placeholder="İrsaliye no" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="vehiclePlate" required placeholder="Araç plaka" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                    <input type="text" name="driverName" required placeholder="Sürücü" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
+    <!-- 1. Sayfa Üstü İş Akışı Rehberi -->
+    <div class="bg-gradient-to-r from-blue-50/80 via-slate-50 to-emerald-50/80 border border-slate-200 rounded-xl p-4 shadow-sm">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0">
+                    <i data-lucide="package-check" class="w-5 h-5"></i>
                 </div>
-                <input type="number" step="0.01" name="freightCost" placeholder="Nakliye tutarı" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <button type="submit" class="w-full min-h-11 py-2.5 bg-[#2b6cb0] text-white text-sm font-semibold rounded-lg">Sevk et</button>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800">Operasyonel Sevkiyat Akışı</h3>
+                    <p class="text-xs text-slate-500">Üretimden çıkan mamulleri 3 adımda kolayca paletleyip sevkiyata hazır hale getirin.</p>
+                </div>
+            </div>
+            <div class="flex items-center flex-wrap gap-2 text-xs font-semibold">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-blue-200 shadow-2xs text-blue-900">
+                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                    <span>Palet Oluştur</span>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-amber-200 shadow-2xs text-amber-900">
+                    <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">2</span>
+                    <span>Lot Ekle</span>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-emerald-200 shadow-2xs text-emerald-900">
+                    <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+                    <span>Sevk Et</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert / Toast Messages -->
+    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2.5">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 shrink-0"></i>
+        <span th:text="${successMessage}">İşlem başarıyla tamamlandı.</span>
+    </div>
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2.5">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600 shrink-0"></i>
+        <span th:text="${errorMessage}">Bir hata oluştu.</span>
+    </div>
+
+    <!-- 2 & 3. Üst Formlar (Yeni Palet ve Sevkiyat Oluştur) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 2. Yeni Palet Oluştur Formu -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-6 h-6 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">1</span>
+                    <h3 class="font-bold text-slate-900">Yeni palet oluştur</h3>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">Hedef: Müşteri veya Şantiye</span>
+            </div>
+            <form th:action="@{/production/pallets}" method="post" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Palet Kodu</label>
+                    <input type="text" name="palletCode" placeholder="Boş bırakılırsa sistem otomatik üretir (PAL-2026-...)" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Müşteri</label>
+                        <select name="customerId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Müşteri Seçin --</option>
+                            <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Şantiye / Proje</label>
+                        <select name="projectId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Şantiye Seçin --</option>
+                            <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="text-[11px] text-amber-700 bg-amber-50/70 border border-amber-200/50 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5">
+                    <i data-lucide="info" class="w-3.5 h-3.5 shrink-0 text-amber-600"></i>
+                    <span>Müşteri veya Şantiye seçimlerinden en az biri zorunludur.</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Palet Stok Sahası / Konum</label>
+                    <input type="text" name="warehouseLocation" placeholder="Örn: Paletli Stok Sahası, A-1 Alanı" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Palet Oluştur</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- 3. Sevkiyat Formu -->
+        <div id="shipment-form-container" class="bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">3</span>
+                    <h3 class="font-bold text-slate-900">Sevkiyat oluştur</h3>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">Hazır paletleri sevk edin</span>
+            </div>
+            <form th:action="@{/production/shipments}" method="post" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Sevk Edilecek Palet <span class="text-rose-500">*</span></label>
+                    <select id="shipment-pallet-select" name="palletId" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled selected>-- Sevk Edilecek Paleti Seçin --</option>
+                        <option th:each="pal : ${shippablePallets}" th:value="${pal.id}"
+                                th:text="${pal.palletCode + ' — ' + pal.statusLabel + ' (' + pal.totalLotCount + ' lot, ' + #numbers.formatDecimal(pal.totalAreaM2, 1, 'POINT', 2, 'COMMA') + ' m²)'}"></option>
+                        <option th:if="${#lists.isEmpty(shippablePallets)}" value="" disabled>Sevk edilebilecek aktif palet bulunamadı</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Müşteri</label>
+                        <select name="customerId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Müşteri Seçin --</option>
+                            <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Şantiye / Proje</label>
+                        <select name="projectId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Şantiye Seçin --</option>
+                            <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Araç Plakası <span class="text-rose-500">*</span></label>
+                        <input type="text" name="vehiclePlate" required placeholder="Örn: 03 ABC 123" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Sürücü Adı <span class="text-rose-500">*</span></label>
+                        <input type="text" name="driverName" required placeholder="Ad Soyad" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">İrsaliye No</label>
+                        <input type="text" name="waybillNo" placeholder="Boşsa otomatik IRS-..." class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Nakliye Tutarı (₺)</label>
+                        <input type="number" step="0.01" name="freightCost" placeholder="0.00" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <button type="submit" class="w-full min-h-11 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="truck" class="w-4 h-4"></i>
+                    <span>Sevk Et</span>
+                </button>
             </form>
         </div>
     </div>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-        <h3 class="font-bold text-slate-900">Paletler ve lot ekleme</h3>
-        <div th:each="pal : ${pallets}" class="p-3 rounded-lg border border-slate-100 space-y-2">
-            <div class="flex justify-between gap-2 text-sm">
-                <strong class="font-mono" th:text="${pal.palletCode}">PAL</strong>
-                <span th:text="${pal.statusLabel}">Hazırlanıyor</span>
+    <!-- 4. Paletler ve Lot Ekleme (Zengin Palet Kartları) -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-5">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-sm">
+                    <i data-lucide="boxes" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Paletler ve Lot İçerikleri</h3>
+                    <p class="text-xs text-slate-500">Palet detayları, içerisindeki ürün lotları ve yeni lot ekleme alanı</p>
+                </div>
             </div>
-            <div class="flex flex-wrap gap-3 text-xs text-slate-600">
-                <span th:text="${pal.currentLocation != null ? pal.currentLocation.name : (pal.warehouseLocation != null ? pal.warehouseLocation : 'Paletli Stok')}">Saha</span>
-                <span class="font-semibold text-amber-800"
-                      th:text="${'Anlık maliyet: ' + #numbers.formatDecimal(pal.currentCostPerM2, 1, 'POINT', 2, 'COMMA') + ' ₺/m²'}">Anlık maliyet</span>
-            </div>
-            <form th:action="@{'/production/pallets/' + ${pal.id} + '/items'}" method="post" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                <select name="materialLotId" required class="px-3 py-2 text-sm border border-slate-200 rounded-lg sm:col-span-2">
-                    <option value="" disabled selected>Ürün lotu</option>
-                    <option th:each="lot : ${lots}" th:value="${lot.id}"
-                            th:text="${lot.lotCode + ' — ' + (lot.productForm != null ? lot.productForm.label : '') + ' ' + lot.totalAreaM2 + ' m²'}"></option>
-                </select>
-                <input type="number" name="quantity" placeholder="Adet" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <input type="number" step="0.01" name="areaM2" placeholder="m²" class="px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <button type="submit" class="sm:col-span-4 min-h-11 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg">Lota ekle</button>
-            </form>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700"
+                  th:text="${#lists.size(pallets)} + ' Palet'">0 Palet</span>
         </div>
-        <div th:if="${#lists.isEmpty(pallets)}" class="text-sm text-slate-400">Henüz palet yok.</div>
+
+        <!-- Palet Kartları Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <div th:each="pal : ${pallets}"
+                 th:id="'pallet-card-' + ${pal.id}"
+                 class="rounded-xl border transition-all duration-200 flex flex-col justify-between"
+                 th:classappend="${pal.status == 'SHIPPED' ? 'border-slate-200 bg-slate-50/50 opacity-90' : (pal.status == 'READY' ? 'border-emerald-200 bg-white shadow-2xs' : 'border-amber-200 bg-white shadow-2xs')}">
+                
+                <!-- Kart Üst Bar (Palet Kodu, Durum Rozeti, Sevk Hızlı Aksiyonu) -->
+                <div class="p-4 border-b border-slate-100 space-y-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-bold text-base text-slate-900 tracking-wide" th:text="${pal.palletCode}">PAL-2026-0001</span>
+                                
+                                <!-- Renkli Durum Rozeti -->
+                                <span th:if="${pal.status == 'PREPARING'}"
+                                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                    <span>Hazırlanıyor</span>
+                                </span>
+                                <span th:if="${pal.status == 'READY'}"
+                                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                    <span>Hazır</span>
+                                </span>
+                                <span th:if="${pal.status == 'SHIPPED'}"
+                                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-200 text-slate-700 border border-slate-300">
+                                    <i data-lucide="check" class="w-3 h-3 text-slate-500"></i>
+                                    <span>Sevk Edildi</span>
+                                </span>
+                                <span th:if="${pal.status != 'PREPARING' and pal.status != 'READY' and pal.status != 'SHIPPED'}"
+                                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200"
+                                      th:text="${pal.statusLabel}">Durum</span>
+                            </div>
+
+                            <!-- Hedef (Müşteri veya Şantiye) -->
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
+                                <span th:if="${pal.customer != null}" class="inline-flex items-center gap-1 text-slate-700 font-medium">
+                                    <i data-lucide="building-2" class="w-3.5 h-3.5 text-blue-600"></i>
+                                    <span th:text="${pal.customer.companyName}">Müşteri</span>
+                                </span>
+                                <span th:if="${pal.project != null}" class="inline-flex items-center gap-1 text-slate-700 font-medium">
+                                    <i data-lucide="hard-hat" class="w-3.5 h-3.5 text-amber-600"></i>
+                                    <span th:text="${pal.project.name}">Şantiye</span>
+                                </span>
+                                <span class="inline-flex items-center gap-1 text-slate-500">
+                                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span th:text="${pal.currentLocation != null ? pal.currentLocation.name : (pal.warehouseLocation != null ? pal.warehouseLocation : 'Paletli Stok')}">Konum</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Hızlı Sevkiyat Aksiyonu -->
+                        <div th:if="${pal.status != 'SHIPPED'}" class="shrink-0">
+                            <button type="button"
+                                    th:data-pallet-id="${pal.id}"
+                                    onclick="selectPalletForShipment(this.getAttribute('data-pallet-id'))"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors">
+                                <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+                                <span>Sevk Et</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Özet ve Maliyet Şeridi -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+                        <div class="flex items-center gap-3 text-slate-700 font-medium">
+                            <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded text-slate-800">
+                                <i data-lucide="layers" class="w-3 h-3 text-slate-500"></i>
+                                <span th:text="${pal.totalLotCount + ' lot'}">0 lot</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded text-slate-800">
+                                <i data-lucide="maximize-2" class="w-3 h-3 text-slate-500"></i>
+                                <span th:text="${#numbers.formatDecimal(pal.totalAreaM2, 1, 'POINT', 2, 'COMMA') + ' m²'}">0,00 m²</span>
+                            </span>
+                            <span th:if="${pal.totalQuantity > 0}" class="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded text-slate-800">
+                                <span th:text="${pal.totalQuantity + ' adet'}">0 adet</span>
+                            </span>
+                        </div>
+                        <div class="font-semibold text-amber-800 bg-amber-50/80 border border-amber-200/60 px-2.5 py-0.5 rounded text-xs flex items-center gap-1">
+                            <i data-lucide="coins" class="w-3 h-3 text-amber-600"></i>
+                            <span th:text="${'Anlık maliyet: ' + #numbers.formatDecimal(pal.currentCostPerM2, 1, 'POINT', 2, 'COMMA') + ' ₺/m²'}">0 ₺/m²</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kart Orta Bölüm: Lot Listesi -->
+                <div class="p-4 space-y-2.5 flex-1">
+                    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                        <span>Palet İçi Ürünler</span>
+                        <span th:text="${pal.items != null ? #lists.size(pal.items) : 0} + ' Kayıt'">0 Kayıt</span>
+                    </div>
+
+                    <!-- Lotlar Tablosu / Listesi -->
+                    <div th:if="${pal.items != null and not #lists.isEmpty(pal.items)}" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <div th:each="item : ${pal.items}"
+                             class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200/70 text-xs hover:bg-slate-100/60 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-bold text-slate-800" th:text="${item.materialLot != null ? item.materialLot.lotCode : 'Lot #' + item.id}">LOT-001</span>
+                                <span th:if="${item.materialLot != null and item.materialLot.productForm != null}"
+                                      class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-medium"
+                                      th:text="${item.materialLot.productForm.label}">Fayans</span>
+                                <span th:if="${item.materialLot != null and item.materialLot.stoneType != null}"
+                                      class="text-slate-500 text-[11px]"
+                                      th:text="${item.materialLot.stoneType}">Taş Cinsi</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-slate-700 font-medium text-right">
+                                <span th:if="${item.quantity != null}" th:text="${item.quantity + ' ad.'}">1 ad.</span>
+                                <span class="font-semibold text-slate-900" th:text="${#numbers.formatDecimal(item.areaM2, 1, 'POINT', 2, 'COMMA') + ' m²'}">0,00 m²</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Plakalar Listesi (Varsa) -->
+                    <div th:if="${pal.slabs != null and not #lists.isEmpty(pal.slabs)}" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                        <div th:each="slab : ${pal.slabs}"
+                             class="flex items-center justify-between p-2 rounded-lg bg-amber-50/50 border border-amber-200/60 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-bold text-amber-900" th:text="${slab.slabCode}">PLK-001</span>
+                                <span class="text-[11px] text-slate-600" th:text="${slab.thicknessCm + ' cm • ' + slab.widthCm + 'x' + slab.lengthCm + ' cm'}">Ebat</span>
+                            </div>
+                            <span class="font-semibold text-slate-900" th:text="${#numbers.formatDecimal(slab.surfaceAreaM2, 1, 'POINT', 2, 'COMMA') + ' m²'}">0,00 m²</span>
+                        </div>
+                    </div>
+
+                    <!-- Boş Durum (Henüz Lot Eklenmemiş) -->
+                    <div th:if="${(pal.items == null or #lists.isEmpty(pal.items)) and (pal.slabs == null or #lists.isEmpty(pal.slabs))}"
+                         class="p-3 rounded-lg bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-500 space-y-1">
+                        <i data-lucide="package-open" class="w-5 h-5 mx-auto text-slate-400"></i>
+                        <p class="font-medium text-slate-600">Henüz lot eklenmedi</p>
+                        <p class="text-[11px] text-slate-400">Aşağıdaki formu kullanarak uygun ürün lotunu palete bağlayın.</p>
+                    </div>
+                </div>
+
+                <!-- Kart Alt Bölüm: 2. Lot Ekle Formu (Sadece Sevk Edilmemişse) -->
+                <div th:if="${pal.status != 'SHIPPED'}" class="p-3 bg-slate-50/70 border-t border-slate-200/80 rounded-b-xl">
+                    <form th:action="@{'/production/pallets/' + ${pal.id} + '/items'}" method="post" class="space-y-2">
+                        <div class="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                            <span class="w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                            <span>Palete Lot Ekle</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                            <select name="materialLotId" required class="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg sm:col-span-3 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                <option value="" disabled selected>-- Eklenecek Ürün Lotu Seçin --</option>
+                                <option th:each="lot : ${lots}" th:value="${lot.id}"
+                                        th:text="${lot.lotCode + ' — ' + (lot.productForm != null ? lot.productForm.label : '') + ' (' + lot.totalAreaM2 + ' m²)'}"></option>
+                            </select>
+                            <input type="number" name="quantity" placeholder="Adet" min="1" class="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <input type="number" step="0.01" name="areaM2" placeholder="m²" class="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <button type="submit" class="sm:col-span-5 min-h-9 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center justify-center gap-1.5">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                <span>Lotu Palete Ekle</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div th:if="${pal.status == 'SHIPPED'}" class="p-3 bg-slate-100/80 border-t border-slate-200 rounded-b-xl text-center text-xs text-slate-500 flex items-center justify-center gap-1.5">
+                    <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>Bu palet sevk edildiği için yeni lot eklenemez.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hiç Palet Yoksa Boş Durum -->
+        <div th:if="${#lists.isEmpty(pallets)}" class="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 space-y-3">
+            <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                <i data-lucide="package-search" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-700 text-sm">Henüz palet oluşturulmadı</h4>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">Üretim çıktısı mamulleri gruplamak için yukarıdaki "Yeni palet oluştur" formunu kullanın.</p>
+            </div>
+        </div>
     </div>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-2">
-        <h3 class="font-bold text-slate-900">Sevkiyatlar</h3>
-        <div th:each="sh : ${shipments}" class="flex justify-between text-sm border-b border-slate-100 py-2">
-            <span th:text="${sh.waybillNo + ' · ' + sh.vehiclePlate + ' · ' + sh.driverName}">irsaliye</span>
-            <span th:text="${sh.deliveryStatusLabel}">Yolda</span>
+    <!-- 5. Sevkiyatlar Listesi (Okunaklı & Detaylı Tablo) -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm">
+                    <i data-lucide="truck" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Tamamlanan ve Yoldaki Sevkiyatlar</h3>
+                    <p class="text-xs text-slate-500">Fabrikadan sevk edilen paletlerin irsaliye, araç ve teslimat durumları</p>
+                </div>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700"
+                  th:text="${#lists.size(shipments)} + ' Sevkiyat'">0 Sevkiyat</span>
         </div>
-        <div th:if="${#lists.isEmpty(shipments)}" class="text-sm text-slate-400">Sevkiyat yok.</div>
+
+        <!-- Sevkiyatlar Tablosu -->
+        <div th:if="${not #lists.isEmpty(shipments)}" class="overflow-x-auto rounded-lg border border-slate-200">
+            <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-4">İrsaliye No</th>
+                        <th class="py-3 px-4">Çıkış Zamanı</th>
+                        <th class="py-3 px-4">Teslimat Hedefi</th>
+                        <th class="py-3 px-4">Araç / Sürücü</th>
+                        <th class="py-3 px-4 text-right">Nakliye Tutarı</th>
+                        <th class="py-3 px-4 text-center">Durum</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <tr th:each="sh : ${shipments}" class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-3 px-4">
+                            <span class="font-mono font-bold text-slate-900" th:text="${sh.waybillNo}">IRS-2026-0001</span>
+                        </td>
+                        <td class="py-3 px-4 text-slate-600"
+                            th:text="${sh.departureTime != null ? #temporals.format(sh.departureTime, 'dd.MM.yyyy HH:mm') : '-'}">01.01.2026 12:00</td>
+                        <td class="py-3 px-4">
+                            <span th:if="${sh.customer != null}" class="inline-flex items-center gap-1 font-medium text-slate-800">
+                                <i data-lucide="building-2" class="w-3.5 h-3.5 text-blue-600"></i>
+                                <span th:text="${sh.customer.companyName}">Müşteri</span>
+                            </span>
+                            <span th:if="${sh.project != null}" class="inline-flex items-center gap-1 font-medium text-slate-800">
+                                <i data-lucide="hard-hat" class="w-3.5 h-3.5 text-amber-600"></i>
+                                <span th:text="${sh.project.name}">Şantiye</span>
+                            </span>
+                            <span th:if="${sh.customer == null and sh.project == null}" class="text-slate-400">-</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-semibold" th:text="${sh.vehiclePlate}">03 ABC 123</span>
+                                <span class="text-slate-700" th:text="${sh.driverName}">Ahmet Yılmaz</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 text-right font-medium text-slate-800"
+                            th:text="${sh.freightCost != null ? #numbers.formatDecimal(sh.freightCost, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
+                        <td class="py-3 px-4 text-center">
+                            <span th:if="${sh.deliveryStatus == 'IN_TRANSIT'}"
+                                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span>Yolda</span>
+                            </span>
+                            <span th:if="${sh.deliveryStatus == 'DELIVERED'}"
+                                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <i data-lucide="check" class="w-3 h-3 text-emerald-600"></i>
+                                <span>Teslim Edildi</span>
+                            </span>
+                            <span th:if="${sh.deliveryStatus != 'IN_TRANSIT' and sh.deliveryStatus != 'DELIVERED'}"
+                                  class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200"
+                                  th:text="${sh.deliveryStatusLabel}">Durum</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Sevkiyat Yoksa Boş Durum -->
+        <div th:if="${#lists.isEmpty(shipments)}" class="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 space-y-2">
+            <i data-lucide="truck" class="w-6 h-6 mx-auto text-slate-400"></i>
+            <p class="font-medium text-slate-600 text-xs">Henüz oluşturulmuş bir sevkiyat kaydı bulunmuyor.</p>
+            <p class="text-[11px] text-slate-400">Paletler hazırlandığında yukarıdaki "Sevkiyat oluştur" formunu kullanarak sevk edebilirsiniz.</p>
+        </div>
     </div>
 </div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        function selectPalletForShipment(palletId) {
+            const selectEl = document.getElementById('shipment-pallet-select');
+            if (selectEl) {
+                selectEl.value = palletId;
+                const formContainer = document.getElementById('shipment-form-container');
+                if (formContainer) {
+                    formContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    formContainer.classList.add('ring-2', 'ring-emerald-500');
+                    setTimeout(() => {
+                        formContainer.classList.remove('ring-2', 'ring-emerald-500');
+                    }, 1500);
+                }
+            }
+        }
+    </script>
+</th:block>
 </body>
 </html>

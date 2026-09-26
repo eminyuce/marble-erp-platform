@@ -28,8 +28,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/production")
@@ -184,6 +186,7 @@ public class ProductionController {
         model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
         model.addAttribute("processTypes", FactoryProcessRouting.SURFACE_TYPES.toArray(FactoryProcessType[]::new));
         model.addAttribute("chamferStatuses", ChamferStatus.values());
+        model.addAttribute("operations", factoryProductionService.surfaceOperations());
         return "erp/production/polish";
     }
 
@@ -193,6 +196,34 @@ public class ProductionController {
         return factoryProductionService.allowedSurfaceProcesses(workOrderId).stream()
                 .map(type -> type.name())
                 .toList();
+    }
+
+    @GetMapping("/api/polish-operations")
+    @ResponseBody
+    public List<Map<String, Object>> polishOperationsApi() {
+        return factoryProductionService.surfaceOperations().stream().map(op -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", op.getId());
+            map.put("orderNo", op.getWorkOrder() != null ? op.getWorkOrder().getOrderNo() : "-");
+            map.put("workOrderId", op.getWorkOrder() != null ? op.getWorkOrder().getId() : null);
+            map.put("blockCode", (op.getWorkOrder() != null && op.getWorkOrder().getBlock() != null)
+                    ? op.getWorkOrder().getBlock().getBlockCode() : "-");
+            map.put("processType", op.getProcessType() != null ? op.getProcessType().name() : "");
+            map.put("processTypeLabel", op.getProcessType() != null ? op.getProcessType().getLabel() : "-");
+            map.put("machineName", op.getMachine() != null ? op.getMachine().getName() : "-");
+            map.put("operatorName", op.getOperatorName() != null ? op.getOperatorName() : "-");
+            map.put("finishedAt", op.getFinishedAt() != null ? op.getFinishedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) : "-");
+            map.put("inputQuantity", op.getInputQuantity());
+            map.put("outputQuantity", op.getOutputQuantity());
+            map.put("wasteQuantity", op.getWasteQuantity());
+            map.put("wastePercent", (op.getInputQuantity() != null && op.getInputQuantity().compareTo(BigDecimal.ZERO) > 0 && op.getWasteQuantity() != null)
+                    ? op.getWasteQuantity().multiply(BigDecimal.valueOf(100)).divide(op.getInputQuantity(), 1, java.math.RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO);
+            map.put("chamferStatus", op.getChamferStatus() != null ? op.getChamferStatus().getLabel() : "-");
+            map.put("totalCost", op.getTotalOperationCost());
+            map.put("notes", op.getNotes() != null ? op.getNotes() : "");
+            return map;
+        }).toList();
     }
 
     @PostMapping("/polish")
@@ -211,16 +242,55 @@ public class ProductionController {
                                @RequestParam(value = "consumableCost", required = false) BigDecimal consumableCost,
                                Locale locale,
                                RedirectAttributes redirectAttributes) {
-        factoryProductionService.recordSurfaceOperation(workOrderId, processType, machineId, operatorName,
-                inputM2, outputM2, wasteM2, chamferStatus, notes, laborCost, electricityCost, consumableCost);
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.production.polish.success", null, locale));
+        try {
+            factoryProductionService.recordSurfaceOperation(workOrderId, processType, machineId, operatorName,
+                    inputM2, outputM2, wasteM2, chamferStatus, notes, laborCost, electricityCost, consumableCost);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.production.polish.success", null, locale));
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/production/polish";
+    }
+
+    @GetMapping("/polish/{id}/edit")
+    public String editPolishForm(@PathVariable("id") Long id, Model model) {
+        com.ozerler.marble.model.FactoryOperation op = factoryProductionService.getOperation(id);
+        model.addAttribute("operation", op);
+        model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
+        model.addAttribute("chamferStatuses", ChamferStatus.values());
+        return "erp/production/polish-edit";
+    }
+
+    @PostMapping("/polish/{id}/edit")
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
+    public String updatePolish(@PathVariable("id") Long id,
+                               @RequestParam(value = "machineId", required = false) Long machineId,
+                               @RequestParam("operatorName") String operatorName,
+                               @RequestParam("inputM2") BigDecimal inputM2,
+                               @RequestParam("outputM2") BigDecimal outputM2,
+                               @RequestParam("wasteM2") BigDecimal wasteM2,
+                               @RequestParam(value = "chamferStatus", required = false) ChamferStatus chamferStatus,
+                               @RequestParam(value = "notes", required = false) String notes,
+                               @RequestParam(value = "laborCost", required = false) BigDecimal laborCost,
+                               @RequestParam(value = "electricityCost", required = false) BigDecimal electricityCost,
+                               @RequestParam(value = "consumableCost", required = false) BigDecimal consumableCost,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            factoryProductionService.updateSurfaceOperation(id, machineId, operatorName,
+                    inputM2, outputM2, wasteM2, chamferStatus, notes, laborCost, electricityCost, consumableCost);
+            redirectAttributes.addFlashAttribute("successMessage", "Silim operasyonu başarıyla güncellendi.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/production/polish/" + id + "/edit";
+        }
         return "redirect:/production/polish";
     }
 
     @GetMapping("/pallets")
     public String pallets(Model model) {
         model.addAttribute("pallets", palletShipmentService.pallets());
+        model.addAttribute("shippablePallets", palletShipmentService.shippablePallets());
         model.addAttribute("palletLocationTypes", new com.ozerler.marble.model.enums.StockLocationType[]{
                 com.ozerler.marble.model.enums.StockLocationType.PALLET_STOCK_YARD,
                 com.ozerler.marble.model.enums.StockLocationType.WORKSHOP_STOCK});
@@ -239,9 +309,13 @@ public class ProductionController {
                                @RequestParam(value = "warehouseLocation", required = false) String warehouseLocation,
                                Locale locale,
                                RedirectAttributes redirectAttributes) {
-        palletShipmentService.createPallet(palletCode, customerId, projectId, warehouseLocation);
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.production.pallet.success", null, locale));
+        try {
+            palletShipmentService.createPallet(palletCode, customerId, projectId, warehouseLocation);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.production.pallet.success", null, locale));
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
         return "redirect:/production/pallets";
     }
 
@@ -250,8 +324,14 @@ public class ProductionController {
     public String addPalletItem(@PathVariable("id") Long palletId,
                                 @RequestParam("materialLotId") Long materialLotId,
                                 @RequestParam(value = "quantity", required = false) Integer quantity,
-                                @RequestParam(value = "areaM2", required = false) BigDecimal areaM2) {
-        palletShipmentService.addLot(palletId, materialLotId, quantity, areaM2);
+                                @RequestParam(value = "areaM2", required = false) BigDecimal areaM2,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            palletShipmentService.addLot(palletId, materialLotId, quantity, areaM2);
+            redirectAttributes.addFlashAttribute("successMessage", "Lot başarıyla palete eklendi.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
         return "redirect:/production/pallets";
     }
 
@@ -266,9 +346,13 @@ public class ProductionController {
                                  @RequestParam(value = "freightCost", required = false) BigDecimal freightCost,
                                  Locale locale,
                                  RedirectAttributes redirectAttributes) {
-        palletShipmentService.createShipment(palletId, customerId, projectId, waybillNo, vehiclePlate, driverName, freightCost);
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("erp.production.shipment.success", null, locale));
+        try {
+            palletShipmentService.createShipment(palletId, customerId, projectId, waybillNo, vehiclePlate, driverName, freightCost);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("erp.production.shipment.success", null, locale));
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
         return "redirect:/production/pallets";
     }
 

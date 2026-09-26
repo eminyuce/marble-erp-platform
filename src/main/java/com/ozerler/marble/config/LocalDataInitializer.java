@@ -52,6 +52,8 @@ public class LocalDataInitializer implements CommandLineRunner {
 
         if (userRepository.count() == 0) {
             initUsers();
+        } else if (userRepository.findByEmail("admin@eimece.test").isEmpty()) {
+            seedEimeceAdmin();
         }
 
         if (costCenterRepository.count() == 0) {
@@ -130,7 +132,38 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .roles(new HashSet<>(Set.of(siteRole, userRole)))
                 .build();
 
-        userRepository.saveAll(List.of(admin, factoryMgr, siteChief));
+        User eimeceAdmin = User.builder()
+                .username("admin@eimece.test")
+                .email("admin@eimece.test")
+                .password(passwordEncoder.encode("B2u5c8JB"))
+                .firstName("Eimece")
+                .lastName("Admin")
+                .enabled(true)
+                .deleted(false)
+                .roles(new HashSet<>(Set.of(adminRole, userRole, execRole, factoryRole, siteRole)))
+                .build();
+
+        userRepository.saveAll(List.of(admin, factoryMgr, siteChief, eimeceAdmin));
+    }
+
+    private void seedEimeceAdmin() {
+        log.info("Seeding admin@eimece.test user...");
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseThrow();
+        Role userRole = roleRepository.findByName("ROLE_USER").orElseThrow();
+        Role execRole = roleRepository.findByName("ROLE_EXECUTIVE").orElseThrow();
+        Role factoryRole = roleRepository.findByName("ROLE_FACTORY_MANAGER").orElseThrow();
+        Role siteRole = roleRepository.findByName("ROLE_SITE_ENGINEER").orElseThrow();
+
+        userRepository.save(User.builder()
+                .username("admin@eimece.test")
+                .email("admin@eimece.test")
+                .password(passwordEncoder.encode("B2u5c8JB"))
+                .firstName("Eimece")
+                .lastName("Admin")
+                .enabled(true)
+                .deleted(false)
+                .roles(new HashSet<>(Set.of(adminRole, userRole, execRole, factoryRole, siteRole)))
+                .build());
     }
 
     private void initCostCenters() {

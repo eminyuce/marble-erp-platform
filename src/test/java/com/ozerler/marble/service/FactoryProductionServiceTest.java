@@ -112,4 +112,31 @@ class FactoryProductionServiceRoutingTest {
                 BigDecimal.TEN, BigDecimal.TEN, BigDecimal.ZERO, null, null);
         assertThat(saved.getProcessType()).isEqualTo(FactoryProcessType.SLAB_POLISHING);
     }
+
+    @Test
+    @DisplayName("updateSurfaceOperation updates fields and calculates total cost correctly")
+    void updateSurfaceOperation_Success() {
+        FactoryOperation existing = FactoryOperation.builder()
+                .id(10L)
+                .processType(FactoryProcessType.SLAB_POLISHING)
+                .operatorName("Old Op")
+                .inputQuantity(BigDecimal.TEN)
+                .outputQuantity(BigDecimal.valueOf(8))
+                .wasteQuantity(BigDecimal.valueOf(2))
+                .build();
+
+        when(operationRepository.findById(10L)).thenReturn(Optional.of(existing));
+        when(operationRepository.save(any(FactoryOperation.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        FactoryOperation updated = service.updateSurfaceOperation(10L, null, "New Op",
+                new BigDecimal("20.00"), new BigDecimal("18.00"), new BigDecimal("2.00"),
+                null, "Guncellendi", new BigDecimal("100"), new BigDecimal("50"), new BigDecimal("25"));
+
+        assertThat(updated.getOperatorName()).isEqualTo("New Op");
+        assertThat(updated.getInputQuantity()).isEqualByComparingTo(new BigDecimal("20.00"));
+        assertThat(updated.getOutputQuantity()).isEqualByComparingTo(new BigDecimal("18.00"));
+        assertThat(updated.getWasteQuantity()).isEqualByComparingTo(new BigDecimal("2.00"));
+        assertThat(updated.getTotalOperationCost()).isEqualByComparingTo(new BigDecimal("175"));
+        assertThat(updated.getNotes()).isEqualTo("Guncellendi");
+    }
 }

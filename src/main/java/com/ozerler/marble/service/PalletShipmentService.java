@@ -28,7 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -71,14 +74,17 @@ public class PalletShipmentService {
     public PalletItem addLot(Long palletId, Long materialLotId, Integer quantity, BigDecimal areaM2) {
         Pallet pallet = palletRepository.findById(palletId)
                 .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
+        if ("SHIPPED".equalsIgnoreCase(pallet.getStatus())) {
+            throw new IllegalStateException("Sevk edilmiş palete yeni lot eklenemez.");
+        }
         MaterialLot lot = materialLotRepository.findById(materialLotId)
                 .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.material_lot.not_found", materialLotId)));
         lot.setStatus(MaterialLotStatus.PALLETIZED);
         PalletItem item = palletItemRepository.save(PalletItem.builder()
                 .pallet(pallet)
                 .materialLot(lot)
-                .quantity(quantity != null ? quantity : 1)
-                .areaM2(areaM2 != null ? areaM2 : lot.getTotalAreaM2())
+                .quantity(quantity != null && quantity > 0 ? quantity : 1)
+                .areaM2(areaM2 != null && areaM2.compareTo(BigDecimal.ZERO) > 0 ? areaM2 : lot.getTotalAreaM2())
                 .build());
         pallet.setStatus("READY");
         return item;
@@ -142,12 +148,29 @@ public class PalletShipmentService {
 
     @Transactional(readOnly = true)
     public List<Pallet> pallets() {
-        return palletRepository.findAllWithLocationAndSlabs();
+        List<Pallet> pallets = palletRepository.findAllWithLocationAndSlabs();
+        if (!pallets.isEmpty()) {
+            List<PalletItem> items = palletItemRepository.findByPalletIn(pallets);
+            Map<Long, List<PalletItem>> itemsByPallet = items.stream()
+                    .filter(i -> i.getPallet() != null)
+                    .collect(Collectors.groupingBy(i -> i.getPallet().getId()));
+            for (Pallet p : pallets) {
+                p.setItems(itemsByPallet.getOrDefault(p.getId(), new ArrayList<>()));
+            }
+        }
+        return pallets;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Pallet> shippablePallets() {
+        return pallets().stream()
+                .filter(p -> !"SHIPPED".equalsIgnoreCase(p.getStatus()))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<Shipment> shipments() {
-        return shipmentRepository.findAll();
+        return shipmentRepository.findAllWithDetails();
     }
 
     @Transactional(readOnly = true)

@@ -12,15 +12,17 @@ function initDualEditor(containerId, hiddenInputId, options) {
 
     const compact = !!(options && options.compact);
     const initialContent = hiddenInput.value || "";
-    const paneMin = compact ? "min-h-[96px]" : "min-h-[160px]";
+    const paneMin = compact ? "min-h-[120px]" : "min-h-[220px]";
+
+    makeHostFullWidth(container);
 
     container.dataset.editorReady = "1";
     container.innerHTML = `
-        <div class="w-full border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+        <div class="w-full col-span-full border border-slate-200 rounded-lg overflow-hidden bg-white shadow-xs">
             <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2">
                 <div class="flex items-center gap-2">
                     <button type="button" data-editor-tab="visual"
-                            class="px-3 py-1 text-xs font-semibold rounded bg-white text-slate-800 shadow-sm border border-slate-200 transition">
+                            class="px-3 py-1 text-xs font-semibold rounded bg-white text-slate-800 shadow-2xs border border-slate-200 transition">
                         Zengin Metin
                     </button>
                     <button type="button" data-editor-tab="code"
@@ -28,11 +30,11 @@ function initDualEditor(containerId, hiddenInputId, options) {
                         Kaynak Kod
                     </button>
                 </div>
-                <span class="text-xs text-slate-400">HTML</span>
+                <span class="text-xs text-slate-400 font-mono">HTML Editör (Tam Genişlik)</span>
             </div>
-            <div data-editor-pane="visual" class="p-3 ${paneMin} focus:outline-none prose prose-slate max-w-none"></div>
+            <div data-editor-pane="visual" class="p-4 ${paneMin} focus:outline-none prose prose-slate max-w-none text-slate-800 text-sm leading-relaxed"></div>
             <div data-editor-pane="code" class="hidden">
-                <textarea data-editor-code class="w-full h-40 p-3 font-mono text-xs bg-slate-900 text-emerald-400 border-0 focus:ring-0 resize-y"></textarea>
+                <textarea data-editor-code class="w-full h-56 p-4 font-mono text-xs bg-slate-900 text-emerald-400 border-0 focus:ring-0 resize-y"></textarea>
             </div>
         </div>
     `;
@@ -94,6 +96,31 @@ function uniqueEditorId(base) {
     return id;
 }
 
+function makeHostFullWidth(container) {
+    if (!container) return;
+    container.classList.add("col-span-full", "w-full");
+    container.style.gridColumn = "1 / -1";
+    container.style.width = "100%";
+
+    let el = container.parentElement;
+    while (el && el !== document.body && !el.classList.contains("erp-form-card") && !el.classList.contains("erp-form-body") && el.tagName.toLowerCase() !== "form") {
+        const parent = el.parentElement;
+        if (parent) {
+            const hasGridClass = parent.classList.contains("grid") ||
+                                 parent.classList.contains("erp-form-grid") ||
+                                 [...parent.classList].some(c => c.startsWith("grid-cols-") || c.startsWith("erp-form-grid"));
+            const isDisplayGrid = window.getComputedStyle ? window.getComputedStyle(parent).display === "grid" : false;
+            if (hasGridClass || isDisplayGrid) {
+                el.classList.add("col-span-full", "w-full");
+                el.style.gridColumn = "1 / -1";
+                el.style.width = "100%";
+                break;
+            }
+        }
+        el = el.parentElement;
+    }
+}
+
 function preparedEditorHost(field) {
     const prev = field.previousElementSibling;
     if (prev && (prev.hasAttribute("data-html-notes") || prev.querySelector("[data-editor-pane]"))) {
@@ -122,6 +149,7 @@ function bindPreparedNotesEditors(root) {
         if (!container.id) {
             container.id = uniqueEditorId((hidden && hidden.id ? hidden.id : "notes") + "-editor");
         }
+        makeHostFullWidth(container);
         initDualEditor(container.id, hidden && hidden.id ? hidden.id : hidden);
     });
 }
@@ -141,6 +169,7 @@ function wrapVisibleNotesFields(root) {
             if (!host.id) {
                 host.id = uniqueEditorId(field.id + "-editor");
             }
+            makeHostFullWidth(host);
             initDualEditor(host.id, field.id);
             return;
         }
@@ -152,9 +181,11 @@ function wrapVisibleNotesFields(root) {
         hidden.dataset.htmlNotesBound = "1";
         const container = document.createElement("div");
         container.id = uniqueEditorId(hidden.id + "-editor");
+        container.className = "col-span-full w-full";
         container.setAttribute("data-html-notes", "");
         container.setAttribute("data-hidden-id", hidden.id);
         hidden.parentNode.insertBefore(container, hidden);
+        makeHostFullWidth(container);
         initDualEditor(container.id, hidden.id, {compact: compact});
     });
 }

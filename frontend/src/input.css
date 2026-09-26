@@ -3355,19 +3355,28 @@ a.settings-sidebar-item {
 }
 
 .erp-notes-band {
-  width: 100%;
+  width: 100% !important;
+  grid-column: 1 / -1 !important;
   margin-top: 1.15rem;
 }
 
 .erp-form-grid > .erp-form-field:has([data-html-notes]),
 .erp-form-grid--3 > .erp-form-field:has([data-html-notes]),
-.erp-form-grid--4 > .erp-form-field:has([data-html-notes]) {
-  grid-column: 1 / -1;
+.erp-form-grid--4 > .erp-form-field:has([data-html-notes]),
+.grid > *:has([data-html-notes]),
+[class*="grid-cols"] > *:has([data-html-notes]),
+.grid > [data-html-notes],
+[class*="grid-cols"] > [data-html-notes],
+*:has(> [data-html-notes]),
+*:has(> * > [data-html-notes][data-editor-ready="1"]) {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
 }
 
 [data-html-notes] {
   display: block;
-  width: 100%;
+  width: 100% !important;
+  grid-column: 1 / -1 !important;
 }
 
 .erp-form-label {

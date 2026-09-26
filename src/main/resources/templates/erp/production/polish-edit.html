@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="'Silim Operasyonunu Düzenle #' + ${operation.id} + ' | Özerler Mermer ERP'">Silim Operasyonu Düzenle | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-6">
+    <!-- Header -->
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Silim operasyonunu düzenle')}"></div>
+            <div class="flex items-center gap-3">
+                <h2 class="admin-page-title" th:text="'Silim Operasyonu Düzenle #' + ${operation.id}">Silim Operasyonunu Düzenle</h2>
+                <span class="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-blue-100 text-blue-800"
+                      th:text="${operation.processType != null ? operation.processType.label : ''}">Plaka Silim</span>
+            </div>
+            <p class="erp-list-lead">Kayıtlı silim veya ebatlama operasyonunun makine, operatör, alan ve maliyet bilgilerini güncelleyin.</p>
+        </div>
+        <a th:href="@{/production/polish}" class="erp-btn-secondary">
+            <i data-lucide="arrow-left"></i>
+            <span>Silim Listesi</span>
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2.5">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600 shrink-0"></i>
+        <span th:text="${errorMessage}">Bir hata oluştu.</span>
+    </div>
+
+    <!-- Edit Form Card -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-6 max-w-4xl">
+        <!-- Üst Bilgi Rozeti -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-wrap items-center justify-between gap-4 text-xs">
+            <div class="space-y-1">
+                <span class="text-slate-500 font-medium">Bağlı İş Emri</span>
+                <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <span th:text="${operation.workOrder != null ? operation.workOrder.orderNo : '-'}">WO-2026-001</span>
+                    <span th:if="${operation.workOrder != null and operation.workOrder.block != null}"
+                          class="font-mono font-normal text-xs text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded"
+                          th:text="'Blok: ' + ${operation.workOrder.block.blockCode}">Blok Kodu</span>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <span class="text-slate-500 font-medium">Tamamlanma Zamanı</span>
+                <div class="font-bold text-slate-800"
+                     th:text="${operation.finishedAt != null ? #temporals.format(operation.finishedAt, 'dd.MM.yyyy HH:mm') : '-'}">01.01.2026 12:00</div>
+            </div>
+            <div class="space-y-1">
+                <span class="text-slate-500 font-medium">Mevcut Durum</span>
+                <div>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800"
+                          th:text="${operation.status != null ? operation.status.label : 'Tamamlandı'}">Tamamlandı</span>
+                </div>
+            </div>
+        </div>
+
+        <form th:action="@{'/production/polish/' + ${operation.id} + '/edit'}" method="post" class="space-y-5" id="polishEditForm">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Makine</label>
+                    <select name="machineId" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Makine Seçin --</option>
+                        <option th:each="m : ${factoryMachines}" th:value="${m.id}" th:text="${m.name}"
+                                th:selected="${operation.machine != null and operation.machine.id == m.id}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Operatör <span class="text-rose-500">*</span></label>
+                    <input type="text" name="operatorName" required th:value="${operation.operatorName}" placeholder="Operatör adı"
+                           class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                </div>
+                <div id="chamferField">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Pah Durumu (Dar Bant için)</label>
+                    <select id="chamferStatus" name="chamferStatus" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option th:each="c : ${chamferStatuses}" th:value="${c.name()}" th:text="${c.label}"
+                                th:selected="${operation.chamferStatus != null and operation.chamferStatus == c}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Metraj ve Fire Bilgileri -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Metraj ve Fire Dengesi (Giriş = Çıkış + Fire)</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Giriş Alanı (m²) <span class="text-rose-500">*</span></label>
+                        <input id="inputM2" type="number" step="0.01" min="0.01" name="inputM2" required
+                               th:value="${operation.inputQuantity}" placeholder="Giriş m²"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               oninput="calcPolishWaste()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Çıkış Sağlam Alan (m²) <span class="text-rose-500">*</span></label>
+                        <input id="outputM2" type="number" step="0.01" min="0" name="outputM2" required
+                               th:value="${operation.outputQuantity}" placeholder="Çıkış m²"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               oninput="calcPolishWaste()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Hesaplanan Fire (m²)</label>
+                        <input id="wasteM2" type="number" step="0.01" min="0" name="wasteM2" required
+                               th:value="${operation.wasteQuantity}" placeholder="Fire m²"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-100 font-mono">
+                    </div>
+                </div>
+                <div id="polish-summary-text" class="text-xs font-bold"></div>
+            </div>
+
+            <!-- Maliyetler -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Operasyonel Giderler (TL)</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">İşçilik Tutarı (₺)</label>
+                        <input type="number" step="0.01" min="0" name="laborCost" th:value="${operation.laborCost}" placeholder="0.00"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Elektrik Tutarı (₺)</label>
+                        <input type="number" step="0.01" min="0" name="electricityCost" th:value="${operation.electricityCost}" placeholder="0.00"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Sarf Malzeme Tutarı (₺)</label>
+                        <input type="number" step="0.01" min="0" name="consumableCost" th:value="${operation.consumableCost}" placeholder="0.00"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notlar -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Vardiya / Kalite Notu</label>
+                <input type="text" name="notes" th:value="${operation.notes}" placeholder="Operasyona dair ek notlar"
+                       class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Butonlar -->
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <a th:href="@{/production/polish}" class="erp-btn-secondary">
+                    <span>Vazgeç</span>
+                </a>
+                <button type="submit" class="min-h-11 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow-xs transition flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>Değişiklikleri Kaydet</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+    function calcPolishWaste() {
+        const inp = parseFloat(document.getElementById('inputM2').value) || 0;
+        const out = parseFloat(document.getElementById('outputM2').value) || 0;
+        const waste = Math.max(0, inp - out);
+        document.getElementById('wasteM2').value = waste.toFixed(2);
+        const sumEl = document.getElementById('polish-summary-text');
+        if (inp > 0) {
+            const firePct = (waste / inp) * 100;
+            sumEl.textContent = 'Fire Oranı: %' + firePct.toFixed(1) + ' (Net Çıkan: ' + out.toFixed(2) + ' m²)';
+            sumEl.className = firePct > 15 ? 'text-xs text-rose-700 font-bold' : 'text-xs text-emerald-700 font-bold';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', calcPolishWaste);
+</script>
+</th:block>
+</body>
+</html>

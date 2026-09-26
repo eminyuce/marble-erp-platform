@@ -61,9 +61,59 @@ public class Pallet extends AuditableEntity {
     @Builder.Default
     private List<Slab> slabs = new ArrayList<>();
 
+    @OneToMany(mappedBy = "pallet", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<PalletItem> items = new ArrayList<>();
+
     @Transient
     public String getStatusLabel() {
         return com.ozerler.marble.model.enums.PalletStatus.labelOf(status);
+    }
+
+    @Transient
+    public int getTotalLotCount() {
+        return items != null ? items.size() : 0;
+    }
+
+    @Transient
+    public BigDecimal getTotalAreaM2() {
+        BigDecimal total = BigDecimal.ZERO;
+        if (items != null) {
+            for (PalletItem item : items) {
+                if (item != null && item.getAreaM2() != null) {
+                    total = total.add(item.getAreaM2());
+                }
+            }
+        }
+        if (slabs != null) {
+            for (Slab slab : slabs) {
+                if (slab != null && slab.getSurfaceAreaM2() != null) {
+                    total = total.add(slab.getSurfaceAreaM2());
+                }
+            }
+        }
+        return total;
+    }
+
+    @Transient
+    public int getTotalQuantity() {
+        int qty = 0;
+        if (items != null) {
+            for (PalletItem item : items) {
+                if (item != null && item.getQuantity() != null) {
+                    qty += item.getQuantity();
+                }
+            }
+        }
+        if (slabs != null) {
+            qty += slabs.size();
+        }
+        return qty;
+    }
+
+    @Transient
+    public boolean isShippable() {
+        return !"SHIPPED".equalsIgnoreCase(status) && (getTotalQuantity() > 0 || getTotalAreaM2().compareTo(BigDecimal.ZERO) > 0);
     }
 
     @Transient
@@ -72,15 +122,26 @@ public class Pallet extends AuditableEntity {
     }
 
     private List<PalletCostAccumulator.AreaCost> areaCosts() {
-        if (slabs == null || slabs.isEmpty()) {
-            return List.of();
-        }
         List<PalletCostAccumulator.AreaCost> lines = new ArrayList<>();
-        for (Slab slab : slabs) {
-            if (slab == null || slab.getSurfaceAreaM2() == null) {
-                continue;
+        if (slabs != null && !slabs.isEmpty()) {
+            for (Slab slab : slabs) {
+                if (slab == null || slab.getSurfaceAreaM2() == null) {
+                    continue;
+                }
+                lines.add(PalletCostAccumulator.line(slab.getSurfaceAreaM2(), slab.getCostPerM2()));
             }
-            lines.add(PalletCostAccumulator.line(slab.getSurfaceAreaM2(), slab.getCostPerM2()));
+        }
+        if (items != null && !items.isEmpty()) {
+            for (PalletItem item : items) {
+                if (item == null || item.getAreaM2() == null) {
+                    continue;
+                }
+                BigDecimal unitCost = BigDecimal.ZERO;
+                if (item.getMaterialLot() != null && item.getMaterialLot().getUnitCost() != null) {
+                    unitCost = item.getMaterialLot().getUnitCost();
+                }
+                lines.add(PalletCostAccumulator.line(item.getAreaM2(), unitCost));
+            }
         }
         return lines;
     }
