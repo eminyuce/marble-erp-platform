@@ -62,11 +62,18 @@
      }">
 
     <!-- Welcome Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-            <p class="text-sm font-semibold text-[#2b6cb0]">Özerler Mermer</p>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">Yönetici Paneline Hoş Geldiniz</h1>
-            <p class="text-sm text-slate-500 mt-1">Tüm modüllere buradan hızlıca erişebilirsiniz.</p>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl px-5 py-4">
+        <div class="flex items-center gap-4 min-w-0">
+            <img th:src="@{/brand/ozerler-logo.png(v=${assetVersion})}"
+                 src="/brand/ozerler-logo.png"
+                 alt="Özerler"
+                 width="218"
+                 height="122"
+                 class="h-14 sm:h-16 w-auto shrink-0 object-contain object-left">
+            <div class="min-w-0 border-l border-slate-200 pl-4">
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900">Yönetici Paneline Hoş Geldiniz</h1>
+                <p class="text-sm text-slate-500 mt-1">Tüm modüllere buradan hızlıca erişebilirsiniz.</p>
+            </div>
         </div>
         <a th:href="@{/admin/dashboard/oursitefeatures}"
            class="px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2 cursor-pointer transition hover:shadow">
