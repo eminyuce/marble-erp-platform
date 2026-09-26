@@ -127,7 +127,7 @@ install_inapp_deploy_support() {
     echo "[INAPP] Installing root-owned $dest"
     sudo_cmd install -m 755 -o root -g root "$src" "$dest"
 
-    # Root running git against an eyuce-owned clone (sudo git pull / in-app deploy).
+    # Root running git against an eyuce-owned clone (in-app fetch + reset --hard).
     local trusted_dirs
     trusted_dirs="$(sudo_cmd git config --system --get-all safe.directory 2>/dev/null || true)"
     if ! printf '%s\n' "$trusted_dirs" | grep -Fxq "$REPO_ROOT"; then

@@ -211,10 +211,11 @@
                 idleTerminal() {
                     return [
                         'eyuce@eyucedev:~$ cd marble-erp-platform/',
-                        'eyuce@eyucedev:~/marble-erp-platform$ sudo git pull origin main',
+                        'eyuce@eyucedev:~/marble-erp-platform$ sudo git fetch origin main',
+                        'eyuce@eyucedev:~/marble-erp-platform$ sudo git reset --hard origin/main',
                         'eyuce@eyucedev:~/marble-erp-platform$ sudo ./scripts/deploy_production.sh -y',
                         '',
-                        '# Bu iki komut, Yayınla düğmesiyle buradan çalışır.',
+                        '# Bu adımlar, Yayınla düğmesiyle buradan çalışır.',
                         '# SSH oturumu açmanıza gerek yoktur.'
                     ].join('\n');
                 }
@@ -242,8 +243,9 @@
                             Yazılım ekibinin sisteme eklediği en güncel özellikleri, ekran yeniliklerini ve hata düzeltmelerini tek bir tuşla canlı sisteme aktararak tüm personelin kullanımına hazır hale getirir.
                         </p>
                         <p class="text-[11px] text-slate-500 font-medium">
-                            SSH olmadan <strong>main</strong> dalını çekip üretim paketini kurar.
-                            Araçlar: <code class="font-mono text-[11px]">git pull origin main</code>
+                            SSH olmadan çalışma kopyasını <strong>origin/main</strong> ile eşitler, sonra üretim paketini kurar.
+                            Araçlar: <code class="font-mono text-[11px]">git fetch origin main</code>,
+                            <code class="font-mono text-[11px]">git reset --hard origin/main</code>
                             ve <code class="font-mono text-[11px]">./scripts/deploy_production.sh -y</code>
                         </p>
                     </div>
@@ -287,7 +289,7 @@
                         <h2 class="text-sm font-bold text-slate-900">Ne olur?</h2>
                     </div>
                     <ol class="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed">
-                        <li><code class="font-mono">git pull origin main</code> çalışır.</li>
+                        <li><code class="font-mono">git fetch origin main</code> sonra <code class="font-mono">git reset --hard origin/main</code> çalışır. Sunucudaki yerel farklar silinir; kurulan kod GitHub’daki son main’dir.</li>
                         <li>Önyüz ve JAR derlenir.</li>
                         <li><code class="font-mono">marble-erp</code> servisi durur (kısa kesinti).</li>
                         <li>Yeni JAR kurulur, servis ayağa kalkar, sağlık kontrolü yapılır.</li>

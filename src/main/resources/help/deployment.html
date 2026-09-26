@@ -23,7 +23,7 @@
         <li>Sağ üstteki <strong>"Üretim Yayınını Başlat"</strong> butonuna tıklayın.</li>
         <li>Konsol akışında otomatik yürütülen adımları izleyin:
             <ul>
-                <li><code>git pull origin main</code>: En son güncellemeleri çeker.</li>
+                <li><code>git fetch origin main</code> ve <code>git reset --hard origin/main</code>: Sunucu kopyasını GitHub’daki son main ile eşitler. Yerel değişiklikler yayın sırasında silinir.</li>
                 <li>Maven ile projeyi derler ve otomatik testleri çalıştırır.</li>
                 <li>Eski servisi kapatıp yeni JAR dosyasını ayağa kaldırır.</li>
                 <li>Veritabanı ve web servisinin ayakta olduğunu doğrular.</li>

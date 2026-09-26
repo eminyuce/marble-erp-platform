@@ -25,7 +25,7 @@ public class DeploymentProperties {
     private String command = "/usr/local/sbin/marble-erp-inapp-deploy";
 
     /**
-     * Git clone that {@code git pull origin main} runs against.
+     * Git clone that is hard-reset to {@code origin/main} before deploy.
      */
     private String repoDir = "/home/eyuce/marble-erp-platform";
 

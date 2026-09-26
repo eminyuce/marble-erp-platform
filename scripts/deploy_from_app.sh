@@ -30,7 +30,7 @@ usage() {
 Usage: marble-erp-inapp-deploy [options]
 
   --ping             Print READY and exit (sudo / path probe).
-  --foreground       Run git pull + deploy in this process (used by systemd-run).
+  --foreground       Fetch origin/main, hard-reset, then deploy (used by systemd-run).
   --repo DIR         Git clone root (default: /home/eyuce/marble-erp-platform)
   --log FILE         Deploy log path
   --status FILE      Status file path
@@ -226,12 +226,15 @@ fi
 cd "$REPO_ROOT"
 ensure_git_safe_directory "$REPO_ROOT"
 
-# Matches the host workflow: sudo git pull origin main
-echo "\$ git checkout ${GIT_BRANCH}"
-git_cmd checkout "$GIT_BRANCH"
+# Always match the remote branch. Local commits and edits on the server are discarded.
+echo "\$ git fetch ${GIT_REMOTE} ${GIT_BRANCH}"
+git_cmd fetch "$GIT_REMOTE" "$GIT_BRANCH"
 
-echo "\$ git pull ${GIT_REMOTE} ${GIT_BRANCH}"
-git_cmd pull "$GIT_REMOTE" "$GIT_BRANCH"
+echo "\$ git checkout -B ${GIT_BRANCH} ${GIT_REMOTE}/${GIT_BRANCH}"
+git_cmd checkout -B "$GIT_BRANCH" "${GIT_REMOTE}/${GIT_BRANCH}"
+
+echo "\$ git reset --hard ${GIT_REMOTE}/${GIT_BRANCH}"
+git_cmd reset --hard "${GIT_REMOTE}/${GIT_BRANCH}"
 
 echo
 echo "\$ ./scripts/deploy_production.sh -y"
