@@ -3456,6 +3456,15 @@ textarea.is-invalid {
   display: flex;
   align-items: flex-start;
   gap: 14px;
+  transition: opacity 0.35s ease;
+}
+
+.erp-notice.is-dismissed {
+  opacity: 0;
+}
+
+.erp-notice__field {
+  font-weight: 700;
 }
 
 .erp-form-errors {

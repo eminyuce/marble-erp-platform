@@ -1,15 +1,97 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<div th:fragment="alerts">
-    <div th:if="${successMessage}"
+<div th:fragment="alerts"
+     th:with="hasSuccess=${!#strings.isEmpty(successMessage) and !#strings.isEmpty(#strings.trim(successMessage))},
+              hasError=${!#strings.isEmpty(errorMessage) and !#strings.isEmpty(#strings.trim(errorMessage))},
+              hasWarning=${!#strings.isEmpty(warningMessage) and !#strings.isEmpty(#strings.trim(warningMessage))},
+              hasFields=${invalidFields != null and !invalidFields.isEmpty()}">
+    <div th:if="${hasSuccess}"
          th:replace="~{:: notice('success', ${#messages.msg('notice.success.title')}, ${successMessage})}"></div>
-    <div th:if="${errorMessage}"
+    <div th:if="${hasError}"
          th:replace="~{:: notice('error', ${#messages.msg('notice.error.title')}, ${errorMessage})}"></div>
-    <div th:if="${warningMessage}"
-         th:replace="~{:: notice('warning', ${#messages.msg('notice.warning.title')}, ${warningMessage})}"></div>
+    <div th:if="${hasWarning or hasFields}" class="erp-notice erp-notice--warning" role="status">
+        <span class="erp-notice__mark" aria-hidden="true">
+            <svg class="erp-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+        </span>
+        <div class="erp-notice__copy">
+            <p class="erp-notice__kicker" th:text="#{notice.warning.title}">Kontrol edin</p>
+            <p class="erp-notice__text" th:if="${hasWarning}" th:text="${warningMessage}">Uyarı</p>
+            <p class="erp-notice__text" th:if="${hasFields}">
+                <span th:text="#{notice.warning.fields.lead}">Şu alanlara bakın:</span>
+                <span th:each="field, stat : ${invalidFields}"><span class="erp-notice__field" th:attr="data-field-name=${field}" th:text="${field}">alan</span><span th:if="${!stat.last}">, </span></span>
+            </p>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        (function () {
+            if (window.erpNoticeDismissScheduled) {
+                return;
+            }
+            window.erpNoticeDismissScheduled = true;
+            var dismissAfterMs = 100000;
+
+            function fieldLabel(name) {
+                var escape = window.CSS && CSS.escape ? function (value) { return CSS.escape(value); } : function (value) { return value; };
+                var field = document.querySelector('[name="' + escape(name) + '"]');
+                if (!field) {
+                    return name;
+                }
+                var label = field.id ? document.querySelector('label[for="' + escape(field.id) + '"]') : null;
+                if (!label) {
+                    var wrap = field.closest("div");
+                    label = wrap ? wrap.querySelector("label") : null;
+                }
+                if (!label) {
+                    return name;
+                }
+                var text = label.textContent.replace(/\*/g, "").replace(/\s+/g, " ").trim();
+                return text || name;
+            }
+
+            function arm() {
+                document.querySelectorAll("[data-field-name]").forEach(function (node) {
+                    node.textContent = fieldLabel(node.getAttribute("data-field-name"));
+                });
+                document.querySelectorAll(".erp-notice").forEach(function (notice) {
+                    if (notice.dataset.dismissArmed === "1") {
+                        return;
+                    }
+                    var texts = notice.querySelectorAll(".erp-notice__text");
+                    var hasText = false;
+                    texts.forEach(function (text) {
+                        if (text.textContent && text.textContent.trim()) {
+                            hasText = true;
+                        }
+                    });
+                    if (!hasText) {
+                        notice.remove();
+                        return;
+                    }
+                    notice.dataset.dismissArmed = "1";
+                    setTimeout(function () {
+                        notice.classList.add("is-dismissed");
+                        setTimeout(function () {
+                            notice.remove();
+                        }, 350);
+                    }, dismissAfterMs);
+                });
+            }
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", arm);
+            } else {
+                arm();
+            }
+        })();
+    </script>
 </div>
 
 <div th:fragment="notice(kind, title, text)"
+     th:if="${!#strings.isEmpty(text) and !#strings.isEmpty(#strings.trim(text))}"
      class="erp-notice"
      th:classappend="'erp-notice--' + ${kind}"
      th:attr="role=${kind == 'error' ? 'alert' : 'status'}">
