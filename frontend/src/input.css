@@ -1800,12 +1800,17 @@ body.admin-login-page {
 .admin-login__alert {
   display: flex;
   gap: 10px;
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
   background: #ecfeff;
   border: 1px solid #a5f3fc;
   color: #155e75;
-  font-size: 12px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 550;
+  line-height: 1.55;
+  letter-spacing: -0.011em;
+  word-spacing: 0.12em;
   margin-bottom: 18px;
 }
 
@@ -3390,9 +3395,25 @@ a.settings-sidebar-item {
 
 .erp-form-input.is-invalid,
 .erp-form-select.is-invalid,
-.erp-form-textarea.is-invalid {
+.erp-form-textarea.is-invalid,
+input.is-invalid,
+select.is-invalid,
+textarea.is-invalid {
   border-color: #e11d48;
   background: #fff7f8;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.16);
+}
+
+.erp-field-hint {
+  margin: 6px 0 0;
+  max-width: 62ch;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 650;
+  line-height: 1.45;
+  letter-spacing: -0.011em;
+  word-spacing: 0.12em;
+  color: #9f1239;
 }
 
 .erp-form-textarea {
@@ -3417,17 +3438,138 @@ a.settings-sidebar-item {
   color: #be123c;
 }
 
+.erp-notice,
 .erp-form-errors {
-  margin-bottom: 1.15rem;
-  padding: 0.9rem 1rem;
-  background: #fff1f2;
+  margin: 0 0 1.25rem;
+  padding: 16px 18px;
+  border-radius: 16px;
   border: 1px solid #fecdd3;
-  border-radius: 10px;
-  color: #9f1239;
-  font-size: 13px;
+  border-left: 5px solid #e11d48;
+  background: #fff5f5;
+  color: #881337;
+  box-shadow: 0 10px 28px rgba(136, 19, 55, 0.07);
+  font-family: var(--font-sans);
+  word-spacing: 0.12em;
+}
+
+.erp-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.erp-form-errors {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.4rem;
+  font-size: 1.0625rem;
+  font-weight: 550;
+  line-height: 1.6;
+  letter-spacing: -0.012em;
+}
+
+.erp-form-errors > div {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+}
+
+.erp-notice__mark {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffe4e6;
+  color: #be123c;
+}
+
+.erp-notice__icon {
+  width: 22px;
+  height: 22px;
+}
+
+.erp-notice__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 1px;
+}
+
+.erp-notice__kicker {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  word-spacing: 0.08em;
+  color: #be123c;
+}
+
+.erp-notice__text {
+  margin: 0;
+  max-width: 68ch;
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 550;
+  line-height: 1.6;
+  letter-spacing: -0.014em;
+  word-spacing: 0.12em;
+  color: #6b1230;
+}
+
+.erp-notice--success {
+  background: #f0fdf8;
+  border-color: #a7f3d0;
+  border-left-color: #0f766e;
+  color: #115e59;
+  box-shadow: 0 10px 28px rgba(15, 118, 110, 0.07);
+}
+
+.erp-notice--success .erp-notice__mark {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.erp-notice--success .erp-notice__kicker,
+.erp-notice--success .erp-notice__text {
+  color: #115e59;
+}
+
+.erp-notice--warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  border-left-color: #d97706;
+  color: #92400e;
+  box-shadow: 0 10px 28px rgba(217, 119, 6, 0.07);
+}
+
+.erp-notice--warning .erp-notice__mark {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.erp-notice--warning .erp-notice__kicker,
+.erp-notice--warning .erp-notice__text {
+  color: #92400e;
+}
+
+.erp-notice-followup {
+  margin: 0 0 1rem;
+  max-width: 62ch;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: #334e68;
+  word-spacing: 0.12em;
 }
 
 .erp-form-panel {

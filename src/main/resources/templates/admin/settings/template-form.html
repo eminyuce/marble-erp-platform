@@ -26,8 +26,6 @@
         </div>
     </div>
 
-    <div th:replace="~{fragments/alerts :: alerts}"></div>
-
     <div class="erp-form-card">
         <form th:action="@{/admin/settings/templates/{id}/save(id=${template.id})}" method="post" class="erp-form">
             <div class="erp-form-body">

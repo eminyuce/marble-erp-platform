@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${pageTitle != null ? pageTitle + ' | Özerler Mermer ERP' : 'İşlem tamamlanamadı | Özerler Mermer ERP'}">
+        İşlem tamamlanamadı
+    </title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page">
+    <p class="erp-notice-followup" th:text="#{notice.error.followup}">
+        Açıklamayı okuyup formu düzeltin ve yeniden deneyin.
+    </p>
+    <a class="erp-btn-secondary" th:href="@{/admin/dashboard}">
+        <i data-lucide="layout-dashboard"></i>
+        <span>Panele dön</span>
+    </a>
+</div>
+</body>
+</html>

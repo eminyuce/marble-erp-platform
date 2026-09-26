@@ -2,19 +2,36 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <div th:fragment="alerts">
     <div th:if="${successMessage}"
-         class="mb-5 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3">
-        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
-        <div class="text-sm font-medium" th:text="${successMessage}">İşlem başarıyla tamamlandı.</div>
-    </div>
+         th:replace="~{:: notice('success', ${#messages.msg('notice.success.title')}, ${successMessage})}"></div>
     <div th:if="${errorMessage}"
-         class="mb-5 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-3">
-        <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
-        <div class="text-sm font-medium" th:text="${errorMessage}">Bir hata meydana geldi.</div>
-    </div>
+         th:replace="~{:: notice('error', ${#messages.msg('notice.error.title')}, ${errorMessage})}"></div>
     <div th:if="${warningMessage}"
-         class="mb-5 p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-3">
-        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0"></i>
-        <div class="text-sm font-medium" th:text="${warningMessage}">Dikkat edilmesi gereken durum.</div>
+         th:replace="~{:: notice('warning', ${#messages.msg('notice.warning.title')}, ${warningMessage})}"></div>
+</div>
+
+<div th:fragment="notice(kind, title, text)"
+     class="erp-notice"
+     th:classappend="'erp-notice--' + ${kind}"
+     th:attr="role=${kind == 'error' ? 'alert' : 'status'}">
+    <span class="erp-notice__mark" aria-hidden="true">
+        <svg th:if="${kind == 'error'}" class="erp-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <svg th:if="${kind == 'success'}" class="erp-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="m8 12 2.5 2.5L16 9"></path>
+        </svg>
+        <svg th:if="${kind == 'warning'}" class="erp-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+    </span>
+    <div class="erp-notice__copy">
+        <p class="erp-notice__kicker" th:text="${title}">İşlem tamamlanamadı</p>
+        <p class="erp-notice__text" th:text="${text}">Açıklama</p>
     </div>
 </div>
 </html>

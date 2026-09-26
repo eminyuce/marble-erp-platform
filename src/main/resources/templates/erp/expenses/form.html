@@ -54,8 +54,6 @@
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
             <div class="erp-form-body">
-                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
-
                 <!-- 1. Birim ve Masraf Merkezi -->
                 <section class="erp-form-section">
                     <div th:replace="~{fragments/form-page :: section('İş Birimi & Masraf Merkezi', 'Giderin ait olduğu birim, ocak/şantiye hedefi ve masraf merkezini seçin.')}"></div>

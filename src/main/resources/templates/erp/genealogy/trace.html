@@ -35,13 +35,6 @@
         </form>
     </div>
 
-    <!-- Error message if not found -->
-    <div th:if="${errorMessage}"
-         class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-        <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
-        <span th:text="${errorMessage}">Hata</span>
-    </div>
-
     <!-- Genealogy Visual Tree Render -->
     <div th:if="${tree != null}" class="space-y-4">
         <!-- Root Node: Quarry & Block -->

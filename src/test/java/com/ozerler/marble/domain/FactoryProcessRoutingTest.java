@@ -1,5 +1,6 @@
 package com.ozerler.marble.domain;
 
+import com.ozerler.marble.exception.RejectedInputException;
 import com.ozerler.marble.model.enums.FactoryProcessType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,11 @@ class FactoryProcessRoutingTest {
     void stCuttingRejectsSlabPolishing() {
         assertThatThrownBy(() -> FactoryProcessRouting.requireValidSurfaceRouting(
                 FactoryProcessType.ST_CUTTING, FactoryProcessType.SLAB_POLISHING))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(RejectedInputException.class)
+                .hasMessage("Bu iş emri ST kesimden geldi. Yalnızca Bant Silim (Dar Bant Cila) seçebilirsiniz.")
+                .extracting(ex -> ((RejectedInputException) ex).fieldNames())
+                .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.LIST)
+                .containsExactly("processType");
     }
 
     @Test
@@ -31,7 +36,8 @@ class FactoryProcessRoutingTest {
         FactoryProcessRouting.requireValidSurfaceRouting(FactoryProcessType.GANGSAW_CUTTING, FactoryProcessType.SLAB_POLISHING);
         assertThatThrownBy(() -> FactoryProcessRouting.requireValidSurfaceRouting(
                 FactoryProcessType.GANGSAW_CUTTING, FactoryProcessType.STRIP_POLISHING))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Bu iş emri Katrak kesimden geldi. Yalnızca Plaka Silim (Plaka Cila) seçebilirsiniz.");
     }
 
     @Test

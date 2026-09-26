@@ -6,7 +6,7 @@
     <title th:text="${title != null ? title : 'Dijital Taş Pasaportu'}">Dijital Taş Pasaportu | Özerler Mermer</title>
     <link rel="preload" th:href="@{/fonts/inter-latin-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" th:href="@{/fonts/inter-latin-ext-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css(v=${assetVersion})}">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 flex items-center justify-center antialiased">
@@ -123,10 +123,8 @@
         <div class="text-emerald-400 text-[10px]">QC Onayı: Onaylandı (Sıfır Çatlak Toleransı)</div>
     </div>
 
-    <div th:if="${errorMessage}" class="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-xl"
-         th:text="${errorMessage}">
-        Kayıt bulunamadı.
-    </div>
+    <div th:if="${errorMessage}"
+         th:replace="~{fragments/alerts :: notice('error', ${#messages.msg('notice.error.title')}, ${errorMessage})}"></div>
 
     <!-- Action Links -->
     <div class="pt-2 flex flex-col gap-2">

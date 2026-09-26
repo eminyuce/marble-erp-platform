@@ -18,8 +18,6 @@
     <div class="erp-form-card">
         <form th:action="@{/machines/fuel/create}" method="post" class="erp-form" id="fuel-form">
             <div class="erp-form-body">
-                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
-
                 <!-- Makine & Tarih -->
                 <section class="erp-form-section">
                     <div th:replace="~{fragments/form-page :: section('Makine & Tarih', 'İkmal yapılan makine ve fiş tarihi')}"></div>

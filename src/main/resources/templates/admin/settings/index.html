@@ -36,23 +36,6 @@
         </div>
     </div>
 
-    <!-- Alert Messages -->
-    <div th:if="${successMessage}"
-         class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center gap-3">
-        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
-        <span th:text="${successMessage}"></span>
-    </div>
-    <div th:if="${warningMessage}"
-         class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium flex items-center gap-3">
-        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0"></i>
-        <span th:text="${warningMessage}"></span>
-    </div>
-    <div th:if="${errorMessage}"
-         class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-center gap-3">
-        <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
-        <span th:text="${errorMessage}"></span>
-    </div>
-
     <!-- ═══════════════════════════════════════════════════════════════
          SIDEBAR + CONTENT LAYOUT
          ═══════════════════════════════════════════════════════════════ -->

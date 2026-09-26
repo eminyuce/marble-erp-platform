@@ -18,8 +18,6 @@
         <form th:object="${costCenter}" th:action="@{/admin/definitions/cost-centers/save}" method="post" class="erp-form">
             <input type="hidden" th:if="${isEdit ?: false}" th:field="*{id}"/>
             <div class="erp-form-body">
-                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
-
                 <section class="erp-form-section">
                     <div th:replace="~{fragments/form-page :: section('Kimlik', 'Merkez kodu, ad ve iş birimi')}"></div>
                     <div class="erp-form-grid">

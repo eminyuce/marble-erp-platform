@@ -17,8 +17,6 @@
     <div class="erp-form-card">
         <form th:action="@{/sales/create}" method="post" class="erp-form">
             <div class="erp-form-body">
-                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
-
                 <section class="erp-form-section">
                     <div th:replace="~{fragments/form-page :: section('Sipariş', 'Numara ve müşteri')}"></div>
                     <div class="erp-form-grid">

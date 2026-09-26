@@ -14,11 +14,6 @@
         ${'Blok #' + block.blockCode},
         @{/blocks})}"></div>
 
-    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-800 flex items-center gap-3" role="alert">
-        <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 shrink-0"></i>
-        <span th:text="${errorMessage}">Hata mesajı</span>
-    </div>
-
     <!-- Blok Bilgileri ve Özet Kartı -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">

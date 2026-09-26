@@ -618,5 +618,168 @@
 <script th:src="@{/js/editor-setup.js(v=${assetVersion})}"></script>
 
 <th:block layout:fragment="scripts"></th:block>
+<script th:inline="javascript">
+(function () {
+    var values = /*[[${preservedForm}]]*/ null;
+    var invalidFields = /*[[${invalidFields}]]*/ null;
+    var actionPath = /*[[${preservedFormAction}]]*/ "";
+    if (!values) {
+        return;
+    }
+
+    function cssEscape(value) {
+        if (window.CSS && typeof CSS.escape === "function") {
+            return CSS.escape(value);
+        }
+        return String(value).replace(/"/g, "\\'");
+    }
+
+    function pathname(action) {
+        try {
+            return new URL(action, window.location.origin).pathname;
+        } catch (ignore) {
+            return "";
+        }
+    }
+
+    function fieldsNamed(root, name) {
+        return root.querySelectorAll('[name="' + cssEscape(name) + '"]');
+    }
+
+    function syncAlpine(field, value) {
+        if (!window.Alpine || typeof Alpine.$data !== "function") {
+            return;
+        }
+        var expr = field.getAttribute("x-model");
+        if (!expr || expr.indexOf(".") !== -1 || expr.indexOf("[") !== -1 || expr.indexOf(" ") !== -1) {
+            return;
+        }
+        try {
+            var data = Alpine.$data(field);
+            if (data && Object.prototype.hasOwnProperty.call(data, expr)) {
+                data[expr] = value;
+            }
+        } catch (ignore) {
+            /* field is outside an Alpine component */
+        }
+    }
+
+    function watchOptions(select, value) {
+        if (!value || Array.prototype.some.call(select.options, function (opt) { return opt.value === value; })) {
+            return;
+        }
+        var observer = new MutationObserver(function () {
+            if (Array.prototype.some.call(select.options, function (opt) { return opt.value === value; })) {
+                select.value = value;
+                syncAlpine(select, value);
+                observer.disconnect();
+            }
+        });
+        observer.observe(select, {childList: true, subtree: true});
+        setTimeout(function () { observer.disconnect(); }, 4000);
+    }
+
+    function writeField(field, entry) {
+        if (!field || field.type === "file" || field.type === "password") {
+            return;
+        }
+        if (field.type === "checkbox" || field.type === "radio") {
+            field.checked = entry.indexOf(field.value) !== -1;
+            syncAlpine(field, field.checked);
+            return;
+        }
+        if (field.tagName === "SELECT" && field.multiple) {
+            Array.prototype.forEach.call(field.options, function (opt) {
+                opt.selected = entry.indexOf(opt.value) !== -1;
+            });
+            return;
+        }
+        var next = entry.length ? entry[0] : "";
+        if (field.tagName === "SELECT") {
+            watchOptions(field, next);
+        }
+        field.value = next;
+        syncAlpine(field, next);
+    }
+
+    function writeAll(form) {
+        Object.keys(values).forEach(function (name) {
+            var entry = values[name] || [];
+            Array.prototype.forEach.call(fieldsNamed(form, name), function (field) {
+                writeField(field, entry);
+            });
+        });
+    }
+
+    function targetForm() {
+        var forms = Array.prototype.slice.call(document.forms);
+        var wanted = pathname(actionPath || "");
+        var matched = forms.filter(function (form) {
+            return wanted && pathname(form.action) === wanted;
+        });
+        if (matched.length === 1) {
+            return matched[0];
+        }
+        var pool = matched.length ? matched : forms;
+        var best = null;
+        var bestScore = -1;
+        pool.forEach(function (form) {
+            var score = 0;
+            Object.keys(values).forEach(function (name) {
+                if (fieldsNamed(form, name).length) {
+                    score += 1;
+                }
+            });
+            if (score > bestScore) {
+                best = form;
+                bestScore = score;
+            }
+        });
+        return bestScore > 0 ? best : null;
+    }
+
+    function markInvalid(form, message) {
+        var names = Array.isArray(invalidFields) ? invalidFields : [];
+        var first = null;
+        names.forEach(function (name) {
+            Array.prototype.forEach.call(fieldsNamed(form, name), function (field) {
+                field.classList.add("is-invalid");
+                field.setAttribute("aria-invalid", "true");
+                if (!first) {
+                    first = field;
+                }
+            });
+        });
+        if (!first || !message) {
+            return;
+        }
+        var hint = document.createElement("p");
+        hint.className = "erp-field-hint";
+        hint.textContent = message;
+        first.insertAdjacentElement("afterend", hint);
+        first.setAttribute("aria-describedby", hint.id || (hint.id = "erp-field-hint"));
+        first.focus({preventScroll: true});
+        first.scrollIntoView({block: "center", behavior: "smooth"});
+    }
+
+    function restore() {
+        var form = targetForm();
+        if (!form) {
+            return;
+        }
+        writeAll(form);
+        var notice = document.querySelector(".erp-notice--error .erp-notice__text");
+        var message = notice ? (notice.textContent || "").trim() : "";
+        markInvalid(form, message);
+        setTimeout(function () { writeAll(form); }, 0);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", restore);
+    } else {
+        restore();
+    }
+})();
+</script>
 </body>
 </html>

@@ -17,8 +17,6 @@
     <div class="erp-form-card">
         <form th:action="@{/production/slabs/{id}/edit(id=${record.id})}" method="post" class="erp-form">
             <div class="erp-form-body">
-                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
-
                 <section class="erp-form-section">
                     <div th:replace="~{fragments/form-page :: section('Kimlik', 'Plaka kodu ve stok durumu')}"></div>
                     <div class="erp-form-grid">

@@ -46,8 +46,6 @@
         <form id="workshop-receipt-form" th:action="@{/workshop/receipts}" method="post" class="erp-form"
               x-data="{ source: 'INTERNAL_FACTORY' }">
             <div class="erp-form-body">
-                <div th:if="${errorMessage}" class="erp-form-errors" role="alert" th:text="${errorMessage}">Hata</div>
-
                 <section class="erp-form-section">
                     <div th:replace="~{fragments/form-page :: section('Kabul bilgisi', 'Kaynak, taş cinsi ve alış tutarı')}"></div>
                     <div class="erp-form-grid">

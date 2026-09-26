@@ -14,11 +14,6 @@
         ${'Blok #' + block.blockCode},
         @{/blocks})}"></div>
 
-    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-800 flex items-center gap-3" role="alert">
-        <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 shrink-0"></i>
-        <span th:text="${errorMessage}">Hata mesajı</span>
-    </div>
-
     <div th:replace="~{fragments/block-operation :: identity(${block})}"></div>
 
     <div class="erp-ops-info-callout p-5 rounded-2xl bg-gradient-to-r from-sky-50 via-amber-50/60 to-slate-50 border border-sky-200/80 shadow-xs">

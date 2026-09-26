@@ -1,5 +1,6 @@
 package com.ozerler.marble.domain;
 
+import com.ozerler.marble.exception.RejectedInputException;
 import com.ozerler.marble.model.enums.FactoryProcessType;
 import com.ozerler.marble.util.MessageUtils;
 
@@ -73,8 +74,22 @@ public final class FactoryProcessRouting {
             return;
         }
         FactoryProcessType requiredPolishing = requiredPolishingFor(previousCutting);
-        if (requiredPolishing == null || requiredPolishing != requested) {
-            throw new IllegalArgumentException(MessageUtils.getMessage("error.factory.process.invalid_routing"));
+        if (requiredPolishing == null) {
+            throw new RejectedInputException(
+                    MessageUtils.getMessage("error.factory.process.cutting_required"), "processType");
         }
+        if (requiredPolishing != requested) {
+            throw new RejectedInputException(mismatchMessage(previousCutting), "processType");
+        }
+    }
+
+    private static String mismatchMessage(FactoryProcessType previousCutting) {
+        if (previousCutting == FactoryProcessType.ST_CUTTING) {
+            return MessageUtils.getMessage("error.factory.process.st_requires_strip");
+        }
+        if (previousCutting == FactoryProcessType.GANGSAW_CUTTING) {
+            return MessageUtils.getMessage("error.factory.process.gangsaw_requires_slab");
+        }
+        return MessageUtils.getMessage("error.factory.process.invalid_routing");
     }
 }
