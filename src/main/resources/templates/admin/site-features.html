@@ -12,8 +12,7 @@
         <p class="osf-guide__eyebrow">YÖNETİCİ REHBERİ</p>
         <h1 class="osf-guide__title">Sitenizin özellikleri</h1>
         <p class="osf-guide__lead">
-            Ocaktan şantiyeye kadar neleri yönetebileceğinizi küçük adımlarla öğrenin.
-            Her bölüm bir kitap sayfası gibi açılır; uzun sayfada aşağı kaydırmanız gerekmez.
+            Ocaktan şantiyeye, fabrika kesiminden 1 m² nihai ürün maliyetine kadar Özerler Mermer ERP platformunun sunduğu tüm kurumsal kabiliyetleri adım adım keşfedin. Her bölüm bir kitap sayfası gibi açılır; sayfa kaydırmadan tüm operasyonel detaylara ulaşabilirsiniz.
         </p>
         <aside class="osf-guide__callout osf-guide__callout--tip" role="note" aria-label="İpucu">
             <strong>İpucu:</strong> İçindekilerden bir başlık seçin veya alttaki
@@ -35,19 +34,14 @@
             </div>
 
             <ol class="osf-guide__toc-list">
-                <li><a href="#osf-home" data-osf-toc-link data-osf-page="0" class="is-active" aria-current="page">1.
-                    Kokpit</a></li>
+                <li><a href="#osf-home" data-osf-toc-link data-osf-page="0" class="is-active" aria-current="page">1. Kokpit</a></li>
                 <li><a href="#osf-blocks" data-osf-toc-link data-osf-page="1" aria-current="false">2. Ocak</a></li>
-                <li><a href="#osf-production" data-osf-toc-link data-osf-page="2" aria-current="false">3. Fabrika</a>
-                </li>
-                <li><a href="#osf-slabs" data-osf-toc-link data-osf-page="3" aria-current="false">4. Plaka Stok Sahası</a>
-                </li>
+                <li><a href="#osf-production" data-osf-toc-link data-osf-page="2" aria-current="false">3. Fabrika</a></li>
+                <li><a href="#osf-slabs" data-osf-toc-link data-osf-page="3" aria-current="false">4. Plaka Stok Sahası</a></li>
                 <li><a href="#osf-workshop" data-osf-toc-link data-osf-page="4" aria-current="false">5. Atölye</a></li>
                 <li><a href="#osf-projects" data-osf-toc-link data-osf-page="5" aria-current="false">6. Şantiyeler</a></li>
-                <li><a href="#osf-cost" data-osf-toc-link data-osf-page="6" aria-current="false">7. Maliyet Analizi</a>
-                </li>
-                <li><a href="#osf-users" data-osf-toc-link data-osf-page="7" aria-current="false">8. Kullanıcılar</a>
-                </li>
+                <li><a href="#osf-cost" data-osf-toc-link data-osf-page="6" aria-current="false">7. Maliyet Analizi</a></li>
+                <li><a href="#osf-users" data-osf-toc-link data-osf-page="7" aria-current="false">8. Kullanıcılar</a></li>
             </ol>
         </nav>
 
@@ -60,19 +54,26 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="layout-dashboard"></i></span>
                         <div>
-                            <h2 id="osf-home-title">Yönetici kokpiti</h2>
-                            <p>Günün stoğu, açık iş emirleri ve şantiye özetinin ilk bakışta göründüğü yer.</p>
+                            <h2 id="osf-home-title">Yönetici Kokpiti ve Genel Bakış</h2>
+                            <p>Günün blok tonajı, fabrika kesim metrajı, açık iş emirleri ve şantiye projelerinin tek ekranda izlendiği canlı yönetim merkezi.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
                     <ul class="osf-guide__list">
-                        <li>Blok, plaka ve iş emri özetlerini tek ekranda izleyin</li>
-                        <li>Menüden operasyon, proje ve yönetim sayfalarına geçin</li>
-                        <li>Sistem sağlığını ve kullanıcı hesaplarını buradan açın</li>
+                        <li>Aylık üretilen blok tonajını, kesilen plaka m²'sini ve stok durumunu canlı sayaçlarla anlık izleyin</li>
+                        <li>Küresel arama kutusuna blok no, plaka kodu veya müşteri adı yazarak doğrudan ilgili kayda saniyeler içinde ulaşın</li>
+                        <li>Fabrika blok stoğundaki kesim bekleyen hammaddeyi ve plaka deposundaki müşteri rezervasyonlarını denetleyin</li>
+                        <li>Fabrika kesim ve silim hatlarındaki güncel fire oranlarını ve aktif şantiye proje sayılarını takip edin</li>
+                        <li>Ocak, Fabrika, Atölye, Şantiyeler, Maliyet ve Öğrenme Merkezi modüllerine hızlı geçiş butonlarıyla anında erişin</li>
                     </ul>
+                    <aside class="osf-guide__callout osf-guide__callout--tip" role="note">
+                        <strong>İpucu (Canlı Senkronizasyon):</strong> Kokpitteki veriler canlıdır. Sahada kantar tartımı yapıldığında veya operatör tabletten kesimi bitirdiğinde göstergeler anında otomatik güncellenir.
+                    </aside>
                     <p class="osf-guide__where">
                         Yönetim:
                         <a th:href="@{/admin/dashboard}">Yönetici Kokpiti</a>
+                        |
+                        <a th:href="@{/ogrenme-merkezi}">Öğrenme Merkezi</a>
                     </p>
                 </section>
 
@@ -82,23 +83,27 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="mountain"></i></span>
                         <div>
-                            <h2 id="osf-blocks-title">Ocak ve blok kabul</h2>
-                            <p>Ocaktan çıkan bloğu ölçün, tartın ve fabrikaya sevk edin.</p>
+                            <h2 id="osf-blocks-title">Ocak ve Blok Yönetimi</h2>
+                            <p>Ocaktan çıkan ham bloğun kademe kaydından kantar tartımına, saha transferlerinden fabrikaya sevkiyatına tam kontrol.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
                     <ul class="osf-guide__list">
-                        <li>En, boy ve yükseklik ile hacim ve teorik tonaj hesaplayın</li>
-                        <li>Kantar tartımını girin; %5 sapmayı sarı alarmla görün</li>
-                        <li>Bloğu kendi fabrikasına maliyetsiz dahili transfer edin</li>
+                        <li>Ocak kademesini seçip standart kodlama kuralıyla (Örn: OC-A3-202609-0084) benzersiz yeni blok kaydı oluşturun</li>
+                        <li>En, boy ve yükseklik ölçüleriyle taşın özgül ağırlığından (2,71 t/m³) hacim ve teorik tonajı otomatik hesaplayın</li>
+                        <li>Fiili kantar tartımını girin; teorik tonajla %5 üzerindeki kantar sapmalarını sarı uyarı alarmlarıyla denetleyin</li>
+                        <li>Bloğu vinç veya loderle Üretim Sahasından sevkiyata hazır Stok Sahasına taşıyın ve konum notlarını kaydedin</li>
+                        <li>Kamyon nakliye bedelini girerek bloğu Fabrika Blok Sahasına sevk edin veya ocaktan doğrudan müşteriye satın</li>
+                        <li>Bloğun 4 cephe fotoğraflarını yükleyin ve karekodlu (QR) dijital taş pasaportunu anında oluşturun</li>
                     </ul>
-                    <aside class="osf-guide__callout osf-guide__callout--note" role="note">
-                        <strong>Not:</strong> Kendi fabrikasına sevkte yapay iç kâr eklenmez; ocak bedeli ve nakliye
-                        hammadde maliyetine yazılır.
+                    <aside class="osf-guide__callout osf-guide__callout--warn" role="note">
+                        <strong>Kritik Kural (Kantar &amp; Nakliye):</strong> Tüm ocak çıkarma maliyetleri fiili kantar tartımı üzerinden hesaplanır. Ocaktan fabrikaya sevkte ödenen kamyon navlunu mutlaka girilmelidir; bu bedel hammadde maliyetine kuruşu kuruşuna eklenir.
                     </aside>
                     <p class="osf-guide__where">
                         Yönetim:
-                        <a th:href="@{/blocks}">Ocak</a>
+                        <a th:href="@{/blocks}">Ocak &amp; Blok Takibi</a>
+                        |
+                        <a th:href="@{/machines/fuel}">Makine &amp; Mazot Takibi</a>
                     </p>
                 </section>
 
@@ -108,23 +113,31 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="scissors"></i></span>
                         <div>
-                            <h2 id="osf-production-title">Fabrika</h2>
-                            <p>Blok kabulünden ST/Katrak kesime, silim ve palet sevkiyata kadar izleyin.</p>
+                            <h2 id="osf-production-title">Fabrika Kesim ve Üretim Yönetimi</h2>
+                            <p>Blok kabulünden Katrak/ST kesimine, silim-cila yüzey işlemlerinden barkodlu paletlemeye entegre imalat süreci.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
                     <ul class="osf-guide__list">
-                        <li>Katrak veya ST kesimini ayrı iş emri olarak kaydedin</li>
-                        <li>Cila, honlama veya fırçalama yüzey işlemi seçin</li>
-                        <li>Fireyi FR-01 … FR-10 kodlarıyla kaydedin</li>
+                        <li>Ocaktan gelen kamyonlardaki blokları fabrika hammadde sahasına teslim alın ve kesim kuyruğuna aktarın</li>
+                        <li>Katrak (geniş plaka) veya ST (şerit/dar bant) makinelerine kesim iş emri açıp operatör ve hedef kalınlık (2-3 cm) atayın</li>
+                        <li>Makine başındaki ustaların kullandığı dokunmatik Operatör Tableti üzerinden işleri tek tuşla başlatıp bitirin</li>
+                        <li>Kesim sonrası elde edilen sağlam m² metrajını ve standart kodlu (FR-01 … FR-10) fire miktarlarını kaydedin</li>
+                        <li>Silim ve Cila hattında taşlara Cilalı, Honlu veya Fırçalı (Patinato) yüzey işlemi uygulayın ve pah işlemlerini izleyin</li>
+                        <li>Kesilen mamul taşları ahşap palet veya kasalara dizip barkodlayarak sevk irsaliyesiyle nakliyeye hazırlayın</li>
                     </ul>
                     <aside class="osf-guide__callout osf-guide__callout--warn" role="note">
-                        <strong>Dikkat:</strong> Doğal çatlak (FR-02) ocak seleksiyonuna, operatör hatası (FR-05)
-                        işçilik performansına yazılır.
+                        <strong>Dikkat (Fire &amp; Birim Maliyet):</strong> Kesimde fire arttıkça çıkan sağlam m² azalır ve 1 m² mermerin üretim maliyeti doğrudan yükselir. Doğal çatlak (FR-02) ocak seleksiyonuna, operatör hatası (FR-05) işçilik performansına işlenir.
                     </aside>
                     <p class="osf-guide__where">
                         Yönetim:
-                        <a th:href="@{/production}">Fabrika</a>
+                        <a th:href="@{/production}">Fabrika Üretim</a>
+                        |
+                        <a th:href="@{/production/tablet}">Operatör Tableti</a>
+                        |
+                        <a th:href="@{/production/polish}">Silim &amp; Cila</a>
+                        |
+                        <a th:href="@{/production/pallets}">Barkodlu Paletler</a>
                     </p>
                 </section>
 
@@ -134,16 +147,22 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="layers"></i></span>
                         <div>
-                            <h2 id="osf-slabs-title">Plaka Stok Sahası</h2>
-                            <p>Her plakayı barkodlayın, kaliteleyin ve paletleyin.</p>
+                            <h2 id="osf-slabs-title">Plaka Stok Sahası ve Köprü Kesme</h2>
+                            <p>Katrak ve ciladan çıkan büyük boy plakaların depolanması, rezervasyonu, satışı veya ebatlamaya sevki.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
                     <ul class="osf-guide__list">
-                        <li>Plakaya tekil kod ve QR etiket verin</li>
-                        <li>Kalite sınıfı, kalınlık ve parlaklık (gloss) kaydedin</li>
-                        <li>Stok durumunu Stokta, Rezerve veya Sevk Edildi olarak izleyin</li>
+                        <li>Depodaki plakaları kalınlık (2 cm, 3 cm), yüzey işlemi (Cilalı, Ham, Honlu) ve kalite seleksiyonuna göre filtreleyin</li>
+                        <li>Her plakaya benzersiz plaka kodu ve karekod (QR) vererek plakanın ocak kademesi ve blok kökenini bağlayın</li>
+                        <li>Cilalı büyük boy plakaları doğrudan müşteriye hazır plaka olarak satıp stoktan düşün</li>
+                        <li>Müşteri veya şantiye ebat taleplerine göre plakayı Köprü Kesme makinesine göndererek karolara ebatlayın</li>
+                        <li>Müşteriye ayrılan plakaları "Rezerve" statüsüne alarak çift satış veya mükerrer iş emrini engelleyin</li>
+                        <li>Depodaki sağlam plaka alanını, rezerve metrajları ve fire oranlarını tek tıkla Excel veya CSV olarak indirin</li>
                     </ul>
+                    <aside class="osf-guide__callout osf-guide__callout--note" role="note">
+                        <strong>Not:</strong> Köprü kesmeye giren plakada oluşan kenar çıtası ve kesim tozu firesi mutlaka kaydedilmelidir; böylece 1 m² ebatlı mamul maliyeti doğru hesaplanır ve çıkan ürünler otomatik paletleme alanına aktarılır.
+                    </aside>
                     <p class="osf-guide__where">
                         Yönetim:
                         <a th:href="@{/production/slabs}">Plaka Stok Sahası</a>
@@ -156,22 +175,25 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="hammer"></i></span>
                         <div>
-                            <h2 id="osf-workshop-title">Atölye ebatlama</h2>
-                            <p>Şantiye ölçüsüne göre plakayı kesin ve nesting firesini ayırın.</p>
+                            <h2 id="osf-workshop-title">Atölye Ebatlama ve Kenar İşleme</h2>
+                            <p>Fabrika plakalarından veya dış alımlardan özel müşteri siparişlerine ve şantiye projelerine hassas ebatlama.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
                     <ul class="osf-guide__list">
-                        <li>İş emri ile kaynak plakayı rezerve edin</li>
-                        <li>Köprü kesmede ebatlama ve pah/profil uygulayın</li>
-                        <li>Nesting artığını mozaik stoğuna aktarın</li>
+                        <li>Kendi fabrikamızdan gelen plakaları veya dış tedarikçilerden satın alınan fason taşları atölye fişiyle kabul edin</li>
+                        <li>Köprü Kesme-1 ve 2 makinelerinde 60x60, 30x60, basamak, süpürgelik veya özel gönyeli ölçülere ebatlama yapın</li>
+                        <li>Yan kesme makinesinde şerit baş kesimi yapın; pah kırma makinesinde süpürgelik ve basamak kenarlarına pah açın</li>
+                        <li>Spiral ve tezgâh işçiliğiyle balıksırtı, damlalık, özel kavis ve ince el işçiliği işlemlerini gerçekleştirin</li>
+                        <li>Ebatlama sonucunda çıkan mamulleri doğrudan Müşteri Siparişine veya Şantiye Proje Mahaline sevk edin</li>
+                        <li>Nesting artığı sağlam mermer parçalarını mozaik stoğuna devrederek malzeme kaybını en aza indirin</li>
                     </ul>
                     <aside class="osf-guide__callout osf-guide__callout--note" role="note">
-                        <strong>Not:</strong> Rezerve plaka başka projeye seçilemez. Emir bitince otomatik işlendi olur.
+                        <strong>Not:</strong> Bir atölye iş emrine bağlanan kaynak plaka rezerve edilir ve başka işe kullanılamaz. Ebatlama tamamlandığında plaka sistemde otomatik olarak "İşlendi" durumuna geçer.
                     </aside>
                     <p class="osf-guide__where">
                         Yönetim:
-                        <a th:href="@{/workshop}">Atölye</a>
+                        <a th:href="@{/workshop}">Atölye Yönetimi</a>
                     </p>
                 </section>
 
@@ -181,19 +203,27 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="building-2"></i></span>
                         <div>
-                            <h2 id="osf-projects-title">Şantiyeler</h2>
-                            <p>Şantiyeyi mahal ağacına bölün; montaj ve sarfiyatı izleyin.</p>
+                            <h2 id="osf-projects-title">Şantiyeler ve Proje Yönetimi</h2>
+                            <p>Otel, rezidans ve villa taahhüt projelerinin mahal bazlı metraj planlaması, palet kabulü ve gerçekleşen kârlılığı.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
                     <ul class="osf-guide__list">
-                        <li>Blok → kat → mahal → oda kırılımında mahal ağacı oluşturun</li>
-                        <li>Planlanan m² ile fiili montajı karşılaştırın</li>
-                        <li>Kum, çimento ve yapıştırıcı sarfiyatını kaydedin</li>
+                        <li>Her taahhüt işini müşteri adı, sözleşme bedeli ve teslim takvimiyle ayrı bir proje olarak sisteme açın</li>
+                        <li>Blok &rarr; Kat &rarr; Mahal (Örn: A Blok – 3. Kat – Lobby: 120 m² Bianco Carrara 60x60) hiyerarşisinde mahal ağacı tanımlayın</li>
+                        <li>Fabrikadan veya atölyeden tırla gelen barkodlu mermer paletlerinin şantiye malzeme kabulünü ve sağlamlığını onaylayın</li>
+                        <li>Mahal bazında planlanan metraj ile şantiyede fiilen tamamlanan montaj ilerleme yüzdelerini anlık izleyin</li>
+                        <li>Şantiyede harcanan montaj işçiliği yevmiyelerini, kum, çimento, yapıştırıcı, vinç ve nakliye sarfiyatını projeye bağlayın</li>
+                        <li>Proje bitiminde hakediş geliri ile toplam mermer, işçilik ve sarf maliyetini kıyaslayıp Gerçekleşen Brüt Kârı görün</li>
                     </ul>
+                    <aside class="osf-guide__callout osf-guide__callout--warn" role="note">
+                        <strong>Kritik Kural (Şantiye Gider Ayrımı):</strong> Şantiyeye alınan kum, çimento veya yapıştırıcı faturası, Giderler modülünden mutlaka ilgili proje seçilerek işlenmelidir. Genel şirket giderine yazılan harcamalar projenin gerçek kârlılığını gizler.
+                    </aside>
                     <p class="osf-guide__where">
                         Yönetim:
-                        <a th:href="@{/projects}">Şantiyeler</a>
+                        <a th:href="@{/projects}">Şantiyeler &amp; Projeler</a>
+                        |
+                        <a th:href="@{/expenses}">Şantiye Giderleri</a>
                     </p>
                 </section>
 
@@ -203,21 +233,29 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="calculator"></i></span>
                         <div>
-                            <h2 id="osf-cost-title">Maliyet Analizi ve Raporlar</h2>
-                            <p>Gerçek operasyon giderleri ve Excel raporları.</p>
+                            <h2 id="osf-cost-title">Maliyet Analizi, Raporlar ve İzlenebilirlik</h2>
+                            <p>Ocaktan nihai palete kuruşu kuruşuna birim maliyet zinciri, Excel raporları ve geriye dönük soykütüğü takibi.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
                     <ul class="osf-guide__list">
-                        <li>Extra / A / B / C kalite çarpanı ile birim maliyeti dağıtın</li>
-                        <li>Hedef kâr marjına göre satış fiyatı önerin</li>
-                        <li>Excel veya CSV rapor alın</li>
+                        <li>Ocak çıkarma giderlerini tonaja bölerek TL/Ton hammadde maliyetini ve kamyon navlununu kuruşu kuruşuna hesaplayın</li>
+                        <li>Katrak/ST kesim amortismanı, silim aşındırıcı sarfiyatı ve köprü kesme fire payı ile 1 m² paletli ürünün çıplak maliyetini çıkarın</li>
+                        <li>Extra / A / B / C kalite seleksiyon katsayıları ile blok maliyetini yüksek ve düşük kaliteli plakalara adil dağıtın</li>
+                        <li>Fiyatlama Simülatörü ile çıplak m² maliyetine hedef kâr marjınızı ekleyerek zararına satış riskini önleyen teklif fiyatı alın</li>
+                        <li>Ocak üretim, kesim fireleri, makine mazot tüketimi ve proje hakediş analizlerini tek tıkla Excel (.xlsx) veya CSV olarak indirin</li>
+                        <li>Soykütüğü ekranında blok no veya palet barkodunu okutarak ocağın kademesinden şantiyedeki montaj mahalline kadar tüm yaşam zincirini görün</li>
                     </ul>
+                    <aside class="osf-guide__callout osf-guide__callout--warn" role="note">
+                        <strong>Kritik Kural (Zararına Satışın Önlenmesi):</strong> Satış teklifi asla piyasa dedikodusuyla verilmemelidir. Sistemdeki 1 m² nihai çıplak maliyet görülmeden fiyat verilirse, fire ve nakliye farkı yüzünden kâr sanılırken zarar edilebilir.
+                    </aside>
                     <p class="osf-guide__where">
                         Yönetim:
                         <a th:href="@{/costs}">Maliyet Analizi</a>
                         |
                         <a th:href="@{/reports}">Rapor Merkezi</a>
+                        |
+                        <a th:href="@{/genealogy}">Soykütüğü &amp; İzlenebilirlik</a>
                     </p>
                 </section>
 
@@ -227,23 +265,28 @@
                     <header class="osf-guide__section-head">
                         <span class="osf-guide__icon" aria-hidden="true"><i data-lucide="users"></i></span>
                         <div>
-                            <h2 id="osf-users-title">Kullanıcılar ve ayarlar</h2>
-                            <p>Hesap, rol, 2FA ve sistem sağlık izlemesi.</p>
+                            <h2 id="osf-users-title">Kullanıcılar, Güvenlik ve Sistem Sağlığı</h2>
+                            <p>Görev odaklı rol yetkilendirmesi, iki aşamalı doğrulama (2FA), kurumsal ayarlar ve canlı sunucu izleme.</p>
                         </div>
                     </header>
                     <h3 class="osf-guide__subhead">Ne yapabilirsiniz?</h3>
                     <ul class="osf-guide__list">
-                        <li>Yönetici ve operasyon hesaplarını tanımlayın</li>
-                        <li>SMTP, 2FA ve reCAPTCHA ayarlarını yönetin</li>
-                        <li>Veritabanı, bellek ve disk sağlığını izleyin</li>
+                        <li>Ocak Sorumlusu, Fabrika Operatörü, Atölye Şefi, Şantiye Şefi, Muhasebe ve Yönetici rollerini personele tanımlayın</li>
+                        <li>Makine başındaki kesim ve silim ustaları için Operatör Tableti yetkisi vererek sade ve güvenli kullanım sağlayın</li>
+                        <li>Güvenlik için İki Aşamalı Doğrulama (2FA - TOTP), reCAPTCHA ve kurumsal SMTP e-posta bildirim şablonlarını yönetin</li>
+                        <li>Sunucu durumunu (UP / DOWN), PostgreSQL veritabanı bağlantı havuzunu, bellek kullanımını ve disk alanını canlı izleyin</li>
+                        <li>İşten ayrılan çalışanların hesaplarını silmeyip askıya alarak geçmiş kantar ve üretim verilerinin güvenliğini koruyun</li>
                     </ul>
+                    <aside class="osf-guide__callout osf-guide__callout--note" role="note">
+                        <strong>Önemli Güvenlik Kuralı:</strong> Ayrılan personelin hesabı silinmemeli, "Askıya Al" seçeneğiyle dondurulmalıdır. Böylece personelin sisteme girişi kesilirken geçmişte girdiği kantar tartımı, kesim ve irsaliye kayıtlarının izlenebilirliği korunur.
+                    </aside>
                     <p class="osf-guide__where">
                         Yönetim:
-                        <a th:href="@{/admin/users}">Kullanıcılar</a>
+                        <a th:href="@{/admin/users}">Kullanıcı &amp; Yetki Yönetimi</a>
                         |
                         <a th:href="@{/admin/settings}">Sistem Ayarları</a>
                         |
-                        <a th:href="@{/admin/dashboard/systemhealth/}">Sistem Sağlığı</a>
+                        <a th:href="@{/admin/dashboard/systemhealth}">Sistem Sağlığı</a>
                     </p>
                 </section>
 
