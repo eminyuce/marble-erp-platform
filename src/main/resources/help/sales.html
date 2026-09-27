@@ -1,43 +1,73 @@
-<section class="help-page" data-title="Satış & Sevkiyat Yönetimi" data-updated="2026-09-20">
+<section class="help-page" data-title="Satış Yönetimi — Blok, Plaka & Palet Satışları" data-updated="2026-09-27">
     <div class="help-lead">
-        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktan ham blok, plaka stok sundurmasından cilalı plaka veya fabrikadan kasalı ebatlı palet satışlarının sözleşme, rezervasyon, fatura ve tır/konteyner sevkiyat süreçlerini yönettiğiniz merkezdir.
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktan ham blok, fabrikadan cilalı hazır plaka ve atölyeden/ebatlamadan kasalı ebatlı palet satışlarının sözleşmeden çeki listesine, sevk irsaliyesinden faturalandırmaya kadar yönetildiği ticari satış merkezidir.
     </div>
 
-    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
+    <div class="help-flow">
+        <span class="help-flow-tag">1. Sipariş Aç & Müşteri Seç</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">2. Gerçek Maliyeti Gör & Fiyat Ver</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">3. Stok Rezervasyonu</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">4. Tır / Konteyner Sevkiyatı</span>
+    </div>
+
+    <h3>Bu Sayfada Ne Yapacaksınız?</h3>
     <ul class="help-panel-list">
-        <li>Müşterileriniz için blok, plaka veya ebatlı mamul satış siparişleri açabilirsiniz.</li>
-        <li>Siparişe eklenen taşları otomatik "Rezerve" durumuna alarak çift satışı engelleyebilirsiniz.</li>
-        <li>İhracat satışlarında döviz cinsi (USD, EUR) ve teslimat şekli (FOB, Fabrika Teslim) belirleyebilirsiniz.</li>
-        <li>Konteyner veya tır yüklendiğinde çeki listesi (Packing List) ve sevk irsaliyesi oluşturabilirsiniz.</li>
-        <li>Satış listesini ve ciro raporlarını Excel olarak bilgisayarınıza indirebilirsiniz.</li>
+        <li>Müşterileriniz için blok, plaka veya paletli ebatlı mamul satış siparişi açacaksınız.</li>
+        <li>Satış fiyatını belirlerken sistemin getirdiği <strong>gerçek birim üretim maliyetini (TL/m² veya TL/Ton)</strong> görüp kârlı teklif vereceksiniz.</li>
+        <li>Siparişe eklenen blok veya paletleri otomatik <strong>"Rezerve"</strong> ederek başka birine satılmasını engelleyeceksiniz.</li>
+        <li>İhracatta döviz cinsi (USD, EUR) ve çeki listesi (Packing List) oluşturacaksınız.</li>
+        <li>Taşlar tıra yüklendiğinde sevk irsaliyesi kesip stoğu otomatik düşüreceksiniz.</li>
     </ul>
 
-    <h3>Bu Buton Ne İşe Yarar?</h3>
+    <h3>Ekrandaki Düğmeler Ne İşe Yarar?</h3>
     <ul class="help-panel-list">
-        <li><code>+ Yeni Satış Siparişi</code>: Yeni bir müşteri sözleşmesi ve satış fişi oluşturmak için formu açar.</li>
-        <li><code>Durum Filtresi</code>: Taslak, Onaylandı, Sevkiyatta veya Tamamlandı siparişleri ayırır.</li>
-        <li><code>Dışa Aktar (Excel/CSV)</code>: Satış listesini, müşteri bakiyelerini ve metrajları tablo olarak indirir.</li>
-        <li><code>İşlemler &rarr; İncele / Sevk Et</code>: Siparişteki taşları, irsaliye bilgilerini ve sevkiyat durumunu yönetir.</li>
-        <li><code>İşlemler &rarr; Düzenle</code>: Henüz sevk edilmemiş siparişin fiyat veya miktar detaylarını günceller.</li>
+        <li><span class="help-btn">+ Yeni Satış Siparişi</span>: Müşteri sipariş sözleşmesi formu açar.</li>
+        <li><span class="help-btn">Durum Filtresi</span>: Teklif, Onaylandı, Sevkiyatta veya Tamamlandı siparişleri ayırır.</li>
+        <li><span class="help-btn">İşlemler &rarr; İncele / Sevk Et</span>: Siparişteki paletleri, kamyon plakasını ve çeki listesini yönetir.</li>
+        <li><span class="help-btn">Dışa Aktar (Excel/CSV)</span>: Satış ve ciro dökümünü bilgisayarınıza indirir.</li>
     </ul>
 
     <h3>Adım Adım Satış Siparişi Nasıl Açılır?</h3>
-    <ol>
-        <li>Sağ üstteki <strong>"Yeni Satış Siparişi"</strong> butonuna tıklayın.</li>
-        <li>Taşın satılacağı <strong>Müşteri Carisi</strong>ni seçin.</li>
-        <li>Para birimini (TRY, USD, EUR) ve fatura vadesini belirleyin.</li>
-        <li>Satış kalemini seçin: <em>Ham Blok</em> (Kantar tonu üzerinden), <em>Plaka</em> (m² üzerinden) veya <em>Ebatlı Palet</em>.</li>
-        <li>Siparişi onaylayın; seçilen taşlar otomatik olarak <strong>"Rezerve"</strong> durumuna kilitlenir.</li>
-        <li>Taşlar tıra yüklendiğinde sevk irsaliyesini onaylayıp işlemi tamamlayın.</li>
-    </ol>
+    <ul class="help-step-list">
+        <li class="help-step-item">
+            <span class="help-step-num">1</span>
+            <div>Sağ üstteki <strong>"+ Yeni Satış Siparişi"</strong> butonuna tıklayın.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">2</span>
+            <div>Alıcı <strong>Müşteri</strong>yi ve para birimini (TL, USD, EUR) seçin.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">3</span>
+            <div>Satılacak ürünü ekleyin: <em>Ham Blok (Tonaj)</em>, <em>Plaka (m²)</em> veya <em>Mamul Palet</em>.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">4</span>
+            <div>Sistem ürünün birim maliyetini gösterir; hedef kârınızı ekleyerek satış fiyatını yazın.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">5</span>
+            <div>Kaydedin; ürünler rezerve olur. Kamyon yüklendiğinde irsaliyeyi onaylayıp satışı kapatın.</div>
+        </li>
+    </ul>
 
     <div class="help-example">
-        <strong>Gerçek Kullanım Örneği:</strong><br>
-        İtalya'daki bir alıcıya 480 m² cilalı 60×60 cm Burdur Bej ebatlı kasa taş satıldı (Metrekaresi 38 USD). Siparişe 16 adet palet eklendi. Sipariş onaylandığında paletler depoda rezerve edildi. Konteyner fabrikaya yanaştığında araç plakası ve konteyner no girilerek sevk irsaliyesi kesildi ve taşlar stoktan otomatik düşüldü.
+        <strong>Sahadan Gerçek Örnek:</strong><br>
+        Almanya'daki alıcıya 480 m² 2x60x60 cm cilalı Burdur Bej satıldı. Sistem fabrikadaki gerçek ebatlı ürün maliyetini 280 TL/m² (yaklaşık 8 USD) olarak gösterdi. Temsilci metrekaresini 24 EUR olarak anlaştı. 16 ahşap palet tıra yüklenirken barkodlar okutuldu; sistem 16 paleti mamul stokundan düşürerek satış faturasını oluşturdu.
     </div>
 
-    <div class="help-tip">
-        <strong>Önemli Kural (Kantar Tonajı ve Çeki Listesi):</strong><br>
-        Blok satışlarında teorik hesap değil, kantar tartım fişindeki gerçek tonaj üzerinden fatura kesilir. İhracat kasalarında ise toplam tır tonajının yasal sınır olan 26–27 tonu aşmaması için sistem palet ağırlıklarını otomatik toplar.
+    <div class="help-danger">
+        <strong>Kritik Kural (Kantar & Çeki Listesi):</strong><br>
+        Blok satışlarında fatura her zaman çıkış kantar tartım fişi üzerinden kesilir. Paletli ihracatta ise tırın yasal aks tonaj sınırını (26-27 ton) aşmaması için sistem paletlerin toplam ağırlığını otomatik hesaplar.
+    </div>
+
+    <div class="help-question">
+        <strong>Bu Sayfa Hangi Sorularınıza Cevap Verir?</strong><br>
+        • Bu ürün hangi müşteriye, hangi tarihte ve hangi fiyattan satıldı?<br>
+        • Hangi paletler veya hangi bloklar sevk edildi?<br>
+        • Satıştan gerçekleşen kâr marjımız nedir?
     </div>
 </section>

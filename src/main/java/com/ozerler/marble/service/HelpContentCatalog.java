@@ -38,16 +38,18 @@ public class HelpContentCatalog {
     private static final List<ActionPathMapping> ACTION_PATH_MAPPINGS = List.of(
             new ActionPathMapping(Pattern.compile("^/blocks/[0-9]+/move$"), "block-move"),
             new ActionPathMapping(Pattern.compile("^/blocks/[0-9]+/transfer-to-factory$"), "block-transfer"),
+            new ActionPathMapping(Pattern.compile("^/blocks/[0-9]+/sell$"), "block-sell"),
             new ActionPathMapping(Pattern.compile("^/blocks/[0-9]+/photos(/[0-9]+)?$"), "block-photos"),
             new ActionPathMapping(Pattern.compile("^/admin/settings/templates/[0-9]+/preview$"), "email-preview")
     );
 
     private static final List<PathMapping> PATH_MAPPINGS = List.of(
+                    new PathMapping("/ogrenme-merkezi", "learning-center"),
                     new PathMapping("/account/change-password", "change-password"),
                     new PathMapping("/admin/dashboard/systemhealth", "system-health"),
-                    new PathMapping("/production/tablet", "production"),
-                    new PathMapping("/production/pallets", "production"),
-                    new PathMapping("/production/polish", "production"),
+                    new PathMapping("/production/tablet", "tablet"),
+                    new PathMapping("/production/pallets", "pallets"),
+                    new PathMapping("/production/polish", "polish"),
                     new PathMapping("/production/slabs", "slabs"),
                     new PathMapping("/admin/definitions", "definitions"),
                     new PathMapping("/admin/deployment", "deployment"),

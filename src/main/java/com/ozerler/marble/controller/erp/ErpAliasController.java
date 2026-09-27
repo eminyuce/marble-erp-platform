@@ -25,4 +25,59 @@ public class ErpAliasController {
     public String costAnalysis() {
         return "redirect:/costs";
     }
+
+    @GetMapping({"/learning-center", "/learning", "/ogrenme"})
+    public String learningCenterAlias() {
+        return "redirect:/ogrenme-merkezi";
+    }
+
+    @GetMapping("/ocak/uretim/yeni")
+    public String ocakUretimYeni() {
+        return "redirect:/blocks/create";
+    }
+
+    @GetMapping("/ocak/stok")
+    public String ocakStok() {
+        return "redirect:/blocks";
+    }
+
+    @GetMapping("/giderler/yeni")
+    public String giderlerYeni() {
+        return "redirect:/expenses/create";
+    }
+
+    @GetMapping("/fabrika/kesim")
+    public String fabrikaKesim() {
+        return "redirect:/production/create";
+    }
+
+    @GetMapping("/fabrika/cila")
+    public String fabrikaCila() {
+        return "redirect:/production/polish";
+    }
+
+    @GetMapping("/fabrika/ebatlama")
+    public String fabrikaEbatlama() {
+        return "redirect:/production/pallets";
+    }
+
+    @GetMapping("/atolye/is-emri")
+    public String atolyeIsEmri() {
+        return "redirect:/workshop/create";
+    }
+
+    @GetMapping("/santiye/planlama")
+    public String santiyePlanlama() {
+        return "redirect:/projects/create";
+    }
+
+    @GetMapping("/santiye/montaj")
+    public String santiyeMontaj() {
+        return "redirect:/projects";
+    }
+
+    @GetMapping("/maliyet-analizi")
+    public String maliyetAnalizi() {
+        return "redirect:/costs";
+    }
 }

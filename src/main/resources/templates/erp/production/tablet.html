@@ -24,8 +24,15 @@
                 </p>
             </div>
 
-            <!-- Hızlı Bağlantı / Geri Dön -->
+            <!-- Hızlı Bağlantı / Geri Dön & Yardım -->
             <div class="flex items-center gap-2">
+                <button type="button"
+                        @click="window.openHelpPanel('tablet')"
+                        class="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold shadow-sm transition inline-flex items-center gap-2 cursor-pointer"
+                        title="Operatör Tableti Nasıl Kullanılır?">
+                    <i data-lucide="circle-help" class="w-4 h-4 text-amber-600"></i>
+                    <span>Nasıl Kullanılır?</span>
+                </button>
                 <a th:href="@{/production}" class="erp-btn-secondary inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     <span>Fabrika Ana Ekranı</span>

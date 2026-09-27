@@ -1,41 +1,80 @@
-<section class="help-page" data-title="Maliyet Analizi" data-updated="2026-09-20">
+<section class="help-page" data-title="Maliyet Analizi — Birim Maliyet Zinciri & Kârlılık" data-updated="2026-09-27">
     <div class="help-lead">
-        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktaki 1 ton sağlam bloğun maliyetinden fabrikada üretilen 1 m² plakanın gerçek maliyetine, kesim fire kayıplarından şantiye kârlılığına kadar şirketin finansal gerçekliğini hesaplayan maliyet merkezidir.
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktan çıkan 1 ton ham bloğun maliyetinden fabrikada üretilen <strong>1 m² nihai mermer ürününün toplam üretim maliyetine</strong> kadar tüm üretim zincirini hesaplayan ve satış fiyatlandırmasını gerçek maliyetlere dayandıran stratejik yönetim merkezidir.
     </div>
 
-    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
+    <div class="help-flow">
+        <span class="help-flow-tag">1. Ocak Bloğu</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">2. Ocak Üretim Maliyeti (TL/Ton)</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">3. Fabrikaya Nakliye</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">4. Kesim Maliyeti (TL/m²)</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">5. Cila Maliyeti</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">6. Ebatlama & Fire</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">7. Paletli Nihai Ürün (TL/m²)</span>
+    </div>
+
+    <h3>Sistem Hangi Birim Maliyetleri Otomatik Hesaplar?</h3>
     <ul class="help-panel-list">
-        <li>Seçilen ay için ocak ton maliyetini ve fabrika 1 m² mamul maliyetini tek tıkla hesaplatabilirsiniz.</li>
-        <li>Kesim ve silimde oluşan fire oranının birim maliyeti ne kadar artırdığını görebilirsiniz.</li>
-        <li>Satış fiyatı simülatörüyle taşın maliyetine hedef kâr marjını ekleyip taban satış fiyatı bulabilirsiniz.</li>
-        <li>Şantiyelerdeki mermer harcamaları ve montaj işçiliklerinin getirdiği net kârı inceleyebilirsiniz.</li>
-        <li>Aylık maliyet analiz raporunu yönetim kurulu ve muhasebe için Excel/PDF olarak indirebilirsiniz.</li>
+        <li><strong>Ocak Çıkarma Maliyeti:</strong> Toplam ocak gideri &divide; Üretilen tonaj = <code>TL / Ton</code></li>
+        <li><strong>Fabrika Kesim Maliyeti:</strong> Katrak/ST kesim süresi ve giderleri &divide; Çıkan metraj = <code>TL / m²</code></li>
+        <li><strong>Cila & Yüzey İşlem Maliyeti:</strong> Aşındırıcı sarfiyatı ve cila işçiliği &divide; Cilalanan alan = <code>TL / m²</code></li>
+        <li><strong>Ebatlama & Fire Payı:</strong> Köprü kesme firesi yüzünden kaybolan metrajın maliyete paylaştırılması.</li>
+        <li><strong>Nihai Ürün Maliyeti:</strong> Stoktaki 1 m² paletlenmiş mermerin firmamıza tam çıplak maliyeti = <code>TL / m²</code></li>
     </ul>
 
-    <h3>Bu Buton Ne İşe Yarar?</h3>
+    <h3>Ekrandaki Düğmeler Ne İşe Yarar?</h3>
     <ul class="help-panel-list">
-        <li><code>Dönem Seçimi (Yıl-Ay)</code>: Hesaplama yapılacak üretim ayını (Örn: 2026-09) belirler.</li>
-        <li><code>Maliyetleri Hesapla</code>: O ay girilen tüm giderleri, üretilen ton ve metrajlara bölerek kesin birim maliyetleri çıkarır.</li>
-        <li><code>Fiyatlama Simülatörü</code>: Taş cinsi, kalınlık, fire payı ve kâr marjı girildiğinde önerilen asgari satış fiyatını ($/m² veya TL/m²) hesaplar.</li>
-        <li><code>Gider Ekle / Masraflara Git</code>: Henüz işlenmemiş fatura veya masraf fişi varsa doğrudan Masraflar sayfasına yönlendirir.</li>
-        <li><code>Dışa Aktar (Excel/PDF)</code>: Döneme ait detaylı maliyet dökümünü tek tıkla bilgisayarınıza indirir.</li>
+        <li><span class="help-btn">Dönem Seçimi (Yıl-Ay)</span>: Analiz edilecek üretim ayını (Örn: 2026-09) belirler.</li>
+        <li><span class="help-btn">Maliyetleri Hesapla</span>: O aya ait tüm giderleri üretim miktarlarına dağıtarak birim maliyetleri çıkarır.</li>
+        <li><span class="help-btn">Fiyatlama Simülatörü</span>: Taşın çıplak m² maliyetine hedef kâr marjınızı ekleyerek güvenli satış fiyatını önerir.</li>
+        <li><span class="help-btn">Dışa Aktar (Excel/PDF)</span>: Dönem maliyet tablosunu tek tıkla dosya olarak indirir.</li>
     </ul>
 
     <h3>Adım Adım Dönem Maliyeti Nasıl Hesaplanır?</h3>
-    <ol>
-        <li>Üst kısımdan hesaplama yapmak istediğiniz <strong>Yıl ve Ayı</strong> (Örn: 2026-09) seçin.</li>
-        <li>O aya ait ocak giderlerinin (mazot, tel, personel) ve fabrika giderlerinin (elektrik, segman, su) tam girildiğini kontrol edin.</li>
-        <li><strong>"Maliyetleri Hesapla"</strong> butonuna basın.</li>
-        <li>Sistemin oluşturduğu 4 ana göstergeyi (Ocak Ton Maliyeti, Fabrika m² Maliyeti, Ortalama Fire %, Şantiye Net Kârı) inceleyin.</li>
-    </ol>
+    <ul class="help-step-list">
+        <li class="help-step-item">
+            <span class="help-step-num">1</span>
+            <div>Hesaplanacak <strong>Dönem</strong>i seçin (Örn: 2026-09).</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">2</span>
+            <div>Giderler sayfasından o aya ait mazot, elektrik, işçilik ve sarf faturalarının eksiksiz girildiğinden emin olun.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">3</span>
+            <div><strong>"Maliyetleri Hesapla"</strong> butonuna basın.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">4</span>
+            <div>Oluşan Ocak TL/ton ve Fabrika TL/m² maliyetlerini ve stoktaki taşların güncel maliyetini inceleyin.</div>
+        </li>
+    </ul>
 
     <div class="help-example">
-        <strong>Gerçek Kullanım Örneği:</strong><br>
-        Eylül ayında ocakta 1.200 ton blok üretildi ve ocak masrafları 960.000 TL oldu. Ocak Ton Maliyeti: <code>960.000 TL / 1.200 Ton = 800 TL/Ton</code> çıktı. Fabrikaya nakliyesiyle birlikte 20 tonluk bir bloğun fabrika girişi 18.000 TL oldu. Bu bloktan katrakta 270 m² sağlam plaka çıktı. Fabrika genel gider payı eklendiğinde 1 m² sağlam plaka maliyeti net 95,40 TL olarak belirlendi.
+        <strong>Sahadan Gerçek Örnek (Maliyet Zinciri):</strong><br>
+        Ocakta aylık toplam gider 2.000.000 TL, aylık üretim 1.000 ton oldu. Ocak maliyeti <code>2.000 TL/Ton</code> hesaplandı.<br>
+        20 tonluk Burdur Bej bloğunun ocak maliyeti 40.000 TL, fabrikaya kamyon nakliyesi 10.000 TL oldu (Fabrika giriş maliyeti: 50.000 TL).<br>
+        Katraktan 260 m² sağlam plaka çıktı, kesim gideri 13.000 TL eklendi (m² başına 242 TL).<br>
+        Cila ve ebatlama sonrası %12 fire düşüldüğünde <strong>1 m² nihai paletli ürünün toplam maliyeti net 295 TL/m²</strong> olarak tespit edildi.<br>
+        Satış temsilcisi bu taşa %30 kâr ekleyerek asgari satış fiyatını 383,50 TL/m² (yaklaşık 11 USD/m²) olarak belirledi.
     </div>
 
-    <div class="help-tip">
-        <strong>Püf Noktası (Fire Oranı Etkisi):</strong><br>
-        Mermerde kesim firesi arttıkça bloktan çıkan sağlam m² azalır. Sabit fabrika giderleri daha az metraja bölündüğü için 1 m² mermerin maliyeti fırlar. Fireyi %15'ten %10'a düşürmek, şirket kârlılığını doğrudan artırır.
+    <div class="help-danger">
+        <strong>Kritik Kural (Zararına Satışın Önlenmesi):</strong><br>
+        Satış fiyatı asla tahmini veya piyasa dedikodusuyla belirlenmemelidir. Sistemdeki <strong>TL/m² nihai maliyet</strong> görülmeden teklif verilirse, fire ve nakliye farkı yüzünden şirket kâr ettiğini sanırken zarar edebilir.
+    </div>
+
+    <div class="help-question">
+        <strong>Bu Sayfa Hangi Sorularınıza Cevap Verir?</strong><br>
+        • Bu ürünün mevcut maliyeti nedir?<br>
+        • <strong>1 m² nihai mermer ürün bize kaça mal oldu?</strong><br>
+        • Maliyet hangi aşamalardan oluştu (Ocak, Nakliye, Kesim, Cila, Fire)?<br>
+        • Satışta minimum hangi fiyatın altına inmemeliyiz?
     </div>
 </section>

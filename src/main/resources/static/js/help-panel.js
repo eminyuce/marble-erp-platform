@@ -97,6 +97,7 @@ function renderSimpleMarkdown(source) {
 const HELP_PATH_ACTIONS = [
     [/^\/blocks\/\d+\/move$/, 'block-move'],
     [/^\/blocks\/\d+\/transfer-to-factory$/, 'block-transfer'],
+    [/^\/blocks\/\d+\/sell$/, 'block-sell'],
     [/^\/blocks\/\d+\/photos(?:\/\d+)?$/, 'block-photos'],
     [/^\/admin\/settings\/templates\/\d+\/preview$/, 'email-preview']
 ];
@@ -104,6 +105,9 @@ const HELP_PATH_ACTIONS = [
 const HELP_PATH_PREFIXES = [
     ['/account/change-password', 'change-password'],
     ['/admin/dashboard/systemhealth', 'system-health'],
+    ['/production/tablet', 'tablet'],
+    ['/production/pallets', 'pallets'],
+    ['/production/polish', 'polish'],
     ['/production/slabs', 'slabs'],
     ['/admin/definitions', 'definitions'],
     ['/admin/deployment', 'deployment'],

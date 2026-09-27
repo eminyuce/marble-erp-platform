@@ -46,11 +46,15 @@ class HelpServiceTest {
         assertThat(helpService.getHelpPage("machine-fuel")).isPresent();
         assertThat(helpService.getHelpPage("system-health")).isPresent();
         assertThat(helpService.getHelpPage("block-move")).isPresent();
-        assertThat(helpService.getHelpPage("block-move").orElseThrow().getTitle()).isEqualTo("Blok Saha Taşıma");
+        assertThat(helpService.getHelpPage("block-move").orElseThrow().getTitle()).isEqualTo("Ocak — Blok Saha Taşıma");
         assertThat(helpService.getHelpPage("block-transfer")).isPresent();
-        assertThat(helpService.getHelpPage("block-transfer").orElseThrow().getTitle()).isEqualTo("Fabrikaya Sevk");
+        assertThat(helpService.getHelpPage("block-transfer").orElseThrow().getTitle()).isEqualTo("Ocak &rarr; Fabrikaya Blok Sevkiyatı");
         assertThat(helpService.getHelpPage("block-photos")).isPresent();
-        assertThat(helpService.getHelpPage("block-photos").orElseThrow().getTitle()).isEqualTo("Blok Fotoğraf İncelemesi");
+        assertThat(helpService.getHelpPage("block-photos").orElseThrow().getTitle()).isEqualTo("Ocak — Blok Fotoğrafları & Taş Pasaportu");
+        assertThat(helpService.getHelpPage("block-sell")).isPresent();
+        assertThat(helpService.getHelpPage("tablet")).isPresent();
+        assertThat(helpService.getHelpPage("pallets")).isPresent();
+        assertThat(helpService.getHelpPage("polish")).isPresent();
         assertThat(helpService.getHelpPage("email-preview")).isPresent();
         assertThat(helpService.getHelpPage("email-preview").orElseThrow().getTitle()).isEqualTo("E-posta Şablon Önizleme");
     }
@@ -83,7 +87,9 @@ class HelpServiceTest {
         assertThat(helpService.resolvePageKey("/projects/2")).contains("projects");
         assertThat(helpService.resolvePageKey("/production/slabs")).contains("slabs");
         assertThat(helpService.resolvePageKey("/production/orders/1")).contains("production");
-        assertThat(helpService.resolvePageKey("/production/polish")).contains("production");
+        assertThat(helpService.resolvePageKey("/production/polish")).contains("polish");
+        assertThat(helpService.resolvePageKey("/production/tablet")).contains("tablet");
+        assertThat(helpService.resolvePageKey("/production/pallets")).contains("pallets");
         assertThat(helpService.resolvePageKey("/production/accept")).contains("production");
         assertThat(helpService.resolvePageKey("/quarry")).contains("blocks");
         assertThat(helpService.resolvePageKey("/factory")).contains("production");
@@ -101,6 +107,7 @@ class HelpServiceTest {
         assertThat(helpService.resolvePageKey("/blocks/12/move")).contains("block-move");
         assertThat(helpService.resolvePageKey("/blocks/12/move?targetType=DISPATCH_YARD")).contains("block-move");
         assertThat(helpService.resolvePageKey("/blocks/12/transfer-to-factory")).contains("block-transfer");
+        assertThat(helpService.resolvePageKey("/blocks/12/sell")).contains("block-sell");
         assertThat(helpService.resolvePageKey("/blocks/12/photos")).contains("block-photos");
         assertThat(helpService.resolvePageKey("/blocks/12/photos/8")).contains("block-photos");
         assertThat(helpService.resolvePageKey("/admin/settings/templates/3/preview")).contains("email-preview");

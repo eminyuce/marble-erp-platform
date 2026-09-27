@@ -1,43 +1,72 @@
-<section class="help-page" data-title="Masraflar & Gider Yönetimi" data-updated="2026-09-20">
+<section class="help-page" data-title="Giderler — Birim Masraf Dağıtımı & Fatura Girişi" data-updated="2026-09-27">
     <div class="help-lead">
-        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocak, fabrika, atölye ve şantiyelerde yapılan tüm elektrik, mazot, sarf malzeme, işçilik ve bakım harcamalarının kayıt altına alındığı ve maliyet merkezlerine dağıtıldığı finansal yönetim merkezidir.
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> İşletmenin tüm harcamalarının (mazot, elektrik, işçilik, testere, epoksi, kum, çimento, yapıştırıcı, SSK, bakım vb.) kuruşu kuruşuna ait olduğu birime (Ocak, Fabrika, Atölye, Şantiye/Proje) bağlanarak kaydedildiği finansal merkezdir.
     </div>
 
-    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
+    <div class="help-flow">
+        <span class="help-flow-tag">1. Fatura / Fiş Gelir</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">2. Birim Seç: Ocak / Fabrika / Atölye / Şantiye</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">3. Gider Kalemi Seç</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">4. Otomatik Maliyete Bağlanma</span>
+    </div>
+
+    <h3>4 Ana Birim ve Gider Kalemleri Nelerdir?</h3>
     <ul class="help-panel-list">
-        <li>Aylık toplam şirket harcamalarını ve operasyonel birim bazlı gider dağılımını izleyebilirsiniz.</li>
-        <li>Elektrik, akaryakıt, patlayıcı, elmas tel, testere laması ve bakım faturalarını sisteme işleyebilirsiniz.</li>
-        <li>Şantiyelere ait montaj işçiliği ve harç/sarfiyat giderlerini ilgili projeye bağlayabilirsiniz.</li>
-        <li>Gider listesini filtreleyip Excel veya CSV tablosu olarak indirebilirsiniz.</li>
+        <li><strong>1. Ocak Giderleri:</strong> Mazot, Elektrik, İşçilik, Sarf Malzeme, SSK ve Vergiler, Bakım Maliyetleri, Demirbaş/Ekipman, Diğer.</li>
+        <li><strong>2. Fabrika Giderleri:</strong> Elektrik, Testere Lamaları, Epoksi, Mazot, İşçilik, Sarf Malzeme, SSK ve Vergiler, Bakım, Nakliye, Diğer.</li>
+        <li><strong>3. Atölye Giderleri:</strong> İşçilik, Mazot, Elektrik, Kesme Diskleri/Sarf, SSK ve Vergiler, Bakım, Diğer.</li>
+        <li><strong>4. Şantiye / Proje Giderleri:</strong> Montaj İşçiliği, Kum, Çimento, Yapıştırıcı, Sarf Malzeme, Taşıma/Vinç, SSK ve Vergiler, Bakım, Diğer.</li>
     </ul>
 
-    <h3>Bu Buton Ne İşe Yarar?</h3>
+    <h3>Ekrandaki Düğmeler Ne İşe Yarar?</h3>
     <ul class="help-panel-list">
-        <li><code>+ Yeni Gider Kaydı</code>: Yeni bir masraf faturası veya harcama fişi girmek için tam ekran kayıt formunu açar.</li>
-        <li><code>Dönem Seçimi (Yıl-Ay)</code>: Yalnızca seçilen ayın (Örn: 2026-09) üretim ve finansal kayıtlarını listeler.</li>
-        <li><code>Birim Filtresi</code>: Giderleri Ocak (QUARRY), Fabrika (FACTORY), Atölye (WORKSHOP), Şantiye (CONSTRUCTION) veya Genel Merkez (HEADQUARTERS) bazında süzer.</li>
-        <li><code>Gider Türü</code>: Elektrik, Mazot, Personel, Bakım, Nakliye vb. harcama kalemine göre filtreler.</li>
-        <li><code>Dışa Aktar (Excel/CSV)</code>: Ekranda listelenen harcamaları tek tıkla Excel veya CSV tablosuna dönüştürür.</li>
-        <li><code>İşlemler &rarr; Düzenle</code>: Sehven yanlış girilen tutar, açıklama veya fatura numarasını düzeltir.</li>
-        <li><code>İşlemler &rarr; Sil</code>: Hatalı mükerrer gider kaydını sistemden güvenle kaldırır.</li>
+        <li><span class="help-btn">+ Yeni Gider Kaydı</span>: Yeni bir harcama fişi veya fatura girmek için formu açar.</li>
+        <li><span class="help-btn">Birim Filtresi</span>: Yalnızca Ocak, Fabrika, Atölye veya belirli bir Şantiye harcamalarını listeler.</li>
+        <li><span class="help-btn">Dönem Seçimi</span>: Faturanın ait olduğu üretim ayını (Örn: 2026-09) süzer.</li>
+        <li><span class="help-btn">Dışa Aktar (Excel/CSV)</span>: Tüm harcama dökümünü tek tıkla dosya olarak indirir.</li>
     </ul>
 
     <h3>Adım Adım Gider Kaydı Nasıl Yapılır?</h3>
-    <ol>
-        <li>Sağ üstteki <strong>"Yeni Gider Kaydı"</strong> butonuna tıklayın.</li>
-        <li><strong>Operasyonel Birim</strong> seçin (Örn: <em>FABRİKA</em> veya <em>ŞANTİYE</em>).</li>
-        <li><strong>Gider Türü</strong> belirleyin (Örn: <em>Elektrik</em>, <em>Elmas Tel</em> veya <em>Montaj Sarfiyatı</em>).</li>
-        <li><strong>Fatura Tarihi</strong> ve faturanın ait olduğu <strong>Üretim Dönemi</strong>ni seçin.</li>
-        <li>Fatura tutarını (KDV dahil/hariç TL), fatura numarasını ve tedarikçi cariyi girip <strong>Kaydet</strong> butonuna basın.</li>
-    </ol>
+    <ul class="help-step-list">
+        <li class="help-step-item">
+            <span class="help-step-num">1</span>
+            <div>Sağ üstteki mavi <strong>"+ Yeni Gider Kaydı"</strong> butonuna basın.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">2</span>
+            <div><strong>Giderin Ait Olduğu Birim</strong>i seçin: <em>Ocak, Fabrika, Atölye veya Şantiye/Proje</em>.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">3</span>
+            <div>Şantiye seçtiyseniz hangi <strong>Proje</strong> olduğunu belirleyin (Örn: Hilton Otel Projesi).</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">4</span>
+            <div><strong>Gider Kalemi</strong>ni seçin (Örn: <em>Fabrika &rarr; Elektrik</em> veya <em>Şantiye &rarr; Çimento/Yapıştırıcı</em>).</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">5</span>
+            <div>Fatura Tarihini, <strong>Ait Olduğu Dönem</strong>i (geçmiş ay ise seçin) ve Fatura Tutarını (TL) yazıp <strong>Kaydet</strong>e basın.</div>
+        </li>
+    </ul>
 
     <div class="help-example">
-        <strong>Gerçek Kullanım Örneği:</strong><br>
-        Mart ayında fabrikaya 68.400 TL elektrik faturası geldi. Fatura tarihi 15 Mart 2026'dır; ancak bu elektrik Şubat ayı kesimlerinde harcanmıştır. Formda <em>Fatura Tarihi: 2026-03-15</em>, <em>Ait Olduğu Dönem: 2026-02</em> seçilir. Böylece elektrik maliyeti Şubat ayında kesilen m²'ye doğru pay edilir.
+        <strong>Sahadan Gerçek Örnekler:</strong><br>
+        • <strong>Fabrika:</strong> 500.000 TL elektrik faturası &rarr; <em>Fabrika &rarr; Elektrik Gideri</em> olarak işlendi. Tutar o ay kesilen plaka m²'sine bölündü.<br>
+        • <strong>Şantiye:</strong> 150.000 TL çimento/yapıştırıcı faturası &rarr; <em>Şantiye / Proje A &rarr; Sarf Malzeme</em> olarak işlendi ve Proje A'nın maliyetine yazıldı.<br>
+        • <strong>Ocak:</strong> 300.000 TL mazot dolumu &rarr; <em>Ocak &rarr; Mazot Gideri</em> olarak işlendi ve o ayın ton çıkarma maliyetine eklendi.
+    </div>
+
+    <div class="help-danger">
+        <strong>Kritik Kural (Yanlış Birime Yazma Yasağı):</strong><br>
+        Her fatura mutlaka doğru birime yazılmalıdır! Fabrika elektriği ocağa, şantiye çimentosu fabrikaya yazılırsa sistemdeki 1 m² mermer maliyeti ve şantiye kârlılığı tamamen yanlış çıkar.
     </div>
 
     <div class="help-tip">
-        <strong>Önemli Kural (Şantiye & Proje Harcamaları):</strong><br>
-        Birim olarak "Şantiye" seçildiğinde, sistem harcamanın hangi projeye ait olduğunu sorar. Seçilen gider, doğrudan o şantiyenin maliyet kartına yazılır ve hakediş kârlılığından düşülür.
+        <strong>Usta Tavsiyesi (Geç Gelen Faturalar):</strong><br>
+        Elektrik veya mazot faturası bir sonraki ayın 15'inde gelse bile, formdaki <em>"Ait Olduğu Dönem"</em> alanından faturanın gerçekte harcandığı geçmiş ayı seçin. Sistem bu gideri o ayın üretim miktarına bağlar.
     </div>
 </section>

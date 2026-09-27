@@ -17,7 +17,7 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20260926-pallets-shipments-datagrid}")
+    @Value("${app.asset-version:20260927-learning-center-workflows}")
     private String configuredAssetVersion;
 
     private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();

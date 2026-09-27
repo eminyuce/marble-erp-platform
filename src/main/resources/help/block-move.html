@@ -1,44 +1,63 @@
-<section class="help-page" data-title="Blok Saha Taşıma" data-updated="2026-09-21">
+<section class="help-page" data-title="Ocak — Blok Saha Taşıma" data-updated="2026-09-27">
     <div class="help-lead">
-        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocaktaki bir ham bloğu Üretim Sahası ile Stok Sahası arasında taşıdığınız, konum notu eklediğiniz ve hareketi blok geçmişine işlediğiniz işlem ekranıdır. Küçük yardım metinleri her alanın yanında yer alır; bu panel işlemin kurallarını ayrıntılı açıklar.
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocakta kesilen bir bloğu vinç veya loder ile <strong>Üretim Sahası</strong>ndan sevkiyata hazır <strong>Stok / Sevk Sahası</strong>na taşıdığınızda bu hareketi sisteme işlediğiniz ekrandır.
     </div>
 
-    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
+    <div class="help-flow">
+        <span class="help-flow-tag">Üretim Sahası (Kesim Noktası)</span>
+        <span class="help-flow-arrow">&rarr;</span>
+        <span class="help-flow-tag">Stok / Sevk Sahası (Yükleme Rampası)</span>
+    </div>
+
+    <h3>Bu Sayfada Ne Yapacaksınız?</h3>
     <ul class="help-panel-list">
-        <li>Bloğun mevcut sahasını görüp hedef ocak sahasını seçebilirsiniz.</li>
-        <li>Sıra, hat veya rampa gibi konum notu yazarak sahada tekrar bulmayı kolaylaştırabilirsiniz.</li>
-        <li>Taşımayı kaydederek bloğun konumunu ve saha hareket geçmişini güncelleyebilirsiniz.</li>
-        <li>İşlemi iptal edip blok listesine veya blok detayına dönebilirsiniz.</li>
+        <li>Bloğun mevcut bulunduğu sahayı kontrol edeceksiniz.</li>
+        <li>Bloğun taşındığı yeni hedef sahayı (Üretim veya Stok Sahası) seçeceksiniz.</li>
+        <li>Kamyon şoförünün ve vinç operatörünün bloğu hemen bulabilmesi için konum notu (Örn: "A sırası, 2. rampa") yazacaksınız.</li>
+        <li>Kaydet butonuna basarak hareket geçmişini güncelleyeceksiniz.</li>
     </ul>
 
-    <h3>Bu Alan ve Butonlar Ne İşe Yarar?</h3>
+    <h3>Ekrandaki Düğmeler ve Alanlar Ne İşe Yarar?</h3>
     <ul class="help-panel-list">
-        <li><code>Mevcut Saha</code>: Bloğun şu anda bulunduğu ocak sahasıdır; buradan değiştirilmez.</li>
-        <li><code>Hedef Saha</code>: Bloğun gideceği Üretim Sahası veya Stok Sahasıdır. Zorunludur.</li>
-        <li><code>Konum / Taşıma Notu</code>: İsteğe bağlıdır. Örnek: "A sırası, rampanın yanı". Hareket geçmişinde görünür.</li>
-        <li><code>Taşımayı Kaydet</code>: Konumu günceller ve saha hareketini kaydeder.</li>
-        <li><code>Vazgeç</code>: Değişiklik yapmadan ocak blok listesine döner.</li>
-        <li><code>Blok Detayı</code>: Aynı bloğun ölçü, maliyet ve geçmiş ekranına gider.</li>
+        <li><code>Mevcut Saha</code>: Bloğun şu anda sistemde kayıtlı olduğu sahadır (Bilgi amaçlıdır, buradan değiştirilmez).</li>
+        <li><code>Hedef Saha</code>: Bloğun fiziken taşındığı yeni sahadır. (Fabrikaya sevk veya satış yapılacak bloklar <strong>Stok Sahası</strong>na alınmalıdır).</li>
+        <li><code>Konum / Taşıma Notu</code>: Sahada bloğun tam yerini belirten açıklamadır (Örn: "3. Kademe çıkışı, rampa arkası").</li>
+        <li><span class="help-btn">Taşımayı Kaydet</span>: Saha yer değişimini onaylar ve bloğun konumunu günceller.</li>
+        <li><span class="help-btn">Vazgeç</span>: Hiçbir değişiklik yapmadan blok listesine döner.</li>
     </ul>
 
     <h3>Adım Adım Saha Taşıma Nasıl Yapılır?</h3>
-    <ol>
-        <li>Blok listesinin <strong>İşlemler</strong> menüsünden <strong>Üretim Sahasına taşı</strong> veya <strong>Stok Sahasına taşı</strong> seçin.</li>
-        <li>Üstteki özet kartta blok kodu, tonaj ve mevcut sahayı kontrol edin.</li>
-        <li><strong>Hedef Saha</strong>yı doğrulayın. Fabrikaya sevk veya satış için hedef <strong>Stok Sahası</strong> olmalıdır.</li>
-        <li>Sahada bulmayı kolaylaştıracak bir <strong>konum notu</strong> yazın (isteğe bağlı).</li>
-        <li><strong>Taşımayı Kaydet</strong>e basın. Sistem sizi blok detayına yönlendirir; hareket geçmişinde kayıt görünür.</li>
-    </ol>
+    <ul class="help-step-list">
+        <li class="help-step-item">
+            <span class="help-step-num">1</span>
+            <div>Ekrandaki blok kodunu, taş cinsini ve tonajı teyit edin.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">2</span>
+            <div><strong>Hedef Saha</strong> kutusundan bloğu indirdiğiniz sahayı seçin (Genellikle <em>Stok Sahası</em>).</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">3</span>
+            <div><strong>Konum Notu</strong> alanına bloğu hangi sıraya veya rampaya koyduğunuzu yazın.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">4</span>
+            <div><strong>"Taşımayı Kaydet"</strong> butonuna basın. Blok anında yeni sahasında listelenir.</div>
+        </li>
+    </ul>
 
     <div class="help-example">
-        <strong>Gerçek Kullanım Örneği:</strong><br>
-        Burdur ocağında <code>OC-A3-202609-0084</code> kodlu blok üretim sahasında ölçüldü. Sevkiyata hazır olduğu için Stok Sahasına taşındı; nota "B sırası, sol hat" yazıldı. Ertesi gün aynı blok fabrikaya sevk veya müşteri satışına bu sahadan devam eder.
+        <strong>Sahadan Gerçek Örnek:</strong><br>
+        Ocakta kesilen <code>B-2026-00125</code> numaralı Burdur Bej bloğu üretim kademesinden loderle alındı ve sevk rampasına taşındı. Hedef saha "Stok Sahası", konum notu olarak da "Rampa 2 - Ön Sıra" seçildi. Artık fabrikaya sevk kamyonu geldiğinde operatör bloğu nerede bulacağını ekrandan doğrudan görür.
+    </div>
+
+    <div class="help-danger">
+        <strong>Önemli Kural (Sevkiyat ve Satış):</strong><br>
+        Bir bloğu fabrikaya sevk etmek veya müşteriye satmak için bloğun mutlaka <strong>Stok / Sevk Sahası</strong>nda olması gerekir. Üretim sahasındaki blok doğrudan kamyona yüklenemez; önce bu ekrandan Stok Sahasına taşınmalıdır.
     </div>
 
     <div class="help-tip">
-        <strong>Kritik Kurallar:</strong><br>
-        • Yalnızca ocaktaki (üretilmiş veya işaretlenmiş) bloklar taşınabilir. Satılmış veya fabrikaya alınmış bloklar bu sayfada açılamaz.<br>
-        • Fabrikaya sevk ve dış satış yalnızca Stok Sahası'ndan yapılır. Üretim Sahasındaki bloğu önce buraya taşıyın.<br>
-        • Konum notu en fazla 255 karakterdir; saha ekibinin bloğu fiziksel olarak bulması için yazılır.
+        <strong>Usta Tavsiyesi:</strong><br>
+        Konum notuna bloğun üzerine sprey boyayla yazdığınız sıra numarasını ekleyin (Örn: "Sıra 4, Blok #12"). Böylece sahada onlarca blok arasında arama yapmak zorunda kalmazsınız.
     </div>
 </section>

@@ -22,10 +22,19 @@
         <p class="erp-list-lead" th:if="${lead}" th:text="${lead}">Açıklama</p>
         <span class="erp-form-entity" th:if="${entityRef}" th:text="${entityRef}">Kayıt #0</span>
     </div>
-    <a th:href="${cancelHref}" class="erp-btn-secondary erp-form-back">
-        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-        <span>Listeye dön</span>
-    </a>
+    <div class="flex items-center gap-2">
+        <button type="button"
+                class="erp-btn-secondary inline-flex items-center gap-1.5"
+                @click="window.openHelpPanel(document.body.dataset.helpPageKey)"
+                title="Bu formun nasıl doldurulacağını adım adım görün">
+            <i data-lucide="circle-help" class="w-4 h-4 text-sky-600"></i>
+            <span>Yardım</span>
+        </button>
+        <a th:href="${cancelHref}" class="erp-btn-secondary erp-form-back">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Listeye dön</span>
+        </a>
+    </div>
 </div>
 
 <div th:fragment="section(title, hint)" class="erp-form-section-head">

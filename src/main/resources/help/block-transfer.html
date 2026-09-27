@@ -1,44 +1,66 @@
-<section class="help-page" data-title="Fabrikaya Sevk" data-updated="2026-09-21">
+<section class="help-page" data-title="Ocak &rarr; Fabrikaya Blok Sevkiyatı" data-updated="2026-09-27">
     <div class="help-lead">
-        <strong>Bu Sayfa Ne İşe Yarar?</strong> Stok Sahası'ndaki ham bloğu ocak stokundan çıkarıp Fabrika Blok Sahasına aldığınız, nakliye bedelini fabrika maliyetine yazdığınız işlem ekranıdır. Küçük yardım metinleri her alanın yanında yer alır; bu panel sevkiyat kurallarını ayrıntılı açıklar.
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> Ocak Stok Sahası'nda bekleyen bir bloğu kamyona yükleyip işlenmek üzere fabrikaya gönderdiğiniz ekrandır. Bu işlemle blok ocak stokundan düşer, fabrika hammadde stokuna girer ve ödenen kamyon nakliye bedeli bloğun maliyetine eklenir.
     </div>
 
-    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
+    <div class="help-flow">
+        <span class="help-flow-tag">Ocak Stok Sahası</span>
+        <span class="help-flow-arrow">&rarr; Kamyon Nakliyesi (Navlun) &rarr;</span>
+        <span class="help-flow-tag">Fabrika Blok Stok Sahası</span>
+    </div>
+
+    <h3>Bu Sayfada Ne Yapacaksınız?</h3>
     <ul class="help-panel-list">
-        <li>Yüklenecek bloğun kodunu, tonajını ve mevcut Stok Sahasını doğrulayabilirsiniz.</li>
-        <li>Nakliye bedelini girerek fabrika maliyet kaydını oluşturabilirsiniz.</li>
-        <li>Sevki onaylayarak bloğu Fabrika Blok Sahasına alabilirsiniz.</li>
-        <li>İşlemi iptal edip blok listesine veya blok detayına dönebilirsiniz.</li>
+        <li>Kamyona yüklenen bloğun kodunu, taş türünü ve kantar tonajını teyit edeceksiniz.</li>
+        <li>Kamyon şoförüne / nakliye firmasına ödenen veya fatura edilen <strong>Nakliye Bedeli (TL)</strong> tutarını yazacaksınız.</li>
+        <li>Sevki onaylayarak bloğu ocak stokundan düşürecek ve fabrika kabul listesine aktaracaksınız.</li>
     </ul>
 
-    <h3>Bu Alan ve Butonlar Ne İşe Yarar?</h3>
+    <h3>Ekrandaki Düğmeler ve Alanlar Ne İşe Yarar?</h3>
     <ul class="help-panel-list">
-        <li><code>Yükleme Sahası</code>: Tırın yükleme yaptığı ocak Stok Sahasıdır. Sevk yalnızca buradan yapılır.</li>
-        <li><code>Hedef Konum</code>: Her zaman Fabrika Blok Sahasıdır; kesim hattının hammadde alanı.</li>
-        <li><code>Nakliye bedeli (TL)</code>: Zorunludur. Fatura veya kantar fişindeki tutarı yazın. Bedelsiz sevk için 0 girin.</li>
-        <li><code>Sevki Onayla ve Kaydet</code>: Bloğu ocaktan düşer, fabrikaya alır ve nakliye maliyetini kaydeder.</li>
-        <li><code>Vazgeç</code>: Değişiklik yapmadan ocak blok listesine döner.</li>
-        <li><code>Blok Detayı</code>: Aynı bloğun ölçü, maliyet ve geçmiş ekranına gider.</li>
+        <li><code>Yükleme Sahası</code>: Kamyonun yüklendiği ocak Stok Sahasıdır.</li>
+        <li><code>Hedef Konum</code>: Fabrika Blok Stok Sahasıdır (Kesim hattının hammadde depolama alanı).</li>
+        <li><code>Nakliye Bedeli (TL)</code>: Kamyon taşıma ücretidir. Bu tutar kuruşu kuruşuna bloğun ve nihai plakanın üretim maliyetine dahil edilir. Özmal araç için 0 yazabilirsiniz.</li>
+        <li><span class="help-btn">Sevki Onayla ve Kaydet</span>: Sevkiyatı tamamlar, ocak stokunu düşer ve fabrika stokuna aktarır.</li>
+        <li><span class="help-btn">Vazgeç</span>: İşlemi iptal ederek blok listesine döner.</li>
     </ul>
 
     <h3>Adım Adım Fabrikaya Sevk Nasıl Yapılır?</h3>
-    <ol>
-        <li>Bloğun <strong>Stok Sahası</strong>nda olduğundan emin olun. Üretim Sahasındaysa önce saha taşıma sayfasını kullanın.</li>
-        <li>Blok listesinin <strong>İşlemler</strong> menüsünden <strong>Fabrikaya sevk</strong> seçin.</li>
-        <li>Özet kartta blok kodu, tonaj ve yükleme sahasını kontrol edin.</li>
-        <li><strong>Nakliye bedeli</strong>ni TL olarak girin.</li>
-        <li><strong>Sevki Onayla ve Kaydet</strong>e basın. Blok detayında konum Fabrika Blok Sahası, durum fabrikada olur.</li>
-    </ol>
+    <ul class="help-step-list">
+        <li class="help-step-item">
+            <span class="help-step-num">1</span>
+            <div>Bloğun <strong>Stok Sahası</strong>nda olduğundan emin olun (Üretim sahasındaysa önce saha taşıma yapın).</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">2</span>
+            <div>Blok satırındaki <strong>İşlemler &rarr; Fabrikaya Sevk</strong> butonuna tıklayın.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">3</span>
+            <div>Açılan ekranda blok tonajını ve kamyon plakasını kontrol edin.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">4</span>
+            <div><strong>Nakliye Bedeli (TL)</strong> alanına kamyon navlun tutarını yazın.</div>
+        </li>
+        <li class="help-step-item">
+            <span class="help-step-num">5</span>
+            <div><strong>"Sevki Onayla ve Kaydet"</strong> butonuna basın. Sevkiyat kaydı oluşur, blok ocak stokundan çıkar.</div>
+        </li>
+    </ul>
 
     <div class="help-example">
-        <strong>Gerçek Kullanım Örneği:</strong><br>
-        Stok Sahası'ndaki 18,45 tonluk Burdur Bej bloğu fabrikaya gönderildi. Nakliye faturası 12.500 TL idi; tutar forma yazıldı. Sevk sonrası blok ocak stokundan düştü, Fabrika Blok Sahasına alındı ve 12.500 TL nakliye maliyeti kesim maliyetine bağlandı.
+        <strong>Sahadan Gerçek Örnek:</strong><br>
+        Ocak Stok Sahası'ndaki 18,45 tonluk Burdur Bej bloğu fabrikaya sevk edildi. Nakliye firması kamyon başı 12.500 TL navlun faturası kesti. Tutar sisteme 12.500 TL olarak girildi. Sistem bu tutarı bloğun maliyet hesabına yazdı. Blok fabrikada Katrakta kesildiğinde 1 m² plakanın maliyetine nakliye payı da otomatik yansır.
+    </div>
+
+    <div class="help-danger">
+        <strong>Kritik Kural (Nakliye Maliyeti):</strong><br>
+        Ocaktan fabrikaya yapılan her sevkiyatta ödenen nakliye bedeli mutlaka girilmelidir. Nakliye bedeli girilmezse fabrikanın gerçek üretim maliyeti eksik hesaplanır ve kârlılık yanıltıcı olur.
     </div>
 
     <div class="help-tip">
-        <strong>Kritik Kurallar:</strong><br>
-        • Sevk yalnızca Stok Sahası'ndaki ocak blokları için geçerlidir. Satılmış bloklar sevk edilemez.<br>
-        • Nakliye bedeli bloğun nakliye maliyetine ve fabrika gider kaydına yazılır; sonraki plaka maliyetine yansır.<br>
-        • Fabrikaya alınan blok bu ekrandan ocak sahalarına geri gönderilemez. Geri alma gerekirse üretim veya stok süreçleri üzerinden ilerlenir.
+        <strong>Usta Tavsiyesi:</strong><br>
+        Sevkiyat irsaliyesinin numarasını ve kamyon plakasını not alanına yazın. Fabrika girişindeki güvenlik veya kantar sorumlusu kamyon kapıya geldiğinde sistemden bu numarayla anında eşleştirme yapar.
     </div>
 </section>

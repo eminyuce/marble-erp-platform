@@ -1,36 +1,23 @@
-<section class="help-page" data-title="Sistem Sağlığı & Performans Metrikleri" data-updated="2026-09-20">
+<section class="help-page" data-title="Sistem Sağlığı & Canlı İzleme" data-updated="2026-09-27">
     <div class="help-lead">
-        <strong>Bu Sayfa Ne İşe Yarar?</strong> ERP platformunun üzerinde çalıştığı sunucunun bellek (JVM RAM), sabit disk alanı, veritabanı bağlantı havuzu ve çalışma süresi (uptime) göstergelerinin canlı olarak izlendiği teknik sağlık merkezidir.
+        <strong>Bu Sayfa Ne İşe Yarar?</strong> ERP sisteminin kurulu olduğu sunucunun çalışma durumunu, veritabanı bağlantısını, disk doluluk oranını ve sunucu belleğini canlı yeşil/kırmızı ışıklarla takip ettiğiniz sistem kontrol ekranıdır.
     </div>
 
-    <h3>Bu Sayfada Ne Yapabilirsiniz?</h3>
+    <h3>Bu Sayfada Neleri Görebilirsiniz?</h3>
     <ul class="help-panel-list">
-        <li>Sunucunun anlık bellek kullanımını, boşta kalan RAM miktarını ve tavan sınırını takip edebilirsiniz.</li>
-        <li>Sunucu diskinde kalan boş depolama alanını inceleyip disk doluluk risklerini önceden fark edebilirsiniz.</li>
-        <li>Veritabanına bağlı aktif kullanıcı sorgularını ve boşta bekleyen bağlantı havuzu durumunu izleyebilirsiniz.</li>
-        <li>Sistemin kesintisiz ne kadar süredir ayakta olduğunu (Uptime) ve anlık yanıt sürelerini kontrol edebilirsiniz.</li>
+        <li><strong>Sistem Durumu (UP / DOWN):</strong> Yeşil renk sistemin ve veritabanının sorunsuz çalıştığını gösterir. Kırmızı ise bir serviste aksama olduğuna işaret eder.</li>
+        <li><strong>Disk Boş Alanı:</strong> Ocaktan ve fabrikadan yüklenen blok fotoğrafları ve irsaliyeler için sunucuda ne kadar boş yer kaldığını gösterir.</li>
+        <li><strong>Sunucu Belleği (RAM):</strong> Sistemin hızını ve performansını etkileyen bellek doluluk oranını gösterir.</li>
+        <li><strong>Çalışma Süresi (Uptime):</strong> Sistemin kesintisiz kaç gün/saattir ayakta olduğunu gösterir.</li>
     </ul>
-
-    <h3>Bu Buton Ne İşe Yarar?</h3>
-    <ul class="help-panel-list">
-        <li><code>JSON Metrikleri Gör / API</code>: Canlı sunucu metriklerini harici izleme araçları (Prometheus/Grafana) veya teknik analiz için ham JSON formatında açar.</li>
-        <li><code>Sayfayı Yenile (F5)</code>: Sunucudan o anki en güncel bellek ve işlemci göstergelerini yeniden çeker.</li>
-    </ul>
-
-    <h3>Adım Adım Sistem Sağlığı Nasıl Kontrol Edilir?</h3>
-    <ol>
-        <li><strong>JVM Bellek Kartı:</strong> Kullanılan bellek oranının %85'in altında olduğundan emin olun.</li>
-        <li><strong>Disk Durumu:</strong> Blok fotoğrafları, irsaliyeler ve evraklar için yeterli boş disk alanı (en az 5 GB) bulunduğunu teyit edin.</li>
-        <li><strong>Veritabanı Havuzu:</strong> Aktif bağlantı sayısının havuz tavanına dayanıp dayanmadığını kontrol edin.</li>
-    </ol>
 
     <div class="help-example">
-        <strong>Gerçek Kullanım Örneği:</strong><br>
-        Fabrikadaki operatörler veya ocak şefleri sistemde hafif bir yavaşlık bildirdiğinde, sistem yöneticisi bu ekrana girer. RAM kullanımının %60, disk boş alanının 42 GB ve veritabanı aktif bağlantısının 3/10 olduğunu görerek altyapısal bir kilitlenme olmadığını, durumun internet bağlantısı kaynaklı olabileceğini saniyeler içinde anlar.
+        <strong>Sahadan Gerçek Örnek:</strong><br>
+        Ocakta veya fabrikada internet üzerinden işlem yaparken bir yavaşlama hissedilirse bu sayfaya bakılır. Göstergeler yeşil ise ve diskte yeterli yer varsa, sunucuda bir problem olmadığı, sahadaki yerel internet veya Wi-Fi hattında zayıflık olduğu anlaşılır.
     </div>
 
     <div class="help-tip">
         <strong>Güvenlik Kuralı:</strong><br>
-        Sistem Sağlığı sayfası şirket veri güvenliği ve sunucu gizliliği nedeniyle yalnızca Yönetici (ADMIN) rolüne açık bir ekrandır.
+        Bu ekran sistem güvenliği nedeniyle yalnızca sistem yöneticisi (ADMIN) yetkisine sahip kullanıcılar tarafından görüntülenebilir.
     </div>
 </section>
