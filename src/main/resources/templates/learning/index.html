@@ -616,10 +616,8 @@
         </div>
     </section>
 
-</div>
-
 <script>
-function learningCenter() {
+window.learningCenter = function learningCenter() {
     return {
         activeCategory: 'Tümü',
         selectedRole: 'all', // 'all', 'operator', 'manager'
@@ -1041,7 +1039,9 @@ function learningCenter() {
             }
         }
     };
-}
+};
 </script>
+
+</div>
 </body>
 </html>
