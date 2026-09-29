@@ -32,9 +32,10 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
            "AND (:customerId IS NULL OR i.customer.id = :customerId) " +
            "AND (:startDate IS NULL OR i.invoiceDate >= :startDate) " +
            "AND (:endDate IS NULL OR i.invoiceDate <= :endDate) " +
-           "AND (:search IS NULL OR LOWER(i.invoiceNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(i.partyName) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(i.customer.companyName) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "AND (:search IS NULL OR :search = '' " +
+           "OR LOWER(i.invoiceNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "OR LOWER(COALESCE(i.partyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "OR LOWER(COALESCE(i.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
            "ORDER BY i.invoiceDate DESC, i.id DESC")
     Page<Invoice> searchInvoices(@Param("invoiceType") InvoiceType invoiceType,
                                 @Param("department") BusinessUnit department,

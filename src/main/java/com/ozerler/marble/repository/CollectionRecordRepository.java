@@ -27,8 +27,9 @@ public interface CollectionRecordRepository extends JpaRepository<CollectionReco
            "AND (:customerId IS NULL OR c.customer.id = :customerId) " +
            "AND (:startDate IS NULL OR c.collectionDate >= :startDate) " +
            "AND (:endDate IS NULL OR c.collectionDate <= :endDate) " +
-           "AND (:search IS NULL OR LOWER(c.collectionNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(c.customer.companyName) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "AND (:search IS NULL OR :search = '' " +
+           "OR LOWER(c.collectionNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "OR LOWER(COALESCE(c.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
            "ORDER BY c.collectionDate DESC, c.id DESC")
     Page<CollectionRecord> searchCollections(@Param("method") CollectionMethod method,
                                             @Param("customerId") Long customerId,

@@ -31,10 +31,11 @@ public interface OperationWorkOrderRepository extends JpaRepository<OperationWor
            "AND (:customerId IS NULL OR o.customer.id = :customerId) " +
            "AND (:startDate IS NULL OR o.orderDate >= :startDate) " +
            "AND (:endDate IS NULL OR o.orderDate <= :endDate) " +
-           "AND (:search IS NULL OR LOWER(o.orderNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(o.customer.companyName) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(o.stoneType) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(o.responsiblePerson) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "AND (:search IS NULL OR :search = '' " +
+           "OR LOWER(o.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "OR LOWER(COALESCE(o.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "OR LOWER(COALESCE(o.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "OR LOWER(COALESCE(o.responsiblePerson, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
            "ORDER BY o.orderDate DESC, o.id DESC")
     Page<OperationWorkOrder> searchOrders(@Param("department") BusinessUnit department,
                                          @Param("status") OperationWorkOrderStatus status,

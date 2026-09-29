@@ -86,12 +86,12 @@ public interface CostTransactionRepository extends JpaRepository<CostTransaction
             + "AND (:projectId IS NULL OR (c.project IS NOT NULL AND c.project.id = :projectId)) "
             + "AND (:centerId IS NULL OR cc.id = :centerId) "
             + "AND (:search IS NULL OR :search = '' OR "
-            + "     LOWER(COALESCE(c.documentNo, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-            + "     LOWER(COALESCE(c.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-            + "     LOWER(COALESCE(cc.name, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-            + "     LOWER(COALESCE(cc.code, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-            + "     LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-            + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', :search, '%')))")
+            + "     LOWER(COALESCE(c.documentNo, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "     LOWER(COALESCE(c.description, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "     LOWER(COALESCE(cc.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "     LOWER(COALESCE(cc.code, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "     LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<CostTransaction> searchExpenses(@Param("search") String search,
                                          @Param("unit") BusinessUnit unit,
                                          @Param("period") String period,
@@ -112,12 +112,12 @@ public interface CostTransactionRepository extends JpaRepository<CostTransaction
             + "AND (:projectId IS NULL OR (c.project IS NOT NULL AND c.project.id = :projectId)) "
             + "AND (:centerId IS NULL OR cc.id = :centerId) "
             + "AND (:search IS NULL OR :search = '' OR "
-            + "     LOWER(COALESCE(c.documentNo, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-            + "     LOWER(COALESCE(c.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-            + "     LOWER(COALESCE(cc.name, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-            + "     LOWER(COALESCE(cc.code, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-            + "     LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-            + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', :search, '%')))")
+            + "     LOWER(COALESCE(c.documentNo, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "     LOWER(COALESCE(c.description, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "     LOWER(COALESCE(cc.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "     LOWER(COALESCE(cc.code, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "     LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     BigDecimal sumFilteredExpenses(@Param("search") String search,
                                    @Param("unit") BusinessUnit unit,
                                    @Param("period") String period,

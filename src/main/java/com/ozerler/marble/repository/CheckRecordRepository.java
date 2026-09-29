@@ -23,9 +23,10 @@ public interface CheckRecordRepository extends JpaRepository<CheckRecord, Long> 
            "AND (:customerId IS NULL OR ch.customer.id = :customerId) " +
            "AND (:startDate IS NULL OR ch.dueDate >= :startDate) " +
            "AND (:endDate IS NULL OR ch.dueDate <= :endDate) " +
-           "AND (:search IS NULL OR LOWER(ch.checkNo) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(ch.bankName) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(ch.customer.companyName) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "AND (:search IS NULL OR :search = '' " +
+           "OR LOWER(ch.checkNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "OR LOWER(COALESCE(ch.bankName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "OR LOWER(COALESCE(ch.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
            "ORDER BY ch.dueDate ASC, ch.id DESC")
     Page<CheckRecord> searchChecks(@Param("status") CheckStatus status,
                                   @Param("customerId") Long customerId,
