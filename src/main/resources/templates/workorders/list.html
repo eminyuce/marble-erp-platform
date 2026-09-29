@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>İş Emirleri & Siparişler | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-6">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('İş Emirleri & Siparişler')}"></div>
+            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-1 flex items-center gap-2">
+                <i data-lucide="clipboard-list" class="w-7 h-7 text-indigo-600"></i>
+                <span>İş Emirleri & Sipariş Yönetimi</span>
+            </h2>
+            <p class="erp-list-lead text-sm text-slate-600">
+                Fabrika, Atölye ve Şantiye departmanlarına ait sipariş ve üretim iş emirlerinin durum, hammadde ve operasyon takibi.
+            </p>
+        </div>
+        <div class="flex items-center gap-2.5 shrink-0">
+            <a th:href="@{/work-orders/create}" class="erp-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Yeni İş Emri Oluştur</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Departman & Durum Filtreleri -->
+    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        <!-- Departman Sekmeleri -->
+        <div class="flex items-center gap-2 overflow-x-auto">
+            <a th:href="@{/work-orders(status=${param.status})}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedDepartment == null ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                Tüm Departmanlar
+            </a>
+            <a th:href="@{/work-orders(department='FACTORY', status=${param.status})}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedDepartment != null and selectedDepartment.name() == 'FACTORY' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                Fabrika
+            </a>
+            <a th:href="@{/work-orders(department='WORKSHOP', status=${param.status})}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedDepartment != null and selectedDepartment.name() == 'WORKSHOP' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                Atölye
+            </a>
+            <a th:href="@{/work-orders(department='SITE', status=${param.status})}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedDepartment != null and selectedDepartment.name() == 'SITE' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                Şantiye
+            </a>
+        </div>
+
+        <!-- Durum Filtresi Dropdown -->
+        <form th:action="@{/work-orders}" method="get" class="flex items-center gap-2">
+            <input type="hidden" name="department" th:value="${selectedDepartment != null ? selectedDepartment.name() : ''}" th:if="${selectedDepartment != null}" />
+            <label class="text-xs font-bold text-slate-700 shrink-0">Durum:</label>
+            <select name="status" onchange="this.form.submit()" class="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="">Tüm Durumlar</option>
+                <option th:each="st : ${statuses}" th:value="${st.name()}" th:text="${st.label}"
+                        th:selected="${selectedStatus != null and selectedStatus == st}"></option>
+            </select>
+        </form>
+    </div>
+
+    <!-- İş Emirleri Tablosu -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3 px-4">İş Emri No</th>
+                        <th class="py-3 px-4">Departman</th>
+                        <th class="py-3 px-4">Müşteri</th>
+                        <th class="py-3 px-4">Taş Türü & Ölçüler</th>
+                        <th class="py-3 px-4">Yüzey & Kenar</th>
+                        <th class="py-3 px-4 text-right">Planlanan Miktar</th>
+                        <th class="py-3 px-4">Termin Tarihi</th>
+                        <th class="py-3 px-4">Durum</th>
+                        <th class="py-3 px-4 text-center">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    <tr th:if="${#lists.isEmpty(orders)}" class="hover:bg-slate-50">
+                        <td colspan="9" class="py-8 text-center text-slate-400">
+                            <i data-lucide="clipboard-list" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                            Kriterlere uygun iş emri kaydı bulunamadı.
+                        </td>
+                    </tr>
+                    <tr th:each="wo : ${orders}" class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-indigo-600">
+                            <a th:href="@{'/work-orders/' + ${wo.id}}" class="hover:underline flex items-center gap-1">
+                                <span th:text="${wo.orderNumber}">WO-2026-0001</span>
+                            </a>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md border"
+                                  th:classappend="${wo.department != null and wo.department.name() == 'FACTORY' ? 'bg-blue-50 text-blue-800 border-blue-200' : (wo.department != null and wo.department.name() == 'WORKSHOP' ? 'bg-purple-50 text-purple-800 border-purple-200' : 'bg-amber-50 text-amber-800 border-amber-200')}"
+                                  th:text="${wo.department != null ? wo.department.displayName : 'Fabrika'}">Fabrika</span>
+                        </td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            <span th:if="${wo.customer != null}" th:text="${wo.customer.companyName}">ABC Marble</span>
+                            <span th:unless="${wo.customer != null}" class="text-slate-400">Genel Stok / Proje</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-slate-800" th:text="${wo.stoneType != null ? wo.stoneType : 'Doğaltaş'}">Traverten</div>
+                            <div class="text-[11px] text-slate-500"
+                                 th:text="${wo.thicknessCm != null ? wo.thicknessCm + 'cm ' : ''} + (${wo.widthCm != null and wo.lengthCm != null ? (wo.widthCm + '×' + wo.lengthCm + 'cm') : ''})">2cm 60×60cm</div>
+                        </td>
+                        <td class="py-3 px-4 text-slate-700">
+                            <span th:text="${wo.surfaceOperation != null ? wo.surfaceOperation : 'Standart'}">Cilalı</span>
+                            <span class="text-slate-400">/</span>
+                            <span class="text-slate-600" th:text="${wo.edgeOperation != null ? wo.edgeOperation : 'Düz'}">Pah</span>
+                        </td>
+                        <td class="py-3 px-4 text-right font-black text-slate-900 whitespace-nowrap"
+                            th:text="${wo.plannedQuantity != null ? #numbers.formatDecimal(wo.plannedQuantity, 1, 'POINT', 2, 'COMMA') + ' ' + (wo.quantityUnit != null ? wo.quantityUnit : 'm²') : '—'}">50,00 m²</td>
+                        <td class="py-3 px-4 font-bold whitespace-nowrap"
+                            th:classappend="${wo.dueDate != null and wo.dueDate.isBefore(#temporals.createNow().toLocalDate()) ? 'text-rose-600' : 'text-slate-700'}"
+                            th:text="${wo.dueDate != null ? #temporals.format(wo.dueDate, 'dd.MM.yyyy') : '—'}">15.09.2026</td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <span class="px-2.5 py-1 text-[11px] font-bold rounded-full"
+                                  th:classappend="${wo.status != null and wo.status.name() == 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : (wo.status != null and wo.status.name() == 'IN_PRODUCTION' ? 'bg-blue-100 text-blue-800' : (wo.status != null and wo.status.name() == 'DISPATCHED' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'))}"
+                                  th:text="${wo.status != null ? wo.status.label : 'Yeni'}">Yeni</span>
+                        </td>
+                        <td class="py-3 px-4 text-center whitespace-nowrap">
+                            <a th:href="@{'/work-orders/' + ${wo.id}}" class="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition inline-flex items-center gap-1 font-bold text-xs">
+                                <span>Detay</span>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

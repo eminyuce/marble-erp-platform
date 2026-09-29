@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Yeni Plaka Üretim Girişi — Fabrika | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page max-w-3xl mx-auto space-y-6"
+     x-data="{
+        width: 180,
+        length: 280,
+        get area() {
+            if (!this.width || !this.length) return 0;
+            return ((this.width * this.length) / 10000).toFixed(2);
+        }
+     }">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-form-header">
+        <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Fabrika Plaka Sahası', '/operations/factory/slabs', 'Yeni Plaka Üretim Girişi')}"></div>
+        <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-2 flex items-center gap-2">
+            <i data-lucide="layers" class="w-7 h-7 text-indigo-600"></i>
+            <span>Yeni Plaka Üretim Girişi</span>
+        </h2>
+        <p class="erp-form-lead text-sm text-slate-600">
+            Kesilen bloktan çıkan plakayı Plaka Stok Sahasına kaydedin, ölçülerini ve varsa müşteri rezervasyonunu belirleyin.
+        </p>
+    </div>
+
+    <form th:action="@{/operations/factory/slabs/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Kaynak Blok -->
+            <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kaynak Blok *</label>
+                <select name="blockId" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="" disabled selected>Kaynak Blok Seçiniz...</option>
+                    <option th:each="b : ${blocks}" th:value="${b.id}"
+                            th:text="${b.blockCode} + ' | ' + ${b.stoneType != null ? b.stoneType : 'Taş'} + ' | ' + ${b.quarry != null ? b.quarry.name : ''} + ' | ' + ${b.status}"></option>
+                </select>
+            </div>
+
+            <!-- Kalınlık -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Plaka Kalınlığı (cm) *</label>
+                <input type="number" step="0.1" name="thicknessCm" value="2.0" required
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            </div>
+
+            <!-- Kalite Derecesi -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kalite Sınıfı</label>
+                <select name="qualityGrade" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option th:each="grade : ${qualityGrades}" th:value="${grade.name()}" th:text="${grade.displayName}"></option>
+                </select>
+            </div>
+
+            <!-- En (cm) -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Plaka Eni (cm) *</label>
+                <input type="number" step="0.1" name="widthCm" x-model.number="width" required
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            </div>
+
+            <!-- Boy (cm) -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Plaka Boyu (cm) *</label>
+                <input type="number" step="0.1" name="lengthCm" x-model.number="length" required
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            </div>
+
+            <!-- Yüzey İşlemi -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Yüzey İşlemi</label>
+                <select name="surfaceFinish" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option th:each="finish : ${surfaceFinishes}" th:value="${finish.name()}" th:text="${finish.displayName}"></option>
+                </select>
+            </div>
+
+            <!-- Müşteri Ataması -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Müşteri (Opsiyonel - Boşsa Genel Stok)</label>
+                <select name="customerId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="">-- Genel Stok / Müşterisiz --</option>
+                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                </select>
+            </div>
+
+        </div>
+
+        <!-- M² Gösterge Kartı -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
+                    m²
+                </div>
+                <div>
+                    <div class="text-xs text-indigo-700 font-semibold">Hesaplanan Plaka Yüzey Alanı:</div>
+                    <div class="text-2xl font-black text-indigo-950 font-mono" x-text="area + ' m²'">5,04 m²</div>
+                </div>
+            </div>
+            <span class="text-xs text-indigo-600 font-semibold">Otomatik Hesaplanır</span>
+        </div>
+
+        <!-- Açıklama -->
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Açıklama / Notlar</label>
+            <textarea name="notes" rows="3" placeholder="Damar yönü, dolgu durumu veya sipariş notu..."
+                      class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- Butonlar -->
+        <div class="border-t border-slate-100 pt-6 flex items-center justify-end gap-3">
+            <a th:href="@{/operations/factory/slabs}" class="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                Vazgeç
+            </a>
+            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>Plakayı Stok Sahasına Kaydet</span>
+            </button>
+        </div>
+
+    </form>
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

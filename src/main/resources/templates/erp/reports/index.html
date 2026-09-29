@@ -6,7 +6,7 @@
     <title>Raporlar | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page" x-data="{ selectedReport: 'QUARRY_BLOCKS' }">
+<div layout:fragment="content" class="erp-list-page" th:attr="x-data='{ selectedReport: \'' + (${defaultSelectedReport} != null ? ${defaultSelectedReport} : 'QUARRY_BLOCKS') + '\' }'">
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">

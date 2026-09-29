@@ -22,6 +22,7 @@ public class DashboardController {
     public String dashboard(Model model) {
         DashboardKpiDto kpis = dashboardService.getDashboardKpis();
 
+        model.addAttribute("kpis", kpis);
         model.addAttribute("totalSlabArea", kpis.getTotalSlabArea());
         model.addAttribute("availableSlabArea", kpis.getAvailableSlabArea());
         model.addAttribute("reservedSlabArea", kpis.getReservedSlabArea());

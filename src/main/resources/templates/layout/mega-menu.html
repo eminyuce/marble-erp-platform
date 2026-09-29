@@ -85,33 +85,98 @@
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="factory" aria-hidden="true"></i></span>
                             <h3 class="admin-mega-card-title">Operasyon</h3>
-                            <span class="admin-mega-count">4</span>
+                            <span class="admin-mega-count">3</span>
                         </header>
                         <div class="admin-mega-card-body">
-                            <a class="admin-mega-item" th:href="@{/blocks}" data-search="ocak blok takibi üretim sahası stok"
+                            <a class="admin-mega-item" th:href="@{/operations/quarry}" data-search="ocak blok takibi üretim sahası stok tonaj tahmini gerçek sevkiyat"
                                title="Ocak — Blok Takibi">
                                 <i data-lucide="mountain" aria-hidden="true"></i>
                                 <span>Ocak — Blok Takibi</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/machines/fuel}" data-search="makine mazot tüketim yakıt sayaç litre ocak fabrika"
-                               title="Makine Mazot Takibi">
-                                <i data-lucide="fuel" aria-hidden="true"></i>
-                                <span>Makine Mazot Takibi</span>
+                            <a class="admin-mega-item" th:href="@{/operations/factory}"
+                               data-search="fabrika blok stok sahası ebatlı plaka kesim siparişler müşteri" title="Fabrika">
+                                <i data-lucide="factory" aria-hidden="true"></i>
+                                <span>Fabrika</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/production}"
-                               data-search="fabrika kesim katrak st silim palet iş emri" title="Fabrika / Kesim İş Emirleri">
-                                <i data-lucide="scissors" aria-hidden="true"></i>
-                                <span>Fabrika / Kesim İş Emirleri</span>
-                            </a>
-                            <a class="admin-mega-item" th:href="@{/production/slabs}"
-                               data-search="plaka stok saha barkod cilalı" title="Plaka Stok Sahası">
-                                <i data-lucide="layers" aria-hidden="true"></i>
-                                <span>Plaka Stok Sahası</span>
-                            </a>
-                            <a class="admin-mega-item" th:href="@{/workshop}"
-                               data-search="atölye ebatlama kesim nesting" title="Atölye">
+                            <a class="admin-mega-item" th:href="@{/operations/workshop}"
+                               data-search="atölye ebatlama siparişler iş emri plaka nesting" title="Atölye">
                                 <i data-lucide="hammer" aria-hidden="true"></i>
                                 <span>Atölye</span>
+                            </a>
+                        </div>
+                    </section>
+
+                    <section class="admin-mega-card admin-mega-card--sales" data-mega-group="invoices">
+                        <header class="admin-mega-card-head">
+                            <span class="admin-mega-card-icon"><i data-lucide="receipt" aria-hidden="true"></i></span>
+                            <h3 class="admin-mega-card-title">Fatura</h3>
+                            <span class="admin-mega-count">3</span>
+                        </header>
+                        <div class="admin-mega-card-body">
+                            <a class="admin-mega-item" th:href="@{/invoices}" data-search="fatura alış satış cari departman faturalar"
+                               title="Faturalar Listesi">
+                                <i data-lucide="file-text" aria-hidden="true"></i>
+                                <span>Tüm Faturalar</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/invoices/create(type='SALES')}" data-search="satış faturası yeni fatura"
+                               title="Yeni Satış Faturası">
+                                <i data-lucide="badge-dollar-sign" aria-hidden="true"></i>
+                                <span>Yeni Satış Faturası</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/invoices/create(type='PURCHASE')}" data-search="alış faturası yeni fatura"
+                               title="Yeni Alış Faturası">
+                                <i data-lucide="shopping-bag" aria-hidden="true"></i>
+                                <span>Yeni Alış Faturası</span>
+                            </a>
+                        </div>
+                    </section>
+
+                    <section class="admin-mega-card admin-mega-card--sales" data-mega-group="collections">
+                        <header class="admin-mega-card-head">
+                            <span class="admin-mega-card-icon"><i data-lucide="wallet" aria-hidden="true"></i></span>
+                            <h3 class="admin-mega-card-title">Tahsilat</h3>
+                            <span class="admin-mega-count">3</span>
+                        </header>
+                        <div class="admin-mega-card-body">
+                            <a class="admin-mega-item" th:href="@{/collections}" data-search="tahsilat nakit eft havale çek makbuz ödeme"
+                               title="Tahsilat Listesi">
+                                <i data-lucide="circle-dollar-sign" aria-hidden="true"></i>
+                                <span>Tüm Tahsilatlar</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/collections/create}" data-search="yeni tahsilat nakit eft havale çek"
+                               title="Yeni Tahsilat Girişi">
+                                <i data-lucide="plus-circle" aria-hidden="true"></i>
+                                <span>Yeni Tahsilat Girişi</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/collections/checks}" data-search="çek portföyü vadesi yaklaşan vadesi geçmiş çekler"
+                               title="Çek Takip Portföyü">
+                                <i data-lucide="calendar-check" aria-hidden="true"></i>
+                                <span>Çek Portföyü & Takip</span>
+                            </a>
+                        </div>
+                    </section>
+
+                    <section class="admin-mega-card admin-mega-card--sales" data-mega-group="workorders">
+                        <header class="admin-mega-card-head">
+                            <span class="admin-mega-card-icon"><i data-lucide="clipboard-list" aria-hidden="true"></i></span>
+                            <h3 class="admin-mega-card-title">İş Emirleri & Siparişler</h3>
+                            <span class="admin-mega-count">3</span>
+                        </header>
+                        <div class="admin-mega-card-body">
+                            <a class="admin-mega-item" th:href="@{/work-orders}" data-search="iş emri sipariş fabrika atölye şantiye üretim"
+                               title="Tüm İş Emirleri">
+                                <i data-lucide="list-ordered" aria-hidden="true"></i>
+                                <span>Tüm İş Emirleri</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/work-orders/create}" data-search="yeni iş emri sipariş oluştur taş yüzey kenar"
+                               title="Yeni İş Emri Oluştur">
+                                <i data-lucide="plus" aria-hidden="true"></i>
+                                <span>Yeni İş Emri Oluştur</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/operations/factory/orders}" data-search="fabrika siparişleri iş emirleri"
+                               title="Fabrika Siparişleri">
+                                <i data-lucide="factory" aria-hidden="true"></i>
+                                <span>Fabrika Siparişleri</span>
                             </a>
                         </div>
                     </section>

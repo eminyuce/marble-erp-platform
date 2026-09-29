@@ -3,6 +3,7 @@ package com.ozerler.marble.model;
 import com.ozerler.marble.domain.BlockMeasurement;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.QualityGrade;
+import com.ozerler.marble.model.enums.TargetDestination;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -85,6 +86,27 @@ public class Block extends AuditableEntity {
     @JoinColumn(name = "sold_customer_id")
     private Customer soldCustomer;
 
+    @Column(name = "estimated_tonnage", precision = 10, scale = 3)
+    private BigDecimal estimatedTonnage;
+
+    @Column(name = "actual_tonnage", precision = 10, scale = 3)
+    private BigDecimal actualTonnage;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_destination", length = 40)
+    @Builder.Default
+    private TargetDestination targetDestination = TargetDestination.FACTORY;
+
+    @Column(name = "arrival_date")
+    private LocalDate arrivalDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_customer_id")
+    private Customer assignedCustomer;
+
+    @Column(name = "dispatch_invoice_id")
+    private Long dispatchInvoiceId;
+
     @Column(name = "extraction_cost", nullable = false, precision = 14, scale = 2)
     @Builder.Default
     private BigDecimal extractionCost = BigDecimal.ZERO;
@@ -123,6 +145,12 @@ public class Block extends AuditableEntity {
             BigDecimal density = specificGravity != null ? specificGravity : new BigDecimal("2.70");
             BigDecimal approximateTonnage = BlockMeasurement.approximateTonnage(this.volumeM3, density);
             this.theoreticalWeightKg = BlockMeasurement.theoreticalWeightKg(approximateTonnage);
+            if (this.estimatedTonnage == null) {
+                this.estimatedTonnage = approximateTonnage;
+            }
+            if (this.actualTonnage != null && this.actualTonnage.compareTo(BigDecimal.ZERO) > 0) {
+                this.actualWeightKg = this.actualTonnage.multiply(BigDecimal.valueOf(1000));
+            }
             this.weightDeviationPct = BlockMeasurement.weightDeviationPercent(this.actualWeightKg, this.theoreticalWeightKg);
         }
 
@@ -133,12 +161,31 @@ public class Block extends AuditableEntity {
 
     @Transient
     public BigDecimal getApproximateTonnage() {
+        if (estimatedTonnage != null) {
+            return estimatedTonnage;
+        }
         return BlockMeasurement.kilogramsToTons(theoreticalWeightKg);
     }
 
     @Transient
     public BigDecimal getActualTonnage() {
-        return BlockMeasurement.kilogramsToTons(actualWeightKg);
+        if (actualTonnage != null) {
+            return actualTonnage;
+        }
+        if (actualWeightKg != null && actualWeightKg.compareTo(BigDecimal.ZERO) > 0) {
+            return BlockMeasurement.kilogramsToTons(actualWeightKg);
+        }
+        return null;
+    }
+
+    @Transient
+    public BigDecimal getTonnageDeviation() {
+        BigDecimal est = getApproximateTonnage();
+        BigDecimal act = getActualTonnage();
+        if (est != null && act != null) {
+            return act.subtract(est);
+        }
+        return BigDecimal.ZERO;
     }
 
     @Transient
@@ -150,5 +197,35 @@ public class Block extends AuditableEntity {
     @Transient
     public BlockStatus getCanonicalStatus() {
         return status == null ? BlockStatus.PRODUCED : status.canonical();
+    }
+
+    @Transient
+    public String getQuarryLocation() {
+        return quarrySection;
+    }
+
+    @Transient
+    public String getColorQuality() {
+        return (colorTone != null ? colorTone : "") + (qualityGrade != null ? " / " + qualityGrade.getLabel() : "");
+    }
+
+    @Transient
+    public String getDimensions() {
+        return (lengthCm != null ? lengthCm + "×" : "") + (widthCm != null ? widthCm + "×" : "") + (heightCm != null ? heightCm + " cm" : "");
+    }
+
+    @Transient
+    public String getQuarryName() {
+        return quarry != null ? quarry.getName() : null;
+    }
+
+    @Transient
+    public BigDecimal getWeightTons() {
+        return getApproximateTonnage();
+    }
+
+    @Transient
+    public Customer getCustomer() {
+        return soldCustomer;
     }
 }

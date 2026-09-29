@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Yeni Tahsilat Girişi | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page max-w-3xl mx-auto space-y-6"
+     x-data="{
+        method: 'CASH',
+        isCheck() {
+            return this.method === 'CHECK';
+        },
+        isBank() {
+            return this.method === 'BANK_TRANSFER' || this.method === 'CHECK';
+        }
+     }">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-form-header">
+        <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Tahsilat', '/collections', 'Yeni Tahsilat Girişi')}"></div>
+        <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-2 flex items-center gap-2">
+            <i data-lucide="wallet" class="w-7 h-7 text-teal-600"></i>
+            <span>Yeni Tahsilat Kaydı</span>
+        </h2>
+        <p class="erp-form-lead text-sm text-slate-600">
+            Nakit, banka transferi veya çek yöntemiyle müşteriden yapılan tahsilatı sisteme kaydedin.
+        </p>
+    </div>
+
+    <form th:action="@{/collections/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <!-- Tahsilat Yöntemi Seçimi (Nakit, EFT/Havale, Çek) -->
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-2">Tahsilat Yöntemi *</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                       :class="method === 'CASH' ? 'border-emerald-600 bg-emerald-50/50 text-emerald-900 ring-2 ring-emerald-500/20 font-bold' : 'border-slate-200 text-slate-700 hover:bg-slate-50'">
+                    <input type="radio" name="method" value="CASH" x-model="method" class="sr-only" checked />
+                    <i data-lucide="banknote" class="w-5 h-5" :class="method === 'CASH' ? 'text-emerald-600' : 'text-slate-400'"></i>
+                    <div>
+                        <div class="text-sm font-bold">1. Nakit</div>
+                        <div class="text-[11px] font-normal text-slate-500">Kasa tahsilatı</div>
+                    </div>
+                </label>
+
+                <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                       :class="method === 'BANK_TRANSFER' ? 'border-blue-600 bg-blue-50/50 text-blue-900 ring-2 ring-blue-500/20 font-bold' : 'border-slate-200 text-slate-700 hover:bg-slate-50'">
+                    <input type="radio" name="method" value="BANK_TRANSFER" x-model="method" class="sr-only" />
+                    <i data-lucide="landmark" class="w-5 h-5" :class="method === 'BANK_TRANSFER' ? 'text-blue-600' : 'text-slate-400'"></i>
+                    <div>
+                        <div class="text-sm font-bold">2. EFT / Havale</div>
+                        <div class="text-[11px] font-normal text-slate-500">Banka transferi</div>
+                    </div>
+                </label>
+
+                <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                       :class="method === 'CHECK' ? 'border-purple-600 bg-purple-50/50 text-purple-900 ring-2 ring-purple-500/20 font-bold' : 'border-slate-200 text-slate-700 hover:bg-slate-50'">
+                    <input type="radio" name="method" value="CHECK" x-model="method" class="sr-only" />
+                    <i data-lucide="calendar-check" class="w-5 h-5" :class="method === 'CHECK' ? 'text-purple-600' : 'text-slate-400'"></i>
+                    <div>
+                        <div class="text-sm font-bold">3. Çek</div>
+                        <div class="text-[11px] font-normal text-slate-500">Vade tarihli çek</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Müşteri / Cari -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Müşteri / Cari *</label>
+                <select name="customerId" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    <option value="" disabled selected>Müşteri Seçiniz...</option>
+                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"
+                            th:selected="${selectedCustomerId != null and selectedCustomerId == c.id}"></option>
+                </select>
+            </div>
+
+            <!-- İlişkili Fatura (Opsiyonel) -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">İlişkili Fatura (Opsiyonel)</label>
+                <select name="invoiceId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    <option value="">-- Faturasız / Cari Hesaba --</option>
+                    <option th:each="inv : ${invoices}" th:value="${inv.id}"
+                            th:text="${inv.invoiceNumber} + ' | ' + ${inv.customer != null ? inv.customer.companyName : ''} + ' | ' + ${#numbers.formatDecimal(inv.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' TL'"
+                            th:selected="${selectedInvoice != null and selectedInvoice.id == inv.id}"></option>
+                </select>
+            </div>
+
+            <!-- Tutar -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Tahsil Edilen Tutar (TL) *</label>
+                <input type="number" step="0.01" name="amount" required placeholder="Örn: 25000.00"
+                       th:value="${param.amount != null ? param.amount[0] : ''}"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base font-black text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none" />
+            </div>
+
+            <!-- Banka Adı (EFT veya Çek için) -->
+            <div x-show="isBank()">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    Banka Adı <span x-show="isBank()" class="text-rose-500">*</span>
+                </label>
+                <input type="text" name="bankName" placeholder="Örn: Garanti BBVA, İş Bankası, Akbank"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none" />
+            </div>
+
+        </div>
+
+        <!-- ÇEK ÖZEL ALANLARI (Çek seçildiğinde özellikle açılan alanlar) -->
+        <div x-show="isCheck()" class="border-t border-purple-200 bg-purple-50/50 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center gap-2 pb-2 border-b border-purple-200">
+                <i data-lucide="calendar-check" class="w-5 h-5 text-purple-600"></i>
+                <h3 class="text-sm font-bold text-purple-900">Çek Detay Bilgileri</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Çek Numarası -->
+                <div>
+                    <label class="block text-xs font-bold text-purple-900 mb-1.5">Çek Numarası *</label>
+                    <input type="text" name="checkNo" placeholder="Örn: CK-987654"
+                           class="w-full px-3.5 py-2.5 bg-white border border-purple-300 rounded-xl text-sm font-mono text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none" />
+                </div>
+
+                <!-- Çek Düzenleme Tarihi -->
+                <div>
+                    <label class="block text-xs font-bold text-purple-900 mb-1.5">Çek Tarihi (Düzenleme) *</label>
+                    <input type="date" name="checkDate" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                           class="w-full px-3.5 py-2.5 bg-white border border-purple-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none" />
+                </div>
+
+                <!-- Çek Vade Tarihi (En Önemli Alan) -->
+                <div>
+                    <label class="block text-xs font-bold text-purple-900 mb-1.5">Çek Vade Tarihi *</label>
+                    <input type="date" name="dueDate"
+                           class="w-full px-3.5 py-2.5 bg-white border-2 border-purple-500 rounded-xl text-sm font-bold text-purple-950 focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-xs" />
+                </div>
+            </div>
+
+            <div class="text-[11px] text-purple-700 bg-purple-100/60 rounded-xl p-3 flex items-start gap-2">
+                <i data-lucide="info" class="w-4 h-4 text-purple-600 shrink-0 mt-0.5"></i>
+                <div>
+                    Çek portföye <strong>"Portföyde"</strong> durumunda kaydedilir. Vade tarihine göre yaklaşan ve vadesi geçmiş çekler otomatik olarak raporlanır ve takip edilir.
+                </div>
+            </div>
+        </div>
+
+        <!-- Açıklama -->
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Açıklama / Dekont Notu</label>
+            <textarea name="notes" rows="3" placeholder="Dekont numarası, tahsilat makbuz detayı veya açıklama..."
+                      class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-teal-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- Butonlar -->
+        <div class="border-t border-slate-100 pt-6 flex items-center justify-end gap-3">
+            <a th:href="@{/collections}" class="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                Vazgeç
+            </a>
+            <button type="submit" class="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>Tahsilatı Kaydet</span>
+            </button>
+        </div>
+
+    </form>
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

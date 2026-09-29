@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Faturalar — Alış & Satış | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-6">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Fatura Modülü')}"></div>
+            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-1 flex items-center gap-2">
+                <i data-lucide="receipt" class="w-7 h-7 text-emerald-600"></i>
+                <span>Fatura Modülü — Alış & Satış Faturaları</span>
+            </h2>
+            <p class="erp-list-lead text-sm text-slate-600">
+                Ocak, Fabrika, Atölye ve Şantiye departmanlarına ait alış ve satış faturaları.
+            </p>
+        </div>
+        <div class="flex items-center gap-2.5 shrink-0">
+            <a th:href="@{/invoices/create(type='PURCHASE')}" class="erp-btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition">
+                <i data-lucide="shopping-bag" class="w-4 h-4 text-slate-600"></i>
+                <span>Yeni Alış Faturası</span>
+            </a>
+            <a th:href="@{/invoices/create(type='SALES')}" class="erp-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Yeni Satış Faturası</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Aylık Ciro / Alış KPI Kartları -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Bu Ay Satış (Ciro)</div>
+            <div class="text-2xl font-black text-emerald-600 mt-1"
+                 th:text="${monthlySales != null ? #numbers.formatDecimal(monthlySales, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+            <div class="text-xs text-slate-500 mt-0.5">Departman satış toplamı</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Bu Ay Alış</div>
+            <div class="text-2xl font-black text-blue-600 mt-1"
+                 th:text="${monthlyPurchase != null ? #numbers.formatDecimal(monthlyPurchase, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+            <div class="text-xs text-slate-500 mt-0.5">Tedarik ve hammadde alımları</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kayıtlı Fatura Sayısı</div>
+            <div class="text-2xl font-black text-slate-900 mt-1" th:text="${page != null ? page.totalElements : #lists.size(invoices)}">0</div>
+            <div class="text-xs text-slate-500 mt-0.5">Sistemdeki tüm faturalar</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">KDV Durumu</div>
+            <div class="text-base font-black text-slate-700 mt-2 flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+                <span>Net Tutar Esaslı</span>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5">KDV hariç / brüt net faturalama</div>
+        </div>
+    </div>
+
+    <!-- Filtre Sekmeleri & Departman Seçimi -->
+    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Fatura Tipi Sekmeleri -->
+        <div class="flex items-center gap-2 overflow-x-auto">
+            <a th:href="@{/invoices(department=${param.department})}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedType == null ? 'bg-slate-900 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                Tüm Faturalar
+            </a>
+            <a th:href="@{/invoices(type='SALES', department=${param.department})}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedType != null and selectedType.name() == 'SALES' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                Satış Faturaları
+            </a>
+            <a th:href="@{/invoices(type='PURCHASE', department=${param.department})}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedType != null and selectedType.name() == 'PURCHASE' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                Alış Faturaları
+            </a>
+        </div>
+
+        <!-- Departman Filtresi -->
+        <form th:action="@{/invoices}" method="get" class="flex items-center gap-2">
+            <input type="hidden" name="type" th:value="${selectedType != null ? selectedType.name() : ''}" th:if="${selectedType != null}" />
+            <label class="text-xs font-bold text-slate-700 shrink-0">Departman:</label>
+            <select name="department" onchange="this.form.submit()" class="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <option value="">Tüm Departmanlar</option>
+                <option th:each="dept : ${departments}" th:value="${dept.name()}" th:text="${dept.displayName}"
+                        th:selected="${selectedDepartment != null and selectedDepartment == dept}"></option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Faturalar Tablosu -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3 px-4">Fatura No</th>
+                        <th class="py-3 px-4">Tarih</th>
+                        <th class="py-3 px-4">Fatura Tipi</th>
+                        <th class="py-3 px-4">Cari (Müşteri / Tedarikçi)</th>
+                        <th class="py-3 px-4">Departman</th>
+                        <th class="py-3 px-4 text-right bg-emerald-50/50">Toplam Tutar</th>
+                        <th class="py-3 px-4">Durum</th>
+                        <th class="py-3 px-4 text-center">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    <tr th:if="${#lists.isEmpty(invoices)}" class="hover:bg-slate-50">
+                        <td colspan="8" class="py-8 text-center text-slate-400">
+                            <i data-lucide="receipt" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                            Kayıtlı fatura bulunamadı.
+                        </td>
+                    </tr>
+                    <tr th:each="inv : ${invoices}" class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-blue-600">
+                            <a th:href="@{'/invoices/' + ${inv.id}}" class="hover:underline flex items-center gap-1">
+                                <span th:text="${inv.invoiceNumber}">FAT-2026-0001</span>
+                            </a>
+                        </td>
+                        <td class="py-3 px-4 text-slate-500 whitespace-nowrap" th:text="${inv.invoiceDate != null ? #temporals.format(inv.invoiceDate, 'dd.MM.yyyy') : '—'}">01.09.2026</td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md"
+                                  th:classappend="${inv.invoiceType != null and inv.invoiceType.name() == 'SALES' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}"
+                                  th:text="${inv.invoiceType != null ? inv.invoiceType.displayName : 'Satış'}">Satış</span>
+                        </td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            <span th:if="${inv.customer != null}" th:text="${inv.customer.companyName}">ABC Marble</span>
+                            <span th:if="${inv.supplier != null}" th:text="${inv.supplier.companyName}">XYZ Tedarik</span>
+                            <span th:if="${inv.customer == null and inv.supplier == null}" th:text="${inv.partyName != null ? inv.partyName : '—'}">—</span>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 text-slate-800 border border-slate-200"
+                                  th:text="${inv.department != null ? inv.department.displayName : 'Genel'}">Fabrika</span>
+                        </td>
+                        
+                        <!-- Toplam Tutar (Strictly NO KDV) -->
+                        <td class="py-3 px-4 text-right font-black text-emerald-700 bg-emerald-50/30 whitespace-nowrap text-sm">
+                            <span th:text="${inv.totalAmount != null ? #numbers.formatDecimal(inv.totalAmount, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">150.000,00 TL</span>
+                        </td>
+
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-full"
+                                  th:classappend="${inv.status != null and inv.status.name() == 'PAID' ? 'bg-emerald-100 text-emerald-800' : (inv.status != null and inv.status.name() == 'OVERDUE' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')}"
+                                  th:text="${inv.status != null ? inv.status.displayName : 'Ödenmedi'}">Ödenmedi</span>
+                        </td>
+
+                        <td class="py-3 px-4 text-center whitespace-nowrap">
+                            <a th:href="@{'/invoices/' + ${inv.id}}" class="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition inline-flex items-center gap-1 font-bold text-xs">
+                                <span>Görüntüle</span>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

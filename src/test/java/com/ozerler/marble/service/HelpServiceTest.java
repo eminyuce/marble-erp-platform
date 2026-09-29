@@ -46,9 +46,9 @@ class HelpServiceTest {
         assertThat(helpService.getHelpPage("machine-fuel")).isPresent();
         assertThat(helpService.getHelpPage("system-health")).isPresent();
         assertThat(helpService.getHelpPage("block-move")).isPresent();
-        assertThat(helpService.getHelpPage("block-move").orElseThrow().getTitle()).isEqualTo("Ocak — Blok Saha Taşıma");
+        assertThat(helpService.getHelpPage("block-move").orElseThrow().getTitle()).isEqualTo("Blok Saha Taşıma");
         assertThat(helpService.getHelpPage("block-transfer")).isPresent();
-        assertThat(helpService.getHelpPage("block-transfer").orElseThrow().getTitle()).isEqualTo("Ocak &rarr; Fabrikaya Blok Sevkiyatı");
+        assertThat(helpService.getHelpPage("block-transfer").orElseThrow().getTitle()).isEqualTo("Fabrikaya Sevk");
         assertThat(helpService.getHelpPage("block-photos")).isPresent();
         assertThat(helpService.getHelpPage("block-photos").orElseThrow().getTitle()).isEqualTo("Ocak — Blok Fotoğrafları & Taş Pasaportu");
         assertThat(helpService.getHelpPage("block-sell")).isPresent();

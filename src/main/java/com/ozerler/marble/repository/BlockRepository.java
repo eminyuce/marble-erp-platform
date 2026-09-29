@@ -155,4 +155,41 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                                           @Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
                                           @Param("status") BlockStatus status,
                                           @Param("unsoldOnly") boolean unsoldOnly);
+
+    @Query("SELECT b FROM Block b " +
+           "LEFT JOIN FETCH b.quarry " +
+           "LEFT JOIN FETCH b.assignedCustomer " +
+           "LEFT JOIN FETCH b.currentLocation " +
+           "WHERE b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD " +
+           "AND b.status = com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY " +
+           "ORDER BY b.arrivalDate DESC, b.id DESC")
+    List<Block> findFactoryUncutBlocks();
+
+    @Query("SELECT b FROM Block b " +
+           "LEFT JOIN FETCH b.quarry " +
+           "LEFT JOIN FETCH b.assignedCustomer " +
+           "LEFT JOIN FETCH b.currentLocation " +
+           "WHERE b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD " +
+           "AND b.status = com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY " +
+           "AND (:customerId IS NULL OR b.assignedCustomer.id = :customerId) " +
+           "AND (:generalStockOnly = false OR b.assignedCustomer IS NULL) " +
+           "ORDER BY b.arrivalDate DESC, b.id DESC")
+    List<Block> findFactoryUncutBlocksFiltered(@Param("customerId") Long customerId,
+                                              @Param("generalStockOnly") boolean generalStockOnly);
+
+    @Query("SELECT COALESCE(SUM(b.estimatedTonnage), 0) FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
+    java.math.BigDecimal sumTotalEstimatedTonnage();
+
+    @Query("SELECT COALESCE(SUM(b.actualTonnage), 0) FROM Block b WHERE b.actualTonnage IS NOT NULL AND b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
+    java.math.BigDecimal sumTotalActualTonnage();
+
+    @Query("SELECT COUNT(b) FROM Block b " +
+           "WHERE b.currentLocation.locationType IN (com.ozerler.marble.model.enums.StockLocationType.PRODUCTION_YARD, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD) " +
+           "AND b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
+    long countQuarryBlocks();
+
+    @Query("SELECT COUNT(b) FROM Block b " +
+           "WHERE b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD " +
+           "AND b.status = com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY")
+    long countFactoryUncutBlocks();
 }

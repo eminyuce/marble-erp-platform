@@ -38,6 +38,10 @@ public class Slab extends AuditableEntity {
     @JoinColumn(name = "pallet_id")
     private Pallet pallet;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
     @Column(name = "thickness_cm", nullable = false, precision = 5, scale = 2)
     private BigDecimal thicknessCm;
 
@@ -79,5 +83,20 @@ public class Slab extends AuditableEntity {
             this.surfaceAreaM2 = widthCm.multiply(lengthCm)
                     .divide(new BigDecimal("10000"), 4, RoundingMode.HALF_UP);
         }
+    }
+
+    @Transient
+    public Block getSourceBlock() {
+        return block;
+    }
+
+    @Transient
+    public BigDecimal getAreaM2() {
+        return surfaceAreaM2;
+    }
+
+    @Transient
+    public String getStoneType() {
+        return block != null ? block.getStoneType() : null;
     }
 }

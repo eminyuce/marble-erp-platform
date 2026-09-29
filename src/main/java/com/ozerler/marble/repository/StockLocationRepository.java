@@ -18,6 +18,8 @@ public interface StockLocationRepository extends JpaRepository<StockLocation, Lo
 
     Optional<StockLocation> findByCode(String code);
 
+    boolean existsByCode(String code);
+
     Optional<StockLocation> findByLocationTypeAndActiveTrue(StockLocationType locationType);
 
     List<StockLocation> findByActiveTrueOrderByNameAsc();

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Blok Sevk Et — Ocak | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page max-w-3xl mx-auto space-y-6"
+     x-data="{
+        destination: 'FACTORY',
+        isCustomerDestination() {
+            return this.destination === 'CUSTOMER';
+        }
+     }">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-form-header">
+        <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Ocak', '/operations/quarry', 'Blok Sevkiyatı')}"></div>
+        <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-2 flex items-center gap-2">
+            <i data-lucide="send" class="w-7 h-7 text-blue-600"></i>
+            <span>Ocak → Ürün / Blok Transferi & Sevkiyat</span>
+        </h2>
+        <p class="erp-form-lead text-sm text-slate-600">
+            Ocaktan çıkan bloğun hedefini (Fabrika veya Müşteri) belirleyin, stok hareketini otomatik oluşturun ve isteğe bağlı fatura bağlantısı kurun.
+        </p>
+    </div>
+
+    <!-- Blok Bilgi Kartı -->
+    <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">Sevk Edilecek Blok:</span>
+                <span class="text-xl font-mono font-black text-amber-400" th:text="${block.blockCode}">BLK-001</span>
+            </div>
+            <div class="text-xs font-semibold text-slate-300" th:text="${block.quarry != null ? block.quarry.name : 'Merkez Ocak'}">Merkez Ocak</div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs">
+            <div>
+                <span class="text-slate-400 block">Taş Türü</span>
+                <span class="font-bold text-slate-200 text-sm" th:text="${block.stoneType != null ? block.stoneType : '—'}">Traverten</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block">Ölçüler</span>
+                <span class="font-bold text-slate-200" th:text="${block.dimensions != null ? block.dimensions : (block.length + '×' + block.width + '×' + block.height + ' cm')}">180×120×140 cm</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block">Tahmini Tonaj</span>
+                <span class="font-bold text-amber-400 text-sm" th:text="${block.estimatedTonnage != null ? #numbers.formatDecimal(block.estimatedTonnage, 1, 'POINT', 2, 'COMMA') + ' t' : '—'}">18,50 t</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block">Gerçek Tonaj</span>
+                <span class="font-bold text-emerald-400 text-sm" th:text="${block.actualTonnage != null ? #numbers.formatDecimal(block.actualTonnage, 1, 'POINT', 2, 'COMMA') + ' t' : 'Henüz Girilmedi'}">—</span>
+            </div>
+        </div>
+    </div>
+
+    <form th:action="@{'/operations/quarry/' + ${block.id} + '/dispatch'}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <!-- Hedef Seçimi -->
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-2">Hedef Departman / Lokasyon *</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                       :class="destination === 'FACTORY' ? 'border-blue-600 bg-blue-50/50 text-blue-900 ring-2 ring-blue-500/20 font-bold' : 'border-slate-200 text-slate-700 hover:bg-slate-50'">
+                    <input type="radio" name="targetDestination" value="FACTORY" x-model="destination" class="sr-only" checked />
+                    <i data-lucide="factory" class="w-5 h-5" :class="destination === 'FACTORY' ? 'text-blue-600' : 'text-slate-400'"></i>
+                    <div>
+                        <div class="text-sm font-bold">Fabrika / Blok Stok Sahası</div>
+                        <div class="text-[11px] font-normal text-slate-500">Kesilmemiş blok sahasına aktarılır</div>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                       :class="destination === 'CUSTOMER' ? 'border-emerald-600 bg-emerald-50/50 text-emerald-900 ring-2 ring-emerald-500/20 font-bold' : 'border-slate-200 text-slate-700 hover:bg-slate-50'">
+                    <input type="radio" name="targetDestination" value="CUSTOMER" x-model="destination" class="sr-only" />
+                    <i data-lucide="users" class="w-5 h-5" :class="destination === 'CUSTOMER' ? 'text-emerald-600' : 'text-slate-400'"></i>
+                    <div>
+                        <div class="text-sm font-bold">Müşteri (Direkt Satış / Sevk)</div>
+                        <div class="text-[11px] font-normal text-slate-500">Müşteriye doğrudan blok satışı</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Müşteri Seçimi (Opsiyonel veya Müşteri seçildiğinde) -->
+        <div x-show="destination === 'CUSTOMER' || destination === 'FACTORY'" class="transition">
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Müşteri / Cari
+                <span x-show="destination === 'CUSTOMER'" class="text-rose-500">* (Müşteriye sevk için zorunlu)</span>
+                <span x-show="destination === 'FACTORY'" class="text-slate-400 font-normal">(Opsiyonel - Fabrika stoğunda müşteri rezervasyonu için)</span>
+            </label>
+            <select name="customerId" :required="destination === 'CUSTOMER'"
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="">-- Genel Stok / Müşteri Yok --</option>
+                <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+            </select>
+        </div>
+
+        <!-- Fatura Bağlantısı (Opsiyonel) -->
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">İlişkili Fatura (Opsiyonel)</label>
+            <select name="invoiceId"
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="">-- Faturasız / Sonra Bağlanacak --</option>
+                <option th:each="inv : ${invoices}" th:value="${inv.id}"
+                        th:text="${inv.invoiceNumber} + ' | ' + ${inv.invoiceType != null ? inv.invoiceType.displayName : ''} + ' | ' + ${inv.customer != null ? inv.customer.companyName : ''} + ' | ' + ${#numbers.formatDecimal(inv.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' TL'"></option>
+            </select>
+            <p class="text-[11px] text-slate-400 mt-1">Ocaktan fabrikaya veya müşteriye sevk edilen blok bu faturayla eşleştirilir.</p>
+        </div>
+
+        <!-- Sevkiyat Notu -->
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Sevkiyat Notu / İrsaliye Açıklaması</label>
+            <textarea name="notes" rows="3" placeholder="Nakliye firması, plaka numarası, şoför bilgisi veya sevkiyat notu..."
+                      class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- Bilgi Kutusu -->
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-900 flex items-start gap-2">
+            <i data-lucide="info" class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"></i>
+            <div>
+                Sevkiyat onaylandığında otomatik olarak bir <strong>Stok Hareketi (Transfer)</strong> kaydı oluşturulur ve blok Fabrika Stok Sahası veya Müşteri kayıtlarına işlenir.
+            </div>
+        </div>
+
+        <!-- Butonlar -->
+        <div class="border-t border-slate-100 pt-6 flex items-center justify-end gap-3">
+            <a th:href="@{/operations/quarry}" class="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                Vazgeç
+            </a>
+            <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>Sevkiyatı Tamamla</span>
+            </button>
+        </div>
+
+    </form>
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

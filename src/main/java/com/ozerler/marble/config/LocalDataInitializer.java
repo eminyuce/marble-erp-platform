@@ -41,6 +41,7 @@ public class LocalDataInitializer implements CommandLineRunner {
     private final PalletRepository palletRepository;
     private final PalletItemRepository palletItemRepository;
     private final ShipmentRepository shipmentRepository;
+    private final OperationDefinitionRepository operationDefinitionRepository;
 
     @Override
     @Transactional
@@ -79,6 +80,12 @@ public class LocalDataInitializer implements CommandLineRunner {
 
         if (palletRepository.count() == 0) {
             initPalletsAndShipments();
+        }
+
+        ensureStockLocations();
+
+        if (operationDefinitionRepository.count() == 0) {
+            initOperationDefinitions();
         }
 
         log.info("Local database initialization completed successfully.");
@@ -535,5 +542,42 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .freightCost(BigDecimal.valueOf(6200.00))
                 .deliveryStatus("DELIVERED")
                 .build());
+    }
+
+    private void ensureStockLocations() {
+        if (!stockLocationRepository.existsByCode("FAB-EBATLI")) {
+            stockLocationRepository.save(StockLocation.builder()
+                    .code("FAB-EBATLI")
+                    .name("Fabrika Ebatlı Stok Sahası")
+                    .businessUnit(BusinessUnit.FACTORY)
+                    .locationType(StockLocationType.SIZED_STOCK_YARD)
+                    .active(true)
+                    .build());
+        }
+    }
+
+    private void initOperationDefinitions() {
+        log.info("Seeding surface and edge operation definitions...");
+        List<OperationDefinition> defs = List.of(
+                OperationDefinition.builder().category("SURFACE_OPERATION").code("HONLU").name("Honlu").displayOrder(1).active(true).build(),
+                OperationDefinition.builder().category("SURFACE_OPERATION").code("CILALI").name("Cilalı").displayOrder(2).active(true).build(),
+                OperationDefinition.builder().category("SURFACE_OPERATION").code("FIRCALI").name("Fırçalı").displayOrder(3).active(true).build(),
+                OperationDefinition.builder().category("SURFACE_OPERATION").code("KUMLAMA").name("Kumlama").displayOrder(4).active(true).build(),
+                OperationDefinition.builder().category("SURFACE_OPERATION").code("LEATHER").name("Leather / Patinato").displayOrder(5).active(true).build(),
+                OperationDefinition.builder().category("SURFACE_OPERATION").code("SURFACE_DIGER").name("Diğer").displayOrder(6).active(true).build(),
+
+                OperationDefinition.builder().category("EDGE_OPERATION").code("DUZ").name("Düz").displayOrder(1).active(true).build(),
+                OperationDefinition.builder().category("EDGE_OPERATION").code("PAH").name("Pah").displayOrder(2).active(true).build(),
+                OperationDefinition.builder().category("EDGE_OPERATION").code("PROFIL").name("Profil").displayOrder(3).active(true).build(),
+                OperationDefinition.builder().category("EDGE_OPERATION").code("YUVARLATMA").name("Yuvarlatma").displayOrder(4).active(true).build(),
+                OperationDefinition.builder().category("EDGE_OPERATION").code("EDGE_DIGER").name("Diğer").displayOrder(5).active(true).build(),
+
+                OperationDefinition.builder().category("UNIT").code("MT").name("m.t.").displayOrder(1).active(true).build(),
+                OperationDefinition.builder().category("UNIT").code("M2").name("m²").displayOrder(2).active(true).build(),
+                OperationDefinition.builder().category("UNIT").code("M3").name("m³").displayOrder(3).active(true).build(),
+                OperationDefinition.builder().category("UNIT").code("TON").name("ton").displayOrder(4).active(true).build(),
+                OperationDefinition.builder().category("UNIT").code("ADET").name("adet").displayOrder(5).active(true).build()
+        );
+        operationDefinitionRepository.saveAll(defs);
     }
 }

@@ -25,6 +25,10 @@ public enum BlockStatus {
         return MessageUtils.getMessage(canonical().messageKey);
     }
 
+    public String getDisplayName() {
+        return getLabel();
+    }
+
     public BlockStatus canonical() {
         return switch (this) {
             case QUARRY -> PRODUCED;

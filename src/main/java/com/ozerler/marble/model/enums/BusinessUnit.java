@@ -6,7 +6,8 @@ public enum BusinessUnit {
     QUARRY("enum.business_unit.quarry"),
     FACTORY("enum.business_unit.factory"),
     WORKSHOP("enum.business_unit.workshop"),
-    SITE("enum.business_unit.site");
+    SITE("enum.business_unit.site"),
+    GENERAL("enum.business_unit.general");
 
     private final String messageKey;
 
@@ -16,5 +17,9 @@ public enum BusinessUnit {
 
     public String getLabel() {
         return MessageUtils.getMessage(messageKey);
+    }
+
+    public String getDisplayName() {
+        return getLabel();
     }
 }

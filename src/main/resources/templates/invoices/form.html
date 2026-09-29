@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Yeni Fatura — Alış & Satış | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page max-w-5xl mx-auto space-y-6"
+     x-data="{
+        invoiceType: '/*[[${defaultType.name()}]]*/' || 'SALES',
+        lines: [
+            { productName: '', description: '', quantity: 1, unit: 'm2', unitPrice: 0, blockId: '', stockItemId: '' }
+        ],
+        addLine() {
+            this.lines.push({ productName: '', description: '', quantity: 1, unit: 'm2', unitPrice: 0, blockId: '', stockItemId: '' });
+        },
+        removeLine(index) {
+            if (this.lines.length > 1) {
+                this.lines.splice(index, 1);
+            }
+        },
+        get grandTotal() {
+            let total = 0;
+            this.lines.forEach(l => {
+                const q = parseFloat(l.quantity) || 0;
+                const p = parseFloat(l.unitPrice) || 0;
+                total += (q * p);
+            });
+            return total.toFixed(2);
+        }
+     }">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-form-header">
+        <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Faturalar', '/invoices', 'Yeni Fatura')}"></div>
+        <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-2 flex items-center gap-2">
+            <i data-lucide="receipt" class="w-7 h-7 text-emerald-600"></i>
+            <span>Yeni Fatura Oluştur</span>
+        </h2>
+        <p class="erp-form-lead text-sm text-slate-600">
+            Departman bazlı alış veya satış faturası girin. Ürün kalemlerini ekleyerek doğrudan stok/blok ve cari hesaplara bağlayın.
+        </p>
+    </div>
+
+    <!-- KDV Bilgi Notu -->
+    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
+        <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"></i>
+        <div class="text-xs text-emerald-900 leading-relaxed">
+            <strong>Fatura Sistemi Kuralı:</strong> Faturalar net tutarlar üzerinden düzenlenir. Sistemde KDV alanı yer almamaktadır; satır toplamları doğrudan fatura toplamını oluşturur.
+        </div>
+    </div>
+
+    <form th:action="@{/invoices/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <!-- Fatura Üst Bilgileri -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <!-- Fatura Tipi (Satış / Alış) -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Fatura Tipi *</label>
+                <select name="invoiceType" x-model="invoiceType" required
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <option value="SALES">Satış Faturası</option>
+                    <option value="PURCHASE">Alış Faturası</option>
+                </select>
+            </div>
+
+            <!-- Fatura Numarası -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Fatura No (Opsiyonel - Boşsa Otomatik)</label>
+                <input type="text" name="invoiceNo" placeholder="Örn: FAT-2026-0001"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-mono text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            </div>
+
+            <!-- Departman Seçimi (Ocak, Fabrika, Atölye, Şantiye, Genel) -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Departman *</label>
+                <select name="department" required
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <option th:each="d : ${departments}" th:value="${d.name()}" th:text="${d.displayName}"
+                            th:selected="${defaultDepartment != null and defaultDepartment == d}"></option>
+                </select>
+            </div>
+
+            <!-- Fatura Tarihi -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Fatura Tarihi *</label>
+                <input type="date" name="invoiceDate" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            </div>
+
+            <!-- Vade Tarihi -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Vade Tarihi (Opsiyonel)</label>
+                <input type="date" name="dueDate"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            </div>
+
+            <!-- Cari Seçimi (Satış ise Müşteri, Alış ise Tedarikçi veya Serbest) -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    <span x-show="invoiceType === 'SALES'">Müşteri / Cari *</span>
+                    <span x-show="invoiceType === 'PURCHASE'">Tedarikçi / Cari *</span>
+                </label>
+                <!-- Satış için Müşteriler -->
+                <div x-show="invoiceType === 'SALES'">
+                    <select name="customerId"
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="">-- Müşteri Seçiniz --</option>
+                        <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                    </select>
+                </div>
+                <!-- Alış için Tedarikçiler -->
+                <div x-show="invoiceType === 'PURCHASE'">
+                    <select name="supplierId"
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="">-- Tedarikçi Seçiniz --</option>
+                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.companyName}"></option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Açıklama -->
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Fatura Notu / Açıklama</label>
+            <input type="text" name="notes" placeholder="Sevkiyat referansı, irsaliye no veya sözleşme detayı..."
+                   class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+        </div>
+
+        <!-- Fatura Kalemleri (Dinamik Tablo) -->
+        <div class="border-t border-slate-100 pt-6">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                    <i data-lucide="list" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Fatura Kalemleri</span>
+                </h3>
+                <button type="button" @click="addLine()"
+                        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-200">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>Kalem Ekle</span>
+                </button>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+                <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                        <tr>
+                            <th class="py-3 px-3">Ürün / Hizmet *</th>
+                            <th class="py-3 px-3">Açıklama</th>
+                            <th class="py-3 px-3 w-28">Miktar *</th>
+                            <th class="py-3 px-3 w-28">Birim *</th>
+                            <th class="py-3 px-3 w-32">Birim Fiyat (TL) *</th>
+                            <th class="py-3 px-3 w-32 text-right">Satır Toplamı (TL)</th>
+                            <th class="py-3 px-2 w-10 text-center"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium">
+                        <template x-for="(line, index) in lines" :key="index">
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-2">
+                                    <input type="text" name="itemProductName" x-model="line.productName" required placeholder="Ürün adı"
+                                           class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                                </td>
+                                <td class="p-2">
+                                    <input type="text" name="itemDescription" x-model="line.description" placeholder="Açıklama / ebat"
+                                           class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                                </td>
+                                <td class="p-2">
+                                    <input type="number" step="0.01" name="itemQuantity" x-model.number="line.quantity" required
+                                           class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right" />
+                                </td>
+                                <td class="p-2">
+                                    <select name="itemUnit" x-model="line.unit" required
+                                            class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
+                                        <option value="m2">m²</option>
+                                        <option value="ton">ton</option>
+                                        <option value="adet">adet</option>
+                                        <option value="m.t.">m.t.</option>
+                                        <option value="m3">m³</option>
+                                    </select>
+                                </td>
+                                <td class="p-2">
+                                    <input type="number" step="0.01" name="itemUnitPrice" x-model.number="line.unitPrice" required
+                                           class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right" />
+                                </td>
+                                <td class="p-2 text-right font-black text-slate-900 text-xs whitespace-nowrap">
+                                    <span x-text="((line.quantity || 0) * (line.unitPrice || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' TL'"></span>
+                                </td>
+                                <td class="p-2 text-center">
+                                    <button type="button" @click="removeLine(index)" class="p-1 text-slate-400 hover:text-rose-600 rounded-md transition" title="Satırı Sil">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Toplam Gösterge Kartı (Kesinlikle KDV'siz) -->
+        <div class="flex justify-end pt-4">
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 w-full max-w-sm space-y-2">
+                <div class="flex justify-between items-center text-xs text-slate-600">
+                    <span>Ara Toplam:</span>
+                    <span class="font-bold text-slate-800" x-text="parseFloat(grandTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' TL'"></span>
+                </div>
+                <div class="flex justify-between items-center text-xs text-emerald-700 font-semibold border-t border-slate-200 pt-2">
+                    <span>KDV:</span>
+                    <span>Uygulanmaz (0 TL)</span>
+                </div>
+                <div class="flex justify-between items-center text-base font-black text-slate-900 border-t border-slate-200 pt-2">
+                    <span>Genel Toplam:</span>
+                    <span class="text-xl text-emerald-600" x-text="parseFloat(grandTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' TL'"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Butonlar -->
+        <div class="border-t border-slate-100 pt-6 flex items-center justify-end gap-3">
+            <a th:href="@{/invoices}" class="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                Vazgeç
+            </a>
+            <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>Faturayı Kaydet</span>
+            </button>
+        </div>
+
+    </form>
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Yeni Blok Çıkar — Ocak | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page max-w-4xl mx-auto space-y-6">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-form-header">
+        <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Ocak', '/operations/quarry', 'Yeni Blok Çıkar')}"></div>
+        <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-2 flex items-center gap-2">
+            <i data-lucide="mountain" class="w-7 h-7 text-amber-600"></i>
+            <span>Yeni Blok Çıkarma Kaydı</span>
+        </h2>
+        <p class="erp-form-lead text-sm text-slate-600">
+            Ocaktan çıkarılan ham mermer bloğunu sisteme kaydedin. Çıkarılma anında tahmini tonaj girilir, kantar ölçümünden sonra gerçek tonaj kaydedilebilir.
+        </p>
+    </div>
+
+    <!-- Alert / Validation Notice -->
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+        <i data-lucide="alert-circle" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+        <div class="text-xs text-amber-900 leading-relaxed">
+            <strong>Tonaj Takip Kuralı:</strong> <em>Tahmini Tonaj</em> ve <em>Gerçek Tonaj</em> sistemde kesinlikle ayrı sütunlarda tutulur. Gerçek tonaj daha sonra girilse dahi tahmini tonaj silinmez veya üzerine yazılmaz.
+        </div>
+    </div>
+
+    <form th:action="@{/operations/quarry/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Ocak Seçimi -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Ocak (Maden Sahası) *</label>
+                <select name="quarryId" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <option value="" disabled selected>Ocak Seçiniz...</option>
+                    <option th:each="q : ${quarries}" th:value="${q.id}" th:text="${q.name} + ' (' + ${q.location} + ')'"></option>
+                </select>
+            </div>
+
+            <!-- Blok Kodu -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Blok Numarası / Kodu (Opsiyonel - Boşsa otomatik atanır)</label>
+                <input type="text" name="blockCode" placeholder="Örn: BLK-001 veya BLK-2026-001"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-mono text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+            </div>
+
+            <!-- Ocak Lokasyonu / Ayna -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Ocak Lokasyonu / Ayna / Kademe</label>
+                <input type="text" name="quarrySection" placeholder="Örn: Doğu Aynası - Kademe 3"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+            </div>
+
+            <!-- Çıkarılma Tarihi -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Çıkarılma Tarihi</label>
+                <input type="date" name="extractionDate" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+            </div>
+
+            <!-- Taş Türü -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Taş Türü</label>
+                <input type="text" name="stoneType" placeholder="Örn: Klasik Traverten, Bej Mermer, Crema"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+            </div>
+
+            <!-- Renk / Kalite -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Renk Tonu</label>
+                <input type="text" name="colorTone" placeholder="Örn: Açık Krem, Beyaz, Gümüş"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+            </div>
+
+            <!-- Kalite Derecesi -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kalite Sınıfı</label>
+                <select name="qualityGrade" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <option th:each="grade : ${qualityGrades}" th:value="${grade.name()}" th:text="${grade.displayName}"></option>
+                </select>
+            </div>
+
+            <!-- Çatlak Durumu -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Çatlak / Kusur Derecesi (0-5)</label>
+                <input type="number" min="0" max="5" name="crackLevel" value="0"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+            </div>
+
+        </div>
+
+        <!-- Ölçüler Bölümü -->
+        <div class="border-t border-slate-100 pt-6">
+            <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+                <i data-lucide="ruler" class="w-4 h-4 text-slate-500"></i>
+                <span>Blok Ölçüleri (cm)</span>
+            </h3>
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">En (cm) *</label>
+                    <input type="number" name="widthCm" value="120" required
+                           class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Boy / Uzunluk (cm) *</label>
+                    <input type="number" name="lengthCm" value="180" required
+                           class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Yükseklik (cm) *</label>
+                    <input type="number" name="heightCm" value="140" required
+                           class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Tonaj Bölümü (Ayrı Sütunlar & Alanlar) -->
+        <div class="border-t border-slate-100 pt-6">
+            <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+                <i data-lucide="scale" class="w-4 h-4 text-emerald-600"></i>
+                <span>Tonaj Bilgileri (Ayrı Alanlar)</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-4">
+                    <label class="block text-xs font-bold text-amber-900 mb-1">Tahmini Tonaj (Ton) *</label>
+                    <p class="text-[11px] text-amber-700 mb-2">Çıkarılma anında hesaplanan tahmini tonajdır. Asla silinmez.</p>
+                    <input type="number" step="0.01" name="estimatedTonnage" required placeholder="Örn: 18.50"
+                           class="w-full px-3 py-2 border border-amber-300 rounded-xl text-base font-black text-amber-900 bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                </div>
+                <div class="bg-emerald-50/60 border border-emerald-200 rounded-xl p-4">
+                    <label class="block text-xs font-bold text-emerald-900 mb-1">Gerçek Tonaj (Ton) (Opsiyonel)</label>
+                    <p class="text-[11px] text-emerald-700 mb-2">Kantar tartımı yapıldıysa girilir. Boş bırakılabilir, sonra eklenebilir.</p>
+                    <input type="number" step="0.01" name="actualTonnage" placeholder="Örn: 19.20"
+                           class="w-full px-3 py-2 border border-emerald-300 rounded-xl text-base font-black text-emerald-900 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Açıklama -->
+        <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Açıklama / Notlar</label>
+            <textarea name="notes" rows="3" placeholder="Blok hakkında notlar, damar yapısı, sevkiyat hazırlığı vb."
+                      class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- Butonlar -->
+        <div class="border-t border-slate-100 pt-6 flex items-center justify-end gap-3">
+            <a th:href="@{/operations/quarry}" class="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                Vazgeç
+            </a>
+            <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>Bloğu Kaydet</span>
+            </button>
+        </div>
+
+    </form>
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Ocak Sevkiyat Raporu | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-6">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Ocak', '/operations/quarry', 'Ocak Çıkan Ürünler Raporu')}"></div>
+            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-1 flex items-center gap-2">
+                <i data-lucide="truck" class="w-7 h-7 text-blue-600"></i>
+                <span>Ocak'tan Çıkan Ürünler & Sevkiyat Takibi</span>
+            </h2>
+            <p class="erp-list-lead text-sm text-slate-600">
+                Ocaktan Fabrikaya, Müşteriye veya diğer departmanlara sevk edilen blokların tonaj, hedef, müşteri ve fatura bağlantılarını izleyin.
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a th:href="@{/operations/quarry}" class="erp-btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Ocak Blok Listesi</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Sevkiyat Tablosu -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="calendar" class="w-4 h-4 text-blue-600"></i>
+                <span>Ocak Sevkiyat ve Transfer Hareketleri</span>
+            </h3>
+            <span class="text-xs text-slate-500 font-semibold" th:text="${dispatches != null ? #lists.size(dispatches) + ' hareket' : '0 hareket'}">0 hareket</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3 px-4">Tarih</th>
+                        <th class="py-3 px-4">Ürün / Blok</th>
+                        <th class="py-3 px-4 text-right">Tonaj / Miktar</th>
+                        <th class="py-3 px-4">Kaynak</th>
+                        <th class="py-3 px-4">Hedef</th>
+                        <th class="py-3 px-4">Müşteri</th>
+                        <th class="py-3 px-4">Fatura</th>
+                        <th class="py-3 px-4">Açıklama</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    <tr th:if="${#lists.isEmpty(dispatches)}" class="hover:bg-slate-50">
+                        <td colspan="8" class="py-8 text-center text-slate-400">
+                            <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                            Henüz sevkiyat hareketi bulunmuyor.
+                        </td>
+                    </tr>
+                    <tr th:each="m : ${dispatches}" class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 text-slate-500 whitespace-nowrap" th:text="${m.movementDate != null ? #temporals.format(m.movementDate, 'dd.MM.yyyy HH:mm') : '—'}">01.09.2026</td>
+                        <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
+                            <span th:if="${m.block != null}" th:text="${m.block.blockCode}" class="text-blue-600">BLK-001</span>
+                            <span th:unless="${m.block != null}" th:text="${m.productName != null ? m.productName : 'Ürün'}">Mermer Blok</span>
+                        </td>
+                        <td class="py-3 px-4 text-right font-black whitespace-nowrap">
+                            <span th:if="${m.tonnage != null}" th:text="${#numbers.formatDecimal(m.tonnage, 1, 'POINT', 2, 'COMMA')} + ' ton'" class="text-emerald-700">18,50 ton</span>
+                            <span th:unless="${m.tonnage != null}" th:text="${m.quantity != null ? m.quantity + ' ' + (m.unit != null ? m.unit : '') : '—'}">—</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-amber-50 text-amber-800 border border-amber-200">Ocak</span>
+                        </td>
+                        <td class="py-3 px-4 font-bold">
+                            <span th:if="${m.targetDestination != null}"
+                                  class="px-2 py-0.5 text-[10px] rounded-md"
+                                  th:classappend="${m.targetDestination.name() == 'FACTORY' ? 'bg-blue-50 text-blue-800 border border-blue-200' : (m.targetDestination.name() == 'CUSTOMER' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-800')}"
+                                  th:text="${m.targetDestination.displayName}">Fabrika</span>
+                            <span th:unless="${m.targetDestination != null}" class="text-slate-400">—</span>
+                        </td>
+                        <td class="py-3 px-4 font-bold text-slate-800">
+                            <span th:if="${m.customer != null}" th:text="${m.customer.companyName}">ABC Marble</span>
+                            <span th:unless="${m.customer != null}" class="text-slate-400">—</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <a th:if="${m.invoice != null}" th:href="@{'/invoices/' + ${m.invoice.id}}" class="text-blue-600 hover:underline font-bold" th:text="${m.invoice.invoiceNumber}">FAT-001</a>
+                            <span th:unless="${m.invoice != null}" class="text-slate-400">—</span>
+                        </td>
+                        <td class="py-3 px-4 text-slate-500 max-w-xs truncate" th:text="${m.description != null ? m.description : '—'}">—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

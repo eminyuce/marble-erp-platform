@@ -33,6 +33,11 @@ public class ReportService {
     private final CutOrderRepository cutOrderRepository;
     private final ProjectRepository projectRepository;
     private final SlabRepository slabRepository;
+    private final StockItemRepository stockItemRepository;
+    private final InvoiceRepository invoiceRepository;
+    private final CollectionRecordRepository collectionRecordRepository;
+    private final CheckRecordRepository checkRecordRepository;
+    private final OperationWorkOrderRepository operationWorkOrderRepository;
     private final CostAccountingService costAccountingService;
     private final org.springframework.context.MessageSource messageSource;
 
@@ -48,6 +53,10 @@ public class ReportService {
 
     public enum ReportType {
         QUARRY_BLOCKS("ocak_bloklari"),
+        FACTORY_INVENTORY("fabrika_stoklari"),
+        INVOICE_FLOW("fatura_raporu"),
+        COLLECTIONS_SUMMARY("tahsilat_ve_cekler"),
+        OPERATION_WORK_ORDERS("is_emirleri"),
         FACTORY_SCRAP("katrak_fire"),
         WORKSHOP_ORDERS("atelye_is_emirleri"),
         SITE_INSTALLATION("santiye_projeleri"),
@@ -111,41 +120,205 @@ public class ReportService {
         switch (type) {
             case QUARRY_BLOCKS -> {
                 data.headers = new String[]{
-                        getMessage("report.header.block_code"),
-                        getMessage("report.header.quarry"),
-                        getMessage("report.header.quality"),
-                        getMessage("report.header.volume"),
-                        getMessage("report.header.theoretical_tonnage"),
-                        getMessage("report.header.actual_tonnage"),
-                        getMessage("report.header.deviation"),
-                        getMessage("report.header.status"),
-                        getMessage("report.header.stone_type")
+                        "Blok Kodu",
+                        "Ocak",
+                        "Taş Türü",
+                        "Tahmini Tonaj",
+                        "Gerçek Tonaj",
+                        "Sapma %",
+                        "Hedef",
+                        "Müşteri",
+                        "Durum"
                 };
                 List<Block> blocks = blockRepository.findAllWithQuarry();
                 for (Block b : blocks) {
-                    String varianceStr = "0.00%";
+                    String varianceStr = "-";
                     if (b.getWeightDeviationPct() != null) {
                         varianceStr = String.format("%.2f%%", b.getWeightDeviationPct().doubleValue());
                     }
-                    String theoTon = "0.00";
+                    String theoTon = "0.00 t";
                     if (b.getTheoreticalWeightKg() != null) {
-                        theoTon = b.getTheoreticalWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString();
+                        theoTon = b.getTheoreticalWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString() + " t";
                     }
-                    String actualTon = "0.00";
+                    String actualTon = "-";
                     if (b.getActualWeightKg() != null) {
-                        actualTon = b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString();
+                        actualTon = b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString() + " t";
                     }
-                    String stoneType = b.getStoneType() != null ? b.getStoneType() : getMessage("common.default_stone_type");
+                    String stoneType = b.getStoneType() != null ? b.getStoneType() : "-";
+                    String dest = b.getTargetDestination() != null ? b.getTargetDestination().getDisplayName() : "-";
+                    String cust = b.getCustomer() != null ? b.getCustomer().getCompanyName() : "-";
                     data.rows.add(new String[]{
                             b.getBlockCode() != null ? b.getBlockCode() : "",
-                            b.getQuarry() != null ? b.getQuarry().getName() : "",
-                            b.getQualityGrade() != null ? b.getQualityGrade().name() : "",
-                            b.getVolumeM3() != null ? b.getVolumeM3().toString() : "0.00",
+                            b.getQuarry() != null ? b.getQuarry().getName() : "-",
+                            stoneType,
                             theoTon,
                             actualTon,
                             varianceStr,
-                            b.getStatus() != null ? b.getStatus().name() : "",
-                            stoneType
+                            dest,
+                            cust,
+                            b.getStatus() != null ? b.getStatus().name() : ""
+                    });
+                }
+            }
+            case FACTORY_INVENTORY -> {
+                data.headers = new String[]{
+                        "Kategori",
+                        "Kod / Numara",
+                        "Kaynak Blok",
+                        "Taş Türü",
+                        "Ölçü / Kalınlık",
+                        "Miktar",
+                        "Birim",
+                        "Adet",
+                        "Müşteri / Tahsis",
+                        "Durum"
+                };
+                List<Block> factoryBlocks = blockRepository.findAll();
+                for (Block b : factoryBlocks) {
+                    if (b.getStatus() == com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY || b.getStatus() == com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) {
+                        String ton = b.getActualWeightKg() != null
+                                ? b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString()
+                                : (b.getTheoreticalWeightKg() != null ? b.getTheoreticalWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString() : "0.00");
+                        String cust = b.getCustomer() != null ? b.getCustomer().getCompanyName() : "Genel Stok";
+                        data.rows.add(new String[]{
+                                "Blok Stok",
+                                b.getBlockCode(),
+                                "-",
+                                b.getStoneType() != null ? b.getStoneType() : "-",
+                                (b.getLengthCm() != null ? b.getLengthCm() : 0) + "x" + (b.getWidthCm() != null ? b.getWidthCm() : 0) + "x" + (b.getHeightCm() != null ? b.getHeightCm() : 0) + " cm",
+                                ton,
+                                "ton",
+                                "1",
+                                cust,
+                                b.getStatus() != null ? b.getStatus().name() : "-"
+                        });
+                    }
+                }
+                List<Slab> slabs = slabRepository.findAll();
+                for (Slab sl : slabs) {
+                    String cust = sl.getCustomer() != null ? sl.getCustomer().getCompanyName() : "Genel Stok";
+                    String dims = (sl.getWidthCm() != null ? sl.getWidthCm() : 0) + "x" + (sl.getLengthCm() != null ? sl.getLengthCm() : 0) + " (" + (sl.getThicknessCm() != null ? sl.getThicknessCm() : 2) + "cm)";
+                    String src = sl.getBlock() != null ? sl.getBlock().getBlockCode() : "-";
+                    data.rows.add(new String[]{
+                            "Plaka Stok",
+                            sl.getSlabCode() != null ? sl.getSlabCode() : "-",
+                            src,
+                            sl.getStoneType() != null ? sl.getStoneType() : "-",
+                            dims,
+                            sl.getAreaM2() != null ? sl.getAreaM2().toString() : "0.00",
+                            "m²",
+                            "1",
+                            cust,
+                            sl.getStatus() != null ? sl.getStatus().getLabel() : "-"
+                    });
+                }
+                List<StockItem> sizedItems = stockItemRepository.findAll();
+                for (StockItem si : sizedItems) {
+                    String cust = si.getCustomer() != null ? si.getCustomer().getCompanyName() : "Genel Stok";
+                    String dims = (si.getWidthCm() != null ? si.getWidthCm() : 0) + "x" + (si.getLengthCm() != null ? si.getLengthCm() : 0) + " (" + (si.getThicknessCm() != null ? si.getThicknessCm() : 2) + "cm)";
+                    String src = si.getSourceBlock() != null ? si.getSourceBlock().getBlockCode() : "-";
+                    data.rows.add(new String[]{
+                            "Ebatlı Ürün",
+                            si.getItemCode() != null ? si.getItemCode() : "-",
+                            src,
+                            si.getStoneType() != null ? si.getStoneType() : "-",
+                            dims,
+                            si.getQuantity() != null ? si.getQuantity().toString() : "0.00",
+                            si.getUnit() != null ? si.getUnit() : "m2",
+                            String.valueOf(si.getPieceCount() != null ? si.getPieceCount() : 1),
+                            cust,
+                            si.getStatus() != null ? si.getStatus() : "-"
+                    });
+                }
+            }
+            case INVOICE_FLOW -> {
+                data.headers = new String[]{
+                        "Fatura No",
+                        "Fatura Tarihi",
+                        "Fatura Türü",
+                        "Departman",
+                        "Cari / Müşteri",
+                        "Tutar (KDV'siz)",
+                        "Durum",
+                        "Açıklama"
+                };
+                List<Invoice> invoices = invoiceRepository.findAll();
+                for (Invoice inv : invoices) {
+                    String cust = inv.getCustomer() != null ? inv.getCustomer().getCompanyName() : "-";
+                    String amt = inv.getTotalAmount() != null ? String.format("%,.2f TL", inv.getTotalAmount().doubleValue()) : "0,00 TL";
+                    data.rows.add(new String[]{
+                            inv.getInvoiceNo() != null ? inv.getInvoiceNo() : "-",
+                            inv.getInvoiceDate() != null ? inv.getInvoiceDate().toString() : "-",
+                            inv.getInvoiceType() != null ? inv.getInvoiceType().getDisplayName() : "-",
+                            inv.getDepartment() != null ? inv.getDepartment().getDisplayName() : "-",
+                            cust,
+                            amt,
+                            inv.getStatus() != null ? inv.getStatus().getDisplayName() : "-",
+                            inv.getNotes() != null ? inv.getNotes() : "-"
+                    });
+                }
+            }
+            case COLLECTIONS_SUMMARY -> {
+                data.headers = new String[]{
+                        "İşlem / Belge No",
+                        "Tarih",
+                        "Yöntem",
+                        "Cari / Müşteri",
+                        "Tutar",
+                        "Banka",
+                        "Vade Tarihi",
+                        "Durum / Açıklama"
+                };
+                List<CollectionRecord> collections = collectionRecordRepository.findAll();
+                for (CollectionRecord col : collections) {
+                    String cust = col.getCustomer() != null ? col.getCustomer().getCompanyName() : "-";
+                    String amt = col.getAmount() != null ? String.format("%,.2f TL", col.getAmount().doubleValue()) : "0,00 TL";
+                    String checkNo = col.getCheckRecord() != null && col.getCheckRecord().getCheckNumber() != null ? col.getCheckRecord().getCheckNumber() : (col.getCollectionNo() != null ? col.getCollectionNo() : ("COL-" + col.getId()));
+                    String dueDate = col.getCheckRecord() != null && col.getCheckRecord().getDueDate() != null ? col.getCheckRecord().getDueDate().toString() : "-";
+                    String statDesc = col.getCheckRecord() != null && col.getCheckRecord().getStatus() != null ? col.getCheckRecord().getStatus().getDisplayName() : (col.getNotes() != null ? col.getNotes() : "-");
+                    data.rows.add(new String[]{
+                            checkNo,
+                            col.getCollectionDate() != null ? col.getCollectionDate().toString() : "-",
+                            col.getMethod() != null ? col.getMethod().getDisplayName() : "-",
+                            cust,
+                            amt,
+                            col.getBankName() != null ? col.getBankName() : "-",
+                            dueDate,
+                            statDesc
+                    });
+                }
+            }
+            case OPERATION_WORK_ORDERS -> {
+                data.headers = new String[]{
+                        "İş Emri No",
+                        "Departman",
+                        "Müşteri",
+                        "Taş Türü & Renk",
+                        "Ebat (Kalınlık x En x Boy)",
+                        "Yüzey İşlemi",
+                        "Kenar İşlemi",
+                        "Planlanan Miktar",
+                        "Termin Tarihi",
+                        "Durum"
+                };
+                List<OperationWorkOrder> workOrders = operationWorkOrderRepository.findAll();
+                for (OperationWorkOrder wo : workOrders) {
+                    String cust = wo.getCustomer() != null ? wo.getCustomer().getCompanyName() : "-";
+                    String stone = (wo.getStoneType() != null ? wo.getStoneType() : "-") + (wo.getStoneColorQuality() != null ? " / " + wo.getStoneColorQuality() : "");
+                    String dims = (wo.getStoneThicknessCm() != null ? wo.getStoneThicknessCm() + "cm " : "") +
+                            (wo.getWidthCm() != null ? wo.getWidthCm() : 0) + "x" + (wo.getLengthCm() != null ? wo.getLengthCm() : 0) + " cm";
+                    String qty = (wo.getPlannedQuantity() != null ? wo.getPlannedQuantity().toString() : "0") + " " + (wo.getUnit() != null ? wo.getUnit() : "m2");
+                    data.rows.add(new String[]{
+                            wo.getWorkOrderNo() != null ? wo.getWorkOrderNo() : "-",
+                            wo.getDepartment() != null ? wo.getDepartment().getDisplayName() : "-",
+                            cust,
+                            stone,
+                            dims,
+                            wo.getSurfaceOperation() != null ? wo.getSurfaceOperation() : "-",
+                            wo.getEdgeOperation() != null ? wo.getEdgeOperation() : "-",
+                            qty,
+                            wo.getTargetDate() != null ? wo.getTargetDate().toString() : "-",
+                            wo.getStatus() != null ? wo.getStatus().getDisplayName() : "-"
                     });
                 }
             }

@@ -24,4 +24,8 @@ public enum QualityGrade {
     public String getLabel() {
         return MessageUtils.getMessage(messageKey);
     }
+
+    public String getDisplayName() {
+        return getLabel();
+    }
 }

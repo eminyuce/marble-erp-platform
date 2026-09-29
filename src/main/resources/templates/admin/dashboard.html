@@ -167,6 +167,115 @@
     <div x-show="!searched" class="space-y-6">
 
         <!-- ════════════════════════════════════════════════════ -->
+        <!-- CANLI OPERASYONEL ÖZET & KPI GÖSTERGELERİ          -->
+        <!-- ════════════════════════════════════════════════════ -->
+        <div th:if="${kpis != null}" class="space-y-3">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4 text-blue-600"></i>
+                    <span>Operasyonel Yönetim Özeti & Canlı Stoklar</span>
+                </h2>
+                <span class="text-xs text-slate-400 font-medium">Anlık Veriler</span>
+            </div>
+
+            <!-- Stok & Tonaj Kartları -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Ocak Blok Stoku</span>
+                    <div class="text-xl font-black text-slate-900 mt-1">
+                        <span th:text="${kpis.quarryBlockCount}">0</span>
+                        <span class="text-xs font-normal text-slate-500">blok</span>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Fabrika Blok Stoku</span>
+                    <div class="text-xl font-black text-blue-600 mt-1">
+                        <span th:text="${kpis.factoryBlockUncutCount}">0</span>
+                        <span class="text-xs font-normal text-slate-500">blok</span>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Fabrika Plaka Stok</span>
+                    <div class="text-xl font-black text-indigo-600 mt-1">
+                        <span th:text="${totalSlabArea != null ? #numbers.formatDecimal(totalSlabArea, 1, 'POINT', 1, 'COMMA') : '0'}">0</span>
+                        <span class="text-xs font-normal text-slate-500">m²</span>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Fabrika Ebatlı Stok</span>
+                    <div class="text-xl font-black text-emerald-600 mt-1">
+                        <span th:text="${kpis.factorySizedItemCount}">0</span>
+                        <span class="text-xs font-normal text-slate-500">ürün</span>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Toplam Gerçek Tonaj</span>
+                    <div class="text-xl font-black text-emerald-700 mt-1">
+                        <span th:text="${kpis.totalActualTonnage != null ? #numbers.formatDecimal(kpis.totalActualTonnage, 1, 'POINT', 1, 'COMMA') : '0'}">0</span>
+                        <span class="text-xs font-normal text-slate-500">ton</span>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Toplam Tahmini Tonaj</span>
+                    <div class="text-xl font-black text-amber-600 mt-1">
+                        <span th:text="${kpis.totalEstimatedTonnage != null ? #numbers.formatDecimal(kpis.totalEstimatedTonnage, 1, 'POINT', 1, 'COMMA') : '0'}">0</span>
+                        <span class="text-xs font-normal text-slate-500">ton</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- İş Emirleri & Finansal Özet Kartları -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Açık İş Emirleri</span>
+                    <div class="text-xl font-black text-indigo-700 mt-1" th:text="${kpis.openWorkOrdersCount}">0</div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Üretimdeki İş Emirleri</span>
+                    <div class="text-xl font-black text-blue-700 mt-1" th:text="${kpis.inProductionWorkOrdersCount}">0</div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Tamamlanan İş Emirleri</span>
+                    <div class="text-xl font-black text-emerald-700 mt-1" th:text="${kpis.completedWorkOrdersCount}">0</div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Bu Ay Satış</span>
+                    <div class="text-xs font-black text-emerald-600 mt-1.5"
+                         th:text="${kpis.monthlySalesTotal != null ? #numbers.formatDecimal(kpis.monthlySalesTotal, 1, 'POINT', 0, 'COMMA') + ' TL' : '0 TL'}">0 TL</div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Bu Ay Alış</span>
+                    <div class="text-xs font-black text-blue-600 mt-1.5"
+                         th:text="${kpis.monthlyPurchasesTotal != null ? #numbers.formatDecimal(kpis.monthlyPurchasesTotal, 1, 'POINT', 0, 'COMMA') + ' TL' : '0 TL'}">0 TL</div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Bu Ay Tahsilat</span>
+                    <div class="text-xs font-black text-teal-600 mt-1.5"
+                         th:text="${kpis.monthlyCollectionsTotal != null ? #numbers.formatDecimal(kpis.monthlyCollectionsTotal, 1, 'POINT', 0, 'COMMA') + ' TL' : '0 TL'}">0 TL</div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs"
+                     th:classappend="${kpis.approachingChecksCount > 0 ? 'bg-amber-50/50 border-amber-300 ring-1 ring-amber-400/20' : ''}">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Yaklaşan Çekler</span>
+                    <div class="text-xl font-black text-amber-600 mt-1 flex items-center justify-between">
+                        <span th:text="${kpis.approachingChecksCount}">0</span>
+                        <a th:href="@{/collections/checks}" class="text-[10px] text-amber-700 underline font-semibold">Gör</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════ -->
         <!-- Ocak & Hammadde                                     -->
         <!-- ════════════════════════════════════════════════════ -->
         <div>

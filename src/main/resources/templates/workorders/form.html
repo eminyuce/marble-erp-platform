@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Yeni İş Emri Oluştur | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page max-w-4xl mx-auto space-y-6"
+     x-data="{
+        hasStockConnection: false,
+        stockType: 'SLAB'
+     }">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-form-header">
+        <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('İş Emirleri', '/work-orders', 'Yeni İş Emri')}"></div>
+        <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-2 flex items-center gap-2">
+            <i data-lucide="clipboard-list" class="w-7 h-7 text-indigo-600"></i>
+            <span>Yeni İş Emri / Sipariş Oluştur</span>
+        </h2>
+        <p class="erp-form-lead text-sm text-slate-600">
+            Fabrika, Atölye veya Şantiye departmanına iş emri girin, taş özellikleri, yüzey ve kenar işlemlerini belirleyin ve stoktan hammadde bağlayın.
+        </p>
+    </div>
+
+    <form th:action="@{/work-orders/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <!-- 1. GENEL BİLGİLER -->
+        <div>
+            <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 pb-2 border-b border-slate-100">
+                <i data-lucide="info" class="w-4 h-4 text-indigo-600"></i>
+                <span>1. Genel Sipariş & Departman Bilgileri</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Departman Seçimi -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Departman *</label>
+                    <select name="department" required
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option th:each="d : ${departments}" th:value="${d.name()}" th:text="${d.displayName}"
+                                th:selected="${defaultDepartment != null and defaultDepartment == d}"></option>
+                    </select>
+                </div>
+
+                <!-- İş Emri No -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">İş Emri No (Opsiyonel - Boşsa Otomatik)</label>
+                    <input type="text" name="orderNo" placeholder="Örn: WO-2026-0001"
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-mono text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+
+                <!-- Müşteri -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Müşteri / Cari *</label>
+                    <select name="customerId" required
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="" disabled selected>Müşteri Seçiniz...</option>
+                        <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                    </select>
+                </div>
+
+                <!-- Sipariş Tarihi -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Sipariş Tarihi *</label>
+                    <input type="date" name="orderDate" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+
+                <!-- Termin Tarihi -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Termin Tarihi *</label>
+                    <input type="date" name="dueDate" required
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+
+                <!-- Sorumlu Kişi -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Sorumlu Kişi / Usta</label>
+                    <input type="text" name="responsiblePerson" placeholder="Örn: Fabrika Müdürü, Atölye Şefi"
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. TAŞ BİLGİLERİ & ÖLÇÜLER -->
+        <div class="border-t border-slate-100 pt-6">
+            <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 pb-2 border-b border-slate-100">
+                <i data-lucide="layers" class="w-4 h-4 text-amber-600"></i>
+                <span>2. Taş Özellikleri & Ölçüler</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Taş Türü -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Taş Türü *</label>
+                    <input type="text" name="stoneType" required placeholder="Örn: Traverten, Crema, Bej"
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+
+                <!-- Renk / Kalite -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Taş Rengi / Kalite</label>
+                    <input type="text" name="colorQuality" placeholder="Örn: Açık Krem / Extra 1. Sınıf"
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+
+                <!-- Kalınlık (cm) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Kalınlık (cm) *</label>
+                    <input type="number" step="0.1" name="thicknessCm" value="2.0" required
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+
+                <!-- En (cm) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">En (cm)</label>
+                    <input type="number" step="0.1" name="widthCm" placeholder="Örn: 60"
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+
+                <!-- Boy (cm) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Boy (cm)</label>
+                    <input type="number" step="0.1" name="lengthCm" placeholder="Örn: 120"
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                </div>
+
+                <!-- Planlanan Miktar & Birim -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Planlanan Miktar *</label>
+                    <div class="flex gap-2">
+                        <input type="number" step="0.01" name="quantity" required placeholder="50.00"
+                               class="w-2/3 px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                        <select name="quantityUnit" class="w-1/3 px-2 py-2.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="m2">m²</option>
+                            <option value="adet">adet</option>
+                            <option value="m.t.">m.t.</option>
+                            <option value="ton">ton</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. YÜZEY & KENAR İŞLEMLERİ (Yönetilebilir Tanımlar) -->
+        <div class="border-t border-slate-100 pt-6">
+            <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 pb-2 border-b border-slate-100">
+                <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600"></i>
+                <span>3. Yüzey & Kenar İşlemleri</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Yüzey İşlemi -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Yüzey İşlemi *</label>
+                    <select name="surfaceOperation" required
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="Cilalı" selected>Cilalı</option>
+                        <option value="Honlu">Honlu</option>
+                        <option value="Fırçalı">Fırçalı</option>
+                        <option value="Kumlama">Kumlama</option>
+                        <option value="Leather">Leather</option>
+                        <option value="Diğer">Diğer</option>
+                        <option th:each="so : ${surfaceOperations}" th:value="${so.name}" th:text="${so.name}"></option>
+                    </select>
+                </div>
+
+                <!-- Kenar İşlemi -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Kenar İşlemi *</label>
+                    <select name="edgeOperation" required
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="Düz" selected>Düz</option>
+                        <option value="Pah">Pah</option>
+                        <option value="Profil">Profil</option>
+                        <option value="Yuvarlatma">Yuvarlatma</option>
+                        <option value="Diğer">Diğer</option>
+                        <option th:each="eo : ${edgeOperations}" th:value="${eo.name}" th:text="${eo.name}"></option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. STOK & HAMMADDE BAĞLANTISI (Stoktan Düşüş) -->
+        <div class="border-t border-slate-100 pt-6">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="package-minus" class="w-4 h-4 text-rose-600"></i>
+                    <span>4. Stok ve Hammadde Bağlantısı (Otomatik Stok Düşüşü)</span>
+                </h3>
+                <label class="inline-flex items-center gap-2 text-xs font-bold text-indigo-700 cursor-pointer">
+                    <input type="checkbox" x-model="hasStockConnection" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                    <span>Mevcut Stoktan Hammadde Çek</span>
+                </label>
+            </div>
+
+            <div x-show="hasStockConnection" class="bg-indigo-50/50 border border-indigo-200 rounded-2xl p-4 space-y-4">
+                <div class="text-xs text-indigo-900">
+                    Örneğin: <strong>Fabrika Plaka Stoku → Atölye İş Emri</strong>. Seçilen plaka veya ebatlı stok miktarı iş emrine bağlanır ve stoktan otomatik olarak düşülür.
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Stok Türü -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Hammadde Kaynağı</label>
+                        <select x-model="stockType" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="SLAB">Fabrika Plaka Sahası (Plakalar)</option>
+                            <option value="SIZED">Fabrika Ebatlı Sahası (Ürünler)</option>
+                        </select>
+                    </div>
+
+                    <!-- Plaka Seçimi -->
+                    <div x-show="stockType === 'SLAB'">
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Fabrika Plakası Seçiniz</label>
+                        <select name="sourceSlabId" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="">-- Plaka Seçiniz --</option>
+                            <option th:each="s : ${availableSlabs}" th:value="${s.id}"
+                                    th:text="${s.slabCode} + ' | ' + ${s.surfaceAreaM2} + ' m² | ' + ${s.thicknessCm} + ' cm'"
+                                    th:selected="${selectedSlab != null and selectedSlab.id == s.id}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Ebatlı Stok Seçimi -->
+                    <div x-show="stockType === 'SIZED'">
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Ebatlı Stok Ürünü Seçiniz</label>
+                        <select name="sourceStockItemId" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="">-- Ebatlı Ürün Seçiniz --</option>
+                            <option th:each="it : ${availableStockItems}" th:value="${it.id}"
+                                    th:text="${it.itemCode} + ' | ' + ${it.description} + ' | ' + ${it.quantity} + ' m²'"
+                                    th:selected="${selectedStockItem != null and selectedStockItem.id == it.id}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Kullanılan Miktar -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Stoktan Çekilecek / Sarf Edilecek Miktar</label>
+                        <input type="number" step="0.01" name="usedQuantity" placeholder="Örn: 5.04"
+                               class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Açıklama -->
+        <div class="border-t border-slate-100 pt-6">
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">İş Emri Açıklaması & Notlar</label>
+            <textarea name="notes" rows="3" placeholder="Özel kesim detayları, paketleme yönergeleri, şantiye mahali vb."
+                      class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- Butonlar -->
+        <div class="border-t border-slate-100 pt-6 flex items-center justify-end gap-3">
+            <a th:href="@{/work-orders}" class="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                Vazgeç
+            </a>
+            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>İş Emrini Başlat</span>
+            </button>
+        </div>
+
+    </form>
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

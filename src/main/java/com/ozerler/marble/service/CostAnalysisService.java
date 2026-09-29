@@ -53,6 +53,8 @@ public class CostAnalysisService {
             case FACTORY -> factoryAnalysis(current, previous);
             case WORKSHOP -> workshopAnalysis(current, previous);
             case SITE -> siteAnalysis(current, previous);
+            case GENERAL -> factoryAnalysis(current, previous);
+            case null -> factoryAnalysis(current, previous);
         };
     }
 

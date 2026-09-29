@@ -32,7 +32,35 @@ public class ReportController {
 
     @GetMapping
     public String index(Model model) {
-        // Collect preview data for all 6 reports
+        return indexWithSelected(model, "QUARRY_BLOCKS");
+    }
+
+    @GetMapping("/quarry")
+    public String quarryReport(Model model) {
+        return indexWithSelected(model, "QUARRY_BLOCKS");
+    }
+
+    @GetMapping("/factory")
+    public String factoryReport(Model model) {
+        return indexWithSelected(model, "FACTORY_INVENTORY");
+    }
+
+    @GetMapping("/invoices")
+    public String invoiceReport(Model model) {
+        return indexWithSelected(model, "INVOICE_FLOW");
+    }
+
+    @GetMapping("/collections")
+    public String collectionReport(Model model) {
+        return indexWithSelected(model, "COLLECTIONS_SUMMARY");
+    }
+
+    @GetMapping("/work-orders")
+    public String workOrderReport(Model model) {
+        return indexWithSelected(model, "OPERATION_WORK_ORDERS");
+    }
+
+    private String indexWithSelected(Model model, String selectedKey) {
         Map<String, ReportService.ReportData> reportsData = new LinkedHashMap<>();
         for (ReportService.ReportType type : ReportService.ReportType.values()) {
             reportsData.put(type.name(), reportService.getReportData(type));
@@ -42,6 +70,7 @@ public class ReportController {
         model.addAttribute("reportTypes", ReportService.ReportType.values());
         model.addAttribute("currentDate", LocalDate.now().toString());
         model.addAttribute("currentSection", "reports");
+        model.addAttribute("defaultSelectedReport", selectedKey);
         return "erp/reports/index";
     }
 

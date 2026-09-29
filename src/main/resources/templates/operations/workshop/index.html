@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>3. Atölye — Operasyon & Siparişler | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-6">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Operasyon', '/operations/workshop', '3. Atölye — Operasyon & Siparişler')}"></div>
+            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-1 flex items-center gap-2">
+                <i data-lucide="hammer" class="w-7 h-7 text-purple-600"></i>
+                <span>Atölye — Operasyon, Siparişler ve İşleme</span>
+            </h2>
+            <p class="erp-list-lead text-sm text-slate-600">
+                Atölye üretim siparişleri, özel ebatlama, pah, profil ve yüzey işlemleri. Fabrika plaka veya ebatlı stoğundan hammadde çekerek iş emirlerine bağlayabilirsiniz.
+            </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <a th:href="@{/work-orders/create(department='WORKSHOP')}" class="erp-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition shadow-sm">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Yeni Atölye İş Emri</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Hızlı Durum Filtreleri -->
+    <div class="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
+        <a th:href="@{/operations/workshop}"
+           class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+           th:classappend="${selectedStatus == null ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            Tüm Siparişler
+        </a>
+        <a th:href="@{/operations/workshop(status='NEW')}"
+           class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+           th:classappend="${selectedStatus != null and selectedStatus.name() == 'NEW' ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            Yeni
+        </a>
+        <a th:href="@{/operations/workshop(status='IN_PRODUCTION')}"
+           class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+           th:classappend="${selectedStatus != null and selectedStatus.name() == 'IN_PRODUCTION' ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            Üretimde
+        </a>
+        <a th:href="@{/operations/workshop(status='COMPLETED')}"
+           class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+           th:classappend="${selectedStatus != null and selectedStatus.name() == 'COMPLETED' ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            Tamamlanan
+        </a>
+    </div>
+
+    <!-- Atölye Siparişleri Tablosu -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3 px-4">İş Emri No</th>
+                        <th class="py-3 px-4">Müşteri</th>
+                        <th class="py-3 px-4">Taş Cinsi & Ölçüler</th>
+                        <th class="py-3 px-4">Yüzey İşlemi</th>
+                        <th class="py-3 px-4">Kenar İşlemi</th>
+                        <th class="py-3 px-4 text-right">Planlanan Miktar</th>
+                        <th class="py-3 px-4">Sorumlu</th>
+                        <th class="py-3 px-4">Termin Tarihi</th>
+                        <th class="py-3 px-4">Durum</th>
+                        <th class="py-3 px-4 text-center">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    <tr th:if="${#lists.isEmpty(orders)}" class="hover:bg-slate-50">
+                        <td colspan="10" class="py-8 text-center text-slate-400">
+                            <i data-lucide="hammer" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                            Atölyeye ait aktif sipariş / iş emri bulunamadı.
+                        </td>
+                    </tr>
+                    <tr th:each="wo : ${orders}" class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-purple-600">
+                            <a th:href="@{'/work-orders/' + ${wo.id}}" class="hover:underline flex items-center gap-1">
+                                <span th:text="${wo.orderNumber}">WO-ATY-001</span>
+                            </a>
+                        </td>
+                        <td class="py-3 px-4 font-bold text-slate-900" th:text="${wo.customer != null ? wo.customer.companyName : 'İç Üretim / Proje'}">ABC Mermer</td>
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-slate-800" th:text="${wo.stoneType != null ? wo.stoneType : 'Doğaltaş'}">Muğla Beyaz</div>
+                            <div class="text-[11px] text-slate-500" th:text="${wo.thicknessCm != null ? wo.thicknessCm + 'cm ' : ''} + (${wo.widthCm != null and wo.lengthCm != null ? (wo.widthCm + '×' + wo.lengthCm + 'cm') : ''})">3cm 30×60cm</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 text-slate-800" th:text="${wo.surfaceOperation != null ? wo.surfaceOperation : 'Standart'}">Honlu</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 text-slate-800" th:text="${wo.edgeOperation != null ? wo.edgeOperation : 'Düz'}">Pahlı</span>
+                        </td>
+                        <td class="py-3 px-4 text-right font-black text-slate-900 whitespace-nowrap"
+                            th:text="${wo.plannedQuantity != null ? #numbers.formatDecimal(wo.plannedQuantity, 1, 'POINT', 2, 'COMMA') + ' ' + (wo.quantityUnit != null ? wo.quantityUnit : 'm²') : '—'}">25,00 m²</td>
+                        <td class="py-3 px-4 text-slate-600" th:text="${wo.responsiblePerson != null ? wo.responsiblePerson : '—'}">Usta</td>
+                        <td class="py-3 px-4 font-bold whitespace-nowrap"
+                            th:classappend="${wo.dueDate != null and wo.dueDate.isBefore(#temporals.createNow().toLocalDate()) ? 'text-rose-600' : 'text-slate-700'}"
+                            th:text="${wo.dueDate != null ? #temporals.format(wo.dueDate, 'dd.MM.yyyy') : '—'}">20.09.2026</td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <span class="px-2.5 py-1 text-[11px] font-bold rounded-full"
+                                  th:classappend="${wo.status != null and wo.status.name() == 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : (wo.status != null and wo.status.name() == 'IN_PRODUCTION' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800')}"
+                                  th:text="${wo.status != null ? wo.status.displayName : 'Yeni'}">Yeni</span>
+                        </td>
+                        <td class="py-3 px-4 text-center whitespace-nowrap">
+                            <a th:href="@{'/work-orders/' + ${wo.id}}" class="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition inline-flex items-center gap-1 font-bold text-xs">
+                                <span>Detay</span>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

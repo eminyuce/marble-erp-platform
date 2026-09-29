@@ -32,6 +32,16 @@ class DashboardServiceTest {
     private UserRepository userRepository;
     @Mock
     private CostTransactionRepository costTransactionRepository;
+    @Mock
+    private StockItemRepository stockItemRepository;
+    @Mock
+    private OperationWorkOrderRepository workOrderRepository;
+    @Mock
+    private InvoiceRepository invoiceRepository;
+    @Mock
+    private CollectionRecordRepository collectionRepository;
+    @Mock
+    private CheckRecordRepository checkRepository;
 
     @InjectMocks
     private DashboardService dashboardService;

@@ -37,6 +37,7 @@ final class StockLocations {
             case DISPATCH_YARD -> Constants.STOCK_LOCATION_DISPATCH_YARD;
             case FACTORY_BLOCK_YARD -> Constants.STOCK_LOCATION_FACTORY_BLOCK_YARD;
             case SLAB_STOCK_YARD -> Constants.STOCK_LOCATION_SLAB_STOCK_YARD;
+            case SIZED_STOCK_YARD -> "FAB-EBATLI";
             case PALLET_STOCK_YARD -> Constants.STOCK_LOCATION_PALLET_STOCK_YARD;
             case WORKSHOP_STOCK -> Constants.STOCK_LOCATION_WORKSHOP_STOCK;
         };

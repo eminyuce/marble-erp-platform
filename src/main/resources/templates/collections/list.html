@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Tahsilat Modülü | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-6">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Tahsilat')}"></div>
+            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-1 flex items-center gap-2">
+                <i data-lucide="wallet" class="w-7 h-7 text-teal-600"></i>
+                <span>Tahsilat Modülü</span>
+            </h2>
+            <p class="erp-list-lead text-sm text-slate-600">
+                Nakit, EFT / Havale ve Çek tahsilatlarının kaydı, fatura eşleştirmeleri ve çek portföy yönetimi.
+            </p>
+        </div>
+        <div class="flex items-center gap-2.5 shrink-0">
+            <a th:href="@{/collections/checks}" class="erp-btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition">
+                <i data-lucide="calendar-check" class="w-4 h-4 text-slate-600"></i>
+                <span>Çek Portföyü & Takip</span>
+            </a>
+            <a th:href="@{/collections/create}" class="erp-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl transition shadow-sm">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Yeni Tahsilat Ekle</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Bu Ay Tahsilat Toplamı</div>
+            <div class="text-2xl font-black text-teal-600 mt-1"
+                 th:text="${monthlyTotal != null ? #numbers.formatDecimal(monthlyTotal, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+            <div class="text-xs text-slate-500 mt-0.5">Tüm yöntemlerle tahsil edilen</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Vadesi Yaklaşan Çekler</div>
+            <div class="text-2xl font-black text-amber-600 mt-1" th:text="${approachingChecksCount != null ? approachingChecksCount : 0}">0</div>
+            <div class="text-xs text-slate-500 mt-0.5">Önümüzdeki 15 gün vadeli</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kayıtlı Tahsilat İşlemi</div>
+            <div class="text-2xl font-black text-slate-900 mt-1" th:text="${page != null ? page.totalElements : #lists.size(collections)}">0</div>
+            <div class="text-xs text-slate-500 mt-0.5">Sistemdeki tüm kayıtlar</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Desteklenen Yöntemler</div>
+            <div class="text-xs font-bold text-slate-800 mt-2 flex items-center gap-2">
+                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md">Nakit</span>
+                <span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md">EFT</span>
+                <span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded-md">Çek</span>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-1">Anlık bakiye ve vade takibi</div>
+        </div>
+    </div>
+
+    <!-- Filtre Sekmeleri -->
+    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2 overflow-x-auto">
+            <a th:href="@{/collections}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedMethod == null ? 'bg-teal-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                Tüm Yöntemler
+            </a>
+            <a th:href="@{/collections(method='CASH')}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedMethod != null and selectedMethod.name() == 'CASH' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                Nakit
+            </a>
+            <a th:href="@{/collections(method='BANK_TRANSFER')}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedMethod != null and selectedMethod.name() == 'BANK_TRANSFER' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                EFT / Havale
+            </a>
+            <a th:href="@{/collections(method='CHECK')}"
+               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+               th:classappend="${selectedMethod != null and selectedMethod.name() == 'CHECK' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                Çek
+            </a>
+        </div>
+        <div class="flex items-center gap-2">
+            <a th:href="@{/collections/checks}" class="text-xs font-bold text-teal-700 hover:underline flex items-center gap-1">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                <span>Detaylı Çek Portföyü</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Tahsilatlar Tablosu -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3 px-4">Makbuz / No</th>
+                        <th class="py-3 px-4">Tarih</th>
+                        <th class="py-3 px-4">Cari (Müşteri)</th>
+                        <th class="py-3 px-4">Yöntem</th>
+                        <th class="py-3 px-4">İlişkili Fatura</th>
+                        <th class="py-3 px-4 text-right bg-teal-50/50">Tahsilat Tutarı</th>
+                        <th class="py-3 px-4">Banka / Çek Detayı</th>
+                        <th class="py-3 px-4">Açıklama</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    <tr th:if="${#lists.isEmpty(collections)}" class="hover:bg-slate-50">
+                        <td colspan="8" class="py-8 text-center text-slate-400">
+                            <i data-lucide="wallet" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                            Kayıtlı tahsilat işlemi bulunamadı.
+                        </td>
+                    </tr>
+                    <tr th:each="c : ${collections}" class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-teal-700" th:text="${c.collectionNo}">THS-2026-0001</td>
+                        <td class="py-3 px-4 text-slate-500 whitespace-nowrap" th:text="${c.collectionDate != null ? #temporals.format(c.collectionDate, 'dd.MM.yyyy') : '—'}">01.09.2026</td>
+                        <td class="py-3 px-4 font-bold text-slate-900" th:text="${c.customer != null ? c.customer.companyName : '—'}">ABC Marble</td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <span class="px-2.5 py-1 text-[11px] font-bold rounded-lg"
+                                  th:classappend="${c.method != null and c.method.name() == 'CASH' ? 'bg-emerald-100 text-emerald-800' : (c.method != null and c.method.name() == 'BANK_TRANSFER' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800')}"
+                                  th:text="${c.method != null ? c.method.label : 'Nakit'}">Nakit</span>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <a th:if="${c.invoice != null}" th:href="@{'/invoices/' + ${c.invoice.id}}" class="text-blue-600 hover:underline font-bold" th:text="${c.invoice.invoiceNumber}">FAT-001</a>
+                            <span th:unless="${c.invoice != null}" class="text-slate-400">—</span>
+                        </td>
+                        <td class="py-3 px-4 text-right font-black text-teal-700 bg-teal-50/30 whitespace-nowrap text-sm"
+                            th:text="${c.amount != null ? #numbers.formatDecimal(c.amount, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">50.000,00 TL</td>
+                        <td class="py-3 px-4 text-slate-700">
+                            <div th:if="${c.checkRecord != null}" class="font-bold text-purple-700 flex items-center gap-1">
+                                <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
+                                <span>Çek No: <span th:text="${c.checkRecord.checkNo}"></span></span>
+                                <span class="text-slate-400 font-normal" th:if="${c.checkRecord.dueDate != null}" th:text="'(Vade: ' + ${#temporals.format(c.checkRecord.dueDate, 'dd.MM.yyyy')} + ')'"></span>
+                            </div>
+                            <div th:if="${c.bankName != null and c.checkRecord == null}" class="font-semibold" th:text="${c.bankName}">Garanti BBVA</div>
+                            <div th:if="${c.bankName == null and c.checkRecord == null}" class="text-slate-400">—</div>
+                        </td>
+                        <td class="py-3 px-4 text-slate-500 max-w-xs truncate" th:text="${c.notes != null ? c.notes : '—'}">—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>
