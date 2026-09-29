@@ -46,23 +46,95 @@
         pageLabel.textContent = raw || "Yönetim";
     }
 
-    function markActiveItem() {
-        const path = (window.location.pathname.replace(/\/+$/, "") || "/");
-        menu.querySelectorAll(".admin-mega-item").forEach((item) => {
-            const href = item.getAttribute("href") || "";
-            let target = href;
-            try {
-                target = new URL(href, window.location.origin).pathname.replace(/\/+$/, "") || "/";
-            } catch (e) {
-                target = href.replace(/\/+$/, "") || "/";
+    function scoreUrlMatch(itemHref) {
+        if (!itemHref || itemHref === "#" || itemHref.startsWith("javascript:")) {
+            return 0;
+        }
+        let itemUrl;
+        try {
+            itemUrl = new URL(itemHref, window.location.origin);
+        } catch (e) {
+            return 0;
+        }
+
+        const currentPath = (window.location.pathname.replace(/\/+$/, "") || "/");
+        const itemPath = (itemUrl.pathname.replace(/\/+$/, "") || "/");
+
+        const currentParams = new URLSearchParams(window.location.search);
+        const itemParams = itemUrl.searchParams;
+
+        let pathScore = 0;
+        if (currentPath === itemPath) {
+            pathScore = 100;
+        } else if (itemPath !== "/" && currentPath.startsWith(itemPath + "/")) {
+            pathScore = 50;
+        } else {
+            return 0;
+        }
+
+        let itemParamCount = 0;
+        let allParamsMatch = true;
+        itemParams.forEach((val, key) => {
+            itemParamCount++;
+            if (currentParams.get(key) !== val) {
+                allParamsMatch = false;
             }
-            const isActive = path === target;
+        });
+
+        if (!allParamsMatch) {
+            return 0;
+        }
+
+        return pathScore + (itemParamCount * 25);
+    }
+
+    function markActiveElements(containerOrList) {
+        if (!containerOrList) return 0;
+        const items = Array.isArray(containerOrList)
+            ? containerOrList
+            : Array.from(containerOrList.querySelectorAll ? containerOrList.querySelectorAll("a[href]") : containerOrList);
+
+        let bestScore = 0;
+        const scored = items.map((item) => {
+            const score = scoreUrlMatch(item.getAttribute("href") || "");
+            if (score > bestScore) {
+                bestScore = score;
+            }
+            return { item, score };
+        });
+
+        scored.forEach(({ item, score }) => {
+            const isActive = bestScore > 0 && score === bestScore;
             item.classList.toggle("active", isActive);
             if (isActive) {
                 item.setAttribute("aria-current", "page");
             } else {
                 item.removeAttribute("aria-current");
             }
+        });
+
+        return bestScore;
+    }
+
+    function markActiveItem() {
+        if (menu) {
+            markActiveElements(menu.querySelectorAll(".admin-mega-item"));
+        }
+        const topbarNav = document.querySelector(".admin-topbar nav");
+        if (topbarNav) {
+            markActiveElements(topbarNav.querySelectorAll("a[href]"));
+            const dropdown = topbarNav.querySelector("[x-data]");
+            if (dropdown) {
+                const hasActiveChild = !!dropdown.querySelector("a.active");
+                const triggerBtn = dropdown.querySelector("button");
+                if (triggerBtn) {
+                    triggerBtn.classList.toggle("active-child", hasActiveChild);
+                }
+            }
+        }
+        const sidebars = document.querySelectorAll("aside nav");
+        sidebars.forEach((sb) => {
+            markActiveElements(sb.querySelectorAll("a[href]"));
         });
     }
 

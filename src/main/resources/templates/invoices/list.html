@@ -2,166 +2,267 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Faturalar — Alış & Satış | Özerler Mermer ERP</title>
+    <title>Faturalar — Alış &amp; Satış | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-6">
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        typeFilter: '[[${selectedType}]]',
+        deptFilter: '[[${selectedDepartment}]]',
+        statusFilter: '[[${selectedStatus}]]',
+        setTypeFilter(t) {
+            this.typeFilter = t;
+            if (typeof reloadInvoicesGrid === 'function') reloadInvoicesGrid();
+        },
+        setDeptFilter(d) {
+            this.deptFilter = d;
+            if (typeof reloadInvoicesGrid === 'function') reloadInvoicesGrid();
+        },
+        gridExtraQuery() {
+            let q = '';
+            if (this.typeFilter) q += '&type=' + encodeURIComponent(this.typeFilter);
+            if (this.deptFilter) q += '&department=' + encodeURIComponent(this.deptFilter);
+            if (this.statusFilter) q += '&status=' + encodeURIComponent(this.statusFilter);
+            return q;
+        }
+     }"
+     x-init="window.invoicesPageState = $data">
 
-    <!-- Header & Breadcrumb -->
-    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <!-- Header Section -->
+    <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Fatura Modülü')}"></div>
-            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-1 flex items-center gap-2">
-                <i data-lucide="receipt" class="w-7 h-7 text-emerald-600"></i>
-                <span>Fatura Modülü — Alış & Satış Faturaları</span>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="receipt" class="w-7 h-7 text-emerald-600 inline-block"></i>
+                <span>Fatura Modülü — Alış &amp; Satış Faturaları</span>
             </h2>
-            <p class="erp-list-lead text-sm text-slate-600">
-                Ocak, Fabrika, Atölye ve Şantiye departmanlarına ait alış ve satış faturaları.
+            <p class="erp-list-lead">
+                Ocak, Fabrika, Atölye ve Şantiye departmanlarına ait alış ve satış faturaları, cari hesaplar ve tutar takibi.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Ocaktan fabrikaya veya müşteriye gönderilen ürünler ile fabrika/atölye üretimleri doğrudan fatura ile bağlanabilir.')}"></span>
             </p>
         </div>
-        <div class="flex items-center gap-2.5 shrink-0">
-            <a th:href="@{/invoices/create(type='PURCHASE')}" class="erp-btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition">
-                <i data-lucide="shopping-bag" class="w-4 h-4 text-slate-600"></i>
-                <span>Yeni Alış Faturası</span>
-            </a>
-            <a th:href="@{/invoices/create(type='SALES')}" class="erp-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm">
-                <i data-lucide="plus" class="w-4 h-4"></i>
+    </div>
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="typeFilter === '' ? 'erp-summary-card--active ring-2 ring-slate-900' : ''"
+                @click="setTypeFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Tüm Faturalar</div>
+            <div class="text-lg font-black text-slate-900 mt-1 flex items-center gap-1.5">
+                <i data-lucide="receipt" class="w-4 h-4 text-slate-500"></i>
+                <span>Genel Liste</span>
+            </div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="typeFilter === 'SALES' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setTypeFilter('SALES')">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="badge-dollar-sign" class="w-3.5 h-3.5"></i> Bu Ay Satış (Ciro)
+            </div>
+            <div class="text-lg font-black text-emerald-700 mt-1 font-mono"
+                 th:text="${monthlySales != null ? #numbers.formatDecimal(monthlySales, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="typeFilter === 'PURCHASE' ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
+                @click="setTypeFilter('PURCHASE')">
+            <div class="text-[11px] uppercase tracking-wide text-blue-600 font-semibold flex items-center gap-1">
+                <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i> Bu Ay Alış (Maliyet)
+            </div>
+            <div class="text-lg font-black text-blue-700 mt-1 font-mono"
+                 th:text="${monthlyPurchase != null ? #numbers.formatDecimal(monthlyPurchase, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</div>
+        </button>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold flex items-center gap-1">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-teal-600"></i> Fatura Standartı
+            </div>
+            <div class="text-sm font-black text-slate-800 mt-1">E-Fatura / Arşiv Uyumlu</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Departman bazlı net tutar</div>
+        </div>
+    </div>
+
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="typeFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setTypeFilter('')">Tüm Faturalar</button>
+        <button type="button" class="erp-yard-chip"
+                :class="typeFilter === 'SALES' ? 'erp-yard-chip--active' : ''"
+                @click="setTypeFilter('SALES')">
+            <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 inline mr-1 text-emerald-600"></i>
+            Satış Faturaları
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="typeFilter === 'PURCHASE' ? 'erp-yard-chip--active' : ''"
+                @click="setTypeFilter('PURCHASE')">
+            <i data-lucide="arrow-down-left" class="w-3.5 h-3.5 inline mr-1 text-blue-600"></i>
+            Alış Faturaları
+        </button>
+        <span class="border-l border-slate-300 h-5 my-auto mx-1"></span>
+        <button type="button" class="erp-yard-chip"
+                :class="deptFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setDeptFilter('')">Tüm Departmanlar</button>
+        <button type="button" class="erp-yard-chip"
+                :class="deptFilter === 'QUARRY' ? 'erp-yard-chip--active' : ''"
+                @click="setDeptFilter('QUARRY')">Ocak</button>
+        <button type="button" class="erp-yard-chip"
+                :class="deptFilter === 'FACTORY' ? 'erp-yard-chip--active' : ''"
+                @click="setDeptFilter('FACTORY')">Fabrika</button>
+        <button type="button" class="erp-yard-chip"
+                :class="deptFilter === 'WORKSHOP' ? 'erp-yard-chip--active' : ''"
+                @click="setDeptFilter('WORKSHOP')">Atölye</button>
+        <button type="button" class="erp-yard-chip"
+                :class="deptFilter === 'SITE' ? 'erp-yard-chip--active' : ''"
+                @click="setDeptFilter('SITE')">Şantiye</button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
+    <div class="erp-toolbar">
+        <div class="flex items-center gap-2">
+            <a th:href="@{/invoices/create(type='SALES')}" class="erp-btn-primary">
+                <i data-lucide="plus"></i>
                 <span>Yeni Satış Faturası</span>
             </a>
-        </div>
-    </div>
-
-    <!-- Aylık Ciro / Alış KPI Kartları -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Bu Ay Satış (Ciro)</div>
-            <div class="text-2xl font-black text-emerald-600 mt-1"
-                 th:text="${monthlySales != null ? #numbers.formatDecimal(monthlySales, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
-            <div class="text-xs text-slate-500 mt-0.5">Departman satış toplamı</div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Bu Ay Alış</div>
-            <div class="text-2xl font-black text-blue-600 mt-1"
-                 th:text="${monthlyPurchase != null ? #numbers.formatDecimal(monthlyPurchase, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
-            <div class="text-xs text-slate-500 mt-0.5">Tedarik ve hammadde alımları</div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kayıtlı Fatura Sayısı</div>
-            <div class="text-2xl font-black text-slate-900 mt-1" th:text="${page != null ? page.totalElements : #lists.size(invoices)}">0</div>
-            <div class="text-xs text-slate-500 mt-0.5">Sistemdeki tüm faturalar</div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">KDV Durumu</div>
-            <div class="text-base font-black text-slate-700 mt-2 flex items-center gap-1.5">
-                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
-                <span>Net Tutar Esaslı</span>
-            </div>
-            <div class="text-[11px] text-slate-500 mt-0.5">KDV hariç / brüt net faturalama</div>
-        </div>
-    </div>
-
-    <!-- Filtre Sekmeleri & Departman Seçimi -->
-    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <!-- Fatura Tipi Sekmeleri -->
-        <div class="flex items-center gap-2 overflow-x-auto">
-            <a th:href="@{/invoices(department=${param.department})}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedType == null ? 'bg-slate-900 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                Tüm Faturalar
-            </a>
-            <a th:href="@{/invoices(type='SALES', department=${param.department})}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedType != null and selectedType.name() == 'SALES' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                Satış Faturaları
-            </a>
-            <a th:href="@{/invoices(type='PURCHASE', department=${param.department})}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedType != null and selectedType.name() == 'PURCHASE' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                Alış Faturaları
+            <a th:href="@{/invoices/create(type='PURCHASE')}" class="erp-btn-secondary">
+                <i data-lucide="shopping-bag"></i>
+                <span>Yeni Alış Faturası</span>
             </a>
         </div>
-
-        <!-- Departman Filtresi -->
-        <form th:action="@{/invoices}" method="get" class="flex items-center gap-2">
-            <input type="hidden" name="type" th:value="${selectedType != null ? selectedType.name() : ''}" th:if="${selectedType != null}" />
-            <label class="text-xs font-bold text-slate-700 shrink-0">Departman:</label>
-            <select name="department" onchange="this.form.submit()" class="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                <option value="">Tüm Departmanlar</option>
-                <option th:each="dept : ${departments}" th:value="${dept.name()}" th:text="${dept.displayName}"
-                        th:selected="${selectedDepartment != null and selectedDepartment == dept}"></option>
-            </select>
-        </form>
-    </div>
-
-    <!-- Faturalar Tablosu -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-700 border-collapse">
-                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
-                    <tr>
-                        <th class="py-3 px-4">Fatura No</th>
-                        <th class="py-3 px-4">Tarih</th>
-                        <th class="py-3 px-4">Fatura Tipi</th>
-                        <th class="py-3 px-4">Cari (Müşteri / Tedarikçi)</th>
-                        <th class="py-3 px-4">Departman</th>
-                        <th class="py-3 px-4 text-right bg-emerald-50/50">Toplam Tutar</th>
-                        <th class="py-3 px-4">Durum</th>
-                        <th class="py-3 px-4 text-center">İşlem</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-medium">
-                    <tr th:if="${#lists.isEmpty(invoices)}" class="hover:bg-slate-50">
-                        <td colspan="8" class="py-8 text-center text-slate-400">
-                            <i data-lucide="receipt" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
-                            Kayıtlı fatura bulunamadı.
-                        </td>
-                    </tr>
-                    <tr th:each="inv : ${invoices}" class="hover:bg-slate-50 transition">
-                        <td class="py-3 px-4 font-mono font-bold text-blue-600">
-                            <a th:href="@{'/invoices/' + ${inv.id}}" class="hover:underline flex items-center gap-1">
-                                <span th:text="${inv.invoiceNumber}">FAT-2026-0001</span>
-                            </a>
-                        </td>
-                        <td class="py-3 px-4 text-slate-500 whitespace-nowrap" th:text="${inv.invoiceDate != null ? #temporals.format(inv.invoiceDate, 'dd.MM.yyyy') : '—'}">01.09.2026</td>
-                        <td class="py-3 px-4 whitespace-nowrap">
-                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md"
-                                  th:classappend="${inv.invoiceType != null and inv.invoiceType.name() == 'SALES' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}"
-                                  th:text="${inv.invoiceType != null ? inv.invoiceType.displayName : 'Satış'}">Satış</span>
-                        </td>
-                        <td class="py-3 px-4 font-bold text-slate-900">
-                            <span th:if="${inv.customer != null}" th:text="${inv.customer.companyName}">ABC Marble</span>
-                            <span th:if="${inv.supplier != null}" th:text="${inv.supplier.companyName}">XYZ Tedarik</span>
-                            <span th:if="${inv.customer == null and inv.supplier == null}" th:text="${inv.partyName != null ? inv.partyName : '—'}">—</span>
-                        </td>
-                        <td class="py-3 px-4 whitespace-nowrap">
-                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 text-slate-800 border border-slate-200"
-                                  th:text="${inv.department != null ? inv.department.displayName : 'Genel'}">Fabrika</span>
-                        </td>
-                        
-                        <!-- Toplam Tutar (Strictly NO KDV) -->
-                        <td class="py-3 px-4 text-right font-black text-emerald-700 bg-emerald-50/30 whitespace-nowrap text-sm">
-                            <span th:text="${inv.totalAmount != null ? #numbers.formatDecimal(inv.totalAmount, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">150.000,00 TL</span>
-                        </td>
-
-                        <td class="py-3 px-4 whitespace-nowrap">
-                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-full"
-                                  th:classappend="${inv.status != null and inv.status.name() == 'PAID' ? 'bg-emerald-100 text-emerald-800' : (inv.status != null and inv.status.name() == 'OVERDUE' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')}"
-                                  th:text="${inv.status != null ? inv.status.displayName : 'Ödenmedi'}">Ödenmedi</span>
-                        </td>
-
-                        <td class="py-3 px-4 text-center whitespace-nowrap">
-                            <a th:href="@{'/invoices/' + ${inv.id}}" class="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition inline-flex items-center gap-1 font-bold text-xs">
-                                <span>Görüntüle</span>
-                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div th:replace="~{fragments/list-chrome :: search('Fatura no, cari unvanı veya departman...', 'invoice-search-input')}"></div>
+        <div class="erp-toolbar-actions">
+            <div th:replace="~{fragments/list-chrome :: exportDropdown('invoices-table', 'faturalar')}"></div>
         </div>
     </div>
 
+    <!-- DataGrid Shell -->
+    <div th:replace="~{fragments/list-chrome :: gridShell('invoices-table')}"></div>
 </div>
-<th:block layout:fragment="scripts"></th:block>
+
+<th:block layout:fragment="scripts">
+    <script>
+        let invoicesTable;
+        document.addEventListener("DOMContentLoaded", () => {
+            invoicesTable = new Tabulator("#invoices-table", {
+                ...erpGridDefaults(),
+                pagination: true,
+                paginationMode: "remote",
+                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
+                paginationSizeSelector: [5, 10, 25, 50, 100],
+                ajaxURL: "/invoices/api/data",
+                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
+                ajaxURLGenerator: function (url, config, params) {
+                    return erpGridAjaxUrl(url, params, "invoice-search-input", function () {
+                        return window.invoicesPageState ? window.invoicesPageState.gridExtraQuery() : "";
+                    });
+                },
+                ajaxResponse: function (url, params, response) {
+                    return erpGridAjaxResponse("invoices-table", response);
+                },
+                placeholder: "Kriterlere uygun fatura kaydı bulunamadı.",
+                columns: [
+                    erpResponsiveCollapseColumn(),
+                    erpIndexColumn(),
+                    {
+                        title: "Fatura No",
+                        field: "invoiceNumber",
+                        width: 170,
+                        responsive: 0,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return `<a href="/invoices/${row.id}" class="font-mono font-bold text-blue-700 hover:text-blue-900 underline flex items-center gap-1.5">
+                                <i data-lucide="receipt" class="w-3.5 h-3.5 text-blue-600 inline"></i>
+                                <span>${gridText(cell.getValue())}</span>
+                            </a>`;
+                        }
+                    },
+                    {
+                        title: "Tarih",
+                        field: "invoiceDate",
+                        width: 120,
+                        formatter: function (cell) {
+                            return `<span class="text-slate-600 font-medium">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "Tür",
+                        field: "invoiceTypeLabel",
+                        width: 130,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            const isSales = row.invoiceType === "SALES";
+                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${isSales ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}">
+                                ${isSales ? '↑ Satış' : '↓ Alış'}
+                            </span>`;
+                        }
+                    },
+                    {
+                        title: "Cari (Müşteri / Tedarikçi)",
+                        field: "partyName",
+                        minWidth: 200,
+                        formatter: function (cell) {
+                            return `<strong class="text-slate-900">${gridText(cell.getValue())}</strong>`;
+                        }
+                    },
+                    {
+                        title: "Departman",
+                        field: "departmentLabel",
+                        width: 130,
+                        formatter: function (cell) {
+                            return `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                                ${gridText(cell.getValue())}
+                            </span>`;
+                        }
+                    },
+                    {
+                        title: "Toplam Tutar",
+                        field: "totalAmount",
+                        width: 150,
+                        formatter: function (cell) {
+                            return `<strong class="font-mono text-emerald-700 text-sm">${gridMoney(cell.getValue())}</strong>`;
+                        }
+                    },
+                    {
+                        title: "Durum",
+                        field: "statusLabel",
+                        width: 120,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            let cls = "bg-amber-100 text-amber-800";
+                            if (row.status === "PAID") cls = "bg-emerald-100 text-emerald-800";
+                            else if (row.status === "OVERDUE" || row.status === "CANCELLED") cls = "bg-rose-100 text-rose-800";
+                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${cls}">● ${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "İşlemler",
+                        width: 100,
+                        headerSort: false,
+                        responsive: 0,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return gridActionsHtml([
+                                {icon: 'eye', label: 'Görüntüle', href: '/invoices/' + row.id}
+                            ]);
+                        }
+                    }
+                ]
+            });
+
+            attachTabulatorPagingAnimation(invoicesTable);
+            bindGridSearch(invoicesTable, "invoice-search-input");
+            invoicesTable.on("renderComplete", () => {
+                if (window.lucide) window.lucide.createIcons();
+            });
+        });
+
+        function reloadInvoicesGrid() {
+            if (invoicesTable) invoicesTable.setData();
+        }
+        window.reloadInvoicesGrid = reloadInvoicesGrid;
+    </script>
+</th:block>
 </body>
 </html>

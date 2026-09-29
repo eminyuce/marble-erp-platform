@@ -5,118 +5,253 @@
     <title>3. Atölye — Operasyon & Siparişler | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-6">
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        statusFilter: '[[${selectedStatus != null ? selectedStatus.name() : ''}]]',
+        setStatusFilter(st) {
+            this.statusFilter = st;
+            if (typeof reloadWorkshopOrdersGrid === 'function') reloadWorkshopOrdersGrid();
+        },
+        gridExtraQuery() {
+            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
+        }
+     }"
+     x-init="window.workshopOrdersPageState = $data">
 
     <!-- Header & Breadcrumb -->
     <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Operasyon', '/operations/workshop', '3. Atölye — Operasyon & Siparişler')}"></div>
-            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-1 flex items-center gap-2">
-                <i data-lucide="hammer" class="w-7 h-7 text-purple-600"></i>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="hammer" class="w-7 h-7 text-purple-600 inline-block"></i>
                 <span>Atölye — Operasyon, Siparişler ve İşleme</span>
             </h2>
-            <p class="erp-list-lead text-sm text-slate-600">
+            <p class="erp-list-lead">
                 Atölye üretim siparişleri, özel ebatlama, pah, profil ve yüzey işlemleri. Fabrika plaka veya ebatlı stoğundan hammadde çekerek iş emirlerine bağlayabilirsiniz.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Yeni iş emri oluşturmak için sağdaki butonu kullanabilirsiniz.')}"></span>
             </p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-            <a th:href="@{/work-orders/create(department='WORKSHOP')}" class="erp-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition shadow-sm">
-                <i data-lucide="plus" class="w-4 h-4"></i>
+            <a th:href="@{/work-orders/create(department='WORKSHOP')}" class="erp-btn-primary">
+                <i data-lucide="plus"></i>
                 <span>Yeni Atölye İş Emri</span>
             </a>
         </div>
     </div>
 
-    <!-- Hızlı Durum Filtreleri -->
-    <div class="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
-        <a th:href="@{/operations/workshop}"
-           class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-           th:classappend="${selectedStatus == null ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-            Tüm Siparişler
-        </a>
-        <a th:href="@{/operations/workshop(status='NEW')}"
-           class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-           th:classappend="${selectedStatus != null and selectedStatus.name() == 'NEW' ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-            Yeni
-        </a>
-        <a th:href="@{/operations/workshop(status='IN_PRODUCTION')}"
-           class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-           th:classappend="${selectedStatus != null and selectedStatus.name() == 'IN_PRODUCTION' ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-            Üretimde
-        </a>
-        <a th:href="@{/operations/workshop(status='COMPLETED')}"
-           class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-           th:classappend="${selectedStatus != null and selectedStatus.name() == 'COMPLETED' ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-            Tamamlanan
-        </a>
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === '' ? 'erp-summary-card--active ring-2 ring-purple-500' : ''"
+                @click="setStatusFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Tüm İş Emirleri</div>
+            <div class="text-lg font-black text-slate-900 mt-1">Atölye Siparişleri</div>
+            <div class="text-xs text-slate-500 mt-0.5">Tüm durumlar</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'NEW' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setStatusFilter('NEW')">
+            <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> Yeni Siparişler
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">Beklemede</div>
+            <div class="text-xs text-slate-500 mt-0.5">İşleme girmeyi bekleyen</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'IN_PRODUCTION' ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
+                @click="setStatusFilter('IN_PRODUCTION')">
+            <div class="text-[11px] uppercase tracking-wide text-blue-600 font-semibold flex items-center gap-1">
+                <i data-lucide="play" class="w-3.5 h-3.5"></i> İşleniyor
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">Atölyede İşlemde</div>
+            <div class="text-xs text-slate-500 mt-0.5">Pah / profil / ebatlama</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="statusFilter === 'COMPLETED' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setStatusFilter('COMPLETED')">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Tamamlananlar
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">Montaj / Sevk</div>
+            <div class="text-xs text-slate-500 mt-0.5">Üretimi bitmiş işler</div>
+        </button>
     </div>
 
-    <!-- Atölye Siparişleri Tablosu -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-700 border-collapse">
-                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
-                    <tr>
-                        <th class="py-3 px-4">İş Emri No</th>
-                        <th class="py-3 px-4">Müşteri</th>
-                        <th class="py-3 px-4">Taş Cinsi & Ölçüler</th>
-                        <th class="py-3 px-4">Yüzey İşlemi</th>
-                        <th class="py-3 px-4">Kenar İşlemi</th>
-                        <th class="py-3 px-4 text-right">Planlanan Miktar</th>
-                        <th class="py-3 px-4">Sorumlu</th>
-                        <th class="py-3 px-4">Termin Tarihi</th>
-                        <th class="py-3 px-4">Durum</th>
-                        <th class="py-3 px-4 text-center">İşlem</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-medium">
-                    <tr th:if="${#lists.isEmpty(orders)}" class="hover:bg-slate-50">
-                        <td colspan="10" class="py-8 text-center text-slate-400">
-                            <i data-lucide="hammer" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
-                            Atölyeye ait aktif sipariş / iş emri bulunamadı.
-                        </td>
-                    </tr>
-                    <tr th:each="wo : ${orders}" class="hover:bg-slate-50 transition">
-                        <td class="py-3 px-4 font-mono font-bold text-purple-600">
-                            <a th:href="@{'/work-orders/' + ${wo.id}}" class="hover:underline flex items-center gap-1">
-                                <span th:text="${wo.orderNumber}">WO-ATY-001</span>
-                            </a>
-                        </td>
-                        <td class="py-3 px-4 font-bold text-slate-900" th:text="${wo.customer != null ? wo.customer.companyName : 'İç Üretim / Proje'}">ABC Mermer</td>
-                        <td class="py-3 px-4">
-                            <div class="font-bold text-slate-800" th:text="${wo.stoneType != null ? wo.stoneType : 'Doğaltaş'}">Muğla Beyaz</div>
-                            <div class="text-[11px] text-slate-500" th:text="${wo.thicknessCm != null ? wo.thicknessCm + 'cm ' : ''} + (${wo.widthCm != null and wo.lengthCm != null ? (wo.widthCm + '×' + wo.lengthCm + 'cm') : ''})">3cm 30×60cm</div>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 text-slate-800" th:text="${wo.surfaceOperation != null ? wo.surfaceOperation : 'Standart'}">Honlu</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 text-slate-800" th:text="${wo.edgeOperation != null ? wo.edgeOperation : 'Düz'}">Pahlı</span>
-                        </td>
-                        <td class="py-3 px-4 text-right font-black text-slate-900 whitespace-nowrap"
-                            th:text="${wo.plannedQuantity != null ? #numbers.formatDecimal(wo.plannedQuantity, 1, 'POINT', 2, 'COMMA') + ' ' + (wo.quantityUnit != null ? wo.quantityUnit : 'm²') : '—'}">25,00 m²</td>
-                        <td class="py-3 px-4 text-slate-600" th:text="${wo.responsiblePerson != null ? wo.responsiblePerson : '—'}">Usta</td>
-                        <td class="py-3 px-4 font-bold whitespace-nowrap"
-                            th:classappend="${wo.dueDate != null and wo.dueDate.isBefore(#temporals.createNow().toLocalDate()) ? 'text-rose-600' : 'text-slate-700'}"
-                            th:text="${wo.dueDate != null ? #temporals.format(wo.dueDate, 'dd.MM.yyyy') : '—'}">20.09.2026</td>
-                        <td class="py-3 px-4 whitespace-nowrap">
-                            <span class="px-2.5 py-1 text-[11px] font-bold rounded-full"
-                                  th:classappend="${wo.status != null and wo.status.name() == 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : (wo.status != null and wo.status.name() == 'IN_PRODUCTION' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800')}"
-                                  th:text="${wo.status != null ? wo.status.displayName : 'Yeni'}">Yeni</span>
-                        </td>
-                        <td class="py-3 px-4 text-center whitespace-nowrap">
-                            <a th:href="@{'/work-orders/' + ${wo.id}}" class="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition inline-flex items-center gap-1 font-bold text-xs">
-                                <span>Detay</span>
-                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('')">Tüm Siparişler</button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'NEW' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('NEW')">
+            <i data-lucide="clock" class="w-3.5 h-3.5 inline mr-1"></i>
+            Yeni
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'IN_PRODUCTION' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('IN_PRODUCTION')">
+            <i data-lucide="play" class="w-3.5 h-3.5 inline mr-1"></i>
+            İşleniyor
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'COMPLETED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('COMPLETED')">
+            <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
+            Tamamlanan
+        </button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
+    <div class="erp-toolbar">
+        <a th:href="@{/work-orders/create(department='WORKSHOP')}" class="erp-btn-primary">
+            <i data-lucide="plus"></i>
+            <span>Yeni Atölye İş Emri</span>
+        </a>
+        <div th:replace="~{fragments/list-chrome :: search('İş emri no, müşteri, taş veya sorumlu usta...', 'workshop-orders-search-input')}"></div>
+        <div class="erp-toolbar-actions">
+            <div th:replace="~{fragments/list-chrome :: exportDropdown('workshop-orders-table', 'atolye-is-emirleri')}"></div>
         </div>
     </div>
 
+    <!-- DataGrid Shell -->
+    <div th:replace="~{fragments/list-chrome :: gridShell('workshop-orders-table')}"></div>
+
 </div>
-<th:block layout:fragment="scripts"></th:block>
+
+<th:block layout:fragment="scripts">
+    <script>
+        let workshopOrdersTable;
+        document.addEventListener("DOMContentLoaded", () => {
+            workshopOrdersTable = new Tabulator("#workshop-orders-table", {
+                ...erpGridDefaults(),
+                pagination: true,
+                paginationMode: "remote",
+                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
+                paginationSizeSelector: [10, 25, 50, 100],
+                ajaxURL: "/work-orders/api/data?department=WORKSHOP",
+                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
+                ajaxURLGenerator: function (url, config, params) {
+                    return erpGridAjaxUrl(url, params, "workshop-orders-search-input", function () {
+                        return window.workshopOrdersPageState ? window.workshopOrdersPageState.gridExtraQuery() : "";
+                    });
+                },
+                ajaxResponse: function (url, params, response) {
+                    return erpGridAjaxResponse("workshop-orders-table", response);
+                },
+                placeholder: "Atölyeye ait aktif sipariş / iş emri bulunamadı.",
+                columns: [
+                    erpResponsiveCollapseColumn(),
+                    erpIndexColumn(),
+                    {
+                        title: "İş Emri No",
+                        field: "orderNo",
+                        width: 150,
+                        responsive: 0,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return `<a href="/work-orders/${row.id}" class="font-mono font-bold text-purple-600 hover:text-purple-800 underline">${gridText(cell.getValue())}</a>`;
+                        }
+                    },
+                    {
+                        title: "Müşteri / Proje",
+                        field: "customerName",
+                        minWidth: 160,
+                        formatter: function (cell) {
+                            return `<span class="font-bold text-slate-900">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "Taş Cinsi",
+                        field: "stoneType",
+                        width: 140,
+                        formatter: function (cell) {
+                            return `<span class="font-semibold text-slate-800">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "Miktar",
+                        field: "quantity",
+                        width: 120,
+                        headerHozAlign: "right",
+                        hozAlign: "right",
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            const val = cell.getValue();
+                            const num = Number(val || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            return `<span class="font-black text-slate-900">${num} ${gridText(row.unit || 'm²')}</span>`;
+                        }
+                    },
+                    {
+                        title: "Sorumlu Usta",
+                        field: "responsiblePerson",
+                        width: 130,
+                        formatter: function (cell) {
+                            return `<span class="text-slate-600">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "Sipariş Tarihi",
+                        field: "orderDate",
+                        width: 110,
+                        formatter: function (cell) {
+                            return `<span class="text-slate-500 whitespace-nowrap">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "Termin Tarihi",
+                        field: "targetDeliveryDate",
+                        width: 110,
+                        formatter: function (cell) {
+                            return `<span class="font-semibold text-slate-700 whitespace-nowrap">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "Durum",
+                        field: "status",
+                        width: 130,
+                        formatter: function (cell) {
+                            const val = cell.getValue();
+                            const row = cell.getRow().getData();
+                            let badgeClass = "bg-amber-100 text-amber-800";
+                            if (val === 'IN_PRODUCTION') badgeClass = "bg-blue-100 text-blue-800";
+                            else if (val === 'COMPLETED') badgeClass = "bg-emerald-100 text-emerald-800";
+                            return `<span class="px-2.5 py-1 text-[11px] font-bold rounded-full ${badgeClass}">${gridText(row.statusLabel || val)}</span>`;
+                        }
+                    },
+                    {
+                        title: "İşlem",
+                        width: 90,
+                        headerSort: false,
+                        responsive: 0,
+                        headerHozAlign: "center",
+                        hozAlign: "center",
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return `<a href="/work-orders/${row.id}" class="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition inline-flex items-center gap-1 font-bold text-xs">
+                                <span>Detay</span>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </a>`;
+                        }
+                    }
+                ]
+            });
+
+            attachTabulatorPagingAnimation(workshopOrdersTable);
+            bindGridSearch(workshopOrdersTable, "workshop-orders-search-input");
+            workshopOrdersTable.on("renderComplete", () => {
+                if (window.lucide) window.lucide.createIcons();
+            });
+        });
+
+        function reloadWorkshopOrdersGrid() {
+            if (workshopOrdersTable) workshopOrdersTable.setData();
+        }
+        window.reloadWorkshopOrdersGrid = reloadWorkshopOrdersGrid;
+    </script>
+</th:block>
 </body>
 </html>

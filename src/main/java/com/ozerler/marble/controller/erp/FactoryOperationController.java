@@ -14,8 +14,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.ozerler.marble.dto.TabulatorResponse;
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/operations/factory")
@@ -58,6 +63,41 @@ public class FactoryOperationController extends AbstractController {
         model.addAttribute("activeSubSection", "blocks");
 
         return "operations/factory/blocks";
+    }
+
+    @GetMapping("/blocks/api/data")
+    @ResponseBody
+    public TabulatorResponse<Map<String, Object>> getFactoryBlocksData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "customerId", required = false) Long customerId,
+            @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly) {
+
+        int pageIndex = Math.max(0, page - 1);
+        Page<Block> blocksPage = factoryStockService.getFactoryUncutBlocksPaged(customerId, generalStockOnly, search, pageIndex, size);
+
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        List<Map<String, Object>> data = blocksPage.getContent().stream().map(b -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", b.getId());
+            map.put("blockCode", b.getBlockCode());
+            map.put("stoneType", b.getStoneType() != null ? b.getStoneType() : "—");
+            map.put("quarryName", b.getQuarry() != null ? b.getQuarry().getName() : (b.getQuarryName() != null ? b.getQuarryName() : "Merkez Ocak"));
+            map.put("arrivalDate", b.getArrivalDate() != null ? b.getArrivalDate().format(dateFmt) : (b.getCreatedDate() != null ? b.getCreatedDate().format(dateFmt) : "—"));
+            map.put("estimatedTonnage", b.getEstimatedTonnage() != null ? b.getEstimatedTonnage() : (b.getApproximateTonnage() != null ? b.getApproximateTonnage() : null));
+            map.put("actualTonnage", b.getActualTonnage());
+            map.put("dimensions", b.getDimensions() != null ? b.getDimensions() : "—");
+            map.put("customerName", b.getAssignedCustomer() != null ? b.getAssignedCustomer().getCompanyName() : null);
+            map.put("customerId", b.getAssignedCustomer() != null ? b.getAssignedCustomer().getId() : null);
+            map.put("isGeneralStock", b.getAssignedCustomer() == null);
+            map.put("statusLabel", "Kesilmemiş Blok");
+            map.put("notes", b.getNotes() != null ? b.getNotes() : "");
+            return map;
+        }).collect(Collectors.toList());
+
+        return TabulatorResponse.of(data, blocksPage.getTotalPages(), blocksPage.getTotalElements());
     }
 
     @PostMapping("/blocks/{id}/assign-customer")
@@ -113,6 +153,46 @@ public class FactoryOperationController extends AbstractController {
         model.addAttribute("activeSubSection", "slabs");
 
         return "operations/factory/slabs";
+    }
+
+    @GetMapping("/slabs/api/data")
+    @ResponseBody
+    public TabulatorResponse<Map<String, Object>> getFactorySlabsData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "status", required = false) SlabStatus status,
+            @RequestParam(value = "customerId", required = false) Long customerId,
+            @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly) {
+
+        int pageIndex = Math.max(0, page - 1);
+        Page<Slab> slabsPage = factoryStockService.getFactorySlabsPaged(status, customerId, generalStockOnly, search, pageIndex, size);
+
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        List<Map<String, Object>> data = slabsPage.getContent().stream().map(s -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", s.getId());
+            map.put("slabCode", s.getSlabCode());
+            map.put("sourceBlockCode", s.getBlock() != null ? s.getBlock().getBlockCode() : "—");
+            map.put("stoneType", s.getBlock() != null && s.getBlock().getStoneType() != null ? s.getBlock().getStoneType() : "—");
+            map.put("qualityGrade", s.getQualityGrade() != null ? s.getQualityGrade().getDisplayName() : "1. Sınıf");
+            map.put("surfaceFinish", s.getSurfaceFinish() != null ? s.getSurfaceFinish().getDisplayName() : "Cilalı");
+            map.put("thicknessCm", s.getThicknessCm() != null ? s.getThicknessCm() + " cm" : "2 cm");
+            map.put("dimensions", (s.getWidthCm() != null && s.getLengthCm() != null) ? (s.getWidthCm() + "×" + s.getLengthCm() + " cm") : "—");
+            map.put("surfaceAreaM2", s.getSurfaceAreaM2());
+            map.put("pieceCount", 1);
+            map.put("customerName", s.getCustomer() != null ? s.getCustomer().getCompanyName() : null);
+            map.put("customerId", s.getCustomer() != null ? s.getCustomer().getId() : null);
+            map.put("isGeneralStock", s.getCustomer() == null);
+            map.put("status", s.getStatus() != null ? s.getStatus().name() : "AVAILABLE");
+            map.put("statusLabel", s.getStatus() != null ? s.getStatus().getDisplayName() : "Hazır");
+            map.put("createdDate", s.getCreatedDate() != null ? s.getCreatedDate().format(dateFmt) : "—");
+            map.put("notes", "");
+            return map;
+        }).collect(Collectors.toList());
+
+        return TabulatorResponse.of(data, slabsPage.getTotalPages(), slabsPage.getTotalElements());
     }
 
     @GetMapping({"/slabs/new", "/slabs/create"})
@@ -183,6 +263,47 @@ public class FactoryOperationController extends AbstractController {
         model.addAttribute("activeSubSection", "sized");
 
         return "operations/factory/sized";
+    }
+
+    @GetMapping("/sized/api/data")
+    @ResponseBody
+    public TabulatorResponse<Map<String, Object>> getFactorySizedData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "customerId", required = false) Long customerId,
+            @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly) {
+
+        int pageIndex = Math.max(0, page - 1);
+        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(customerId, generalStockOnly, search, pageIndex, size);
+
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        List<Map<String, Object>> data = itemsPage.getContent().stream().map(it -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", it.getId());
+            map.put("itemCode", it.getItemCode());
+            map.put("sourceBlockCode", it.getSourceBlock() != null ? it.getSourceBlock().getBlockCode() : "—");
+            map.put("stoneType", it.getStoneType() != null ? it.getStoneType() : "Mermer");
+            map.put("description", it.getDescription() != null ? it.getDescription() : "Ebatlı Mermer");
+            map.put("surfaceFinish", it.getSurfaceFinish() != null ? it.getSurfaceFinish().getDisplayName() : "Cilalı");
+            map.put("thicknessCm", it.getThicknessCm() != null ? it.getThicknessCm() + " cm" : "2 cm");
+            map.put("dimensions", (it.getWidthCm() != null && it.getLengthCm() != null) ? (it.getWidthCm() + "×" + it.getLengthCm() + " cm") : "—");
+            map.put("quantity", it.getQuantity());
+            map.put("unit", it.getUnit() != null ? it.getUnit() : "m2");
+            map.put("pieceCount", it.getPieceCount());
+            map.put("actualProducedQuantity", it.getActualProducedQuantity());
+            map.put("customerName", it.getCustomer() != null ? it.getCustomer().getCompanyName() : null);
+            map.put("customerId", it.getCustomer() != null ? it.getCustomer().getId() : null);
+            map.put("isGeneralStock", it.getCustomer() == null);
+            map.put("productionDate", it.getProductionDate() != null ? it.getProductionDate().format(dateFmt) : (it.getCreatedDate() != null ? it.getCreatedDate().format(dateFmt) : "—"));
+            map.put("status", it.getStatus() != null ? it.getStatus() : "AVAILABLE");
+            map.put("statusLabel", "Hazır / Stokta");
+            map.put("notes", it.getNotes() != null ? it.getNotes() : "");
+            return map;
+        }).collect(Collectors.toList());
+
+        return TabulatorResponse.of(data, itemsPage.getTotalPages(), itemsPage.getTotalElements());
     }
 
     @GetMapping({"/sized/new", "/sized/create"})

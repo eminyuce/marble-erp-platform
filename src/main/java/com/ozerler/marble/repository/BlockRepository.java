@@ -177,6 +177,32 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     List<Block> findFactoryUncutBlocksFiltered(@Param("customerId") Long customerId,
                                               @Param("generalStockOnly") boolean generalStockOnly);
 
+    @EntityGraph(attributePaths = {"quarry", "assignedCustomer", "currentLocation"})
+    @Query(value = "SELECT b FROM Block b " +
+           "WHERE b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD " +
+           "AND b.status = com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY " +
+           "AND (:customerId IS NULL OR b.assignedCustomer.id = :customerId) " +
+           "AND (:generalStockOnly = false OR b.assignedCustomer IS NULL) " +
+           "AND (:search IS NULL OR :search = '' " +
+           "     OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "     OR LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "     OR LOWER(COALESCE(b.quarry.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "     OR LOWER(COALESCE(b.assignedCustomer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+           countQuery = "SELECT COUNT(b) FROM Block b " +
+           "WHERE b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD " +
+           "AND b.status = com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY " +
+           "AND (:customerId IS NULL OR b.assignedCustomer.id = :customerId) " +
+           "AND (:generalStockOnly = false OR b.assignedCustomer IS NULL) " +
+           "AND (:search IS NULL OR :search = '' " +
+           "     OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "     OR LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "     OR LOWER(COALESCE(b.quarry.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "     OR LOWER(COALESCE(b.assignedCustomer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    Page<Block> searchFactoryUncutBlocks(@Param("customerId") Long customerId,
+                                         @Param("generalStockOnly") boolean generalStockOnly,
+                                         @Param("search") String search,
+                                         Pageable pageable);
+
     @Query("SELECT COALESCE(SUM(b.estimatedTonnage), 0) FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
     java.math.BigDecimal sumTotalEstimatedTonnage();
 

@@ -1368,6 +1368,31 @@ body.admin-app.admin-mega-open .admin-sidebar-overlay {
   box-shadow: 0 0 0 1.5px #fecaca;
 }
 
+.admin-topbar nav a.active,
+.admin-topbar nav button.active-child {
+  background: #fef2f2 !important;
+  border-color: #dc2626 !important;
+  color: #b91c1c !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 0 1px #fca5a5 !important;
+}
+
+.admin-topbar nav a.active svg,
+.admin-topbar nav button.active-child svg {
+  color: #dc2626 !important;
+}
+
+aside nav a.active {
+  background: #991b1b !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: inset 4px 0 0 #ef4444 !important;
+}
+
+aside nav a.active svg {
+  color: #fca5a5 !important;
+}
+
 .admin-mega-logout {
   display: inline-flex;
   align-items: center;

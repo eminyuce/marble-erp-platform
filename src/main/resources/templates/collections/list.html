@@ -5,148 +5,237 @@
     <title>Tahsilat Modülü | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-6">
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        methodFilter: '[[${selectedMethod}]]',
+        setMethodFilter(m) {
+            this.methodFilter = m;
+            if (typeof reloadCollectionsGrid === 'function') reloadCollectionsGrid();
+        },
+        gridExtraQuery() {
+            return this.methodFilter ? '&method=' + encodeURIComponent(this.methodFilter) : '';
+        }
+     }"
+     x-init="window.collectionsPageState = $data">
 
-    <!-- Header & Breadcrumb -->
-    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <!-- Header Section -->
+    <div class="erp-list-header">
         <div class="erp-list-header-main">
             <div th:replace="~{fragments/list-chrome :: breadcrumb('Tahsilat')}"></div>
-            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-1 flex items-center gap-2">
-                <i data-lucide="wallet" class="w-7 h-7 text-teal-600"></i>
-                <span>Tahsilat Modülü</span>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="wallet" class="w-7 h-7 text-teal-600 inline-block"></i>
+                <span>Tahsilat Modülü — Kasa &amp; Banka Hareketleri</span>
             </h2>
-            <p class="erp-list-lead text-sm text-slate-600">
-                Nakit, EFT / Havale ve Çek tahsilatlarının kaydı, fatura eşleştirmeleri ve çek portföy yönetimi.
+            <p class="erp-list-lead">
+                Nakit, Havale/EFT ve Çek tahsilatlarının kaydı, müşteri cari bakiye ve fatura kapamaları.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Tahsilat kaydı girildiğinde ilgili faturanın ve müşterinin cari bakiyesi anında güncellenir.')}"></span>
             </p>
         </div>
-        <div class="flex items-center gap-2.5 shrink-0">
-            <a th:href="@{/collections/checks}" class="erp-btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition">
-                <i data-lucide="calendar-check" class="w-4 h-4 text-slate-600"></i>
-                <span>Çek Portföyü & Takip</span>
-            </a>
-            <a th:href="@{/collections/create}" class="erp-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl transition shadow-sm">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                <span>Yeni Tahsilat Ekle</span>
-            </a>
-        </div>
     </div>
 
-    <!-- Summary KPI Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Bu Ay Tahsilat Toplamı</div>
-            <div class="text-2xl font-black text-teal-600 mt-1"
-                 th:text="${monthlyTotal != null ? #numbers.formatDecimal(monthlyTotal, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
-            <div class="text-xs text-slate-500 mt-0.5">Tüm yöntemlerle tahsil edilen</div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Vadesi Yaklaşan Çekler</div>
-            <div class="text-2xl font-black text-amber-600 mt-1" th:text="${approachingChecksCount != null ? approachingChecksCount : 0}">0</div>
-            <div class="text-xs text-slate-500 mt-0.5">Önümüzdeki 15 gün vadeli</div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kayıtlı Tahsilat İşlemi</div>
-            <div class="text-2xl font-black text-slate-900 mt-1" th:text="${page != null ? page.totalElements : #lists.size(collections)}">0</div>
-            <div class="text-xs text-slate-500 mt-0.5">Sistemdeki tüm kayıtlar</div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Desteklenen Yöntemler</div>
-            <div class="text-xs font-bold text-slate-800 mt-2 flex items-center gap-2">
-                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md">Nakit</span>
-                <span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md">EFT</span>
-                <span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded-md">Çek</span>
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="methodFilter === '' ? 'erp-summary-card--active ring-2 ring-slate-900' : ''"
+                @click="setMethodFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Tüm Tahsilatlar</div>
+            <div class="text-lg font-black text-teal-700 mt-1 font-mono"
+                 th:text="${monthlyTotal != null ? #numbers.formatDecimal(monthlyTotal, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="methodFilter === 'CASH' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setMethodFilter('CASH')">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
+                <i data-lucide="banknote" class="w-3.5 h-3.5"></i> Nakit Kasa
             </div>
-            <div class="text-[11px] text-slate-500 mt-1">Anlık bakiye ve vade takibi</div>
-        </div>
+            <div class="text-lg font-black text-slate-900 mt-1">Elden Tahsilat</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="methodFilter === 'BANK_TRANSFER' ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
+                @click="setMethodFilter('BANK_TRANSFER')">
+            <div class="text-[11px] uppercase tracking-wide text-blue-600 font-semibold flex items-center gap-1">
+                <i data-lucide="building" class="w-3.5 h-3.5"></i> Banka Havale / EFT
+            </div>
+            <div class="text-lg font-black text-slate-900 mt-1">Hesaba Giriş</div>
+        </button>
+
+        <a th:href="@{/collections/checks}" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300 block">
+            <div class="text-[11px] uppercase tracking-wide text-purple-600 font-semibold flex items-center gap-1">
+                <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i> Çek Portföyü
+            </div>
+            <div class="text-lg font-black text-amber-600 mt-1">
+                <span th:text="${approachingChecksCount != null ? approachingChecksCount : 0}">0</span> yaklaşan çek
+            </div>
+        </a>
     </div>
 
-    <!-- Filtre Sekmeleri -->
-    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="flex items-center gap-2 overflow-x-auto">
-            <a th:href="@{/collections}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedMethod == null ? 'bg-teal-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                Tüm Yöntemler
-            </a>
-            <a th:href="@{/collections(method='CASH')}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedMethod != null and selectedMethod.name() == 'CASH' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                Nakit
-            </a>
-            <a th:href="@{/collections(method='BANK_TRANSFER')}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedMethod != null and selectedMethod.name() == 'BANK_TRANSFER' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                EFT / Havale
-            </a>
-            <a th:href="@{/collections(method='CHECK')}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedMethod != null and selectedMethod.name() == 'CHECK' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                Çek
-            </a>
-        </div>
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="methodFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setMethodFilter('')">Tüm Yöntemler</button>
+        <button type="button" class="erp-yard-chip"
+                :class="methodFilter === 'CASH' ? 'erp-yard-chip--active' : ''"
+                @click="setMethodFilter('CASH')">
+            <i data-lucide="banknote" class="w-3.5 h-3.5 inline mr-1 text-emerald-600"></i>
+            Nakit
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="methodFilter === 'BANK_TRANSFER' ? 'erp-yard-chip--active' : ''"
+                @click="setMethodFilter('BANK_TRANSFER')">
+            <i data-lucide="building" class="w-3.5 h-3.5 inline mr-1 text-blue-600"></i>
+            Havale / EFT
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="methodFilter === 'CHECK' ? 'erp-yard-chip--active' : ''"
+                @click="setMethodFilter('CHECK')">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 inline mr-1 text-purple-600"></i>
+            Çek
+        </button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
+    <div class="erp-toolbar">
         <div class="flex items-center gap-2">
-            <a th:href="@{/collections/checks}" class="text-xs font-bold text-teal-700 hover:underline flex items-center gap-1">
-                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                <span>Detaylı Çek Portföyü</span>
+            <a th:href="@{/collections/create}" class="erp-btn-primary">
+                <i data-lucide="plus"></i>
+                <span>Yeni Tahsilat Girişi</span>
+            </a>
+            <a th:href="@{/collections/checks}" class="erp-btn-secondary">
+                <i data-lucide="calendar-check"></i>
+                <span>Çek Portföyü</span>
             </a>
         </div>
-    </div>
-
-    <!-- Tahsilatlar Tablosu -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-700 border-collapse">
-                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
-                    <tr>
-                        <th class="py-3 px-4">Makbuz / No</th>
-                        <th class="py-3 px-4">Tarih</th>
-                        <th class="py-3 px-4">Cari (Müşteri)</th>
-                        <th class="py-3 px-4">Yöntem</th>
-                        <th class="py-3 px-4">İlişkili Fatura</th>
-                        <th class="py-3 px-4 text-right bg-teal-50/50">Tahsilat Tutarı</th>
-                        <th class="py-3 px-4">Banka / Çek Detayı</th>
-                        <th class="py-3 px-4">Açıklama</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-medium">
-                    <tr th:if="${#lists.isEmpty(collections)}" class="hover:bg-slate-50">
-                        <td colspan="8" class="py-8 text-center text-slate-400">
-                            <i data-lucide="wallet" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
-                            Kayıtlı tahsilat işlemi bulunamadı.
-                        </td>
-                    </tr>
-                    <tr th:each="c : ${collections}" class="hover:bg-slate-50 transition">
-                        <td class="py-3 px-4 font-mono font-bold text-teal-700" th:text="${c.collectionNo}">THS-2026-0001</td>
-                        <td class="py-3 px-4 text-slate-500 whitespace-nowrap" th:text="${c.collectionDate != null ? #temporals.format(c.collectionDate, 'dd.MM.yyyy') : '—'}">01.09.2026</td>
-                        <td class="py-3 px-4 font-bold text-slate-900" th:text="${c.customer != null ? c.customer.companyName : '—'}">ABC Marble</td>
-                        <td class="py-3 px-4 whitespace-nowrap">
-                            <span class="px-2.5 py-1 text-[11px] font-bold rounded-lg"
-                                  th:classappend="${c.method != null and c.method.name() == 'CASH' ? 'bg-emerald-100 text-emerald-800' : (c.method != null and c.method.name() == 'BANK_TRANSFER' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800')}"
-                                  th:text="${c.method != null ? c.method.label : 'Nakit'}">Nakit</span>
-                        </td>
-                        <td class="py-3 px-4 whitespace-nowrap">
-                            <a th:if="${c.invoice != null}" th:href="@{'/invoices/' + ${c.invoice.id}}" class="text-blue-600 hover:underline font-bold" th:text="${c.invoice.invoiceNumber}">FAT-001</a>
-                            <span th:unless="${c.invoice != null}" class="text-slate-400">—</span>
-                        </td>
-                        <td class="py-3 px-4 text-right font-black text-teal-700 bg-teal-50/30 whitespace-nowrap text-sm"
-                            th:text="${c.amount != null ? #numbers.formatDecimal(c.amount, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">50.000,00 TL</td>
-                        <td class="py-3 px-4 text-slate-700">
-                            <div th:if="${c.checkRecord != null}" class="font-bold text-purple-700 flex items-center gap-1">
-                                <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
-                                <span>Çek No: <span th:text="${c.checkRecord.checkNo}"></span></span>
-                                <span class="text-slate-400 font-normal" th:if="${c.checkRecord.dueDate != null}" th:text="'(Vade: ' + ${#temporals.format(c.checkRecord.dueDate, 'dd.MM.yyyy')} + ')'"></span>
-                            </div>
-                            <div th:if="${c.bankName != null and c.checkRecord == null}" class="font-semibold" th:text="${c.bankName}">Garanti BBVA</div>
-                            <div th:if="${c.bankName == null and c.checkRecord == null}" class="text-slate-400">—</div>
-                        </td>
-                        <td class="py-3 px-4 text-slate-500 max-w-xs truncate" th:text="${c.notes != null ? c.notes : '—'}">—</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div th:replace="~{fragments/list-chrome :: search('Makbuz no, müşteri veya banka...', 'collection-search-input')}"></div>
+        <div class="erp-toolbar-actions">
+            <div th:replace="~{fragments/list-chrome :: exportDropdown('collections-table', 'tahsilatlar')}"></div>
         </div>
     </div>
 
+    <!-- DataGrid Shell -->
+    <div th:replace="~{fragments/list-chrome :: gridShell('collections-table')}"></div>
 </div>
-<th:block layout:fragment="scripts"></th:block>
+
+<th:block layout:fragment="scripts">
+    <script>
+        let collectionsTable;
+        document.addEventListener("DOMContentLoaded", () => {
+            collectionsTable = new Tabulator("#collections-table", {
+                ...erpGridDefaults(),
+                pagination: true,
+                paginationMode: "remote",
+                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
+                paginationSizeSelector: [5, 10, 25, 50, 100],
+                ajaxURL: "/collections/api/data",
+                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
+                ajaxURLGenerator: function (url, config, params) {
+                    return erpGridAjaxUrl(url, params, "collection-search-input", function () {
+                        return window.collectionsPageState ? window.collectionsPageState.gridExtraQuery() : "";
+                    });
+                },
+                ajaxResponse: function (url, params, response) {
+                    return erpGridAjaxResponse("collections-table", response);
+                },
+                placeholder: "Kriterlere uygun tahsilat kaydı bulunamadı.",
+                columns: [
+                    erpResponsiveCollapseColumn(),
+                    erpIndexColumn(),
+                    {
+                        title: "Makbuz / Belge No",
+                        field: "collectionNo",
+                        width: 170,
+                        responsive: 0,
+                        formatter: function (cell) {
+                            return `<span class="font-mono font-bold text-teal-800 flex items-center gap-1.5">
+                                <i data-lucide="receipt" class="w-3.5 h-3.5 text-teal-600 inline"></i>
+                                <span>${gridText(cell.getValue())}</span>
+                            </span>`;
+                        }
+                    },
+                    {
+                        title: "Tarih",
+                        field: "collectionDate",
+                        width: 120,
+                        formatter: function (cell) {
+                            return `<span class="text-slate-600 font-medium">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "Müşteri / Cari",
+                        field: "customerName",
+                        minWidth: 200,
+                        formatter: function (cell) {
+                            return `<strong class="text-slate-900">${gridText(cell.getValue())}</strong>`;
+                        }
+                    },
+                    {
+                        title: "Yöntem",
+                        field: "methodLabel",
+                        width: 130,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            let cls = "bg-slate-100 text-slate-800";
+                            if (row.method === "CASH") cls = "bg-emerald-100 text-emerald-800";
+                            else if (row.method === "BANK_TRANSFER") cls = "bg-blue-100 text-blue-800";
+                            else if (row.method === "CHECK") cls = "bg-purple-100 text-purple-800";
+                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${cls}">
+                                ${gridText(cell.getValue())}
+                            </span>`;
+                        }
+                    },
+                    {
+                        title: "Banka / Kasa",
+                        field: "bankName",
+                        width: 150,
+                        formatter: function (cell) {
+                            return `<span class="text-slate-600">${gridText(cell.getValue()) || '—'}</span>`;
+                        }
+                    },
+                    {
+                        title: "İlişkili Fatura",
+                        field: "invoiceNo",
+                        width: 140,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            if (row.invoiceId) {
+                                return `<a href="/invoices/${row.invoiceId}" class="font-mono font-bold text-blue-600 hover:underline">${gridText(row.invoiceNo)}</a>`;
+                            }
+                            return `<span class="text-slate-400">—</span>`;
+                        }
+                    },
+                    {
+                        title: "Tahsilat Tutarı",
+                        field: "amount",
+                        width: 160,
+                        formatter: function (cell) {
+                            return `<strong class="font-mono text-emerald-700 text-sm">${gridMoney(cell.getValue())}</strong>`;
+                        }
+                    },
+                    {
+                        title: "Açıklama",
+                        field: "notes",
+                        minWidth: 150,
+                        formatter: function (cell) {
+                            return `<span class="text-slate-500 text-xs">${gridText(cell.getValue()) || '—'}</span>`;
+                        }
+                    }
+                ]
+            });
+
+            attachTabulatorPagingAnimation(collectionsTable);
+            bindGridSearch(collectionsTable, "collection-search-input");
+            collectionsTable.on("renderComplete", () => {
+                if (window.lucide) window.lucide.createIcons();
+            });
+        });
+
+        function reloadCollectionsGrid() {
+            if (collectionsTable) collectionsTable.setData();
+        }
+        window.reloadCollectionsGrid = reloadCollectionsGrid;
+    </script>
+</th:block>
 </body>
 </html>

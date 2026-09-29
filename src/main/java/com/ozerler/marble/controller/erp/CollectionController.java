@@ -19,6 +19,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.ozerler.marble.dto.TabulatorResponse;
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 @RequestMapping("/collections")
 @RequiredArgsConstructor
@@ -32,18 +36,12 @@ public class CollectionController extends AbstractController {
     @GetMapping
     public String index(@RequestParam(value = "method", required = false) CollectionMethod method,
                         @RequestParam(value = "customerId", required = false) Long customerId,
-                        @RequestParam(value = "search", required = false) String search,
-                        @RequestParam(value = "page", defaultValue = "0") int page,
-                        @RequestParam(value = "size", defaultValue = "20") int size,
                         Model model) {
 
-        Page<CollectionRecord> collectionPage = collectionService.searchCollections(method, customerId, null, null, search, page, size);
         BigDecimal monthlyTotal = collectionService.getMonthlyTotal();
         long approachingChecksCount = collectionService.getApproachingChecksCount();
 
-        model.addAttribute("collections", collectionPage.getContent());
-        model.addAttribute("page", collectionPage);
-        model.addAttribute("selectedMethod", method);
+        model.addAttribute("selectedMethod", method != null ? method.name() : "");
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("methods", CollectionMethod.values());
@@ -52,6 +50,37 @@ public class CollectionController extends AbstractController {
         model.addAttribute("activeNav", "collections");
 
         return "collections/list";
+    }
+
+    @GetMapping("/api/data")
+    @ResponseBody
+    public TabulatorResponse<Map<String, Object>> getCollectionsData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "method", required = false) CollectionMethod method,
+            @RequestParam(value = "customerId", required = false) Long customerId) {
+
+        int pageIndex = Math.max(0, page - 1);
+        Page<CollectionRecord> collectionPage = collectionService.searchCollections(method, customerId, null, null, search, pageIndex, size);
+
+        List<Map<String, Object>> data = collectionPage.getContent().stream().map(c -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", c.getId());
+            map.put("collectionNo", c.getCollectionNo());
+            map.put("collectionDate", c.getCollectionDate() != null ? c.getCollectionDate().toString() : "");
+            map.put("customerName", c.getCustomer() != null ? c.getCustomer().getCompanyName() : "—");
+            map.put("method", c.getCollectionMethod() != null ? c.getCollectionMethod().name() : "");
+            map.put("methodLabel", c.getCollectionMethod() != null ? c.getCollectionMethod().getDisplayName() : "");
+            map.put("amount", c.getAmount() != null ? c.getAmount() : BigDecimal.ZERO);
+            map.put("bankName", c.getBankName() != null ? c.getBankName() : "—");
+            map.put("invoiceNo", c.getInvoice() != null ? c.getInvoice().getInvoiceNumber() : "—");
+            map.put("invoiceId", c.getInvoice() != null ? c.getInvoice().getId() : null);
+            map.put("notes", c.getNotes() != null ? c.getNotes() : "");
+            return map;
+        }).toList();
+
+        return TabulatorResponse.of(data, collectionPage.getTotalPages(), collectionPage.getTotalElements());
     }
 
     @GetMapping({"/new", "/create"})
@@ -128,6 +157,35 @@ public class CollectionController extends AbstractController {
         model.addAttribute("activeNav", "collections");
 
         return "collections/checks";
+    }
+
+    @GetMapping("/checks/api/data")
+    @ResponseBody
+    public TabulatorResponse<Map<String, Object>> getChecksData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "status", required = false) CheckStatus status,
+            @RequestParam(value = "customerId", required = false) Long customerId) {
+
+        int pageIndex = Math.max(0, page - 1);
+        Page<CheckRecord> checkPage = collectionService.searchChecks(status, customerId, null, null, search, pageIndex, size);
+
+        List<Map<String, Object>> data = checkPage.getContent().stream().map(ch -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", ch.getId());
+            map.put("checkNo", ch.getCheckNo());
+            map.put("bankName", ch.getBankName() != null ? ch.getBankName() : "—");
+            map.put("customerName", ch.getCustomer() != null ? ch.getCustomer().getCompanyName() : "—");
+            map.put("dueDate", ch.getDueDate() != null ? ch.getDueDate().toString() : "");
+            map.put("amount", ch.getAmount() != null ? ch.getAmount() : BigDecimal.ZERO);
+            map.put("status", ch.getStatus() != null ? ch.getStatus().name() : "");
+            map.put("statusLabel", ch.getStatus() != null ? ch.getStatus().getLabel() : "");
+            map.put("notes", ch.getNotes() != null ? ch.getNotes() : "");
+            return map;
+        }).toList();
+
+        return TabulatorResponse.of(data, checkPage.getTotalPages(), checkPage.getTotalElements());
     }
 
     @PostMapping("/checks/{id}/status")

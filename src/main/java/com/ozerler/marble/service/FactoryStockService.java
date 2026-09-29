@@ -37,6 +37,12 @@ public class FactoryStockService {
         return blockRepository.findFactoryUncutBlocksFiltered(customerId, generalStockOnly);
     }
 
+    @Transactional(readOnly = true)
+    public Page<Block> getFactoryUncutBlocksPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
+        return blockRepository.searchFactoryUncutBlocks(customerId, generalStockOnly, search, pageable);
+    }
+
     @Transactional
     public Block assignCustomerToBlock(Long blockId, Long customerId) {
         Block block = blockRepository.findById(blockId)

@@ -20,6 +20,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ozerler.marble.dto.TabulatorResponse;
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 @RequestMapping("/invoices")
 @RequiredArgsConstructor
@@ -37,20 +41,14 @@ public class InvoiceController extends AbstractController {
                         @RequestParam(value = "department", required = false) BusinessUnit department,
                         @RequestParam(value = "status", required = false) InvoiceStatus status,
                         @RequestParam(value = "customerId", required = false) Long customerId,
-                        @RequestParam(value = "search", required = false) String search,
-                        @RequestParam(value = "page", defaultValue = "0") int page,
-                        @RequestParam(value = "size", defaultValue = "20") int size,
                         Model model) {
 
-        Page<Invoice> invoicePage = invoiceService.searchInvoices(invoiceType, department, status, customerId, null, null, search, page, size);
         BigDecimal monthlyPurchase = invoiceService.getMonthlyTotal(InvoiceType.PURCHASE);
         BigDecimal monthlySales = invoiceService.getMonthlyTotal(InvoiceType.SALES);
 
-        model.addAttribute("invoices", invoicePage.getContent());
-        model.addAttribute("page", invoicePage);
-        model.addAttribute("selectedType", invoiceType);
-        model.addAttribute("selectedDepartment", department);
-        model.addAttribute("selectedStatus", status);
+        model.addAttribute("selectedType", invoiceType != null ? invoiceType.name() : "");
+        model.addAttribute("selectedDepartment", department != null ? department.name() : "");
+        model.addAttribute("selectedStatus", status != null ? status.name() : "");
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("departments", BusinessUnit.values());
@@ -59,6 +57,41 @@ public class InvoiceController extends AbstractController {
         model.addAttribute("activeNav", "invoices");
 
         return "invoices/list";
+    }
+
+    @GetMapping("/api/data")
+    @ResponseBody
+    public TabulatorResponse<Map<String, Object>> getInvoicesData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "type", required = false) InvoiceType invoiceType,
+            @RequestParam(value = "department", required = false) BusinessUnit department,
+            @RequestParam(value = "status", required = false) InvoiceStatus status,
+            @RequestParam(value = "customerId", required = false) Long customerId) {
+
+        int pageIndex = Math.max(0, page - 1);
+        Page<Invoice> invoicePage = invoiceService.searchInvoices(invoiceType, department, status, customerId, null, null, search, pageIndex, size);
+
+        List<Map<String, Object>> data = invoicePage.getContent().stream().map(inv -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", inv.getId());
+            map.put("invoiceNumber", inv.getInvoiceNumber());
+            map.put("invoiceDate", inv.getInvoiceDate() != null ? inv.getInvoiceDate().toString() : "");
+            map.put("invoiceType", inv.getInvoiceType() != null ? inv.getInvoiceType().name() : "");
+            map.put("invoiceTypeLabel", inv.getInvoiceType() != null ? inv.getInvoiceType().getDisplayName() : "Satış");
+            String party = inv.getCustomer() != null ? inv.getCustomer().getCompanyName()
+                    : (inv.getSupplier() != null ? inv.getSupplier().getCompanyName() : inv.getPartyName());
+            map.put("partyName", party != null ? party : "—");
+            map.put("department", inv.getDepartment() != null ? inv.getDepartment().name() : "");
+            map.put("departmentLabel", inv.getDepartment() != null ? inv.getDepartment().getDisplayName() : "Genel");
+            map.put("totalAmount", inv.getTotalAmount() != null ? inv.getTotalAmount() : BigDecimal.ZERO);
+            map.put("status", inv.getStatus() != null ? inv.getStatus().name() : "");
+            map.put("statusLabel", inv.getStatus() != null ? inv.getStatus().getDisplayName() : "Ödenmedi");
+            return map;
+        }).toList();
+
+        return TabulatorResponse.of(data, invoicePage.getTotalPages(), invoicePage.getTotalElements());
     }
 
     @GetMapping({"/new", "/create"})

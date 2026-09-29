@@ -19,6 +19,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.ozerler.marble.dto.TabulatorResponse;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 @RequestMapping("/operations/quarry")
 @RequiredArgsConstructor
@@ -35,11 +40,8 @@ public class QuarryOperationController extends AbstractController {
     @GetMapping
     public String index(@RequestParam(value = "search", required = false) String search,
                         @RequestParam(value = "status", required = false) BlockStatus status,
-                        @RequestParam(value = "page", defaultValue = "0") int page,
-                        @RequestParam(value = "size", defaultValue = "20") int size,
                         Model model) {
 
-        Page<Block> blockPage = quarryOperationService.searchQuarryBlocks(search, status, page, size);
         List<Quarry> quarries = quarryOperationService.getAllQuarries();
 
         long prodYardCount = blockRepository.countByLocationType(StockLocationType.PRODUCTION_YARD);
@@ -47,11 +49,8 @@ public class QuarryOperationController extends AbstractController {
         BigDecimal totalEstTon = blockRepository.sumTotalEstimatedTonnage();
         BigDecimal totalActTon = blockRepository.sumTotalActualTonnage();
 
-        model.addAttribute("blocks", blockPage.getContent());
-        model.addAttribute("page", blockPage);
         model.addAttribute("quarries", quarries);
-        model.addAttribute("search", search);
-        model.addAttribute("status", status);
+        model.addAttribute("status", status != null ? status.name() : "");
         model.addAttribute("prodYardCount", prodYardCount);
         model.addAttribute("dispatchYardCount", dispatchYardCount);
         model.addAttribute("totalEstTon", totalEstTon != null ? totalEstTon : BigDecimal.ZERO);
@@ -59,6 +58,38 @@ public class QuarryOperationController extends AbstractController {
         model.addAttribute("activeSection", "quarry");
 
         return "operations/quarry/index";
+    }
+
+    @GetMapping("/api/data")
+    @ResponseBody
+    public TabulatorResponse<Map<String, Object>> getQuarryBlocksData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "status", required = false) BlockStatus status) {
+
+        int pageIndex = Math.max(0, page - 1);
+        Page<Block> blockPage = quarryOperationService.searchQuarryBlocks(search, status, pageIndex, size);
+
+        List<Map<String, Object>> data = blockPage.getContent().stream().map(b -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", b.getId());
+            map.put("blockCode", b.getBlockCode());
+            map.put("quarryName", b.getQuarry() != null ? b.getQuarry().getName() : "—");
+            map.put("quarryLocation", b.getQuarrySection() != null ? b.getQuarrySection() : "—");
+            map.put("stoneType", b.getStoneType() != null ? b.getStoneType() : "—");
+            map.put("colorQuality", b.getColorQuality() != null ? b.getColorQuality() : "—");
+            map.put("dimensions", b.getDimensions() != null ? b.getDimensions() : "—");
+            map.put("approximateTonnage", b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO);
+            map.put("actualTonnage", b.getActualTonnage());
+            map.put("extractionDate", b.getExtractionDate() != null ? b.getExtractionDate().toString() : "");
+            map.put("status", b.getStatus() != null ? b.getStatus().name() : "");
+            map.put("statusLabel", b.getStatus() != null ? b.getStatus().getDisplayName() : "");
+            map.put("notes", b.getNotes() != null ? b.getNotes() : "");
+            return map;
+        }).toList();
+
+        return TabulatorResponse.of(data, blockPage.getTotalPages(), blockPage.getTotalElements());
     }
 
     @GetMapping({"/new", "/create"})
@@ -149,5 +180,39 @@ public class QuarryOperationController extends AbstractController {
         model.addAttribute("dispatches", dispatches);
         model.addAttribute("activeSection", "quarry");
         return "operations/quarry/dispatches";
+    }
+
+    @GetMapping("/dispatches/api/data")
+    @ResponseBody
+    public TabulatorResponse<Map<String, Object>> getQuarryDispatchesData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size) {
+
+        int pageIndex = Math.max(0, page - 1);
+        Page<StockMovement> pageData = movementRepository.searchMovements(
+                null, BusinessUnit.QUARRY, null, null, null, null,
+                org.springframework.data.domain.PageRequest.of(pageIndex, size));
+
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+        List<Map<String, Object>> list = pageData.getContent().stream().map(m -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", m.getId());
+            map.put("movementDate", m.getMovementDate() != null ? m.getMovementDate().format(dateFmt) : "—");
+            map.put("productName", m.getBlock() != null ? m.getBlock().getBlockCode() : (m.getItemDescription() != null ? m.getItemDescription() : "Mermer Blok"));
+            map.put("blockId", m.getBlock() != null ? m.getBlock().getId() : null);
+            map.put("tonnage", m.getTonnage());
+            map.put("quantity", m.getQuantity());
+            map.put("unit", m.getQuantityUnit() != null ? m.getQuantityUnit() : "ton");
+            map.put("source", "Ocak");
+            map.put("targetDestination", m.getTargetDestination() != null ? m.getTargetDestination().getDisplayName() : (m.getTargetDepartment() != null ? m.getTargetDepartment().getDisplayName() : "Fabrika"));
+            map.put("customerName", m.getCustomer() != null ? m.getCustomer().getCompanyName() : "—");
+            map.put("invoiceNo", m.getInvoice() != null ? m.getInvoice().getInvoiceNumber() : null);
+            map.put("invoiceId", m.getInvoice() != null ? m.getInvoice().getId() : null);
+            map.put("notes", m.getNotes() != null ? m.getNotes() : "—");
+            return map;
+        }).toList();
+
+        return TabulatorResponse.of(list, pageData.getTotalPages(), pageData.getTotalElements());
     }
 }

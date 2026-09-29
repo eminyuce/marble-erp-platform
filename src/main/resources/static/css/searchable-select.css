@@ -273,3 +273,48 @@
         max-height: min(50dvh, 280px);
     }
 }
+
+/* ==============================================================================
+ * Navigation Red Active Item Rules (Mega-menu, Topbar, Sidebar)
+ * ============================================================================== */
+.admin-mega-item.active {
+    background: #fef2f2 !important;
+    font-weight: 700 !important;
+    border-color: #dc2626 !important;
+    box-shadow: inset 4px 0 0 #dc2626 !important;
+    color: #991b1b !important;
+}
+
+.admin-mega-item.active svg {
+    color: #dc2626 !important;
+}
+
+.admin-mega-card:has(.admin-mega-item.active) {
+    box-shadow: 0 0 0 1.5px #fecaca !important;
+}
+
+.admin-topbar nav a.active,
+.admin-topbar nav button.active-child {
+    background-color: #fef2f2 !important;
+    border-color: #dc2626 !important;
+    color: #b91c1c !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 0 1px #fca5a5 !important;
+}
+
+.admin-topbar nav a.active svg,
+.admin-topbar nav button.active-child svg {
+    color: #dc2626 !important;
+}
+
+aside nav a.active {
+    background-color: #991b1b !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: inset 4px 0 0 #ef4444 !important;
+}
+
+aside nav a.active svg {
+    color: #fca5a5 !important;
+}
+

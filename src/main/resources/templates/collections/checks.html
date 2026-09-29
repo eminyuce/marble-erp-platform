@@ -2,52 +2,51 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Çek Takip Portföyü | Özerler Mermer ERP</title>
+    <title>Çek Portföyü &amp; Vade Takibi | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page space-y-6"
+<div layout:fragment="content" class="erp-list-page space-y-5"
      x-data="{
+        statusFilter: '[[${selectedStatus}]]',
         statusModal: false,
         selectedCheckId: null,
         selectedCheckNo: '',
         currentStatus: '',
+        setStatusFilter(s) {
+            this.statusFilter = s;
+            if (typeof reloadChecksGrid === 'function') reloadChecksGrid();
+        },
         openStatusModal(id, no, st) {
             this.selectedCheckId = id;
             this.selectedCheckNo = no;
             this.currentStatus = st;
             this.statusModal = true;
+        },
+        gridExtraQuery() {
+            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
         }
-     }">
+     }"
+     x-init="window.checksPageState = $data">
 
-    <!-- Header & Breadcrumb -->
-    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <!-- Header Section -->
+    <div class="erp-list-header">
         <div class="erp-list-header-main">
-            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Tahsilat', '/collections', 'Çek Portföyü & Vade Takibi')}"></div>
-            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-1 flex items-center gap-2">
-                <i data-lucide="calendar-check" class="w-7 h-7 text-purple-600"></i>
-                <span>Çek Portföyü & Vade Takip Sistemi</span>
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Tahsilat', '/collections', 'Çek Portföyü')}"></div>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="calendar-check" class="w-7 h-7 text-purple-600 inline-block"></i>
+                <span>Çek Portföyü &amp; Vade Takip Sistemi</span>
             </h2>
-            <p class="erp-list-lead text-sm text-slate-600">
-                Alınan çeklerin vade takibi, portföy durumları (Portföyde, Tahsil Edildi, Karşılıksız, İade) ve vadesi yaklaşan/geçmiş çek uyarıları.
+            <p class="erp-list-lead">
+                Müşteri çeklerinin vadesi, portföy durumu (Portföyde, Tahsil Edildi, Karşılıksız, İade) ve banka takibi.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Vadesi gelen çekin durumunu doğrudan tablodaki buton üzerinden güncelleyebilirsiniz.')}"></span>
             </p>
-        </div>
-        <div class="flex items-center gap-2.5 shrink-0">
-            <a th:href="@{/collections}" class="erp-btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                <span>Tüm Tahsilatlar</span>
-            </a>
-            <a th:href="@{/collections/create}" class="erp-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition shadow-sm">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                <span>Yeni Çek Ekle</span>
-            </a>
         </div>
     </div>
 
-    <!-- Vadesi Geçmiş & Yaklaşan Uyarı Kartları -->
+    <!-- Alert / Warning Cards for Overdue & Approaching Checks -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
-        <!-- Vadesi Geçmiş Çekler Uyarısı -->
-        <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
+        <!-- Vadesi Geçmiş Çekler -->
+        <div class="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3 shadow-xs">
             <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0">
                 <i data-lucide="alert-triangle" class="w-5 h-5"></i>
             </div>
@@ -57,146 +56,93 @@
                     <span class="px-2 py-0.5 text-xs font-black rounded-full bg-rose-200 text-rose-800"
                           th:text="${overdueChecks != null ? #lists.size(overdueChecks) + ' Adet' : '0 Adet'}">0 Adet</span>
                 </div>
-                <p class="text-xs text-rose-700 mt-1">
-                    Vadesi dolduğu halde tahsilatı veya durumu güncellenmemiş çekler.
-                </p>
+                <p class="text-xs text-rose-700 mt-1">Vadesi dolduğu halde tahsil edilmemiş veya işlenmemiş çekler.</p>
                 <div th:if="${overdueChecks != null and not #lists.isEmpty(overdueChecks)}" class="mt-2 space-y-1">
-                    <div th:each="oc : ${overdueChecks}" class="text-xs font-semibold text-rose-900 flex items-center justify-between bg-white/60 px-2.5 py-1 rounded-lg">
-                        <span th:text="${oc.checkNo} + ' | ' + ${oc.bankName != null ? oc.bankName : ''} + ' (' + ${#temporals.format(oc.dueDate, 'dd.MM.yyyy')} + ')'">CK-123 (01.09.2026)</span>
-                        <span class="font-black" th:text="${#numbers.formatDecimal(oc.amount, 1, 'POINT', 2, 'COMMA')} + ' TL'">10.000 TL</span>
+                    <div th:each="oc : ${overdueChecks}" class="text-xs font-semibold text-rose-900 flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg">
+                        <span th:text="${oc.checkNo} + ' | ' + ${oc.bankName != null ? oc.bankName : ''} + ' (' + ${#temporals.format(oc.dueDate, 'dd.MM.yyyy')} + ')'">CK-123</span>
+                        <span class="font-black" th:text="${#numbers.formatDecimal(oc.amount, 1, 'POINT', 2, 'COMMA')} + ' ₺'">10.000 ₺</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Vadesi Yaklaşan Çekler Uyarısı (15 Gün) -->
-        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
+        <!-- Vadesi Yaklaşan Çekler (15 Gün) -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 shadow-xs">
             <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0">
                 <i data-lucide="clock" class="w-5 h-5"></i>
             </div>
             <div class="flex-1">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-bold text-amber-900">Vadesi Yaklaşan Çekler (Önümüzdeki 15 Gün)</h3>
+                    <h3 class="text-sm font-bold text-amber-900">Vadesi Yaklaşan Çekler (15 Gün)</h3>
                     <span class="px-2 py-0.5 text-xs font-black rounded-full bg-amber-200 text-amber-800"
                           th:text="${approachingChecks != null ? #lists.size(approachingChecks) + ' Adet' : '0 Adet'}">0 Adet</span>
                 </div>
-                <p class="text-xs text-amber-700 mt-1">
-                    Önümüzdeki 15 gün içinde vadesi gelecek portföydeki müşteri çekleri.
-                </p>
+                <p class="text-xs text-amber-700 mt-1">Önümüzdeki 15 gün içinde vadesi gelecek müşteri çekleri.</p>
                 <div th:if="${approachingChecks != null and not #lists.isEmpty(approachingChecks)}" class="mt-2 space-y-1">
-                    <div th:each="ac : ${approachingChecks}" class="text-xs font-semibold text-amber-900 flex items-center justify-between bg-white/60 px-2.5 py-1 rounded-lg">
-                        <span th:text="${ac.checkNo} + ' | ' + ${ac.bankName != null ? ac.bankName : ''} + ' (' + ${#temporals.format(ac.dueDate, 'dd.MM.yyyy')} + ')'">CK-456 (15.09.2026)</span>
-                        <span class="font-black" th:text="${#numbers.formatDecimal(ac.amount, 1, 'POINT', 2, 'COMMA')} + ' TL'">25.000 TL</span>
+                    <div th:each="ac : ${approachingChecks}" class="text-xs font-semibold text-amber-900 flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg">
+                        <span th:text="${ac.checkNo} + ' | ' + ${ac.bankName != null ? ac.bankName : ''} + ' (' + ${#temporals.format(ac.dueDate, 'dd.MM.yyyy')} + ')'">CK-456</span>
+                        <span class="font-black" th:text="${#numbers.formatDecimal(ac.amount, 1, 'POINT', 2, 'COMMA')} + ' ₺'">25.000 ₺</span>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 
-    <!-- Durum Filtresi Sekmeleri -->
-    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between gap-4">
-        <div class="flex items-center gap-2 overflow-x-auto">
-            <a th:href="@{/collections/checks}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedStatus == null ? 'bg-purple-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                Tüm Çekler
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters">
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('')">Tüm Çekler</button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'IN_PORTFOLIO' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('IN_PORTFOLIO')">
+            <i data-lucide="clock" class="w-3.5 h-3.5 inline mr-1 text-purple-600"></i>
+            Portföyde
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'COLLECTED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('COLLECTED')">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5 inline mr-1 text-emerald-600"></i>
+            Tahsil Edildi
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'BOUNCED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('BOUNCED')">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5 inline mr-1 text-rose-600"></i>
+            Karşılıksız
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'RETURNED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('RETURNED')">
+            İade Edildi
+        </button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
+    <div class="erp-toolbar">
+        <div class="flex items-center gap-2">
+            <a th:href="@{/collections/create}" class="erp-btn-primary">
+                <i data-lucide="plus"></i>
+                <span>Yeni Çek / Tahsilat</span>
             </a>
-            <a th:href="@{/collections/checks(status='IN_PORTFOLIO')}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedStatus != null and selectedStatus.name() == 'IN_PORTFOLIO' ? 'bg-purple-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                Portföyde
+            <a th:href="@{/collections}" class="erp-btn-secondary">
+                <i data-lucide="wallet"></i>
+                <span>Tüm Tahsilatlar</span>
             </a>
-            <a th:href="@{/collections/checks(status='COLLECTED')}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedStatus != null and selectedStatus.name() == 'COLLECTED' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                Tahsil Edildi
-            </a>
-            <a th:href="@{/collections/checks(status='BOUNCED')}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedStatus != null and selectedStatus.name() == 'BOUNCED' ? 'bg-rose-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                Karşılıksız
-            </a>
-            <a th:href="@{/collections/checks(status='RETURNED')}"
-               class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
-               th:classappend="${selectedStatus != null and selectedStatus.name() == 'RETURNED' ? 'bg-slate-800 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
-                İade Edildi
-            </a>
+        </div>
+        <div th:replace="~{fragments/list-chrome :: search('Çek no, müşteri veya banka...', 'check-search-input')}"></div>
+        <div class="erp-toolbar-actions">
+            <div th:replace="~{fragments/list-chrome :: exportDropdown('checks-table', 'cekler')}"></div>
         </div>
     </div>
 
-    <!-- Çekler Tablosu -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-700 border-collapse">
-                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
-                    <tr>
-                        <th class="py-3 px-4">Çek No</th>
-                        <th class="py-3 px-4">Cari (Müşteri)</th>
-                        <th class="py-3 px-4">Banka</th>
-                        <th class="py-3 px-4">Çek Tarihi</th>
-                        <th class="py-3 px-4 bg-purple-50/50 font-black text-purple-900">Çek Vade Tarihi</th>
-                        <th class="py-3 px-4 text-right bg-emerald-50/50">Tutar</th>
-                        <th class="py-3 px-4">Durum</th>
-                        <th class="py-3 px-4 text-center">İşlem</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-medium">
-                    <tr th:if="${#lists.isEmpty(checks)}" class="hover:bg-slate-50">
-                        <td colspan="8" class="py-8 text-center text-slate-400">
-                            <i data-lucide="calendar-x" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
-                            Kayıtlı çek bulunamadı.
-                        </td>
-                    </tr>
-                    <tr th:each="ck : ${checks}" class="hover:bg-slate-50 transition">
-                        <td class="py-3 px-4 font-mono font-black text-purple-700" th:text="${ck.checkNo}">CK-00123</td>
-                        <td class="py-3 px-4 font-bold text-slate-900" th:text="${ck.customer != null ? ck.customer.companyName : (ck.collectionRecord != null and ck.collectionRecord.customer != null ? ck.collectionRecord.customer.companyName : '—')}">ABC Marble</td>
-                        <td class="py-3 px-4 text-slate-700 font-semibold" th:text="${ck.bankName != null ? ck.bankName : '—'}">Garanti BBVA</td>
-                        <td class="py-3 px-4 text-slate-500 whitespace-nowrap" th:text="${ck.issueDate != null ? #temporals.format(ck.issueDate, 'dd.MM.yyyy') : '—'}">01.09.2026</td>
-                        
-                        <!-- Vade Tarihi (Vurgulu) -->
-                        <td class="py-3 px-4 whitespace-nowrap bg-purple-50/30">
-                            <div class="font-black text-slate-900 flex items-center gap-1.5"
-                                 th:classappend="${ck.dueDate != null and ck.dueDate.isBefore(#temporals.createNow().toLocalDate()) and ck.status != null and ck.status.name() == 'PORTFOLIO' ? 'text-rose-600' : ''}">
-                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-purple-600"></i>
-                                <span th:text="${ck.dueDate != null ? #temporals.format(ck.dueDate, 'dd.MM.yyyy') : '—'}">15.09.2026</span>
-                            </div>
-                        </td>
+    <!-- DataGrid Shell -->
+    <div th:replace="~{fragments/list-chrome :: gridShell('checks-table')}"></div>
 
-                        <!-- Tutar -->
-                        <td class="py-3 px-4 text-right font-black text-emerald-700 bg-emerald-50/30 whitespace-nowrap text-sm"
-                            th:text="${ck.amount != null ? #numbers.formatDecimal(ck.amount, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">50.000,00 TL</td>
-
-                        <!-- Durum -->
-                        <td class="py-3 px-4 whitespace-nowrap">
-                            <span class="px-2.5 py-1 text-[11px] font-bold rounded-full"
-                                  th:classappend="${ck.status != null and ck.status.name() == 'COLLECTED' ? 'bg-emerald-100 text-emerald-800' : (ck.status != null and ck.status.name() == 'BOUNCED' ? 'bg-rose-100 text-rose-800' : (ck.status != null and ck.status.name() == 'RETURNED' ? 'bg-slate-100 text-slate-700' : 'bg-purple-100 text-purple-800'))}"
-                                  th:text="${ck.status != null ? ck.status.label : 'Portföyde'}">Portföyde</span>
-                        </td>
-
-                        <!-- İşlemler -->
-                        <td class="py-3 px-4 text-center whitespace-nowrap">
-                            <button type="button"
-                                    class="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition inline-flex items-center gap-1 font-bold text-xs"
-                                    th:data-id="${ck.id}"
-                                    th:data-checkno="${ck.checkNo}"
-                                    th:data-status="${ck.status != null ? ck.status.name() : 'PORTFOLIO'}"
-                                    @click="openStatusModal($el.dataset.id, $el.dataset.checkno, $el.dataset.status)">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                                <span>Durum Değiştir</span>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Durum Değiştirme Modalı -->
+    <!-- Quick Status Change Modal -->
     <div x-show="statusModal" x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4"
-         @keydown.escape.window="statusModal = false">
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6"
              @click.outside="statusModal = false">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div class="flex items-center gap-2">
@@ -228,7 +174,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Açıklama / Durum Notu</label>
-                    <input type="text" name="notes" placeholder="Banka dekontu, iade gerekçesi vb."
+                    <input type="text" name="notes" placeholder="Banka dekontu, tahsilat detayı veya gerekçe"
                            class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-purple-500 focus:outline-none" />
                 </div>
 
@@ -240,14 +186,124 @@
                     <button type="submit"
                             class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                         <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                        <span>Güncelle</span>
+                        <span>Kaydet</span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
-
 </div>
-<th:block layout:fragment="scripts"></th:block>
+
+<th:block layout:fragment="scripts">
+    <script>
+        let checksTable;
+        document.addEventListener("DOMContentLoaded", () => {
+            checksTable = new Tabulator("#checks-table", {
+                ...erpGridDefaults(),
+                pagination: true,
+                paginationMode: "remote",
+                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
+                paginationSizeSelector: [5, 10, 25, 50, 100],
+                ajaxURL: "/collections/checks/api/data",
+                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
+                ajaxURLGenerator: function (url, config, params) {
+                    return erpGridAjaxUrl(url, params, "check-search-input", function () {
+                        return window.checksPageState ? window.checksPageState.gridExtraQuery() : "";
+                    });
+                },
+                ajaxResponse: function (url, params, response) {
+                    return erpGridAjaxResponse("checks-table", response);
+                },
+                placeholder: "Kriterlere uygun çek kaydı bulunamadı.",
+                columns: [
+                    erpResponsiveCollapseColumn(),
+                    erpIndexColumn(),
+                    {
+                        title: "Çek No",
+                        field: "checkNo",
+                        width: 160,
+                        responsive: 0,
+                        formatter: function (cell) {
+                            return `<span class="font-mono font-bold text-purple-900 flex items-center gap-1.5">
+                                <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-purple-600 inline"></i>
+                                <span>${gridText(cell.getValue())}</span>
+                            </span>`;
+                        }
+                    },
+                    {
+                        title: "Müşteri (Keşideci)",
+                        field: "customerName",
+                        minWidth: 180,
+                        formatter: function (cell) {
+                            return `<strong class="text-slate-900">${gridText(cell.getValue())}</strong>`;
+                        }
+                    },
+                    {
+                        title: "Banka",
+                        field: "bankName",
+                        width: 140,
+                        formatter: function (cell) {
+                            return `<span class="text-slate-700 font-medium">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "Vade Tarihi",
+                        field: "dueDate",
+                        width: 130,
+                        formatter: function (cell) {
+                            return `<span class="font-mono font-bold text-slate-800">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "Tutar",
+                        field: "amount",
+                        width: 150,
+                        formatter: function (cell) {
+                            return `<strong class="font-mono text-emerald-700 text-sm">${gridMoney(cell.getValue())}</strong>`;
+                        }
+                    },
+                    {
+                        title: "Durum",
+                        field: "statusLabel",
+                        width: 130,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            let cls = "bg-purple-100 text-purple-800";
+                            if (row.status === "COLLECTED") cls = "bg-emerald-100 text-emerald-800";
+                            else if (row.status === "BOUNCED") cls = "bg-rose-100 text-rose-800";
+                            else if (row.status === "RETURNED") cls = "bg-slate-100 text-slate-800";
+                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${cls}">● ${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "İşlem",
+                        width: 120,
+                        headerSort: false,
+                        responsive: 0,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return `<button type="button" onclick="window.checksPageState.openStatusModal(${row.id}, '${row.checkNo}', '${row.status}')"
+                                        class="px-2.5 py-1 rounded-lg text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition inline-flex items-center gap-1">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                <span>Durum</span>
+                            </button>`;
+                        }
+                    }
+                ]
+            });
+
+            attachTabulatorPagingAnimation(checksTable);
+            bindGridSearch(checksTable, "check-search-input");
+            checksTable.on("renderComplete", () => {
+                if (window.lucide) window.lucide.createIcons();
+            });
+        });
+
+        function reloadChecksGrid() {
+            if (checksTable) checksTable.setData();
+        }
+        window.reloadChecksGrid = reloadChecksGrid;
+    </script>
+</th:block>
 </body>
 </html>

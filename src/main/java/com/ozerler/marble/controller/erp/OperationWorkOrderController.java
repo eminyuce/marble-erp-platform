@@ -17,6 +17,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.ozerler.marble.dto.TabulatorResponse;
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 @RequestMapping("/work-orders")
 @RequiredArgsConstructor
@@ -33,17 +37,10 @@ public class OperationWorkOrderController extends AbstractController {
     public String index(@RequestParam(value = "department", required = false) BusinessUnit department,
                         @RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
                         @RequestParam(value = "customerId", required = false) Long customerId,
-                        @RequestParam(value = "search", required = false) String search,
-                        @RequestParam(value = "page", defaultValue = "0") int page,
-                        @RequestParam(value = "size", defaultValue = "20") int size,
                         Model model) {
 
-        Page<OperationWorkOrder> ordersPage = workOrderService.searchOrders(department, status, customerId, null, null, search, page, size);
-
-        model.addAttribute("orders", ordersPage.getContent());
-        model.addAttribute("page", ordersPage);
-        model.addAttribute("selectedDepartment", department);
-        model.addAttribute("selectedStatus", status);
+        model.addAttribute("selectedDepartment", department != null ? department.name() : "");
+        model.addAttribute("selectedStatus", status != null ? status.name() : "");
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("departments", List.of(BusinessUnit.FACTORY, BusinessUnit.WORKSHOP, BusinessUnit.SITE));
@@ -51,6 +48,40 @@ public class OperationWorkOrderController extends AbstractController {
         model.addAttribute("activeNav", "work-orders");
 
         return "workorders/list";
+    }
+
+    @GetMapping("/api/data")
+    @ResponseBody
+    public TabulatorResponse<Map<String, Object>> getOrdersData(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "department", required = false) BusinessUnit department,
+            @RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
+            @RequestParam(value = "customerId", required = false) Long customerId) {
+
+        int pageIndex = Math.max(0, page - 1);
+        Page<OperationWorkOrder> ordersPage = workOrderService.searchOrders(department, status, customerId, null, null, search, pageIndex, size);
+
+        List<Map<String, Object>> data = ordersPage.getContent().stream().map(ord -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", ord.getId());
+            map.put("orderNo", ord.getOrderNo());
+            map.put("orderDate", ord.getOrderDate() != null ? ord.getOrderDate().toString() : "");
+            map.put("targetDeliveryDate", ord.getDueDate() != null ? ord.getDueDate().toString() : "");
+            map.put("department", ord.getDepartment() != null ? ord.getDepartment().name() : "");
+            map.put("departmentLabel", ord.getDepartment() != null ? ord.getDepartment().getDisplayName() : "");
+            map.put("customerName", ord.getCustomer() != null ? ord.getCustomer().getCompanyName() : "Genel Sipariş");
+            map.put("stoneType", ord.getStoneType() != null ? ord.getStoneType() : "—");
+            map.put("quantity", ord.getQuantity() != null ? ord.getQuantity() : BigDecimal.ZERO);
+            map.put("unit", ord.getUnit() != null ? ord.getUnit() : "m²");
+            map.put("responsiblePerson", ord.getResponsiblePerson() != null ? ord.getResponsiblePerson() : "—");
+            map.put("status", ord.getStatus() != null ? ord.getStatus().name() : "");
+            map.put("statusLabel", ord.getStatus() != null ? ord.getStatus().getDisplayName() : "");
+            return map;
+        }).toList();
+
+        return TabulatorResponse.of(data, ordersPage.getTotalPages(), ordersPage.getTotalElements());
     }
 
     @GetMapping({"/new", "/create"})
