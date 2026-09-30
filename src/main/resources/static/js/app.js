@@ -101,13 +101,41 @@ function erpGridAjaxUrl(url, params, searchInputId, extraQuery) {
         sorterField = params.sorters[0].field || "";
         sorterDir = params.sorters[0].dir || "";
     }
-    let query = `${url}?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}&search=${encodeURIComponent(searchVal)}&sortField=${encodeURIComponent(sorterField)}&sortDir=${encodeURIComponent(sorterDir)}`;
+
+    const baseOrigin = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "http://localhost";
+    const parsedUrl = new URL(url, baseOrigin);
+
+    parsedUrl.searchParams.set("page", String(page));
+    parsedUrl.searchParams.set("size", String(size));
+    parsedUrl.searchParams.set("search", searchVal);
+    parsedUrl.searchParams.set("sortField", sorterField);
+    parsedUrl.searchParams.set("sortDir", sorterDir);
+
+    let extra = "";
     if (typeof extraQuery === "function") {
-        query += extraQuery() || "";
+        extra = extraQuery() || "";
     } else if (extraQuery) {
-        query += extraQuery;
+        extra = extraQuery;
     }
-    return query;
+
+    if (extra) {
+        if (extra.startsWith("?") || extra.startsWith("&")) {
+            extra = extra.substring(1);
+        }
+        const extraParams = new URLSearchParams(extra);
+        const seenKeys = new Set();
+        extraParams.forEach((val, key) => {
+            if (val !== undefined && val !== null && val !== "") {
+                if (!seenKeys.has(key)) {
+                    parsedUrl.searchParams.delete(key);
+                    seenKeys.add(key);
+                }
+                parsedUrl.searchParams.append(key, val);
+            }
+        });
+    }
+
+    return parsedUrl.pathname + parsedUrl.search;
 }
 
 function emptyTabulatorResponse() {

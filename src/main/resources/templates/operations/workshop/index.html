@@ -13,7 +13,9 @@
             if (typeof reloadWorkshopOrdersGrid === 'function') reloadWorkshopOrdersGrid();
         },
         gridExtraQuery() {
-            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
+            let q = '&department=WORKSHOP';
+            if (this.statusFilter) q += '&status=' + encodeURIComponent(this.statusFilter);
+            return q;
         }
      }"
      x-init="window.workshopOrdersPageState = $data">
@@ -132,7 +134,7 @@
                 paginationMode: "remote",
                 paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
                 paginationSizeSelector: [10, 25, 50, 100],
-                ajaxURL: "/work-orders/api/data?department=WORKSHOP",
+                ajaxURL: "/work-orders/api/data",
                 ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
                 ajaxURLGenerator: function (url, config, params) {
                     return erpGridAjaxUrl(url, params, "workshop-orders-search-input", function () {
