@@ -6,12 +6,14 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
+     th:data-initial-customer-id="${selectedCustomerId != null ? selectedCustomerId : ''}"
+     th:data-initial-general-stock="${generalStockOnly ? 'true' : ''}"
      x-data="{
         customerModal: false,
         selectedBlockId: null,
         selectedBlockCode: '',
-        selectedCustomerId: '[[${selectedCustomerId != null ? selectedCustomerId : ''}]]',
-        generalStockFilter: '[[${generalStockOnly ? 'true' : ''}]]',
+        selectedCustomerId: $el.dataset.initialCustomerId || '',
+        generalStockFilter: $el.dataset.initialGeneralStock || '',
         openCustomerModal(id, code, custId) {
             this.selectedBlockId = id;
             this.selectedBlockCode = code;

@@ -6,8 +6,9 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
+     th:data-initial-status="${selectedStatus}"
      x-data="{
-        statusFilter: '[[${selectedStatus}]]',
+        statusFilter: $el.dataset.initialStatus || '',
         statusModal: false,
         selectedCheckId: null,
         selectedCheckNo: '',

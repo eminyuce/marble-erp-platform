@@ -1,7 +1,11 @@
 package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.model.*;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.CheckRecord;
+import com.ozerler.marble.model.CollectionRecord;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.Invoice;
 import com.ozerler.marble.model.enums.CheckStatus;
 import com.ozerler.marble.model.enums.CollectionMethod;
 import com.ozerler.marble.repository.CustomerRepository;
@@ -12,15 +16,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
-
-import com.ozerler.marble.dto.TabulatorResponse;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller

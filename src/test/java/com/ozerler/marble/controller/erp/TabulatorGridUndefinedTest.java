@@ -14,6 +14,16 @@ class TabulatorGridUndefinedTest {
             "/static/js/blocks-grid.js",
             "/static/js/production-grid.js",
             "/static/js/users-grid.js",
+            "/templates/collections/list.html",
+            "/templates/collections/checks.html",
+            "/templates/invoices/list.html",
+            "/templates/workorders/list.html",
+            "/templates/operations/factory/blocks.html",
+            "/templates/operations/factory/orders.html",
+            "/templates/operations/factory/sized.html",
+            "/templates/operations/factory/slabs.html",
+            "/templates/operations/quarry/index.html",
+            "/templates/operations/workshop/index.html",
             "/templates/erp/workshop/index.html",
             "/templates/erp/production/slabs.html",
             "/templates/erp/projects/index.html",
@@ -155,6 +165,20 @@ class TabulatorGridUndefinedTest {
         String layout = readResource("/templates/layout/base.html");
         assertThat(layout).contains("@{/css/app.css(v=${assetVersion})}");
         assertThat(layout).contains("@{/js/app.js(v=${assetVersion})}");
+    }
+
+    @Test
+    @DisplayName("Templates do not contain unparsed Thymeleaf expressions in HTML attributes")
+    void templatesDoNotContainUnparsedThymeleafInAttributes() throws Exception {
+        for (String resource : GRID_SOURCES) {
+            if (resource.endsWith(".html")) {
+                String source = readResource(resource);
+                assertThat(source)
+                        .as("%s should not contain unparsed Thymeleaf inlining inside attributes", resource)
+                        .doesNotContain("'[['")
+                        .doesNotContain("\"[[\"");
+            }
+        }
     }
 
     private static String readResource(String resource) throws Exception {

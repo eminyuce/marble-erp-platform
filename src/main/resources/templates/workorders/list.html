@@ -6,9 +6,11 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
+     th:data-initial-dept="${selectedDepartment}"
+     th:data-initial-status="${selectedStatus}"
      x-data="{
-        deptFilter: '[[${selectedDepartment}]]',
-        statusFilter: '[[${selectedStatus}]]',
+        deptFilter: $el.dataset.initialDept || '',
+        statusFilter: $el.dataset.initialStatus || '',
         setDeptFilter(d) {
             this.deptFilter = d;
             if (typeof reloadOrdersGrid === 'function') reloadOrdersGrid();

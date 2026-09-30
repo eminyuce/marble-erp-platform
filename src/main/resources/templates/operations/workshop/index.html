@@ -6,8 +6,9 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
+     th:data-initial-status="${selectedStatus != null ? selectedStatus.name() : ''}"
      x-data="{
-        statusFilter: '[[${selectedStatus != null ? selectedStatus.name() : ''}]]',
+        statusFilter: $el.dataset.initialStatus || '',
         setStatusFilter(st) {
             this.statusFilter = st;
             if (typeof reloadWorkshopOrdersGrid === 'function') reloadWorkshopOrdersGrid();

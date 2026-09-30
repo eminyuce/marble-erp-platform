@@ -6,8 +6,9 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
+     th:data-initial-method="${selectedMethod}"
      x-data="{
-        methodFilter: '[[${selectedMethod}]]',
+        methodFilter: $el.dataset.initialMethod || '',
         setMethodFilter(m) {
             this.methodFilter = m;
             if (typeof reloadCollectionsGrid === 'function') reloadCollectionsGrid();

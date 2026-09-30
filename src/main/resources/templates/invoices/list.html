@@ -6,10 +6,13 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
+     th:data-initial-type="${selectedType}"
+     th:data-initial-dept="${selectedDepartment}"
+     th:data-initial-status="${selectedStatus}"
      x-data="{
-        typeFilter: '[[${selectedType}]]',
-        deptFilter: '[[${selectedDepartment}]]',
-        statusFilter: '[[${selectedStatus}]]',
+        typeFilter: $el.dataset.initialType || '',
+        deptFilter: $el.dataset.initialDept || '',
+        statusFilter: $el.dataset.initialStatus || '',
         setTypeFilter(t) {
             this.typeFilter = t;
             if (typeof reloadInvoicesGrid === 'function') reloadInvoicesGrid();

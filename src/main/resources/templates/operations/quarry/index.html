@@ -6,8 +6,9 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
+     th:data-initial-status="${status != null ? status : ''}"
      x-data="{
-        statusFilter: '[[${status}]]',
+        statusFilter: $el.dataset.initialStatus || '',
         actualTonnageModal: false,
         selectedBlockId: null,
         selectedBlockCode: '',
