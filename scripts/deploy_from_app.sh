@@ -227,14 +227,23 @@ cd "$REPO_ROOT"
 ensure_git_safe_directory "$REPO_ROOT"
 
 # Always match the remote branch. Local commits and edits on the server are discarded.
+echo "\$ git reset --hard HEAD"
+git_cmd reset --hard HEAD || true
+
+echo "\$ git clean -fd"
+git_cmd clean -fd || true
+
 echo "\$ git fetch ${GIT_REMOTE} ${GIT_BRANCH}"
 git_cmd fetch "$GIT_REMOTE" "$GIT_BRANCH"
 
-echo "\$ git checkout -B ${GIT_BRANCH} ${GIT_REMOTE}/${GIT_BRANCH}"
-git_cmd checkout -B "$GIT_BRANCH" "${GIT_REMOTE}/${GIT_BRANCH}"
+echo "\$ git checkout -f -B ${GIT_BRANCH} ${GIT_REMOTE}/${GIT_BRANCH}"
+git_cmd checkout -f -B "$GIT_BRANCH" "${GIT_REMOTE}/${GIT_BRANCH}"
 
 echo "\$ git reset --hard ${GIT_REMOTE}/${GIT_BRANCH}"
 git_cmd reset --hard "${GIT_REMOTE}/${GIT_BRANCH}"
+
+echo "\$ git clean -fd"
+git_cmd clean -fd
 
 echo
 echo "\$ ./scripts/deploy_production.sh -y"
