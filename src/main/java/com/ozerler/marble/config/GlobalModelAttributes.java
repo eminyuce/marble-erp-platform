@@ -17,7 +17,7 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20260930-fix-tabulator-filter-params}")
+    @Value("${app.asset-version:20260930-app-logs-management}")
     private String configuredAssetVersion;
 
     private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();

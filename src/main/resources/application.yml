@@ -103,7 +103,7 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20260930-fix-tabulator-filter-params"
+  asset-version: "20260930-app-logs-management"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy
