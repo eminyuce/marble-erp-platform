@@ -8,7 +8,6 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
 // List of all critical routes across Özerler Mermer ERP
 const ROUTES = [
     { name: 'Yönetici Kokpiti', path: '/admin/dashboard' },
-    { name: '10 Adımda Öğrenme Merkezi', path: '/ogrenme-merkezi' },
     { name: 'Sitemizin Özellikleri', path: '/admin/dashboard/oursitefeatures/' },
     { name: 'Ocak — Blok Takibi', path: '/blocks' },
     { name: 'Makine Mazot Takibi', path: '/machines/fuel' },

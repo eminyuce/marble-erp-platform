@@ -64,7 +64,6 @@ npx playwright test e2e/ --project=desktop
 | :--- | :--- | :--- |
 | **Auth** | `/account/adminlogin/` | CSRF token, login formu, asset 200 |
 | **Kokpit** | `/admin/dashboard` | KPI kartları, son hareketler, Lucide ikonlar |
-| **Rehber** | `/ogrenme-merkezi` | 10 Adımda rehber kartları, modal tetikleyiciler |
 | **Rehber** | `/admin/dashboard/oursitefeatures/` | Özellik listesi, dokümantasyon blokları |
 | **Operasyon** | `/blocks` | Tabulator 6 blok listesi, filtreler, modal/sayfa linkleri |
 | **Operasyon** | `/machines/fuel` | Mazot sarfiyat formu ve geçmiş tablosu |

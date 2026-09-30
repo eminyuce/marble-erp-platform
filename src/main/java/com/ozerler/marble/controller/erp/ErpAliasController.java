@@ -26,11 +26,6 @@ public class ErpAliasController {
         return "redirect:/costs";
     }
 
-    @GetMapping({"/learning-center", "/learning", "/ogrenme"})
-    public String learningCenterAlias() {
-        return "redirect:/ogrenme-merkezi";
-    }
-
     @GetMapping("/ocak/uretim/yeni")
     public String ocakUretimYeni() {
         return "redirect:/blocks/create";

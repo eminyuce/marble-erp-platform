@@ -15,7 +15,6 @@ class ErpAliasControllerTest {
         assertThat(controller.factory()).isEqualTo("redirect:/production");
         assertThat(controller.sites()).isEqualTo("redirect:/projects");
         assertThat(controller.costAnalysis()).isEqualTo("redirect:/costs");
-        assertThat(controller.learningCenterAlias()).isEqualTo("redirect:/ogrenme-merkezi");
         assertThat(controller.ocakUretimYeni()).isEqualTo("redirect:/blocks/create");
         assertThat(controller.ocakStok()).isEqualTo("redirect:/blocks");
         assertThat(controller.giderlerYeni()).isEqualTo("redirect:/expenses/create");

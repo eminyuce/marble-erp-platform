@@ -44,7 +44,6 @@ public class HelpContentCatalog {
     );
 
     private static final List<PathMapping> PATH_MAPPINGS = List.of(
-                    new PathMapping("/ogrenme-merkezi", "learning-center"),
                     new PathMapping("/account/change-password", "change-password"),
                     new PathMapping("/admin/dashboard/systemhealth", "system-health"),
                     new PathMapping("/production/tablet", "tablet"),
