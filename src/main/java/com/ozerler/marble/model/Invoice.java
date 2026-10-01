@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,18 +54,40 @@ public class Invoice extends AuditableEntity {
     @JoinColumn(name = "supplier_id")
     private Supplier supplier;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_department", length = 40)
+    private BusinessUnit targetDepartment;
+
     @Column(name = "party_name", length = 150)
     private String partyName;
 
     /**
-     * KDV kullanılmamaktadır. Ara toplam doğrudan kalemlerin toplamıdır.
+     * Ara toplam kalemlerin toplamıdır (KDV hariç).
      */
     @Column(name = "subtotal_amount", nullable = false, precision = 16, scale = 2)
     @Builder.Default
     private BigDecimal subtotalAmount = BigDecimal.ZERO;
 
     /**
-     * KDV kullanılmamaktadır. Genel toplam ara toplama eşittir.
+     * KDV Oranı (Varsayılan %20, kullanıcı düzenleyebilir veya silebilir).
+     */
+    @Column(name = "tax_rate", precision = 5, scale = 2)
+    @Builder.Default
+    private BigDecimal taxRate = new BigDecimal("20.00");
+
+    /**
+     * KDV Tutarı.
+     */
+    @Column(name = "tax_amount", nullable = false, precision = 16, scale = 2)
+    @Builder.Default
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+
+    /**
+     * Genel Toplam (Ara Toplam + KDV Tutarı).
      */
     @Column(name = "total_amount", nullable = false, precision = 16, scale = 2)
     @Builder.Default
@@ -99,11 +122,24 @@ public class Invoice extends AuditableEntity {
             }
         }
         this.subtotalAmount = sum;
-        this.totalAmount = sum;
+        if (this.taxRate != null && this.taxRate.compareTo(BigDecimal.ZERO) > 0) {
+            this.taxAmount = sum.multiply(this.taxRate).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        } else {
+            this.taxAmount = BigDecimal.ZERO;
+        }
+        this.totalAmount = this.subtotalAmount.add(this.taxAmount);
+    }
+
+    @Transient
+    public boolean isInternalTransfer() {
+        return targetDepartment != null;
     }
 
     @Transient
     public String getPartyDisplayName() {
+        if (targetDepartment != null) {
+            return "Dahili: " + targetDepartment.getDisplayName();
+        }
         if (customer != null) {
             return customer.getCompanyName();
         }

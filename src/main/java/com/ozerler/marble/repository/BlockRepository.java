@@ -209,6 +209,13 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     @Query("SELECT COALESCE(SUM(b.actualTonnage), 0) FROM Block b WHERE b.actualTonnage IS NOT NULL AND b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
     java.math.BigDecimal sumTotalActualTonnage();
 
+    @Query("SELECT COALESCE(SUM(CASE WHEN b.actualTonnage IS NOT NULL AND b.actualTonnage > 0 THEN b.actualTonnage ELSE COALESCE(b.estimatedTonnage, 0) END), 0) " +
+           "FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
+    java.math.BigDecimal sumTotalEffectiveBlockTonnage();
+
+    @Query("SELECT COUNT(b) FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
+    long countTotalStockBlocks();
+
     @Query("SELECT COUNT(b) FROM Block b " +
            "WHERE b.currentLocation.locationType IN (com.ozerler.marble.model.enums.StockLocationType.PRODUCTION_YARD, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD) " +
            "AND b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")

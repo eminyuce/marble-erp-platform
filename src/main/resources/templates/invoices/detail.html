@@ -14,6 +14,10 @@
             <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-2 flex items-center gap-2">
                 <i data-lucide="receipt" class="w-7 h-7 text-emerald-600"></i>
                 <span th:text="${invoice.invoiceNumber}">FAT-2026-0001</span>
+                <span th:if="${invoice.internalTransfer}"
+                      class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                    Dahili Transfer
+                </span>
             </h2>
         </div>
         <div class="flex items-center gap-2 shrink-0">
@@ -21,7 +25,7 @@
                 <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i>
                 <span>Yazdır</span>
             </button>
-            <a th:if="${invoice.invoiceType != null and invoice.invoiceType.name() == 'SALES' and invoice.status != null and invoice.status.name() != 'PAID'}"
+            <a th:if="${invoice.invoiceType != null and invoice.invoiceType.name() == 'SALES' and invoice.status != null and invoice.status.name() != 'PAID' and !invoice.internalTransfer}"
                th:href="@{/collections/create(customerId=${invoice.customer != null ? invoice.customer.id : ''}, invoiceId=${invoice.id}, amount=${invoice.totalAmount})}"
                class="erp-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm">
                 <i data-lucide="wallet" class="w-4 h-4"></i>
@@ -38,8 +42,8 @@
                 <span class="font-bold text-sm text-slate-900" th:text="${invoice.invoiceType != null ? invoice.invoiceType.displayName : '—'}">Satış Faturası</span>
             </div>
             <div>
-                <span class="text-slate-400 block font-semibold">Departman</span>
-                <span class="font-bold text-sm text-slate-900" th:text="${invoice.department != null ? invoice.department.displayName : 'Genel'}">Fabrika</span>
+                <span class="text-slate-400 block font-semibold">Çıkış Birimi / Departman</span>
+                <span class="font-bold text-sm text-slate-900" th:text="${invoice.department != null ? (invoice.department.name() == 'QUARRY' ? 'Ocaklar' : invoice.department.displayName) : 'Genel'}">Fabrika</span>
             </div>
             <div>
                 <span class="text-slate-400 block font-semibold">Fatura Tarihi</span>
@@ -53,17 +57,32 @@
             </div>
         </div>
 
-        <!-- Cari Bilgisi -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-slate-100 text-xs">
+        <!-- Cari / Hedef Birim & Proje Bilgisi -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-slate-100 text-xs">
             <div>
-                <span class="text-slate-400 block font-semibold mb-1">Cari / Müşteri / Tedarikçi</span>
+                <span class="text-slate-400 block font-semibold mb-1">Alıcı / Hedef Birim</span>
                 <div class="text-base font-black text-slate-900">
-                    <span th:if="${invoice.customer != null}" th:text="${invoice.customer.companyName}">ABC Marble Ltd.</span>
-                    <span th:if="${invoice.supplier != null}" th:text="${invoice.supplier.companyName}">XYZ Tedarik A.Ş.</span>
-                    <span th:if="${invoice.customer == null and invoice.supplier == null}" th:text="${invoice.partyName != null ? invoice.partyName : '—'}">—</span>
+                    <span th:if="${invoice.internalTransfer}" class="text-amber-800 flex items-center gap-1">
+                        <i data-lucide="arrow-right-left" class="w-4 h-4 text-amber-600"></i>
+                        <span th:text="${'Dahili Transfer: ' + (invoice.targetDepartment != null ? (invoice.targetDepartment.name() == 'QUARRY' ? 'Ocaklar' : invoice.targetDepartment.displayName) : 'Depo')}">Dahili: Fabrika</span>
+                    </span>
+                    <span th:if="${!invoice.internalTransfer and invoice.customer != null}" th:text="${invoice.customer.companyName}">ABC Marble Ltd.</span>
+                    <span th:if="${!invoice.internalTransfer and invoice.supplier != null}" th:text="${invoice.supplier.companyName}">XYZ Tedarik A.Ş.</span>
+                    <span th:if="${!invoice.internalTransfer and invoice.customer == null and invoice.supplier == null}" th:text="${invoice.partyName != null ? invoice.partyName : '—'}">—</span>
                 </div>
-                <div class="text-slate-500 mt-1" th:if="${invoice.customer != null}" th:text="${invoice.customer.phone}">+90 555 123 4567</div>
+                <div class="text-slate-500 mt-1" th:if="${!invoice.internalTransfer and invoice.customer != null and invoice.customer.phone != null}" th:text="${invoice.customer.phone}">+90 555 123 4567</div>
             </div>
+
+            <div>
+                <span class="text-slate-400 block font-semibold mb-1">Bağlantılı Şantiye / Proje</span>
+                <div th:if="${invoice.project != null}" class="text-sm font-bold text-amber-900 flex items-center gap-1.5 mt-0.5">
+                    <i data-lucide="building-2" class="w-4 h-4 text-amber-600"></i>
+                    <a th:href="@{'/projects/' + ${invoice.project.id}}" class="underline hover:text-amber-700" th:text="${invoice.project.name + ' (' + invoice.project.projectCode + ')'}">Proje Adı</a>
+                </div>
+                <div th:if="${invoice.project == null}" class="text-slate-500 font-medium mt-0.5">—</div>
+                <p th:if="${invoice.project != null}" class="text-[11px] text-amber-700 mt-1">Malzeme maliyeti projeye kaydedildi.</p>
+            </div>
+
             <div>
                 <span class="text-slate-400 block font-semibold mb-1">Açıklama / Notlar</span>
                 <div class="text-slate-700 font-medium" th:text="${invoice.notes != null ? invoice.notes : '—'}">Sevkiyat faturası</div>
@@ -72,49 +91,73 @@
 
         <!-- Fatura Kalemleri -->
         <div>
-            <h3 class="text-sm font-bold text-slate-900 mb-3">Fatura Kalemleri</h3>
+            <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+                <i data-lucide="list" class="w-4 h-4 text-emerald-600"></i>
+                <span>Fatura Kalemleri</span>
+            </h3>
             <div class="overflow-x-auto border border-slate-200 rounded-xl">
                 <table class="w-full text-left text-xs text-slate-700 border-collapse">
                     <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
                         <tr>
-                            <th class="py-3 px-4">#</th>
-                            <th class="py-3 px-4">Ürün / Hizmet</th>
-                            <th class="py-3 px-4">Açıklama</th>
-                            <th class="py-3 px-4 text-right">Miktar</th>
-                            <th class="py-3 px-4">Birim</th>
-                            <th class="py-3 px-4 text-right">Birim Fiyat</th>
-                            <th class="py-3 px-4 text-right bg-emerald-50/50">Satır Toplamı</th>
+                            <th class="py-3 px-3">#</th>
+                            <th class="py-3 px-3">Ürün / Hizmet</th>
+                            <th class="py-3 px-3">Açıklama</th>
+                            <th class="py-3 px-3 text-right">Miktar</th>
+                            <th class="py-3 px-3">Birim</th>
+                            <th class="py-3 px-3 text-center">Genişlik (cm)</th>
+                            <th class="py-3 px-3 text-center">Hesaplanan m²</th>
+                            <th class="py-3 px-3 text-right">Birim Fiyat</th>
+                            <th class="py-3 px-3 text-right bg-emerald-50/50">Satır Toplamı</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
                         <tr th:each="item, stat : ${invoice.items}" class="hover:bg-slate-50 transition">
-                            <td class="py-3 px-4 text-slate-400" th:text="${stat.count}">1</td>
-                            <td class="py-3 px-4 font-bold text-slate-900" th:text="${item.productName}">Mermer Plaka</td>
-                            <td class="py-3 px-4 text-slate-500" th:text="${item.description != null ? item.description : '—'}">—</td>
-                            <td class="py-3 px-4 text-right font-bold" th:text="${item.quantity != null ? #numbers.formatDecimal(item.quantity, 1, 'POINT', 2, 'COMMA') : '—'}">10,00</td>
-                            <td class="py-3 px-4 text-slate-600" th:text="${item.unit}">m2</td>
-                            <td class="py-3 px-4 text-right font-bold text-slate-800" th:text="${item.unitPrice != null ? #numbers.formatDecimal(item.unitPrice, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">1.500,00 TL</td>
-                            <td class="py-3 px-4 text-right font-black text-emerald-700 bg-emerald-50/30 whitespace-nowrap" th:text="${item.lineTotal != null ? #numbers.formatDecimal(item.lineTotal, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">15.000,00 TL</td>
+                            <td class="py-3 px-3 text-slate-400 font-mono" th:text="${stat.count}">1</td>
+                            <td class="py-3 px-3 font-bold text-slate-900">
+                                <span th:text="${item.productName}">Mermer Plaka</span>
+                                <span th:if="${item.block != null or item.slab != null or item.stockItem != null}"
+                                      class="ml-1 inline-block px-1.5 py-0.2 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800">
+                                    Stok
+                                </span>
+                            </td>
+                            <td class="py-3 px-3 text-slate-500" th:text="${item.description != null ? item.description : '—'}">—</td>
+                            <td class="py-3 px-3 text-right font-bold font-mono" th:text="${item.quantity != null ? #numbers.formatDecimal(item.quantity, 1, 'POINT', 2, 'COMMA') : '—'}">10,00</td>
+                            <td class="py-3 px-3 text-slate-600">
+                                <span th:text="${item.unit == 'm.t.' ? 'm.t. (Metretül)' : item.unit}">m2</span>
+                            </td>
+                            <td class="py-3 px-3 text-center font-mono text-slate-700">
+                                <span th:if="${item.widthCm != null and item.widthCm.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                      th:text="${#numbers.formatDecimal(item.widthCm, 1, 'POINT', 1, 'COMMA') + ' cm'}">30,0 cm</span>
+                                <span th:if="${item.widthCm == null or item.widthCm.compareTo(T(java.math.BigDecimal).ZERO) == 0}" class="text-slate-400">—</span>
+                            </td>
+                            <td class="py-3 px-3 text-center font-mono font-bold">
+                                <span th:if="${item.calculatedM2 != null and item.calculatedM2.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                      class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200"
+                                      th:text="${#numbers.formatDecimal(item.calculatedM2, 1, 'POINT', 2, 'COMMA') + ' m²'}">3,00 m²</span>
+                                <span th:if="${item.calculatedM2 == null or item.calculatedM2.compareTo(T(java.math.BigDecimal).ZERO) == 0}" class="text-slate-400">—</span>
+                            </td>
+                            <td class="py-3 px-3 text-right font-bold text-slate-800 font-mono" th:text="${item.unitPrice != null ? #numbers.formatDecimal(item.unitPrice, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">1.500,00 TL</td>
+                            <td class="py-3 px-3 text-right font-black text-emerald-700 bg-emerald-50/30 whitespace-nowrap font-mono" th:text="${item.lineTotal != null ? #numbers.formatDecimal(item.lineTotal, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">15.000,00 TL</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Toplamlar (NO KDV) -->
+        <!-- Toplamlar (Madde 3: KDV Alanı) -->
         <div class="flex justify-end pt-4">
             <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 w-full max-w-sm space-y-2 text-xs">
                 <div class="flex justify-between items-center text-slate-600">
-                    <span>Ara Toplam:</span>
-                    <span class="font-bold text-slate-800" th:text="${invoice.subtotalAmount != null ? #numbers.formatDecimal(invoice.subtotalAmount, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">15.000,00 TL</span>
+                    <span>Ara Toplam (Net):</span>
+                    <span class="font-bold text-slate-800 font-mono" th:text="${invoice.subtotalAmount != null ? #numbers.formatDecimal(invoice.subtotalAmount, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">15.000,00 TL</span>
                 </div>
-                <div class="flex justify-between items-center text-emerald-700 font-semibold border-t border-slate-200 pt-2">
-                    <span>KDV:</span>
-                    <span>Uygulanmaz (0 TL)</span>
+                <div class="flex justify-between items-center text-slate-700 border-t border-slate-200 pt-2">
+                    <span th:text="${'KDV (%' + (invoice.taxRate != null ? #numbers.formatDecimal(invoice.taxRate, 1, 'POINT', 0, 'COMMA') : '20') + '):'}">KDV (%20):</span>
+                    <span class="font-bold font-mono text-slate-900" th:text="${invoice.taxAmount != null ? #numbers.formatDecimal(invoice.taxAmount, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">3.000,00 TL</span>
                 </div>
-                <div class="flex justify-between items-center text-base font-black text-slate-900 border-t border-slate-200 pt-2">
+                <div class="flex justify-between items-center text-base font-black text-slate-900 border-t-2 border-slate-300 pt-2">
                     <span>Genel Toplam:</span>
-                    <span class="text-xl text-emerald-600" th:text="${invoice.totalAmount != null ? #numbers.formatDecimal(invoice.totalAmount, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">15.000,00 TL</span>
+                    <span class="text-xl text-emerald-600 font-mono" th:text="${invoice.totalAmount != null ? #numbers.formatDecimal(invoice.totalAmount, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">18.000,00 TL</span>
                 </div>
             </div>
         </div>
@@ -131,7 +174,7 @@
                         <span class="font-bold text-slate-800" th:text="${c.method != null ? c.method.displayName : 'Tahsilat'}">Nakit</span>
                         <span class="text-slate-500" th:text="${c.collectionDate != null ? #temporals.format(c.collectionDate, 'dd.MM.yyyy') : ''}"></span>
                     </div>
-                    <span class="font-black text-emerald-700" th:text="${#numbers.formatDecimal(c.amount, 1, 'POINT', 2, 'COMMA')} + ' TL'"></span>
+                    <span class="font-black text-emerald-700 font-mono" th:text="${#numbers.formatDecimal(c.amount, 1, 'POINT', 2, 'COMMA')} + ' TL'"></span>
                 </div>
             </div>
         </div>

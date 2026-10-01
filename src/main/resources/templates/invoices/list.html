@@ -110,7 +110,7 @@
                 @click="setDeptFilter('')">Tüm Departmanlar</button>
         <button type="button" class="erp-yard-chip"
                 :class="deptFilter === 'QUARRY' ? 'erp-yard-chip--active' : ''"
-                @click="setDeptFilter('QUARRY')">Ocak</button>
+                @click="setDeptFilter('QUARRY')">Ocaklar</button>
         <button type="button" class="erp-yard-chip"
                 :class="deptFilter === 'FACTORY' ? 'erp-yard-chip--active' : ''"
                 @click="setDeptFilter('FACTORY')">Fabrika</button>
@@ -171,7 +171,7 @@
                     {
                         title: "Fatura No",
                         field: "invoiceNumber",
-                        width: 170,
+                        width: 160,
                         responsive: 0,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
@@ -184,7 +184,7 @@
                     {
                         title: "Tarih",
                         field: "invoiceDate",
-                        width: 120,
+                        width: 110,
                         formatter: function (cell) {
                             return `<span class="text-slate-600 font-medium">${gridText(cell.getValue())}</span>`;
                         }
@@ -192,7 +192,7 @@
                     {
                         title: "Tür",
                         field: "invoiceTypeLabel",
-                        width: 130,
+                        width: 120,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
                             const isSales = row.invoiceType === "SALES";
@@ -202,27 +202,61 @@
                         }
                     },
                     {
-                        title: "Cari (Müşteri / Tedarikçi)",
+                        title: "Cari / Hedef Birim",
                         field: "partyName",
                         minWidth: 200,
                         formatter: function (cell) {
-                            return `<strong class="text-slate-900">${gridText(cell.getValue())}</strong>`;
+                            const row = cell.getRow().getData();
+                            if (row.isInternalTransfer) {
+                                return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                    <i data-lucide="arrow-right-left" class="w-3.5 h-3.5 text-amber-700 inline"></i>
+                                    <span>${gridText(cell.getValue())}</span>
+                                </span>`;
+                            }
+                            let html = `<strong class="text-slate-900">${gridText(cell.getValue())}</strong>`;
+                            if (row.projectName) {
+                                html += `<div class="text-[11px] text-amber-700 font-semibold flex items-center gap-1 mt-0.5">
+                                    <i data-lucide="building-2" class="w-3 h-3 inline"></i>
+                                    <span>${gridText(row.projectName)}</span>
+                                </div>`;
+                            }
+                            return html;
                         }
                     },
                     {
-                        title: "Departman",
+                        title: "Çıkış Birimi",
                         field: "departmentLabel",
                         width: 130,
                         formatter: function (cell) {
+                            const deptName = cell.getValue();
+                            const label = deptName === "QUARRY" || deptName === "Ocak" ? "Ocaklar" : deptName;
                             return `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
-                                ${gridText(cell.getValue())}
+                                ${gridText(label)}
                             </span>`;
                         }
                     },
                     {
-                        title: "Toplam Tutar",
+                        title: "Ara Toplam",
+                        field: "subtotalAmount",
+                        width: 130,
+                        formatter: function (cell) {
+                            return `<span class="font-mono text-slate-700 text-xs">${gridMoney(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "KDV",
+                        field: "taxAmount",
+                        width: 110,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            const rate = row.taxRate != null ? row.taxRate : 20;
+                            return `<span class="font-mono text-slate-600 text-xs">${gridMoney(cell.getValue())} <span class="text-[10px] text-slate-400">(%${rate})</span></span>`;
+                        }
+                    },
+                    {
+                        title: "Genel Toplam",
                         field: "totalAmount",
-                        width: 150,
+                        width: 140,
                         formatter: function (cell) {
                             return `<strong class="font-mono text-emerald-700 text-sm">${gridMoney(cell.getValue())}</strong>`;
                         }
@@ -230,7 +264,7 @@
                     {
                         title: "Durum",
                         field: "statusLabel",
-                        width: 120,
+                        width: 110,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
                             let cls = "bg-amber-100 text-amber-800";
@@ -241,7 +275,7 @@
                     },
                     {
                         title: "İşlemler",
-                        width: 100,
+                        width: 90,
                         headerSort: false,
                         responsive: 0,
                         formatter: function (cell) {

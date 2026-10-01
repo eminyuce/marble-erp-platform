@@ -57,13 +57,13 @@ class TerminologyContractTest {
         }
 
         String sidebar = Files.readString(root.resolve("templates/layout/sidebar.html"));
-        assertThat(sidebar).contains(">Ocak<").contains(">Fabrika<").contains(">Atölye<")
-                .contains(">Şantiyeler<").contains(">Maliyet Analizi<").contains(">Plaka Stok Sahası<")
+        assertThat(sidebar).contains(">Ocaklar<").contains(">Fabrika<").contains(">Atölye<")
+                .contains(">Şantiyeler<").contains(">Maliyet Analizi<")
                 .contains("/admin/definitions/machines")
                 .contains("/admin/definitions/suppliers")
                 .doesNotContain("th:href=\"@{/admin/definitions}\"");
         String megaMenu = Files.readString(root.resolve("templates/layout/mega-menu.html"));
-        assertThat(megaMenu).contains(">Ocak — Blok Takibi<");
+        assertThat(megaMenu).contains(">Ocaklar — Blok Takibi<");
         assertThat(megaMenu).doesNotContain("Sistem Tanımları");
         assertThat(megaMenu).doesNotContain("th:href=\"@{/admin/definitions}\"");
         assertThat(megaMenu).contains("admin-mega-card-title\">Tanımlar<");

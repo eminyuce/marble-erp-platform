@@ -33,6 +33,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.StockItemRepository;
+import java.math.RoundingMode;
+
 @Service
 @RequiredArgsConstructor
 public class PalletShipmentService {
@@ -42,15 +49,17 @@ public class PalletShipmentService {
     private final ShipmentRepository shipmentRepository;
     private final ShipmentItemRepository shipmentItemRepository;
     private final MaterialLotRepository materialLotRepository;
+    private final StockItemRepository stockItemRepository;
+    private final SlabRepository slabRepository;
     private final CustomerRepository customerRepository;
     private final ProjectRepository projectRepository;
     private final StockLocationRepository stockLocationRepository;
     private final PalletLocationMovementRepository palletLocationMovementRepository;
 
     @Transactional
-    public Pallet createPallet(String palletCode, Long customerId, Long projectId, String warehouseLocation) {
+    public Pallet createPallet(String palletCode, Long customerId, Long projectId, String warehouseLocation, BusinessUnit department) {
         if (customerId == null && projectId == null) {
-            throw new IllegalArgumentException(MessageUtils.getMessage("error.shipment.target.required"));
+            throw new IllegalArgumentException("Müşteri veya şantiye seçilmelidir");
         }
         Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
         Project project = projectId != null ? projectRepository.findById(projectId).orElse(null) : null;
@@ -62,30 +71,85 @@ public class PalletShipmentService {
                         : UniqueCodes.yearly("PAL", palletRepository::existsByPalletCode))
                 .warehouseLocation(warehouseLocation)
                 .currentLocation(yard)
+                .department(department != null ? department : BusinessUnit.FACTORY)
                 .status("PREPARING")
                 .customer(customer)
                 .project(project)
                 .build());
-        recordPalletMovement(pallet, null, yard, "Palet oluşturuldu — Paletli Stok");
+        recordPalletMovement(pallet, null, yard, "Palet oluşturuldu — Paletli Stok (" + (department != null ? department.getDisplayName() : "Fabrika") + ")");
         return pallet;
     }
 
     @Transactional
+    public Pallet createPallet(String palletCode, Long customerId, Long projectId, String warehouseLocation) {
+        return createPallet(palletCode, customerId, projectId, warehouseLocation, BusinessUnit.FACTORY);
+    }
+
+    @Transactional
     public PalletItem addLot(Long palletId, Long materialLotId, Integer quantity, BigDecimal areaM2) {
+        return addItem(palletId, materialLotId, null, null, null, null, null, null, quantity, areaM2);
+    }
+
+    @Transactional
+    public PalletItem addItem(Long palletId, Long materialLotId, Long stockItemId, Long slabId,
+                              String productName, BigDecimal widthCm, BigDecimal lengthCm, BigDecimal thicknessCm,
+                              Integer quantity, BigDecimal areaM2) {
         Pallet pallet = palletRepository.findById(palletId)
                 .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
         if ("SHIPPED".equalsIgnoreCase(pallet.getStatus())) {
-            throw new IllegalStateException("Sevk edilmiş palete yeni lot eklenemez.");
+            throw new IllegalStateException("Sevk edilmiş palete yeni ürün eklenemez.");
         }
-        MaterialLot lot = materialLotRepository.findById(materialLotId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.material_lot.not_found", materialLotId)));
-        lot.setStatus(MaterialLotStatus.PALLETIZED);
+
+        MaterialLot lot = materialLotId != null ? materialLotRepository.findById(materialLotId).orElse(null) : null;
+        StockItem stockItem = stockItemId != null ? stockItemRepository.findById(stockItemId).orElse(null) : null;
+        Slab slab = slabId != null ? slabRepository.findById(slabId).orElse(null) : null;
+
+        if (lot != null) {
+            lot.setStatus(MaterialLotStatus.PALLETIZED);
+            if (widthCm == null) widthCm = lot.getWidthCm();
+            if (lengthCm == null) lengthCm = lot.getLengthCm();
+            if (thicknessCm == null) thicknessCm = lot.getThicknessCm();
+            if (productName == null || productName.isBlank()) {
+                productName = lot.getLotCode() + (lot.getProductForm() != null ? " — " + lot.getProductForm().getLabel() : "");
+            }
+        } else if (stockItem != null) {
+            if (widthCm == null) widthCm = stockItem.getWidthCm();
+            if (lengthCm == null) lengthCm = stockItem.getLengthCm();
+            if (thicknessCm == null) thicknessCm = stockItem.getThicknessCm();
+            if (productName == null || productName.isBlank()) {
+                productName = stockItem.getItemCode() + " (" + (stockItem.getStoneType() != null ? stockItem.getStoneType() : "Ebatlı") + ")";
+            }
+        } else if (slab != null) {
+            if (widthCm == null) widthCm = slab.getWidthCm();
+            if (lengthCm == null) lengthCm = slab.getLengthCm();
+            if (thicknessCm == null) thicknessCm = slab.getThicknessCm();
+            if (productName == null || productName.isBlank()) {
+                productName = slab.getSlabCode() + " (Plaka)";
+            }
+        }
+
+        int qty = quantity != null && quantity > 0 ? quantity : 1;
+        BigDecimal calculatedArea = areaM2;
+        if ((calculatedArea == null || calculatedArea.compareTo(BigDecimal.ZERO) <= 0) && widthCm != null && lengthCm != null) {
+            calculatedArea = widthCm.multiply(lengthCm).divide(new BigDecimal("10000"), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(qty));
+        }
+        if (calculatedArea == null || calculatedArea.compareTo(BigDecimal.ZERO) <= 0) {
+            calculatedArea = lot != null ? lot.getTotalAreaM2() : (slab != null ? slab.getSurfaceAreaM2() : BigDecimal.ZERO);
+        }
+
         PalletItem item = palletItemRepository.save(PalletItem.builder()
                 .pallet(pallet)
                 .materialLot(lot)
-                .quantity(quantity != null && quantity > 0 ? quantity : 1)
-                .areaM2(areaM2 != null && areaM2.compareTo(BigDecimal.ZERO) > 0 ? areaM2 : lot.getTotalAreaM2())
+                .stockItem(stockItem)
+                .slab(slab)
+                .productName(productName)
+                .widthCm(widthCm)
+                .lengthCm(lengthCm)
+                .thicknessCm(thicknessCm)
+                .quantity(qty)
+                .areaM2(calculatedArea != null ? calculatedArea : BigDecimal.ZERO)
                 .build());
+
         pallet.setStatus("READY");
         return item;
     }

@@ -67,6 +67,8 @@ public class DashboardService {
 
         BigDecimal totalEstTon = blockRepository.sumTotalEstimatedTonnage();
         BigDecimal totalActTon = blockRepository.sumTotalActualTonnage();
+        BigDecimal totalEffectiveTon = blockRepository.sumTotalEffectiveBlockTonnage();
+        long totalStockBlockCount = blockRepository.countTotalStockBlocks();
 
         long openOrders = workOrderRepository.countByStatus(com.ozerler.marble.model.enums.OperationWorkOrderStatus.NEW)
                 + workOrderRepository.countByStatus(com.ozerler.marble.model.enums.OperationWorkOrderStatus.APPROVED);
@@ -101,6 +103,8 @@ public class DashboardService {
                 .factorySizedItemAreaM2(factorySizedItemAreaM2)
                 .totalEstimatedTonnage(totalEstTon)
                 .totalActualTonnage(totalActTon)
+                .totalEffectiveBlockTonnage(totalEffectiveTon)
+                .totalStockBlockCount(totalStockBlockCount)
                 .openWorkOrdersCount(openOrders)
                 .inProductionWorkOrdersCount(inProdOrders)
                 .completedWorkOrdersCount(completedOrders)

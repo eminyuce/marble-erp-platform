@@ -106,4 +106,9 @@ public class StockItem extends AuditableEntity {
     public boolean isReserved() {
         return customer != null || "RESERVED".equalsIgnoreCase(status);
     }
+
+    @Transient
+    public String getProductCode() {
+        return itemCode;
+    }
 }

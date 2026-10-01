@@ -179,7 +179,7 @@
             </div>
 
             <!-- Stok & Tonaj Kartları -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Ocak Blok Stoku</span>
                     <div class="text-xl font-black text-slate-900 mt-1">
@@ -213,18 +213,11 @@
                 </div>
 
                 <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Toplam Gerçek Tonaj</span>
-                    <div class="text-xl font-black text-emerald-700 mt-1">
-                        <span th:text="${kpis.totalActualTonnage != null ? #numbers.formatDecimal(kpis.totalActualTonnage, 1, 'POINT', 1, 'COMMA') : '0'}">0</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Stoktaki Bloklar & Tonaj</span>
+                    <div class="text-xl font-black text-emerald-700 mt-1 flex items-baseline gap-1.5 flex-wrap">
+                        <span th:text="${kpis.totalEffectiveBlockTonnage != null ? #numbers.formatDecimal(kpis.totalEffectiveBlockTonnage, 1, 'POINT', 1, 'COMMA') : '0'}">0</span>
                         <span class="text-xs font-normal text-slate-500">ton</span>
-                    </div>
-                </div>
-
-                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Toplam Tahmini Tonaj</span>
-                    <div class="text-xl font-black text-amber-600 mt-1">
-                        <span th:text="${kpis.totalEstimatedTonnage != null ? #numbers.formatDecimal(kpis.totalEstimatedTonnage, 1, 'POINT', 1, 'COMMA') : '0'}">0</span>
-                        <span class="text-xs font-normal text-slate-500">ton</span>
+                        <span class="text-xs font-bold text-slate-500 ml-1">(<span th:text="${kpis.totalStockBlockCount}">0</span> blok)</span>
                     </div>
                 </div>
             </div>

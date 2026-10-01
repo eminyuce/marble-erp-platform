@@ -45,6 +45,11 @@ public class Pallet extends AuditableEntity {
     @Builder.Default
     private String status = "PREPARING";
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "department", length = 40)
+    @Builder.Default
+    private com.ozerler.marble.model.enums.BusinessUnit department = com.ozerler.marble.model.enums.BusinessUnit.FACTORY;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
     private Customer customer;

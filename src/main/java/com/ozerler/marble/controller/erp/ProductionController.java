@@ -27,6 +27,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.repository.StockItemRepository;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -43,6 +45,7 @@ public class ProductionController {
     private final FactoryProductionService factoryProductionService;
     private final PalletShipmentService palletShipmentService;
     private final QuarryBlockService quarryBlockService;
+    private final StockItemRepository stockItemRepository;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -343,8 +346,10 @@ public class ProductionController {
                 com.ozerler.marble.model.enums.StockLocationType.WORKSHOP_STOCK});
         model.addAttribute("shipments", palletShipmentService.shipments());
         model.addAttribute("lots", palletShipmentService.availableLots());
+        model.addAttribute("stockItems", stockItemRepository.findAll());
         model.addAttribute("customers", palletShipmentService.customers());
         model.addAttribute("projects", palletShipmentService.projects());
+        model.addAttribute("departments", BusinessUnit.values());
         return "erp/production/pallets";
     }
 
@@ -353,11 +358,12 @@ public class ProductionController {
     public String createPallet(@RequestParam(value = "palletCode", required = false) String palletCode,
                                @RequestParam(value = "customerId", required = false) Long customerId,
                                @RequestParam(value = "projectId", required = false) Long projectId,
+                               @RequestParam(value = "department", required = false) BusinessUnit department,
                                @RequestParam(value = "warehouseLocation", required = false) String warehouseLocation,
                                Locale locale,
                                RedirectAttributes redirectAttributes) {
         try {
-            palletShipmentService.createPallet(palletCode, customerId, projectId, warehouseLocation);
+            palletShipmentService.createPallet(palletCode, customerId, projectId, warehouseLocation, department != null ? department : BusinessUnit.FACTORY);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.production.pallet.success", null, locale));
         } catch (Exception e) {
@@ -369,13 +375,18 @@ public class ProductionController {
     @PostMapping("/pallets/{id}/items")
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     public String addPalletItem(@PathVariable("id") Long palletId,
-                                @RequestParam("materialLotId") Long materialLotId,
+                                @RequestParam(value = "materialLotId", required = false) Long materialLotId,
+                                @RequestParam(value = "stockItemId", required = false) Long stockItemId,
+                                @RequestParam(value = "productName", required = false) String productName,
+                                @RequestParam(value = "widthCm", required = false) BigDecimal widthCm,
+                                @RequestParam(value = "lengthCm", required = false) BigDecimal lengthCm,
+                                @RequestParam(value = "thicknessCm", required = false) BigDecimal thicknessCm,
                                 @RequestParam(value = "quantity", required = false) Integer quantity,
                                 @RequestParam(value = "areaM2", required = false) BigDecimal areaM2,
                                 RedirectAttributes redirectAttributes) {
         try {
-            palletShipmentService.addLot(palletId, materialLotId, quantity, areaM2);
-            redirectAttributes.addFlashAttribute("successMessage", "Lot başarıyla palete eklendi.");
+            palletShipmentService.addItem(palletId, materialLotId, stockItemId, null, productName, widthCm, lengthCm, thicknessCm, quantity, areaM2);
+            redirectAttributes.addFlashAttribute("successMessage", "Ürün başarıyla palete eklendi.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }

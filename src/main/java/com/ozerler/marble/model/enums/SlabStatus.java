@@ -7,7 +7,8 @@ public enum SlabStatus {
     RESERVED("enum.slab_status.reserved"),
     IN_CUTTING("enum.slab_status.in_cutting"),
     SCRAPPED("enum.slab_status.scrapped"),
-    INSTALLED("enum.slab_status.installed");
+    INSTALLED("enum.slab_status.installed"),
+    SOLD("enum.slab_status.sold");
 
     private final String messageKey;
 

@@ -2,68 +2,150 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Yeni Fatura — Alış & Satış | Özerler Mermer ERP</title>
+    <title>Yeni Fatura — Alış, Satış &amp; Dahili Transfer | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-form-page max-w-5xl mx-auto space-y-6"
+<div layout:fragment="content" class="erp-form-page max-w-6xl mx-auto space-y-6"
      th:data-initial-type="${defaultType != null ? defaultType.name() : 'SALES'}"
      x-data="{
         invoiceType: $el.dataset.initialType || 'SALES',
+        destinationMode: 'CUSTOMER', // 'CUSTOMER' or 'INTERNAL'
+        targetDepartment: 'FACTORY',
+        taxRate: 20,
+        stockModalOpen: false,
+        stockCategoryFilter: '',
+        stockSearch: '',
+        stockItemsList: [],
+        stockLoading: false,
         lines: [
-            { productName: '', description: '', quantity: 1, unit: 'm2', unitPrice: 0, blockId: '', stockItemId: '' }
+            { productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' }
         ],
         addLine() {
-            this.lines.push({ productName: '', description: '', quantity: 1, unit: 'm2', unitPrice: 0, blockId: '', stockItemId: '' });
+            this.lines.push({ productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' });
         },
         removeLine(index) {
             if (this.lines.length > 1) {
                 this.lines.splice(index, 1);
             }
         },
-        get grandTotal() {
+        getLineCalcM2(line) {
+            if (line.unit === 'm.t.' && parseFloat(line.widthCm) > 0) {
+                return (((parseFloat(line.quantity) || 0) * parseFloat(line.widthCm)) / 100).toFixed(2);
+            }
+            return '';
+        },
+        get subtotal() {
             let total = 0;
             this.lines.forEach(l => {
                 const q = parseFloat(l.quantity) || 0;
                 const p = parseFloat(l.unitPrice) || 0;
                 total += (q * p);
             });
-            return total.toFixed(2);
+            return total;
+        },
+        get taxAmount() {
+            const rate = parseFloat(this.taxRate) || 0;
+            return (this.subtotal * (rate / 100));
+        },
+        get grandTotal() {
+            return (this.subtotal + this.taxAmount);
+        },
+        get subtotalFormatted() {
+            return this.subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        get taxAmountFormatted() {
+            return this.taxAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        get grandTotalFormatted() {
+            return this.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        openStockModal() {
+            this.stockModalOpen = true;
+            this.fetchStock();
+        },
+        fetchStock() {
+            this.stockLoading = true;
+            let url = '/invoices/api/available-stock?';
+            if (this.stockCategoryFilter) url += 'type=' + encodeURIComponent(this.stockCategoryFilter) + '&';
+            if (this.stockSearch) url += 'search=' + encodeURIComponent(this.stockSearch);
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    this.stockItemsList = data;
+                    this.stockLoading = false;
+                })
+                .catch(() => { this.stockLoading = false; });
+        },
+        selectStockItem(item) {
+            // İlk satır tamamen boşsa üzerine yaz, aksi halde yeni satır ekle
+            let targetLine;
+            if (this.lines.length === 1 && !this.lines[0].productName) {
+                targetLine = this.lines[0];
+            } else {
+                targetLine = { productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' };
+                this.lines.push(targetLine);
+            }
+            targetLine.productName = item.name;
+            targetLine.description = (item.dimensions ? item.dimensions + ' ' : '') + (item.stoneType ? item.stoneType : '');
+            targetLine.quantity = item.quantity || 1;
+            targetLine.unit = item.unit || 'm2';
+            targetLine.widthCm = item.widthCm || '';
+            targetLine.blockId = item.category === 'BLOCK' ? item.id : '';
+            targetLine.slabId = item.category === 'SLAB' ? item.id : '';
+            targetLine.stockItemId = item.category === 'SIZED' ? item.id : '';
+            this.stockModalOpen = false;
         }
      }">
 
     <!-- Header & Breadcrumb -->
     <div class="erp-form-header">
         <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Faturalar', '/invoices', 'Yeni Fatura')}"></div>
-        <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-2 flex items-center gap-2">
-            <i data-lucide="receipt" class="w-7 h-7 text-emerald-600"></i>
-            <span>Yeni Fatura Oluştur</span>
-        </h2>
-        <p class="erp-form-lead text-sm text-slate-600">
-            Departman bazlı alış veya satış faturası girin. Ürün kalemlerini ekleyerek doğrudan stok/blok ve cari hesaplara bağlayın.
-        </p>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
+            <div>
+                <h2 class="admin-page-title text-2xl font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="receipt" class="w-7 h-7 text-emerald-600"></i>
+                    <span>Yeni Fatura Oluştur</span>
+                </h2>
+                <p class="erp-form-lead text-sm text-slate-600 mt-1">
+                    Ocak, Fabrika veya Atölye çıkışlarını faturalandırın, dahili transfer yapın veya şantiye maliyetine bağlayın.
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" @click="openStockModal()"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-300 shadow-sm">
+                    <i data-lucide="boxes" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Stoktan Ürün Seç</span>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- KDV Bilgi Notu -->
-    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
+    <!-- Bilgilendirme Notu -->
+    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
         <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"></i>
-        <div class="text-xs text-emerald-900 leading-relaxed">
-            <strong>Fatura Sistemi Kuralı:</strong> Faturalar net tutarlar üzerinden düzenlenir. Sistemde KDV alanı yer almamaktadır; satır toplamları doğrudan fatura toplamını oluşturur.
+        <div class="text-xs text-emerald-950 leading-relaxed space-y-1">
+            <p><strong>Operasyonel Kurallar:</strong> Ocak, Fabrika ve Atölye'den yapılan tüm çıkışlar fatura ile kayıt altına alınır.</p>
+            <p class="text-slate-600">
+                • <strong>Dahili Sevkiyat:</strong> Fabrika veya Atölye'ye gönderilen mermerlerde müşteri seçimi gerekmez; ürünler doğrudan o birimin stoğuna geçer.<br>
+                • <strong>Şantiye Maliyet Takibi:</strong> Atölye/Fabrika çıkışında proje seçildiğinde malzeme maliyeti doğrudan o şantiyeye bağımsız olarak kaydedilir.<br>
+                • <strong>Metretül Satış:</strong> Birim "m.t." seçildiğinde genişlik (cm) girilir, sistem m² karşılığını otomatik hesaplar ve stoktan m² olarak düşer.
+            </p>
         </div>
     </div>
 
     <form th:action="@{/invoices/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
         <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-        <!-- Fatura Üst Bilgileri -->
+        <!-- 1. Fatura Üst Bilgileri -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-            <!-- Fatura Tipi (Satış / Alış) -->
+            <!-- Fatura Tipi -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Fatura Tipi *</label>
                 <select name="invoiceType" x-model="invoiceType" required
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    <option value="SALES">Satış Faturası</option>
-                    <option value="PURCHASE">Alış Faturası</option>
+                    <option value="SALES">Satış / Çıkış Faturası</option>
+                    <option value="PURCHASE">Alış / Giriş Faturası</option>
                 </select>
             </div>
 
@@ -74,12 +156,13 @@
                        class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-mono text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
             </div>
 
-            <!-- Departman Seçimi (Ocak, Fabrika, Atölye, Şantiye, Genel) -->
+            <!-- Çıkış Yapan / Düzenleyen Departman -->
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">Departman *</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Çıkış Yapan Birim / Departman *</label>
                 <select name="department" required
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    <option th:each="d : ${departments}" th:value="${d.name()}" th:text="${d.displayName}"
+                    <option th:each="d : ${departments}" th:value="${d.name()}"
+                            th:text="${d.name() == 'QUARRY' ? 'Ocaklar' : d.displayName}"
                             th:selected="${defaultDepartment != null and defaultDepartment == d}"></option>
                 </select>
             </div>
@@ -98,27 +181,99 @@
                        class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
             </div>
 
-            <!-- Cari Seçimi (Satış ise Müşteri, Alış ise Tedarikçi veya Serbest) -->
+            <!-- Proje / Şantiye Seçimi (Maliyet Takibi İçin) -->
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                    <span x-show="invoiceType === 'SALES'">Müşteri / Cari *</span>
-                    <span x-show="invoiceType === 'PURCHASE'">Tedarikçi / Cari *</span>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                    <span>Şantiye / Proje (Opsiyonel)</span>
+                    <span class="text-[10px] text-amber-600 font-semibold uppercase">Maliyet</span>
                 </label>
-                <!-- Satış için Müşteriler -->
-                <div x-show="invoiceType === 'SALES'">
-                    <select name="customerId"
-                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                        <option value="">-- Müşteri Seçiniz --</option>
-                        <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
-                    </select>
+                <select name="projectId"
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <option value="">-- Şantiye / Proje Yok (Genel Satış) --</option>
+                    <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name + ' (' + p.projectCode + ')'}"></option>
+                </select>
+            </div>
+
+        </div>
+
+        <!-- 2. Alıcı / Cari / Dahili Birim Seçimi (Madde 1) -->
+        <div class="border-t border-slate-100 pt-5">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-1.5">
+                <i data-lucide="user-check" class="w-4 h-4 text-emerald-600"></i>
+                <span>Alıcı / Hedef Birim Seçimi</span>
+            </h3>
+
+            <!-- Satış Durumu için Seçim (Müşteri mi Dahili Transfer mi?) -->
+            <div x-show="invoiceType === 'SALES'" class="space-y-3">
+                <div class="flex flex-wrap items-center gap-4 text-xs font-bold">
+                    <label class="inline-flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border"
+                           :class="destinationMode === 'CUSTOMER' ? 'bg-emerald-50 border-emerald-500 text-emerald-950' : 'bg-slate-50 border-slate-200 text-slate-700'">
+                        <input type="radio" x-model="destinationMode" value="CUSTOMER" class="text-emerald-600 focus:ring-emerald-500">
+                        <span>Dış Müşteri (Cari Satış)</span>
+                    </label>
+
+                    <label class="inline-flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border"
+                           :class="destinationMode === 'INTERNAL' ? 'bg-amber-50 border-amber-500 text-amber-950' : 'bg-slate-50 border-slate-200 text-slate-700'">
+                        <input type="radio" x-model="destinationMode" value="INTERNAL" class="text-amber-600 focus:ring-amber-500">
+                        <span>Dahili Birim Transferi (Ocaklar / Fabrika / Atölye)</span>
+                    </label>
                 </div>
-                <!-- Alış için Tedarikçiler -->
-                <div x-show="invoiceType === 'PURCHASE'">
-                    <select name="supplierId"
-                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                        <option value="">-- Tedarikçi Seçiniz --</option>
-                        <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.companyName}"></option>
-                    </select>
+
+                <!-- Müşteri Seçimi -->
+                <div x-show="destinationMode === 'CUSTOMER'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Müşteri Seçiniz *</label>
+                        <select name="customerId" :required="destinationMode === 'CUSTOMER' && invoiceType === 'SALES'"
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <option value="">-- Müşteri Listesinden Seçin --</option>
+                            <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Cari Unvan / Serbest Alıcı (Opsiyonel)</label>
+                        <input type="text" name="partyName" placeholder="Müşteri kaydı yoksa serbest alıcı unvanı girin..."
+                               class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                    </div>
+                </div>
+
+                <!-- Dahili Transfer Hedef Birim Seçimi -->
+                <div x-show="destinationMode === 'INTERNAL'" class="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 space-y-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-amber-900 mb-1.5">Ürünlerin Aktarılacağı Hedef Birim *</label>
+                            <select name="targetDepartment" x-model="targetDepartment"
+                                    class="w-full px-3.5 py-2.5 bg-white border border-amber-300 rounded-xl text-sm font-bold text-amber-950 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <option value="FACTORY">Fabrika (Plaka / Blok Sahası)</option>
+                                <option value="WORKSHOP">Atölye (Ebatlama &amp; Mamul)</option>
+                                <option value="QUARRY">Ocaklar</option>
+                            </select>
+                        </div>
+                        <div class="text-xs text-amber-900 flex items-center">
+                            <div class="bg-white/80 p-3 rounded-xl border border-amber-200 w-full">
+                                <i data-lucide="arrow-right-left" class="w-4 h-4 text-amber-600 inline mr-1"></i>
+                                <strong>Otomatik Stok Transferi:</strong> Müşteri cari seçimine gerek yoktur. Bu faturayla çıkan blok veya plakalar doğrudan seçilen birimin stoğuna kaydedilecektir.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alış Durumu için Tedarikçi Seçimi -->
+            <div x-show="invoiceType === 'PURCHASE'">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Tedarikçi Seçiniz *</label>
+                        <select name="supplierId" :required="invoiceType === 'PURCHASE'"
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <option value="">-- Tedarikçi Listesinden Seçin --</option>
+                            <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.companyName}"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Tedarikçi Unvanı / Fatura Başlığı</label>
+                        <input type="text" name="partyName" placeholder="Kayıtlı olmayan tedarikçi unvanı..."
+                               class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                    </div>
                 </div>
             </div>
 
@@ -126,70 +281,125 @@
 
         <!-- Açıklama -->
         <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">Fatura Notu / Açıklama</label>
-            <input type="text" name="notes" placeholder="Sevkiyat referansı, irsaliye no veya sözleşme detayı..."
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Fatura Notu / İrsaliye &amp; Sevkiyat Detayı</label>
+            <input type="text" name="notes" placeholder="Sevkiyat referansı, irsaliye no, şoför/plaka bilgisi veya sözleşme notu..."
                    class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
         </div>
 
-        <!-- Fatura Kalemleri (Dinamik Tablo) -->
+        <!-- 3. Fatura Kalemleri (Dinamik Tablo & Metretül Desteği) -->
         <div class="border-t border-slate-100 pt-6">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                    <i data-lucide="list" class="w-4 h-4 text-emerald-600"></i>
-                    <span>Fatura Kalemleri</span>
-                </h3>
-                <button type="button" @click="addLine()"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-200">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                    <span>Kalem Ekle</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                        <i data-lucide="list" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Fatura Kalemleri</span>
+                    </h3>
+                    <span class="text-xs text-slate-400 font-mono" x-text="'(' + lines.length + ' Kalem)'"></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="openStockModal()"
+                            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-300">
+                        <i data-lucide="boxes" class="w-3.5 h-3.5"></i>
+                        <span>Stoktan Seç</span>
+                    </button>
+                    <button type="button" @click="addLine()"
+                            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition border border-slate-300">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        <span>Boş Satır Ekle</span>
+                    </button>
+                </div>
             </div>
 
             <div class="overflow-x-auto border border-slate-200 rounded-2xl">
-                <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                <table class="w-full text-left text-xs text-slate-700 border-collapse min-w-[850px]">
                     <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
                         <tr>
-                            <th class="py-3 px-3">Ürün / Hizmet *</th>
-                            <th class="py-3 px-3">Açıklama</th>
-                            <th class="py-3 px-3 w-28">Miktar *</th>
+                            <th class="py-3 px-3 min-w-[200px]">Ürün / Hizmet *</th>
+                            <th class="py-3 px-3 min-w-[140px]">Açıklama / Ebat</th>
+                            <th class="py-3 px-3 w-24">Miktar *</th>
                             <th class="py-3 px-3 w-28">Birim *</th>
-                            <th class="py-3 px-3 w-32">Birim Fiyat (TL) *</th>
-                            <th class="py-3 px-3 w-32 text-right">Satır Toplamı (TL)</th>
+                            <th class="py-3 px-3 w-28">Genişlik (cm)</th>
+                            <th class="py-3 px-3 w-28 text-center">Hesaplanan m²</th>
+                            <th class="py-3 px-3 w-28">Birim Fiyat (TL) *</th>
+                            <th class="py-3 px-3 w-28 text-right">Satır Tutarı (TL)</th>
                             <th class="py-3 px-2 w-10 text-center"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
                         <template x-for="(line, index) in lines" :key="index">
                             <tr class="hover:bg-slate-50 transition">
+                                <!-- Ürün Adı & Gizli ID'ler -->
                                 <td class="p-2">
-                                    <input type="text" name="itemProductName" x-model="line.productName" required placeholder="Ürün adı"
+                                    <input type="text" name="itemProductName" x-model="line.productName" required placeholder="Ürün / Malzeme adı"
                                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                                    <!-- Bağlı Stok ID'leri -->
+                                    <input type="hidden" name="itemBlockId" :value="line.blockId || ''">
+                                    <input type="hidden" name="itemSlabId" :value="line.slabId || ''">
+                                    <input type="hidden" name="itemStockItemId" :value="line.stockItemId || ''">
+                                    <input type="hidden" name="itemCalculatedM2" :value="getLineCalcM2(line)">
+                                    <div th:if="true" x-show="line.blockId || line.slabId || line.stockItemId" class="mt-1 flex items-center gap-1">
+                                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                            <i data-lucide="check" class="w-3 h-3"></i> Stok Bağlı
+                                        </span>
+                                    </div>
                                 </td>
+
+                                <!-- Açıklama -->
                                 <td class="p-2">
-                                    <input type="text" name="itemDescription" x-model="line.description" placeholder="Açıklama / ebat"
+                                    <input type="text" name="itemDescription" x-model="line.description" placeholder="Ebat, yüzey veya detay..."
                                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
                                 </td>
+
+                                <!-- Miktar -->
                                 <td class="p-2">
                                     <input type="number" step="0.01" name="itemQuantity" x-model.number="line.quantity" required
                                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right" />
                                 </td>
+
+                                <!-- Birim -->
                                 <td class="p-2">
                                     <select name="itemUnit" x-model="line.unit" required
                                             class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
                                         <option value="m2">m²</option>
+                                        <option value="m.t.">m.t. (Metretül)</option>
                                         <option value="ton">ton</option>
                                         <option value="adet">adet</option>
-                                        <option value="m.t.">m.t.</option>
                                         <option value="m3">m³</option>
                                     </select>
                                 </td>
+
+                                <!-- Genişlik (cm) - Metretül satışı için -->
+                                <td class="p-2">
+                                    <input type="number" step="0.1" name="itemWidthCm" x-model.number="line.widthCm"
+                                           :placeholder="line.unit === 'm.t.' ? 'En (cm) *' : '—'"
+                                           :disabled="line.unit !== 'm.t.'"
+                                           class="w-full px-2 py-1.5 border rounded-lg text-xs text-center font-mono focus:ring-1 focus:outline-none"
+                                           :class="line.unit === 'm.t.' ? 'border-amber-400 bg-amber-50 text-amber-950 font-bold focus:ring-amber-500' : 'border-slate-200 bg-slate-100 text-slate-400'" />
+                                </td>
+
+                                <!-- Hesaplanan m² (Metretül x Genişlik / 100) -->
+                                <td class="p-2 text-center font-mono font-bold text-xs">
+                                    <template x-if="line.unit === 'm.t.' && line.widthCm > 0">
+                                        <span class="px-2 py-1 bg-teal-50 border border-teal-200 text-teal-800 rounded-lg inline-block"
+                                              x-text="getLineCalcM2(line) + ' m²'"></span>
+                                    </template>
+                                    <template x-if="line.unit !== 'm.t.' || !line.widthCm">
+                                        <span class="text-slate-400">—</span>
+                                    </template>
+                                </td>
+
+                                <!-- Birim Fiyat -->
                                 <td class="p-2">
                                     <input type="number" step="0.01" name="itemUnitPrice" x-model.number="line.unitPrice" required
-                                           class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right" />
+                                           class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right font-mono" />
                                 </td>
-                                <td class="p-2 text-right font-black text-slate-900 text-xs whitespace-nowrap">
+
+                                <!-- Satır Tutarı -->
+                                <td class="p-2 text-right font-black text-slate-900 text-xs whitespace-nowrap font-mono">
                                     <span x-text="((line.quantity || 0) * (line.unitPrice || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' TL'"></span>
                                 </td>
+
+                                <!-- Sil -->
                                 <td class="p-2 text-center">
                                     <button type="button" @click="removeLine(index)" class="p-1 text-slate-400 hover:text-rose-600 rounded-md transition" title="Satırı Sil">
                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -202,20 +412,55 @@
             </div>
         </div>
 
-        <!-- Toplam Gösterge Kartı (Kesinlikle KDV'siz) -->
-        <div class="flex justify-end pt-4">
-            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 w-full max-w-sm space-y-2">
+        <!-- 4. KDV ve Toplamlar Kartı (Madde 3) -->
+        <div class="flex flex-col sm:flex-row justify-end items-end gap-6 pt-4">
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 w-full sm:max-w-md space-y-3">
+                <!-- Ara Toplam -->
                 <div class="flex justify-between items-center text-xs text-slate-600">
-                    <span>Ara Toplam:</span>
-                    <span class="font-bold text-slate-800" x-text="parseFloat(grandTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' TL'"></span>
+                    <span>Ara Toplam (Net):</span>
+                    <span class="font-bold text-slate-900 text-sm font-mono" x-text="subtotalFormatted + ' TL'"></span>
                 </div>
-                <div class="flex justify-between items-center text-xs text-emerald-700 font-semibold border-t border-slate-200 pt-2">
-                    <span>KDV:</span>
-                    <span>Uygulanmaz (0 TL)</span>
+
+                <!-- KDV Oranı ve Hesaplanan Tutar -->
+                <div class="border-t border-slate-200 pt-3 space-y-2">
+                    <div class="flex items-center justify-between gap-3">
+                        <label class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                            <i data-lucide="percent" class="w-3.5 h-3.5 text-slate-500"></i>
+                            <span>KDV Oranı:</span>
+                        </label>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-bold text-slate-500">%</span>
+                            <input type="number" step="1" min="0" max="100" name="taxRate" x-model.number="taxRate"
+                                   class="w-16 px-2 py-1 text-xs font-bold text-right border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        </div>
+                    </div>
+
+                    <!-- Hızlı KDV Seçim Butonları -->
+                    <div class="flex items-center justify-end gap-1.5">
+                        <button type="button" @click="taxRate = 20"
+                                :class="taxRate === 20 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300'"
+                                class="px-2.5 py-0.5 text-[11px] font-bold rounded-lg border transition">%20 (Varsayılan)</button>
+                        <button type="button" @click="taxRate = 10"
+                                :class="taxRate === 10 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300'"
+                                class="px-2.5 py-0.5 text-[11px] font-bold rounded-lg border transition">%10</button>
+                        <button type="button" @click="taxRate = 1"
+                                :class="taxRate === 1 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300'"
+                                class="px-2.5 py-0.5 text-[11px] font-bold rounded-lg border transition">%1</button>
+                        <button type="button" @click="taxRate = 0"
+                                :class="taxRate === 0 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300'"
+                                class="px-2.5 py-0.5 text-[11px] font-bold rounded-lg border transition">%0 (KDV Muaf)</button>
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs text-slate-600 pt-1">
+                        <span>Hesaplanan KDV Tutarı:</span>
+                        <span class="font-bold text-slate-800 font-mono" x-text="taxAmountFormatted + ' TL'"></span>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center text-base font-black text-slate-900 border-t border-slate-200 pt-2">
-                    <span>Genel Toplam:</span>
-                    <span class="text-xl text-emerald-600" x-text="parseFloat(grandTotal).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' TL'"></span>
+
+                <!-- Genel Toplam -->
+                <div class="flex justify-between items-center text-base font-black text-slate-900 border-t-2 border-slate-300 pt-3">
+                    <span>Genel Toplam (KDV Dahil):</span>
+                    <span class="text-xl text-emerald-600 font-mono" x-text="grandTotalFormatted + ' TL'"></span>
                 </div>
             </div>
         </div>
@@ -232,6 +477,99 @@
         </div>
 
     </form>
+
+    <!-- 5. Stoktan Ürün Seçim Modalı (Madde 4) -->
+    <div x-show="stockModalOpen" style="display:none"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+             @click.away="stockModalOpen = false">
+
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 grid place-items-center">
+                        <i data-lucide="boxes" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Stoktan Ürün Seç</h3>
+                        <p class="text-xs text-slate-500">Mevcut blok, plaka veya ebatlı mamul stoklarını faturaya ekleyin.</p>
+                    </div>
+                </div>
+                <button type="button" @click="stockModalOpen = false" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Filtreler -->
+            <div class="p-4 border-b border-slate-100 bg-white flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-bold text-slate-700">
+                    <button type="button" @click="stockCategoryFilter = ''; fetchStock()"
+                            :class="stockCategoryFilter === '' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
+                            class="px-2.5 py-1 rounded-lg transition">Tümü</button>
+                    <button type="button" @click="stockCategoryFilter = 'BLOCK'; fetchStock()"
+                            :class="stockCategoryFilter === 'BLOCK' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
+                            class="px-2.5 py-1 rounded-lg transition">Bloklar</button>
+                    <button type="button" @click="stockCategoryFilter = 'SLAB'; fetchStock()"
+                            :class="stockCategoryFilter === 'SLAB' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
+                            class="px-2.5 py-1 rounded-lg transition">Plakalar</button>
+                    <button type="button" @click="stockCategoryFilter = 'SIZED'; fetchStock()"
+                            :class="stockCategoryFilter === 'SIZED' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
+                            class="px-2.5 py-1 rounded-lg transition">Ebatlı Mamul</button>
+                </div>
+
+                <div class="flex-1 min-w-[200px]">
+                    <input type="text" x-model="stockSearch" @input.debounce.300ms="fetchStock()"
+                           placeholder="Kod, taş türü veya isim ara..."
+                           class="w-full px-3 py-1.5 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                </div>
+            </div>
+
+            <!-- Liste -->
+            <div class="max-h-96 overflow-y-auto p-4 divide-y divide-slate-100">
+                <div x-show="stockLoading" class="py-8 text-center text-xs text-slate-500">
+                    <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto text-emerald-600 mb-2"></i>
+                    Stoklar yükleniyor...
+                </div>
+
+                <template x-if="!stockLoading && stockItemsList.length === 0">
+                    <div class="py-8 text-center text-xs text-slate-400">
+                        Kriterlere uygun stok kaydı bulunamadı.
+                    </div>
+                </template>
+
+                <template x-for="item in stockItemsList" :key="item.category + '_' + item.id">
+                    <div class="py-2.5 px-3 flex items-center justify-between hover:bg-slate-50 rounded-xl transition cursor-pointer"
+                         @click="selectStockItem(item)">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                                  :class="item.category === 'BLOCK' ? 'bg-amber-100 text-amber-800' : (item.category === 'SLAB' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800')"
+                                  x-text="item.categoryLabel"></span>
+                            <div>
+                                <div class="text-xs font-bold text-slate-900" x-text="item.name"></div>
+                                <div class="text-[11px] text-slate-500 flex items-center gap-2">
+                                    <span x-text="'Ebat: ' + (item.dimensions || '—')"></span>
+                                    <span>•</span>
+                                    <span x-text="'Mevcut: ' + (item.quantity ? item.quantity + ' ' + item.unit : '—')"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="px-3 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition">
+                            Faturaya Ekle
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button type="button" @click="stockModalOpen = false" class="px-4 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-800">
+                    Kapat
+                </button>
+            </div>
+
+        </div>
+    </div>
+
 </div>
 <th:block layout:fragment="scripts"></th:block>
 </body>

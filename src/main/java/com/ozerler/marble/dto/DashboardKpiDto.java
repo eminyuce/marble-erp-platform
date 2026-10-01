@@ -30,6 +30,8 @@ public class DashboardKpiDto {
     private final BigDecimal factorySizedItemAreaM2;
     private final BigDecimal totalEstimatedTonnage;
     private final BigDecimal totalActualTonnage;
+    private final BigDecimal totalEffectiveBlockTonnage;
+    private final long totalStockBlockCount;
     private final long openWorkOrdersCount;
     private final long inProductionWorkOrdersCount;
     private final long completedWorkOrdersCount;

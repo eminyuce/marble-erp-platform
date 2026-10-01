@@ -24,6 +24,10 @@ import com.ozerler.marble.dto.TabulatorResponse;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.SlabRepository;
+
 @Controller
 @RequestMapping("/invoices")
 @RequiredArgsConstructor
@@ -35,6 +39,8 @@ public class InvoiceController extends AbstractController {
     private final SupplierRepository supplierRepository;
     private final BlockRepository blockRepository;
     private final StockItemRepository stockItemRepository;
+    private final SlabRepository slabRepository;
+    private final ProjectRepository projectRepository;
 
     @GetMapping
     public String index(@RequestParam(value = "type", required = false) InvoiceType invoiceType,
@@ -54,6 +60,7 @@ public class InvoiceController extends AbstractController {
         model.addAttribute("departments", BusinessUnit.values());
         model.addAttribute("monthlyPurchase", monthlyPurchase);
         model.addAttribute("monthlySales", monthlySales);
+        model.addAttribute("projects", projectRepository.findAll());
         model.addAttribute("activeNav", "invoices");
 
         return "invoices/list";
@@ -80,11 +87,20 @@ public class InvoiceController extends AbstractController {
             map.put("invoiceDate", inv.getInvoiceDate() != null ? inv.getInvoiceDate().toString() : "");
             map.put("invoiceType", inv.getInvoiceType() != null ? inv.getInvoiceType().name() : "");
             map.put("invoiceTypeLabel", inv.getInvoiceType() != null ? inv.getInvoiceType().getDisplayName() : "Satış");
-            String party = inv.getCustomer() != null ? inv.getCustomer().getCompanyName()
-                    : (inv.getSupplier() != null ? inv.getSupplier().getCompanyName() : inv.getPartyName());
+            String party = inv.getTargetDepartment() != null
+                    ? "Dahili: " + inv.getTargetDepartment().getDisplayName()
+                    : (inv.getCustomer() != null ? inv.getCustomer().getCompanyName()
+                    : (inv.getSupplier() != null ? inv.getSupplier().getCompanyName() : inv.getPartyName()));
             map.put("partyName", party != null ? party : "—");
             map.put("department", inv.getDepartment() != null ? inv.getDepartment().name() : "");
             map.put("departmentLabel", inv.getDepartment() != null ? inv.getDepartment().getDisplayName() : "Genel");
+            map.put("targetDepartment", inv.getTargetDepartment() != null ? inv.getTargetDepartment().name() : "");
+            map.put("targetDepartmentLabel", inv.getTargetDepartment() != null ? inv.getTargetDepartment().getDisplayName() : "");
+            map.put("isInternalTransfer", inv.isInternalTransfer());
+            map.put("projectName", inv.getProject() != null ? inv.getProject().getName() : "");
+            map.put("subtotalAmount", inv.getSubtotalAmount() != null ? inv.getSubtotalAmount() : BigDecimal.ZERO);
+            map.put("taxRate", inv.getTaxRate() != null ? inv.getTaxRate() : BigDecimal.ZERO);
+            map.put("taxAmount", inv.getTaxAmount() != null ? inv.getTaxAmount() : BigDecimal.ZERO);
             map.put("totalAmount", inv.getTotalAmount() != null ? inv.getTotalAmount() : BigDecimal.ZERO);
             map.put("status", inv.getStatus() != null ? inv.getStatus().name() : "");
             map.put("statusLabel", inv.getStatus() != null ? inv.getStatus().getDisplayName() : "Ödenmedi");
@@ -103,10 +119,12 @@ public class InvoiceController extends AbstractController {
         model.addAttribute("defaultDepartment", department);
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("suppliers", supplierRepository.findAll());
+        model.addAttribute("projects", projectRepository.findAll());
         model.addAttribute("departments", BusinessUnit.values());
         model.addAttribute("invoiceTypes", InvoiceType.values());
         model.addAttribute("blocks", blockRepository.findAllWithQuarry());
         model.addAttribute("stockItems", stockItemRepository.findAll());
+        model.addAttribute("slabs", slabRepository.findByStatus(SlabStatus.AVAILABLE));
         model.addAttribute("activeNav", "invoices");
 
         return "invoices/form";
@@ -120,6 +138,9 @@ public class InvoiceController extends AbstractController {
                                 @RequestParam("department") BusinessUnit department,
                                 @RequestParam(value = "customerId", required = false) Long customerId,
                                 @RequestParam(value = "supplierId", required = false) Long supplierId,
+                                @RequestParam(value = "targetDepartment", required = false) BusinessUnit targetDepartment,
+                                @RequestParam(value = "projectId", required = false) Long projectId,
+                                @RequestParam(value = "taxRate", required = false) BigDecimal taxRate,
                                 @RequestParam(value = "partyName", required = false) String partyName,
                                 @RequestParam(value = "notes", required = false) String notes,
                                 @RequestParam(value = "itemProductName", required = false) List<String> productNames,
@@ -128,7 +149,10 @@ public class InvoiceController extends AbstractController {
                                 @RequestParam(value = "itemUnit", required = false) List<String> units,
                                 @RequestParam(value = "itemUnitPrice", required = false) List<BigDecimal> unitPrices,
                                 @RequestParam(value = "itemBlockId", required = false) List<Long> blockIds,
+                                @RequestParam(value = "itemSlabId", required = false) List<Long> slabIds,
                                 @RequestParam(value = "itemStockItemId", required = false) List<Long> stockItemIds,
+                                @RequestParam(value = "itemWidthCm", required = false) List<BigDecimal> widthCms,
+                                @RequestParam(value = "itemCalculatedM2", required = false) List<BigDecimal> calculatedM2s,
                                 RedirectAttributes redirectAttributes) {
 
         try {
@@ -142,15 +166,21 @@ public class InvoiceController extends AbstractController {
                     String unit = (units != null && i < units.size()) ? units.get(i) : "m2";
                     BigDecimal price = (unitPrices != null && i < unitPrices.size()) ? unitPrices.get(i) : BigDecimal.ZERO;
                     Long blkId = (blockIds != null && i < blockIds.size()) ? blockIds.get(i) : null;
+                    Long slbId = (slabIds != null && i < slabIds.size()) ? slabIds.get(i) : null;
                     Long stkId = (stockItemIds != null && i < stockItemIds.size()) ? stockItemIds.get(i) : null;
+                    BigDecimal width = (widthCms != null && i < widthCms.size()) ? widthCms.get(i) : null;
+                    BigDecimal calcM2 = (calculatedM2s != null && i < calculatedM2s.size()) ? calculatedM2s.get(i) : null;
 
-                    itemForms.add(new InvoiceService.InvoiceItemForm(pName, desc, qty, unit, price, blkId, stkId));
+                    itemForms.add(new InvoiceService.InvoiceItemForm(pName, desc, qty, unit, price, blkId, slbId, stkId, width, calcM2));
                 }
             }
 
+            BigDecimal effectiveTaxRate = taxRate != null ? taxRate : new BigDecimal("20.00");
+
             Invoice invoice = invoiceService.createInvoice(
                     invoiceNo, invoiceDate, dueDate, invoiceType, department,
-                    customerId, supplierId, partyName, notes, itemForms
+                    customerId, supplierId, targetDepartment, projectId, effectiveTaxRate,
+                    partyName, notes, itemForms
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Fatura (" + invoice.getInvoiceNo() + ") başarıyla oluşturuldu. Toplam: " + invoice.getTotalAmount() + " TL");
@@ -160,6 +190,89 @@ public class InvoiceController extends AbstractController {
             redirectAttributes.addFlashAttribute("errorMessage", "Fatura oluşturulurken hata: " + e.getMessage());
             return "redirect:/invoices/new?type=" + invoiceType.name();
         }
+    }
+
+    @GetMapping("/api/available-stock")
+    @ResponseBody
+    public List<Map<String, Object>> getAvailableStock(
+            @RequestParam(value = "type", required = false) String stockType,
+            @RequestParam(value = "search", required = false) String search) {
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        String s = search != null ? search.trim().toLowerCase() : "";
+
+        // 1. Bloklar (Ocak & Fabrika)
+        if (stockType == null || stockType.isBlank() || "BLOCK".equalsIgnoreCase(stockType)) {
+            List<Block> blocks = blockRepository.findAllWithQuarry().stream()
+                    .filter(b -> b.getStatus() != com.ozerler.marble.model.enums.BlockStatus.SOLD)
+                    .filter(b -> s.isEmpty() || b.getBlockCode().toLowerCase().contains(s) || (b.getStoneType() != null && b.getStoneType().toLowerCase().contains(s)))
+                    .limit(50)
+                    .toList();
+            for (Block b : blocks) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("category", "BLOCK");
+                m.put("categoryLabel", "Blok");
+                m.put("id", b.getId());
+                m.put("code", b.getBlockCode());
+                m.put("name", "Blok: " + b.getBlockCode() + (b.getStoneType() != null ? " (" + b.getStoneType() + ")" : ""));
+                m.put("stoneType", b.getStoneType() != null ? b.getStoneType() : "—");
+                m.put("dimensions", (b.getWidthCm() != null ? b.getWidthCm() : 0) + "x" + (b.getLengthCm() != null ? b.getLengthCm() : 0) + "x" + (b.getHeightCm() != null ? b.getHeightCm() : 0) + " cm");
+                BigDecimal ton = b.getActualTonnage() != null && b.getActualTonnage().compareTo(BigDecimal.ZERO) > 0
+                        ? b.getActualTonnage()
+                        : (b.getEstimatedTonnage() != null ? b.getEstimatedTonnage() : BigDecimal.ONE);
+                m.put("quantity", ton);
+                m.put("unit", "ton");
+                m.put("widthCm", b.getWidthCm());
+                result.add(m);
+            }
+        }
+
+        // 2. Plakalar
+        if (stockType == null || stockType.isBlank() || "SLAB".equalsIgnoreCase(stockType)) {
+            List<Slab> slabs = slabRepository.findByStatus(SlabStatus.AVAILABLE).stream()
+                    .filter(sl -> s.isEmpty() || sl.getSlabCode().toLowerCase().contains(s))
+                    .limit(50)
+                    .toList();
+            for (Slab sl : slabs) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("category", "SLAB");
+                m.put("categoryLabel", "Plaka");
+                m.put("id", sl.getId());
+                m.put("code", sl.getSlabCode());
+                m.put("name", "Plaka: " + sl.getSlabCode());
+                m.put("stoneType", "Plaka");
+                m.put("dimensions", sl.getWidthCm() + "x" + sl.getLengthCm() + "x" + sl.getThicknessCm() + " cm");
+                m.put("quantity", sl.getSurfaceAreaM2() != null ? sl.getSurfaceAreaM2() : BigDecimal.ONE);
+                m.put("unit", "m2");
+                m.put("widthCm", sl.getWidthCm());
+                result.add(m);
+            }
+        }
+
+        // 3. Ebatlı Ürün Stoğu
+        if (stockType == null || stockType.isBlank() || "SIZED".equalsIgnoreCase(stockType)) {
+            List<StockItem> stockItems = stockItemRepository.findAll().stream()
+                    .filter(st -> st.getQuantity() != null && st.getQuantity().compareTo(BigDecimal.ZERO) > 0)
+                    .filter(st -> s.isEmpty() || st.getProductCode().toLowerCase().contains(s) || (st.getStoneType() != null && st.getStoneType().toLowerCase().contains(s)))
+                    .limit(50)
+                    .toList();
+            for (StockItem st : stockItems) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("category", "SIZED");
+                m.put("categoryLabel", "Ebatlı Stok");
+                m.put("id", st.getId());
+                m.put("code", st.getProductCode());
+                m.put("name", st.getProductCode() + " — " + (st.getStoneType() != null ? st.getStoneType() : "Ebatlı Mermer"));
+                m.put("stoneType", st.getStoneType() != null ? st.getStoneType() : "—");
+                m.put("dimensions", st.getWidthCm() + "x" + st.getLengthCm() + "x" + st.getThicknessCm() + " cm");
+                m.put("quantity", st.getQuantity());
+                m.put("unit", st.getUnit() != null ? st.getUnit() : "m2");
+                m.put("widthCm", st.getWidthCm());
+                result.add(m);
+            }
+        }
+
+        return result;
     }
 
     @GetMapping("/{id}")
