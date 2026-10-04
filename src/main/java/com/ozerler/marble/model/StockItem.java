@@ -64,6 +64,10 @@ public class StockItem extends AuditableEntity {
     @Column(name = "actual_produced_quantity", precision = 12, scale = 4)
     private BigDecimal actualProducedQuantity;
 
+    @Column(name = "unit_price", precision = 14, scale = 2)
+    @Builder.Default
+    private BigDecimal unitPrice = BigDecimal.ZERO;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
     private Customer customer;

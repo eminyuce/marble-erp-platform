@@ -72,6 +72,7 @@ public class QuarryBlockService {
     private final CostTransactionRepository costTransactionRepository;
     private final ShipmentItemRepository shipmentItemRepository;
     private final FileStorageService fileStorageService;
+    private final QuarryInventoryService quarryInventoryService;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
@@ -86,18 +87,24 @@ public class QuarryBlockService {
     @Transactional(readOnly = true)
     public TabulatorResponse<BlockDto> getBlocksPaged(int page, int size, String search, String sortField, String sortDir,
                                                     StockLocationType locationType, BlockStatus status) {
-        boolean unsoldOnly = status == null;
+        return getBlocksPaged(page, size, search, sortField, sortDir, locationType, status, "IN_STOCK");
+    }
+
+    @Transactional(readOnly = true)
+    public TabulatorResponse<BlockDto> getBlocksPaged(int page, int size, String search, String sortField, String sortDir,
+                                                    StockLocationType locationType, BlockStatus status, String stockFilter) {
+        String effectiveFilter = (stockFilter == null || stockFilter.isBlank()) ? "IN_STOCK" : stockFilter.trim().toUpperCase(Locale.ROOT);
         Page<Block> blockPage = GridPages.execute(page, size, sortField, sortDir, GridPages.BLOCK_SORTS,
-                pageable -> blockRepository.searchBlocks(
-                        GridPages.normalizeSearch(search), locationType, status, unsoldOnly, pageable));
+                pageable -> blockRepository.searchBlocksWithStockFilter(
+                        GridPages.normalizeSearch(search), locationType, status, effectiveFilter, pageable));
         String period = YearMonth.now().toString();
         Map<Long, BigDecimal> expensePerTonByQuarry = blockCostCalculationService.expensePerTonByQuarry(period);
         List<BlockDto> dtos = blockPage.getContent().stream()
                 .map(b -> toBlockDto(b, expensePerTonByQuarry))
                 .collect(Collectors.toList());
 
-        Map<String, Object> meta = gridMetricsMeta(
-                GridPages.normalizeSearch(search), locationType, status, unsoldOnly, expensePerTonByQuarry);
+        Map<String, Object> meta = gridMetricsMetaWithStockFilter(
+                GridPages.normalizeSearch(search), locationType, status, effectiveFilter, expensePerTonByQuarry);
         return TabulatorResponse.of(dtos, blockPage.getTotalPages(), blockPage.getTotalElements(), meta);
     }
 
@@ -139,7 +146,13 @@ public class QuarryBlockService {
     private Map<String, Object> gridMetricsMeta(String search, StockLocationType locationType,
                                                 BlockStatus status, boolean unsoldOnly,
                                                 Map<Long, BigDecimal> expensePerTonByQuarry) {
-        List<Object[]> rows = blockRepository.sumGridMetricsByQuarry(search, locationType, status, unsoldOnly);
+        return gridMetricsMetaWithStockFilter(search, locationType, status, unsoldOnly ? "IN_STOCK" : "ALL", expensePerTonByQuarry);
+    }
+
+    private Map<String, Object> gridMetricsMetaWithStockFilter(String search, StockLocationType locationType,
+                                                               BlockStatus status, String stockFilter,
+                                                               Map<Long, BigDecimal> expensePerTonByQuarry) {
+        List<Object[]> rows = blockRepository.sumGridMetricsWithStockFilterByQuarry(search, locationType, status, stockFilter);
         BigDecimal totalTonnage = BigDecimal.ZERO;
         BigDecimal totalSurfaceM2 = BigDecimal.ZERO;
         BigDecimal totalTransport = BigDecimal.ZERO;
@@ -413,11 +426,11 @@ public class QuarryBlockService {
         if (block == null || block.getId() == null) {
             return false;
         }
-        // Sadece ocakta üretilmiş (PRODUCED) ve satılmamış bloklar silinebilir
-        if (block.getStatus() != BlockStatus.PRODUCED) {
+        // Sadece ocak stoğunda olan ve satılmamış bloklar silinebilir
+        if (!block.getCanonicalStatus().isAtQuarry()) {
             return false;
         }
-        if (block.getSoldCustomer() != null) {
+        if (block.getStatus() == BlockStatus.SOLD || block.getSoldCustomer() != null) {
             return false;
         }
         if (block.getTransportCost() != null && block.getTransportCost().compareTo(BigDecimal.ZERO) > 0) {
@@ -489,16 +502,64 @@ public class QuarryBlockService {
             throw new IllegalArgumentException(getMessage("error.block.move.not_at_quarry"));
         }
         requireDispatchYard(block, "error.block.dispatch.not_in_dispatch_yard");
-        StockLocation factoryYard = requireLocation(StockLocationType.FACTORY_BLOCK_YARD);
         StockLocation from = block.getCurrentLocation();
         BigDecimal cost = transportCost != null ? transportCost : BigDecimal.ZERO;
-        block.setCurrentLocation(factoryYard);
-        block.setStatus(BlockStatus.AT_FACTORY);
+        block.setCurrentLocation(null);
+        block.setStatus(BlockStatus.IN_TRANSIT);
         block.setTransportCost(cost);
         block.calculateMetrics(block.getQuarry().getSpecificGravity());
         Block saved = blockRepository.save(block);
-        recordMovement(saved, from, factoryYard, "Fabrika Blok Sahasına sevk edildi");
+        recordMovement(saved, from, null, "Fabrikaya sevk edildi (Yolda)");
         postFactoryTransportCost(saved, cost);
+        return saved;
+    }
+
+    @Transactional
+    public Block receiveBlockAtFactory(Long blockId) {
+        Block block = getBlockById(blockId);
+        if (block.getStatus() != BlockStatus.IN_TRANSIT && block.getStatus() != BlockStatus.DISPATCHED) {
+            throw new IllegalStateException("Yalnızca sevk edilmiş (Yolda) bloklar fabrika stoğuna kabul edilebilir.");
+        }
+        StockLocation factoryYard = requireLocation(StockLocationType.FACTORY_BLOCK_YARD);
+        StockLocation from = block.getCurrentLocation();
+        block.setCurrentLocation(factoryYard);
+        block.setStatus(BlockStatus.AT_FACTORY);
+        block.setArrivalDate(LocalDate.now());
+        Block saved = blockRepository.save(block);
+        recordMovement(saved, from, factoryYard, "Fabrika stoğuna kabul edildi");
+        return saved;
+    }
+
+    @Transactional
+    public Block updateActualTonnage(Long blockId, BigDecimal actualTonnage) {
+        Block block = getBlockById(blockId);
+        if (!block.getCanonicalStatus().isAtQuarry()) {
+            throw new IllegalArgumentException(getMessage("error.block.move.not_at_quarry"));
+        }
+        if (actualTonnage == null || actualTonnage.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Geçerli bir gerçek tonaj değeri giriniz.");
+        }
+        block.setActualTonnage(actualTonnage);
+        block.setActualWeightKg(actualTonnage.multiply(BigDecimal.valueOf(1000)));
+        block.setStatus(BlockStatus.READY_FOR_DISPATCH);
+        block.calculateMetrics(block.getQuarry().getSpecificGravity());
+        Block saved = blockRepository.save(block);
+        recordMovement(saved, block.getCurrentLocation(), block.getCurrentLocation(),
+                "Kantar tartımı yapıldı: " + actualTonnage + " Ton (Tartıldı / Sevke Hazır)");
+        return saved;
+    }
+
+    @Transactional
+    public Block updateStatus(Long blockId, BlockStatus newStatus, String notes) {
+        Block block = getBlockById(blockId);
+        BlockStatus oldStatus = block.getStatus();
+        if (oldStatus == BlockStatus.SOLD) {
+            throw new IllegalStateException("Satılmış blok durumu değiştirilemez.");
+        }
+        block.setStatus(newStatus);
+        Block saved = blockRepository.save(block);
+        recordMovement(saved, block.getCurrentLocation(), block.getCurrentLocation(),
+                "Durum güncellendi: " + (oldStatus != null ? oldStatus.name() : "") + " -> " + newStatus.name() + (notes != null ? " (" + notes + ")" : ""));
         return saved;
     }
 
@@ -588,14 +649,32 @@ public class QuarryBlockService {
     public QuarrySummaryDto quarrySummary() {
         String period = YearMonth.now().toString();
         var analysis = costAnalysisService.analyze(BusinessUnit.QUARRY, period);
+        long inTransit = blockRepository.countInTransitBlocks();
+        long readyForDispatch = blockRepository.countReadyForDispatchBlocks();
+        long sold = blockRepository.countSoldBlocks();
+        long dispatchedToFactory = blockRepository.countDispatchedToFactoryBlocks();
+        long totalInStock = blockRepository.countInStockBlocks();
+        BigDecimal fuelLiters = quarryInventoryService != null ? quarryInventoryService.getFuelStockLiters() : BigDecimal.ZERO;
+        long consumablesCount = 0L;
+        if (quarryInventoryService != null) {
+            consumablesCount = quarryInventoryService.getConsumableStockItems().stream()
+                    .mapToLong(item -> item.getQuantity() != null ? item.getQuantity().longValue() : 0L)
+                    .sum();
+        }
+
         return QuarrySummaryDto.builder()
                 .producedTonsThisMonth(analysis.getProductionQuantity())
                 .productionYardCount(blockRepository.countByCurrentLocation_LocationTypeAndStatusNot(
                         StockLocationType.PRODUCTION_YARD, BlockStatus.SOLD))
                 .dispatchYardCount(blockRepository.countByCurrentLocation_LocationTypeAndStatusNot(
                         StockLocationType.DISPATCH_YARD, BlockStatus.SOLD))
-                .factoryYardCount(0L)
-                .soldCount(blockRepository.countByStatus(BlockStatus.SOLD))
+                .factoryYardCount(dispatchedToFactory)
+                .soldCount(sold)
+                .readyForDispatchCount(readyForDispatch)
+                .inTransitCount(inTransit)
+                .totalInStockCount(totalInStock)
+                .fuelStockLiters(fuelLiters)
+                .consumablesCount(consumablesCount)
                 .costPerTonThisMonth(analysis.getUnitCost() != null ? analysis.getUnitCost() : BigDecimal.ZERO)
                 .unallocatedCarryForward(analysis.isUnallocatedCarryForward())
                 .expensePeriod(period)

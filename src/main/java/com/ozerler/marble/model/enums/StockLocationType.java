@@ -5,6 +5,8 @@ import com.ozerler.marble.util.MessageUtils;
 public enum StockLocationType {
     PRODUCTION_YARD("enum.stock_location_type.production_yard", BusinessUnit.QUARRY),
     DISPATCH_YARD("enum.stock_location_type.dispatch_yard", BusinessUnit.QUARRY),
+    QUARRY_FUEL_TANK("enum.stock_location_type.quarry_fuel_tank", BusinessUnit.QUARRY),
+    QUARRY_CONSUMABLES_WAREHOUSE("enum.stock_location_type.quarry_consumables_warehouse", BusinessUnit.QUARRY),
     FACTORY_BLOCK_YARD("enum.stock_location_type.factory_block_yard", BusinessUnit.FACTORY),
     SLAB_STOCK_YARD("enum.stock_location_type.slab_stock_yard", BusinessUnit.FACTORY),
     SIZED_STOCK_YARD("enum.stock_location_type.sized_stock_yard", BusinessUnit.FACTORY),

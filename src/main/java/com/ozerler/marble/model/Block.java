@@ -145,11 +145,13 @@ public class Block extends AuditableEntity {
             BigDecimal density = specificGravity != null ? specificGravity : new BigDecimal("2.70");
             BigDecimal approximateTonnage = BlockMeasurement.approximateTonnage(this.volumeM3, density);
             this.theoreticalWeightKg = BlockMeasurement.theoreticalWeightKg(approximateTonnage);
-            if (this.estimatedTonnage == null) {
+            if (this.estimatedTonnage == null || this.estimatedTonnage.compareTo(BigDecimal.ZERO) == 0) {
                 this.estimatedTonnage = approximateTonnage;
             }
             if (this.actualTonnage != null && this.actualTonnage.compareTo(BigDecimal.ZERO) > 0) {
                 this.actualWeightKg = this.actualTonnage.multiply(BigDecimal.valueOf(1000));
+            } else if (this.actualWeightKg != null && this.actualWeightKg.compareTo(BigDecimal.ZERO) > 0) {
+                this.actualTonnage = this.actualWeightKg.divide(BigDecimal.valueOf(1000), 2, java.math.RoundingMode.HALF_UP);
             }
             this.weightDeviationPct = BlockMeasurement.weightDeviationPercent(this.actualWeightKg, this.theoreticalWeightKg);
         }
@@ -227,5 +229,23 @@ public class Block extends AuditableEntity {
     @Transient
     public Customer getCustomer() {
         return soldCustomer;
+    }
+
+    @Transient
+    public boolean isAtQuarry() {
+        return status != null && status.isAtQuarry();
+    }
+
+    @Transient
+    public boolean isAtFactory() {
+        return status != null && status.isAtFactory();
+    }
+
+    @Transient
+    public BigDecimal getEffectiveTonnage() {
+        if (actualTonnage != null && actualTonnage.compareTo(BigDecimal.ZERO) > 0) {
+            return actualTonnage;
+        }
+        return getApproximateTonnage();
     }
 }

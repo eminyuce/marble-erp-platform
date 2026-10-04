@@ -124,6 +124,30 @@ public class StockMovementService {
     }
 
     @Transactional
+    public StockMovement recordBlockMovement(Block block, StockLocation fromLoc, StockLocation toLoc, String notes) {
+        BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage() : block.getApproximateTonnage();
+        return recordMovement(
+                StockMovementType.TRANSFER,
+                fromLoc != null ? fromLoc.getBusinessUnit() : BusinessUnit.QUARRY,
+                toLoc != null ? toLoc.getBusinessUnit() : BusinessUnit.FACTORY,
+                TargetDestination.FACTORY,
+                fromLoc,
+                toLoc,
+                block,
+                null,
+                null,
+                "Blok Transferi: " + block.getBlockCode(),
+                BigDecimal.ONE,
+                "adet",
+                ton,
+                block.getAssignedCustomer(),
+                null,
+                null,
+                notes != null ? notes : "Fabrika stoğuna kabul edildi"
+        );
+    }
+
+    @Transactional
     public StockMovement recordBlockCuttingStart(Block block, String notes) {
         BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage() : block.getApproximateTonnage();
         return recordMovement(

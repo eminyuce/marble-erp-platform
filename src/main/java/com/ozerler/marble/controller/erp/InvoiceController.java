@@ -41,6 +41,7 @@ public class InvoiceController extends AbstractController {
     private final StockItemRepository stockItemRepository;
     private final SlabRepository slabRepository;
     private final ProjectRepository projectRepository;
+    private final com.ozerler.marble.service.QuarryInventoryService quarryInventoryService;
 
     @GetMapping
     public String index(@RequestParam(value = "type", required = false) InvoiceType invoiceType,
@@ -141,6 +142,7 @@ public class InvoiceController extends AbstractController {
                                 @RequestParam(value = "targetDepartment", required = false) BusinessUnit targetDepartment,
                                 @RequestParam(value = "projectId", required = false) Long projectId,
                                 @RequestParam(value = "taxRate", required = false) BigDecimal taxRate,
+                                @RequestParam(value = "directExpense", required = false, defaultValue = "false") Boolean directExpense,
                                 @RequestParam(value = "partyName", required = false) String partyName,
                                 @RequestParam(value = "notes", required = false) String notes,
                                 @RequestParam(value = "itemProductName", required = false) List<String> productNames,
@@ -180,7 +182,7 @@ public class InvoiceController extends AbstractController {
             Invoice invoice = invoiceService.createInvoice(
                     invoiceNo, invoiceDate, dueDate, invoiceType, department,
                     customerId, supplierId, targetDepartment, projectId, effectiveTaxRate,
-                    partyName, notes, itemForms
+                    directExpense, partyName, notes, itemForms
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Fatura (" + invoice.getInvoiceNo() + ") başarıyla oluşturuldu. Toplam: " + invoice.getTotalAmount() + " TL");
@@ -195,16 +197,25 @@ public class InvoiceController extends AbstractController {
     @GetMapping("/api/available-stock")
     @ResponseBody
     public List<Map<String, Object>> getAvailableStock(
+            @RequestParam(value = "department", required = false) BusinessUnit department,
             @RequestParam(value = "type", required = false) String stockType,
             @RequestParam(value = "search", required = false) String search) {
 
         List<Map<String, Object>> result = new ArrayList<>();
         String s = search != null ? search.trim().toLowerCase() : "";
 
-        // 1. Bloklar (Ocak & Fabrika)
+        // 1. Bloklar (Ocak & Fabrika filtrelenebilir)
         if (stockType == null || stockType.isBlank() || "BLOCK".equalsIgnoreCase(stockType)) {
             List<Block> blocks = blockRepository.findAllWithQuarry().stream()
-                    .filter(b -> b.getStatus() != com.ozerler.marble.model.enums.BlockStatus.SOLD)
+                    .filter(b -> b.getStatus() != com.ozerler.marble.model.enums.BlockStatus.SOLD && b.getStatus() != com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT)
+                    .filter(b -> {
+                        if (department == BusinessUnit.QUARRY) {
+                            return b.isAtQuarry();
+                        } else if (department == BusinessUnit.FACTORY) {
+                            return b.isAtFactory();
+                        }
+                        return true;
+                    })
                     .filter(b -> s.isEmpty() || b.getBlockCode().toLowerCase().contains(s) || (b.getStoneType() != null && b.getStoneType().toLowerCase().contains(s)))
                     .limit(50)
                     .toList();
@@ -227,48 +238,106 @@ public class InvoiceController extends AbstractController {
             }
         }
 
-        // 2. Plakalar
-        if (stockType == null || stockType.isBlank() || "SLAB".equalsIgnoreCase(stockType)) {
-            List<Slab> slabs = slabRepository.findByStatus(SlabStatus.AVAILABLE).stream()
-                    .filter(sl -> s.isEmpty() || sl.getSlabCode().toLowerCase().contains(s))
-                    .limit(50)
-                    .toList();
-            for (Slab sl : slabs) {
-                Map<String, Object> m = new HashMap<>();
-                m.put("category", "SLAB");
-                m.put("categoryLabel", "Plaka");
-                m.put("id", sl.getId());
-                m.put("code", sl.getSlabCode());
-                m.put("name", "Plaka: " + sl.getSlabCode());
-                m.put("stoneType", "Plaka");
-                m.put("dimensions", sl.getWidthCm() + "x" + sl.getLengthCm() + "x" + sl.getThicknessCm() + " cm");
-                m.put("quantity", sl.getSurfaceAreaM2() != null ? sl.getSurfaceAreaM2() : BigDecimal.ONE);
-                m.put("unit", "m2");
-                m.put("widthCm", sl.getWidthCm());
-                result.add(m);
+        // 2. Mazot Deposu (Ocak Mazot Stoğu - Madde 3 & 8)
+        if (department == null || department == BusinessUnit.QUARRY) {
+            if (stockType == null || stockType.isBlank() || "FUEL".equalsIgnoreCase(stockType)) {
+                StockItem fuelTank = quarryInventoryService.getOrCreateFuelTankStockItem();
+                if (fuelTank != null && fuelTank.getQuantity() != null && fuelTank.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
+                    if (s.isEmpty() || "mazot".contains(s) || "dizel".contains(s) || fuelTank.getItemCode().toLowerCase().contains(s)) {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("category", "FUEL");
+                        m.put("categoryLabel", "Mazot");
+                        m.put("id", fuelTank.getId());
+                        m.put("code", fuelTank.getItemCode());
+                        m.put("name", "Ocak Mazot Stoğu (Dizel)");
+                        m.put("stoneType", "Akaryakıt");
+                        m.put("dimensions", "Ana Depo Tankı");
+                        m.put("quantity", fuelTank.getQuantity());
+                        m.put("unit", "litre");
+                        m.put("unitPrice", fuelTank.getUnitPrice());
+                        result.add(m);
+                    }
+                }
             }
         }
 
-        // 3. Ebatlı Ürün Stoğu
-        if (stockType == null || stockType.isBlank() || "SIZED".equalsIgnoreCase(stockType)) {
-            List<StockItem> stockItems = stockItemRepository.findAll().stream()
-                    .filter(st -> st.getQuantity() != null && st.getQuantity().compareTo(BigDecimal.ZERO) > 0)
-                    .filter(st -> s.isEmpty() || st.getProductCode().toLowerCase().contains(s) || (st.getStoneType() != null && st.getStoneType().toLowerCase().contains(s)))
-                    .limit(50)
-                    .toList();
-            for (StockItem st : stockItems) {
-                Map<String, Object> m = new HashMap<>();
-                m.put("category", "SIZED");
-                m.put("categoryLabel", "Ebatlı Stok");
-                m.put("id", st.getId());
-                m.put("code", st.getProductCode());
-                m.put("name", st.getProductCode() + " — " + (st.getStoneType() != null ? st.getStoneType() : "Ebatlı Mermer"));
-                m.put("stoneType", st.getStoneType() != null ? st.getStoneType() : "—");
-                m.put("dimensions", st.getWidthCm() + "x" + st.getLengthCm() + "x" + st.getThicknessCm() + " cm");
-                m.put("quantity", st.getQuantity());
-                m.put("unit", st.getUnit() != null ? st.getUnit() : "m2");
-                m.put("widthCm", st.getWidthCm());
-                result.add(m);
+        // 3. Sarf Malzeme Deposu (Ocak Sarf Malzemeleri - Madde 3 & 9)
+        if (department == null || department == BusinessUnit.QUARRY) {
+            if (stockType == null || stockType.isBlank() || "CONSUMABLE".equalsIgnoreCase(stockType)) {
+                List<StockItem> consumables = quarryInventoryService.getConsumableStockItems();
+                for (StockItem ci : consumables) {
+                    if (ci.getQuantity() != null && ci.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
+                        if (s.isEmpty() || (ci.getDescription() != null && ci.getDescription().toLowerCase().contains(s)) || (ci.getItemCode() != null && ci.getItemCode().toLowerCase().contains(s))) {
+                            Map<String, Object> m = new HashMap<>();
+                            m.put("category", "CONSUMABLE");
+                            m.put("categoryLabel", "Sarf Malzeme");
+                            m.put("id", ci.getId());
+                            m.put("code", ci.getItemCode());
+                            m.put("name", ci.getDescription() != null ? ci.getDescription() : ci.getItemCode());
+                            m.put("stoneType", "Sarf Malzeme");
+                            m.put("dimensions", "—");
+                            m.put("quantity", ci.getQuantity());
+                            m.put("unit", ci.getUnit() != null ? ci.getUnit() : "adet");
+                            m.put("unitPrice", ci.getUnitPrice());
+                            result.add(m);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. Plakalar (Fabrika & Atölye)
+        if (department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP) {
+            if (stockType == null || stockType.isBlank() || "SLAB".equalsIgnoreCase(stockType)) {
+                List<Slab> slabs = slabRepository.findByStatus(SlabStatus.AVAILABLE).stream()
+                        .filter(sl -> s.isEmpty() || sl.getSlabCode().toLowerCase().contains(s))
+                        .limit(50)
+                        .toList();
+                for (Slab sl : slabs) {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("category", "SLAB");
+                    m.put("categoryLabel", "Plaka");
+                    m.put("id", sl.getId());
+                    m.put("code", sl.getSlabCode());
+                    m.put("name", "Plaka: " + sl.getSlabCode());
+                    m.put("stoneType", "Plaka");
+                    m.put("dimensions", sl.getWidthCm() + "x" + sl.getLengthCm() + "x" + sl.getThicknessCm() + " cm");
+                    m.put("quantity", sl.getSurfaceAreaM2() != null ? sl.getSurfaceAreaM2() : BigDecimal.ONE);
+                    m.put("unit", "m2");
+                    m.put("widthCm", sl.getWidthCm());
+                    result.add(m);
+                }
+            }
+        }
+
+        // 5. Ebatlı Ürün Stoğu
+        if (department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP) {
+            if (stockType == null || stockType.isBlank() || "SIZED".equalsIgnoreCase(stockType)) {
+                List<StockItem> stockItems = stockItemRepository.findAll().stream()
+                        .filter(st -> st.getQuantity() != null && st.getQuantity().compareTo(BigDecimal.ZERO) > 0)
+                        .filter(st -> {
+                            if (department != null && st.getStockLocation() != null) {
+                                return department.equals(st.getStockLocation().getBusinessUnit());
+                            }
+                            return true;
+                        })
+                        .filter(st -> s.isEmpty() || (st.getProductCode() != null && st.getProductCode().toLowerCase().contains(s)) || (st.getStoneType() != null && st.getStoneType().toLowerCase().contains(s)))
+                        .limit(50)
+                        .toList();
+                for (StockItem st : stockItems) {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("category", "SIZED");
+                    m.put("categoryLabel", "Ebatlı Stok");
+                    m.put("id", st.getId());
+                    m.put("code", st.getProductCode() != null ? st.getProductCode() : st.getItemCode());
+                    m.put("name", (st.getProductCode() != null ? st.getProductCode() : st.getItemCode()) + " — " + (st.getStoneType() != null ? st.getStoneType() : "Ebatlı Mermer"));
+                    m.put("stoneType", st.getStoneType() != null ? st.getStoneType() : "—");
+                    m.put("dimensions", (st.getWidthCm() != null ? st.getWidthCm() : "") + "x" + (st.getLengthCm() != null ? st.getLengthCm() : "") + "x" + (st.getThicknessCm() != null ? st.getThicknessCm() : "") + " cm");
+                    m.put("quantity", st.getQuantity());
+                    m.put("unit", st.getUnit() != null ? st.getUnit() : "m2");
+                    m.put("widthCm", st.getWidthCm());
+                    result.add(m);
+                }
             }
         }
 

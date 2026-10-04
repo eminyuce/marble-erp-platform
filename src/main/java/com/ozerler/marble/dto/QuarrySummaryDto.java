@@ -13,6 +13,11 @@ public class QuarrySummaryDto {
     long dispatchYardCount;
     long factoryYardCount;
     long soldCount;
+    long readyForDispatchCount;
+    long inTransitCount;
+    long totalInStockCount;
+    BigDecimal fuelStockLiters;
+    long consumablesCount;
     BigDecimal costPerTonThisMonth;
     boolean unallocatedCarryForward;
     String expensePeriod;

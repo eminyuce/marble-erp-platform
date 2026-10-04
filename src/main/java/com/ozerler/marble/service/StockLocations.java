@@ -35,6 +35,8 @@ final class StockLocations {
         return switch (type) {
             case PRODUCTION_YARD -> Constants.STOCK_LOCATION_PRODUCTION_YARD;
             case DISPATCH_YARD -> Constants.STOCK_LOCATION_DISPATCH_YARD;
+            case QUARRY_FUEL_TANK -> "OCK-MZ-01";
+            case QUARRY_CONSUMABLES_WAREHOUSE -> "OCK-SRF-01";
             case FACTORY_BLOCK_YARD -> Constants.STOCK_LOCATION_FACTORY_BLOCK_YARD;
             case SLAB_STOCK_YARD -> Constants.STOCK_LOCATION_SLAB_STOCK_YARD;
             case SIZED_STOCK_YARD -> "FAB-EBATLI";

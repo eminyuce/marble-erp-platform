@@ -62,9 +62,10 @@ public class BlockController extends AbstractController {
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir,
             @RequestParam(value = "locationType", required = false) StockLocationType locationType,
-            @RequestParam(value = "status", required = false) BlockStatus status) {
+            @RequestParam(value = "status", required = false) BlockStatus status,
+            @RequestParam(value = "stockFilter", required = false, defaultValue = "IN_STOCK") String stockFilter) {
 
-        return quarryBlockService.getBlocksPaged(page, size, search, sortField, sortDir, locationType, status);
+        return quarryBlockService.getBlocksPaged(page, size, search, sortField, sortDir, locationType, status, stockFilter);
     }
 
     @GetMapping("/api/generate-code")
@@ -436,6 +437,63 @@ public class BlockController extends AbstractController {
             ber = buildFatalResponse(ber, serviceStatus, status, "sellBlock", Constants.ERR_FATAL);
         }
 
+        return ber;
+    }
+
+    @PostMapping("/{id}/actual-tonnage")
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
+    public String updateActualTonnage(@PathVariable("id") Long id,
+                                      @RequestParam("actualTonnage") BigDecimal actualTonnage,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            quarryBlockService.updateActualTonnage(id, actualTonnage);
+            redirectAttributes.addFlashAttribute("successMessage", "Kantar tartımı kaydedildi (Tartıldı / Sevke Hazır).");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/blocks";
+    }
+
+    @PostMapping("/{id}/api/actual-tonnage")
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
+    @ResponseBody
+    public BackEndResponse updateActualTonnageApi(@PathVariable("id") Long id,
+                                                  @RequestParam("actualTonnage") BigDecimal actualTonnage) {
+        BackEndResponse ber = new BackEndResponse();
+        ServiceStatus serviceStatus = new ServiceStatus();
+        Status status = new Status();
+        status.setErrorCode(Constants.NO_ERR);
+        try {
+            quarryBlockService.updateActualTonnage(id, actualTonnage);
+            status.setMessage("Kantar tartımı kaydedildi.");
+        } catch (Exception e) {
+            status.setErrorCode(Constants.ERR_BAD_REQUEST);
+            status.setMessage(e.getMessage());
+        }
+        serviceStatus.setStatus(status);
+        ber.setServiceStatus(serviceStatus);
+        return ber;
+    }
+
+    @PostMapping("/{id}/api/status")
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
+    @ResponseBody
+    public BackEndResponse updateStatusApi(@PathVariable("id") Long id,
+                                           @RequestParam("status") BlockStatus newStatus,
+                                           @RequestParam(value = "notes", required = false) String notes) {
+        BackEndResponse ber = new BackEndResponse();
+        ServiceStatus serviceStatus = new ServiceStatus();
+        Status status = new Status();
+        status.setErrorCode(Constants.NO_ERR);
+        try {
+            quarryBlockService.updateStatus(id, newStatus, notes);
+            status.setMessage("Durum güncellendi.");
+        } catch (Exception e) {
+            status.setErrorCode(Constants.ERR_BAD_REQUEST);
+            status.setMessage(e.getMessage());
+        }
+        serviceStatus.setStatus(status);
+        ber.setServiceStatus(serviceStatus);
         return ber;
     }
 

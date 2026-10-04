@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Ocak — Sarf Malzeme Deposu | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        consumeModalOpen: false,
+        addModalOpen: false,
+        selectedItemId: '',
+        consumeQty: 1,
+        selectedMachineId: '',
+        openConsumeModal(id) {
+            this.selectedItemId = id || '';
+            this.consumeQty = 1;
+            this.consumeModalOpen = true;
+        }
+     }">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Operasyon', '/blocks', 'Ocak — Sarf Malzeme Deposu')}"></div>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="wrench" class="w-7 h-7 text-emerald-600 inline-block"></i>
+                <span>Ocak — Sarf Malzeme Deposu</span>
+            </h2>
+            <p class="erp-list-lead">
+                Ocak sahasında kullanılan kesme telleri, elmas boncuklar, patlayıcılar ve sarf malzemelerin stok ve kullanım takibi.
+            </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <button type="button" @click="openConsumeModal('')"
+                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                <i data-lucide="minus-circle" class="w-4 h-4"></i>
+                <span>Malzeme Kullan / Düş</span>
+            </button>
+            <button type="button" @click="addModalOpen = true"
+                    class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                <i data-lucide="plus" class="w-4 h-4 text-blue-600"></i>
+                <span>Yeni Malzeme / Stok Ekle</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Sub-Navigation Bar for Quarry -->
+    <div class="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
+        <a th:href="@{/blocks}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="box" class="w-4 h-4"></i>
+            <span>Blok Takibi</span>
+        </a>
+        <a th:href="@{/quarry/fuel}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="fuel" class="w-4 h-4 text-amber-600"></i>
+            <span>Mazot Deposu</span>
+        </a>
+        <a th:href="@{/quarry/consumables}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-emerald-600 text-white shadow-xs">
+            <i data-lucide="wrench" class="w-4 h-4"></i>
+            <span>Sarf Malzeme Deposu</span>
+        </a>
+        <a th:href="@{/quarry/machines}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="truck" class="w-4 h-4 text-blue-600"></i>
+            <span>Makineler</span>
+        </a>
+    </div>
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Kayıtlı Sarf Kalemi</span>
+                <span class="p-2 rounded-xl bg-emerald-50 text-emerald-700"><i data-lucide="boxes" class="w-5 h-5"></i></span>
+            </div>
+            <div class="text-3xl font-black text-slate-900 mt-2 font-mono"
+                 th:text="${consumables != null ? consumables.size() : 0} + ' Çeşit'">0 Çeşit</div>
+            <div class="text-xs text-slate-500 mt-1">Depoda tanımlı sarf malzemeler</div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Mevcut Toplam Miktar</span>
+                <span class="p-2 rounded-xl bg-blue-50 text-blue-700"><i data-lucide="layers" class="w-5 h-5"></i></span>
+            </div>
+            <div class="text-3xl font-black text-slate-900 mt-2 font-mono"
+                 th:text="${consumables != null ? #aggregates.sum(consumables.![quantity]) : 0} + ' Adet/Birim'">0</div>
+            <div class="text-xs text-slate-500 mt-1">Stoktaki hazır toplam sarf malzemesi</div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">İşlem Kuralı</span>
+                <span class="p-2 rounded-xl bg-amber-50 text-amber-700"><i data-lucide="shield-check" class="w-5 h-5"></i></span>
+            </div>
+            <div class="text-base font-bold text-slate-900 mt-2">KDV Hariç Net Maliyet</div>
+            <div class="text-xs text-slate-500 mt-1">Kullanıldığında net fiyattan ocak giderine aktarılır.</div>
+        </div>
+    </div>
+
+    <!-- Consumables Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i data-lucide="package" class="w-4 h-4 text-slate-500"></i>
+                <h3 class="text-sm font-bold text-slate-900">Sarf Malzeme Stok Listesi</h3>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-100">
+                <tr>
+                    <th class="py-3 px-4">Malzeme Kodu</th>
+                    <th class="py-3 px-4">Malzeme Tanımı</th>
+                    <th class="py-3 px-4 text-right">Mevcut Stok</th>
+                    <th class="py-3 px-4">Birim</th>
+                    <th class="py-3 px-4 text-right">Birim Fiyat (Net)</th>
+                    <th class="py-3 px-4">Durum</th>
+                    <th class="py-3 px-4 text-right">İşlem</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr th:if="${consumables == null or consumables.isEmpty()}">
+                    <td colspan="7" class="py-8 text-center text-slate-400">
+                        Henüz sarf malzeme kaydı bulunmuyor. Yukarıdaki "Yeni Malzeme / Stok Ekle" butonuyla ekleyebilirsiniz.
+                    </td>
+                </tr>
+                <tr th:each="c : ${consumables}" class="hover:bg-slate-50/80 transition">
+                    <td class="py-3 px-4 font-mono font-bold text-slate-900" th:text="${c.itemCode}">SRF-001</td>
+                    <td class="py-3 px-4 font-bold text-slate-800" th:text="${c.description}">Elmas Kesme Teli</td>
+                    <td class="py-3 px-4 text-right font-black font-mono text-sm"
+                        :class="${c.quantity != null and c.quantity > 0 ? 'text-emerald-700' : 'text-rose-600'}"
+                        th:text="${c.quantity != null ? #numbers.formatDecimal(c.quantity, 1, 'POINT', 0, 'COMMA') : 0}">50</td>
+                    <td class="py-3 px-4 text-slate-500" th:text="${c.unit != null ? c.unit : 'adet'}">adet</td>
+                    <td class="py-3 px-4 text-right font-mono"
+                        th:text="${c.unitPrice != null ? #numbers.formatDecimal(c.unitPrice, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">150,00 TL</td>
+                    <td class="py-3 px-4">
+                        <span th:if="${c.quantity != null and c.quantity > 0}"
+                              class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Stokta</span>
+                        <span th:unless="${c.quantity != null and c.quantity > 0}"
+                              class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800">Tükendi</span>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <button type="button" @click="openConsumeModal([[${c.id}]])"
+                                th:disabled="${c.quantity == null or c.quantity <= 0}"
+                                class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed text-emerald-800 rounded-lg text-xs font-bold transition inline-flex items-center gap-1 cursor-pointer border border-emerald-200">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                            <span>Kullan</span>
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL 1: Malzeme Kullanımı / Çıkış -->
+    <div x-show="consumeModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-900/60" @click="consumeModalOpen = false"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block p-6 my-8 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="minus-circle" class="w-5 h-5 text-emerald-600"></i>
+                        <span>Sarf Malzeme Kullanımı (Çıkış)</span>
+                    </h3>
+                    <button type="button" @click="consumeModalOpen = false" class="text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <form th:action="@{/quarry/consumables/consume}" method="post" class="mt-4 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Malzeme Seçin *</label>
+                        <select name="stockItemId" required x-model="selectedItemId"
+                                class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <option value="">-- Malzeme Seçin --</option>
+                            <option th:each="c : ${consumables}" th:value="${c.id}"
+                                    th:text="${c.description + ' (Mevcut: ' + c.quantity + ' ' + c.unit + ')'}"></option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Kullanılan Miktar *</label>
+                        <input type="number" step="1" min="1" name="quantity" required x-model="consumeQty"
+                               placeholder="1"
+                               class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">İlgili İş Makinesi (Opsiyonel)</label>
+                        <select name="machineId" x-model="selectedMachineId"
+                                class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <option value="">-- Genel Ocak Sahası (Makinesiz) --</option>
+                            <option th:each="m : ${machines}" th:value="${m.id}" th:text="${m.name + ' (' + m.code + ')'}"></option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Açıklama / Kullanım Yeri</label>
+                        <textarea name="notes" rows="2" placeholder="Örn: 2. basamak elmas tel değişimi"
+                                  class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                        <button type="button" @click="consumeModalOpen = false" class="erp-btn-secondary">Vazgeç</button>
+                        <button type="submit"
+                                class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <span>Kullanımı Onayla ve Giderleştir</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Yeni Malzeme Ekle -->
+    <div x-show="addModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-900/60" @click="addModalOpen = false"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block p-6 my-8 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="plus" class="w-5 h-5 text-blue-600"></i>
+                        <span>Sarf Malzeme Stoğa Ekle</span>
+                    </h3>
+                    <button type="button" @click="addModalOpen = false" class="text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <form th:action="@{/quarry/consumables/add}" method="post" class="mt-4 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Malzeme Tanımı *</label>
+                        <input type="text" name="description" required placeholder="Örn: Elmas Kesme Teli (100 m)"
+                               class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Miktar *</label>
+                            <input type="number" step="1" min="1" name="quantity" required placeholder="10"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Birim</label>
+                            <select name="unit" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="adet">adet</option>
+                                <option value="metre">metre</option>
+                                <option value="kg">kg</option>
+                                <option value="paket">paket</option>
+                                <option value="koli">koli</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">KDV Hariç Net Birim Fiyat (TL)</label>
+                        <input type="number" step="0.01" min="0" name="netUnitPrice" placeholder="Örn: 250.00"
+                               class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        <p class="text-[11px] text-slate-500 mt-1">KDV maliyete dahil edilmez; yalnızca net tutar girilir.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Malzeme Kodu (Opsiyonel)</label>
+                        <input type="text" name="itemCode" placeholder="Boş bırakılırsa otomatik üretilir"
+                               class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Notlar</label>
+                        <textarea name="notes" rows="2" placeholder="Tedarikçi vb. notlar..."
+                                  class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                        <button type="button" @click="addModalOpen = false" class="erp-btn-secondary">Vazgeç</button>
+                        <button type="submit"
+                                class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <span>Depoya Ekle</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

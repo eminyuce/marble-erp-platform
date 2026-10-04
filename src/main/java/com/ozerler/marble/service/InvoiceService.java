@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,8 @@ public class InvoiceService {
     private final BlockLocationMovementRepository movementRepository;
     private final CostTransactionRepository costTransactionRepository;
     private final CostCenterRepository costCenterRepository;
+    private final StockMovementRepository stockMovementRepository;
+    private final QuarryInventoryService quarryInventoryService;
 
     public record InvoiceItemForm(String productName, String description, BigDecimal quantity, String unit,
                                   BigDecimal unitPrice, Long blockId, Long slabId, Long stockItemId,
@@ -50,7 +53,7 @@ public class InvoiceService {
     public Invoice createInvoice(String invoiceNo, LocalDate invoiceDate, LocalDate dueDate,
                                  InvoiceType invoiceType, BusinessUnit department, Long customerId,
                                  Long supplierId, BusinessUnit targetDepartment, Long projectId,
-                                 BigDecimal taxRate, String partyName, String notes,
+                                 BigDecimal taxRate, Boolean directExpense, String partyName, String notes,
                                  List<InvoiceItemForm> itemForms) {
 
         Objects.requireNonNull(invoiceType, "Fatura tipi seçilmelidir.");
@@ -152,26 +155,44 @@ public class InvoiceService {
 
         Invoice saved = invoiceRepository.save(invoice);
 
-        // 1 & 4 & 6: Stok hareketleri ve transferleri
+        // 1 & 4 & 6 & 11: Stok hareketleri ve transferleri
         if (invoiceType == InvoiceType.SALES) {
             for (InvoiceItem item : saved.getItems()) {
                 if (targetDepartment != null) {
                     // Dahili departman transferi
                     if (item.getBlock() != null) {
                         Block b = item.getBlock();
+                        StockLocation prevLoc = b.getCurrentLocation();
                         if (targetDepartment == BusinessUnit.FACTORY) {
-                            b.setStatus(BlockStatus.AT_FACTORY);
-                            StockLocation factoryYard = StockLocations.require(stockLocationRepository, StockLocationType.FACTORY_BLOCK_YARD);
-                            recordBlockMovement(b, b.getCurrentLocation(), factoryYard, "Dahili Transfer Faturası (" + saved.getInvoiceNo() + ") ile Fabrikaya sevk edildi");
-                            b.setCurrentLocation(factoryYard);
-                            b.setArrivalDate(invoiceDate != null ? invoiceDate : LocalDate.now());
+                            // Ocaktan Fabrikaya sevkiyat: blok ocak stoğundan düşer, Yolda (IN_TRANSIT) olur.
+                            // Fabrika kullanıcısı 'Stoğa Al' diyene kadar fabrika stoğunda görünmez.
+                            b.setStatus(BlockStatus.IN_TRANSIT);
+                            b.setCurrentLocation(null);
+                            recordBlockMovement(b, prevLoc, null, "Dahili Transfer Faturası (" + saved.getInvoiceNo() + ") ile Fabrikaya sevk edildi (Yolda)");
                         } else if (targetDepartment == BusinessUnit.WORKSHOP) {
                             b.setStatus(BlockStatus.AT_FACTORY);
                             StockLocation wsYard = StockLocations.require(stockLocationRepository, StockLocationType.WORKSHOP_STOCK);
-                            recordBlockMovement(b, b.getCurrentLocation(), wsYard, "Dahili Transfer Faturası (" + saved.getInvoiceNo() + ") ile Atölyeye sevk edildi");
+                            recordBlockMovement(b, prevLoc, wsYard, "Dahili Transfer Faturası (" + saved.getInvoiceNo() + ") ile Atölyeye sevk edildi");
                             b.setCurrentLocation(wsYard);
                         }
                         blockRepository.save(b);
+
+                        String movCode = UniqueCodes.yearly("MOV-TRF", stockMovementRepository::existsByMovementCode);
+                        stockMovementRepository.save(StockMovement.builder()
+                                .movementCode(movCode)
+                                .movementDate(LocalDateTime.now())
+                                .movementType(StockMovementType.TRANSFER)
+                                .sourceDepartment(department)
+                                .targetDepartment(targetDepartment)
+                                .fromLocation(prevLoc)
+                                .block(b)
+                                .itemDescription("Dahili Sevk: " + b.getBlockCode())
+                                .quantity(BigDecimal.ONE)
+                                .quantityUnit("adet")
+                                .tonnage(b.getEffectiveTonnage())
+                                .invoice(saved)
+                                .notes("Dahili Transfer Faturası: " + saved.getInvoiceNo())
+                                .build());
                     }
                     if (item.getSlab() != null && targetDepartment == BusinessUnit.WORKSHOP) {
                         Slab s = item.getSlab();
@@ -188,37 +209,145 @@ public class InvoiceService {
                     // Dış Müşteriye Satış: Stoktan düş
                     if (item.getBlock() != null) {
                         Block b = item.getBlock();
+                        if (b.getStatus() == BlockStatus.SOLD) {
+                            throw new IllegalArgumentException("Hata: " + b.getBlockCode() + " kodlu blok zaten satılmış veya stokta bulunmuyor.");
+                        }
+                        StockLocation prevLoc = b.getCurrentLocation();
                         b.setStatus(BlockStatus.SOLD);
                         if (customer != null) b.setSoldCustomer(customer);
+                        recordBlockMovement(b, prevLoc, null, "Satış Faturası (" + saved.getInvoiceNo() + ") ile satıldı");
                         blockRepository.save(b);
+
+                        String movCode = UniqueCodes.yearly("MOV-SLS", stockMovementRepository::existsByMovementCode);
+                        stockMovementRepository.save(StockMovement.builder()
+                                .movementCode(movCode)
+                                .movementDate(LocalDateTime.now())
+                                .movementType(StockMovementType.OUTGOING)
+                                .sourceDepartment(department)
+                                .fromLocation(prevLoc)
+                                .block(b)
+                                .customer(customer)
+                                .itemDescription("Blok Satışı: " + b.getBlockCode())
+                                .quantity(BigDecimal.ONE)
+                                .quantityUnit("adet")
+                                .tonnage(b.getEffectiveTonnage())
+                                .invoice(saved)
+                                .notes("Satış Faturası: " + saved.getInvoiceNo() + ", Alıcı: " + saved.getPartyName())
+                                .build());
                     }
                     if (item.getSlab() != null) {
                         Slab s = item.getSlab();
+                        if (s.getStatus() == SlabStatus.SOLD) {
+                            throw new IllegalArgumentException("Hata: " + s.getSlabCode() + " kodlu plaka zaten satılmış.");
+                        }
                         s.setStatus(SlabStatus.SOLD);
                         if (customer != null) s.setCustomer(customer);
                         slabRepository.save(s);
+
+                        String movCode = UniqueCodes.yearly("MOV-SLS", stockMovementRepository::existsByMovementCode);
+                        stockMovementRepository.save(StockMovement.builder()
+                                .movementCode(movCode)
+                                .movementDate(LocalDateTime.now())
+                                .movementType(StockMovementType.OUTGOING)
+                                .sourceDepartment(department)
+                                .slab(s)
+                                .customer(customer)
+                                .itemDescription("Plaka Satışı: " + s.getSlabCode())
+                                .quantity(s.getSurfaceAreaM2() != null ? s.getSurfaceAreaM2() : BigDecimal.ONE)
+                                .quantityUnit("m2")
+                                .invoice(saved)
+                                .notes("Satış Faturası: " + saved.getInvoiceNo() + ", Alıcı: " + saved.getPartyName())
+                                .build());
                     }
                     if (item.getStockItem() != null) {
                         StockItem st = item.getStockItem();
                         BigDecimal deduction = item.getCalculatedM2() != null && item.getCalculatedM2().compareTo(BigDecimal.ZERO) > 0
                                 ? item.getCalculatedM2()
                                 : item.getQuantity();
-                        if (st.getQuantity() != null) {
-                            BigDecimal newQty = st.getQuantity().subtract(deduction);
-                            if (newQty.compareTo(BigDecimal.ZERO) <= 0) {
-                                st.setQuantity(BigDecimal.ZERO);
-                                st.setStatus("SOLD");
-                            } else {
-                                st.setQuantity(newQty);
-                            }
-                            stockItemRepository.save(st);
+                        if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
+                            deduction = BigDecimal.ONE;
+                        }
+                        BigDecimal currentQty = st.getQuantity() != null ? st.getQuantity() : BigDecimal.ZERO;
+                        if (currentQty.compareTo(deduction) < 0) {
+                            throw new IllegalArgumentException(String.format(
+                                    "Yetersiz stok! '%s' için mevcut stok: %s %s, çıkış yapılmak istenen: %s %s. Stok miktarı eksiye düşürülemez.",
+                                    st.getDescription() != null ? st.getDescription() : (st.getItemCode() != null ? st.getItemCode() : "Ürün"),
+                                    currentQty.toPlainString(),
+                                    st.getUnit() != null ? st.getUnit() : "adet",
+                                    deduction.toPlainString(),
+                                    st.getUnit() != null ? st.getUnit() : "adet"));
+                        }
+                        BigDecimal newQty = currentQty.subtract(deduction);
+                        st.setQuantity(newQty);
+                        if (newQty.compareTo(BigDecimal.ZERO) == 0 && (st.getProductType() == StockProductType.SLAB || st.getProductType() == StockProductType.SIZED)) {
+                            st.setStatus("SOLD");
+                        }
+                        stockItemRepository.save(st);
+
+                        String movCode = UniqueCodes.yearly("MOV-SLS", stockMovementRepository::existsByMovementCode);
+                        stockMovementRepository.save(StockMovement.builder()
+                                .movementCode(movCode)
+                                .movementDate(LocalDateTime.now())
+                                .movementType(StockMovementType.OUTGOING)
+                                .sourceDepartment(department)
+                                .fromLocation(st.getStockLocation())
+                                .stockItem(st)
+                                .customer(customer)
+                                .itemDescription("Fatura Satışı: " + (st.getDescription() != null ? st.getDescription() : st.getItemCode()))
+                                .quantity(deduction)
+                                .quantityUnit(st.getUnit() != null ? st.getUnit() : "adet")
+                                .invoice(saved)
+                                .notes("Fatura no: " + saved.getInvoiceNo() + ", Alıcı: " + saved.getPartyName())
+                                .build());
+                    }
+                }
+            }
+        }
+
+        // 6 & 10: Alış Faturalarında Doğrudan Gider veya Stok Girişi
+        if (invoiceType == InvoiceType.PURCHASE) {
+            if (Boolean.TRUE.equals(directExpense)) {
+                // Doğrudan Giderleştir (KDV Hariç Net Tutar - Madde 6.B & Madde 10)
+                if (subtotal.compareTo(BigDecimal.ZERO) > 0) {
+                    CostCenter cc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(department)
+                            .or(() -> costCenterRepository.findByCode("CC-001"))
+                            .or(() -> costCenterRepository.findAll().stream().findFirst())
+                            .orElse(null);
+                    if (cc != null) {
+                        CostTransaction tx = CostTransaction.builder()
+                                .costCenter(cc)
+                                .project(project)
+                                .expenseType(ExpenseType.OVERHEAD)
+                                .expenseCategory(ExpenseCategory.OTHER)
+                                .amount(subtotal)
+                                .businessUnit(department)
+                                .documentNo(saved.getInvoiceNo())
+                                .invoiceDate(saved.getInvoiceDate())
+                                .entryDate(LocalDate.now())
+                                .expensePeriod(YearMonth.from(saved.getInvoiceDate()).toString())
+                                .description("Doğrudan Alış Faturası Gideri: " + saved.getInvoiceNo() + (saved.getNotes() != null && !saved.getNotes().isBlank() ? " — " + saved.getNotes() : ""))
+                                .build();
+                        costTransactionRepository.save(tx);
+                    }
+                }
+            } else {
+                // Stok Alımı (Madde 6.A): Gider henüz yazılmaz; depoya/stoğa alınır
+                if (department == BusinessUnit.QUARRY) {
+                    for (InvoiceItem item : saved.getItems()) {
+                        String pName = item.getProductName() != null ? item.getProductName().toLowerCase() : "";
+                        String unit = item.getUnit() != null ? item.getUnit().toLowerCase() : "";
+                        boolean isFuel = pName.contains("mazot") || pName.contains("dizel") || pName.contains("diesel") || unit.contains("lt") || unit.contains("litre");
+                        if (isFuel) {
+                            quarryInventoryService.addFuelStock(item.getQuantity(), item.getUnitPrice(), saved, saved.getNotes());
+                        } else {
+                            quarryInventoryService.addConsumableStock(null, item.getProductName(), item.getQuantity(), item.getUnit(), item.getUnitPrice(), saved, saved.getNotes());
                         }
                     }
                 }
             }
         }
 
-        // 2: Şantiye / Proje Maliyet Takibi
+        // 2: Şantiye / Proje Maliyet Takibi (KDV Hariç Net Tutar)
         if (project != null && subtotal.compareTo(BigDecimal.ZERO) > 0) {
             CostCenter cc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE)
                     .or(() -> costCenterRepository.findByCode("CC-005"))
@@ -244,6 +373,15 @@ public class InvoiceService {
         }
 
         return saved;
+    }
+
+    @Transactional
+    public Invoice createInvoice(String invoiceNo, LocalDate invoiceDate, LocalDate dueDate,
+                                 InvoiceType invoiceType, BusinessUnit department, Long customerId,
+                                 Long supplierId, BusinessUnit targetDepartment, Long projectId,
+                                 BigDecimal taxRate, String partyName, String notes,
+                                 List<InvoiceItemForm> itemForms) {
+        return createInvoice(invoiceNo, invoiceDate, dueDate, invoiceType, department, customerId, supplierId, targetDepartment, projectId, taxRate, false, partyName, notes, itemForms);
     }
 
     @Transactional

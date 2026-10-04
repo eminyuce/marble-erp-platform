@@ -7,8 +7,11 @@
 <body>
 <div layout:fragment="content" class="erp-form-page max-w-6xl mx-auto space-y-6"
      th:data-initial-type="${defaultType != null ? defaultType.name() : 'SALES'}"
+     th:data-initial-dept="${defaultDepartment != null ? defaultDepartment.name() : 'QUARRY'}"
      x-data="{
         invoiceType: $el.dataset.initialType || 'SALES',
+        department: $el.dataset.initialDept || 'QUARRY',
+        directExpense: false,
         destinationMode: 'CUSTOMER', // 'CUSTOMER' or 'INTERNAL'
         targetDepartment: 'FACTORY',
         taxRate: 20,
@@ -66,6 +69,7 @@
         fetchStock() {
             this.stockLoading = true;
             let url = '/invoices/api/available-stock?';
+            if (this.department) url += 'department=' + encodeURIComponent(this.department) + '&';
             if (this.stockCategoryFilter) url += 'type=' + encodeURIComponent(this.stockCategoryFilter) + '&';
             if (this.stockSearch) url += 'search=' + encodeURIComponent(this.stockSearch);
             fetch(url)
@@ -77,7 +81,6 @@
                 .catch(() => { this.stockLoading = false; });
         },
         selectStockItem(item) {
-            // İlk satır tamamen boşsa üzerine yaz, aksi halde yeni satır ekle
             let targetLine;
             if (this.lines.length === 1 && !this.lines[0].productName) {
                 targetLine = this.lines[0];
@@ -90,9 +93,10 @@
             targetLine.quantity = item.quantity || 1;
             targetLine.unit = item.unit || 'm2';
             targetLine.widthCm = item.widthCm || '';
+            targetLine.unitPrice = item.unitPrice || 0;
             targetLine.blockId = item.category === 'BLOCK' ? item.id : '';
             targetLine.slabId = item.category === 'SLAB' ? item.id : '';
-            targetLine.stockItemId = item.category === 'SIZED' ? item.id : '';
+            targetLine.stockItemId = (item.category === 'SIZED' || item.category === 'FUEL' || item.category === 'CONSUMABLE') ? item.id : '';
             this.stockModalOpen = false;
         }
      }">
@@ -159,7 +163,7 @@
             <!-- Çıkış Yapan / Düzenleyen Departman -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Çıkış Yapan Birim / Departman *</label>
-                <select name="department" required
+                <select name="department" x-model="department" required
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                     <option th:each="d : ${departments}" th:value="${d.name()}"
                             th:text="${d.name() == 'QUARRY' ? 'Ocaklar' : d.displayName}"
@@ -242,7 +246,7 @@
                         <div>
                             <label class="block text-xs font-bold text-amber-900 mb-1.5">Ürünlerin Aktarılacağı Hedef Birim *</label>
                             <select name="targetDepartment" x-model="targetDepartment"
-                                    class="w-full px-3.5 py-2.5 bg-white border border-amber-300 rounded-xl text-sm font-bold text-amber-950 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                     class="w-full px-3.5 py-2.5 bg-white border border-amber-300 rounded-xl text-sm font-bold text-amber-950 focus:ring-2 focus:ring-amber-500 focus:outline-none">
                                 <option value="FACTORY">Fabrika (Plaka / Blok Sahası)</option>
                                 <option value="WORKSHOP">Atölye (Ebatlama &amp; Mamul)</option>
                                 <option value="QUARRY">Ocaklar</option>
@@ -258,8 +262,8 @@
                 </div>
             </div>
 
-            <!-- Alış Durumu için Tedarikçi Seçimi -->
-            <div x-show="invoiceType === 'PURCHASE'">
+            <!-- Alış Durumu için Tedarikçi Seçimi ve Doğrudan Gider Ayrımı (Madde 6) -->
+            <div x-show="invoiceType === 'PURCHASE'" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Tedarikçi Seçiniz *</label>
@@ -273,6 +277,33 @@
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Tedarikçi Unvanı / Fatura Başlığı</label>
                         <input type="text" name="partyName" placeholder="Kayıtlı olmayan tedarikçi unvanı..."
                                class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                    </div>
+                </div>
+
+                <!-- Madde 6: Doğrudan Giderleştirme mi yoksa Stok Alımı mı? -->
+                <div class="p-4 rounded-2xl border transition"
+                     :class="directExpense ? 'bg-amber-50/80 border-amber-300' : 'bg-emerald-50/80 border-emerald-300'">
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" id="directExpense" name="directExpense" value="true" x-model="directExpense"
+                               class="mt-1 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
+                        <div class="flex-1">
+                            <label for="directExpense" class="text-xs font-bold text-slate-900 cursor-pointer flex items-center gap-1.5">
+                                <i data-lucide="help-circle" class="w-4 h-4 text-amber-600"></i>
+                                <span>Bu faturayı doğrudan giderleştirmek istiyor musunuz?</span>
+                            </label>
+                            <p class="text-[11px] mt-1 text-slate-600 leading-relaxed">
+                                <template x-if="directExpense">
+                                    <span class="text-amber-900 font-medium">
+                                        • <strong>Evet (Doğrudan Dönem Gideri):</strong> Bu fatura tutarı (KDV Hariç Net) doğrudan ilgili birimin dönem işletme gideri olarak kaydedilecektir (Elektrik, kira, bakım, hizmet faturası vb.). Depoya stok girişi yapılmaz.
+                                    </span>
+                                </template>
+                                <template x-if="!directExpense">
+                                    <span class="text-emerald-900 font-medium">
+                                        • <strong>Hayır (Depo / Stok Girişi):</strong> Alınan ürünler (Mazot, sarf malzeme vb.) önce Ocak Stoğuna eklenir. İlk alımda gider yazılmaz; makineye verildiğinde veya sahada tüketildiğinde giderleştirilir.
+                                    </span>
+                                </template>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -509,17 +540,31 @@
                     <button type="button" @click="stockCategoryFilter = 'BLOCK'; fetchStock()"
                             :class="stockCategoryFilter === 'BLOCK' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
                             class="px-2.5 py-1 rounded-lg transition">Bloklar</button>
-                    <button type="button" @click="stockCategoryFilter = 'SLAB'; fetchStock()"
-                            :class="stockCategoryFilter === 'SLAB' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
-                            class="px-2.5 py-1 rounded-lg transition">Plakalar</button>
-                    <button type="button" @click="stockCategoryFilter = 'SIZED'; fetchStock()"
-                            :class="stockCategoryFilter === 'SIZED' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
-                            class="px-2.5 py-1 rounded-lg transition">Ebatlı Mamul</button>
+                    <template x-if="department === 'QUARRY'">
+                        <div class="inline-flex gap-1">
+                            <button type="button" @click="stockCategoryFilter = 'FUEL'; fetchStock()"
+                                    :class="stockCategoryFilter === 'FUEL' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
+                                    class="px-2.5 py-1 rounded-lg transition">Mazot</button>
+                            <button type="button" @click="stockCategoryFilter = 'CONSUMABLE'; fetchStock()"
+                                    :class="stockCategoryFilter === 'CONSUMABLE' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
+                                    class="px-2.5 py-1 rounded-lg transition">Sarf Malzeme</button>
+                        </div>
+                    </template>
+                    <template x-if="department !== 'QUARRY'">
+                        <div class="inline-flex gap-1">
+                            <button type="button" @click="stockCategoryFilter = 'SLAB'; fetchStock()"
+                                    :class="stockCategoryFilter === 'SLAB' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
+                                    class="px-2.5 py-1 rounded-lg transition">Plakalar</button>
+                            <button type="button" @click="stockCategoryFilter = 'SIZED'; fetchStock()"
+                                    :class="stockCategoryFilter === 'SIZED' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600'"
+                                    class="px-2.5 py-1 rounded-lg transition">Ebatlı Mamul</button>
+                        </div>
+                    </template>
                 </div>
 
                 <div class="flex-1 min-w-[200px]">
                     <input type="text" x-model="stockSearch" @input.debounce.300ms="fetchStock()"
-                           placeholder="Kod, taş türü veya isim ara..."
+                           placeholder="Kod, malzeme veya taş adı ara..."
                            class="w-full px-3 py-1.5 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
                 </div>
             </div>
@@ -542,7 +587,13 @@
                          @click="selectStockItem(item)">
                         <div class="flex items-center gap-3">
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
-                                  :class="item.category === 'BLOCK' ? 'bg-amber-100 text-amber-800' : (item.category === 'SLAB' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800')"
+                                  :class="{
+                                      'bg-amber-100 text-amber-800': item.category === 'BLOCK',
+                                      'bg-blue-100 text-blue-800': item.category === 'SLAB',
+                                      'bg-purple-100 text-purple-800': item.category === 'SIZED',
+                                      'bg-orange-100 text-orange-800': item.category === 'FUEL',
+                                      'bg-teal-100 text-teal-800': item.category === 'CONSUMABLE'
+                                  }"
                                   x-text="item.categoryLabel"></span>
                             <div>
                                 <div class="text-xs font-bold text-slate-900" x-text="item.name"></div>

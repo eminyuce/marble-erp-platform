@@ -38,6 +38,28 @@ public class FactoryStockService {
     }
 
     @Transactional(readOnly = true)
+    public List<Block> getIncomingBlocksInTransit() {
+        return blockRepository.findByStatusIn(List.of(BlockStatus.IN_TRANSIT, BlockStatus.DISPATCHED));
+    }
+
+    @Transactional
+    public Block receiveBlockAtFactory(Long blockId) {
+        Block block = blockRepository.findById(blockId)
+                .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
+        if (block.getStatus() != BlockStatus.IN_TRANSIT && block.getStatus() != BlockStatus.DISPATCHED) {
+            throw new IllegalStateException("Yalnızca sevk edilmiş (Yolda) bloklar fabrikanın stoğuna kabul edilebilir.");
+        }
+        StockLocation factoryYard = StockLocations.require(stockLocationRepository, StockLocationType.FACTORY_BLOCK_YARD);
+        StockLocation oldLoc = block.getCurrentLocation();
+        block.setCurrentLocation(factoryYard);
+        block.setStatus(BlockStatus.AT_FACTORY);
+        block.setArrivalDate(LocalDate.now());
+        Block saved = blockRepository.save(block);
+        stockMovementService.recordBlockMovement(saved, oldLoc, factoryYard, "Fabrika stoğuna kabul edildi (Stoğa Al)");
+        return saved;
+    }
+
+    @Transactional(readOnly = true)
     public Page<Block> getFactoryUncutBlocksPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
         return blockRepository.searchFactoryUncutBlocks(customerId, generalStockOnly, search, pageable);

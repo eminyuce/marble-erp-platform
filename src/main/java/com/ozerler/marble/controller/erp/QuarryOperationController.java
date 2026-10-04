@@ -38,26 +38,8 @@ public class QuarryOperationController extends AbstractController {
     private final StockMovementRepository movementRepository;
 
     @GetMapping
-    public String index(@RequestParam(value = "search", required = false) String search,
-                        @RequestParam(value = "status", required = false) BlockStatus status,
-                        Model model) {
-
-        List<Quarry> quarries = quarryOperationService.getAllQuarries();
-
-        long prodYardCount = blockRepository.countByLocationType(StockLocationType.PRODUCTION_YARD);
-        long dispatchYardCount = blockRepository.countByLocationType(StockLocationType.DISPATCH_YARD);
-        BigDecimal totalEstTon = blockRepository.sumTotalEstimatedTonnage();
-        BigDecimal totalActTon = blockRepository.sumTotalActualTonnage();
-
-        model.addAttribute("quarries", quarries);
-        model.addAttribute("status", status != null ? status.name() : "");
-        model.addAttribute("prodYardCount", prodYardCount);
-        model.addAttribute("dispatchYardCount", dispatchYardCount);
-        model.addAttribute("totalEstTon", totalEstTon != null ? totalEstTon : BigDecimal.ZERO);
-        model.addAttribute("totalActTon", totalActTon != null ? totalActTon : BigDecimal.ZERO);
-        model.addAttribute("activeSection", "quarry");
-
-        return "operations/quarry/index";
+    public String index() {
+        return "redirect:/blocks";
     }
 
     @GetMapping("/api/data")

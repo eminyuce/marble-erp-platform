@@ -4,37 +4,39 @@ let pendingDeleteBlockId = null;
 
 function quarryPage() {
     return {
-        activeTab: "blocks",
+        stockFilter: "IN_STOCK",
         yardFilter: "",
         statusFilter: "",
         init() {
             window.quarryPageState = this;
         },
-        showBlocksTab() {
-            this.activeTab = "blocks";
+        setStockFilter(filter) {
+            this.stockFilter = filter;
+            this.yardFilter = "";
             this.statusFilter = "";
             if (typeof reloadBlocksGrid === "function") {
                 reloadBlocksGrid();
             }
         },
         setYardFilter(filter) {
-            this.activeTab = "blocks";
             this.yardFilter = filter;
             this.statusFilter = "";
             if (typeof reloadBlocksGrid === "function") {
                 reloadBlocksGrid();
             }
         },
-        showSoldTab() {
-            this.activeTab = "sold";
+        setStatusFilter(status) {
+            this.statusFilter = status;
             this.yardFilter = "";
-            this.statusFilter = "SOLD";
             if (typeof reloadBlocksGrid === "function") {
                 reloadBlocksGrid();
             }
         },
         gridExtraQuery() {
             let q = "";
+            if (this.stockFilter) {
+                q += "&stockFilter=" + encodeURIComponent(this.stockFilter);
+            }
             if (this.yardFilter) {
                 q += "&locationType=" + encodeURIComponent(this.yardFilter);
             }
@@ -168,9 +170,17 @@ function initBlocksGrid() {
             {
                 title: "Durum",
                 field: "statusLabel",
-                minWidth: 120,
+                minWidth: 130,
                 formatter: function (cell) {
-                    return `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">${gridText(cell.getValue())}</span>`;
+                    const row = cell.getRow().getData();
+                    const status = row.status || row.canonicalStatus;
+                    let cls = "bg-slate-100 text-slate-700";
+                    if (status === "PRODUCED") cls = "bg-amber-100 text-amber-800";
+                    else if (status === "READY_FOR_DISPATCH") cls = "bg-emerald-100 text-emerald-800";
+                    else if (status === "IN_TRANSIT") cls = "bg-indigo-100 text-indigo-800";
+                    else if (status === "AT_FACTORY" || status === "FACTORY_STOCK") cls = "bg-blue-100 text-blue-800";
+                    else if (status === "SOLD") cls = "bg-purple-100 text-purple-800";
+                    return `<span class="px-2 py-0.5 rounded-full text-xs font-semibold ${cls}">${gridText(cell.getValue())}</span>`;
                 }
             },
             {
@@ -211,9 +221,14 @@ function initBlocksGrid() {
                     items.push({icon: "eye", label: "Detay ve işlemler", href: "/blocks/" + row.id});
                     items.push({icon: "edit-3", label: "Düzenle", href: "/blocks/" + row.id + "/edit"});
                     const sold = row.canonicalStatus === "SOLD" || row.status === "SOLD";
-                    const atQuarry = !sold && (row.canonicalStatus === "PRODUCED" || row.canonicalStatus === "MARKED"
-                        || row.status === "QUARRY" || row.status === "PRODUCED" || row.status === "MARKED");
+                    const atQuarry = !sold && (row.canonicalStatus === "PRODUCED" || row.canonicalStatus === "READY_FOR_DISPATCH" || row.canonicalStatus === "MARKED"
+                        || row.status === "QUARRY" || row.status === "PRODUCED" || row.status === "READY_FOR_DISPATCH" || row.status === "MARKED");
                     if (atQuarry) {
+                        items.push({
+                            icon: "scale",
+                            label: "Kantar Tartımı Gir",
+                            onclick: "openActualTonnageModal(" + row.id + ", '" + (row.blockCode || "") + "', " + (row.approximateTonnage || 0) + ")"
+                        });
                         if (row.locationType !== "PRODUCTION_YARD") {
                             items.push({
                                 icon: "pickaxe",
@@ -229,8 +244,8 @@ function initBlocksGrid() {
                             });
                         }
                         if (row.locationType === "DISPATCH_YARD") {
-                            items.push({icon: "handshake", label: "Sat", href: "/blocks/" + row.id + "/sell"});
                             items.push({icon: "truck", label: "Fabrikaya sevk", href: "/blocks/" + row.id + "/transfer-to-factory"});
+                            items.push({icon: "handshake", label: "Sat", href: "/blocks/" + row.id + "/sell"});
                         }
                     }
                     if (row.canDelete) {
@@ -393,6 +408,36 @@ function deleteBlock(id) {
     }).then(res => handleBlockActionResponse(res, "Blok başarıyla silindi."));
 }
 
+let pendingTonnageBlockId = null;
+function openActualTonnageModal(id, code, approxTon) {
+    pendingTonnageBlockId = id;
+    const dialog = document.getElementById("tonnage-modal-dialog");
+    const codeEl = document.getElementById("tonnage-block-code");
+    const approxEl = document.getElementById("tonnage-approx");
+    const inputEl = document.getElementById("input-actual-tonnage");
+    if (codeEl) codeEl.textContent = code || ("ID: " + id);
+    if (approxEl) approxEl.textContent = (approxTon || 0) + " Ton";
+    if (inputEl) inputEl.value = "";
+    if (dialog && typeof dialog.showModal === "function") {
+        dialog.showModal();
+        return;
+    }
+    showBlocksToast("Tartım penceresi açılamadı.", false);
+}
+
+function saveActualTonnage(id, tonnage) {
+    const body = new URLSearchParams();
+    body.append("actualTonnage", tonnage);
+    fetch(`/blocks/${id}/api/actual-tonnage`, {
+        method: "POST",
+        headers: csrfHeaders(),
+        body: body
+    }).then(res => handleBlockActionResponse(res, "Kantar tartımı kaydedildi (Tartıldı / Sevke Hazır)."));
+}
+
+window.openActualTonnageModal = openActualTonnageModal;
+window.openDeleteBlock = openDeleteBlock;
+
 document.addEventListener("DOMContentLoaded", function () {
     initBlocksGrid();
 
@@ -405,6 +450,27 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.querySelectorAll("#delete-block-dialog button[value='cancel'], #delete-cancel")
+        .forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                btn.closest("dialog")?.close();
+            });
+        });
+
+    document.getElementById("confirm-save-tonnage")?.addEventListener("click", function () {
+        const dialog = document.getElementById("tonnage-modal-dialog");
+        const inputEl = document.getElementById("input-actual-tonnage");
+        const val = inputEl ? parseFloat(inputEl.value) : null;
+        if (!val || isNaN(val) || val <= 0) {
+            showBlocksToast("Lütfen geçerli bir kantar tonajı girin.", false);
+            return;
+        }
+        if (!pendingTonnageBlockId) return;
+        saveActualTonnage(pendingTonnageBlockId, val);
+        if (dialog) dialog.close();
+        pendingTonnageBlockId = null;
+    });
+
+    document.querySelectorAll("#tonnage-modal-dialog button[value='cancel'], #tonnage-cancel")
         .forEach(function (btn) {
             btn.addEventListener("click", function () {
                 btn.closest("dialog")?.close();

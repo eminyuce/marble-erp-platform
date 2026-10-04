@@ -47,6 +47,7 @@ public class FactoryOperationController extends AbstractController {
                             Model model) {
 
         List<Block> blocks = factoryStockService.getFactoryUncutBlocks(customerId, generalStockOnly);
+        List<Block> incomingBlocks = factoryStockService.getIncomingBlocksInTransit();
         List<Customer> customers = customerRepository.findAll();
 
         BigDecimal totalWeightTon = blocks.stream()
@@ -54,6 +55,7 @@ public class FactoryOperationController extends AbstractController {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         model.addAttribute("blocks", blocks);
+        model.addAttribute("incomingBlocks", incomingBlocks);
         model.addAttribute("customers", customers);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("generalStockOnly", generalStockOnly);
@@ -121,6 +123,17 @@ public class FactoryOperationController extends AbstractController {
         try {
             Block block = factoryStockService.dispatchBlockToCutting(id, notes);
             redirectAttributes.addFlashAttribute("successMessage", "Blok (" + block.getBlockCode() + ") kesime alındı. Kesilmemiş blok stokundan düşüldü.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
+        }
+        return "redirect:/operations/factory/blocks";
+    }
+
+    @PostMapping("/blocks/{id}/receive")
+    public String receiveBlock(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            Block block = factoryStockService.receiveBlockAtFactory(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Blok (" + block.getBlockCode() + ") başarıyla fabrika stok sahasına kabul edildi.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }

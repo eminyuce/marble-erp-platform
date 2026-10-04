@@ -81,6 +81,8 @@ class QuarryBlockServiceTest {
     private CostAnalysisService costAnalysisService;
     @Mock
     private BlockCostCalculationService blockCostCalculationService;
+    @Mock
+    private QuarryInventoryService quarryInventoryService;
 
     private QuarryBlockService quarryBlockService;
 
@@ -91,7 +93,7 @@ class QuarryBlockServiceTest {
                 costAnalysisService, blockCostCalculationService, expenseService, costCenterRepository, customerRepository,
                 slabRepository, factoryWorkOrderRepository, productionOrderRepository,
                 blockCustomerMarkRepository, costTransactionRepository, shipmentItemRepository,
-                fileStorageService);
+                fileStorageService, quarryInventoryService);
     }
 
     @Test
@@ -175,8 +177,8 @@ class QuarryBlockServiceTest {
 
         Block saved = quarryBlockService.transferToFactory(8L, new BigDecimal("1500"));
 
-        assertThat(saved.getStatus()).isEqualTo(BlockStatus.AT_FACTORY);
-        assertThat(saved.getCurrentLocation().getLocationType()).isEqualTo(StockLocationType.FACTORY_BLOCK_YARD);
+        assertThat(saved.getStatus()).isEqualTo(BlockStatus.IN_TRANSIT);
+        assertThat(saved.getCurrentLocation()).isNull();
         assertThat(saved.getTransportCost()).isEqualByComparingTo("1500");
         ArgumentCaptor<ExpenseService.ExpenseDraft> expense = ArgumentCaptor.forClass(ExpenseService.ExpenseDraft.class);
         verify(expenseService).recordExpense(expense.capture());
@@ -184,6 +186,11 @@ class QuarryBlockServiceTest {
         assertThat(expense.getValue().amount()).isEqualByComparingTo("1500");
         assertThat(expense.getValue().centerId()).isEqualTo(6L);
         verify(movementRepository).save(any());
+
+        // Fabrika kullanıcısı Stoğa Al dediğinde
+        Block received = quarryBlockService.receiveBlockAtFactory(8L);
+        assertThat(received.getStatus()).isEqualTo(BlockStatus.AT_FACTORY);
+        assertThat(received.getCurrentLocation().getLocationType()).isEqualTo(StockLocationType.FACTORY_BLOCK_YARD);
     }
 
     @Test
@@ -466,14 +473,14 @@ class QuarryBlockServiceTest {
     @Test
     @DisplayName("getBlocksPaged puts filtered tonnage, m2, extraction and total cost into grid meta")
     void getBlocksPaged_IncludesFooterTotalsInMeta() {
-        when(blockRepository.searchBlocks(isNull(), isNull(), isNull(), anyBoolean(), any()))
+        when(blockRepository.searchBlocksWithStockFilter(isNull(), isNull(), isNull(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of()));
         when(blockCostCalculationService.expensePerTonByQuarry(any()))
                 .thenReturn(Map.of(1L, new BigDecimal("100")));
         List<Object[]> metricRows = List.<Object[]>of(new Object[]{
                 1L, new BigDecimal("10"), new BigDecimal("4.50"), new BigDecimal("250")
         });
-        when(blockRepository.sumGridMetricsByQuarry(isNull(), isNull(), isNull(), anyBoolean()))
+        when(blockRepository.sumGridMetricsWithStockFilterByQuarry(isNull(), isNull(), isNull(), any()))
                 .thenReturn(metricRows);
 
         var response = quarryBlockService.getBlocksPaged(1, 25, null, null, null, null, null);

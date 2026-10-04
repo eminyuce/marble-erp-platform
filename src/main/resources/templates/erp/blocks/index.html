@@ -2,7 +2,7 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/base}">
 <head>
-    <title>Ocak | Özerler Mermer ERP</title>
+    <title>Ocaklar | Özerler Mermer ERP</title>
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
@@ -10,111 +10,187 @@
      x-init="init()">
     <script th:src="@{/js/blocks-grid.js(v=${assetVersion})}"></script>
 
-    <div class="erp-list-header">
+    <!-- Header & Breadcrumb -->
+    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="erp-list-header-main">
-            <div th:replace="~{fragments/list-chrome :: breadcrumb('Ocak')}"></div>
-            <h2 class="admin-page-title">Ocak — Blok Takibi</h2>
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Operasyon', '/blocks', 'Ocaklar — Blok Takibi')}"></div>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="mountain" class="w-7 h-7 text-amber-600 inline-block"></i>
+                <span>Ocaklar — Blok Takibi</span>
+            </h2>
             <p class="erp-list-lead">
-                Üretim Sahası ve Stok Sahasındaki blokları izleyin; saha değiştirin, fabrikaya sevk edin veya satın.
-                Blok maliyeti ve ocak çıkarma maliyeti sistem tarafından gider kayıtlarından otomatik hesaplanır.
-                <span th:replace="~{fragments/erp-ops :: tip('', 'Gider girişi için Giderler ve Satın Alma sayfasını kullanın.')}"></span>
+                Ocakta çıkarılan mermer bloklarının stok, kantar tartımı, transfer ve satış takibi.
             </p>
         </div>
-    </div>
-
-    <div th:replace="~{fragments/erp-ops :: quarryWorkflow}"></div>
-
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3" th:if="${summary != null}">
-        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4"
-                :class="yardFilter === '' && activeTab === 'blocks' ? 'erp-summary-card--active' : ''"
-                @click="setYardFilter(''); activeTab = 'blocks'">
-            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Bu ay üretilen</div>
-            <div class="text-lg font-black text-slate-900 mt-1"
-                 th:text="${#numbers.formatDecimal(summary.producedTonsThisMonth, 1, 'POINT', 2, 'COMMA')} + ' ton'">0 ton</div>
-        </button>
-        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4"
-                :class="yardFilter === 'PRODUCTION_YARD' ? 'erp-summary-card--active' : ''"
-                @click="setYardFilter('PRODUCTION_YARD')">
-            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Üretim Sahası</div>
-            <div class="text-lg font-black text-slate-900 mt-1">
-                <span th:text="${summary.productionYardCount}">0</span> blok
-            </div>
-        </button>
-        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4"
-                :class="yardFilter === 'DISPATCH_YARD' ? 'erp-summary-card--active' : ''"
-                @click="setYardFilter('DISPATCH_YARD')">
-            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Stok Sahası</div>
-            <div class="text-lg font-black text-slate-900 mt-1">
-                <span th:text="${summary.dispatchYardCount}">0</span> blok
-            </div>
-        </button>
-        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4"
-                :class="activeTab === 'sold' ? 'erp-summary-card--active' : ''"
-                @click="showSoldTab()">
-            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Satılan</div>
-            <div class="text-lg font-black text-slate-900 mt-1">
-                <span th:text="${summary.soldCount}">0</span> blok
-            </div>
-        </button>
-        <div class="bg-white rounded-xl border border-slate-200 p-4">
-            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Ton maliyeti</div>
-            <div class="text-lg font-black text-slate-900 mt-1"
-                 th:if="${summary.unallocatedCarryForward}">Dağıtılmamış gider</div>
-            <div class="text-lg font-black text-slate-900 mt-1" th:unless="${summary.unallocatedCarryForward}"
-                 th:text="${summary.costPerTonThisMonth != null ? #numbers.formatDecimal(summary.costPerTonThisMonth, 1, 'POINT', 2, 'COMMA') + ' TL/ton' : '—'}">—</div>
-        </div>
-    </div>
-
-    <nav class="erp-module-tabs" role="tablist" aria-label="Ocak bölümleri">
-        <button type="button" role="tab" class="erp-module-tab erp-module-tab--active" :class="activeTab === 'blocks' ? 'erp-module-tab--active' : ''" :aria-selected="activeTab === 'blocks'" @click="showBlocksTab()" aria-selected="true">Blok Takibi</button>
-        <button type="button" role="tab" class="erp-module-tab" :class="activeTab === 'sold' ? 'erp-module-tab--active' : ''" :aria-selected="activeTab === 'sold'" @click="showSoldTab()" aria-selected="false">Satılan Bloklar</button>
-    </nav>
-
-    <section x-show="activeTab === 'blocks' || activeTab === 'sold'" x-cloak class="space-y-4">
-        <aside class="erp-callout" role="note" x-show="activeTab === 'blocks'">
-            <i data-lucide="map-pin"></i>
-            <p>
-                <strong>Nasıl kullanılır?</strong> Listeden bir bloğa tıklayın veya satır sonundaki
-                <strong>İşlemler</strong> menüsünden saha taşıma, fabrika sevki veya satış yapın.
-                Maliyet sütunları gider kayıtlarına göre dinamik güncellenir.
-            </p>
-        </aside>
-        <aside class="erp-callout" role="note" x-show="activeTab === 'sold'" style="display:none;">
-            <i data-lucide="users"></i>
-            <p>
-                <strong>Satılan bloklar</strong> burada listelenir. Satış rakamı piyasa değeri olarak kullanılır.
-            </p>
-        </aside>
-
-        <div class="erp-yard-filters" x-show="activeTab === 'blocks'">
-            <button type="button" class="erp-yard-chip"
-                    :class="yardFilter === '' ? 'erp-yard-chip--active' : ''"
-                    @click="setYardFilter('')">Tümü</button>
-            <button type="button" class="erp-yard-chip"
-                    :class="yardFilter === 'PRODUCTION_YARD' ? 'erp-yard-chip--active' : ''"
-                    @click="setYardFilter('PRODUCTION_YARD')">
-                Üretim Sahası
-                <span class="erp-yard-chip-count" th:text="${summary != null ? summary.productionYardCount : 0}">0</span>
-            </button>
-            <button type="button" class="erp-yard-chip"
-                    :class="yardFilter === 'DISPATCH_YARD' ? 'erp-yard-chip--active' : ''"
-                    @click="setYardFilter('DISPATCH_YARD')">
-                Stok Sahası
-                <span class="erp-yard-chip-count" th:text="${summary != null ? summary.dispatchYardCount : 0}">0</span>
-            </button>
-        </div>
-
-        <div class="erp-toolbar">
+        <div class="flex items-center gap-2 shrink-0">
             <a th:href="@{/blocks/create}" class="erp-btn-primary">
                 <i data-lucide="plus"></i>
-                <span>Yeni blok kaydı</span>
+                <span>Yeni Blok Çıkar</span>
             </a>
-            <div th:replace="~{fragments/list-chrome :: search('Blok kodu, ocak bölgesi, taş cinsi, ocak veya müşteri', 'search-input')}"></div>
+        </div>
+    </div>
+
+    <!-- Sub-Navigation Bar for Quarry -->
+    <div class="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
+        <a th:href="@{/blocks}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-amber-600 text-white shadow-xs">
+            <i data-lucide="box" class="w-4 h-4"></i>
+            <span>Blok Takibi</span>
+        </a>
+        <a th:href="@{/quarry/fuel}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="fuel" class="w-4 h-4 text-amber-600"></i>
+            <span>Mazot Deposu</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800"
+                  th:text="${summary != null and summary.fuelStockLiters != null ? #numbers.formatDecimal(summary.fuelStockLiters, 1, 'POINT', 0, 'COMMA') + ' L' : '0 L'}">0 L</span>
+        </a>
+        <a th:href="@{/quarry/consumables}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="wrench" class="w-4 h-4 text-emerald-600"></i>
+            <span>Sarf Malzeme Deposu</span>
+        </a>
+        <a th:href="@{/quarry/machines}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="truck" class="w-4 h-4 text-blue-600"></i>
+            <span>Makineler</span>
+        </a>
+    </div>
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" th:if="${summary != null}">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="stockFilter === 'IN_STOCK' && yardFilter === '' && statusFilter === '' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setStockFilter('IN_STOCK')">
+            <div class="text-[11px] uppercase tracking-wide text-amber-700 font-semibold flex items-center gap-1">
+                <i data-lucide="boxes" class="w-3.5 h-3.5"></i> Stoktaki Bloklar
+            </div>
+            <div class="text-xl font-black text-slate-900 mt-1">
+                <span th:text="${summary.totalInStockCount != null ? summary.totalInStockCount : 0}">0</span> blok
+            </div>
+            <div class="text-xs text-slate-500 mt-0.5">Ocak mevcudu</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="stockFilter === 'IN_STOCK' && yardFilter === 'PRODUCTION_YARD' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setStockFilter('IN_STOCK'); setYardFilter('PRODUCTION_YARD')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Üretim Sahası</div>
+            <div class="text-xl font-black text-slate-900 mt-1">
+                <span th:text="${summary.productionYardCount}">0</span> blok
+            </div>
+            <div class="text-xs text-slate-500 mt-0.5">Aynadan çıkan</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="stockFilter === 'IN_STOCK' && yardFilter === 'DISPATCH_YARD' ? 'erp-summary-card--active ring-2 ring-sky-500' : ''"
+                @click="setStockFilter('IN_STOCK'); setYardFilter('DISPATCH_YARD')">
+            <div class="text-[11px] uppercase tracking-wide text-sky-700 font-semibold">Stok Sahası</div>
+            <div class="text-xl font-black text-slate-900 mt-1">
+                <span th:text="${summary.dispatchYardCount}">0</span> blok
+            </div>
+            <div class="text-xs text-slate-500 mt-0.5">Sevk sahasında</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="stockFilter === 'IN_STOCK' && statusFilter === 'READY_FOR_DISPATCH' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setStockFilter('IN_STOCK'); setStatusFilter('READY_FOR_DISPATCH')">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-700 font-semibold">Tartıldı</div>
+            <div class="text-xl font-black text-emerald-700 mt-1">
+                <span th:text="${summary.readyForDispatchCount != null ? summary.readyForDispatchCount : 0}">0</span> blok
+            </div>
+            <div class="text-xs text-slate-500 mt-0.5">Sevke hazır</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="stockFilter === 'DISPATCHED' ? 'erp-summary-card--active ring-2 ring-indigo-500' : ''"
+                @click="setStockFilter('DISPATCHED')">
+            <div class="text-[11px] uppercase tracking-wide text-indigo-700 font-semibold flex items-center gap-1">
+                <i data-lucide="truck" class="w-3.5 h-3.5"></i> Fabrikaya Sevk
+            </div>
+            <div class="text-xl font-black text-slate-900 mt-1">
+                <span th:text="${summary.factoryYardCount}">0</span> blok
+            </div>
+            <div class="text-xs text-slate-500 mt-0.5">Yolda veya fabrikada</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="stockFilter === 'SOLD' ? 'erp-summary-card--active ring-2 ring-purple-500' : ''"
+                @click="setStockFilter('SOLD')">
+            <div class="text-[11px] uppercase tracking-wide text-purple-700 font-semibold">Satılan</div>
+            <div class="text-xl font-black text-slate-900 mt-1">
+                <span th:text="${summary.soldCount}">0</span> blok
+            </div>
+            <div class="text-xs text-slate-500 mt-0.5">Müşteriye çıkış</div>
+        </button>
+    </div>
+
+    <!-- Filter Section (Standardized per Requirement 4) -->
+    <div class="space-y-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+        <!-- 1. Ana Durum Filtresi (Primary Filter Chips) -->
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-wide">Filtrele:</span>
+            <button type="button" class="erp-yard-chip"
+                    :class="stockFilter === 'IN_STOCK' ? 'erp-yard-chip--active' : ''"
+                    @click="setStockFilter('IN_STOCK')">
+                <i data-lucide="boxes" class="w-3.5 h-3.5 inline mr-1"></i>
+                Stokta (Varsayılan)
+                <span class="erp-yard-chip-count" th:text="${summary != null ? summary.totalInStockCount : 0}">0</span>
+            </button>
+            <button type="button" class="erp-yard-chip"
+                    :class="stockFilter === 'SOLD' ? 'erp-yard-chip--active' : ''"
+                    @click="setStockFilter('SOLD')">
+                <i data-lucide="handshake" class="w-3.5 h-3.5 inline mr-1"></i>
+                Satılan
+                <span class="erp-yard-chip-count" th:text="${summary != null ? summary.soldCount : 0}">0</span>
+            </button>
+            <button type="button" class="erp-yard-chip"
+                    :class="stockFilter === 'DISPATCHED' ? 'erp-yard-chip--active' : ''"
+                    @click="setStockFilter('DISPATCHED')">
+                <i data-lucide="truck" class="w-3.5 h-3.5 inline mr-1"></i>
+                Fabrikaya Sevk Edilen
+                <span class="erp-yard-chip-count" th:text="${summary != null ? summary.factoryYardCount : 0}">0</span>
+            </button>
+            <button type="button" class="erp-yard-chip"
+                    :class="stockFilter === 'ALL' ? 'erp-yard-chip--active' : ''"
+                    @click="setStockFilter('ALL')">
+                <i data-lucide="layers" class="w-3.5 h-3.5 inline mr-1"></i>
+                Tümü
+            </button>
+        </div>
+
+        <!-- 2. Ocak İçi Alt Kategori Filtreleri (Only visible when stockFilter === 'IN_STOCK') -->
+        <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100" x-show="stockFilter === 'IN_STOCK'">
+            <span class="text-[11px] font-semibold text-slate-400 mr-2">Saha / İşlem:</span>
+            <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
+                    :class="yardFilter === '' && statusFilter === '' ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                    @click="setYardFilter('')">Tüm Sahalar</button>
+            <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
+                    :class="yardFilter === 'PRODUCTION_YARD' ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                    @click="setYardFilter('PRODUCTION_YARD')">
+                Üretim Sahası (<span th:text="${summary != null ? summary.productionYardCount : 0}">0</span>)
+            </button>
+            <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
+                    :class="yardFilter === 'DISPATCH_YARD' ? 'bg-sky-100 text-sky-900 border-sky-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                    @click="setYardFilter('DISPATCH_YARD')">
+                Stok Sahası (<span th:text="${summary != null ? summary.dispatchYardCount : 0}">0</span>)
+            </button>
+            <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
+                    :class="statusFilter === 'READY_FOR_DISPATCH' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                    @click="setStatusFilter('READY_FOR_DISPATCH')">
+                Tartıldı (Sevke Hazır) (<span th:text="${summary != null ? summary.readyForDispatchCount : 0}">0</span>)
+            </button>
+            <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
+                    :class="statusFilter === 'IN_TRANSIT' ? 'bg-indigo-100 text-indigo-900 border-indigo-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                    @click="setStatusFilter('IN_TRANSIT')">
+                Yolda (<span th:text="${summary != null ? summary.inTransitCount : 0}">0</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- Data Grid Toolbar & Table -->
+    <section class="space-y-4">
+        <div class="erp-toolbar">
+            <div th:replace="~{fragments/list-chrome :: search('Blok kodu, ocak bölgesi, taş cinsi veya müşteri', 'search-input')}"></div>
             <div class="erp-toolbar-actions">
-                <a th:href="@{/expenses(unit=QUARRY)}" class="erp-btn-secondary">
-                    <i data-lucide="receipt"></i>
-                    <span>Giderler ve Satın Alma</span>
-                </a>
                 <div th:replace="~{fragments/list-chrome :: exportDropdown('blocks-table', 'bloklar')}"></div>
             </div>
         </div>
@@ -122,6 +198,42 @@
         <div th:replace="~{fragments/list-chrome :: gridShell('blocks-table')}"></div>
     </section>
 
+    <!-- Kantar Tartımı Gir (Gerçek Tonaj) Dialog -->
+    <dialog id="tonnage-modal-dialog" class="erp-dialog-panel">
+        <form method="dialog" class="erp-dialog-body" id="tonnage-form">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <i data-lucide="scale" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="erp-dialog-title mb-0">Kantar Tartımı Gir (Gerçek Tonaj)</h3>
+                    <p class="text-xs text-slate-500 font-mono" id="tonnage-block-code">BLK-001</p>
+                </div>
+            </div>
+            <div class="space-y-3 mt-4">
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="text-[11px] font-bold text-slate-500 block uppercase">Tahmini Tonaj (Referans)</span>
+                    <span id="tonnage-approx" class="text-sm font-black text-slate-800 font-mono">18.50 Ton</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Fiili Kantar Tartımı (Ton) *</label>
+                    <input type="number" step="0.01" min="0.1" id="input-actual-tonnage" required
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base font-black text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                           placeholder="Örn: 19.20" />
+                    <p class="text-[11px] text-slate-500 mt-1.5">Gerçek tonaj girildiğinde blok durumu otomatik olarak <strong>Tartıldı (Sevke Hazır)</strong> durumuna güncellenir.</p>
+                </div>
+            </div>
+            <div class="erp-dialog-actions mt-5">
+                <button type="button" class="erp-btn-secondary" id="tonnage-cancel">Vazgeç</button>
+                <button type="button" id="confirm-save-tonnage" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>Tartımı Kaydet</span>
+                </button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Güvenli Silme Dialog -->
     <dialog id="delete-block-dialog" class="erp-dialog-panel">
         <form method="dialog" class="erp-dialog-body">
             <div class="flex items-center gap-3">
@@ -133,8 +245,8 @@
                     <p class="text-xs text-slate-500 font-mono" id="delete-block-code">BLK-2026-00001</p>
                 </div>
             </div>
-            <p class="erp-dialog-lead text-slate-600">Bu bloğu sistemden kalıcı olarak silmek istediğinize emin misiniz?</p>
-            <div class="erp-dialog-actions">
+            <p class="erp-dialog-lead text-slate-600 mt-2">Bu bloğu sistemden kalıcı olarak silmek istediğinize emin misiniz? Yanlışlıkla girilen veya henüz satılmamış/kesilmemiş bloklar silinebilir.</p>
+            <div class="erp-dialog-actions mt-4">
                 <button value="cancel" type="button" class="erp-btn-secondary" id="delete-cancel">Vazgeç</button>
                 <button type="button" id="confirm-delete-block" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
