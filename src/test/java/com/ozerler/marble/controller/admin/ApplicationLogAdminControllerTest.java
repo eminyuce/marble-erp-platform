@@ -98,4 +98,18 @@ class ApplicationLogAdminControllerTest {
         assertThat(response.getBody()).containsEntry("deletedCount", 35);
         verify(applicationLogService).cleanupOldLogs(15);
     }
+
+    @Test
+    @DisplayName("cleanupOldLogs with 0 should trigger all logs cleanup and return all logs message")
+    void shouldTriggerCleanupAllLogs() {
+        when(applicationLogService.cleanupOldLogs(0)).thenReturn(75);
+
+        ResponseEntity<Map<String, Object>> response = controller.cleanupOldLogs(0);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsEntry("success", true);
+        assertThat(response.getBody()).containsEntry("deletedCount", 75);
+        assertThat(response.getBody()).containsEntry("message", "Tüm log kayıtları başarıyla temizlendi (75 adet).");
+        verify(applicationLogService).cleanupOldLogs(0);
+    }
 }

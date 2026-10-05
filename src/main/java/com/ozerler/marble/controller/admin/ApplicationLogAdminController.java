@@ -84,10 +84,13 @@ public class ApplicationLogAdminController extends AbstractController {
     public ResponseEntity<Map<String, Object>> cleanupOldLogs(
             @RequestParam(value = "retentionDays", defaultValue = "30") int retentionDays) {
         int deleted = applicationLogService.cleanupOldLogs(retentionDays);
+        String message = retentionDays == 0
+                ? "Tüm log kayıtları başarıyla temizlendi (" + deleted + " adet)."
+                : deleted + " adet eski log kaydı başarıyla temizlendi.";
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "deletedCount", deleted,
-                "message", deleted + " adet eski log kaydı başarıyla temizlendi."
+                "message", message
         ));
     }
 

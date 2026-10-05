@@ -22,4 +22,9 @@ public interface ApplicationLogRepository extends JpaRepository<ApplicationLog, 
     @Transactional
     @Query("DELETE FROM ApplicationLog a WHERE a.timestamp < :cutoff")
     int deleteLogsOlderThan(@Param("cutoff") LocalDateTime cutoff);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM ApplicationLog a")
+    int deleteAllLogs();
 }

@@ -149,4 +149,15 @@ class ApplicationLogServiceTest {
 
         verify(applicationLogRepository).deleteLogsOlderThan(any(LocalDateTime.class));
     }
+
+    @Test
+    @DisplayName("cleanupOldLogs with 0 should delete all logs")
+    void shouldCleanupAllLogsWhenRetentionDaysIsZero() {
+        when(applicationLogRepository.deleteAllLogs()).thenReturn(100);
+
+        int deleted = applicationLogService.cleanupOldLogs(0);
+
+        assertThat(deleted).isEqualTo(100);
+        verify(applicationLogRepository).deleteAllLogs();
+    }
 }
