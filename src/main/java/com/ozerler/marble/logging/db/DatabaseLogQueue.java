@@ -75,4 +75,8 @@ public class DatabaseLogQueue {
     public long getDroppedCount() {
         return droppedCount.get();
     }
+
+    public void clear() {
+        queue.clear();
+    }
 }

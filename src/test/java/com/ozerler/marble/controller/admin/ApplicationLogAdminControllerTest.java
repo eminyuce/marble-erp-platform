@@ -87,22 +87,39 @@ class ApplicationLogAdminControllerTest {
     }
 
     @Test
-    @DisplayName("cleanupOldLogs should trigger cleanup and return result")
+    @DisplayName("getKpiMetrics should return current KPIs from service")
+    void shouldReturnKpiMetrics() {
+        ApplicationLogKpiDto kpis = ApplicationLogKpiDto.builder().totalLast24Hours(50).build();
+        when(applicationLogService.getKpiMetrics()).thenReturn(kpis);
+
+        ApplicationLogKpiDto response = controller.getKpiMetrics();
+
+        assertThat(response).isSameAs(kpis);
+        verify(applicationLogService).getKpiMetrics();
+    }
+
+    @Test
+    @DisplayName("cleanupOldLogs should trigger cleanup and return result with kpis")
     void shouldTriggerCleanup() {
+        ApplicationLogKpiDto kpis = ApplicationLogKpiDto.builder().totalLast24Hours(10).build();
         when(applicationLogService.cleanupOldLogs(15)).thenReturn(35);
+        when(applicationLogService.getKpiMetrics()).thenReturn(kpis);
 
         ResponseEntity<Map<String, Object>> response = controller.cleanupOldLogs(15);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).containsEntry("success", true);
         assertThat(response.getBody()).containsEntry("deletedCount", 35);
+        assertThat(response.getBody()).containsEntry("kpis", kpis);
         verify(applicationLogService).cleanupOldLogs(15);
     }
 
     @Test
     @DisplayName("cleanupOldLogs with 0 should trigger all logs cleanup and return all logs message")
     void shouldTriggerCleanupAllLogs() {
+        ApplicationLogKpiDto kpis = ApplicationLogKpiDto.builder().totalLast24Hours(0).build();
         when(applicationLogService.cleanupOldLogs(0)).thenReturn(75);
+        when(applicationLogService.getKpiMetrics()).thenReturn(kpis);
 
         ResponseEntity<Map<String, Object>> response = controller.cleanupOldLogs(0);
 
@@ -110,6 +127,7 @@ class ApplicationLogAdminControllerTest {
         assertThat(response.getBody()).containsEntry("success", true);
         assertThat(response.getBody()).containsEntry("deletedCount", 75);
         assertThat(response.getBody()).containsEntry("message", "Tüm log kayıtları başarıyla temizlendi (75 adet).");
+        assertThat(response.getBody()).containsEntry("kpis", kpis);
         verify(applicationLogService).cleanupOldLogs(0);
     }
 }

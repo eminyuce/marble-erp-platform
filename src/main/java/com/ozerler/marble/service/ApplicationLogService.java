@@ -124,15 +124,15 @@ public class ApplicationLogService {
     @Transactional
     public int cleanupOldLogs(int retentionDays) {
         if (retentionDays == 0) {
-            int deleted = applicationLogRepository.deleteAllLogs();
-            log.info("Cleaned up all application logs (total deleted: {})", deleted);
-            return deleted;
+            try {
+                com.ozerler.marble.logging.db.DatabaseLogQueue.getInstance().clear();
+            } catch (Exception ignored) {
+            }
+            return applicationLogRepository.deleteAllLogs();
         }
         int days = retentionDays > 0 ? retentionDays : DEFAULT_RETENTION_DAYS;
         LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
-        int deleted = applicationLogRepository.deleteLogsOlderThan(cutoff);
-        log.info("Cleaned up {} application logs older than {} days (cutoff: {})", deleted, days, cutoff);
-        return deleted;
+        return applicationLogRepository.deleteLogsOlderThan(cutoff);
     }
 
     @Transactional

@@ -6,6 +6,7 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
+     th:attr="data-kpi-total=${kpis != null ? kpis.totalLast24Hours : 0}, data-kpi-error=${kpis != null ? kpis.errorLast24Hours : 0}, data-kpi-warn=${kpis != null ? kpis.warnLast24Hours : 0}, data-kpi-info=${kpis != null ? kpis.infoLast24Hours : 0}"
      x-data="{
         levelFilter: '',
         startDate: '',
@@ -18,7 +19,34 @@
         cleanupMessage: '',
         selectedLog: null,
         copiedField: '',
+        kpiTotal: 0,
+        kpiError: 0,
+        kpiWarn: 0,
+        kpiInfo: 0,
 
+        init() {
+            this.kpiTotal = parseInt(this.$el.dataset.kpiTotal || '0', 10);
+            this.kpiError = parseInt(this.$el.dataset.kpiError || '0', 10);
+            this.kpiWarn = parseInt(this.$el.dataset.kpiWarn || '0', 10);
+            this.kpiInfo = parseInt(this.$el.dataset.kpiInfo || '0', 10);
+            this.fetchKpis();
+        },
+        fetchKpis() {
+            fetch('/admin/settings/logs/api/kpis')
+                .then(r => r.json())
+                .then(data => {
+                    if (data) {
+                        this.kpiTotal = data.totalLast24Hours || 0;
+                        this.kpiError = data.errorLast24Hours || 0;
+                        this.kpiWarn = data.warnLast24Hours || 0;
+                        this.kpiInfo = data.infoLast24Hours || 0;
+                    }
+                })
+                .catch(() => {});
+        },
+        formatNumber(val) {
+            return Number(val || 0).toLocaleString('tr-TR');
+        },
         setLevelFilter(lvl) {
             this.levelFilter = lvl;
             this.reloadGrid();
@@ -32,6 +60,7 @@
             this.reloadGrid();
         },
         reloadGrid() {
+            this.fetchKpis();
             if (typeof reloadLogsGrid === 'function') {
                 reloadLogsGrid();
             }
@@ -119,6 +148,14 @@
                 this.cleanupLoading = false;
                 if (res.success) {
                     this.cleanupMessage = res.message;
+                    if (res.kpis) {
+                        this.kpiTotal = res.kpis.totalLast24Hours || 0;
+                        this.kpiError = res.kpis.errorLast24Hours || 0;
+                        this.kpiWarn = res.kpis.warnLast24Hours || 0;
+                        this.kpiInfo = res.kpis.infoLast24Hours || 0;
+                    } else {
+                        this.fetchKpis();
+                    }
                     if (window.lucide) {
                         this.$nextTick(() => lucide.createIcons());
                     }
@@ -192,7 +229,7 @@
                 @click="setLevelFilter('')">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Son 24 Saat Toplam</div>
             <div class="text-xl font-black text-slate-900 mt-1">
-                <span th:text="${#numbers.formatInteger(kpis.totalLast24Hours, 0, 'POINT')}">0</span>
+                <span x-text="formatNumber(kpiTotal)" th:text="${#numbers.formatInteger(kpis.totalLast24Hours, 0, 'POINT')}">0</span>
                 <span class="text-xs font-normal text-slate-400">kayıt</span>
             </div>
         </button>
@@ -204,7 +241,7 @@
                 <i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i> Hatalar (ERROR)
             </div>
             <div class="text-xl font-black text-rose-700 mt-1">
-                <span th:text="${#numbers.formatInteger(kpis.errorLast24Hours, 0, 'POINT')}">0</span>
+                <span x-text="formatNumber(kpiError)" th:text="${#numbers.formatInteger(kpis.errorLast24Hours, 0, 'POINT')}">0</span>
                 <span class="text-xs font-normal text-rose-400">hata</span>
             </div>
         </button>
@@ -216,7 +253,7 @@
                 <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Uyarılar (WARN)
             </div>
             <div class="text-xl font-black text-amber-700 mt-1">
-                <span th:text="${#numbers.formatInteger(kpis.warnLast24Hours, 0, 'POINT')}">0</span>
+                <span x-text="formatNumber(kpiWarn)" th:text="${#numbers.formatInteger(kpis.warnLast24Hours, 0, 'POINT')}">0</span>
                 <span class="text-xs font-normal text-amber-400">uyarı</span>
             </div>
         </button>
@@ -228,7 +265,7 @@
                 <i data-lucide="info" class="w-3.5 h-3.5"></i> Bilgi (INFO)
             </div>
             <div class="text-xl font-black text-blue-700 mt-1">
-                <span th:text="${#numbers.formatInteger(kpis.infoLast24Hours, 0, 'POINT')}">0</span>
+                <span x-text="formatNumber(kpiInfo)" th:text="${#numbers.formatInteger(kpis.infoLast24Hours, 0, 'POINT')}">0</span>
                 <span class="text-xs font-normal text-blue-400">işlem</span>
             </div>
         </button>

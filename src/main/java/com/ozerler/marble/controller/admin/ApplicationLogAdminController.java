@@ -79,6 +79,12 @@ public class ApplicationLogAdminController extends AbstractController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping("/api/kpis")
+    @ResponseBody
+    public ApplicationLogKpiDto getKpiMetrics() {
+        return applicationLogService.getKpiMetrics();
+    }
+
     @PostMapping("/cleanup")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> cleanupOldLogs(
@@ -87,10 +93,12 @@ public class ApplicationLogAdminController extends AbstractController {
         String message = retentionDays == 0
                 ? "Tüm log kayıtları başarıyla temizlendi (" + deleted + " adet)."
                 : deleted + " adet eski log kaydı başarıyla temizlendi.";
+        ApplicationLogKpiDto updatedKpis = applicationLogService.getKpiMetrics();
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "deletedCount", deleted,
-                "message", message
+                "message", message,
+                "kpis", updatedKpis
         ));
     }
 

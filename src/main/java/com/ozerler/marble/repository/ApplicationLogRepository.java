@@ -18,12 +18,12 @@ public interface ApplicationLogRepository extends JpaRepository<ApplicationLog, 
 
     long countByTimestampAfter(LocalDateTime timestamp);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("DELETE FROM ApplicationLog a WHERE a.timestamp < :cutoff")
     int deleteLogsOlderThan(@Param("cutoff") LocalDateTime cutoff);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("DELETE FROM ApplicationLog a")
     int deleteAllLogs();
