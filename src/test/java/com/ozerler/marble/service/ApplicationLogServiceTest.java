@@ -139,4 +139,14 @@ class ApplicationLogServiceTest {
         assertThat(deleted).isEqualTo(42);
         verify(applicationLogRepository).deleteLogsOlderThan(any(LocalDateTime.class));
     }
+
+    @Test
+    @DisplayName("scheduledRetentionCleanup should invoke cleanupOldLogs with default retention days")
+    void shouldRunScheduledRetentionCleanup() {
+        when(applicationLogRepository.deleteLogsOlderThan(any(LocalDateTime.class))).thenReturn(15);
+
+        applicationLogService.scheduledRetentionCleanup();
+
+        verify(applicationLogRepository).deleteLogsOlderThan(any(LocalDateTime.class));
+    }
 }

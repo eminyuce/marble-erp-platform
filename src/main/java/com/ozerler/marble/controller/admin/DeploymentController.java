@@ -5,7 +5,6 @@ import com.ozerler.marble.dto.DeploymentStartResult;
 import com.ozerler.marble.dto.DeploymentStatusDto;
 import com.ozerler.marble.service.DeploymentService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/admin/deployment")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
-@Slf4j
 public class DeploymentController {
 
     private final DeploymentService deploymentService;

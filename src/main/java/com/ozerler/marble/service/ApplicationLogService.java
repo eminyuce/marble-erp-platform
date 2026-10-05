@@ -130,6 +130,7 @@ public class ApplicationLogService {
         return deleted;
     }
 
+    @Transactional
     @Scheduled(cron = "0 0 3 * * ?")
     public void scheduledRetentionCleanup() {
         cleanupOldLogs(DEFAULT_RETENTION_DAYS);

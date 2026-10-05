@@ -6,7 +6,6 @@ import com.ozerler.marble.dto.DeploymentStartResult;
 import com.ozerler.marble.dto.DeploymentState;
 import com.ozerler.marble.dto.DeploymentStatusDto;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DeploymentService {
@@ -107,7 +105,6 @@ public class DeploymentService {
                 new HostCommandRunner.HostCommand(argv, repoDir, Duration.ofSeconds(20)));
 
         if (!result.isSuccess()) {
-            log.error("In-app deploy wrapper failed to start. exit={} output={}", result.exitCode(), result.output());
             return DeploymentStartResult.builder()
                     .accepted(false)
                     .state(DeploymentState.FAILED)
@@ -115,7 +112,6 @@ public class DeploymentService {
                     .build();
         }
 
-        log.info("In-app production deploy started from the web UI");
         return DeploymentStartResult.builder()
                 .accepted(true)
                 .state(DeploymentState.RUNNING)
@@ -157,7 +153,6 @@ public class DeploymentService {
                     .finishedAt(emptyToNull(fileStatus.finishedAt()))
                     .build();
         } catch (IOException ex) {
-            log.warn("Could not read deploy log {}: {}", logPath, ex.getMessage());
             return DeploymentLogDto.builder()
                     .offset(Math.max(0, offset))
                     .nextOffset(Math.max(0, offset))
@@ -259,7 +254,6 @@ public class DeploymentService {
         DeploymentState state = parseState(values.get("STATE"));
         String startedAt = values.getOrDefault("STARTED_AT", "");
         if (state == DeploymentState.RUNNING && isStale(startedAt)) {
-            log.warn("Stale in-app deploy status file at {} (started {})", statusPath, startedAt);
             return new DeployFileStatus(DeploymentState.FAILED, startedAt, values.getOrDefault("FINISHED_AT", ""),
                     values.getOrDefault("EXIT_CODE", ""));
         }
@@ -290,7 +284,7 @@ public class DeploymentService {
                 values.put(line.substring(0, separator).trim(), line.substring(separator + 1).trim());
             }
         } catch (IOException ex) {
-            log.warn("Could not read deploy status {}: {}", path, ex.getMessage());
+            // Deploy status file read ignored
         }
         return values;
     }

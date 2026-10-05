@@ -103,7 +103,7 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20260930-cleanup-header-and-learning-center"
+  asset-version: "20261005-log-cleanup-fix"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy
