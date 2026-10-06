@@ -9,7 +9,7 @@
     <script th:inline="javascript">
         function expenseForm() {
             return {
-                unit: /*[[${record != null and record.businessUnit != null ? record.businessUnit.name() : 'FACTORY'}]]*/ 'FACTORY',
+                unit: /*[[${record != null and record.businessUnit != null ? record.businessUnit.name() : (selectedUnit != null ? selectedUnit.name() : 'FACTORY')}]]*/ 'FACTORY',
                 centers: [],
                 types: [],
                 loading: false,
@@ -63,7 +63,7 @@
                             <select id="expense-businessUnit" name="businessUnit" required class="erp-form-select"
                                     x-model="unit" @change="loadUnitOptions()">
                                 <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}"
-                                        th:selected="${record != null and record.businessUnit != null and record.businessUnit.name() == u.name()}"></option>
+                                        th:selected="${(record != null and record.businessUnit != null and record.businessUnit.name() == u.name()) or (record == null and selectedUnit != null and selectedUnit.name() == u.name())}"></option>
                             </select>
                         </div>
 

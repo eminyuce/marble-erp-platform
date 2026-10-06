@@ -3,6 +3,7 @@ package com.ozerler.marble.model;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.InvoiceStatus;
 import com.ozerler.marble.model.enums.InvoiceType;
+import com.ozerler.marble.model.enums.QuarryCategory;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -45,6 +46,10 @@ public class Invoice extends AuditableEntity {
     @Column(nullable = false, length = 40)
     @Builder.Default
     private BusinessUnit department = BusinessUnit.FACTORY;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "quarry_category", length = 30)
+    private QuarryCategory quarryCategory;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")

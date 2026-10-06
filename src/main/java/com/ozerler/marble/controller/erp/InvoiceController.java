@@ -9,6 +9,8 @@ import com.ozerler.marble.repository.*;
 import com.ozerler.marble.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.ozerler.marble.model.enums.QuarryCategory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -143,6 +145,7 @@ public class InvoiceController extends AbstractController {
                                 @RequestParam(value = "projectId", required = false) Long projectId,
                                 @RequestParam(value = "taxRate", required = false) BigDecimal taxRate,
                                 @RequestParam(value = "directExpense", required = false, defaultValue = "false") Boolean directExpense,
+                                @RequestParam(value = "quarryCategory", required = false) QuarryCategory quarryCategory,
                                 @RequestParam(value = "status", required = false) InvoiceStatus status,
                                 @RequestParam(value = "partyName", required = false) String partyName,
                                 @RequestParam(value = "notes", required = false) String notes,
@@ -184,7 +187,7 @@ public class InvoiceController extends AbstractController {
             Invoice invoice = invoiceService.createInvoice(
                     invoiceNo, invoiceDate, dueDate, invoiceType, department,
                     customerId, supplierId, targetDepartment, projectId, effectiveTaxRate,
-                    directExpense, effectiveStatus, partyName, notes, itemForms
+                    directExpense, effectiveStatus, partyName, notes, itemForms, quarryCategory
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Fatura (" + invoice.getInvoiceNo() + ") başarıyla oluşturuldu. Toplam: " + invoice.getTotalAmount() + " TL");
@@ -229,7 +232,8 @@ public class InvoiceController extends AbstractController {
     public List<Map<String, Object>> getAvailableStock(
             @RequestParam(value = "department", required = false) BusinessUnit department,
             @RequestParam(value = "type", required = false) String stockType,
-            @RequestParam(value = "search", required = false) String search) {
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "includeZero", required = false, defaultValue = "false") Boolean includeZero) {
 
         List<Map<String, Object>> result = new ArrayList<>();
         String s = search != null ? search.trim().toLowerCase() : "";
@@ -298,7 +302,7 @@ public class InvoiceController extends AbstractController {
                 if (ci.getItemCode().equals("O-MZ-TANK")) {
                     continue;
                 }
-                if (ci.getQuantity() != null && ci.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
+                if (Boolean.TRUE.equals(includeZero) || (ci.getQuantity() != null && ci.getQuantity().compareTo(BigDecimal.ZERO) > 0)) {
                     String catCode = ci.getQuarryCategory() != null ? ci.getQuarryCategory().name() : "CONSUMABLE";
                     String catLabel = ci.getQuarryCategory() != null ? ci.getQuarryCategory().getDisplayName() : "Sarf Malzeme";
 
@@ -322,6 +326,7 @@ public class InvoiceController extends AbstractController {
                         m.put("quantity", ci.getQuantity());
                         m.put("unit", ci.getUnit() != null ? ci.getUnit() : "adet");
                         m.put("unitPrice", ci.getUnitPrice());
+                        m.put("directExpense", Boolean.TRUE.equals(ci.getDirectExpense()));
                         result.add(m);
                     }
                 }
@@ -384,6 +389,42 @@ public class InvoiceController extends AbstractController {
         }
 
         return result;
+    }
+
+    @PostMapping("/api/create-stock-card")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> createStockCardApi(
+            @RequestParam("quarryCategory") QuarryCategory quarryCategory,
+            @RequestParam("productName") String productName,
+            @RequestParam(value = "itemCode", required = false) String itemCode,
+            @RequestParam(value = "unit", required = false) String unit,
+            @RequestParam(value = "unitPrice", required = false) BigDecimal unitPrice,
+            @RequestParam(value = "isExpense", required = false, defaultValue = "false") Boolean isExpense,
+            @RequestParam(value = "notes", required = false) String notes) {
+        try {
+            StockItem item = quarryInventoryService.createStockCard(
+                    quarryCategory, productName, unit, BigDecimal.ZERO, unitPrice, itemCode, isExpense, notes);
+
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("success", true);
+            resp.put("id", item.getId());
+            resp.put("name", item.getDescription());
+            resp.put("code", item.getItemCode());
+            resp.put("category", item.getProductType() != null ? item.getProductType().name() : "CONSUMABLE");
+            resp.put("categoryLabel", item.getQuarryCategory() != null ? item.getQuarryCategory().getDisplayName() : "Sarf Malzeme");
+            resp.put("quarryCategory", item.getQuarryCategory() != null ? item.getQuarryCategory().name() : quarryCategory.name());
+            resp.put("unit", item.getUnit());
+            resp.put("unitPrice", item.getUnitPrice());
+            resp.put("quantity", item.getQuantity() != null ? item.getQuantity() : BigDecimal.ZERO);
+            resp.put("isExpense", Boolean.TRUE.equals(item.getDirectExpense()));
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            log.error("Stok kartı oluşturulamadı: {}", e.getMessage(), e);
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(err);
+        }
     }
 
     @GetMapping("/{id}")

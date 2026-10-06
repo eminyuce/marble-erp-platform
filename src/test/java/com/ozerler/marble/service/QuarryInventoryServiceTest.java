@@ -227,16 +227,49 @@ class QuarryInventoryServiceTest {
     }
 
     @Test
-    @DisplayName("createStockCard throws exception when duplicate code exists")
-    void createStockCard_DuplicateCode_ThrowsException() {
-        when(stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Özel Kablo"))
+    @DisplayName("createStockCard with direct expense marks directExpense true")
+    void createStockCard_WithDirectExpense_SetsDirectExpenseTrue() {
+        when(stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Danışmanlık Hizmeti"))
                 .thenReturn(false);
-        when(stockItemRepository.existsByItemCode("ELK-999"))
-                .thenReturn(true);
+        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE))
+                .thenReturn(Optional.of(consumablesLocation));
+        when(stockItemRepository.save(any(StockItem.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        assertThatThrownBy(() -> inventoryService.createStockCard(
-                QuarryCategory.ELEKTRIK, "Özel Kablo", "metre", BigDecimal.ZERO, BigDecimal.ZERO, "ELK-999", null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Mükerrer stok kartı oluşturulamaz");
+        StockItem item = inventoryService.createStockCard(
+                QuarryCategory.DIGER, "Danışmanlık Hizmeti", "adet", BigDecimal.ZERO, new BigDecimal("500.00"), null, true, null);
+
+        assertThat(item.getDirectExpense()).isTrue();
+        assertThat(item.getQuarryCategory()).isEqualTo(QuarryCategory.DIGER);
+    }
+
+    @Test
+    @DisplayName("createStockCard with MAZOT forces unit to litre")
+    void createStockCard_Mazot_EnforcesLitreUnit() {
+        when(stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Kışlık Motorin"))
+                .thenReturn(false);
+        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.QUARRY_FUEL_TANK))
+                .thenReturn(Optional.of(fuelLocation));
+        when(stockItemRepository.save(any(StockItem.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        StockItem item = inventoryService.createStockCard(
+                QuarryCategory.MAZOT, "Kışlık Motorin", "varil", BigDecimal.ZERO, new BigDecimal("44.00"), null, false, null);
+
+        assertThat(item.getUnit()).isEqualTo("litre");
+        assertThat(item.getDirectExpense()).isFalse();
+    }
+
+    @Test
+    @DisplayName("createStockCard with ELEKTRIK defaults directExpense to true")
+    void createStockCard_Elektrik_DefaultsToDirectExpense() {
+        when(stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Trafo Elektrik Bedeli"))
+                .thenReturn(false);
+        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE))
+                .thenReturn(Optional.of(consumablesLocation));
+        when(stockItemRepository.save(any(StockItem.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        StockItem item = inventoryService.createStockCard(
+                QuarryCategory.ELEKTRIK, "Trafo Elektrik Bedeli", "kWh", BigDecimal.ZERO, new BigDecimal("4.50"), null, false, null);
+
+        assertThat(item.getDirectExpense()).isTrue();
     }
 }

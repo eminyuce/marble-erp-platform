@@ -314,7 +314,7 @@ public class QuarryInventoryService {
     @Transactional
     public StockItem createStockCard(QuarryCategory category, String description, String unit,
                                      BigDecimal initialQuantity, BigDecimal netUnitPrice,
-                                     String itemCode, String notes) {
+                                     String itemCode, Boolean isExpense, String notes) {
         Objects.requireNonNull(category, "Kategori seçimi zorunludur.");
         if (description == null || description.isBlank()) {
             throw new IllegalArgumentException("Stok kartı ürün tanımı / adı boş olamaz.");
@@ -375,6 +375,16 @@ public class QuarryInventoryService {
                 ? netUnitPrice
                 : BigDecimal.ZERO;
 
+        // Birim Tanımlamaları kuralı: Mazot alımlarında birim litre olmalıdır.
+        String resolvedUnit;
+        if (category == QuarryCategory.MAZOT) {
+            resolvedUnit = "litre";
+        } else if (unit != null && !unit.isBlank()) {
+            resolvedUnit = unit.trim().toLowerCase();
+        } else {
+            resolvedUnit = "adet";
+        }
+
         StockItem item = StockItem.builder()
                 .itemCode(finalCode)
                 .description(trimmedDesc)
@@ -382,8 +392,9 @@ public class QuarryInventoryService {
                 .quarryCategory(category)
                 .stockLocation(location)
                 .quantity(qty)
-                .unit(unit != null && !unit.isBlank() ? unit.trim() : (category == QuarryCategory.MAZOT ? "litre" : "adet"))
+                .unit(resolvedUnit)
                 .unitPrice(price)
+                .directExpense(Boolean.TRUE.equals(isExpense) || category == QuarryCategory.ELEKTRIK)
                 .status("AVAILABLE")
                 .productionDate(LocalDate.now())
                 .notes(notes)
@@ -409,8 +420,16 @@ public class QuarryInventoryService {
             stockMovementRepository.save(movement);
         }
 
-        log.info("Yeni Ocak stok kartı oluşturuldu: {} [{}] - Kategori: {}", saved.getDescription(), saved.getItemCode(), category);
+        log.info("Yeni Ocak stok kartı oluşturuldu: {} [{}] - Kategori: {}, Gider: {}",
+                saved.getDescription(), saved.getItemCode(), category, saved.getDirectExpense());
         return saved;
+    }
+
+    @Transactional
+    public StockItem createStockCard(QuarryCategory category, String description, String unit,
+                                     BigDecimal initialQuantity, BigDecimal netUnitPrice,
+                                     String itemCode, String notes) {
+        return createStockCard(category, description, unit, initialQuantity, netUnitPrice, itemCode, false, notes);
     }
 
     @Transactional(readOnly = true)

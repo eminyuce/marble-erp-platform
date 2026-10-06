@@ -34,6 +34,10 @@ public class StockItem extends AuditableEntity {
     @Column(name = "quarry_category", length = 30)
     private com.ozerler.marble.model.enums.QuarryCategory quarryCategory;
 
+    @Column(name = "direct_expense")
+    @Builder.Default
+    private Boolean directExpense = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_block_id")
     private Block sourceBlock;

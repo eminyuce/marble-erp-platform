@@ -11,6 +11,7 @@
      x-data="{
         invoiceType: $el.dataset.initialType || 'SALES',
         department: $el.dataset.initialDept || 'QUARRY',
+        purchaseCategory: 'MAZOT',
         directExpense: false,
         destinationMode: 'CUSTOMER', // 'CUSTOMER' or 'INTERNAL'
         targetDepartment: 'FACTORY',
@@ -20,6 +21,20 @@
         stockSearch: '',
         stockItemsList: [],
         stockLoading: false,
+
+        // Yeni Stok Kartı Açma Modalı (Madde 1)
+        createStockModalOpen: false,
+        createStockSubmitting: false,
+        createStockError: '',
+        newStockForm: {
+            category: 'MAZOT',
+            productName: '',
+            itemCode: '',
+            unit: 'litre',
+            unitPrice: '',
+            isExpense: false,
+            notes: ''
+        },
         lines: [
             { productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' }
         ],
@@ -62,6 +77,132 @@
         get grandTotalFormatted() {
             return this.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         },
+        onPurchaseCategoryChange(cat) {
+            this.purchaseCategory = cat;
+            if (cat === 'MAZOT') {
+                this.directExpense = false;
+                this.newStockForm.category = 'MAZOT';
+                this.newStockForm.unit = 'litre';
+                this.lines.forEach(l => {
+                    l.unit = 'litre';
+                    if (!l.productName) l.productName = 'Motorin (Mazot)';
+                });
+            } else if (cat === 'ELEKTRIK') {
+                this.directExpense = true;
+                this.newStockForm.category = 'ELEKTRIK';
+                this.newStockForm.unit = 'adet';
+                this.newStockForm.isExpense = true;
+                this.lines.forEach(l => {
+                    if (!l.productName) l.productName = 'Elektrik Faturası';
+                    l.unit = 'adet';
+                });
+            } else if (cat === 'SARF_MALZEME') {
+                this.directExpense = false;
+                this.newStockForm.category = 'SARF_MALZEME';
+                this.newStockForm.unit = 'adet';
+                this.lines.forEach(l => {
+                    if (l.unit !== 'adet' && l.unit !== 'm.t.' && l.unit !== 'litre') {
+                        l.unit = 'adet';
+                    }
+                });
+            } else if (cat === 'DIGER') {
+                this.newStockForm.category = 'DIGER';
+            }
+        },
+        openCreateStockModal(cat) {
+            this.createStockError = '';
+            const targetCat = cat || this.purchaseCategory || 'SARF_MALZEME';
+            this.newStockForm.category = targetCat;
+            this.newStockForm.productName = '';
+            this.newStockForm.itemCode = '';
+            this.newStockForm.unitPrice = '';
+            this.newStockForm.notes = '';
+            if (targetCat === 'MAZOT') {
+                this.newStockForm.unit = 'litre';
+                this.newStockForm.isExpense = false;
+            } else if (targetCat === 'ELEKTRIK') {
+                this.newStockForm.unit = 'adet';
+                this.newStockForm.isExpense = true;
+            } else {
+                this.newStockForm.unit = 'adet';
+                this.newStockForm.isExpense = false;
+            }
+            this.createStockModalOpen = true;
+        },
+        openCreateStockModalFromSelector() {
+            this.stockModalOpen = false;
+            this.openCreateStockModal(this.purchaseCategory);
+        },
+        onNewStockCategoryChange() {
+            if (this.newStockForm.category === 'MAZOT') {
+                this.newStockForm.unit = 'litre';
+                this.newStockForm.isExpense = false;
+            } else if (this.newStockForm.category === 'ELEKTRIK') {
+                this.newStockForm.unit = 'adet';
+                this.newStockForm.isExpense = true;
+            } else if (this.newStockForm.category === 'SARF_MALZEME') {
+                if (this.newStockForm.unit !== 'adet' && this.newStockForm.unit !== 'm.t.' && this.newStockForm.unit !== 'litre') {
+                    this.newStockForm.unit = 'adet';
+                }
+            }
+        },
+        async submitCreateStockCard() {
+            if (!this.newStockForm.productName || !this.newStockForm.productName.trim()) {
+                this.createStockError = 'Lütfen ürün/malzeme adını giriniz.';
+                return;
+            }
+            this.createStockSubmitting = true;
+            this.createStockError = '';
+            try {
+                const formData = new FormData();
+                formData.append('quarryCategory', this.newStockForm.category);
+                formData.append('productName', this.newStockForm.productName.trim());
+                if (this.newStockForm.itemCode) formData.append('itemCode', this.newStockForm.itemCode.trim());
+                formData.append('unit', this.newStockForm.unit);
+                if (this.newStockForm.unitPrice) formData.append('unitPrice', this.newStockForm.unitPrice);
+                formData.append('isExpense', this.newStockForm.isExpense ? 'true' : 'false');
+                if (this.newStockForm.notes) formData.append('notes', this.newStockForm.notes);
+
+                const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
+                const headers = {};
+                if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+
+                const res = await fetch('/invoices/api/create-stock-card', {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    let targetLine;
+                    if (this.lines.length === 1 && !this.lines[0].productName) {
+                        targetLine = this.lines[0];
+                    } else {
+                        targetLine = { productName: '', description: '', quantity: 1, unit: 'adet', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' };
+                        this.lines.push(targetLine);
+                    }
+                    targetLine.productName = data.name;
+                    targetLine.description = 'Stok Kartı: ' + data.code;
+                    targetLine.quantity = 1;
+                    targetLine.unit = data.unit;
+                    targetLine.unitPrice = data.unitPrice || 0;
+                    targetLine.stockItemId = data.id;
+
+                    if (data.isExpense) {
+                        this.directExpense = true;
+                    }
+
+                    this.createStockModalOpen = false;
+                    this.createStockSubmitting = false;
+                } else {
+                    this.createStockError = data.message || 'Stok kartı oluşturulamadı.';
+                    this.createStockSubmitting = false;
+                }
+            } catch (err) {
+                this.createStockError = 'Bağlantı hatası: ' + err.message;
+                this.createStockSubmitting = false;
+            }
+        },
         openStockModal() {
             this.stockModalOpen = true;
             this.fetchStock();
@@ -71,7 +212,8 @@
             let url = '/invoices/api/available-stock?';
             if (this.department) url += 'department=' + encodeURIComponent(this.department) + '&';
             if (this.stockCategoryFilter) url += 'type=' + encodeURIComponent(this.stockCategoryFilter) + '&';
-            if (this.stockSearch) url += 'search=' + encodeURIComponent(this.stockSearch);
+            if (this.stockSearch) url += 'search=' + encodeURIComponent(this.stockSearch) + '&';
+            if (this.invoiceType === 'PURCHASE') url += 'includeZero=true';
             fetch(url)
                 .then(r => r.json())
                 .then(data => {
@@ -90,13 +232,17 @@
             }
             targetLine.productName = item.name;
             targetLine.description = (item.dimensions ? item.dimensions + ' ' : '') + (item.stoneType ? item.stoneType : '');
-            targetLine.quantity = item.quantity || 1;
-            targetLine.unit = item.unit || 'm2';
+            targetLine.quantity = (item.quantity && parseFloat(item.quantity) > 0) ? item.quantity : 1;
+            targetLine.unit = item.unit || (this.purchaseCategory === 'MAZOT' ? 'litre' : 'adet');
             targetLine.widthCm = item.widthCm || '';
             targetLine.unitPrice = item.unitPrice || 0;
             targetLine.blockId = item.category === 'BLOCK' ? item.id : '';
             targetLine.slabId = item.category === 'SLAB' ? item.id : '';
-            targetLine.stockItemId = (item.category === 'SIZED' || item.category === 'FUEL' || item.category === 'CONSUMABLE') ? item.id : '';
+            targetLine.stockItemId = (item.category === 'SIZED' || item.category === 'FUEL' || item.category === 'CONSUMABLE' || item.category === 'ELEKTRIK' || item.category === 'DIGER') ? item.id : '';
+
+            if (item.directExpense === true) {
+                this.directExpense = true;
+            }
             this.stockModalOpen = false;
         }
      }">
@@ -114,14 +260,19 @@
                     Ocak, Fabrika veya Atölye çıkışlarını faturalandırın, dahili transfer yapın veya şantiye maliyetine bağlayın.
                 </p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <a th:href="@{/expenses/create(unit='QUARRY')}"
-                   class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-xl transition border border-amber-300 shadow-sm">
-                    <i data-lucide="receipt" class="w-4 h-4 text-amber-600"></i>
+                   class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-xl transition border border-amber-300 shadow-2xs">
+                    <i data-lucide="receipt" class="w-4 h-4 text-amber-700"></i>
                     <span>Doğrudan Gider Girişi (SSK, Vergi vb.)</span>
                 </a>
+                <button type="button" @click="openCreateStockModal()"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-blue-900 bg-blue-50 hover:bg-blue-100 rounded-xl transition border border-blue-300 shadow-2xs cursor-pointer">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-blue-600"></i>
+                    <span>+ Yeni Stok Kartı Aç</span>
+                </button>
                 <button type="button" @click="openStockModal()"
-                        class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-300 shadow-sm">
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-300 shadow-2xs cursor-pointer">
                     <i data-lucide="boxes" class="w-4 h-4 text-emerald-600"></i>
                     <span>Stoktan Ürün Seç</span>
                 </button>
@@ -267,8 +418,109 @@
                 </div>
             </div>
 
-            <!-- Alış Durumu için Tedarikçi Seçimi ve Doğrudan Gider Ayrımı (Madde 6) -->
-            <div x-show="invoiceType === 'PURCHASE'" class="space-y-4">
+            <!-- Alış Durumu için Tedarikçi Seçimi, 4 Sabit Ana Başlık ve Doğrudan Gider Ayrımı (Madde 1 & 3) -->
+            <div x-show="invoiceType === 'PURCHASE'" class="space-y-5">
+
+                <!-- Harici / Resmi Gider Bağlantısı & Bilgilendirme Alanı (SSK, Vergi vb.) (Madde 3) -->
+                <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                            <i data-lucide="landmark" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-amber-950">Resmi &amp; Harici Giderler (SSK, Vergi, Stopaj vb.)</div>
+                            <div class="text-[11px] text-amber-900 mt-0.5 leading-relaxed">
+                                Bu işlem malzeme alımı değil; SSK, Vergi, Stopaj, Resmi Ödemeler veya Banka Finans gibi stokla ilişkisiz bir gider ise aşağıdaki bağlantıdan doğrudan işletme gideri olarak kaydediniz.
+                            </div>
+                        </div>
+                    </div>
+                    <a th:href="@{/expenses/create(unit='QUARRY')}"
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-amber-950 bg-amber-200/80 hover:bg-amber-200 rounded-xl transition border border-amber-300 shadow-2xs shrink-0 self-start sm:self-center">
+                        <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-amber-800"></i>
+                        <span>Gider Girişine Git (SSK / Vergi)</span>
+                    </a>
+                </div>
+
+                <!-- 1. Alış Faturası Değiştirilemeyen 4 Ana Başlık (Madde 1) -->
+                <div class="border border-slate-200 rounded-2xl p-4 bg-slate-50/70 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                <i data-lucide="tag" class="w-4 h-4 text-emerald-600"></i>
+                                <span>Alış Faturası Ana Başlığı (4 Sabit Kategori) *</span>
+                            </label>
+                            <p class="text-[11px] text-slate-500 mt-0.5">
+                                Alış faturası aşağıdaki 4 ana başlıktan birine ait olmalıdır. Bu başlıklar sistem tarafından korunur ve değiştirilemez.
+                            </p>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">Değiştirilemez Başlıklar</span>
+                    </div>
+
+                    <!-- Hidden input to submit with form -->
+                    <input type="hidden" name="quarryCategory" :value="purchaseCategory">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <!-- A) Mazot -->
+                        <label class="p-3.5 rounded-xl border cursor-pointer transition flex flex-col justify-between"
+                               :class="purchaseCategory === 'MAZOT' ? 'bg-amber-50 border-amber-500 text-amber-950 ring-2 ring-amber-500 shadow-2xs' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-2">
+                                    <input type="radio" x-model="purchaseCategory" value="MAZOT" @change="onPurchaseCategoryChange('MAZOT')" class="text-amber-600 focus:ring-amber-500">
+                                    <span class="text-xs font-black text-slate-900">A) Mazot</span>
+                                </div>
+                                <span class="p-1 rounded-lg bg-amber-100 text-amber-800"><i data-lucide="fuel" class="w-4 h-4"></i></span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                                Mazot alımları ve tank dolumu. Birim: <strong>Litre</strong>. Depo stoğuna eklenir.
+                            </p>
+                        </label>
+
+                        <!-- B) Sarf Malzeme -->
+                        <label class="p-3.5 rounded-xl border cursor-pointer transition flex flex-col justify-between"
+                               :class="purchaseCategory === 'SARF_MALZEME' ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-500 shadow-2xs' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-2">
+                                    <input type="radio" x-model="purchaseCategory" value="SARF_MALZEME" @change="onPurchaseCategoryChange('SARF_MALZEME')" class="text-emerald-600 focus:ring-emerald-500">
+                                    <span class="text-xs font-black text-slate-900">B) Sarf Malzeme</span>
+                                </div>
+                                <span class="p-1 rounded-lg bg-emerald-100 text-emerald-800"><i data-lucide="wrench" class="w-4 h-4"></i></span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                                Yağ, filtre, kesici disk, tel vb. Birim: <strong>Adet</strong>, <strong>m.t.</strong> veya <strong>Litre</strong>.
+                            </p>
+                        </label>
+
+                        <!-- C) Elektrik -->
+                        <label class="p-3.5 rounded-xl border cursor-pointer transition flex flex-col justify-between"
+                               :class="purchaseCategory === 'ELEKTRIK' ? 'bg-blue-50 border-blue-500 text-blue-950 ring-2 ring-blue-500 shadow-2xs' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-2">
+                                    <input type="radio" x-model="purchaseCategory" value="ELEKTRIK" @change="onPurchaseCategoryChange('ELEKTRIK')" class="text-blue-600 focus:ring-blue-500">
+                                    <span class="text-xs font-black text-slate-900">C) Elektrik</span>
+                                </div>
+                                <span class="p-1 rounded-lg bg-blue-100 text-blue-800"><i data-lucide="zap" class="w-4 h-4"></i></span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                                Elektrik faturası. Stok tutulmaz, doğrudan işletme gideri olarak kaydedilir.
+                            </p>
+                        </label>
+
+                        <!-- D) Diğer -->
+                        <label class="p-3.5 rounded-xl border cursor-pointer transition flex flex-col justify-between"
+                               :class="purchaseCategory === 'DIGER' ? 'bg-purple-50 border-purple-500 text-purple-950 ring-2 ring-purple-500 shadow-2xs' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-2">
+                                    <input type="radio" x-model="purchaseCategory" value="DIGER" @change="onPurchaseCategoryChange('DIGER')" class="text-purple-600 focus:ring-purple-500">
+                                    <span class="text-xs font-black text-slate-900">D) Diğer</span>
+                                </div>
+                                <span class="p-1 rounded-lg bg-purple-100 text-purple-800"><i data-lucide="package" class="w-4 h-4"></i></span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                                Yukarıdaki kategorilere girmeyen genel ürün, sarf veya hizmet alımları.
+                            </p>
+                        </label>
+                    </div>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Tedarikçi Seçiniz *</label>
@@ -343,14 +595,19 @@
                     </h3>
                     <span class="text-xs text-slate-400 font-mono" x-text="'(' + lines.length + ' Kalem)'"></span>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" @click="openCreateStockModal()"
+                            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-blue-900 bg-blue-50 hover:bg-blue-100 rounded-xl transition border border-blue-300 cursor-pointer">
+                        <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-blue-600"></i>
+                        <span>+ Yeni Stok Kartı Aç</span>
+                    </button>
                     <button type="button" @click="openStockModal()"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-300">
-                        <i data-lucide="boxes" class="w-3.5 h-3.5"></i>
+                            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-300 cursor-pointer">
+                        <i data-lucide="boxes" class="w-3.5 h-3.5 text-emerald-600"></i>
                         <span>Stoktan Seç</span>
                     </button>
                     <button type="button" @click="addLine()"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition border border-slate-300">
+                            class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition border border-slate-300 cursor-pointer">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                         <span>Boş Satır Ekle</span>
                     </button>
@@ -403,14 +660,16 @@
                                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right" />
                                 </td>
 
-                                <!-- Birim -->
+                                <!-- Birim (Birim Tanımlamaları: litre, adet, m.t. ve diğerleri) -->
                                 <td class="p-2">
                                     <select name="itemUnit" x-model="line.unit" required
                                             class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
-                                        <option value="m2">m²</option>
-                                        <option value="m.t.">m.t. (Metretül)</option>
-                                        <option value="ton">ton</option>
+                                        <option value="litre">litre</option>
                                         <option value="adet">adet</option>
+                                        <option value="m.t.">m.t. (Metretül)</option>
+                                        <option value="m2">m²</option>
+                                        <option value="ton">ton</option>
+                                        <option value="kg">kg</option>
                                         <option value="m3">m³</option>
                                     </select>
                                 </td>
@@ -644,9 +903,153 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
-                <button type="button" @click="stockModalOpen = false" class="px-4 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-800">
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                <button type="button" @click="openCreateStockModalFromSelector()"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition cursor-pointer">
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                    <span>Aradığınız ürün yok mu? Yeni Stok Kartı Aç</span>
+                </button>
+                <button type="button" @click="stockModalOpen = false" class="px-4 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 cursor-pointer">
                     Kapat
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 6. Fatura Ekranında Yeni Stok Kartı Açma Modalı (Madde 1) -->
+    <div x-show="createStockModalOpen" style="display:none"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+             @click.away="createStockModalOpen = false">
+
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 grid place-items-center">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Yeni Stok Kartı Oluştur</h3>
+                        <p class="text-xs text-slate-500">Faturaya eklemek ve envanterde takip etmek üzere yeni bir stok kartı tanımlayın.</p>
+                    </div>
+                </div>
+                <button type="button" @click="createStockModalOpen = false" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <div class="p-6 space-y-4">
+                <!-- Hata Mesajı -->
+                <div x-show="createStockError" class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 font-semibold flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+                    <span x-text="createStockError"></span>
+                </div>
+
+                <!-- 1. Ana Kategori Seçimi (Değiştirilemeyen 4 Sabit Başlık) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Ana Kategori (4 Sabit Başlık) *</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="p-2.5 rounded-xl border cursor-pointer transition flex items-center gap-2"
+                               :class="newStockForm.category === 'MAZOT' ? 'bg-amber-50 border-amber-500 text-amber-950 ring-1 ring-amber-500' : 'bg-slate-50 border-slate-200 text-slate-700'">
+                            <input type="radio" x-model="newStockForm.category" value="MAZOT" @change="onNewStockCategoryChange()" class="text-amber-600 focus:ring-amber-500">
+                            <span class="text-xs font-bold">A) Mazot</span>
+                        </label>
+                        <label class="p-2.5 rounded-xl border cursor-pointer transition flex items-center gap-2"
+                               :class="newStockForm.category === 'SARF_MALZEME' ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-1 ring-emerald-500' : 'bg-slate-50 border-slate-200 text-slate-700'">
+                            <input type="radio" x-model="newStockForm.category" value="SARF_MALZEME" @change="onNewStockCategoryChange()" class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-xs font-bold">B) Sarf Malzeme</span>
+                        </label>
+                        <label class="p-2.5 rounded-xl border cursor-pointer transition flex items-center gap-2"
+                               :class="newStockForm.category === 'ELEKTRIK' ? 'bg-blue-50 border-blue-500 text-blue-950 ring-1 ring-blue-500' : 'bg-slate-50 border-slate-200 text-slate-700'">
+                            <input type="radio" x-model="newStockForm.category" value="ELEKTRIK" @change="onNewStockCategoryChange()" class="text-blue-600 focus:ring-blue-500">
+                            <span class="text-xs font-bold">C) Elektrik</span>
+                        </label>
+                        <label class="p-2.5 rounded-xl border cursor-pointer transition flex items-center gap-2"
+                               :class="newStockForm.category === 'DIGER' ? 'bg-purple-50 border-purple-500 text-purple-950 ring-1 ring-purple-500' : 'bg-slate-50 border-slate-200 text-slate-700'">
+                            <input type="radio" x-model="newStockForm.category" value="DIGER" @change="onNewStockCategoryChange()" class="text-purple-600 focus:ring-purple-500">
+                            <span class="text-xs font-bold">D) Diğer</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 2. Ürün Adı -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Ürün / Malzeme Adı *</label>
+                    <input type="text" x-model="newStockForm.productName" required
+                           :placeholder="newStockForm.category === 'MAZOT' ? 'Örn: Motorin Eurodiesel' : (newStockForm.category === 'SARF_MALZEME' ? 'Örn: Kesici Tel 11mm, Hidrolik Yağ' : 'Ürün / Malzeme Adı')"
+                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                </div>
+
+                <!-- 3. Stok Kodu ve Birim -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Stok Kodu (Opsiyonel)</label>
+                        <input type="text" x-model="newStockForm.itemCode" placeholder="Boşsa otomatik üretilir"
+                               class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none uppercase" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Birim *</label>
+                        <select x-model="newStockForm.unit" required :disabled="newStockForm.category === 'MAZOT'"
+                                class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="litre">litre</option>
+                            <option value="adet">adet</option>
+                            <option value="m.t.">m.t. (Metretül)</option>
+                            <option value="m2">m²</option>
+                            <option value="ton">ton</option>
+                            <option value="kg">kg</option>
+                            <option value="m3">m³</option>
+                        </select>
+                        <p class="text-[10px] text-slate-500 mt-0.5" x-show="newStockForm.category === 'MAZOT'">Mazot alımlarında birim <strong>litre</strong> olarak sabitlenmiştir.</p>
+                        <p class="text-[10px] text-slate-500 mt-0.5" x-show="newStockForm.category === 'SARF_MALZEME'">Sarf malzeme alımlarında <strong>adet</strong>, <strong>m.t.</strong> veya <strong>litre</strong> seçebilirsiniz.</p>
+                    </div>
+                </div>
+
+                <!-- 4. Tahmini Birim Fiyat -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">KDV Hariç Net Birim Fiyat (TL)</label>
+                    <input type="number" step="0.01" min="0" x-model="newStockForm.unitPrice" placeholder="0,00"
+                           class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono" />
+                </div>
+
+                <!-- 5. Kritik Kural Sorusu: Gider Kalemi mi, Stok mu? -->
+                <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50 space-y-2">
+                    <label class="block text-xs font-black text-slate-900">
+                        Bu ürün bir gider kalemi midir, yoksa stokta mı takip edilecek? *
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <label class="p-3 rounded-xl border cursor-pointer transition flex items-start gap-2.5"
+                               :class="!newStockForm.isExpense ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-1 ring-emerald-500' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'">
+                            <input type="radio" x-model="newStockForm.isExpense" :value="false" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
+                            <div>
+                                <span class="text-xs font-bold block">HAYIR – STOKTA TAKİP EDİLSİN</span>
+                                <span class="text-[10px] text-slate-500 leading-tight block mt-0.5">Depoda envanter olarak tutulur, sahada kullanıldığında giderleşir.</span>
+                            </div>
+                        </label>
+                        <label class="p-3 rounded-xl border cursor-pointer transition flex items-start gap-2.5"
+                               :class="newStockForm.isExpense ? 'bg-amber-50 border-amber-500 text-amber-950 ring-1 ring-amber-500' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'">
+                            <input type="radio" x-model="newStockForm.isExpense" :value="true" class="mt-0.5 text-amber-600 focus:ring-amber-500">
+                            <div>
+                                <span class="text-xs font-bold block">EVET – DOĞRUDAN GİDER KALEMİ</span>
+                                <span class="text-[10px] text-slate-500 leading-tight block mt-0.5">Stok tutulmaz, doğrudan dönem masrafı olarak işlenir.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
+                <button type="button" @click="createStockModalOpen = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 rounded-xl transition cursor-pointer">
+                    Vazgeç
+                </button>
+                <button type="button" @click="submitCreateStockCard()" :disabled="createStockSubmitting"
+                        class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                    <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin" x-show="createStockSubmitting"></i>
+                    <i data-lucide="check" class="w-3.5 h-3.5" x-show="!createStockSubmitting"></i>
+                    <span x-text="createStockSubmitting ? 'Kaydediliyor...' : 'Stok Kartını Oluştur ve Faturaya Ekle'"></span>
                 </button>
             </div>
 

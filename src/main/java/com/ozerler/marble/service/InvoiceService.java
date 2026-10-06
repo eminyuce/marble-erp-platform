@@ -55,7 +55,8 @@ public class InvoiceService {
                                  Long supplierId, BusinessUnit targetDepartment, Long projectId,
                                  BigDecimal taxRate, Boolean directExpense, InvoiceStatus status,
                                  String partyName, String notes,
-                                 List<InvoiceItemForm> itemForms) {
+                                 List<InvoiceItemForm> itemForms,
+                                 QuarryCategory quarryCategory) {
 
         Objects.requireNonNull(invoiceType, "Fatura tipi seçilmelidir.");
         Objects.requireNonNull(department, "Departman seçilmelidir.");
@@ -84,12 +85,30 @@ public class InvoiceService {
         BigDecimal effectiveTaxRate = taxRate != null ? taxRate : new BigDecimal("20.00");
         InvoiceStatus effectiveStatus = status != null ? status : InvoiceStatus.ISSUED;
 
+        // Kategori çıkarımı (infer category if null for Quarry invoices)
+        QuarryCategory resolvedCategory = quarryCategory;
+        if (resolvedCategory == null && department == BusinessUnit.QUARRY && itemForms != null) {
+            for (InvoiceItemForm f : itemForms) {
+                if (f.productName() != null) {
+                    String pLower = f.productName().toLowerCase();
+                    if (pLower.contains("mazot") || pLower.contains("motorin")) {
+                        resolvedCategory = QuarryCategory.MAZOT;
+                        break;
+                    } else if (pLower.contains("elektrik")) {
+                        resolvedCategory = QuarryCategory.ELEKTRIK;
+                        break;
+                    }
+                }
+            }
+        }
+
         Invoice invoice = Invoice.builder()
                 .invoiceNo(no)
                 .invoiceDate(invoiceDate != null ? invoiceDate : LocalDate.now())
                 .dueDate(dueDate)
                 .invoiceType(invoiceType)
                 .department(department)
+                .quarryCategory(resolvedCategory)
                 .targetDepartment(targetDepartment)
                 .customer(customer)
                 .supplier(supplier)
@@ -173,9 +192,19 @@ public class InvoiceService {
     public Invoice createInvoice(String invoiceNo, LocalDate invoiceDate, LocalDate dueDate,
                                  InvoiceType invoiceType, BusinessUnit department, Long customerId,
                                  Long supplierId, BusinessUnit targetDepartment, Long projectId,
+                                 BigDecimal taxRate, Boolean directExpense, InvoiceStatus status,
+                                 String partyName, String notes,
+                                 List<InvoiceItemForm> itemForms) {
+        return createInvoice(invoiceNo, invoiceDate, dueDate, invoiceType, department, customerId, supplierId, targetDepartment, projectId, taxRate, directExpense, status, partyName, notes, itemForms, null);
+    }
+
+    @Transactional
+    public Invoice createInvoice(String invoiceNo, LocalDate invoiceDate, LocalDate dueDate,
+                                 InvoiceType invoiceType, BusinessUnit department, Long customerId,
+                                 Long supplierId, BusinessUnit targetDepartment, Long projectId,
                                  BigDecimal taxRate, Boolean directExpense, String partyName, String notes,
                                  List<InvoiceItemForm> itemForms) {
-        return createInvoice(invoiceNo, invoiceDate, dueDate, invoiceType, department, customerId, supplierId, targetDepartment, projectId, taxRate, directExpense, InvoiceStatus.ISSUED, partyName, notes, itemForms);
+        return createInvoice(invoiceNo, invoiceDate, dueDate, invoiceType, department, customerId, supplierId, targetDepartment, projectId, taxRate, directExpense, InvoiceStatus.ISSUED, partyName, notes, itemForms, null);
     }
 
     /**

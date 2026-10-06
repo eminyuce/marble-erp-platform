@@ -295,4 +295,22 @@ class InvoiceServiceTest {
         invoiceService.cancelInvoice(200L, "Tekrar iptal");
         assertThat(item.getQuantity()).isEqualByComparingTo("10");
     }
+
+    @Test
+    @DisplayName("createInvoice saves quarryCategory correctly for purchase invoice")
+    void createInvoice_PurchaseWithQuarryCategory_PersistsCategory() {
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        List<InvoiceService.InvoiceItemForm> items = List.of(
+                new InvoiceService.InvoiceItemForm("Ocak Elektrik Faturası", "Ocak", new BigDecimal("1"), "adet", new BigDecimal("15000.00"), null, null, null, null, null)
+        );
+
+        Invoice inv = invoiceService.createInvoice(
+                "FAT-ELK-001", LocalDate.now(), null, InvoiceType.PURCHASE, BusinessUnit.QUARRY,
+                null, null, null, null, new BigDecimal("20"), false, InvoiceStatus.ISSUED, "Tedaş A.Ş.",
+                null, items, QuarryCategory.ELEKTRIK);
+
+        assertThat(inv.getQuarryCategory()).isEqualTo(QuarryCategory.ELEKTRIK);
+        assertThat(inv.getInvoiceType()).isEqualTo(InvoiceType.PURCHASE);
+    }
 }

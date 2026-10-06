@@ -67,46 +67,46 @@
         </a>
     </div>
 
-    <!-- KPI Summary Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+    <!-- KPI Summary Cards (Tamamen Okunaklı ve ERP Standartlarına Uygun) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Tank Mevcut Stok</span>
-                <span class="p-2 rounded-xl bg-amber-50 text-amber-600"><i data-lucide="fuel" class="w-5 h-5"></i></span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Tank Mevcut Stok</span>
+                <span class="p-1.5 rounded-lg bg-amber-50 text-amber-700"><i data-lucide="fuel" class="w-4 h-4"></i></span>
             </div>
-            <div class="text-3xl font-black text-slate-900 mt-2 font-mono"
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono"
                  th:text="${#numbers.formatDecimal(currentLiters, 1, 'POINT', 0, 'COMMA')} + ' Litre'">0 Litre</div>
-            <div class="text-xs text-amber-700 font-semibold mt-1">Ocak ana tankında kullanıma hazır mazot</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">Ocak ana tankında kullanıma hazır mazot</div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Ortalama Birim Fiyat (Net)</span>
-                <span class="p-2 rounded-xl bg-slate-100 text-slate-700"><i data-lucide="tag" class="w-5 h-5"></i></span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Ortalama Birim Fiyat (Net)</span>
+                <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-700"><i data-lucide="tag" class="w-4 h-4"></i></span>
             </div>
-            <div class="text-2xl font-black text-slate-900 mt-2 font-mono"
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono"
                  th:text="${tank != null and tank.unitPrice != null ? #numbers.formatDecimal(tank.unitPrice, 1, 'POINT', 2, 'COMMA') + ' TL/L' : '—'}">0,00 TL/L</div>
-            <div class="text-xs text-emerald-600 font-semibold mt-1">KDV hariç net stok birim maliyeti</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">KDV hariç net stok birim maliyeti</div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Kayıtlı İş Makineleri</span>
-                <span class="p-2 rounded-xl bg-blue-50 text-blue-700"><i data-lucide="truck" class="w-5 h-5"></i></span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kayıtlı İş Makineleri</span>
+                <span class="p-1.5 rounded-lg bg-blue-50 text-blue-700"><i data-lucide="truck" class="w-4 h-4"></i></span>
             </div>
-            <div class="text-2xl font-black text-slate-900 mt-2 font-mono"
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono"
                  th:text="${machines != null ? machines.size() : 0} + ' Makine'">0 Makine</div>
-            <div class="text-xs text-slate-500 mt-1">Ekskavatör, loder, kamyon vb.</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">Ekskavatör, loder, kamyon vb.</div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Toplam İkmal Kaydı</span>
-                <span class="p-2 rounded-xl bg-purple-50 text-purple-700"><i data-lucide="history" class="w-5 h-5"></i></span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Toplam İkmal Kaydı</span>
+                <span class="p-1.5 rounded-lg bg-purple-50 text-purple-700"><i data-lucide="history" class="w-4 h-4"></i></span>
             </div>
-            <div class="text-2xl font-black text-slate-900 mt-2 font-mono"
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono"
                  th:text="${entries != null ? entries.size() : 0} + ' İşlem'">0 İşlem</div>
-            <div class="text-xs text-slate-500 mt-1">Giderleştirilen mazot çıkışları</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">Giderleştirilen mazot çıkışları</div>
         </div>
     </div>
 
@@ -156,7 +156,7 @@
                         th:text="${#temporals.format(entry.entryDate, 'dd.MM.yyyy')}">01.10.2026</td>
                     <td class="py-3 px-4 font-bold text-slate-900"
                         th:text="${entry.machine != null ? entry.machine.name : '—'}">Ekskavatör 1</td>
-                    <td class="py-3 px-4 text-right font-black text-amber-700 font-mono"
+                    <td class="py-3 px-4 text-right font-bold text-slate-900 font-mono"
                         th:text="${#numbers.formatDecimal(entry.litres, 1, 'POINT', 0, 'COMMA')} + ' L'">150 L</td>
                     <td class="py-3 px-4 text-right font-mono"
                         th:text="${entry.pricePerLitre != null ? #numbers.formatDecimal(entry.pricePerLitre, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">40,00 TL</td>
@@ -193,9 +193,9 @@
                 </div>
 
                 <form th:action="@{/quarry/fuel/dispense}" method="post" class="mt-4 space-y-4">
-                    <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center justify-between">
-                        <span class="text-xs font-bold text-amber-900">Mevcut Tank Stoğu:</span>
-                        <span class="text-sm font-black text-amber-900 font-mono"
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-700">Mevcut Tank Stoğu:</span>
+                        <span class="text-base font-black text-slate-900 font-mono"
                               th:text="${#numbers.formatDecimal(currentLiters, 1, 'POINT', 0, 'COMMA')} + ' Litre'">0 Litre</span>
                     </div>
 
