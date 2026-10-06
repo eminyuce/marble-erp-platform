@@ -30,6 +30,10 @@ public class StockItem extends AuditableEntity {
     @Column(name = "product_type", nullable = false, length = 30)
     private StockProductType productType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "quarry_category", length = 30)
+    private com.ozerler.marble.model.enums.QuarryCategory quarryCategory;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_block_id")
     private Block sourceBlock;

@@ -124,7 +124,7 @@
 
     <!-- Standard ERP Toolbar -->
     <div class="erp-toolbar">
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <a th:href="@{/invoices/create(type='SALES')}" class="erp-btn-primary">
                 <i data-lucide="plus"></i>
                 <span>Yeni Satış Faturası</span>
@@ -132,6 +132,10 @@
             <a th:href="@{/invoices/create(type='PURCHASE')}" class="erp-btn-secondary">
                 <i data-lucide="shopping-bag"></i>
                 <span>Yeni Alış Faturası</span>
+            </a>
+            <a th:href="@{/expenses/create}" class="px-3.5 py-2 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-xl transition border border-amber-300 inline-flex items-center gap-1.5 shadow-2xs">
+                <i data-lucide="receipt" class="w-4 h-4 text-amber-600"></i>
+                <span>Doğrudan Gider Girişi (SSK, Vergi vb.)</span>
             </a>
         </div>
         <div th:replace="~{fragments/list-chrome :: search('Fatura no, cari unvanı veya departman...', 'invoice-search-input')}"></div>

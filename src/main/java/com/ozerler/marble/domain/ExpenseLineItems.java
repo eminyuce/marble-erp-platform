@@ -18,18 +18,26 @@ public final class ExpenseLineItems {
             ExpenseType.DIESEL,
             ExpenseType.ELECTRICITY,
             ExpenseType.DIRECT_LABOR,
+            ExpenseType.SSK,
             ExpenseType.CONSUMABLES,
             ExpenseType.TAX,
+            ExpenseType.STOPAJ,
+            ExpenseType.BANK_FINANCE,
+            ExpenseType.OFFICIAL_FEES,
             ExpenseType.OVERHEAD,
             ExpenseType.MAINTENANCE,
             ExpenseType.FIXTURE_CONSUMABLE);
 
     private static final List<ExpenseType> LABOR_FIRST_TYPES = List.of(
             ExpenseType.DIRECT_LABOR,
+            ExpenseType.SSK,
             ExpenseType.DIESEL,
             ExpenseType.ELECTRICITY,
             ExpenseType.CONSUMABLES,
             ExpenseType.TAX,
+            ExpenseType.STOPAJ,
+            ExpenseType.BANK_FINANCE,
+            ExpenseType.OFFICIAL_FEES,
             ExpenseType.OVERHEAD,
             ExpenseType.MAINTENANCE,
             ExpenseType.FIXTURE_CONSUMABLE);

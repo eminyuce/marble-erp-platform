@@ -240,10 +240,15 @@ public class ExpensePurchaseController extends AbstractController {
     }
 
     @GetMapping("/create")
-    public String createForm(Model model) {
+    public String createForm(@RequestParam(value = "unit", required = false) BusinessUnit unit, Model model) {
         model.addAttribute("record", null);
+        model.addAttribute("selectedUnit", unit);
         populateFormLookups(model);
         return "erp/expenses/form";
+    }
+
+    public String createForm(Model model) {
+        return createForm(null, model);
     }
 
     @GetMapping("/{id}/edit")

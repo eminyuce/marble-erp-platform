@@ -60,12 +60,49 @@
         <a th:href="@{/quarry/consumables}"
            class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-emerald-600 text-white shadow-xs">
             <i data-lucide="wrench" class="w-4 h-4"></i>
-            <span>Sarf Malzeme Deposu</span>
+            <span>Stok Kartları &amp; Sarf Deposu</span>
         </a>
         <a th:href="@{/quarry/machines}"
            class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
             <i data-lucide="truck" class="w-4 h-4 text-blue-600"></i>
             <span>Makineler</span>
+        </a>
+        <a th:href="@{/expenses/create(unit='QUARRY')}"
+           class="ml-auto px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100">
+            <i data-lucide="receipt" class="w-4 h-4 text-amber-600"></i>
+            <span>Doğrudan Gider Girişi (SSK, Vergi vb.)</span>
+        </a>
+    </div>
+
+    <!-- 4 Sabit Ana Kategori Filtre Çipleri (Madde 1) -->
+    <div class="flex flex-wrap items-center gap-2 pt-1">
+        <span class="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1">
+            <i data-lucide="filter" class="w-3.5 h-3.5"></i> Kategori:
+        </span>
+        <a th:href="@{/quarry/consumables}"
+           class="px-3 py-1.5 rounded-xl text-xs font-bold transition border"
+           th:classappend="${selectedCategory == null or selectedCategory == '' ? 'bg-slate-900 text-white border-slate-900 shadow-2xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}">
+            Tümü
+        </a>
+        <a th:href="@{/quarry/consumables(category='MAZOT')}"
+           class="px-3 py-1.5 rounded-xl text-xs font-bold transition border"
+           th:classappend="${selectedCategory == 'MAZOT' ? 'bg-amber-600 text-white border-amber-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}">
+            Mazot
+        </a>
+        <a th:href="@{/quarry/consumables(category='SARF_MALZEME')}"
+           class="px-3 py-1.5 rounded-xl text-xs font-bold transition border"
+           th:classappend="${selectedCategory == 'SARF_MALZEME' ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}">
+            Sarf Malzeme
+        </a>
+        <a th:href="@{/quarry/consumables(category='ELEKTRIK')}"
+           class="px-3 py-1.5 rounded-xl text-xs font-bold transition border"
+           th:classappend="${selectedCategory == 'ELEKTRIK' ? 'bg-blue-600 text-white border-blue-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}">
+            Elektrik
+        </a>
+        <a th:href="@{/quarry/consumables(category='DIGER')}"
+           class="px-3 py-1.5 rounded-xl text-xs font-bold transition border"
+           th:classappend="${selectedCategory == 'DIGER' ? 'bg-purple-600 text-white border-purple-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}">
+            Diğer
         </a>
     </div>
 
@@ -73,12 +110,12 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Kayıtlı Sarf Kalemi</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Kayıtlı Stok Kartı</span>
                 <span class="p-2 rounded-xl bg-emerald-50 text-emerald-700"><i data-lucide="boxes" class="w-5 h-5"></i></span>
             </div>
             <div class="text-3xl font-black text-slate-900 mt-2 font-mono"
                  th:text="${consumables != null ? consumables.size() : 0} + ' Çeşit'">0 Çeşit</div>
-            <div class="text-xs text-slate-500 mt-1">Depoda tanımlı sarf malzemeler</div>
+            <div class="text-xs text-slate-500 mt-1">Ocak stoğunda tanımlı kartlar</div>
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
@@ -87,8 +124,8 @@
                 <span class="p-2 rounded-xl bg-blue-50 text-blue-700"><i data-lucide="layers" class="w-5 h-5"></i></span>
             </div>
             <div class="text-3xl font-black text-slate-900 mt-2 font-mono"
-                 th:text="${consumables != null ? #aggregates.sum(consumables.![quantity]) : 0} + ' Adet/Birim'">0</div>
-            <div class="text-xs text-slate-500 mt-1">Stoktaki hazır toplam sarf malzemesi</div>
+                 th:text="${consumables != null ? #aggregates.sum(consumables.![quantity]) : 0} + ' Birim'">0 Birim</div>
+            <div class="text-xs text-slate-500 mt-1">Depodaki toplam stok miktarı</div>
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
@@ -106,7 +143,7 @@
         <div class="p-4 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <i data-lucide="package" class="w-4 h-4 text-slate-500"></i>
-                <h3 class="text-sm font-bold text-slate-900">Sarf Malzeme Stok Listesi</h3>
+                <h3 class="text-sm font-bold text-slate-900">Ocak Stok Kartları &amp; Sarf Malzeme Listesi</h3>
             </div>
         </div>
 
@@ -114,8 +151,9 @@
             <table class="w-full text-left text-xs">
                 <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-100">
                 <tr>
-                    <th class="py-3 px-4">Malzeme Kodu</th>
-                    <th class="py-3 px-4">Malzeme Tanımı</th>
+                    <th class="py-3 px-4">Kategori</th>
+                    <th class="py-3 px-4">Kart Kodu</th>
+                    <th class="py-3 px-4">Malzeme / Ürün Tanımı</th>
                     <th class="py-3 px-4 text-right">Mevcut Stok</th>
                     <th class="py-3 px-4">Birim</th>
                     <th class="py-3 px-4 text-right">Birim Fiyat (Net)</th>
@@ -125,15 +163,27 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
                 <tr th:if="${consumables == null or consumables.isEmpty()}">
-                    <td colspan="7" class="py-8 text-center text-slate-400">
-                        Henüz sarf malzeme kaydı bulunmuyor. Yukarıdaki "Yeni Malzeme / Stok Ekle" butonuyla ekleyebilirsiniz.
+                    <td colspan="8" class="py-8 text-center text-slate-400">
+                        Bu kategoride kayıtlı stok kartı bulunmuyor. Yukarıdaki "Yeni Malzeme / Stok Ekle" butonuyla ekleyebilirsiniz.
                     </td>
                 </tr>
                 <tr th:each="c : ${consumables}" class="hover:bg-slate-50/80 transition">
+                    <td class="py-3 px-4">
+                        <span th:if="${c.quarryCategory != null and c.quarryCategory.name() == 'MAZOT'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800">Mazot</span>
+                        <span th:if="${c.quarryCategory != null and c.quarryCategory.name() == 'SARF_MALZEME'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800">Sarf Malzeme</span>
+                        <span th:if="${c.quarryCategory != null and c.quarryCategory.name() == 'ELEKTRIK'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-800">Elektrik</span>
+                        <span th:if="${c.quarryCategory != null and c.quarryCategory.name() == 'DIGER'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-100 text-purple-800">Diğer</span>
+                        <span th:if="${c.quarryCategory == null}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700">Sarf Malzeme</span>
+                    </td>
                     <td class="py-3 px-4 font-mono font-bold text-slate-900" th:text="${c.itemCode}">SRF-001</td>
                     <td class="py-3 px-4 font-bold text-slate-800" th:text="${c.description}">Elmas Kesme Teli</td>
                     <td class="py-3 px-4 text-right font-black font-mono text-sm"
-                        :class="${c.quantity != null and c.quantity > 0 ? 'text-emerald-700' : 'text-rose-600'}"
+                        th:classappend="${c.quantity != null and c.quantity > 0 ? 'text-emerald-700' : 'text-rose-600'}"
                         th:text="${c.quantity != null ? #numbers.formatDecimal(c.quantity, 1, 'POINT', 0, 'COMMA') : 0}">50</td>
                     <td class="py-3 px-4 text-slate-500" th:text="${c.unit != null ? c.unit : 'adet'}">adet</td>
                     <td class="py-3 px-4 text-right font-mono"
@@ -146,8 +196,17 @@
                     </td>
                     <td class="py-3 px-4 text-right">
                         <button type="button" @click="openConsumeModal([[${c.id}]])"
-                                th:disabled="${c.quantity == null or c.quantity <= 0}"
+                                th:disabled="${c.quantity == null or c.quantity <= 0 or (c.quarryCategory != null and c.quarryCategory.name() == 'MAZOT')}"
                                 class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed text-emerald-800 rounded-lg text-xs font-bold transition inline-flex items-center gap-1 cursor-pointer border border-emerald-200">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                            <span>Kullan</span>
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
                             <i data-lucide="check" class="w-3.5 h-3.5"></i>
                             <span>Kullan</span>
                         </button>
@@ -220,41 +279,62 @@
         </div>
     </div>
 
-    <!-- MODAL 2: Yeni Malzeme Ekle -->
+    <!-- MODAL 2: Yeni Stok Kartı / Malzeme Ekle -->
     <div x-show="addModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 transition-opacity bg-slate-900/60" @click="addModalOpen = false"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
             <div class="inline-block p-6 my-8 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="plus" class="w-5 h-5 text-blue-600"></i>
-                        <span>Sarf Malzeme Stoğa Ekle</span>
-                    </h3>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="plus" class="w-5 h-5 text-blue-600"></i>
+                            <span>Yeni Stok Kartı / Depo Girişi</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Ocak 4 sabit ana kategorisinde kart tanımlayın.</p>
+                    </div>
                     <button type="button" @click="addModalOpen = false" class="text-slate-400 hover:text-slate-600">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
 
-                <form th:action="@{/quarry/consumables/add}" method="post" class="mt-4 space-y-4">
+                <form th:action="@{/quarry/stock-cards/new}" method="post" class="mt-4 space-y-4">
+                    <!-- 4 Sabit Ana Kategori (Madde 1) -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Malzeme Tanımı *</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Sabit Ana Kategori *</label>
+                        <select name="category" required
+                                class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                            <option value="SARF_MALZEME" th:selected="${selectedCategory == 'SARF_MALZEME' or selectedCategory == null or selectedCategory == ''}">Sarf Malzeme (Yağ, Filtre, Kesici Disk vb.)</option>
+                            <option value="MAZOT" th:selected="${selectedCategory == 'MAZOT'}">Mazot (Motorin vb.)</option>
+                            <option value="ELEKTRIK" th:selected="${selectedCategory == 'ELEKTRIK'}">Elektrik</option>
+                            <option value="DIGER" th:selected="${selectedCategory == 'DIGER'}">Diğer (Çeşitli Malzeme)</option>
+                        </select>
+                        <p class="text-[11px] text-slate-500 mt-1">4 sabit kategori sistem genelinde korunur; değiştirilemez.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Ürün / Malzeme Tanımı *</label>
                         <input type="text" name="description" required placeholder="Örn: Elmas Kesme Teli (100 m)"
                                class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        <p class="text-[11px] text-slate-400 mt-0.5">Aynı ürün adıyla mükerrer stok kartı açılamaz.</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Miktar *</label>
-                            <input type="number" step="1" min="1" name="quantity" required placeholder="10"
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Açılış Miktarı</label>
+                            <input type="number" step="0.01" min="0" name="initialQuantity" placeholder="0"
                                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Birim</label>
-                            <select name="unit" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Birimi *</label>
+                            <select name="unit" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                 <option value="adet">adet</option>
+                                <option value="litre">litre</option>
                                 <option value="metre">metre</option>
                                 <option value="kg">kg</option>
+                                <option value="ton">ton</option>
+                                <option value="m2">m²</option>
+                                <option value="m3">m³</option>
                                 <option value="paket">paket</option>
                                 <option value="koli">koli</option>
                             </select>
@@ -269,7 +349,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Malzeme Kodu (Opsiyonel)</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Stok Kodu (Opsiyonel)</label>
                         <input type="text" name="itemCode" placeholder="Boş bırakılırsa otomatik üretilir"
                                class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                     </div>
@@ -285,7 +365,7 @@
                         <button type="submit"
                                 class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                             <i data-lucide="check" class="w-4 h-4"></i>
-                            <span>Depoya Ekle</span>
+                            <span>Stok Kartını Kaydet</span>
                         </button>
                     </div>
                 </form>

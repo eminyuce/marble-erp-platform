@@ -15,7 +15,11 @@ public enum ExpenseType {
     FIXTURE_CONSUMABLE("enum.expense_type.fixture_consumable"),
     MATERIAL("enum.expense_type.material"),
     TRANSPORTATION("enum.expense_type.transportation"),
-    MAINTENANCE("enum.expense_type.maintenance");
+    MAINTENANCE("enum.expense_type.maintenance"),
+    SSK("enum.expense_type.ssk"),
+    STOPAJ("enum.expense_type.stopaj"),
+    BANK_FINANCE("enum.expense_type.bank_finance"),
+    OFFICIAL_FEES("enum.expense_type.official_fees");
 
     private final String messageKey;
 
@@ -31,13 +35,13 @@ public enum ExpenseType {
         return switch (this) {
             case DIESEL -> ExpenseCategory.DIESEL;
             case ELECTRICITY -> ExpenseCategory.ELECTRICITY;
-            case DIRECT_LABOR -> ExpenseCategory.LABOR;
+            case DIRECT_LABOR, SSK -> ExpenseCategory.LABOR;
             case FIXTURE_CONSUMABLE, CONSUMABLES -> ExpenseCategory.FIXTURE_CONSUMABLE;
-            case TAX -> ExpenseCategory.TAX;
+            case TAX, STOPAJ -> ExpenseCategory.TAX;
             case MATERIAL, DIRECT_RAW -> ExpenseCategory.MATERIAL;
             case TRANSPORTATION, LOGISTICS -> ExpenseCategory.TRANSPORTATION;
             case MAINTENANCE -> ExpenseCategory.MAINTENANCE;
-            case DEPRECIATION, OVERHEAD -> ExpenseCategory.OTHER;
+            case DEPRECIATION, OVERHEAD, BANK_FINANCE, OFFICIAL_FEES -> ExpenseCategory.OTHER;
         };
     }
 }

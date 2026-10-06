@@ -104,6 +104,7 @@ class QuarryInventoryServiceTest {
                 .id(1L)
                 .itemCode(QuarryInventoryService.FUEL_TANK_ITEM_CODE)
                 .productType(StockProductType.FUEL)
+                .quarryCategory(QuarryCategory.MAZOT)
                 .stockLocation(fuelLocation)
                 .quantity(new BigDecimal("1500"))
                 .unitPrice(new BigDecimal("40.00"))
@@ -148,6 +149,7 @@ class QuarryInventoryServiceTest {
                 .id(1L)
                 .itemCode(QuarryInventoryService.FUEL_TANK_ITEM_CODE)
                 .productType(StockProductType.FUEL)
+                .quarryCategory(QuarryCategory.MAZOT)
                 .stockLocation(fuelLocation)
                 .quantity(new BigDecimal("100"))
                 .build();
@@ -191,5 +193,50 @@ class QuarryInventoryServiceTest {
         assertThat(m.getName()).isEqualTo("Yeni Loder");
         assertThat(m.getBusinessUnit()).isEqualTo(BusinessUnit.QUARRY);
         assertThat(m.isActive()).isTrue();
+    }
+
+    @Test
+    @DisplayName("createStockCard creates card under category and initializes opening stock")
+    void createStockCard_Success() {
+        when(stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Yağ Filtresi"))
+                .thenReturn(false);
+        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE))
+                .thenReturn(Optional.of(consumablesLocation));
+        when(stockItemRepository.save(any(StockItem.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        StockItem item = inventoryService.createStockCard(
+                QuarryCategory.SARF_MALZEME, "Yağ Filtresi", "adet", new BigDecimal("10"), new BigDecimal("120.00"), null, "Açılış");
+
+        assertThat(item.getQuarryCategory()).isEqualTo(QuarryCategory.SARF_MALZEME);
+        assertThat(item.getDescription()).isEqualTo("Yağ Filtresi");
+        assertThat(item.getQuantity()).isEqualByComparingTo("10");
+        assertThat(item.getUnitPrice()).isEqualByComparingTo("120.00");
+        verify(stockMovementRepository).save(any(StockMovement.class));
+    }
+
+    @Test
+    @DisplayName("createStockCard throws exception when duplicate product name exists in Quarry")
+    void createStockCard_DuplicateName_ThrowsException() {
+        when(stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Motorin"))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> inventoryService.createStockCard(
+                QuarryCategory.MAZOT, "Motorin", "litre", BigDecimal.ZERO, BigDecimal.ZERO, null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Mükerrer stok kartı oluşturulamaz");
+    }
+
+    @Test
+    @DisplayName("createStockCard throws exception when duplicate code exists")
+    void createStockCard_DuplicateCode_ThrowsException() {
+        when(stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Özel Kablo"))
+                .thenReturn(false);
+        when(stockItemRepository.existsByItemCode("ELK-999"))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> inventoryService.createStockCard(
+                QuarryCategory.ELEKTRIK, "Özel Kablo", "metre", BigDecimal.ZERO, BigDecimal.ZERO, "ELK-999", null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Mükerrer stok kartı oluşturulamaz");
     }
 }

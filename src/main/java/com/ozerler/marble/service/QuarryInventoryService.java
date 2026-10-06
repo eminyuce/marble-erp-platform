@@ -50,10 +50,18 @@ public class QuarryInventoryService {
         );
 
         return stockItemRepository.findByItemCode(FUEL_TANK_ITEM_CODE)
+                .map(tank -> {
+                    if (tank.getQuarryCategory() == null) {
+                        tank.setQuarryCategory(QuarryCategory.MAZOT);
+                        return stockItemRepository.save(tank);
+                    }
+                    return tank;
+                })
                 .orElseGet(() -> stockItemRepository.save(StockItem.builder()
                         .itemCode(FUEL_TANK_ITEM_CODE)
                         .description("Ocak Mazot Deposu (Ana Tank)")
                         .productType(StockProductType.FUEL)
+                        .quarryCategory(QuarryCategory.MAZOT)
                         .stockLocation(tankLocation)
                         .quantity(BigDecimal.ZERO)
                         .unit("litre")
@@ -297,6 +305,123 @@ public class QuarryInventoryService {
     @Transactional
     public StockItem addConsumableStock(String description, BigDecimal quantity, String unit, BigDecimal netUnitPrice, String invoiceNo) {
         return addConsumableStock(null, description, quantity, unit, netUnitPrice, null, "Alış faturası: " + (invoiceNo != null ? invoiceNo : ""));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 2.B. STOK KARTI YÖNETİMİ & MÜKERRER KAYIT ENGELLEME (MADDE 1 & 2)
+    // ─────────────────────────────────────────────────────────────
+
+    @Transactional
+    public StockItem createStockCard(QuarryCategory category, String description, String unit,
+                                     BigDecimal initialQuantity, BigDecimal netUnitPrice,
+                                     String itemCode, String notes) {
+        Objects.requireNonNull(category, "Kategori seçimi zorunludur.");
+        if (description == null || description.isBlank()) {
+            throw new IllegalArgumentException("Stok kartı ürün tanımı / adı boş olamaz.");
+        }
+
+        String trimmedDesc = description.trim();
+        String trimmedCode = itemCode != null && !itemCode.isBlank() ? itemCode.trim().toUpperCase() : null;
+
+        // Duplicate kontrolü (Madde 2): Ocak stoğunda aynı isimde veya aynı kodda kayıt var mı?
+        boolean descExists = stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(
+                BusinessUnit.QUARRY, trimmedDesc);
+        if (descExists) {
+            throw new IllegalArgumentException(String.format(
+                    "Bu ürün adıyla kayıtlı bir stok kartı zaten mevcut: '%s'. Mükerrer stok kartı oluşturulamaz.", trimmedDesc));
+        }
+
+        if (trimmedCode != null && stockItemRepository.existsByItemCode(trimmedCode)) {
+            throw new IllegalArgumentException(String.format(
+                    "Bu kodla kayıtlı bir stok kartı zaten mevcut: '%s'. Mükerrer stok kartı oluşturulamaz.", trimmedCode));
+        }
+
+        StockLocation location;
+        StockProductType productType;
+        String defaultPrefix;
+
+        switch (category) {
+            case MAZOT -> {
+                location = getOrCreateLocation(FUEL_TANK_LOCATION_CODE, "Ocak Mazot Deposu", StockLocationType.QUARRY_FUEL_TANK, BusinessUnit.QUARRY);
+                productType = StockProductType.FUEL;
+                defaultPrefix = "MZ";
+            }
+            case SARF_MALZEME -> {
+                location = getOrCreateConsumablesLocation();
+                productType = StockProductType.CONSUMABLE;
+                defaultPrefix = "SRF";
+            }
+            case ELEKTRIK -> {
+                location = getOrCreateConsumablesLocation();
+                productType = StockProductType.OTHER;
+                defaultPrefix = "ELK";
+            }
+            default -> {
+                location = getOrCreateConsumablesLocation();
+                productType = StockProductType.OTHER;
+                defaultPrefix = "DGR";
+            }
+        }
+
+        String finalCode = trimmedCode != null
+                ? trimmedCode
+                : UniqueCodes.yearly(defaultPrefix, stockItemRepository::existsByItemCode);
+
+        BigDecimal qty = (initialQuantity != null && initialQuantity.compareTo(BigDecimal.ZERO) >= 0)
+                ? initialQuantity
+                : BigDecimal.ZERO;
+
+        BigDecimal price = (netUnitPrice != null && netUnitPrice.compareTo(BigDecimal.ZERO) >= 0)
+                ? netUnitPrice
+                : BigDecimal.ZERO;
+
+        StockItem item = StockItem.builder()
+                .itemCode(finalCode)
+                .description(trimmedDesc)
+                .productType(productType)
+                .quarryCategory(category)
+                .stockLocation(location)
+                .quantity(qty)
+                .unit(unit != null && !unit.isBlank() ? unit.trim() : (category == QuarryCategory.MAZOT ? "litre" : "adet"))
+                .unitPrice(price)
+                .status("AVAILABLE")
+                .productionDate(LocalDate.now())
+                .notes(notes)
+                .build();
+
+        StockItem saved = stockItemRepository.save(item);
+
+        if (qty.compareTo(BigDecimal.ZERO) > 0) {
+            String movCode = UniqueCodes.yearly("MOV-OPN", stockMovementRepository::existsByMovementCode);
+            StockMovement movement = StockMovement.builder()
+                    .movementCode(movCode)
+                    .movementDate(LocalDateTime.now())
+                    .movementType(StockMovementType.INCOMING)
+                    .sourceDepartment(BusinessUnit.QUARRY)
+                    .targetDepartment(BusinessUnit.QUARRY)
+                    .toLocation(location)
+                    .stockItem(saved)
+                    .itemDescription("Yeni Stok Kartı Açılışı: " + saved.getDescription())
+                    .quantity(qty)
+                    .quantityUnit(saved.getUnit())
+                    .notes("Açılış stok kartı bakiyesi")
+                    .build();
+            stockMovementRepository.save(movement);
+        }
+
+        log.info("Yeni Ocak stok kartı oluşturuldu: {} [{}] - Kategori: {}", saved.getDescription(), saved.getItemCode(), category);
+        return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public List<StockItem> getAllQuarryStockCards(QuarryCategory category) {
+        List<StockItem> list = stockItemRepository.findByStockLocation_BusinessUnitAndStatus(BusinessUnit.QUARRY, "AVAILABLE");
+        if (category == null) {
+            return list;
+        }
+        return list.stream()
+                .filter(item -> item.getQuarryCategory() == category)
+                .toList();
     }
 
     @Transactional

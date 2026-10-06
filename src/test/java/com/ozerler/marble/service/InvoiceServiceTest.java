@@ -99,7 +99,7 @@ class InvoiceServiceTest {
                 null, null, null, null, new BigDecimal("20"), false, "Müşteri A", null, items))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Yetersiz stok")
-                .hasMessageContaining("Stok miktarı eksiye düşürülemez");
+                .hasMessageContaining("Mevcut stok: 10 adet");
     }
 
     @Test
@@ -177,5 +177,122 @@ class InvoiceServiceTest {
                 && tx.getBusinessUnit() == BusinessUnit.QUARRY
         ));
         verify(quarryInventoryService, never()).addFuelStock(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("createInvoice with DRAFT status does not change stock or process movements")
+    void createInvoice_DraftStatus_DoesNotProcessStock() {
+        StockItem item = StockItem.builder()
+                .id(20L)
+                .itemCode("SRF-01")
+                .description("Matkap Ucu")
+                .quantity(new BigDecimal("10"))
+                .unit("adet")
+                .build();
+
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        List<InvoiceService.InvoiceItemForm> items = List.of(
+                new InvoiceService.InvoiceItemForm("Matkap Ucu", "Ocak", new BigDecimal("5"), "adet", new BigDecimal("50.00"), null, null, 20L, null, null)
+        );
+
+        Invoice inv = invoiceService.createInvoice(
+                "FAT-DRF-001", LocalDate.now(), null, InvoiceType.SALES, BusinessUnit.QUARRY,
+                null, null, null, null, new BigDecimal("20"), false, InvoiceStatus.DRAFT, "Müşteri A", null, items);
+
+        assertThat(inv.getStatus()).isEqualTo(InvoiceStatus.DRAFT);
+        assertThat(inv.getStockProcessed()).isFalse();
+        verify(stockItemRepository, never()).save(any());
+        verify(stockMovementRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("finalizeInvoice deducts stock and records movement idempotently")
+    void finalizeInvoice_DeductsStock() {
+        StockItem item = StockItem.builder()
+                .id(20L)
+                .itemCode("SRF-01")
+                .description("Matkap Ucu")
+                .quantity(new BigDecimal("10"))
+                .unit("adet")
+                .build();
+
+        InvoiceItem invoiceItem = InvoiceItem.builder()
+                .id(1L)
+                .productName("Matkap Ucu")
+                .quantity(new BigDecimal("3"))
+                .unit("adet")
+                .stockItem(item)
+                .build();
+
+        Invoice invoice = Invoice.builder()
+                .id(100L)
+                .invoiceNo("FAT-FIN-001")
+                .invoiceType(InvoiceType.SALES)
+                .department(BusinessUnit.QUARRY)
+                .status(InvoiceStatus.DRAFT)
+                .stockProcessed(false)
+                .items(new ArrayList<>(List.of(invoiceItem)))
+                .build();
+
+        when(invoiceRepository.findById(100L)).thenReturn(Optional.of(invoice));
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Invoice finalized = invoiceService.finalizeInvoice(100L);
+
+        assertThat(finalized.getStatus()).isEqualTo(InvoiceStatus.ISSUED);
+        assertThat(finalized.getStockProcessed()).isTrue();
+        assertThat(item.getQuantity()).isEqualByComparingTo("7");
+        verify(stockItemRepository).save(item);
+        verify(stockMovementRepository).save(any(StockMovement.class));
+
+        // Idempotency: second finalize does not deduct stock again
+        invoiceService.finalizeInvoice(100L);
+        assertThat(item.getQuantity()).isEqualByComparingTo("7");
+    }
+
+    @Test
+    @DisplayName("cancelInvoice restores deducted stock and reverses movements idempotently")
+    void cancelInvoice_RestoresStock() {
+        StockItem item = StockItem.builder()
+                .id(20L)
+                .itemCode("SRF-01")
+                .description("Matkap Ucu")
+                .quantity(new BigDecimal("7"))
+                .unit("adet")
+                .build();
+
+        InvoiceItem invoiceItem = InvoiceItem.builder()
+                .id(1L)
+                .productName("Matkap Ucu")
+                .quantity(new BigDecimal("3"))
+                .unit("adet")
+                .stockItem(item)
+                .build();
+
+        Invoice invoice = Invoice.builder()
+                .id(200L)
+                .invoiceNo("FAT-CAN-001")
+                .invoiceType(InvoiceType.SALES)
+                .department(BusinessUnit.QUARRY)
+                .status(InvoiceStatus.ISSUED)
+                .stockProcessed(true)
+                .items(new ArrayList<>(List.of(invoiceItem)))
+                .build();
+
+        when(invoiceRepository.findById(200L)).thenReturn(Optional.of(invoice));
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Invoice cancelled = invoiceService.cancelInvoice(200L, "Müşteri vazgeçti");
+
+        assertThat(cancelled.getStatus()).isEqualTo(InvoiceStatus.CANCELLED);
+        assertThat(cancelled.getStockProcessed()).isFalse();
+        assertThat(item.getQuantity()).isEqualByComparingTo("10"); // 7 + 3
+        verify(stockItemRepository).save(item);
+        verify(stockMovementRepository).save(any(StockMovement.class));
+
+        // Idempotency: second cancel does not restore again
+        invoiceService.cancelInvoice(200L, "Tekrar iptal");
+        assertThat(item.getQuantity()).isEqualByComparingTo("10");
     }
 }

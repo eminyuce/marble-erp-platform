@@ -98,6 +98,14 @@ public class Invoice extends AuditableEntity {
     @Builder.Default
     private InvoiceStatus status = InvoiceStatus.ISSUED;
 
+    @Column(name = "stock_processed", nullable = false)
+    @Builder.Default
+    private Boolean stockProcessed = false;
+
+    @Column(name = "direct_expense")
+    @Builder.Default
+    private Boolean directExpense = false;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 

@@ -5,18 +5,26 @@
     <title th:text="${'Fatura ' + invoice.invoiceNumber + ' | Özerler Mermer ERP'}">Fatura Detayı</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-detail-page max-w-4xl mx-auto space-y-6">
+<div layout:fragment="content" class="erp-detail-page max-w-4xl mx-auto space-y-6" x-data="{ cancelModalOpen: false }">
 
     <!-- Header & Breadcrumb -->
     <div class="erp-detail-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Faturalar', '/invoices', ${invoice.invoiceNumber})}"></div>
-            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-2 flex items-center gap-2">
+            <h2 class="admin-page-title text-2xl font-black text-slate-900 mt-2 flex flex-wrap items-center gap-2">
                 <i data-lucide="receipt" class="w-7 h-7 text-emerald-600"></i>
                 <span th:text="${invoice.invoiceNumber}">FAT-2026-0001</span>
                 <span th:if="${invoice.internalTransfer}"
                       class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
                     Dahili Transfer
+                </span>
+                <span th:if="${invoice.directExpense}"
+                      class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                    Doğrudan Dönem Gideri
+                </span>
+                <span th:if="${invoice.stockProcessed}"
+                      class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-teal-100 text-teal-800 border border-teal-200">
+                    Stok Hareketi İşlendi
                 </span>
             </h2>
         </div>
@@ -25,12 +33,33 @@
                 <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i>
                 <span>Yazdır</span>
             </button>
-            <a th:if="${invoice.invoiceType != null and invoice.invoiceType.name() == 'SALES' and invoice.status != null and invoice.status.name() != 'PAID' and !invoice.internalTransfer}"
+
+            <!-- Kesinleştir Butonu (Eğer Taslak ise) -->
+            <form th:if="${invoice.status != null and invoice.status.name() == 'DRAFT'}"
+                  th:action="@{'/invoices/' + ${invoice.id} + '/finalize'}" method="post" class="inline">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" onclick="return confirm('Bu faturayı kesinleştirmek ve ilgili ürünleri stoktan düşmek istediğinize emin misiniz?')"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm cursor-pointer">
+                    <i data-lucide="check-check" class="w-4 h-4"></i>
+                    <span>Faturayı Kesinleştir &amp; Stoktan Düş</span>
+                </button>
+            </form>
+
+            <!-- Tahsilat Ekle (Satış ve Açık Fatura ise) -->
+            <a th:if="${invoice.invoiceType != null and invoice.invoiceType.name() == 'SALES' and invoice.status != null and invoice.status.name() == 'ISSUED' and !invoice.internalTransfer}"
                th:href="@{/collections/create(customerId=${invoice.customer != null ? invoice.customer.id : ''}, invoiceId=${invoice.id}, amount=${invoice.totalAmount})}"
                class="erp-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm">
                 <i data-lucide="wallet" class="w-4 h-4"></i>
                 <span>Tahsilat Ekle</span>
             </a>
+
+            <!-- İptal Et Butonu (Madde 12: İptal ve Stok İadesi) -->
+            <button th:if="${invoice.status != null and invoice.status.name() != 'CANCELLED' and invoice.status.name() != 'DRAFT'}"
+                    type="button" @click="cancelModalOpen = true"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl border border-rose-200 transition cursor-pointer">
+                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                <span>Faturayı İptal Et</span>
+            </button>
         </div>
     </div>
 
@@ -52,8 +81,8 @@
             <div>
                 <span class="text-slate-400 block font-semibold">Durum</span>
                 <span class="px-2.5 py-1 text-[11px] font-bold rounded-full w-max mt-0.5 inline-block"
-                      th:classappend="${invoice.status != null and invoice.status.name() == 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}"
-                      th:text="${invoice.status != null ? invoice.status.displayName : 'Ödenmedi'}">Ödenmedi</span>
+                      th:classappend="${invoice.status != null and invoice.status.name() == 'PAID' ? 'bg-emerald-100 text-emerald-800' : (invoice.status != null and invoice.status.name() == 'CANCELLED' ? 'bg-rose-100 text-rose-800' : (invoice.status != null and invoice.status.name() == 'DRAFT' ? 'bg-slate-100 text-slate-700' : 'bg-blue-100 text-blue-800'))}"
+                      th:text="${invoice.status != null ? invoice.status.displayName : 'Taslak'}">Ödenmedi</span>
             </div>
         </div>
 
@@ -179,6 +208,43 @@
             </div>
         </div>
 
+    <!-- İptal Onay Modalı (Madde 12) -->
+    <div x-show="cancelModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
+        <div class="flex items-center justify-center min-h-screen px-4 text-center">
+            <div class="fixed inset-0 transition-opacity bg-slate-900/60" @click="cancelModalOpen = false"></div>
+            <div class="inline-block p-6 my-8 text-left bg-white rounded-2xl shadow-xl max-w-md w-full relative z-10">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600"></i>
+                        <span>Fatura İptali &amp; Stok İadesi</span>
+                    </h3>
+                    <button type="button" @click="cancelModalOpen = false" class="text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <form th:action="@{'/invoices/' + ${invoice.id} + '/cancel'}" method="post" class="mt-4 space-y-4">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                        <p class="font-bold">Önemli Kural:</p>
+                        <p>• Satış faturası ise düşülen stoklar (blok, mazot, sarf) <strong>otomatik olarak ocağın stoğuna iade edilir</strong>.</p>
+                        <p>• Doğrudan gider faturası ise masraf kaydı ters kayıtla geri alınır.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">İptal Gerekçesi *</label>
+                        <input type="text" name="reason" placeholder="Örn: Yanlış adet girildi / Müşteri alımdan vazgeçti"
+                               class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none" required />
+                    </div>
+                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                        <button type="button" @click="cancelModalOpen = false" class="erp-btn-secondary text-xs">Vazgeç</button>
+                        <button type="submit"
+                                class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <span>İptali Onayla ve Stokları İade Et</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
 </div>

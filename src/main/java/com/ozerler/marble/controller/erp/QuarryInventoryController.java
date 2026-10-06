@@ -4,6 +4,7 @@ import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.MachineFuelEntry;
 import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.enums.QuarryCategory;
 import com.ozerler.marble.service.QuarryInventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,15 +86,18 @@ public class QuarryInventoryController extends AbstractController {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 2. SARF MALZEME DEPOSU
+    // 2. SARF MALZEME & STOK KARTLARI (MADDE 1 & 2)
     // ─────────────────────────────────────────────────────────────
     @GetMapping("/consumables")
-    public String consumablesIndex(Model model) {
-        List<StockItem> consumables = quarryInventoryService.getConsumableStockItems();
+    public String consumablesIndex(@RequestParam(value = "category", required = false) QuarryCategory category,
+                                   Model model) {
+        List<StockItem> consumables = quarryInventoryService.getAllQuarryStockCards(category);
         List<Machine> machines = quarryInventoryService.getQuarryMachines();
 
         model.addAttribute("consumables", consumables);
         model.addAttribute("machines", machines);
+        model.addAttribute("categories", QuarryCategory.values());
+        model.addAttribute("selectedCategory", category != null ? category.name() : "");
         model.addAttribute("activeSection", "quarry");
         model.addAttribute("activeSubSection", "consumables");
 
@@ -119,7 +123,8 @@ public class QuarryInventoryController extends AbstractController {
     }
 
     @PostMapping("/consumables/add")
-    public String addConsumableStock(@RequestParam(value = "itemCode", required = false) String itemCode,
+    public String addConsumableStock(@RequestParam(value = "category", required = false) QuarryCategory category,
+                                     @RequestParam(value = "itemCode", required = false) String itemCode,
                                      @RequestParam("description") String description,
                                      @RequestParam("quantity") BigDecimal quantity,
                                      @RequestParam(value = "unit", defaultValue = "adet") String unit,
@@ -127,16 +132,39 @@ public class QuarryInventoryController extends AbstractController {
                                      @RequestParam(value = "notes", required = false) String notes,
                                      RedirectAttributes redirectAttributes) {
         try {
-            StockItem item = quarryInventoryService.addConsumableStock(
-                    itemCode, description, quantity, unit, netUnitPrice, null, notes);
+            QuarryCategory cat = category != null ? category : QuarryCategory.SARF_MALZEME;
+            StockItem item = quarryInventoryService.createStockCard(
+                    cat, description, unit, quantity, netUnitPrice, itemCode, notes);
             redirectAttributes.addFlashAttribute("successMessage",
-                    String.format("%s (%s %s) sarf malzeme deposuna eklendi. Güncel stok: %s %s.",
-                            item.getDescription(), quantity, item.getUnit(), item.getQuantity(), item.getUnit()));
+                    String.format("%s (%s %s) stok kartı ve depo girişi başarıyla kaydedildi.",
+                            item.getDescription(), quantity, item.getUnit()));
         } catch (Exception e) {
-            log.error("Sarf malzeme ekleme hatası: {}", e.getMessage(), e);
+            log.error("Stok ekleme hatası: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/quarry/consumables";
+        return "redirect:/quarry/consumables" + (category != null ? "?category=" + category.name() : "");
+    }
+
+    @PostMapping("/stock-cards/new")
+    public String createStockCard(@RequestParam("category") QuarryCategory category,
+                                  @RequestParam("description") String description,
+                                  @RequestParam(value = "unit", defaultValue = "adet") String unit,
+                                  @RequestParam(value = "initialQuantity", required = false) BigDecimal initialQuantity,
+                                  @RequestParam(value = "netUnitPrice", required = false) BigDecimal netUnitPrice,
+                                  @RequestParam(value = "itemCode", required = false) String itemCode,
+                                  @RequestParam(value = "notes", required = false) String notes,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            StockItem item = quarryInventoryService.createStockCard(
+                    category, description, unit, initialQuantity, netUnitPrice, itemCode, notes);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    String.format("Yeni stok kartı (%s - %s) başarıyla tanımlandı.",
+                            item.getItemCode(), item.getDescription()));
+        } catch (Exception e) {
+            log.error("Stok kartı oluşturma hatası: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/quarry/consumables" + (category != null ? "?category=" + category.name() : "");
     }
 
     // ─────────────────────────────────────────────────────────────

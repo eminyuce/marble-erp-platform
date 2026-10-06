@@ -143,6 +143,7 @@ public class InvoiceController extends AbstractController {
                                 @RequestParam(value = "projectId", required = false) Long projectId,
                                 @RequestParam(value = "taxRate", required = false) BigDecimal taxRate,
                                 @RequestParam(value = "directExpense", required = false, defaultValue = "false") Boolean directExpense,
+                                @RequestParam(value = "status", required = false) InvoiceStatus status,
                                 @RequestParam(value = "partyName", required = false) String partyName,
                                 @RequestParam(value = "notes", required = false) String notes,
                                 @RequestParam(value = "itemProductName", required = false) List<String> productNames,
@@ -178,11 +179,12 @@ public class InvoiceController extends AbstractController {
             }
 
             BigDecimal effectiveTaxRate = taxRate != null ? taxRate : new BigDecimal("20.00");
+            InvoiceStatus effectiveStatus = status != null ? status : InvoiceStatus.ISSUED;
 
             Invoice invoice = invoiceService.createInvoice(
                     invoiceNo, invoiceDate, dueDate, invoiceType, department,
                     customerId, supplierId, targetDepartment, projectId, effectiveTaxRate,
-                    directExpense, partyName, notes, itemForms
+                    directExpense, effectiveStatus, partyName, notes, itemForms
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Fatura (" + invoice.getInvoiceNo() + ") başarıyla oluşturuldu. Toplam: " + invoice.getTotalAmount() + " TL");
@@ -192,6 +194,34 @@ public class InvoiceController extends AbstractController {
             redirectAttributes.addFlashAttribute("errorMessage", "Fatura oluşturulurken hata: " + e.getMessage());
             return "redirect:/invoices/new?type=" + invoiceType.name();
         }
+    }
+
+    @PostMapping("/{id}/finalize")
+    public String finalizeInvoice(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            Invoice invoice = invoiceService.finalizeInvoice(id);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Fatura (" + invoice.getInvoiceNo() + ") başarıyla kesinleştirildi ve stok hareketleri işlendi.");
+        } catch (Exception e) {
+            log.error("Fatura kesinleştirme hatası: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Fatura kesinleştirilemedi: " + e.getMessage());
+        }
+        return "redirect:/invoices/" + id;
+    }
+
+    @PostMapping("/{id}/cancel")
+    public String cancelInvoice(@PathVariable("id") Long id,
+                                @RequestParam(value = "reason", required = false, defaultValue = "Kullanıcı talebiyle iptal edildi") String reason,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            Invoice invoice = invoiceService.cancelInvoice(id, reason);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Fatura (" + invoice.getInvoiceNo() + ") iptal edildi ve stoklar depoya iade edildi.");
+        } catch (Exception e) {
+            log.error("Fatura iptal hatası: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Fatura iptal edilemedi: " + e.getMessage());
+        }
+        return "redirect:/invoices/" + id;
     }
 
     @GetMapping("/api/available-stock")
@@ -240,7 +270,7 @@ public class InvoiceController extends AbstractController {
 
         // 2. Mazot Deposu (Ocak Mazot Stoğu - Madde 3 & 8)
         if (department == null || department == BusinessUnit.QUARRY) {
-            if (stockType == null || stockType.isBlank() || "FUEL".equalsIgnoreCase(stockType)) {
+            if (stockType == null || stockType.isBlank() || "FUEL".equalsIgnoreCase(stockType) || "MAZOT".equalsIgnoreCase(stockType)) {
                 StockItem fuelTank = quarryInventoryService.getOrCreateFuelTankStockItem();
                 if (fuelTank != null && fuelTank.getQuantity() != null && fuelTank.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
                     if (s.isEmpty() || "mazot".contains(s) || "dizel".contains(s) || fuelTank.getItemCode().toLowerCase().contains(s)) {
@@ -261,26 +291,38 @@ public class InvoiceController extends AbstractController {
             }
         }
 
-        // 3. Sarf Malzeme Deposu (Ocak Sarf Malzemeleri - Madde 3 & 9)
+        // 3. Sarf Malzeme & Diğer Ocak Stok Kartları (Madde 1 & 2 & 9)
         if (department == null || department == BusinessUnit.QUARRY) {
-            if (stockType == null || stockType.isBlank() || "CONSUMABLE".equalsIgnoreCase(stockType)) {
-                List<StockItem> consumables = quarryInventoryService.getConsumableStockItems();
-                for (StockItem ci : consumables) {
-                    if (ci.getQuantity() != null && ci.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
-                        if (s.isEmpty() || (ci.getDescription() != null && ci.getDescription().toLowerCase().contains(s)) || (ci.getItemCode() != null && ci.getItemCode().toLowerCase().contains(s))) {
-                            Map<String, Object> m = new HashMap<>();
-                            m.put("category", "CONSUMABLE");
-                            m.put("categoryLabel", "Sarf Malzeme");
-                            m.put("id", ci.getId());
-                            m.put("code", ci.getItemCode());
-                            m.put("name", ci.getDescription() != null ? ci.getDescription() : ci.getItemCode());
-                            m.put("stoneType", "Sarf Malzeme");
-                            m.put("dimensions", "—");
-                            m.put("quantity", ci.getQuantity());
-                            m.put("unit", ci.getUnit() != null ? ci.getUnit() : "adet");
-                            m.put("unitPrice", ci.getUnitPrice());
-                            result.add(m);
+            List<StockItem> allQuarryCards = quarryInventoryService.getAllQuarryStockCards(null);
+            for (StockItem ci : allQuarryCards) {
+                if (ci.getItemCode().equals("O-MZ-TANK")) {
+                    continue;
+                }
+                if (ci.getQuantity() != null && ci.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
+                    String catCode = ci.getQuarryCategory() != null ? ci.getQuarryCategory().name() : "CONSUMABLE";
+                    String catLabel = ci.getQuarryCategory() != null ? ci.getQuarryCategory().getDisplayName() : "Sarf Malzeme";
+
+                    if (stockType != null && !stockType.isBlank()) {
+                        boolean match = stockType.equalsIgnoreCase(catCode)
+                                || ("CONSUMABLE".equalsIgnoreCase(stockType) && (ci.getQuarryCategory() == null || ci.getQuarryCategory() == com.ozerler.marble.model.enums.QuarryCategory.SARF_MALZEME));
+                        if (!match) {
+                            continue;
                         }
+                    }
+
+                    if (s.isEmpty() || (ci.getDescription() != null && ci.getDescription().toLowerCase().contains(s)) || (ci.getItemCode() != null && ci.getItemCode().toLowerCase().contains(s))) {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("category", catCode);
+                        m.put("categoryLabel", catLabel);
+                        m.put("id", ci.getId());
+                        m.put("code", ci.getItemCode());
+                        m.put("name", ci.getDescription() != null ? ci.getDescription() : ci.getItemCode());
+                        m.put("stoneType", catLabel);
+                        m.put("dimensions", "—");
+                        m.put("quantity", ci.getQuantity());
+                        m.put("unit", ci.getUnit() != null ? ci.getUnit() : "adet");
+                        m.put("unitPrice", ci.getUnitPrice());
+                        result.add(m);
                     }
                 }
             }
