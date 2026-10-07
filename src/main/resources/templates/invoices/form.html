@@ -8,244 +8,7 @@
 <div layout:fragment="content" class="erp-form-page max-w-6xl mx-auto space-y-6"
      th:data-initial-type="${defaultType != null ? defaultType.name() : 'SALES'}"
      th:data-initial-dept="${defaultDepartment != null ? defaultDepartment.name() : 'QUARRY'}"
-     x-data="{
-        invoiceType: $el.dataset.initialType || 'SALES',
-        department: $el.dataset.initialDept || 'QUARRY',
-        purchaseCategory: 'MAZOT',
-        directExpense: false,
-        destinationMode: 'CUSTOMER', // 'CUSTOMER' or 'INTERNAL'
-        targetDepartment: 'FACTORY',
-        taxRate: 20,
-        stockModalOpen: false,
-        stockCategoryFilter: '',
-        stockSearch: '',
-        stockItemsList: [],
-        stockLoading: false,
-
-        // Yeni Stok Kartı Açma Modalı (Madde 1)
-        createStockModalOpen: false,
-        createStockSubmitting: false,
-        createStockError: '',
-        newStockForm: {
-            category: 'MAZOT',
-            productName: '',
-            itemCode: '',
-            unit: 'litre',
-            unitPrice: '',
-            isExpense: false,
-            notes: ''
-        },
-        lines: [
-            { productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' }
-        ],
-        addLine() {
-            this.lines.push({ productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' });
-        },
-        removeLine(index) {
-            if (this.lines.length > 1) {
-                this.lines.splice(index, 1);
-            }
-        },
-        getLineCalcM2(line) {
-            if (line.unit === 'm.t.' && parseFloat(line.widthCm) > 0) {
-                return (((parseFloat(line.quantity) || 0) * parseFloat(line.widthCm)) / 100).toFixed(2);
-            }
-            return '';
-        },
-        get subtotal() {
-            let total = 0;
-            this.lines.forEach(l => {
-                const q = parseFloat(l.quantity) || 0;
-                const p = parseFloat(l.unitPrice) || 0;
-                total += (q * p);
-            });
-            return total;
-        },
-        get taxAmount() {
-            const rate = parseFloat(this.taxRate) || 0;
-            return (this.subtotal * (rate / 100));
-        },
-        get grandTotal() {
-            return (this.subtotal + this.taxAmount);
-        },
-        get subtotalFormatted() {
-            return this.subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        },
-        get taxAmountFormatted() {
-            return this.taxAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        },
-        get grandTotalFormatted() {
-            return this.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        },
-        onPurchaseCategoryChange(cat) {
-            this.purchaseCategory = cat;
-            if (cat === 'MAZOT') {
-                this.directExpense = false;
-                this.newStockForm.category = 'MAZOT';
-                this.newStockForm.unit = 'litre';
-                this.lines.forEach(l => {
-                    l.unit = 'litre';
-                    if (!l.productName) l.productName = 'Motorin (Mazot)';
-                });
-            } else if (cat === 'ELEKTRIK') {
-                this.directExpense = true;
-                this.newStockForm.category = 'ELEKTRIK';
-                this.newStockForm.unit = 'adet';
-                this.newStockForm.isExpense = true;
-                this.lines.forEach(l => {
-                    if (!l.productName) l.productName = 'Elektrik Faturası';
-                    l.unit = 'adet';
-                });
-            } else if (cat === 'SARF_MALZEME') {
-                this.directExpense = false;
-                this.newStockForm.category = 'SARF_MALZEME';
-                this.newStockForm.unit = 'adet';
-                this.lines.forEach(l => {
-                    if (l.unit !== 'adet' && l.unit !== 'm.t.' && l.unit !== 'litre') {
-                        l.unit = 'adet';
-                    }
-                });
-            } else if (cat === 'DIGER') {
-                this.newStockForm.category = 'DIGER';
-            }
-        },
-        openCreateStockModal(cat) {
-            this.createStockError = '';
-            const targetCat = cat || this.purchaseCategory || 'SARF_MALZEME';
-            this.newStockForm.category = targetCat;
-            this.newStockForm.productName = '';
-            this.newStockForm.itemCode = '';
-            this.newStockForm.unitPrice = '';
-            this.newStockForm.notes = '';
-            if (targetCat === 'MAZOT') {
-                this.newStockForm.unit = 'litre';
-                this.newStockForm.isExpense = false;
-            } else if (targetCat === 'ELEKTRIK') {
-                this.newStockForm.unit = 'adet';
-                this.newStockForm.isExpense = true;
-            } else {
-                this.newStockForm.unit = 'adet';
-                this.newStockForm.isExpense = false;
-            }
-            this.createStockModalOpen = true;
-        },
-        openCreateStockModalFromSelector() {
-            this.stockModalOpen = false;
-            this.openCreateStockModal(this.purchaseCategory);
-        },
-        onNewStockCategoryChange() {
-            if (this.newStockForm.category === 'MAZOT') {
-                this.newStockForm.unit = 'litre';
-                this.newStockForm.isExpense = false;
-            } else if (this.newStockForm.category === 'ELEKTRIK') {
-                this.newStockForm.unit = 'adet';
-                this.newStockForm.isExpense = true;
-            } else if (this.newStockForm.category === 'SARF_MALZEME') {
-                if (this.newStockForm.unit !== 'adet' && this.newStockForm.unit !== 'm.t.' && this.newStockForm.unit !== 'litre') {
-                    this.newStockForm.unit = 'adet';
-                }
-            }
-        },
-        async submitCreateStockCard() {
-            if (!this.newStockForm.productName || !this.newStockForm.productName.trim()) {
-                this.createStockError = 'Lütfen ürün/malzeme adını giriniz.';
-                return;
-            }
-            this.createStockSubmitting = true;
-            this.createStockError = '';
-            try {
-                const formData = new FormData();
-                formData.append('quarryCategory', this.newStockForm.category);
-                formData.append('productName', this.newStockForm.productName.trim());
-                if (this.newStockForm.itemCode) formData.append('itemCode', this.newStockForm.itemCode.trim());
-                formData.append('unit', this.newStockForm.unit);
-                if (this.newStockForm.unitPrice) formData.append('unitPrice', this.newStockForm.unitPrice);
-                formData.append('isExpense', this.newStockForm.isExpense ? 'true' : 'false');
-                if (this.newStockForm.notes) formData.append('notes', this.newStockForm.notes);
-
-                const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
-                const headers = {};
-                if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
-
-                const res = await fetch('/invoices/api/create-stock-card', {
-                    method: 'POST',
-                    headers: headers,
-                    body: formData
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    let targetLine;
-                    if (this.lines.length === 1 && !this.lines[0].productName) {
-                        targetLine = this.lines[0];
-                    } else {
-                        targetLine = { productName: '', description: '', quantity: 1, unit: 'adet', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' };
-                        this.lines.push(targetLine);
-                    }
-                    targetLine.productName = data.name;
-                    targetLine.description = 'Stok Kartı: ' + data.code;
-                    targetLine.quantity = 1;
-                    targetLine.unit = data.unit;
-                    targetLine.unitPrice = data.unitPrice || 0;
-                    targetLine.stockItemId = data.id;
-
-                    if (data.isExpense) {
-                        this.directExpense = true;
-                    }
-
-                    this.createStockModalOpen = false;
-                    this.createStockSubmitting = false;
-                } else {
-                    this.createStockError = data.message || 'Stok kartı oluşturulamadı.';
-                    this.createStockSubmitting = false;
-                }
-            } catch (err) {
-                this.createStockError = 'Bağlantı hatası: ' + err.message;
-                this.createStockSubmitting = false;
-            }
-        },
-        openStockModal() {
-            this.stockModalOpen = true;
-            this.fetchStock();
-        },
-        fetchStock() {
-            this.stockLoading = true;
-            let url = '/invoices/api/available-stock?';
-            if (this.department) url += 'department=' + encodeURIComponent(this.department) + '&';
-            if (this.stockCategoryFilter) url += 'type=' + encodeURIComponent(this.stockCategoryFilter) + '&';
-            if (this.stockSearch) url += 'search=' + encodeURIComponent(this.stockSearch) + '&';
-            if (this.invoiceType === 'PURCHASE') url += 'includeZero=true';
-            fetch(url)
-                .then(r => r.json())
-                .then(data => {
-                    this.stockItemsList = data;
-                    this.stockLoading = false;
-                })
-                .catch(() => { this.stockLoading = false; });
-        },
-        selectStockItem(item) {
-            let targetLine;
-            if (this.lines.length === 1 && !this.lines[0].productName) {
-                targetLine = this.lines[0];
-            } else {
-                targetLine = { productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' };
-                this.lines.push(targetLine);
-            }
-            targetLine.productName = item.name;
-            targetLine.description = (item.dimensions ? item.dimensions + ' ' : '') + (item.stoneType ? item.stoneType : '');
-            targetLine.quantity = (item.quantity && parseFloat(item.quantity) > 0) ? item.quantity : 1;
-            targetLine.unit = item.unit || (this.purchaseCategory === 'MAZOT' ? 'litre' : 'adet');
-            targetLine.widthCm = item.widthCm || '';
-            targetLine.unitPrice = item.unitPrice || 0;
-            targetLine.blockId = item.category === 'BLOCK' ? item.id : '';
-            targetLine.slabId = item.category === 'SLAB' ? item.id : '';
-            targetLine.stockItemId = (item.category === 'SIZED' || item.category === 'FUEL' || item.category === 'CONSUMABLE' || item.category === 'ELEKTRIK' || item.category === 'DIGER') ? item.id : '';
-
-            if (item.directExpense === true) {
-                this.directExpense = true;
-            }
-            this.stockModalOpen = false;
-        }
-     }">
+     x-data="invoiceForm($el)">
 
     <!-- Header & Breadcrumb -->
     <div class="erp-form-header">
@@ -1057,6 +820,250 @@
     </div>
 
 </div>
-<th:block layout:fragment="scripts"></th:block>
+<th:block layout:fragment="scripts">
+<script>
+function invoiceForm(el) {
+    return {
+        invoiceType: (el && el.dataset && el.dataset.initialType) || 'SALES',
+        department: (el && el.dataset && el.dataset.initialDept) || 'QUARRY',
+        purchaseCategory: 'MAZOT',
+        directExpense: false,
+        destinationMode: 'CUSTOMER', // 'CUSTOMER' or 'INTERNAL'
+        targetDepartment: 'FACTORY',
+        taxRate: 20,
+        stockModalOpen: false,
+        stockCategoryFilter: '',
+        stockSearch: '',
+        stockItemsList: [],
+        stockLoading: false,
+
+        // Yeni Stok Kartı Açma Modalı (Madde 1)
+        createStockModalOpen: false,
+        createStockSubmitting: false,
+        createStockError: '',
+        newStockForm: {
+            category: 'MAZOT',
+            productName: '',
+            itemCode: '',
+            unit: 'litre',
+            unitPrice: '',
+            isExpense: false,
+            notes: ''
+        },
+        lines: [
+            { productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' }
+        ],
+        addLine() {
+            this.lines.push({ productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' });
+        },
+        removeLine(index) {
+            if (this.lines.length > 1) {
+                this.lines.splice(index, 1);
+            }
+        },
+        getLineCalcM2(line) {
+            if (line.unit === 'm.t.' && parseFloat(line.widthCm) > 0) {
+                return (((parseFloat(line.quantity) || 0) * parseFloat(line.widthCm)) / 100).toFixed(2);
+            }
+            return '';
+        },
+        get subtotal() {
+            let total = 0;
+            this.lines.forEach(l => {
+                const q = parseFloat(l.quantity) || 0;
+                const p = parseFloat(l.unitPrice) || 0;
+                total += (q * p);
+            });
+            return total;
+        },
+        get taxAmount() {
+            const rate = parseFloat(this.taxRate) || 0;
+            return (this.subtotal * (rate / 100));
+        },
+        get grandTotal() {
+            return (this.subtotal + this.taxAmount);
+        },
+        get subtotalFormatted() {
+            return this.subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        get taxAmountFormatted() {
+            return this.taxAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        get grandTotalFormatted() {
+            return this.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        onPurchaseCategoryChange(cat) {
+            this.purchaseCategory = cat;
+            if (cat === 'MAZOT') {
+                this.directExpense = false;
+                this.newStockForm.category = 'MAZOT';
+                this.newStockForm.unit = 'litre';
+                this.lines.forEach(l => {
+                    l.unit = 'litre';
+                    if (!l.productName) l.productName = 'Motorin (Mazot)';
+                });
+            } else if (cat === 'ELEKTRIK') {
+                this.directExpense = true;
+                this.newStockForm.category = 'ELEKTRIK';
+                this.newStockForm.unit = 'adet';
+                this.newStockForm.isExpense = true;
+                this.lines.forEach(l => {
+                    if (!l.productName) l.productName = 'Elektrik Faturası';
+                    l.unit = 'adet';
+                });
+            } else if (cat === 'SARF_MALZEME') {
+                this.directExpense = false;
+                this.newStockForm.category = 'SARF_MALZEME';
+                this.newStockForm.unit = 'adet';
+                this.lines.forEach(l => {
+                    if (l.unit !== 'adet' && l.unit !== 'm.t.' && l.unit !== 'litre') {
+                        l.unit = 'adet';
+                    }
+                });
+            } else if (cat === 'DIGER') {
+                this.newStockForm.category = 'DIGER';
+            }
+        },
+        openCreateStockModal(cat) {
+            this.createStockError = '';
+            const targetCat = cat || this.purchaseCategory || 'SARF_MALZEME';
+            this.newStockForm.category = targetCat;
+            this.newStockForm.productName = '';
+            this.newStockForm.itemCode = '';
+            this.newStockForm.unitPrice = '';
+            this.newStockForm.notes = '';
+            if (targetCat === 'MAZOT') {
+                this.newStockForm.unit = 'litre';
+                this.newStockForm.isExpense = false;
+            } else if (targetCat === 'ELEKTRIK') {
+                this.newStockForm.unit = 'adet';
+                this.newStockForm.isExpense = true;
+            } else {
+                this.newStockForm.unit = 'adet';
+                this.newStockForm.isExpense = false;
+            }
+            this.createStockModalOpen = true;
+        },
+        openCreateStockModalFromSelector() {
+            this.stockModalOpen = false;
+            this.openCreateStockModal(this.purchaseCategory);
+        },
+        onNewStockCategoryChange() {
+            if (this.newStockForm.category === 'MAZOT') {
+                this.newStockForm.unit = 'litre';
+                this.newStockForm.isExpense = false;
+            } else if (this.newStockForm.category === 'ELEKTRIK') {
+                this.newStockForm.unit = 'adet';
+                this.newStockForm.isExpense = true;
+            } else if (this.newStockForm.category === 'SARF_MALZEME') {
+                if (this.newStockForm.unit !== 'adet' && this.newStockForm.unit !== 'm.t.' && this.newStockForm.unit !== 'litre') {
+                    this.newStockForm.unit = 'adet';
+                }
+            }
+        },
+        async submitCreateStockCard() {
+            if (!this.newStockForm.productName || !this.newStockForm.productName.trim()) {
+                this.createStockError = 'Lütfen ürün/malzeme adını giriniz.';
+                return;
+            }
+            this.createStockSubmitting = true;
+            this.createStockError = '';
+            try {
+                const formData = new FormData();
+                formData.append('quarryCategory', this.newStockForm.category);
+                formData.append('productName', this.newStockForm.productName.trim());
+                if (this.newStockForm.itemCode) formData.append('itemCode', this.newStockForm.itemCode.trim());
+                formData.append('unit', this.newStockForm.unit);
+                if (this.newStockForm.unitPrice) formData.append('unitPrice', this.newStockForm.unitPrice);
+                formData.append('isExpense', this.newStockForm.isExpense ? 'true' : 'false');
+                if (this.newStockForm.notes) formData.append('notes', this.newStockForm.notes);
+
+                const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
+                const headers = {};
+                if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+
+                const res = await fetch('/invoices/api/create-stock-card', {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    let targetLine;
+                    if (this.lines.length === 1 && !this.lines[0].productName) {
+                        targetLine = this.lines[0];
+                    } else {
+                        targetLine = { productName: '', description: '', quantity: 1, unit: 'adet', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' };
+                        this.lines.push(targetLine);
+                    }
+                    targetLine.productName = data.name;
+                    targetLine.description = 'Stok Kartı: ' + data.code;
+                    targetLine.quantity = 1;
+                    targetLine.unit = data.unit;
+                    targetLine.unitPrice = data.unitPrice || 0;
+                    targetLine.stockItemId = data.id;
+
+                    if (data.isExpense) {
+                        this.directExpense = true;
+                    }
+
+                    this.createStockModalOpen = false;
+                    this.createStockSubmitting = false;
+                } else {
+                    this.createStockError = data.message || 'Stok kartı oluşturulamadı.';
+                    this.createStockSubmitting = false;
+                }
+            } catch (err) {
+                this.createStockError = 'Bağlantı hatası: ' + err.message;
+                this.createStockSubmitting = false;
+            }
+        },
+        openStockModal() {
+            this.stockModalOpen = true;
+            this.fetchStock();
+        },
+        fetchStock() {
+            this.stockLoading = true;
+            let url = '/invoices/api/available-stock?';
+            if (this.department) url += 'department=' + encodeURIComponent(this.department) + '&';
+            if (this.stockCategoryFilter) url += 'type=' + encodeURIComponent(this.stockCategoryFilter) + '&';
+            if (this.stockSearch) url += 'search=' + encodeURIComponent(this.stockSearch) + '&';
+            if (this.invoiceType === 'PURCHASE') url += 'includeZero=true';
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    this.stockItemsList = data;
+                    this.stockLoading = false;
+                })
+                .catch(() => { this.stockLoading = false; });
+        },
+        selectStockItem(item) {
+            let targetLine;
+            if (this.lines.length === 1 && !this.lines[0].productName) {
+                targetLine = this.lines[0];
+            } else {
+                targetLine = { productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' };
+                this.lines.push(targetLine);
+            }
+            targetLine.productName = item.name;
+            targetLine.description = (item.dimensions ? item.dimensions + ' ' : '') + (item.stoneType ? item.stoneType : '');
+            targetLine.quantity = (item.quantity && parseFloat(item.quantity) > 0) ? item.quantity : 1;
+            targetLine.unit = item.unit || (this.purchaseCategory === 'MAZOT' ? 'litre' : 'adet');
+            targetLine.widthCm = item.widthCm || '';
+            targetLine.unitPrice = item.unitPrice || 0;
+            targetLine.blockId = item.category === 'BLOCK' ? item.id : '';
+            targetLine.slabId = item.category === 'SLAB' ? item.id : '';
+            targetLine.stockItemId = (item.category === 'SIZED' || item.category === 'FUEL' || item.category === 'CONSUMABLE' || item.category === 'ELEKTRIK' || item.category === 'DIGER') ? item.id : '';
+
+            if (item.directExpense === true) {
+                this.directExpense = true;
+            }
+            this.stockModalOpen = false;
+        }
+    };
+}
+window.invoiceForm = invoiceForm;
+</script>
+</th:block>
 </body>
 </html>

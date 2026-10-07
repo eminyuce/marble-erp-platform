@@ -103,7 +103,7 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20261005-log-kpi-sync"
+  asset-version: "20261007-email-template-engine"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy

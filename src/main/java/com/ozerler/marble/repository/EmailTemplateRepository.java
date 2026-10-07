@@ -9,4 +9,8 @@ import java.util.Optional;
 @Repository
 public interface EmailTemplateRepository extends JpaRepository<EmailTemplate, Long> {
     Optional<EmailTemplate> findByTemplateKey(String templateKey);
+    boolean existsByTemplateKey(String templateKey);
+    java.util.List<EmailTemplate> findAllByOrderByTemplateNameAsc();
+    java.util.List<EmailTemplate> findByCategoryOrderByTemplateNameAsc(String category);
+    long countByIsActiveTrue();
 }

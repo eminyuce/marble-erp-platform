@@ -20,6 +20,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ozerler.marble.dto.email.BaseEmailModel;
+import com.ozerler.marble.dto.email.EmailTemplateCatalog;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -54,7 +56,20 @@ public class EmailService {
 
     @Transactional(readOnly = true)
     public List<EmailTemplate> getAllTemplates() {
-        return templateRepository.findAll();
+        return templateRepository.findAllByOrderByTemplateNameAsc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EmailTemplate> getTemplatesByCategory(String category) {
+        if (StringUtils.isBlank(category) || "ALL".equalsIgnoreCase(category)) {
+            return getAllTemplates();
+        }
+        return templateRepository.findByCategoryOrderByTemplateNameAsc(category.trim());
+    }
+
+    @Transactional(readOnly = true)
+    public long countActiveTemplates() {
+        return templateRepository.countByIsActiveTrue();
     }
 
     @Cacheable(value = "emailTemplates", key = "#key.trim().toUpperCase()")
@@ -82,7 +97,48 @@ public class EmailService {
 
     @CacheEvict(value = "emailTemplates", allEntries = true)
     @Transactional
-    public EmailTemplate updateTemplate(Long id, String subject, String bodyHtml, boolean isActive) {
+    public EmailTemplate createTemplate(String templateKey, String templateName, String category, String description,
+                                         String subject, String bodyHtml, String placeholders, boolean isActive) {
+        if (StringUtils.isBlank(templateKey)) {
+            throw new IllegalArgumentException("Şablon anahtarı (templateKey) zorunludur.");
+        }
+        String cleanKey = templateKey.trim().toUpperCase();
+        if (templateRepository.existsByTemplateKey(cleanKey)) {
+            throw new IllegalArgumentException("Bu şablon anahtarı ('" + cleanKey + "') zaten sistemde mevcuttur.");
+        }
+        if (StringUtils.isBlank(templateName)) {
+            throw new IllegalArgumentException("Şablon başlığı zorunludur.");
+        }
+        if (StringUtils.isBlank(subject)) {
+            throw new IllegalArgumentException(getMessage("error.email.subject.required"));
+        }
+        if (StringUtils.isBlank(bodyHtml)) {
+            throw new IllegalArgumentException(getMessage("error.email.body.required"));
+        }
+
+        validateTemplateSyntax(subject);
+        validateTemplateSyntax(bodyHtml);
+
+        EmailTemplate template = EmailTemplate.builder()
+                .templateKey(cleanKey)
+                .templateName(templateName.trim())
+                .category(StringUtils.isNotBlank(category) ? category.trim() : "Genel")
+                .description(StringUtils.trimToNull(description))
+                .subject(subject.trim())
+                .bodyHtml(bodyHtml.trim())
+                .placeholders(StringUtils.trimToNull(placeholders))
+                .isActive(isActive)
+                .build();
+
+        EmailTemplate saved = templateRepository.save(template);
+        log.info("Email template '{}' (ID: {}) created successfully.", saved.getTemplateKey(), saved.getId());
+        return saved;
+    }
+
+    @CacheEvict(value = "emailTemplates", allEntries = true)
+    @Transactional
+    public EmailTemplate updateTemplate(Long id, String templateName, String category, String description,
+                                         String subject, String bodyHtml, String placeholders, boolean isActive) {
         if (StringUtils.isBlank(subject)) {
             throw new IllegalArgumentException(getMessage("error.email.subject.required"));
         }
@@ -94,13 +150,39 @@ public class EmailService {
         validateTemplateSyntax(bodyHtml);
 
         EmailTemplate template = getTemplateById(id);
+        if (StringUtils.isNotBlank(templateName)) {
+            template.setTemplateName(templateName.trim());
+        }
+        if (StringUtils.isNotBlank(category)) {
+            template.setCategory(category.trim());
+        }
+        template.setDescription(StringUtils.trimToNull(description));
         template.setSubject(subject.trim());
         template.setBodyHtml(bodyHtml.trim());
+        if (placeholders != null) {
+            template.setPlaceholders(StringUtils.trimToNull(placeholders));
+        }
         template.setIsActive(isActive);
 
         EmailTemplate updated = templateRepository.save(template);
         log.info("Email template '{}' (ID: {}) updated successfully by admin.", updated.getTemplateKey(), id);
         return updated;
+    }
+
+    @CacheEvict(value = "emailTemplates", allEntries = true)
+    @Transactional
+    public EmailTemplate updateTemplate(Long id, String subject, String bodyHtml, boolean isActive) {
+        EmailTemplate existing = getTemplateById(id);
+        return updateTemplate(id, existing.getTemplateName(), existing.getCategory(), existing.getDescription(),
+                subject, bodyHtml, existing.getPlaceholders(), isActive);
+    }
+
+    @CacheEvict(value = "emailTemplates", allEntries = true)
+    @Transactional
+    public void deleteTemplate(Long id) {
+        EmailTemplate template = getTemplateById(id);
+        templateRepository.delete(template);
+        log.info("Email template '{}' (ID: {}) deleted successfully.", template.getTemplateKey(), id);
     }
 
     /**
@@ -207,6 +289,13 @@ public class EmailService {
      * Generates a live preview of an email template using standard domain sample variables.
      */
     public Optional<EmailPreviewDto> previewTemplate(String templateKey) {
+        return previewTemplate(templateKey, Collections.emptyMap());
+    }
+
+    /**
+     * Generates a live preview of an email template with optional overrides.
+     */
+    public Optional<EmailPreviewDto> previewTemplate(String templateKey, Map<String, String> customVars) {
         if (templateKey == null || templateKey.isBlank()) {
             return Optional.empty();
         }
@@ -215,7 +304,10 @@ public class EmailService {
             return Optional.empty();
         }
         EmailTemplate t = templateOpt.get();
-        Map<String, String> sampleVars = getDefaultSampleVariables();
+        Map<String, String> sampleVars = new HashMap<>(getSampleVariablesForTemplate(templateKey));
+        if (customVars != null && !customVars.isEmpty()) {
+            sampleVars.putAll(customVars);
+        }
 
         String renderedSubject = renderSubject(t.getSubject(), sampleVars);
         String renderedHtml = renderHtml(t.getBodyHtml(), sampleVars);
@@ -228,6 +320,20 @@ public class EmailService {
                 .rawSubject(t.getSubject())
                 .rawHtml(t.getBodyHtml())
                 .build());
+    }
+
+    /**
+     * Resolves sample variables for a specific template key using catalog metadata.
+     */
+    public Map<String, String> getSampleVariablesForTemplate(String templateKey) {
+        Map<String, String> vars = new HashMap<>(getDefaultSampleVariables());
+        if (templateKey != null) {
+            Map<String, String> catalogSamples = EmailTemplateCatalog.getSampleVariables(templateKey);
+            if (!catalogSamples.isEmpty()) {
+                vars.putAll(catalogSamples);
+            }
+        }
+        return vars;
     }
 
     /**
@@ -254,7 +360,9 @@ public class EmailService {
      * Sample values used to render the live preview, in the same order as {@link #placeholderKeys}.
      */
     public List<EmailPlaceholderSample> placeholderSamples(EmailTemplate template) {
-        Map<String, String> samples = getDefaultSampleVariables();
+        Map<String, String> samples = template != null
+                ? getSampleVariablesForTemplate(template.getTemplateKey())
+                : getDefaultSampleVariables();
         List<EmailPlaceholderSample> result = new ArrayList<>();
         for (String key : placeholderKeys(template)) {
             String value = samples.get(key);
@@ -325,6 +433,13 @@ public class EmailService {
         sampleVars.put("availableStock", "210.00");
         sampleVars.put("shortfall", "140.00");
         sampleVars.put("completedM2", "145.00 m2");
+
+        // Merge standard enterprise catalog samples
+        for (EmailTemplateCatalog.TemplateMeta meta : EmailTemplateCatalog.getAll()) {
+            if (meta.getSampleModel() != null) {
+                sampleVars.putAll(meta.getSampleModel().toVariables());
+            }
+        }
 
         return sampleVars;
     }
@@ -422,5 +537,16 @@ public class EmailService {
         String html = renderHtml(t.getBodyHtml(), variables);
 
         return sendEmail(to, subject, html);
+    }
+
+    /**
+     * Strongly-typed dispatch using an ERP email model.
+     */
+    public boolean sendTemplatedEmail(String to, BaseEmailModel model) {
+        if (model == null) {
+            log.warn("Cannot send email: model is null");
+            return false;
+        }
+        return sendTemplatedEmail(to, model.getTemplateKey(), model.toVariables());
     }
 }

@@ -32,6 +32,13 @@ public class EmailTemplate extends AuditableEntity {
     @Column(name = "placeholders", length = 500)
     private String placeholders;
 
+    @Column(name = "category", length = 60)
+    @Builder.Default
+    private String category = "Genel";
+
+    @Column(name = "description", length = 300)
+    private String description;
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;

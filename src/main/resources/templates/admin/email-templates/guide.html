@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>E-Posta Şablon Motoru Kılavuzu &amp; Modeller | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-guide-page max-w-5xl mx-auto space-y-8"
+     x-data="{ activeSection: '' }">
+
+    <!-- Top Bar & Breadcrumb -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('E-Posta Şablon Motoru', @{/admin/email-templates}, 'Kullanım Kılavuzu & Modeller')}"></div>
+        <div class="flex items-center gap-2">
+            <a th:href="@{/admin/email-templates}" class="erp-btn-secondary">
+                <i data-lucide="arrow-left"></i>
+                <span>Şablon Listesine Dön</span>
+            </a>
+            <a th:href="@{/admin/settings(tab='smtp')}" class="erp-btn-secondary">
+                <i data-lucide="settings"></i>
+                <span>SMTP Ayarları</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-sky-950 text-white rounded-3xl p-8 shadow-md relative overflow-hidden">
+        <div class="relative z-10 max-w-3xl space-y-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 text-xs font-bold border border-sky-400/30">
+                <i data-lucide="mail-check" class="w-4 h-4"></i> Kurumsal E-Posta Şablon Motoru v1.0
+            </div>
+            <h1 class="text-3xl font-black tracking-tight text-white">E-Posta Şablonları &amp; Java Modelleri Kılavuzu</h1>
+            <p class="text-sm text-slate-300 leading-relaxed">
+                Özerler Mermer ERP platformunda çalışan 10 kurumsal e-posta bildiriminin tetiklenme senaryoları, Java DTO modelleri, kullanılabilir dinamik değişkenleri ve kod örnekleri bu kılavuzda toplanmıştır.
+            </p>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Index -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-3">
+        <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Hızlı Şablon Dizini (10 Kurumsal Şablon)</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+            <a th:each="meta, iter : ${catalogList}"
+               th:href="'#' + ${meta.key}"
+               class="p-2.5 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 transition flex items-center justify-between group">
+                <span class="font-bold text-slate-800 group-hover:text-sky-700 flex items-center gap-1.5 truncate">
+                    <span class="text-slate-400 font-mono text-[10px]" th:text="${iter.count + '.'}">1.</span>
+                    <span th:text="${meta.name}">Şablon Adı</span>
+                </span>
+                <span class="font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded shrink-0" th:text="${meta.key}">KEY</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Architecture & Guidelines Box -->
+    <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-6 text-xs text-amber-950 space-y-2">
+        <h4 class="font-black text-sm flex items-center gap-2 text-amber-900">
+            <i data-lucide="shield-check" class="w-4 h-4 text-amber-600"></i>
+            E-Posta Motoru Çalışma Prensibi &amp; Güvenlik Kuralları
+        </h4>
+        <ul class="list-disc list-inside space-y-1 text-amber-900/90 leading-relaxed">
+            <li><strong>XSS Koruması:</strong> Gönderilen tüm model alanları (müşteri adı, notlar vb.) varsayılan olarak HTML-escape işlemine tabi tutulur. Kullanıcıdan gelen zararlı script kodları e-posta istemcilerinde çalışamaz.</li>
+            <li><strong>SMTP Header Injection Koruması:</strong> Konu satırındaki (subject) tüm satır sonu ve taşıyıcı dönüş (CR/LF) karakterleri otomatik olarak temizlenir.</li>
+            <li><strong>Güçlü Tipli Java Modelleri:</strong> Her e-posta için <code>BaseEmailModel</code> arayüzünü uygulayan bir Java sınıfı mevcuttur. <code>emailService.sendTemplatedEmail(to, model)</code> metoduyla tek satırda gönderim yapılabilir.</li>
+            <li><strong>Önizleme Güvencesi:</strong> Bir şablon değiştirildiğinde veya yayına alınmadan önce mutlaka önizleme sayfasından canlı test gönderimi yapılmalıdır.</li>
+        </ul>
+    </div>
+
+    <!-- 10 Template Documentation Cards -->
+    <div class="space-y-8">
+        <article th:each="meta, iter : ${catalogList}"
+                 th:id="${meta.key}"
+                 class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-20">
+            
+            <!-- Header -->
+            <div class="p-6 bg-slate-50/80 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="font-mono text-xs font-black px-2 py-0.5 rounded-md bg-sky-100 text-sky-800" th:text="'#' + ${iter.count} + ' ' + ${meta.key}">#1 ORDER_CONFIRMATION</span>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700" th:text="${meta.category}">Kategori</span>
+                        <span class="font-mono text-[11px] text-slate-500" th:text="${meta.modelClass.simpleName}">ModelClass</span>
+                    </div>
+                    <h2 class="text-xl font-black text-slate-900 pt-1" th:text="${meta.name}">Şablon Başlığı</h2>
+                    <p class="text-xs text-slate-600" th:text="${meta.description}">Açıklama</p>
+                </div>
+                <div class="shrink-0 flex items-center gap-2">
+                    <a th:href="@{/admin/email-templates/{id}/preview(id=1)}"
+                       th:attr="href=@{/admin/email-templates}"
+                       class="erp-btn-secondary text-xs">
+                        <i data-lucide="eye" class="w-3.5 h-3.5 text-sky-600"></i>
+                        <span>Şablonu Yönet</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- İş Akışı ve Tetiklenme Senaryosu -->
+                <div class="space-y-1.5">
+                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Tetiklenme Senaryosu &amp; İş Süreci</h3>
+                    <p class="text-xs text-slate-800 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200" th:text="${meta.usageScenario}">
+                        Senaryo metni
+                    </p>
+                </div>
+
+                <!-- Parametreler Tablosu -->
+                <div class="space-y-2">
+                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Kullanılabilir Değişkenler (Model Placeholders)</h3>
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                                <tr>
+                                    <th class="p-2.5">Değişken Token</th>
+                                    <th class="p-2.5">Parametre Tanımı</th>
+                                    <th class="p-2.5">Java Tipi</th>
+                                    <th class="p-2.5">Örnek Veri</th>
+                                    <th class="p-2.5">Açıklama</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr th:each="p : ${meta.placeholders}" class="hover:bg-slate-50/50">
+                                    <td class="p-2.5 font-mono font-bold text-sky-700" th:text="'{{' + ${p.key} + '}}'">{{token}}</td>
+                                    <td class="p-2.5 font-bold text-slate-900" th:text="${p.label}">Tanım</td>
+                                    <td class="p-2.5 font-mono text-[11px] text-purple-700" th:text="${p.type}">String</td>
+                                    <td class="p-2.5 font-mono text-slate-600 bg-slate-50/60" th:text="${p.sampleValue}">Örnek</td>
+                                    <td class="p-2.5 text-slate-500 text-[11px]" th:text="${p.description}">Açıklama</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Java Kod Örneği -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Java Servis Kullanım Örneği</h3>
+                        <span class="text-[11px] text-slate-400 font-mono">com.ozerler.marble.service.EmailService</span>
+                    </div>
+                    <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 shadow-inner">
+                        <pre th:text="${meta.javaSnippet}">// Java code</pre>
+                    </div>
+                </div>
+            </div>
+
+        </article>
+    </div>
+
+</div>
+</body>
+</html>

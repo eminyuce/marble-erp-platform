@@ -262,7 +262,7 @@
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
                             <h3 class="admin-mega-card-title">Sistem</h3>
-                            <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">3</span>
+                            <span class="admin-mega-count" sec:authorize="hasRole('ADMIN')">4</span>
                             <span class="admin-mega-count" sec:authorize="!hasRole('ADMIN')">1</span>
                         </header>
                         <div class="admin-mega-card-body">
@@ -275,6 +275,11 @@
                                data-search="ayar smtp 2fa recaptcha sistem" title="Sistem Ayarları">
                                 <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
                                 <span>Sistem Ayarları</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/admin/email-templates}" sec:authorize="hasRole('ADMIN')"
+                               data-search="eposta e-posta sablon mail template engine bildirim smtp" title="E-Posta Şablon Motoru">
+                                <i data-lucide="mail" aria-hidden="true"></i>
+                                <span>E-Posta Şablon Motoru</span>
                             </a>
                             <a class="admin-mega-item" th:href="@{/admin/dashboard/systemhealth/}"
                                data-search="sağlık health actuator izleme" title="Sistem Sağlığı">

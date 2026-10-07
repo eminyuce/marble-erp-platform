@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>E-Posta Şablon Motoru | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="emailTemplatesIndexPage()"
+     x-init="window.emailTemplatesState = $data">
+
+    <!-- Header Section -->
+    <div class="erp-list-header">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Sistem', @{/admin/settings}, 'E-Posta Şablon Motoru')}"></div>
+            <h2 class="admin-page-title flex items-center gap-2.5">
+                <i data-lucide="mail" class="w-7 h-7 text-sky-600 inline-block"></i>
+                <span>E-Posta Şablon Motoru</span>
+            </h2>
+            <p class="erp-list-lead">
+                Özerler Mermer kurumsal işlem bildirimlerini, SMTP servis entegrasyonunu, dinamik model değişkenlerini ve zengin HTML e-posta tasarımlarını yönetin.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Her şablon güçlü Java DTO modelleri ile beslenir. İncelemek ve canlı test e-postası göndermek için tablodan satıra tıklayınız.')}"></span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Alert / Messages -->
+    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-2" role="alert">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 shrink-0"></i>
+        <span th:text="${successMessage}">İşlem başarılı</span>
+    </div>
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center gap-2" role="alert">
+        <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 shrink-0"></i>
+        <span th:text="${errorMessage}">Hata oluştu</span>
+    </div>
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="categoryFilter === '' ? 'erp-summary-card--active ring-2 ring-sky-500' : ''"
+                @click="setCategoryFilter('')">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold flex items-center gap-1.5">
+                <i data-lucide="mail" class="w-3.5 h-3.5 text-sky-600"></i> Toplam Şablon
+            </div>
+            <div class="text-xl font-black text-slate-900 mt-1">
+                <span th:text="${kpi.totalCount}">10</span> adet
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Sistem ve operasyon şablonları</div>
+        </button>
+
+        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
+                :class="categoryFilter === 'ACTIVE' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setCategoryFilter('ACTIVE')">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1.5">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i> Aktif Bildirimler
+            </div>
+            <div class="text-xl font-black text-emerald-700 mt-1">
+                <span th:text="${kpi.activeCount}">10</span> aktif
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Tetiklenmeye hazır şablonlar</div>
+        </button>
+
+        <a th:href="@{/admin/settings(tab='smtp')}" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left transition-all hover:border-slate-300 block group">
+            <div class="text-[11px] uppercase tracking-wide text-indigo-600 font-semibold flex items-center justify-between">
+                <span class="flex items-center gap-1.5"><i data-lucide="server" class="w-3.5 h-3.5"></i> SMTP Bağlantısı</span>
+                <i data-lucide="arrow-up-right" class="w-3 h-3 text-slate-400 group-hover:text-indigo-600 transition"></i>
+            </div>
+            <div class="text-lg font-black mt-1 flex items-center gap-2"
+                 th:classappend="${kpi.smtpReady ? 'text-emerald-700' : 'text-amber-700'}">
+                <span class="w-2.5 h-2.5 rounded-full" th:classappend="${kpi.smtpReady ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}"></span>
+                <span th:text="${kpi.smtpReady ? 'Aktif / Hazır' : 'Yapılandırılmadı'}">Aktif</span>
+            </div>
+            <div class="text-[11px] text-slate-500 truncate mt-0.5" th:text="${kpi.smtpHost}">smtp.office365.com</div>
+        </a>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold flex items-center gap-1.5">
+                <i data-lucide="layers" class="w-3.5 h-3.5 text-purple-600"></i> Şablon Kategorileri
+            </div>
+            <div class="text-xl font-black text-slate-900 mt-1">
+                <span th:text="${kpi.categoriesCount}">9</span> kategori
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Satış, Sevkiyat, Finans, Üretim vb.</div>
+        </div>
+    </div>
+
+    <!-- Operational Filter Chips -->
+    <div class="erp-yard-filters flex flex-wrap gap-2 pt-1 pb-1">
+        <button type="button" class="erp-yard-chip"
+                :class="categoryFilter === '' ? 'erp-yard-chip--active' : ''"
+                @click="setCategoryFilter('')">Tümü (<span th:text="${allCount}">10</span>)</button>
+        <button type="button" class="erp-yard-chip"
+                :class="categoryFilter === 'Sipariş & Satış' ? 'erp-yard-chip--active' : ''"
+                @click="setCategoryFilter('Sipariş & Satış')">
+            <i data-lucide="shopping-bag" class="w-3.5 h-3.5 inline mr-1"></i> Sipariş &amp; Satış
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="categoryFilter === 'Sevkiyat & Lojistik' ? 'erp-yard-chip--active' : ''"
+                @click="setCategoryFilter('Sevkiyat & Lojistik')">
+            <i data-lucide="truck" class="w-3.5 h-3.5 inline mr-1"></i> Sevkiyat &amp; Lojistik
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="categoryFilter === 'Finans & Muhasebe' ? 'erp-yard-chip--active' : ''"
+                @click="setCategoryFilter('Finans & Muhasebe')">
+            <i data-lucide="receipt" class="w-3.5 h-3.5 inline mr-1"></i> Finans &amp; Fatura
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="categoryFilter === 'Teklif & Pazarlama' ? 'erp-yard-chip--active' : ''"
+                @click="setCategoryFilter('Teklif & Pazarlama')">
+            <i data-lucide="file-text" class="w-3.5 h-3.5 inline mr-1"></i> Teklif &amp; Proforma
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="categoryFilter === 'Depo & Satınalma' ? 'erp-yard-chip--active' : ''"
+                @click="setCategoryFilter('Depo & Satınalma')">
+            <i data-lucide="alert-triangle" class="w-3.5 h-3.5 inline mr-1"></i> Depo &amp; Stok Alarmı
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="categoryFilter === 'Üretim & Fabrika' ? 'erp-yard-chip--active' : ''"
+                @click="setCategoryFilter('Üretim & Fabrika')">
+            <i data-lucide="hammer" class="w-3.5 h-3.5 inline mr-1"></i> Üretim &amp; Fabrika
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="categoryFilter === 'Kalite Kontrol' ? 'erp-yard-chip--active' : ''"
+                @click="setCategoryFilter('Kalite Kontrol')">
+            <i data-lucide="shield-alert" class="w-3.5 h-3.5 inline mr-1"></i> Kalite &amp; Karantina
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="categoryFilter === 'Finans & Cari' ? 'erp-yard-chip--active' : ''"
+                @click="setCategoryFilter('Finans & Cari')">
+            <i data-lucide="scale" class="w-3.5 h-3.5 inline mr-1"></i> Cari Mutabakat
+        </button>
+        <button type="button" class="erp-yard-chip"
+                :class="categoryFilter === 'Sistem & Güvenlik' ? 'erp-yard-chip--active' : ''"
+                @click="setCategoryFilter('Sistem & Güvenlik')">
+            <i data-lucide="key-round" class="w-3.5 h-3.5 inline mr-1"></i> Sistem &amp; Güvenlik
+        </button>
+    </div>
+
+    <!-- Standard ERP Toolbar -->
+    <div class="erp-toolbar flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
+            <a th:href="@{/admin/email-templates/create}" class="erp-btn-primary">
+                <i data-lucide="plus"></i>
+                <span>Yeni Şablon Ekle</span>
+            </a>
+            <a th:href="@{/admin/email-templates/guide}" class="erp-btn-secondary">
+                <i data-lucide="book-open"></i>
+                <span>Kullanım Kılavuzu &amp; Modeller</span>
+            </a>
+            <a th:href="@{/admin/settings(tab='smtp')}" class="erp-btn-secondary">
+                <i data-lucide="settings-2"></i>
+                <span>SMTP Yapılandırması</span>
+            </a>
+        </div>
+        <div class="flex items-center gap-2">
+            <div th:replace="~{fragments/list-chrome :: search('Şablon, anahtar veya konu ara...', 'search-templates')}"></div>
+            <div th:replace="~{fragments/list-chrome :: exportDropdown('email-templates-table', 'E-Posta Şablonları')}"></div>
+        </div>
+    </div>
+
+    <!-- DataGrid Shell -->
+    <div th:replace="~{fragments/list-chrome :: gridShell('email-templates-table')}"></div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+function emailTemplatesIndexPage() {
+    return {
+        categoryFilter: /*[[${selectedCategory != null and selectedCategory != 'ALL' ? selectedCategory : ''}]]*/ '',
+        setCategoryFilter(cat) {
+            this.categoryFilter = cat;
+            if (window.emailTemplatesTable) {
+                if (!cat) {
+                    window.emailTemplatesTable.clearFilter();
+                } else if (cat === 'ACTIVE') {
+                    window.emailTemplatesTable.setFilter('active', '=', true);
+                } else {
+                    window.emailTemplatesTable.setFilter('category', '=', cat);
+                }
+            }
+        }
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const tableEl = document.getElementById('email-templates-table');
+    if (!tableEl) return;
+
+    const table = new Tabulator('#email-templates-table', {
+        ...window.erpGridDefaults?.(),
+        ajaxURL: '/admin/email-templates/data',
+        ajaxResponse: function(url, params, response) {
+            return response;
+        },
+        paginationMode: 'local',
+        pagination: true,
+        paginationSize: 20,
+        initialSort: [
+            { column: 'category', dir: 'asc' },
+            { column: 'name', dir: 'asc' }
+        ],
+        columns: [
+            window.erpResponsiveCollapseColumn ? window.erpResponsiveCollapseColumn() : { formatter: 'responsiveCollapse', width: 30, minWidth: 30, hozAlign: 'center', resizable: false, headerSort: false, responsive: 0 },
+            window.erpIndexColumn ? window.erpIndexColumn() : { title: '#', formatter: 'rownum', width: 45, hozAlign: 'center', headerSort: false, responsive: 0 },
+            {
+                title: 'Kategori',
+                field: 'category',
+                width: 150,
+                responsive: 0,
+                formatter: function (cell) {
+                    const val = cell.getValue() || 'Genel';
+                    let color = 'bg-slate-100 text-slate-700 border-slate-300';
+                    if (val.includes('Satış')) color = 'bg-emerald-50 text-emerald-700 border-emerald-300';
+                    else if (val.includes('Sevkiyat')) color = 'bg-sky-50 text-sky-700 border-sky-300';
+                    else if (val.includes('Finans') || val.includes('Fatura')) color = 'bg-purple-50 text-purple-700 border-purple-300';
+                    else if (val.includes('Teklif')) color = 'bg-amber-50 text-amber-700 border-amber-300';
+                    else if (val.includes('Depo') || val.includes('Stok')) color = 'bg-orange-50 text-orange-700 border-orange-300';
+                    else if (val.includes('Üretim')) color = 'bg-teal-50 text-teal-700 border-teal-300';
+                    else if (val.includes('Kalite')) color = 'bg-rose-50 text-rose-700 border-rose-300';
+                    else if (val.includes('Cari')) color = 'bg-blue-50 text-blue-700 border-blue-300';
+                    else if (val.includes('Güvenlik') || val.includes('Sistem')) color = 'bg-indigo-50 text-indigo-700 border-indigo-300';
+
+                    return `<span class="inline-block px-2 py-0.5 text-[11px] font-bold rounded-md border ${color}">${val}</span>`;
+                }
+            },
+            {
+                title: 'Şablon Anahtarı',
+                field: 'key',
+                width: 190,
+                responsive: 0,
+                formatter: function (cell) {
+                    const row = cell.getRow().getData();
+                    return `<a href="${row.detailUrl}" class="font-mono text-xs font-bold text-sky-700 hover:text-sky-900 hover:underline flex items-center gap-1.5">
+                                <i data-lucide="file-code" class="w-3.5 h-3.5 text-slate-400"></i>
+                                <span>${cell.getValue()}</span>
+                            </a>`;
+                }
+            },
+            {
+                title: 'Şablon Başlığı & Açıklama',
+                field: 'name',
+                minWidth: 260,
+                responsive: 1,
+                formatter: function (cell) {
+                    const row = cell.getRow().getData();
+                    return `<div>
+                                <a href="${row.detailUrl}" class="text-xs font-black text-slate-900 hover:text-sky-700 block">${cell.getValue()}</a>
+                                <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">${row.description || ''}</p>
+                            </div>`;
+                }
+            },
+            {
+                title: 'E-Posta Konusu (Subject)',
+                field: 'subject',
+                minWidth: 260,
+                responsive: 2,
+                formatter: function (cell) {
+                    return `<span class="text-xs text-slate-700 font-medium font-sans">${cell.getValue()}</span>`;
+                }
+            },
+            {
+                title: 'Parametreler',
+                field: 'placeholderCount',
+                width: 110,
+                hozAlign: 'center',
+                responsive: 2,
+                formatter: function (cell) {
+                    const count = cell.getValue() || 0;
+                    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
+                                <i data-lucide="variable" class="w-3 h-3 text-slate-400"></i> ${count} Değişken
+                            </span>`;
+                }
+            },
+            {
+                title: 'Durum',
+                field: 'active',
+                width: 100,
+                hozAlign: 'center',
+                responsive: 1,
+                formatter: function (cell) {
+                    const active = cell.getValue();
+                    if (active) {
+                        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Aktif
+                                </span>`;
+                    }
+                    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-600">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Pasif
+                            </span>`;
+                }
+            },
+            {
+                title: 'İşlemler',
+                field: 'actions',
+                width: 160,
+                hozAlign: 'center',
+                headerSort: false,
+                responsive: 0,
+                formatter: function (cell) {
+                    const row = cell.getRow().getData();
+                    return `<div class="flex items-center justify-center gap-1.5">
+                                <a href="${row.detailUrl}" class="px-2 py-1 text-[11px] font-bold bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-lg transition inline-flex items-center gap-1" title="Önizle ve Canlı Test Et">
+                                    <i data-lucide="eye" class="w-3 h-3"></i> Önizle
+                                </a>
+                                <a href="${row.editUrl}" class="px-2 py-1 text-[11px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition inline-flex items-center gap-1" title="Şablonu Düzenle">
+                                    <i data-lucide="edit-3" class="w-3 h-3"></i> Düzenle
+                                </a>
+                            </div>`;
+                }
+            }
+        ]
+    });
+
+    table.on('tableBuilt', function () {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+        if (typeof window.bindGridSearch === 'function') {
+            window.bindGridSearch(table, 'search-templates');
+        }
+    });
+
+    table.on('renderComplete', function () {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    });
+
+    window.emailTemplatesTable = table;
+});
+</script>
+</th:block>
+</body>
+</html>
