@@ -221,16 +221,32 @@ public class FactoryOperationController extends AbstractController {
 
     @PostMapping({"/slabs/new", "/slabs/create"})
     public String createSlab(@RequestParam("blockId") Long blockId,
-                             @RequestParam("thicknessCm") BigDecimal thicknessCm,
-                             @RequestParam("widthCm") BigDecimal widthCm,
-                             @RequestParam("lengthCm") BigDecimal lengthCm,
+                             @RequestParam(value = "thicknessCm", required = false) BigDecimal thicknessCm,
+                             @RequestParam(value = "widthCm", required = false) BigDecimal widthCm,
+                             @RequestParam(value = "lengthCm", required = false) BigDecimal lengthCm,
+                             @RequestParam(value = "rowThicknessCm", required = false) List<BigDecimal> rowThicknesses,
+                             @RequestParam(value = "rowWidthCm", required = false) List<BigDecimal> rowWidths,
+                             @RequestParam(value = "rowLengthCm", required = false) List<BigDecimal> rowLengths,
+                             @RequestParam(value = "rowPieceCount", required = false) List<Integer> rowPieceCounts,
                              @RequestParam(value = "qualityGrade", required = false) QualityGrade qualityGrade,
                              @RequestParam(value = "surfaceFinish", required = false) SurfaceFinish surfaceFinish,
                              @RequestParam(value = "customerId", required = false) Long customerId,
                              @RequestParam(value = "notes", required = false) String notes,
                              RedirectAttributes redirectAttributes) {
         try {
-            Slab slab = factoryStockService.createSlabDirect(blockId, thicknessCm, widthCm, lengthCm, qualityGrade, surfaceFinish, customerId, notes);
+            if (rowWidths != null && !rowWidths.isEmpty()) {
+                List<Slab> slabs = factoryStockService.createSlabsBatch(
+                        blockId, thicknessCm, qualityGrade, surfaceFinish, customerId, notes,
+                        rowThicknesses, rowWidths, rowLengths, rowPieceCounts
+                );
+                BigDecimal totalM2 = slabs.stream()
+                        .map(s -> s.getSurfaceAreaM2() != null ? s.getSurfaceAreaM2() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                redirectAttributes.addFlashAttribute("successMessage", slabs.size() + " adet plaka (" + totalM2 + " m²) başarıyla Plaka Stok Sahasına eklendi.");
+                return "redirect:/operations/factory/slabs";
+            }
+
+            Slab slab = factoryStockService.createSlabDirect(blockId, thicknessCm != null ? thicknessCm : new BigDecimal("2.00"), widthCm, lengthCm, qualityGrade, surfaceFinish, customerId, notes);
             redirectAttributes.addFlashAttribute("successMessage", "Plaka (" + slab.getSlabCode() + ") başarıyla Plaka Stok Sahasına eklendi: " + slab.getSurfaceAreaM2() + " m²");
             return "redirect:/operations/factory/slabs";
         } catch (Exception e) {
@@ -333,10 +349,10 @@ public class FactoryOperationController extends AbstractController {
     @PostMapping({"/sized/new", "/sized/create"})
     public String createSizedItem(@RequestParam(value = "blockId", required = false) Long blockId,
                                   @RequestParam(value = "description", required = false) String description,
-                                  @RequestParam("thicknessCm") BigDecimal thicknessCm,
-                                  @RequestParam("widthCm") BigDecimal widthCm,
-                                  @RequestParam("lengthCm") BigDecimal lengthCm,
-                                  @RequestParam("quantity") BigDecimal quantity,
+                                  @RequestParam(value = "thicknessCm", required = false) BigDecimal thicknessCm,
+                                  @RequestParam(value = "widthCm", required = false) BigDecimal widthCm,
+                                  @RequestParam(value = "lengthCm", required = false) BigDecimal lengthCm,
+                                  @RequestParam(value = "quantity", required = false) BigDecimal quantity,
                                   @RequestParam(value = "pieceCount", defaultValue = "1") int pieceCount,
                                   @RequestParam(value = "actualProducedQuantity", required = false) BigDecimal actualProducedQuantity,
                                   @RequestParam(value = "customerId", required = false) Long customerId,
@@ -344,8 +360,24 @@ public class FactoryOperationController extends AbstractController {
                                   @RequestParam(value = "surfaceFinish", required = false) String surfaceFinish,
                                   @RequestParam(value = "edgeFinish", required = false) String edgeFinish,
                                   @RequestParam(value = "notes", required = false) String notes,
+                                  @RequestParam(value = "rowDescription", required = false) List<String> rowDescriptions,
+                                  @RequestParam(value = "rowThicknessCm", required = false) List<BigDecimal> rowThicknesses,
+                                  @RequestParam(value = "rowWidthCm", required = false) List<BigDecimal> rowWidths,
+                                  @RequestParam(value = "rowLengthCm", required = false) List<BigDecimal> rowLengths,
+                                  @RequestParam(value = "rowPieceCount", required = false) List<Integer> rowPieceCounts,
+                                  @RequestParam(value = "rowQuantity", required = false) List<BigDecimal> rowQuantities,
                                   RedirectAttributes redirectAttributes) {
         try {
+            if (rowWidths != null && !rowWidths.isEmpty()) {
+                List<StockItem> items = factoryStockService.createSizedItemsBatch(
+                        blockId, customerId, description, qualityGrade, surfaceFinish, edgeFinish, notes,
+                        rowDescriptions, rowThicknesses, rowWidths, rowLengths, rowPieceCounts, rowQuantities
+                );
+                BigDecimal totalM2 = items.stream().map(i -> i.getQuantity() != null ? i.getQuantity() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
+                redirectAttributes.addFlashAttribute("successMessage", items.size() + " grup ebatlı ürün (" + totalM2 + " m²) başarıyla Ebatlı Stok Sahasına eklendi.");
+                return "redirect:/operations/factory/sized";
+            }
+
             StockItem item = factoryStockService.createSizedItem(
                     blockId, description, thicknessCm, widthCm, lengthCm, quantity, pieceCount,
                     actualProducedQuantity, customerId, qualityGrade, surfaceFinish, edgeFinish, notes

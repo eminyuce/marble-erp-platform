@@ -444,7 +444,9 @@ public class InvoiceService {
                     for (InvoiceItem item : saved.getItems()) {
                         String pName = item.getProductName() != null ? item.getProductName().toLowerCase() : "";
                         String unit = item.getUnit() != null ? item.getUnit().toLowerCase() : "";
-                        boolean isFuel = pName.contains("mazot") || pName.contains("dizel") || pName.contains("diesel") || unit.contains("lt") || unit.contains("litre");
+                        boolean isFuel = (saved.getQuarryCategory() == QuarryCategory.MAZOT)
+                                || (item.getStockItem() != null && (item.getStockItem().getQuarryCategory() == QuarryCategory.MAZOT || item.getStockItem().getProductType() == StockProductType.FUEL))
+                                || pName.contains("mazot") || pName.contains("dizel") || pName.contains("diesel") || unit.contains("lt") || unit.contains("litre");
                         if (isFuel) {
                             quarryInventoryService.addFuelStock(item.getQuantity(), item.getUnitPrice(), saved, saved.getNotes());
                         } else {
@@ -502,7 +504,7 @@ public class InvoiceService {
                 for (InvoiceItem item : invoice.getItems()) {
                     if (item.getBlock() != null) {
                         Block b = item.getBlock();
-                        b.setStatus(BlockStatus.READY_FOR_DISPATCH);
+                        b.setStatus(BlockStatus.PRODUCED);
                         b.setSoldCustomer(null);
                         StockLocation yard = stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.DISPATCH_YARD)
                                 .or(() -> stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))

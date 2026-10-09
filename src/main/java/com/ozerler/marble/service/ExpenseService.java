@@ -42,22 +42,25 @@ public class ExpenseService {
     @Transactional
     public CostTransaction recordExpense(ExpenseDraft draft) {
         Objects.requireNonNull(draft, MessageUtils.getMessage("error.expense.required"));
-        Objects.requireNonNull(draft.centerId(), MessageUtils.getMessage("error.cost_center.id.required"));
         Objects.requireNonNull(draft.expenseType(), MessageUtils.getMessage("error.cost_center.type.required"));
         Objects.requireNonNull(draft.amount(), MessageUtils.getMessage("error.cost_center.amount.required"));
         if (draft.amount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.cost.negative_amount"));
         }
 
-        CostCenter center = costCenterRepository.findById(draft.centerId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        MessageUtils.getMessage("error.cost_center.not_found", draft.centerId())));
-
         BusinessUnit unit = draft.businessUnit() != null
                 ? draft.businessUnit()
-                : (center.getBusinessUnit() != null ? center.getBusinessUnit() : BusinessUnit.FACTORY);
-        if (unit == BusinessUnit.SITE && draft.project() == null) {
-            throw new IllegalArgumentException(MessageUtils.getMessage("error.expense.site.project.required"));
+                : BusinessUnit.FACTORY;
+
+        CostCenter center;
+        if (draft.centerId() != null) {
+            center = costCenterRepository.findById(draft.centerId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            MessageUtils.getMessage("error.cost_center.not_found", draft.centerId())));
+        } else {
+            center = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
+                    .or(() -> costCenterRepository.findAll().stream().findFirst())
+                    .orElseThrow(() -> new IllegalArgumentException("Masraf merkezi tanımlı değil."));
         }
         String postingPeriod = ExpensePeriods.normalize(
                 draft.postingPeriod() != null ? draft.postingPeriod() : YearMonth.now().toString());
@@ -208,13 +211,19 @@ public class ExpenseService {
 
         assertPeriodOpen(tx.getBusinessUnit(), tx.getExpensePeriod());
 
-        CostCenter center = costCenterRepository.findById(draft.centerId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        MessageUtils.getMessage("error.cost_center.not_found", draft.centerId())));
+        BusinessUnit unit = draft.businessUnit() != null ? draft.businessUnit() : (tx.getBusinessUnit() != null ? tx.getBusinessUnit() : BusinessUnit.FACTORY);
 
-        BusinessUnit unit = draft.businessUnit() != null ? draft.businessUnit() : center.getBusinessUnit();
-        if (unit == BusinessUnit.SITE && draft.project() == null) {
-            throw new IllegalArgumentException(MessageUtils.getMessage("error.expense.site.project.required"));
+        CostCenter center;
+        if (draft.centerId() != null) {
+            center = costCenterRepository.findById(draft.centerId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            MessageUtils.getMessage("error.cost_center.not_found", draft.centerId())));
+        } else if (tx.getCostCenter() != null) {
+            center = tx.getCostCenter();
+        } else {
+            center = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
+                    .or(() -> costCenterRepository.findAll().stream().findFirst())
+                    .orElseThrow(() -> new IllegalArgumentException("Masraf merkezi tanımlı değil."));
         }
 
         String expensePeriod = draft.expensePeriod() != null

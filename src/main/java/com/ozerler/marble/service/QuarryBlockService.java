@@ -541,11 +541,10 @@ public class QuarryBlockService {
         }
         block.setActualTonnage(actualTonnage);
         block.setActualWeightKg(actualTonnage.multiply(BigDecimal.valueOf(1000)));
-        block.setStatus(BlockStatus.READY_FOR_DISPATCH);
         block.calculateMetrics(block.getQuarry().getSpecificGravity());
         Block saved = blockRepository.save(block);
         recordMovement(saved, block.getCurrentLocation(), block.getCurrentLocation(),
-                "Kantar tartımı yapıldı: " + actualTonnage + " Ton (Tartıldı / Sevke Hazır)");
+                "Kantar tartımı yapıldı: " + actualTonnage + " Ton");
         return saved;
     }
 

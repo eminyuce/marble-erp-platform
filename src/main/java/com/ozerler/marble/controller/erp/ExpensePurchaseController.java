@@ -8,6 +8,7 @@ import com.ozerler.marble.dto.ExpenseDto;
 import com.ozerler.marble.dto.ExpenseSummaryDto;
 import com.ozerler.marble.dto.QuarryCostBreakdownDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.Quarry;
 import com.ozerler.marble.model.enums.BusinessUnit;
@@ -128,7 +129,7 @@ public class ExpensePurchaseController extends AbstractController {
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     public BackEndResponse createExpenseApi(
             @RequestParam("businessUnit") BusinessUnit businessUnit,
-            @RequestParam("centerId") Long centerId,
+            @RequestParam(value = "centerId", required = false) Long centerId,
             @RequestParam("expenseType") ExpenseType expenseType,
             @RequestParam("amount") BigDecimal amount,
             @RequestParam("entryDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
@@ -148,12 +149,13 @@ public class ExpensePurchaseController extends AbstractController {
         try {
             Project project = resolveProject(businessUnit, projectId, locale);
             Quarry quarry = resolveQuarry(businessUnit, quarryId, locale);
+            Long effectiveCenterId = resolveCenterId(businessUnit, centerId);
             String period = expensePeriod != null && !expensePeriod.isBlank()
                     ? ExpensePeriods.normalize(expensePeriod)
                     : ExpensePeriods.expensePeriod(expenseType, invoiceDate, entryDate);
 
             expenseService.recordExpense(new ExpenseService.ExpenseDraft(
-                    centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
+                    effectiveCenterId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
                     documentNo, invoiceDate, entryDate, period, YearMonth.now().toString(),
                     null, quarry, null, project, null, null, null, null, description));
 
@@ -175,7 +177,7 @@ public class ExpensePurchaseController extends AbstractController {
     public BackEndResponse updateExpenseApi(
             @PathVariable("id") Long id,
             @RequestParam("businessUnit") BusinessUnit businessUnit,
-            @RequestParam("centerId") Long centerId,
+            @RequestParam(value = "centerId", required = false) Long centerId,
             @RequestParam("expenseType") ExpenseType expenseType,
             @RequestParam("amount") BigDecimal amount,
             @RequestParam("entryDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
@@ -195,12 +197,13 @@ public class ExpensePurchaseController extends AbstractController {
         try {
             Project project = resolveProject(businessUnit, projectId, locale);
             Quarry quarry = resolveQuarry(businessUnit, quarryId, locale);
+            Long effectiveCenterId = resolveCenterId(businessUnit, centerId);
             String period = expensePeriod != null && !expensePeriod.isBlank()
                     ? ExpensePeriods.normalize(expensePeriod)
                     : ExpensePeriods.expensePeriod(expenseType, invoiceDate, entryDate);
 
             expenseService.updateExpense(id, new ExpenseService.ExpenseDraft(
-                    centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
+                    effectiveCenterId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
                     documentNo, invoiceDate, entryDate, period, YearMonth.now().toString(),
                     null, quarry, null, project, null, null, null, null, description));
 
@@ -269,7 +272,7 @@ public class ExpensePurchaseController extends AbstractController {
     @PostMapping(path = {"", "/create"})
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     public String recordExpense(@RequestParam("businessUnit") BusinessUnit businessUnit,
-                                @RequestParam("centerId") Long centerId,
+                                @RequestParam(value = "centerId", required = false) Long centerId,
                                 @RequestParam("expenseType") ExpenseType expenseType,
                                 @RequestParam("amount") BigDecimal amount,
                                 @RequestParam("entryDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
@@ -285,12 +288,13 @@ public class ExpensePurchaseController extends AbstractController {
         try {
             Project project = resolveProject(businessUnit, projectId, locale);
             Quarry quarry = resolveQuarry(businessUnit, quarryId, locale);
+            Long effectiveCenterId = resolveCenterId(businessUnit, centerId);
             String period = expensePeriod != null && !expensePeriod.isBlank()
                     ? ExpensePeriods.normalize(expensePeriod)
                     : ExpensePeriods.expensePeriod(expenseType, invoiceDate, entryDate);
 
             expenseService.recordExpense(new ExpenseService.ExpenseDraft(
-                    centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
+                    effectiveCenterId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
                     documentNo, invoiceDate, entryDate, period, YearMonth.now().toString(),
                     null, quarry, null, project, null, null, null, null, description));
 
@@ -309,7 +313,7 @@ public class ExpensePurchaseController extends AbstractController {
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     public String updateExpense(@PathVariable("id") Long id,
                                 @RequestParam("businessUnit") BusinessUnit businessUnit,
-                                @RequestParam("centerId") Long centerId,
+                                @RequestParam(value = "centerId", required = false) Long centerId,
                                 @RequestParam("expenseType") ExpenseType expenseType,
                                 @RequestParam("amount") BigDecimal amount,
                                 @RequestParam("entryDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
@@ -325,12 +329,13 @@ public class ExpensePurchaseController extends AbstractController {
         try {
             Project project = resolveProject(businessUnit, projectId, locale);
             Quarry quarry = resolveQuarry(businessUnit, quarryId, locale);
+            Long effectiveCenterId = resolveCenterId(businessUnit, centerId);
             String period = expensePeriod != null && !expensePeriod.isBlank()
                     ? ExpensePeriods.normalize(expensePeriod)
                     : ExpensePeriods.expensePeriod(expenseType, invoiceDate, entryDate);
 
             expenseService.updateExpense(id, new ExpenseService.ExpenseDraft(
-                    centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
+                    effectiveCenterId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
                     documentNo, invoiceDate, entryDate, period, YearMonth.now().toString(),
                     null, quarry, null, project, null, null, null, null, description));
 
@@ -355,13 +360,19 @@ public class ExpensePurchaseController extends AbstractController {
         model.addAttribute("expenseTypes", ExpenseType.values());
     }
 
-    private Project resolveProject(BusinessUnit unit, Long projectId, Locale locale) {
-        if (unit != BusinessUnit.SITE) {
-            return null;
+    private Long resolveCenterId(BusinessUnit unit, Long centerId) {
+        if (centerId != null) {
+            return centerId;
         }
-        if (projectId == null) {
-            throw new IllegalArgumentException(
-                    messageSource.getMessage("error.expense.site.project.required", null, locale));
+        return costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
+                .or(() -> costCenterRepository.findAll().stream().findFirst())
+                .map(CostCenter::getId)
+                .orElse(null);
+    }
+
+    private Project resolveProject(BusinessUnit unit, Long projectId, Locale locale) {
+        if (unit != BusinessUnit.SITE || projectId == null) {
+            return null;
         }
         return projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException(

@@ -129,14 +129,60 @@ public class OperationWorkOrderController extends AbstractController {
                               @RequestParam(value = "sourceBlockId", required = false) Long sourceBlockId,
                               @RequestParam(value = "usedQuantity", required = false) BigDecimal usedQuantity,
                               @RequestParam(value = "notes", required = false) String notes,
+                              @RequestParam(value = "dimWidthCm", required = false) List<BigDecimal> dimWidths,
+                              @RequestParam(value = "dimLengthCm", required = false) List<BigDecimal> dimLengths,
+                              @RequestParam(value = "dimThicknessCm", required = false) List<BigDecimal> dimThicknesses,
+                              @RequestParam(value = "dimPieceCount", required = false) List<Integer> dimPieceCounts,
+                              @RequestParam(value = "dimNote", required = false) List<String> dimNotes,
                               RedirectAttributes redirectAttributes) {
 
         try {
+            BigDecimal effectiveWidth = widthCm;
+            BigDecimal effectiveLength = lengthCm;
+            BigDecimal effectiveThickness = thicknessCm;
+            BigDecimal effectiveQuantity = quantity;
+            StringBuilder breakdownBuilder = new StringBuilder();
+
+            if (dimWidths != null && !dimWidths.isEmpty()) {
+                breakdownBuilder.append("=== SİPARİŞ ÖLÇÜ LİSTESİ ===\n");
+                BigDecimal sumM2 = BigDecimal.ZERO;
+                int totalPieces = 0;
+                for (int i = 0; i < dimWidths.size(); i++) {
+                    BigDecimal w = dimWidths.get(i);
+                    if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) continue;
+                    BigDecimal l = (dimLengths != null && i < dimLengths.size()) ? dimLengths.get(i) : BigDecimal.ZERO;
+                    BigDecimal t = (dimThicknesses != null && i < dimThicknesses.size()) ? dimThicknesses.get(i) : new BigDecimal("2.0");
+                    int pcs = (dimPieceCounts != null && i < dimPieceCounts.size() && dimPieceCounts.get(i) != null) ? dimPieceCounts.get(i) : 1;
+                    String dNote = (dimNotes != null && i < dimNotes.size() && dimNotes.get(i) != null) ? dimNotes.get(i).trim() : "";
+
+                    BigDecimal rowM2 = w.multiply(l).multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(10000), 2, java.math.RoundingMode.HALF_UP);
+                    sumM2 = sumM2.add(rowM2);
+                    totalPieces += pcs;
+
+                    if (effectiveWidth == null) effectiveWidth = w;
+                    if (effectiveLength == null) effectiveLength = l;
+                    if (effectiveThickness == null) effectiveThickness = t;
+
+                    breakdownBuilder.append(String.format("%d. %s x %s x %s cm — %d Adet (%s m²)%s\n",
+                            (i + 1), w, l, t, pcs, rowM2, dNote.isEmpty() ? "" : " [" + dNote + "]"));
+                }
+                breakdownBuilder.append(String.format("-------------------------------------------\nTOPLAM: %d Adet | %s m²\n", totalPieces, sumM2));
+
+                if (effectiveQuantity == null || effectiveQuantity.compareTo(BigDecimal.ZERO) <= 0) {
+                    effectiveQuantity = "adet".equalsIgnoreCase(quantityUnit) ? BigDecimal.valueOf(totalPieces) : sumM2;
+                }
+            }
+
+            String finalNotes = notes != null ? notes.trim() : "";
+            if (breakdownBuilder.length() > 0) {
+                finalNotes = breakdownBuilder.toString() + (finalNotes.isEmpty() ? "" : "\n\nEk Notlar: " + finalNotes);
+            }
+
             OperationWorkOrderService.WorkOrderCreateForm form = new OperationWorkOrderService.WorkOrderCreateForm(
                     orderNo, customerId, orderDate, dueDate, department, responsiblePerson,
-                    stoneType, colorQuality, thicknessCm, widthCm, lengthCm, quantity, quantityUnit,
+                    stoneType, colorQuality, effectiveThickness, effectiveWidth, effectiveLength, effectiveQuantity, quantityUnit,
                     surfaceOperation, edgeOperation, sourceStockItemId, sourceSlabId, sourceBlockId,
-                    usedQuantity, notes
+                    usedQuantity, finalNotes
             );
 
             OperationWorkOrder order = workOrderService.createWorkOrder(form);

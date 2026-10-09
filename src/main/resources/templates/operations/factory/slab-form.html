@@ -5,15 +5,43 @@
     <title>Yeni Plaka Üretim Girişi — Fabrika | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-form-page max-w-3xl mx-auto space-y-6"
-     x-data="{
-        width: 180,
-        length: 280,
-        get area() {
-            if (!this.width || !this.length) return 0;
-            return ((this.width * this.length) / 10000).toFixed(2);
+    <script>
+        function slabFormState() {
+            return {
+                commonThickness: 2.0,
+                rows: [
+                    { thickness: 2.0, width: 180, length: 280, count: 1 }
+                ],
+                addRow() {
+                    this.rows.push({ thickness: this.commonThickness || 2.0, width: 180, length: 280, count: 1 });
+                },
+                removeRow(i) {
+                    if (this.rows.length > 1) {
+                        this.rows.splice(i, 1);
+                    }
+                },
+                calcRowM2(r) {
+                    const w = parseFloat(r.width) || 0;
+                    const l = parseFloat(r.length) || 0;
+                    const c = parseInt(r.count) || 1;
+                    return ((w * l * c) / 10000).toFixed(2);
+                },
+                get totalPieces() {
+                    return this.rows.reduce((sum, r) => sum + (parseInt(r.count) || 0), 0);
+                },
+                get totalM2() {
+                    return this.rows.reduce((sum, r) => sum + parseFloat(this.calcRowM2(r)), 0).toFixed(2);
+                },
+                get primaryWidth() { return this.rows[0] ? this.rows[0].width : 180; },
+                get primaryLength() { return this.rows[0] ? this.rows[0].length : 280; },
+                get primaryThickness() { return this.rows[0] ? this.rows[0].thickness : (this.commonThickness || 2.0); },
+                get primaryCount() { return this.rows[0] ? this.rows[0].count : 1; }
+            };
         }
-     }">
+    </script>
+
+    <div layout:fragment="content" class="erp-form-page max-w-4xl mx-auto space-y-6"
+         x-data="slabFormState()">
 
     <!-- Header & Breadcrumb -->
     <div class="erp-form-header">
@@ -23,14 +51,20 @@
             <span>Yeni Plaka Üretim Girişi</span>
         </h2>
         <p class="erp-form-lead text-sm text-slate-600">
-            Kesilen bloktan çıkan plakayı Plaka Stok Sahasına kaydedin, ölçülerini ve varsa müşteri rezervasyonunu belirleyin.
+            Kesilen bloktan çıkan plakaları Plaka Stok Sahasına kaydedin. Bloktan farklı ebatlarda plakalar çıkıyorsa birden fazla ebat satırı ve adet belirleyebilirsiniz.
         </p>
     </div>
 
     <form th:action="@{/operations/factory/slabs/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
         <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Geriye dönük uyumluluk gizli alanları -->
+        <input type="hidden" name="thicknessCm" :value="primaryThickness">
+        <input type="hidden" name="widthCm" :value="primaryWidth">
+        <input type="hidden" name="lengthCm" :value="primaryLength">
+
+        <!-- 1. GENEL BİLGİLER -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-slate-100">
 
             <!-- Kaynak Blok -->
             <div class="md:col-span-2">
@@ -42,10 +76,10 @@
                 </select>
             </div>
 
-            <!-- Kalınlık -->
+            <!-- Kalınlık (Genel) -->
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">Plaka Kalınlığı (cm) *</label>
-                <input type="number" step="0.1" name="thicknessCm" value="2.0" required
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Varsayılan Kalınlık (cm) *</label>
+                <input type="number" step="0.1" x-model.number="commonThickness" required
                        class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
 
@@ -55,20 +89,6 @@
                 <select name="qualityGrade" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     <option th:each="grade : ${qualityGrades}" th:value="${grade.name()}" th:text="${grade.displayName}"></option>
                 </select>
-            </div>
-
-            <!-- En (cm) -->
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">Plaka Eni (cm) *</label>
-                <input type="number" step="0.1" name="widthCm" x-model.number="width" required
-                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-            </div>
-
-            <!-- Boy (cm) -->
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">Plaka Boyu (cm) *</label>
-                <input type="number" step="0.1" name="lengthCm" x-model.number="length" required
-                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
 
             <!-- Yüzey İşlemi -->
@@ -90,24 +110,102 @@
 
         </div>
 
-        <!-- M² Gösterge Kartı -->
-        <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-center justify-between">
+        <!-- 2. DİNAMİK EBAT VE ADET SATIRLARI TABLOSU -->
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i>
+                        <span>Plaka Ebat ve Adet Satırları</span>
+                    </h3>
+                    <p class="text-xs text-slate-500">Bloktan çıkan farklı ebatlardaki plakaları satır satır ekleyebilirsiniz. Adet x En x Boy ile m² otomatik hesaplanır.</p>
+                </div>
+                <button type="button" @click="addRow()"
+                        class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Yeni Ebat Satırı Ekle</span>
+                </button>
+            </div>
+
+            <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse min-w-[700px]">
+                        <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                            <tr>
+                                <th class="py-2.5 px-3 w-10 text-center">#</th>
+                                <th class="py-2.5 px-3 w-28">Kalınlık (cm)</th>
+                                <th class="py-2.5 px-3 w-32">En (cm) *</th>
+                                <th class="py-2.5 px-3 w-32">Boy (cm) *</th>
+                                <th class="py-2.5 px-3 w-28 text-center">Adet *</th>
+                                <th class="py-2.5 px-3 w-32 text-center">Hesaplanan m²</th>
+                                <th class="py-2.5 px-2 w-12 text-center">Sil</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <template x-for="(r, idx) in rows" :key="idx">
+                                <tr class="hover:bg-slate-50/50 transition">
+                                    <td class="py-2.5 px-3 text-center font-bold text-slate-400" x-text="idx + 1"></td>
+                                    <td class="py-2.5 px-3">
+                                        <input type="number" step="0.1" name="rowThicknessCm" x-model.number="r.thickness"
+                                               class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 text-center focus:ring-1 focus:ring-indigo-500">
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <input type="number" step="0.1" name="rowWidthCm" x-model.number="r.width" required
+                                               class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 text-center focus:ring-1 focus:ring-indigo-500">
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <input type="number" step="0.1" name="rowLengthCm" x-model.number="r.length" required
+                                               class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 text-center focus:ring-1 focus:ring-indigo-500">
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <input type="number" min="1" name="rowPieceCount" x-model.number="r.count" required
+                                               class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 text-center focus:ring-1 focus:ring-indigo-500">
+                                    </td>
+                                    <td class="py-2.5 px-3 text-center">
+                                        <span class="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-700 font-mono font-bold text-xs rounded-md"
+                                              x-text="calcRowM2(r) + ' m²'">0.00 m²</span>
+                                    </td>
+                                    <td class="py-2.5 px-2 text-center">
+                                        <button type="button" @click="removeRow(idx)" :disabled="rows.length <= 1"
+                                                :class="rows.length <= 1 ? 'opacity-30 cursor-not-allowed text-slate-400' : 'text-rose-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer'"
+                                                class="w-7 h-7 inline-flex items-center justify-center rounded-lg transition">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. TOPLAM ÖZET KARTI -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500 font-medium">Toplam Plaka Adedi:</div>
+                    <div class="text-xl font-black text-slate-900 font-mono" x-text="totalPieces + ' Adet'">1 Adet</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 sm:border-l sm:border-slate-200 sm:pl-4">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
                     m²
                 </div>
                 <div>
-                    <div class="text-xs text-indigo-700 font-semibold">Hesaplanan Plaka Yüzey Alanı:</div>
-                    <div class="text-2xl font-black text-indigo-950 font-mono" x-text="area + ' m²'">5,04 m²</div>
+                    <div class="text-xs text-slate-500 font-medium">Toplam Hesaplanan Yüzey Alanı:</div>
+                    <div class="text-xl font-black text-emerald-700 font-mono" x-text="totalM2 + ' m²'">5.04 m²</div>
                 </div>
             </div>
-            <span class="text-xs text-indigo-600 font-semibold">Otomatik Hesaplanır</span>
         </div>
 
         <!-- Açıklama -->
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1.5">Açıklama / Notlar</label>
-            <textarea name="notes" rows="3" placeholder="Damar yönü, dolgu durumu veya sipariş notu..."
+            <textarea name="notes" rows="2" placeholder="Damar yönü, dolgu durumu veya sipariş notu..."
                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
         </div>
 
@@ -116,9 +214,9 @@
             <a th:href="@{/operations/factory/slabs}" class="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
                 Vazgeç
             </a>
-            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
                 <i data-lucide="check" class="w-4 h-4"></i>
-                <span>Plakayı Stok Sahasına Kaydet</span>
+                <span>Plakaları Stok Sahasına Kaydet</span>
             </button>
         </div>
 

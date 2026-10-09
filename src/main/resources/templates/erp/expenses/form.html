@@ -55,45 +55,39 @@
 
             <div class="erp-form-body">
                 <!-- 1. Birim ve Masraf Merkezi -->
+                <!-- 1. Masraf Merkezi ve Gider Detayları -->
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('İş Birimi & Masraf Merkezi', 'Giderin ait olduğu birim, ocak/şantiye hedefi ve masraf merkezini seçin.')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Masraf Merkezi & Gider Detayları', 'Giderin ait olduğu masraf merkezini ve gider türünü belirleyin.')}"></div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="expense-businessUnit">İş Birimi <span class="req">*</span></label>
+                            <label class="erp-form-label" for="expense-businessUnit">Masraf Merkezi <span class="req">*</span></label>
                             <select id="expense-businessUnit" name="businessUnit" required class="erp-form-select"
                                     x-model="unit" @change="loadUnitOptions()">
-                                <option th:each="u : ${businessUnits}" th:value="${u.name()}" th:text="${u.label}"
-                                        th:selected="${(record != null and record.businessUnit != null and record.businessUnit.name() == u.name()) or (record == null and selectedUnit != null and selectedUnit.name() == u.name())}"></option>
+                                <option value="QUARRY" th:selected="${(record != null and record.businessUnit != null and record.businessUnit.name() == 'QUARRY') or (record == null and selectedUnit != null and selectedUnit.name() == 'QUARRY')}">Ocak</option>
+                                <option value="FACTORY" th:selected="${(record != null and record.businessUnit != null and record.businessUnit.name() == 'FACTORY') or (record == null and (selectedUnit == null or selectedUnit.name() == 'FACTORY'))}">Fabrika</option>
+                                <option value="WORKSHOP" th:selected="${(record != null and record.businessUnit != null and record.businessUnit.name() == 'WORKSHOP') or (record == null and selectedUnit != null and selectedUnit.name() == 'WORKSHOP')}">Atölye</option>
+                                <option value="SITE" th:selected="${(record != null and record.businessUnit != null and record.businessUnit.name() == 'SITE') or (record == null and selectedUnit != null and selectedUnit.name() == 'SITE')}">Şantiyeler</option>
                             </select>
                         </div>
 
-                        <!-- Quarry Select (Only when unit == QUARRY) -->
-                        <div class="erp-form-field" x-show="unit === 'QUARRY'">
-                            <label class="erp-form-label" for="expense-quarryId">Ocak <span class="req">*</span></label>
-                            <select id="expense-quarryId" name="quarryId" :required="unit === 'QUARRY'" class="erp-form-select">
-                                <option value="" disabled th:selected="${record == null or record.quarryId == null}">Ocak seçin</option>
-                                <option th:each="q : ${quarries}" th:value="${q.id}" th:text="${q.name + ' (' + q.code + ')'}"
-                                        th:selected="${record != null and record.quarryId == q.id}"></option>
-                            </select>
-                        </div>
-
-                        <!-- Project Select (Only when unit == SITE) -->
+                        <!-- Project Select (Only when unit == SITE - Optional) -->
                         <div class="erp-form-field" x-show="unit === 'SITE'">
-                            <label class="erp-form-label" for="expense-projectId">Şantiye / Proje <span class="req">*</span></label>
-                            <select id="expense-projectId" name="projectId" :required="unit === 'SITE'" class="erp-form-select">
-                                <option value="" disabled th:selected="${record == null or record.projectId == null}">Proje seçin</option>
+                            <label class="erp-form-label" for="expense-projectId">Şantiye / Proje (İsteğe Bağlı)</label>
+                            <select id="expense-projectId" name="projectId" class="erp-form-select">
+                                <option value="" th:selected="${record == null or record.projectId == null}">-- Proje Seçilmedi (Genel Şantiye Gideri) --</option>
                                 <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.projectCode + ' — ' + p.name}"
                                         th:selected="${record != null and record.projectId == p.id}"></option>
                             </select>
+                            <p class="text-[11px] text-slate-400 mt-1">İsteğe bağlıdır; proje seçilmezse genel şantiye masrafına kaydedilir.</p>
                         </div>
 
-                        <div class="erp-form-field">
-                            <label class="erp-form-label" for="expense-centerId">Masraf Merkezi <span class="req">*</span></label>
-                            <select id="expense-centerId" name="centerId" required class="erp-form-select">
-                                <option value="" disabled th:selected="${record == null or record.centerId == null}">Masraf merkezi seçin</option>
-                                <option th:each="c : ${costCenters}" th:value="${c.id}"
-                                        th:text="${c.code + ' — ' + c.name}"
-                                        th:selected="${record != null and record.centerId == c.id}"></option>
+                        <!-- Quarry Select (Only when unit == QUARRY - Optional) -->
+                        <div class="erp-form-field" x-show="unit === 'QUARRY'">
+                            <label class="erp-form-label" for="expense-quarryId">Ocak (İsteğe Bağlı)</label>
+                            <select id="expense-quarryId" name="quarryId" class="erp-form-select">
+                                <option value="" th:selected="${record == null or record.quarryId == null}">-- Genel Ocak Gideri --</option>
+                                <option th:each="q : ${quarries}" th:value="${q.id}" th:text="${q.name + ' (' + q.code + ')'}"
+                                        th:selected="${record != null and record.quarryId == q.id}"></option>
                             </select>
                         </div>
 
@@ -103,6 +97,17 @@
                                 <option value="" disabled th:selected="${record == null or record.expenseType == null}">Gider türü seçin</option>
                                 <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"
                                         th:selected="${record != null and record.expenseType != null and record.expenseType.name() == t.name()}"></option>
+                            </select>
+                        </div>
+
+                        <!-- Alt Masraf Merkezi (Opsiyonel / İkincil) -->
+                        <div class="erp-form-field" x-show="centers && centers.length > 1">
+                            <label class="erp-form-label" for="expense-centerId">Alt Masraf Kodu / Detay</label>
+                            <select id="expense-centerId" name="centerId" class="erp-form-select">
+                                <option value="" th:selected="${record == null or record.centerId == null}">-- Birim Varsayılan Masraf Merkezi --</option>
+                                <template x-for="c in centers" :key="c.id">
+                                    <option :value="c.id" x-text="c.code + ' — ' + c.name"></option>
+                                </template>
                             </select>
                         </div>
                     </div>

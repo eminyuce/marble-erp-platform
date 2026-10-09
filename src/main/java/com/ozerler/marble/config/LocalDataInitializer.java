@@ -42,11 +42,13 @@ public class LocalDataInitializer implements CommandLineRunner {
     private final PalletItemRepository palletItemRepository;
     private final ShipmentRepository shipmentRepository;
     private final OperationDefinitionRepository operationDefinitionRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Override
     @Transactional
     public void run(String... args) {
         log.info("Checking local database seed state...");
+        dropCheckConstraintsOnH2();
 
         if (roleRepository.count() == 0) {
             initRoles();
@@ -544,7 +546,58 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .build());
     }
 
+    private void dropCheckConstraintsOnH2() {
+        List<String> alterStatements = List.of(
+                "ALTER TABLE stock_locations ALTER COLUMN location_type VARCHAR(50)",
+                "ALTER TABLE stock_items ALTER COLUMN product_type VARCHAR(50)",
+                "ALTER TABLE stock_items ALTER COLUMN quarry_category VARCHAR(50)",
+                "ALTER TABLE invoices ALTER COLUMN quarry_category VARCHAR(50)"
+        );
+        for (String sql : alterStatements) {
+            try {
+                jdbcTemplate.execute(sql);
+                log.info("Successfully executed H2 migration: {}", sql);
+            } catch (Exception e) {
+                log.debug("H2 column migration skipped for '{}': {}", sql, e.getMessage());
+            }
+        }
+
+        for (String table : List.of("STOCK_LOCATIONS", "STOCK_ITEMS", "INVOICES", "EXPENSES")) {
+            try {
+                List<String> constraintNames = jdbcTemplate.queryForList(
+                        "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
+                        "WHERE TABLE_NAME = ? AND CONSTRAINT_TYPE = 'CHECK'",
+                        String.class, table
+                );
+                for (String cName : constraintNames) {
+                    log.info("Dropping legacy check constraint on {}: {}", table, cName);
+                    jdbcTemplate.execute("ALTER TABLE " + table + " DROP CONSTRAINT " + cName);
+                }
+            } catch (Exception e) {
+                log.debug("Check constraint cleanup skipped for {}: {}", table, e.getMessage());
+            }
+        }
+    }
+
     private void ensureStockLocations() {
+        if (!stockLocationRepository.existsByCode("OCK-MZ-01")) {
+            stockLocationRepository.save(StockLocation.builder()
+                    .code("OCK-MZ-01")
+                    .name("Ocak Mazot Deposu")
+                    .businessUnit(BusinessUnit.QUARRY)
+                    .locationType(StockLocationType.QUARRY_FUEL_TANK)
+                    .active(true)
+                    .build());
+        }
+        if (!stockLocationRepository.existsByCode("OCK-SRF-01")) {
+            stockLocationRepository.save(StockLocation.builder()
+                    .code("OCK-SRF-01")
+                    .name("Ocak Sarf Malzeme Deposu")
+                    .businessUnit(BusinessUnit.QUARRY)
+                    .locationType(StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE)
+                    .active(true)
+                    .build());
+        }
         if (!stockLocationRepository.existsByCode("FAB-EBATLI")) {
             stockLocationRepository.save(StockLocation.builder()
                     .code("FAB-EBATLI")

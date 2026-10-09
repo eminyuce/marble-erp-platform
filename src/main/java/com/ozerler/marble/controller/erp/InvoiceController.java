@@ -7,6 +7,7 @@ import com.ozerler.marble.model.enums.InvoiceStatus;
 import com.ozerler.marble.model.enums.InvoiceType;
 import com.ozerler.marble.repository.*;
 import com.ozerler.marble.service.InvoiceService;
+import com.ozerler.marble.service.QuarryInventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.ozerler.marble.model.enums.QuarryCategory;
@@ -116,10 +117,14 @@ public class InvoiceController extends AbstractController {
     @GetMapping({"/new", "/create"})
     public String newInvoiceForm(@RequestParam(value = "type", defaultValue = "SALES") InvoiceType type,
                                  @RequestParam(value = "department", defaultValue = "FACTORY") BusinessUnit department,
+                                 @RequestParam(value = "blockId", required = false) Long blockId,
                                  Model model) {
 
         model.addAttribute("defaultType", type);
         model.addAttribute("defaultDepartment", department);
+        if (blockId != null) {
+            blockRepository.findById(blockId).ifPresent(b -> model.addAttribute("prefillBlock", b));
+        }
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("suppliers", supplierRepository.findAll());
         model.addAttribute("projects", projectRepository.findAll());
@@ -276,19 +281,20 @@ public class InvoiceController extends AbstractController {
         if (department == null || department == BusinessUnit.QUARRY) {
             if (stockType == null || stockType.isBlank() || "FUEL".equalsIgnoreCase(stockType) || "MAZOT".equalsIgnoreCase(stockType)) {
                 StockItem fuelTank = quarryInventoryService.getOrCreateFuelTankStockItem();
-                if (fuelTank != null && fuelTank.getQuantity() != null && fuelTank.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
+                if (fuelTank != null && (Boolean.TRUE.equals(includeZero) || (fuelTank.getQuantity() != null && fuelTank.getQuantity().compareTo(BigDecimal.ZERO) > 0))) {
                     if (s.isEmpty() || "mazot".contains(s) || "dizel".contains(s) || fuelTank.getItemCode().toLowerCase().contains(s)) {
                         Map<String, Object> m = new HashMap<>();
-                        m.put("category", "FUEL");
+                        m.put("category", "MAZOT");
                         m.put("categoryLabel", "Mazot");
                         m.put("id", fuelTank.getId());
                         m.put("code", fuelTank.getItemCode());
                         m.put("name", "Ocak Mazot Stoğu (Dizel)");
                         m.put("stoneType", "Akaryakıt");
                         m.put("dimensions", "Ana Depo Tankı");
-                        m.put("quantity", fuelTank.getQuantity());
+                        m.put("quantity", fuelTank.getQuantity() != null ? fuelTank.getQuantity() : BigDecimal.ZERO);
                         m.put("unit", "litre");
-                        m.put("unitPrice", fuelTank.getUnitPrice());
+                        m.put("unitPrice", fuelTank.getUnitPrice() != null ? fuelTank.getUnitPrice() : BigDecimal.ZERO);
+                        m.put("directExpense", false);
                         result.add(m);
                     }
                 }
@@ -299,7 +305,7 @@ public class InvoiceController extends AbstractController {
         if (department == null || department == BusinessUnit.QUARRY) {
             List<StockItem> allQuarryCards = quarryInventoryService.getAllQuarryStockCards(null);
             for (StockItem ci : allQuarryCards) {
-                if (ci.getItemCode().equals("O-MZ-TANK")) {
+                if (ci.getItemCode().equals(QuarryInventoryService.FUEL_TANK_ITEM_CODE) || ci.getItemCode().equals("O-MZ-TANK")) {
                     continue;
                 }
                 if (Boolean.TRUE.equals(includeZero) || (ci.getQuantity() != null && ci.getQuantity().compareTo(BigDecimal.ZERO) > 0)) {

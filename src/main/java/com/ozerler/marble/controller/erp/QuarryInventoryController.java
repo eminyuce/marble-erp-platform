@@ -45,6 +45,11 @@ public class QuarryInventoryController extends AbstractController {
         return "quarry/fuel";
     }
 
+    @GetMapping("/fuel/dispense")
+    public String dispenseFuelGet() {
+        return "redirect:/quarry/fuel?action=dispense";
+    }
+
     @PostMapping("/fuel/dispense")
     public String dispenseFuel(@RequestParam("machineId") Long machineId,
                                @RequestParam("litres") BigDecimal litres,
@@ -65,6 +70,11 @@ public class QuarryInventoryController extends AbstractController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/quarry/fuel";
+    }
+
+    @GetMapping("/fuel/add")
+    public String addFuelStockGet() {
+        return "redirect:/quarry/fuel?action=add";
     }
 
     @PostMapping("/fuel/add")
@@ -94,7 +104,13 @@ public class QuarryInventoryController extends AbstractController {
         List<StockItem> consumables = quarryInventoryService.getAllQuarryStockCards(category);
         List<Machine> machines = quarryInventoryService.getQuarryMachines();
 
+        BigDecimal totalValue = consumables.stream()
+                .filter(item -> item.getQuantity() != null && item.getUnitPrice() != null)
+                .map(item -> item.getQuantity().multiply(item.getUnitPrice()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         model.addAttribute("consumables", consumables);
+        model.addAttribute("totalValue", totalValue);
         model.addAttribute("machines", machines);
         model.addAttribute("categories", QuarryCategory.values());
         model.addAttribute("selectedCategory", category != null ? category.name() : "");

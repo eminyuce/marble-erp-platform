@@ -45,11 +45,11 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
            "WHERE (:productType IS NULL OR s.productType = :productType) " +
            "AND (:status IS NULL OR s.status = :status) " +
            "AND (:customerId IS NULL OR c.id = :customerId) " +
-           "AND (:generalStockOnly = false OR c IS NULL) " +
+           "AND (:generalStockOnly = false OR s.customer IS NULL) " +
            "AND (:search IS NULL OR :search = '' " +
-           "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
+           "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%'))) " +
            "ORDER BY s.id DESC")
     Page<StockItem> searchItems(@Param("productType") StockProductType productType,
                                @Param("status") String status,

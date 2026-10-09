@@ -11,10 +11,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -159,6 +159,64 @@ public class FactoryStockService {
         return saved;
     }
 
+    @Transactional
+    public List<Slab> createSlabsBatch(Long blockId, BigDecimal commonThicknessCm,
+                                       QualityGrade qualityGrade, SurfaceFinish surfaceFinish,
+                                       Long customerId, String notes,
+                                       List<BigDecimal> thicknesses, List<BigDecimal> widths,
+                                       List<BigDecimal> lengths, List<Integer> pieceCounts) {
+
+        Block block = blockRepository.findById(blockId)
+                .orElseThrow(() -> new IllegalArgumentException("Kaynak blok bulunamadı: " + blockId));
+        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
+
+        String orderNo = UniqueCodes.yearly("PRD", productionOrderRepository::existsByOrderNo);
+        ProductionOrder order = productionOrderRepository.save(ProductionOrder.builder()
+                .orderNo(orderNo)
+                .block(block)
+                .machineName("ST / Katrak")
+                .processType(com.ozerler.marble.model.enums.ProcessType.ST)
+                .startTime(java.time.LocalDateTime.now())
+                .status("COMPLETED")
+                .operatorName("Operatör")
+                .build());
+
+        List<Slab> createdSlabs = new ArrayList<>();
+        if (widths == null || widths.isEmpty()) return createdSlabs;
+
+        for (int i = 0; i < widths.size(); i++) {
+            BigDecimal w = widths.get(i);
+            if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) continue;
+            BigDecimal l = (lengths != null && i < lengths.size() && lengths.get(i) != null) ? lengths.get(i) : w;
+            BigDecimal t = (thicknesses != null && i < thicknesses.size() && thicknesses.get(i) != null) ? thicknesses.get(i) : (commonThicknessCm != null ? commonThicknessCm : new BigDecimal("2.00"));
+            int count = (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null) ? pieceCounts.get(i) : 1;
+            BigDecimal area = w.multiply(l).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+
+            for (int k = 0; k < count; k++) {
+                String slabCode = UniqueCodes.yearly("SLB", slabRepository::existsBySlabCode);
+                Slab slab = Slab.builder()
+                        .slabCode(slabCode)
+                        .productionOrder(order)
+                        .block(block)
+                        .thicknessCm(t)
+                        .widthCm(w)
+                        .lengthCm(l)
+                        .surfaceAreaM2(area)
+                        .qualityGrade(qualityGrade != null ? qualityGrade : QualityGrade.A)
+                        .surfaceFinish(surfaceFinish != null ? surfaceFinish : SurfaceFinish.RAW)
+                        .customer(customer)
+                        .status(customer != null ? SlabStatus.RESERVED : SlabStatus.AVAILABLE)
+                        .costPerM2(BigDecimal.ZERO)
+                        .build();
+
+                Slab saved = slabRepository.save(slab);
+                stockMovementService.recordSlabProduction(saved, block, customer);
+                createdSlabs.add(saved);
+            }
+        }
+        return createdSlabs;
+    }
+
     @Transactional(readOnly = true)
     public BigDecimal getCustomerSlabAreaTotal(Long customerId) {
         if (customerId == null) return BigDecimal.ZERO;
@@ -233,6 +291,35 @@ public class FactoryStockService {
         StockItem saved = stockItemRepository.save(item);
         stockMovementService.recordSizedItemProduction(saved, block, customer);
         return saved;
+    }
+
+    @Transactional
+    public List<StockItem> createSizedItemsBatch(Long blockId, Long customerId, String defaultDescription,
+                                                 String qualityGradeStr, String surfaceFinishStr, String edgeFinish,
+                                                 String notes,
+                                                 List<String> descriptions, List<BigDecimal> thicknesses,
+                                                 List<BigDecimal> widths, List<BigDecimal> lengths,
+                                                 List<Integer> pieceCounts, List<BigDecimal> quantities) {
+        List<StockItem> created = new ArrayList<>();
+        if (widths == null || widths.isEmpty()) return created;
+
+        for (int i = 0; i < widths.size(); i++) {
+            BigDecimal w = widths.get(i);
+            if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) continue;
+            BigDecimal l = (lengths != null && i < lengths.size() && lengths.get(i) != null) ? lengths.get(i) : w;
+            BigDecimal t = (thicknesses != null && i < thicknesses.size() && thicknesses.get(i) != null) ? thicknesses.get(i) : new BigDecimal("2.0");
+            int count = (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null) ? pieceCounts.get(i) : 1;
+            BigDecimal qty = (quantities != null && i < quantities.size() && quantities.get(i) != null)
+                    ? quantities.get(i)
+                    : w.multiply(l).multiply(BigDecimal.valueOf(count)).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+            String desc = (descriptions != null && i < descriptions.size() && descriptions.get(i) != null && !descriptions.get(i).isBlank())
+                    ? descriptions.get(i).trim()
+                    : (defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Ebatlı Mermer " + t + "x" + w + "x" + l));
+
+            StockItem item = createSizedItem(blockId, desc, t, w, l, qty, count, qty, customerId, qualityGradeStr, surfaceFinishStr, edgeFinish, notes);
+            created.add(item);
+        }
+        return created;
     }
 
     @Transactional

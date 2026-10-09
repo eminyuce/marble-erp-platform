@@ -130,11 +130,12 @@
 
         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">İşlem Kuralı</span>
-                <span class="p-2 rounded-xl bg-amber-50 text-amber-700"><i data-lucide="shield-check" class="w-5 h-5"></i></span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Sarf Deposu Toplam Değeri</span>
+                <span class="p-2 rounded-xl bg-amber-50 text-amber-700"><i data-lucide="badge-cent" class="w-5 h-5"></i></span>
             </div>
-            <div class="text-base font-bold text-slate-900 mt-2">KDV Hariç Net Maliyet</div>
-            <div class="text-xs text-slate-500 mt-1">Kullanıldığında net fiyattan ocak giderine aktarılır.</div>
+            <div class="text-3xl font-black text-slate-900 mt-2 font-mono"
+                 th:text="${totalValue != null ? #numbers.formatDecimal(totalValue, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+            <div class="text-xs text-slate-500 mt-1">Stoktaki sarf malzemelerinin net toplam tutarı</div>
         </div>
     </div>
 
@@ -157,13 +158,14 @@
                     <th class="py-3 px-4 text-right">Mevcut Stok</th>
                     <th class="py-3 px-4">Birim</th>
                     <th class="py-3 px-4 text-right">Birim Fiyat (Net)</th>
+                    <th class="py-3 px-4 text-right">Toplam Değer</th>
                     <th class="py-3 px-4">Durum</th>
                     <th class="py-3 px-4 text-right">İşlem</th>
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
                 <tr th:if="${consumables == null or consumables.isEmpty()}">
-                    <td colspan="8" class="py-8 text-center text-slate-400">
+                    <td colspan="9" class="py-8 text-center text-slate-400">
                         Bu kategoride kayıtlı stok kartı bulunmuyor. Yukarıdaki "Yeni Malzeme / Stok Ekle" butonuyla ekleyebilirsiniz.
                     </td>
                 </tr>
@@ -188,6 +190,8 @@
                     <td class="py-3 px-4 text-slate-500" th:text="${c.unit != null ? c.unit : 'adet'}">adet</td>
                     <td class="py-3 px-4 text-right font-mono"
                         th:text="${c.unitPrice != null ? #numbers.formatDecimal(c.unitPrice, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">150,00 TL</td>
+                    <td class="py-3 px-4 text-right font-mono font-bold text-slate-900"
+                        th:text="${c.quantity != null and c.unitPrice != null ? #numbers.formatDecimal(c.quantity * c.unitPrice, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">0,00 TL</td>
                     <td class="py-3 px-4">
                         <span th:if="${c.quantity != null and c.quantity > 0}"
                               class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Stokta</span>

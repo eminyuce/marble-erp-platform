@@ -8,6 +8,10 @@
 <div layout:fragment="content" class="erp-form-page max-w-6xl mx-auto space-y-6"
      th:data-initial-type="${defaultType != null ? defaultType.name() : 'SALES'}"
      th:data-initial-dept="${defaultDepartment != null ? defaultDepartment.name() : 'QUARRY'}"
+     th:data-prefill-block-name="${prefillBlock != null ? 'Blok: ' + prefillBlock.blockCode + (prefillBlock.stoneType != null ? ' (' + prefillBlock.stoneType + ')' : '') : ''}"
+     th:data-prefill-block-desc="${prefillBlock != null ? (prefillBlock.widthCm + 'x' + prefillBlock.lengthCm + 'x' + prefillBlock.heightCm + ' cm, ' + (prefillBlock.stoneType != null ? prefillBlock.stoneType : '')) : ''}"
+     th:data-prefill-block-qty="${prefillBlock != null ? (prefillBlock.actualTonnage != null && prefillBlock.actualTonnage > 0 ? prefillBlock.actualTonnage : (prefillBlock.approximateTonnage != null ? prefillBlock.approximateTonnage : 1)) : ''}"
+     th:data-prefill-block-id="${prefillBlock != null ? prefillBlock.id : ''}"
      x-data="invoiceForm($el)">
 
     <!-- Header & Breadcrumb -->
@@ -37,7 +41,7 @@
                 <button type="button" @click="openStockModal()"
                         class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-300 shadow-2xs cursor-pointer">
                     <i data-lucide="boxes" class="w-4 h-4 text-emerald-600"></i>
-                    <span>Stoktan Ürün Seç</span>
+                    <span>Stoktan Seç</span>
                 </button>
             </div>
         </div>
@@ -372,7 +376,7 @@
                     <button type="button" @click="addLine()"
                             class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition border border-slate-300 cursor-pointer">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                        <span>Boş Satır Ekle</span>
+                        <span>Satır Ekle</span>
                     </button>
                 </div>
             </div>
@@ -823,36 +827,50 @@
 <th:block layout:fragment="scripts">
 <script>
 function invoiceForm(el) {
-    return {
-        invoiceType: (el && el.dataset && el.dataset.initialType) || 'SALES',
-        department: (el && el.dataset && el.dataset.initialDept) || 'QUARRY',
-        purchaseCategory: 'MAZOT',
-        directExpense: false,
-        destinationMode: 'CUSTOMER', // 'CUSTOMER' or 'INTERNAL'
-        targetDepartment: 'FACTORY',
-        taxRate: 20,
-        stockModalOpen: false,
-        stockCategoryFilter: '',
-        stockSearch: '',
-        stockItemsList: [],
-        stockLoading: false,
-
-        // Yeni Stok Kartı Açma Modalı (Madde 1)
-        createStockModalOpen: false,
-        createStockSubmitting: false,
-        createStockError: '',
-        newStockForm: {
-            category: 'MAZOT',
-            productName: '',
-            itemCode: '',
-            unit: 'litre',
-            unitPrice: '',
-            isExpense: false,
-            notes: ''
-        },
-        lines: [
+        const prefillBlockId = el && el.dataset ? el.dataset.prefillBlockId : '';
+        const initialLines = prefillBlockId ? [
+            {
+                productName: el.dataset.prefillBlockName || '',
+                description: el.dataset.prefillBlockDesc || '',
+                quantity: parseFloat(el.dataset.prefillBlockQty) || 1,
+                unit: 'ton',
+                widthCm: '',
+                unitPrice: 0,
+                blockId: prefillBlockId,
+                slabId: '',
+                stockItemId: ''
+            }
+        ] : [
             { productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' }
-        ],
+        ];
+        return {
+            invoiceType: (el && el.dataset && el.dataset.initialType) || 'SALES',
+            department: (el && el.dataset && el.dataset.initialDept) || 'QUARRY',
+            purchaseCategory: 'MAZOT',
+            directExpense: false,
+            destinationMode: 'CUSTOMER', // 'CUSTOMER' or 'INTERNAL'
+            targetDepartment: 'FACTORY',
+            taxRate: 20,
+            stockModalOpen: false,
+            stockCategoryFilter: '',
+            stockSearch: '',
+            stockItemsList: [],
+            stockLoading: false,
+
+            // Yeni Stok Kartı Açma Modalı (Madde 1)
+            createStockModalOpen: false,
+            createStockSubmitting: false,
+            createStockError: '',
+            newStockForm: {
+                category: 'MAZOT',
+                productName: '',
+                itemCode: '',
+                unit: 'litre',
+                unitPrice: '',
+                isExpense: false,
+                notes: ''
+            },
+            lines: initialLines,
         addLine() {
             this.lines.push({ productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' });
         },
@@ -978,9 +996,12 @@ function invoiceForm(el) {
                 formData.append('isExpense', this.newStockForm.isExpense ? 'true' : 'false');
                 if (this.newStockForm.notes) formData.append('notes', this.newStockForm.notes);
 
-                const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
+                const csrfToken = document.querySelector('input[name="_csrf"]')?.value || document.querySelector('meta[name="_csrf"]')?.content;
                 const headers = {};
-                if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+                if (csrfToken) {
+                    headers['X-CSRF-TOKEN'] = csrfToken;
+                    formData.append('_csrf', csrfToken);
+                }
 
                 const res = await fetch('/invoices/api/create-stock-card', {
                     method: 'POST',
@@ -1053,7 +1074,7 @@ function invoiceForm(el) {
             targetLine.unitPrice = item.unitPrice || 0;
             targetLine.blockId = item.category === 'BLOCK' ? item.id : '';
             targetLine.slabId = item.category === 'SLAB' ? item.id : '';
-            targetLine.stockItemId = (item.category === 'SIZED' || item.category === 'FUEL' || item.category === 'CONSUMABLE' || item.category === 'ELEKTRIK' || item.category === 'DIGER') ? item.id : '';
+            targetLine.stockItemId = (item.category === 'SIZED' || item.category === 'FUEL' || item.category === 'MAZOT' || item.category === 'CONSUMABLE' || item.category === 'ELEKTRIK' || item.category === 'DIGER') ? item.id : '';
 
             if (item.directExpense === true) {
                 this.directExpense = true;

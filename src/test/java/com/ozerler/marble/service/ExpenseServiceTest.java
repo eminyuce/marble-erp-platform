@@ -82,17 +82,21 @@ class ExpenseServiceTest {
     }
 
     @Test
-    @DisplayName("site expenses require a construction project")
-    void siteExpenseWithoutProject_Throws() {
+    @DisplayName("site expenses do not require a construction project")
+    void siteExpenseWithoutProject_Succeeds() {
         CostCenter center = CostCenter.builder().id(5L).code("CC-S").name("Şantiye").businessUnit(BusinessUnit.SITE).build();
         when(costCenterRepository.findById(5L)).thenReturn(Optional.of(center));
+        when(costTransactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        assertThatThrownBy(() -> expenseService.recordExpense(new ExpenseService.ExpenseDraft(
-                5L, ExpenseType.MATERIAL, null, BusinessUnit.SITE, new BigDecimal("500"), "TRY",
+        CostTransaction tx = expenseService.recordExpense(new ExpenseService.ExpenseDraft(
+                5L, ExpenseType.CONSUMABLES, null, BusinessUnit.SITE, new BigDecimal("500"), "TRY",
                 "F-2", LocalDate.of(2026, 9, 10), LocalDate.of(2026, 9, 10), "2026-09", "2026-09",
-                null, null, null, null, null, null, null, null, "Malzeme")))
-                .isInstanceOf(IllegalArgumentException.class);
-        verify(costTransactionRepository, never()).save(any());
+                null, null, null, null, null, null, null, null, "Malzeme"));
+
+        assertThat(tx).isNotNull();
+        assertThat(tx.getBusinessUnit()).isEqualTo(BusinessUnit.SITE);
+        assertThat(tx.getProject()).isNull();
+        verify(costTransactionRepository).save(any());
     }
 
     @Test

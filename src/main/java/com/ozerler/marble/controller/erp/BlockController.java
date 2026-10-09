@@ -577,24 +577,8 @@ public class BlockController extends AbstractController {
 
     @GetMapping("/{id}/sell")
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
-    public String showSellForm(@PathVariable("id") Long id,
-                               Locale locale,
-                               Model model,
-                               RedirectAttributes redirectAttributes) {
-        var block = quarryBlockService.getBlockWithDetails(id);
-        if (redirectIfBlockCannotLeaveQuarry(block, locale, redirectAttributes, "error.block.sell.not_at_quarry")) {
-            return "redirect:/blocks/" + id;
-        }
-        if (!isInDispatchYard(block)) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    messageSource.getMessage("error.block.sell.not_in_dispatch_yard", null, locale));
-            return "redirect:/blocks/" + id;
-        }
-        model.addAttribute("block", block);
-        model.addAttribute("customers", blockCustomerMarkService.customers());
-        model.addAttribute("marks", blockCustomerMarkService.listForBlock(id));
-        model.addAttribute("pageTitle", "Blok Satışı - " + block.getBlockCode());
-        return "erp/blocks/sell";
+    public String showSellForm(@PathVariable("id") Long id) {
+        return "redirect:/invoices/create?type=SALES&department=QUARRY&blockId=" + id;
     }
 
     @PostMapping("/{id}/sell-to-customer")

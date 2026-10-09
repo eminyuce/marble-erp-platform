@@ -5,11 +5,56 @@
     <title>Yeni İş Emri Oluştur | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-form-page max-w-4xl mx-auto space-y-6"
-     x-data="{
-        hasStockConnection: false,
-        stockType: 'SLAB'
-     }">
+    <script>
+        function workOrderFormState() {
+            return {
+                hasStockConnection: false,
+                stockType: 'SLAB',
+                quantityUnit: 'm2',
+                dimRows: [
+                    { width: 60, length: 120, thickness: 2.0, count: 1, note: '' }
+                ],
+                addDimRow() {
+                    this.dimRows.push({ width: 60, length: 120, thickness: 2.0, count: 1, note: '' });
+                },
+                removeDimRow(i) {
+                    if (this.dimRows.length > 1) {
+                        this.dimRows.splice(i, 1);
+                    }
+                },
+                calcRowM2(r) {
+                    const w = parseFloat(r.width) || 0;
+                    const l = parseFloat(r.length) || 0;
+                    const c = parseInt(r.count) || 1;
+                    return ((w * l * c) / 10000).toFixed(2);
+                },
+                get totalPieces() {
+                    return this.dimRows.reduce((sum, r) => sum + (parseInt(r.count) || 1), 0);
+                },
+                get totalM2() {
+                    return this.dimRows.reduce((sum, r) => sum + parseFloat(this.calcRowM2(r)), 0).toFixed(2);
+                },
+                get primaryWidth() {
+                    return this.dimRows[0] ? this.dimRows[0].width : '';
+                },
+                get primaryLength() {
+                    return this.dimRows[0] ? this.dimRows[0].length : '';
+                },
+                get primaryThickness() {
+                    return this.dimRows[0] ? this.dimRows[0].thickness : 2.0;
+                },
+                get plannedQty() {
+                    if (this.quantityUnit === 'adet') {
+                        return this.totalPieces;
+                    }
+                    return this.totalM2;
+                }
+            };
+        }
+    </script>
+
+    <div layout:fragment="content" class="erp-form-page max-w-4xl mx-auto space-y-6"
+         x-data="workOrderFormState()">
 
     <!-- Header & Breadcrumb -->
     <div class="erp-form-header">
@@ -84,12 +129,15 @@
             </div>
         </div>
 
-        <!-- 2. TAŞ BİLGİLERİ & ÖLÇÜLER -->
-        <div class="border-t border-slate-100 pt-6">
-            <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 pb-2 border-b border-slate-100">
-                <i data-lucide="layers" class="w-4 h-4 text-amber-600"></i>
-                <span>2. Taş Özellikleri & Ölçüler</span>
-            </h3>
+        <!-- 2. TAŞ BİLGİLERİ & ÖLÇÜLER (Sınırsız Ebat Girişi) -->
+        <div class="border-t border-slate-100 pt-6 space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-4 h-4 text-amber-600"></i>
+                    <span>2. Taş Özellikleri &amp; Ebat Satırları</span>
+                </h3>
+                <span class="text-xs font-semibold text-slate-500">Sınırsız sayıda farklı ebat girebilirsiniz</span>
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- Taş Türü -->
@@ -106,39 +154,103 @@
                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                 </div>
 
-                <!-- Kalınlık (cm) -->
+                <!-- Birim -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Kalınlık (cm) *</label>
-                    <input type="number" step="0.1" name="thicknessCm" value="2.0" required
-                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Ölçü Birimi *</label>
+                    <select name="quantityUnit" x-model="quantityUnit"
+                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="m2">m² (Kare Metre)</option>
+                        <option value="adet">adet</option>
+                        <option value="m.t.">m.t. (Metretül)</option>
+                        <option value="ton">ton</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Geriye dönük uyumluluk için ana boyut/miktar alanları -->
+            <input type="hidden" name="thicknessCm" :value="primaryThickness">
+            <input type="hidden" name="widthCm" :value="primaryWidth">
+            <input type="hidden" name="lengthCm" :value="primaryLength">
+            <input type="hidden" name="quantity" :value="plannedQty">
+
+            <!-- Dinamik Ebat Satırları Tablosu -->
+            <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
+                <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <i data-lucide="ruler" class="w-4 h-4 text-indigo-600"></i>
+                        <span>Sipariş Ebat ve Adet Listesi</span>
+                    </span>
+                    <button type="button" @click="addDimRow()"
+                            class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        <span>Yeni Ebat Satırı Ekle</span>
+                    </button>
                 </div>
 
-                <!-- En (cm) -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">En (cm)</label>
-                    <input type="number" step="0.1" name="widthCm" placeholder="Örn: 60"
-                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse min-w-[700px]">
+                        <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                            <tr>
+                                <th class="py-2.5 px-3 w-10 text-center">#</th>
+                                <th class="py-2.5 px-3 w-28">Kalınlık (cm)</th>
+                                <th class="py-2.5 px-3 w-28">En (cm) *</th>
+                                <th class="py-2.5 px-3 w-28">Boy (cm) *</th>
+                                <th class="py-2.5 px-3 w-24">Adet *</th>
+                                <th class="py-2.5 px-3 w-28 text-center">Hesaplanan m²</th>
+                                <th class="py-2.5 px-3">Mahâl / Açıklama Notu</th>
+                                <th class="py-2.5 px-2 w-12 text-center">Sil</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium">
+                            <template x-for="(row, idx) in dimRows" :key="idx">
+                                <tr class="hover:bg-slate-50/70 transition">
+                                    <td class="p-2 text-center font-bold text-slate-400 font-mono" x-text="idx + 1">1</td>
+                                    <td class="p-2">
+                                        <input type="number" step="0.1" min="0.1" name="dimThicknessCm" x-model.number="row.thickness" required
+                                               class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="number" step="0.1" min="1" name="dimWidthCm" x-model.number="row.width" required placeholder="En"
+                                               class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="number" step="0.1" min="1" name="dimLengthCm" x-model.number="row.length" required placeholder="Boy"
+                                               class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="number" step="1" min="1" name="dimPieceCount" x-model.number="row.count" required
+                                               class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-right" />
+                                    </td>
+                                    <td class="p-2 text-center font-mono font-bold text-xs">
+                                        <span class="px-2 py-1 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-lg inline-block"
+                                              x-text="calcRowM2(row) + ' m²'">0,00 m²</span>
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="text" name="dimNote" x-model="row.note" placeholder="Örn: Mutfak tezgahı, Zemin kaplama"
+                                               class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
+                                    </td>
+                                    <td class="p-2 text-center">
+                                        <button type="button" @click="removeDimRow(idx)" class="p-1 text-slate-400 hover:text-rose-600 rounded-md transition" title="Satırı Sil">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
                 </div>
 
-                <!-- Boy (cm) -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Boy (cm)</label>
-                    <input type="number" step="0.1" name="lengthCm" placeholder="Örn: 120"
-                           class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-                </div>
-
-                <!-- Planlanan Miktar & Birim -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Planlanan Miktar *</label>
-                    <div class="flex gap-2">
-                        <input type="number" step="0.01" name="quantity" required placeholder="50.00"
-                               class="w-2/3 px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-                        <select name="quantityUnit" class="w-1/3 px-2 py-2.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option value="m2">m²</option>
-                            <option value="adet">adet</option>
-                            <option value="m.t.">m.t.</option>
-                            <option value="ton">ton</option>
-                        </select>
+                <!-- Ebat Satırları Özet Banner -->
+                <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-4 text-slate-600 font-semibold">
+                        <span>Toplam Kalem: <strong class="text-slate-900 font-mono" x-text="dimRows.length">1</strong></span>
+                        <span>•</span>
+                        <span>Toplam Adet: <strong class="text-slate-900 font-mono" x-text="totalPieces">1</strong></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-600 font-bold">Toplam Hesaplanan Alan:</span>
+                        <span class="px-3 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl font-black font-mono text-sm"
+                              x-text="totalM2 + ' m²'">0.00 m²</span>
                     </div>
                 </div>
             </div>

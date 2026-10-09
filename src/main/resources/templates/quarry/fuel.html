@@ -6,16 +6,31 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
-     x-data="{
-        dispenseModalOpen: false,
-        addStockModalOpen: false,
-        selectedMachineId: '',
-        dispenseLitres: '',
-        currentStock: [[${currentLiters != null ? currentLiters : 0}]],
-        get canDispense() {
-            return this.selectedMachineId && parseFloat(this.dispenseLitres) > 0 && parseFloat(this.dispenseLitres) <= this.currentStock;
+     x-data="quarryFuelPage()">
+
+    <script th:inline="javascript">
+        function quarryFuelPage() {
+            return {
+                dispenseModalOpen: false,
+                addStockModalOpen: false,
+                selectedMachineId: '',
+                dispenseLitres: '',
+                currentStock: /*[[${currentLiters != null ? currentLiters : 0}]]*/ 0,
+                init() {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('action') === 'dispense') {
+                        this.dispenseModalOpen = true;
+                    } else if (params.get('action') === 'add' || params.get('action') === 'fill') {
+                        this.addStockModalOpen = true;
+                    }
+                },
+                get canDispense() {
+                    const l = parseFloat(this.dispenseLitres) || 0;
+                    return this.selectedMachineId && l > 0 && l <= this.currentStock;
+                }
+            };
         }
-     }">
+    </script>
 
     <!-- Header & Breadcrumb -->
     <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -26,20 +41,26 @@
                 <span>Ocak — Mazot Deposu</span>
             </h2>
             <p class="erp-list-lead">
-                Ocak yakıt tankı stok takibi ve iş makinelerine mazot çıkış yönetimi. Fatura ile alınan mazot depoya stok olarak girer; makineye verildiğinde KDV hariç net maliyetle ocak giderine yazılır.
+                Ocak yakıt tankı stok takibi ve iş makinelerine mazot çıkış yönetimi. Mazot depo dolumu Alış Faturası üzerinden stok kartından mazot seçilerek veya doğrudan depo dolumuyla yapılır; makineler için yapılan çıkışlar doğrudan ocak giderine yazılır.
             </p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
             <button type="button" @click="dispenseModalOpen = true"
-                    class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                    class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                 <i data-lucide="droplet" class="w-4 h-4"></i>
                 <span>Makineye Mazot Ver</span>
             </button>
             <button type="button" @click="addStockModalOpen = true"
                     class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
-                <i data-lucide="plus" class="w-4 h-4 text-emerald-600"></i>
-                <span>Depo Dolumu (Stok Ekle)</span>
+                <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i>
+                <span>Depo Dolumu</span>
             </button>
+            <a th:href="@{/invoices/create(type='PURCHASE',department='QUARRY')}"
+               class="px-3 py-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs"
+               title="Fatura Girişi ile Depo Dolumu">
+                <i data-lucide="receipt" class="w-4 h-4 text-slate-500"></i>
+                <span>Fatura ile Giriş</span>
+            </a>
         </div>
     </div>
 
@@ -193,6 +214,7 @@
                 </div>
 
                 <form th:action="@{/quarry/fuel/dispense}" method="post" class="mt-4 space-y-4">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
                         <span class="text-xs font-bold text-slate-700">Mevcut Tank Stoğu:</span>
                         <span class="text-base font-black text-slate-900 font-mono"
@@ -272,8 +294,8 @@
             <div class="inline-block p-6 my-8 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="plus" class="w-5 h-5 text-emerald-600"></i>
-                        <span>Depoya Mazot Ekle (Stok Dolumu)</span>
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-600"></i>
+                        <span>Depo Dolumu (Mazot Stok Girişi)</span>
                     </h3>
                     <button type="button" @click="addStockModalOpen = false" class="text-slate-400 hover:text-slate-600">
                         <i data-lucide="x" class="w-5 h-5"></i>
@@ -281,6 +303,7 @@
                 </div>
 
                 <form th:action="@{/quarry/fuel/add}" method="post" class="mt-4 space-y-4">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Giren Mazot Miktarı (Litre) *</label>
                         <input type="number" step="1" min="1" name="litres" required placeholder="Örn: 5000"
@@ -304,6 +327,12 @@
                         <label class="block text-xs font-bold text-slate-700 mb-1">Notlar</label>
                         <textarea name="notes" rows="2" placeholder="Dolum notları..."
                                   class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900">
+                        <i data-lucide="info" class="w-4 h-4 text-emerald-600 inline mr-1"></i>
+                        <span>Fatura cari ve KDV takibiyle girmek isterseniz: </span>
+                        <a th:href="@{/invoices/create(type='PURCHASE',department='QUARRY')}" class="font-bold underline text-emerald-700 hover:text-emerald-900">Alış Faturası ile Girin</a>
                     </div>
 
                     <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">

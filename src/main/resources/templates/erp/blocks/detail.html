@@ -132,6 +132,27 @@
                 <p th:unless="${atQuarry}" class="text-xs text-slate-500 mt-auto">Fabrika sevki yalnızca ocaktaki bloklar için geçerlidir.</p>
             </div>
 
+            <!-- Fabrika Stoğuna Kabul (Yoldaysa) -->
+            <div th:if="${block.status != null and (block.status.name() == 'IN_TRANSIT' or block.status.name() == 'DISPATCHED')}"
+                 class="erp-ops-card erp-ops-card--primary">
+                <div class="erp-ops-card-head">
+                    <span class="erp-ops-card-icon text-indigo-600 bg-indigo-50"><i data-lucide="check-circle"></i></span>
+                    <div>
+                        <h3 class="erp-ops-card-title text-indigo-950">Fabrika Stoğuna Kabul</h3>
+                        <p class="erp-ops-card-desc">Blok sevkiyatta (Yolda). Fabrikaya ulaştığında Fabrika Blok Sahasına kabul edin.</p>
+                    </div>
+                </div>
+                <div class="mt-auto pt-2">
+                    <form th:action="@{'/operations/factory/blocks/' + ${block.id} + '/receive'}" method="post">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <button type="submit" class="w-full min-h-11 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm cursor-pointer">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <span>Fabrikada Kabul Et (Stoğa Al)</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
             <!-- Satış -->
             <div class="erp-ops-card erp-ops-card--success" th:classappend="${!atQuarry ? 'erp-ops-card--muted' : ''}">
                 <div class="erp-ops-card-head">

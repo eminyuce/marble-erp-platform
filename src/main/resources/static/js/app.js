@@ -223,17 +223,27 @@ function gridNumber(value, format) {
     if (!Number.isFinite(n)) {
         return "—";
     }
-    return typeof format === "function" ? format(n) : String(n);
+    return typeof format === "function" ? format(n) : n.toLocaleString("tr-TR");
 }
 
 function gridMoney(value) {
-    const amount = gridNumber(value, (n) => n.toLocaleString("tr-TR"));
+    const amount = gridNumber(value, (n) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     return amount === "—" ? "—" : amount + " TL";
 }
 
 function gridArea(value) {
-    const amount = gridNumber(value, (n) => n.toFixed(2));
+    const amount = gridNumber(value, (n) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     return amount === "—" ? "—" : amount + " m²";
+}
+
+function formatTurkishNumber(val, decimals = null) {
+    if (val === undefined || val === null || val === "") return "";
+    const n = typeof val === "number" ? val : parseFloat(String(val).replace(/\./g, "").replace(",", "."));
+    if (isNaN(n)) return String(val);
+    if (decimals !== null) {
+        return n.toLocaleString("tr-TR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+    return n.toLocaleString("tr-TR");
 }
 
 function erpStatusBadge(status, label) {
@@ -512,6 +522,7 @@ window.gridText = gridText;
 window.gridNumber = gridNumber;
 window.gridMoney = gridMoney;
 window.gridArea = gridArea;
+window.formatTurkishNumber = formatTurkishNumber;
 window.erpStatusBadge = erpStatusBadge;
 window.erpResponsiveCollapseColumn = erpResponsiveCollapseColumn;
 window.erpIndexColumn = erpIndexColumn;

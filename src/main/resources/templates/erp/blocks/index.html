@@ -91,25 +91,15 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="stockFilter === 'IN_STOCK' && statusFilter === 'READY_FOR_DISPATCH' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
-                @click="setStockFilter('IN_STOCK'); setStatusFilter('READY_FOR_DISPATCH')">
-            <div class="text-[11px] uppercase tracking-wide text-emerald-700 font-semibold">Tartıldı</div>
-            <div class="text-xl font-black text-emerald-700 mt-1">
-                <span th:text="${summary.readyForDispatchCount != null ? summary.readyForDispatchCount : 0}">0</span> blok
-            </div>
-            <div class="text-xs text-slate-500 mt-0.5">Sevke hazır</div>
-        </button>
-
-        <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="stockFilter === 'DISPATCHED' ? 'erp-summary-card--active ring-2 ring-indigo-500' : ''"
-                @click="setStockFilter('DISPATCHED')">
+                :class="statusFilter === 'IN_TRANSIT' ? 'erp-summary-card--active ring-2 ring-indigo-500' : ''"
+                @click="setStockFilter('ALL'); setStatusFilter('IN_TRANSIT')">
             <div class="text-[11px] uppercase tracking-wide text-indigo-700 font-semibold flex items-center gap-1">
-                <i data-lucide="truck" class="w-3.5 h-3.5"></i> Fabrikaya Sevk
+                <i data-lucide="truck" class="w-3.5 h-3.5"></i> Yolda
             </div>
             <div class="text-xl font-black text-slate-900 mt-1">
-                <span th:text="${summary.factoryYardCount}">0</span> blok
+                <span th:text="${summary.inTransitCount != null ? summary.inTransitCount : 0}">0</span> blok
             </div>
-            <div class="text-xs text-slate-500 mt-0.5">Yolda veya fabrikada</div>
+            <div class="text-xs text-slate-500 mt-0.5">Fabrikaya sevkiyat halinde</div>
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
@@ -172,11 +162,6 @@
                     :class="yardFilter === 'DISPATCH_YARD' ? 'bg-sky-100 text-sky-900 border-sky-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
                     @click="setYardFilter('DISPATCH_YARD')">
                 Stok Sahası (<span th:text="${summary != null ? summary.dispatchYardCount : 0}">0</span>)
-            </button>
-            <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
-                    :class="statusFilter === 'READY_FOR_DISPATCH' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
-                    @click="setStatusFilter('READY_FOR_DISPATCH')">
-                Tartıldı (Sevke Hazır) (<span th:text="${summary != null ? summary.readyForDispatchCount : 0}">0</span>)
             </button>
             <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
                     :class="statusFilter === 'IN_TRANSIT' ? 'bg-indigo-100 text-indigo-900 border-indigo-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"

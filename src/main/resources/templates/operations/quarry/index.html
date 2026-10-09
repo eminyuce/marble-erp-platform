@@ -71,15 +71,15 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === 'READY_FOR_DISPATCH' ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
-                @click="setStatusFilter('READY_FOR_DISPATCH')">
-            <div class="text-[11px] uppercase tracking-wide text-blue-600 font-semibold flex items-center gap-1">
-                <i data-lucide="scale" class="w-3.5 h-3.5"></i> Kantar Tartımı Yapılan
+                :class="statusFilter === 'PRODUCED' ? 'erp-summary-card--active ring-2 ring-sky-500' : ''"
+                @click="setStatusFilter('PRODUCED')">
+            <div class="text-[11px] uppercase tracking-wide text-sky-600 font-semibold flex items-center gap-1">
+                <i data-lucide="warehouse" class="w-3.5 h-3.5"></i> Stok Sahası
             </div>
-            <div class="text-lg font-black text-blue-700 mt-1 font-mono">
+            <div class="text-lg font-black text-sky-700 mt-1 font-mono">
                 <span th:text="${totalActTon != null ? #numbers.formatDecimal(totalActTon, 1, 'POINT', 2, 'COMMA') + ' ton' : '0,00 ton'}">0,00 ton</span>
             </div>
-            <div class="text-[11px] text-slate-500 mt-0.5">Gerçek net kantar tonajı</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Stok sahasındaki bloklar</div>
         </button>
 
         <a th:href="@{/operations/quarry/dispatches}" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300 block">
@@ -100,13 +100,13 @@
                 :class="statusFilter === 'EXTRACTED' ? 'erp-yard-chip--active' : ''"
                 @click="setStatusFilter('EXTRACTED')">
             <i data-lucide="mountain" class="w-3.5 h-3.5 inline mr-1 text-amber-600"></i>
-            Ocak Sahasında
+            Üretim Sahası
         </button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'READY_FOR_DISPATCH' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('READY_FOR_DISPATCH')">
-            <i data-lucide="scale" class="w-3.5 h-3.5 inline mr-1 text-blue-600"></i>
-            Tartıldı (Sevke Hazır)
+                :class="statusFilter === 'PRODUCED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('PRODUCED')">
+            <i data-lucide="warehouse" class="w-3.5 h-3.5 inline mr-1 text-sky-600"></i>
+            Stok Sahası
         </button>
         <button type="button" class="erp-yard-chip"
                 :class="statusFilter === 'IN_TRANSIT' ? 'erp-yard-chip--active' : ''"
