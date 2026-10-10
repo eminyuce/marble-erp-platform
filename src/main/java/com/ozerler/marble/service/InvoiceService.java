@@ -639,8 +639,40 @@ public class InvoiceService {
 
     @Transactional(readOnly = true)
     public Invoice getInvoiceById(Long id) {
-        return invoiceRepository.findById(id)
+        Invoice invoice = invoiceRepository.findByIdWithDetails(id)
+                .or(() -> invoiceRepository.findById(id))
                 .orElseThrow(() -> new IllegalArgumentException("Fatura bulunamadı: " + id));
+
+        // Lazy collections & associations initialization within transactional boundary
+        // to prevent LazyInitializationException in Thymeleaf views (open-in-view: false)
+        if (invoice.getItems() != null) {
+            invoice.getItems().size();
+            for (InvoiceItem item : invoice.getItems()) {
+                if (item.getBlock() != null) {
+                    item.getBlock().getBlockCode();
+                }
+                if (item.getSlab() != null) {
+                    item.getSlab().getSlabCode();
+                }
+                if (item.getStockItem() != null) {
+                    item.getStockItem().getItemCode();
+                }
+            }
+        }
+        if (invoice.getCollections() != null) {
+            invoice.getCollections().size();
+        }
+        if (invoice.getCustomer() != null) {
+            invoice.getCustomer().getCompanyName();
+        }
+        if (invoice.getSupplier() != null) {
+            invoice.getSupplier().getCompanyName();
+        }
+        if (invoice.getProject() != null) {
+            invoice.getProject().getName();
+        }
+
+        return invoice;
     }
 
     @Transactional(readOnly = true)

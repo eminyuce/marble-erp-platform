@@ -312,7 +312,15 @@ public class FactoryOperationController extends AbstractController {
             Map<String, Object> map = new HashMap<>();
             map.put("id", it.getId());
             map.put("itemCode", it.getItemCode());
-            map.put("sourceBlockCode", it.getSourceBlock() != null ? it.getSourceBlock().getBlockCode() : "—");
+            String sourceBlockCode = "—";
+            if (it.getSourceBlock() != null) {
+                try {
+                    sourceBlockCode = it.getSourceBlock().getBlockCode();
+                } catch (Exception e) {
+                    sourceBlockCode = "—";
+                }
+            }
+            map.put("sourceBlockCode", sourceBlockCode != null ? sourceBlockCode : "—");
             map.put("stoneType", it.getStoneType() != null ? it.getStoneType() : "Mermer");
             map.put("description", it.getDescription() != null ? it.getDescription() : "Ebatlı Mermer");
             map.put("surfaceFinish", it.getSurfaceFinish() != null ? it.getSurfaceFinish().getDisplayName() : "Cilalı");
@@ -322,8 +330,17 @@ public class FactoryOperationController extends AbstractController {
             map.put("unit", it.getUnit() != null ? it.getUnit() : "m2");
             map.put("pieceCount", it.getPieceCount());
             map.put("actualProducedQuantity", it.getActualProducedQuantity());
-            map.put("customerName", it.getCustomer() != null ? it.getCustomer().getCompanyName() : null);
-            map.put("customerId", it.getCustomer() != null ? it.getCustomer().getId() : null);
+            String customerName = null;
+            Long custId = null;
+            if (it.getCustomer() != null) {
+                try {
+                    customerName = it.getCustomer().getCompanyName();
+                    custId = it.getCustomer().getId();
+                } catch (Exception ignored) {
+                }
+            }
+            map.put("customerName", customerName);
+            map.put("customerId", custId);
             map.put("isGeneralStock", it.getCustomer() == null);
             map.put("productionDate", it.getProductionDate() != null ? it.getProductionDate().format(dateFmt) : (it.getCreatedDate() != null ? it.getCreatedDate().format(dateFmt) : "—"));
             map.put("status", it.getStatus() != null ? it.getStatus() : "AVAILABLE");

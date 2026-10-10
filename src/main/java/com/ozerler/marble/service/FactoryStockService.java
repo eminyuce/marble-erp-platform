@@ -228,7 +228,21 @@ public class FactoryStockService {
     @Transactional(readOnly = true)
     public Page<StockItem> getSizedStockItemsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        return stockItemRepository.searchItems(StockProductType.SIZED, null, customerId, generalStockOnly, search, pageable);
+        Page<StockItem> items = stockItemRepository.searchItems(StockProductType.SIZED, null, customerId, generalStockOnly, search, pageable);
+        if (items.hasContent()) {
+            items.getContent().forEach(it -> {
+                if (it.getSourceBlock() != null) {
+                    it.getSourceBlock().getBlockCode();
+                }
+                if (it.getCustomer() != null) {
+                    it.getCustomer().getCompanyName();
+                }
+                if (it.getStockLocation() != null) {
+                    it.getStockLocation().getName();
+                }
+            });
+        }
+        return items;
     }
 
     @Transactional

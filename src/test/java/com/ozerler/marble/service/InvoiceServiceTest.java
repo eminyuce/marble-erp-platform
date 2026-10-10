@@ -313,4 +313,59 @@ class InvoiceServiceTest {
         assertThat(inv.getQuarryCategory()).isEqualTo(QuarryCategory.ELEKTRIK);
         assertThat(inv.getInvoiceType()).isEqualTo(InvoiceType.PURCHASE);
     }
+
+    @Test
+    @DisplayName("getInvoiceById fetches invoice with details and initializes collections")
+    void getInvoiceById_Success_InitializesCollections() {
+        Customer customer = Customer.builder().id(10L).companyName("Müşteri A").build();
+        InvoiceItem item = InvoiceItem.builder().id(1L).productName("Blok").build();
+        Invoice invoice = Invoice.builder()
+                .id(1L)
+                .invoiceNo("FAT-001")
+                .customer(customer)
+                .items(new ArrayList<>(List.of(item)))
+                .collections(new ArrayList<>())
+                .build();
+
+        when(invoiceRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(invoice));
+
+        Invoice result = invoiceService.getInvoiceById(1L);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getInvoiceNo()).isEqualTo("FAT-001");
+        assertThat(result.getItems()).hasSize(1);
+        verify(invoiceRepository).findByIdWithDetails(1L);
+    }
+
+    @Test
+    @DisplayName("getInvoiceById falls back to findById if findByIdWithDetails is empty")
+    void getInvoiceById_FallbackToFindById() {
+        Invoice invoice = Invoice.builder()
+                .id(2L)
+                .invoiceNo("FAT-002")
+                .items(new ArrayList<>())
+                .collections(new ArrayList<>())
+                .build();
+
+        when(invoiceRepository.findByIdWithDetails(2L)).thenReturn(Optional.empty());
+        when(invoiceRepository.findById(2L)).thenReturn(Optional.of(invoice));
+
+        Invoice result = invoiceService.getInvoiceById(2L);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getInvoiceNo()).isEqualTo("FAT-002");
+        verify(invoiceRepository).findByIdWithDetails(2L);
+        verify(invoiceRepository).findById(2L);
+    }
+
+    @Test
+    @DisplayName("getInvoiceById throws IllegalArgumentException when invoice is not found")
+    void getInvoiceById_NotFound_ThrowsException() {
+        when(invoiceRepository.findByIdWithDetails(999L)).thenReturn(Optional.empty());
+        when(invoiceRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> invoiceService.getInvoiceById(999L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Fatura bulunamadı: 999");
+    }
 }
