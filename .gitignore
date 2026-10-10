@@ -54,3 +54,4 @@ playwright-report/
 blob-report/
 .tgrep/
 data/
+.tgrep-agent/
