@@ -92,7 +92,14 @@
                         </div>
 
                         <div class="erp-form-field">
-                            <label class="erp-form-label" for="expense-expenseType">Gider Türü <span class="req">*</span></label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="erp-form-label mb-0" for="expense-expenseType">Gider Türü <span class="req">*</span></label>
+                                <a th:href="@{/admin/definitions/cost-centers/create}" target="_blank"
+                                   class="text-[11px] font-bold text-amber-700 hover:text-amber-800 inline-flex items-center gap-1">
+                                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                    <span>Yeni Masraf Merkezi / Kategori Ekle</span>
+                                </a>
+                            </div>
                             <select id="expense-expenseType" name="expenseType" required class="erp-form-select">
                                 <option value="" disabled th:selected="${record == null or record.expenseType == null}">Gider türü seçin</option>
                                 <option th:each="t : ${expenseTypes}" th:value="${t.name()}" th:text="${t.label}"

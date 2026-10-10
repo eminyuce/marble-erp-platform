@@ -19,7 +19,8 @@ public enum ExpenseType {
     SSK("enum.expense_type.ssk"),
     STOPAJ("enum.expense_type.stopaj"),
     BANK_FINANCE("enum.expense_type.bank_finance"),
-    OFFICIAL_FEES("enum.expense_type.official_fees");
+    OFFICIAL_FEES("enum.expense_type.official_fees"),
+    FOOD("enum.expense_type.food");
 
     private final String messageKey;
 
@@ -41,7 +42,7 @@ public enum ExpenseType {
             case MATERIAL, DIRECT_RAW -> ExpenseCategory.MATERIAL;
             case TRANSPORTATION, LOGISTICS -> ExpenseCategory.TRANSPORTATION;
             case MAINTENANCE -> ExpenseCategory.MAINTENANCE;
-            case DEPRECIATION, OVERHEAD, BANK_FINANCE, OFFICIAL_FEES -> ExpenseCategory.OTHER;
+            case FOOD, DEPRECIATION, OVERHEAD, BANK_FINANCE, OFFICIAL_FEES -> ExpenseCategory.OTHER;
         };
     }
 }

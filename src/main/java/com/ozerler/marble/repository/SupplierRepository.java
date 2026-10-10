@@ -27,6 +27,14 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
             + "OR LOWER(s.supplierCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(s.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(COALESCE(s.contactPerson, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-            + "AND (:type IS NULL OR s.supplierType = :type)")
-    Page<Supplier> search(@Param("search") String search, @Param("type") SupplierType type, Pageable pageable);
+            + "AND (:type IS NULL OR s.supplierType = :type) "
+            + "AND (:unit IS NULL OR s.businessUnit = :unit)")
+    Page<Supplier> search(@Param("search") String search,
+                          @Param("type") SupplierType type,
+                          @Param("unit") com.ozerler.marble.model.enums.BusinessUnit unit,
+                          Pageable pageable);
+
+    default Page<Supplier> search(String search, SupplierType type, Pageable pageable) {
+        return search(search, type, null, pageable);
+    }
 }

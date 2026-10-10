@@ -32,6 +32,7 @@ public class OperationWorkOrderController extends AbstractController {
     private final SlabRepository slabRepository;
     private final StockItemRepository stockItemRepository;
     private final BlockRepository blockRepository;
+    private final SalesOrderItemRepository salesOrderItemRepository;
 
     @GetMapping
     public String index(@RequestParam(value = "department", required = false) BusinessUnit department,
@@ -88,16 +89,65 @@ public class OperationWorkOrderController extends AbstractController {
     public String newOrderForm(@RequestParam(value = "department", defaultValue = "FACTORY") BusinessUnit department,
                                @RequestParam(value = "slabId", required = false) Long slabId,
                                @RequestParam(value = "stockItemId", required = false) Long stockItemId,
+                               @RequestParam(value = "blockId", required = false) Long blockId,
+                               @RequestParam(value = "orderItemId", required = false) Long orderItemId,
+                               @RequestParam(value = "customerId", required = false) Long customerId,
                                Model model) {
+
+        SalesOrderItem orderItem = orderItemId != null
+                ? salesOrderItemRepository.findByIdWithDetails(orderItemId).orElse(null)
+                : null;
+
+        BigDecimal prefillCount = null;
+        String prefillNotes = "";
+        String prefillStoneType = "";
+
+        if (orderItem != null) {
+            if (orderItem.getBlock() != null && blockId == null) {
+                blockId = orderItem.getBlock().getId();
+            }
+            if (orderItem.getSlab() != null && slabId == null) {
+                slabId = orderItem.getSlab().getId();
+            }
+            if (customerId == null && orderItem.getSalesOrder() != null && orderItem.getSalesOrder().getCustomer() != null) {
+                customerId = orderItem.getSalesOrder().getCustomer().getId();
+            }
+            model.addAttribute("prefillOrderItem", orderItem);
+            prefillNotes = "Sipariş: " + (orderItem.getSalesOrder() != null ? orderItem.getSalesOrder().getOrderNo() : "")
+                    + " | Kalem: " + orderItem.getDescription();
+            if (orderItem.getBlock() != null && orderItem.getBlock().getStoneType() != null) {
+                prefillStoneType = orderItem.getBlock().getStoneType();
+            } else {
+                prefillStoneType = orderItem.getDescription();
+            }
+            if ("adet".equalsIgnoreCase(orderItem.getUnit())) {
+                prefillCount = orderItem.getQuantity();
+            }
+        }
 
         Slab selectedSlab = slabId != null ? slabRepository.findById(slabId).orElse(null) : null;
         StockItem selectedStockItem = stockItemId != null ? stockItemRepository.findById(stockItemId).orElse(null) : null;
+        Block selectedBlock = blockId != null ? blockRepository.findById(blockId).orElse(null) : null;
+
+        List<Block> availableBlocks = blockRepository.findByStatusInOrderByBlockCodeAsc(
+                List.of(BlockStatus.AT_FACTORY, BlockStatus.FACTORY_STOCK, BlockStatus.PRODUCED, BlockStatus.QUARRY, BlockStatus.EXTRACTED, BlockStatus.MARKED)
+        );
+        if (selectedBlock != null && !availableBlocks.contains(selectedBlock)) {
+            availableBlocks = new java.util.ArrayList<>(availableBlocks);
+            availableBlocks.add(0, selectedBlock);
+        }
 
         model.addAttribute("defaultDepartment", department);
         model.addAttribute("selectedSlab", selectedSlab);
         model.addAttribute("selectedStockItem", selectedStockItem);
+        model.addAttribute("selectedBlock", selectedBlock);
+        model.addAttribute("prefillCustomerId", customerId);
+        model.addAttribute("prefillStoneType", prefillStoneType);
+        model.addAttribute("prefillNotes", prefillNotes);
+        model.addAttribute("prefillCount", prefillCount != null ? prefillCount.intValue() : 1);
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("departments", List.of(BusinessUnit.FACTORY, BusinessUnit.WORKSHOP, BusinessUnit.SITE));
+        model.addAttribute("availableBlocks", availableBlocks);
         model.addAttribute("availableSlabs", slabRepository.findByStatus(SlabStatus.AVAILABLE));
         model.addAttribute("availableStockItems", stockItemRepository.findByProductTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
         model.addAttribute("surfaceOperations", workOrderService.getSurfaceOperations());

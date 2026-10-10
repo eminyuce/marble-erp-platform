@@ -27,6 +27,14 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             + "OR LOWER(c.customerCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(c.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(COALESCE(c.contactPerson, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-            + "AND (:type IS NULL OR c.customerType = :type)")
-    Page<Customer> search(@Param("search") String search, @Param("type") CustomerType type, Pageable pageable);
+            + "AND (:type IS NULL OR c.customerType = :type) "
+            + "AND (:unit IS NULL OR c.businessUnit = :unit)")
+    Page<Customer> search(@Param("search") String search,
+                          @Param("type") CustomerType type,
+                          @Param("unit") com.ozerler.marble.model.enums.BusinessUnit unit,
+                          Pageable pageable);
+
+    default Page<Customer> search(String search, CustomerType type, Pageable pageable) {
+        return search(search, type, null, pageable);
+    }
 }

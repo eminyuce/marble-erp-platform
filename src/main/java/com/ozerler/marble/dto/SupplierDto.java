@@ -55,11 +55,20 @@ public class SupplierDto {
     @JsonAlias("supplier_type_label")
     private String supplierTypeLabel;
 
+    @JsonProperty("businessUnit")
+    @JsonAlias("business_unit")
+    private String businessUnit;
+
+    @JsonProperty("businessUnitLabel")
+    @JsonAlias("business_unit_label")
+    private String businessUnitLabel;
+
     @JsonProperty("notes")
     private String notes;
 
     public static SupplierDto fromEntity(Supplier supplier) {
         SupplierType type = supplier.getSupplierType();
+        com.ozerler.marble.model.enums.BusinessUnit bu = supplier.getBusinessUnit();
         return SupplierDto.builder()
                 .id(supplier.getId())
                 .supplierCode(supplier.getSupplierCode())
@@ -72,6 +81,8 @@ public class SupplierDto {
                 .taxNumber(supplier.getTaxNumber())
                 .supplierType(type != null ? type.name() : null)
                 .supplierTypeLabel(type != null ? type.getLabel() : "")
+                .businessUnit(bu != null ? bu.name() : null)
+                .businessUnitLabel(bu != null ? bu.getDisplayName() : "")
                 .notes(supplier.getNotes())
                 .build();
     }

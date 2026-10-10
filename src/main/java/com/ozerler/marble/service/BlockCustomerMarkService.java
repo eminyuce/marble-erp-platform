@@ -9,6 +9,7 @@ import com.ozerler.marble.model.enums.BlockMarkStatus;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
 import com.ozerler.marble.repository.BlockCustomerMarkRepository;
+import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.SalesOrderRepository;
 import com.ozerler.marble.util.MessageUtils;
@@ -27,6 +28,7 @@ import java.util.Objects;
 public class BlockCustomerMarkService {
 
     private final BlockCustomerMarkRepository markRepository;
+    private final BlockRepository blockRepository;
     private final CustomerRepository customerRepository;
     private final QuarryBlockService quarryBlockService;
     private final SalesOrderRepository salesOrderRepository;
@@ -55,6 +57,11 @@ public class BlockCustomerMarkService {
                 .build();
         BlockCustomerMark saved = markRepository.save(mark);
         block.setStatus(BlockStatus.MARKED);
+        block.setAssignedCustomer(customer);
+        if (offerPrice != null && offerPrice.compareTo(BigDecimal.ZERO) > 0) {
+            block.setSalePrice(offerPrice);
+        }
+        blockRepository.save(block);
         return saved;
     }
 

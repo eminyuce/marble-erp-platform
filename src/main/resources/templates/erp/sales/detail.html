@@ -77,6 +77,11 @@
                     <span th:text="${#numbers.formatDecimal(item.unitPrice, 1, 'POINT', 0, 'COMMA')} + ' TL'">100 TL</span>
                     <span class="font-bold text-slate-900"
                           th:text="${#numbers.formatDecimal(item.lineTotal, 1, 'POINT', 0, 'COMMA')} + ' TL'">100 TL</span>
+                    <a th:href="@{/work-orders/new(department='FACTORY', orderItemId=${item.id}, customerId=${order.customer != null ? order.customer.id : ''}, blockId=${item.block != null ? item.block.id : ''})}"
+                       class="ml-2 px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 inline-flex items-center gap-1 transition">
+                        <i data-lucide="scissors" class="w-3.5 h-3.5"></i>
+                        <span>Bu kalemi kesime al</span>
+                    </a>
                 </div>
             </div>
         </div>

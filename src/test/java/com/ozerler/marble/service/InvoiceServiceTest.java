@@ -52,6 +52,8 @@ class InvoiceServiceTest {
     private StockMovementRepository stockMovementRepository;
     @Mock
     private QuarryInventoryService quarryInventoryService;
+    @Mock
+    private BlockCustomerMarkRepository blockCustomerMarkRepository;
 
     private InvoiceService invoiceService;
 
@@ -71,7 +73,8 @@ class InvoiceServiceTest {
                 costTransactionRepository,
                 costCenterRepository,
                 stockMovementRepository,
-                quarryInventoryService
+                quarryInventoryService,
+                blockCustomerMarkRepository
         );
     }
 

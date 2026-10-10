@@ -12,6 +12,8 @@
      th:data-prefill-block-desc="${prefillBlock != null ? (prefillBlock.widthCm + 'x' + prefillBlock.lengthCm + 'x' + prefillBlock.heightCm + ' cm, ' + (prefillBlock.stoneType != null ? prefillBlock.stoneType : '')) : ''}"
      th:data-prefill-block-qty="${prefillBlock != null ? (prefillBlock.actualTonnage != null && prefillBlock.actualTonnage > 0 ? prefillBlock.actualTonnage : (prefillBlock.approximateTonnage != null ? prefillBlock.approximateTonnage : 1)) : ''}"
      th:data-prefill-block-id="${prefillBlock != null ? prefillBlock.id : ''}"
+     th:data-prefill-customer-id="${prefillBlock != null && prefillBlock.assignedCustomer != null ? prefillBlock.assignedCustomer.id : ''}"
+     th:data-prefill-unit-price="${prefillBlock != null && prefillBlock.salePrice != null ? prefillBlock.salePrice : ''}"
      x-data="invoiceForm($el)">
 
     <!-- Header & Breadcrumb -->
@@ -109,7 +111,7 @@
             </div>
 
             <!-- Proje / Şantiye Seçimi (Maliyet Takibi İçin) -->
-            <div>
+            <div x-show="department !== 'QUARRY'">
                 <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
                     <span>Şantiye / Proje (Opsiyonel)</span>
                     <span class="text-[10px] text-amber-600 font-semibold uppercase">Maliyet</span>
@@ -150,7 +152,8 @@
                 <div x-show="destinationMode === 'CUSTOMER'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Müşteri Seçiniz *</label>
-                        <select name="customerId" :required="destinationMode === 'CUSTOMER' && invoiceType === 'SALES'"
+                        <select name="customerId" id="customerId" x-model="selectedCustomerId" @change="fetchStock()"
+                                :required="destinationMode === 'CUSTOMER' && invoiceType === 'SALES'"
                                 class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                             <option value="">-- Müşteri Listesinden Seçin --</option>
                             <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
@@ -654,11 +657,21 @@
                                   }"
                                   x-text="item.categoryLabel"></span>
                             <div>
-                                <div class="text-xs font-bold text-slate-900" x-text="item.name"></div>
-                                <div class="text-[11px] text-slate-500 flex items-center gap-2">
+                                <div class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                    <span x-text="item.name"></span>
+                                    <span x-show="item.isMarkedForCustomer" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        ★ Bu Müşteriye Rezerve
+                                    </span>
+                                    <span x-show="!item.isMarkedForCustomer && item.isMarked" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300" x-text="'Rezerve: ' + (item.assignedCustomerName || '')">
+                                    </span>
+                                </div>
+                                <div class="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
                                     <span x-text="'Ebat: ' + (item.dimensions || '—')"></span>
                                     <span>•</span>
                                     <span x-text="'Mevcut: ' + (item.quantity ? item.quantity + ' ' + item.unit : '—')"></span>
+                                    <template x-if="item.unitPrice && item.unitPrice > 0">
+                                        <span>• <strong class="text-slate-800 font-mono" x-text="item.unitPrice + ' ₺'"></strong></span>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -828,6 +841,8 @@
 <script>
 function invoiceForm(el) {
         const prefillBlockId = el && el.dataset ? el.dataset.prefillBlockId : '';
+        const prefillCustId = el && el.dataset ? el.dataset.prefillCustomerId : '';
+        const prefillPrice = el && el.dataset ? parseFloat(el.dataset.prefillUnitPrice) || 0 : 0;
         const initialLines = prefillBlockId ? [
             {
                 productName: el.dataset.prefillBlockName || '',
@@ -835,7 +850,7 @@ function invoiceForm(el) {
                 quantity: parseFloat(el.dataset.prefillBlockQty) || 1,
                 unit: 'ton',
                 widthCm: '',
-                unitPrice: 0,
+                unitPrice: prefillPrice,
                 blockId: prefillBlockId,
                 slabId: '',
                 stockItemId: ''
@@ -846,6 +861,7 @@ function invoiceForm(el) {
         return {
             invoiceType: (el && el.dataset && el.dataset.initialType) || 'SALES',
             department: (el && el.dataset && el.dataset.initialDept) || 'QUARRY',
+            selectedCustomerId: prefillCustId || '',
             purchaseCategory: 'MAZOT',
             directExpense: false,
             destinationMode: 'CUSTOMER', // 'CUSTOMER' or 'INTERNAL'
@@ -1049,6 +1065,8 @@ function invoiceForm(el) {
             if (this.department) url += 'department=' + encodeURIComponent(this.department) + '&';
             if (this.stockCategoryFilter) url += 'type=' + encodeURIComponent(this.stockCategoryFilter) + '&';
             if (this.stockSearch) url += 'search=' + encodeURIComponent(this.stockSearch) + '&';
+            const customerVal = this.selectedCustomerId || (document.getElementById('customerId') ? document.getElementById('customerId').value : '');
+            if (customerVal) url += 'customerId=' + encodeURIComponent(customerVal) + '&';
             if (this.invoiceType === 'PURCHASE') url += 'includeZero=true';
             fetch(url)
                 .then(r => r.json())

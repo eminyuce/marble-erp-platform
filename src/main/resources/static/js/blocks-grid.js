@@ -107,15 +107,21 @@ function initBlocksGrid() {
             {
                 title: "Müşteri",
                 field: "soldCustomerName",
-                minWidth: 140,
+                minWidth: 150,
                 formatter: function (cell) {
                     const row = cell.getRow().getData();
                     const sold = row.canonicalStatus === "SOLD" || row.status === "SOLD";
-                    if (!sold) return '<span class="text-slate-400">—</span>';
-                    const name = gridText(cell.getValue());
-                    return name && name !== "—"
-                        ? `<span class="font-semibold text-emerald-800">${name}</span>`
-                        : '<span class="text-slate-400">Belirtilmedi</span>';
+                    if (sold) {
+                        const name = gridText(cell.getValue());
+                        return name && name !== "—"
+                            ? `<span class="font-semibold text-purple-800">${name}</span>`
+                            : '<span class="text-slate-400">Belirtilmedi</span>';
+                    }
+                    if (row.assignedCustomerName) {
+                        const price = (row.salePrice && row.salePrice > 0) ? ` (${gridMoney(row.salePrice)})` : '';
+                        return `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">Rezerve: ${gridText(row.assignedCustomerName)}${price}</span>`;
+                    }
+                    return '<span class="text-slate-400">—</span>';
                 }
             },
             {title: "Ocak", field: "quarryName", minWidth: 120},
@@ -177,8 +183,10 @@ function initBlocksGrid() {
                     let cls = "bg-slate-100 text-slate-700";
                     if (status === "PRODUCED") cls = "bg-amber-100 text-amber-800";
                     else if (status === "READY_FOR_DISPATCH") cls = "bg-emerald-100 text-emerald-800";
+                    else if (status === "MARKED") cls = "bg-amber-100 text-amber-900 border border-amber-300";
                     else if (status === "IN_TRANSIT") cls = "bg-indigo-100 text-indigo-800";
                     else if (status === "AT_FACTORY" || status === "FACTORY_STOCK") cls = "bg-blue-100 text-blue-800";
+                    else if (status === "IN_PROCESS" || status === "SAWING") cls = "bg-cyan-100 text-cyan-800";
                     else if (status === "SOLD") cls = "bg-purple-100 text-purple-800";
                     return `<span class="px-2 py-0.5 rounded-full text-xs font-semibold ${cls}">${gridText(cell.getValue())}</span>`;
                 }
@@ -243,10 +251,19 @@ function initBlocksGrid() {
                                 href: "/blocks/" + row.id + "/move?targetType=DISPATCH_YARD"
                             });
                         }
+                        items.push({
+                            icon: "bookmark",
+                            label: "Markala (Rezerve Et)",
+                            onclick: "openMarkBlockModal(" + row.id + ", '" + (row.blockCode || "") + "', " + (row.salePrice || row.marketValue || 0) + ", " + (row.assignedCustomerId || "null") + ")"
+                        });
                         if (row.locationType === "DISPATCH_YARD") {
                             items.push({icon: "truck", label: "Fabrikaya sevk", href: "/blocks/" + row.id + "/transfer-to-factory"});
-                            items.push({icon: "handshake", label: "Sat", href: "/blocks/" + row.id + "/sell"});
                         }
+                        items.push({
+                            icon: "receipt",
+                            label: "Sat (Fatura Kes)",
+                            href: "/blocks/" + row.id + "/sell"
+                        });
                     }
                     if (row.canDelete) {
                         items.push({
@@ -476,4 +493,58 @@ document.addEventListener("DOMContentLoaded", function () {
                 btn.closest("dialog")?.close();
             });
         });
+
+    document.getElementById("confirm-mark-block")?.addEventListener("click", function () {
+        const dialog = document.getElementById("mark-block-dialog");
+        const custEl = document.getElementById("mark-customer-id");
+        const priceEl = document.getElementById("mark-offer-price");
+        const customerId = custEl ? custEl.value : null;
+        if (!customerId) {
+            showBlocksToast("Lütfen bir müşteri seçin.", false);
+            return;
+        }
+        const price = priceEl ? parseFloat(priceEl.value) : null;
+        if (!pendingMarkBlockId) return;
+        saveMarkBlock(pendingMarkBlockId, customerId, price);
+        if (dialog) dialog.close();
+        pendingMarkBlockId = null;
+    });
+
+    document.querySelectorAll("#mark-block-dialog button[value='cancel'], #mark-cancel")
+        .forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                btn.closest("dialog")?.close();
+            });
+        });
 });
+
+let pendingMarkBlockId = null;
+
+function openMarkBlockModal(id, code, defaultPrice, currentCustomerId) {
+    pendingMarkBlockId = id;
+    const dialog = document.getElementById("mark-block-dialog");
+    const codeEl = document.getElementById("mark-block-code");
+    const custEl = document.getElementById("mark-customer-id");
+    const priceEl = document.getElementById("mark-offer-price");
+    if (codeEl) codeEl.textContent = code;
+    if (custEl) custEl.value = currentCustomerId || "";
+    if (priceEl) priceEl.value = (defaultPrice && defaultPrice > 0) ? defaultPrice : "";
+    if (dialog && typeof dialog.showModal === "function") {
+        dialog.showModal();
+        return;
+    }
+    showBlocksToast("Markalama penceresi açılamadı.", false);
+}
+
+function saveMarkBlock(id, customerId, offerPrice) {
+    const body = new URLSearchParams();
+    body.append("customerId", customerId);
+    if (offerPrice) body.append("offerPrice", offerPrice);
+    fetch(`/blocks/${id}/api/mark`, {
+        method: "POST",
+        headers: csrfHeaders(),
+        body: body
+    }).then(res => handleBlockActionResponse(res, "Blok müşteriye başarıyla markalandı (rezerve edildi)."));
+}
+
+window.openMarkBlockModal = openMarkBlockModal;

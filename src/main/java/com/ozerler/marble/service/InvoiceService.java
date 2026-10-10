@@ -40,6 +40,7 @@ public class InvoiceService {
     private final CostCenterRepository costCenterRepository;
     private final StockMovementRepository stockMovementRepository;
     private final QuarryInventoryService quarryInventoryService;
+    private final BlockCustomerMarkRepository blockCustomerMarkRepository;
 
     public record InvoiceItemForm(String productName, String description, BigDecimal quantity, String unit,
                                   BigDecimal unitPrice, Long blockId, Long slabId, Long stockItemId,
@@ -338,6 +339,11 @@ public class InvoiceService {
                         recordBlockMovement(b, prevLoc, null, "Satış Faturası (" + saved.getInvoiceNo() + ") ile satıldı");
                         blockRepository.save(b);
 
+                        blockCustomerMarkRepository.findFirstByBlockIdAndStatus(b.getId(), BlockMarkStatus.ACTIVE).ifPresent(m -> {
+                            m.setStatus(BlockMarkStatus.CONVERTED_TO_SALE);
+                            blockCustomerMarkRepository.save(m);
+                        });
+
                         String movCode = UniqueCodes.yearly("MOV-SLS", stockMovementRepository::existsByMovementCode);
                         stockMovementRepository.save(StockMovement.builder()
                                 .movementCode(movCode)
@@ -408,6 +414,30 @@ public class InvoiceService {
                                 .notes("Fatura no: " + saved.getInvoiceNo() + ", Alıcı: " + saved.getPartyName())
                                 .build());
                     }
+                }
+            }
+
+            // Dahili Transfer Faturası: Hedef birime (Fabrika vb.) hammadde gideri/maliyeti olarak yansıt
+            if (targetDepartment != null && subtotal.compareTo(BigDecimal.ZERO) > 0) {
+                CostCenter targetCc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(targetDepartment)
+                        .or(() -> costCenterRepository.findAll().stream().filter(c -> targetDepartment.equals(c.getBusinessUnit())).findFirst())
+                        .or(() -> costCenterRepository.findByCode("CC-001"))
+                        .or(() -> costCenterRepository.findAll().stream().findFirst())
+                        .orElse(null);
+                if (targetCc != null) {
+                    CostTransaction tx = CostTransaction.builder()
+                            .costCenter(targetCc)
+                            .expenseType(ExpenseType.DIRECT_RAW)
+                            .expenseCategory(ExpenseCategory.MATERIAL)
+                            .amount(subtotal)
+                            .businessUnit(targetDepartment)
+                            .documentNo(saved.getInvoiceNo())
+                            .invoiceDate(saved.getInvoiceDate())
+                            .entryDate(LocalDate.now())
+                            .expensePeriod(YearMonth.from(saved.getInvoiceDate()).toString())
+                            .description("Dahili Transfer Faturası (" + department.getDisplayName() + " -> " + targetDepartment.getDisplayName() + "): Hammadde Maliyeti — " + saved.getInvoiceNo())
+                            .build();
+                    costTransactionRepository.save(tx);
                 }
             }
         }

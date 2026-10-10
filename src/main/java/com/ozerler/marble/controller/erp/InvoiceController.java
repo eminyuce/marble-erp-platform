@@ -238,12 +238,13 @@ public class InvoiceController extends AbstractController {
             @RequestParam(value = "department", required = false) BusinessUnit department,
             @RequestParam(value = "type", required = false) String stockType,
             @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "customerId", required = false) Long customerId,
             @RequestParam(value = "includeZero", required = false, defaultValue = "false") Boolean includeZero) {
 
         List<Map<String, Object>> result = new ArrayList<>();
         String s = search != null ? search.trim().toLowerCase() : "";
 
-        // 1. Bloklar (Ocak & Fabrika filtrelenebilir)
+        // 1. Bloklar (Ocak & Fabrika filtrelenebilir, müşteri rezervasyonları öncelikli)
         if (stockType == null || stockType.isBlank() || "BLOCK".equalsIgnoreCase(stockType)) {
             List<Block> blocks = blockRepository.findAllWithQuarry().stream()
                     .filter(b -> b.getStatus() != com.ozerler.marble.model.enums.BlockStatus.SOLD && b.getStatus() != com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT)
@@ -256,6 +257,15 @@ public class InvoiceController extends AbstractController {
                         return true;
                     })
                     .filter(b -> s.isEmpty() || b.getBlockCode().toLowerCase().contains(s) || (b.getStoneType() != null && b.getStoneType().toLowerCase().contains(s)))
+                    .sorted((b1, b2) -> {
+                        if (customerId != null) {
+                            boolean m1 = b1.getAssignedCustomer() != null && b1.getAssignedCustomer().getId().equals(customerId);
+                            boolean m2 = b2.getAssignedCustomer() != null && b2.getAssignedCustomer().getId().equals(customerId);
+                            if (m1 && !m2) return -1;
+                            if (!m1 && m2) return 1;
+                        }
+                        return b2.getId().compareTo(b1.getId());
+                    })
                     .limit(50)
                     .toList();
             for (Block b : blocks) {
@@ -273,6 +283,12 @@ public class InvoiceController extends AbstractController {
                 m.put("quantity", ton);
                 m.put("unit", "ton");
                 m.put("widthCm", b.getWidthCm());
+                boolean isMarked = b.getAssignedCustomer() != null;
+                boolean isMarkedForCustomer = customerId != null && isMarked && b.getAssignedCustomer().getId().equals(customerId);
+                m.put("isMarked", isMarked);
+                m.put("isMarkedForCustomer", isMarkedForCustomer);
+                m.put("assignedCustomerName", b.getAssignedCustomer() != null ? b.getAssignedCustomer().getCompanyName() : null);
+                m.put("unitPrice", b.getSalePrice() != null ? b.getSalePrice() : (b.getUnitMarketValuePerTon() != null ? b.getUnitMarketValuePerTon() : BigDecimal.ZERO));
                 result.add(m);
             }
         }

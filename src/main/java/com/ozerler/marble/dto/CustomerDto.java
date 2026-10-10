@@ -55,11 +55,20 @@ public class CustomerDto {
     @JsonAlias("customer_type_label")
     private String customerTypeLabel;
 
+    @JsonProperty("businessUnit")
+    @JsonAlias("business_unit")
+    private String businessUnit;
+
+    @JsonProperty("businessUnitLabel")
+    @JsonAlias("business_unit_label")
+    private String businessUnitLabel;
+
     @JsonProperty("notes")
     private String notes;
 
     public static CustomerDto fromEntity(Customer customer) {
         CustomerType type = customer.getCustomerType();
+        com.ozerler.marble.model.enums.BusinessUnit bu = customer.getBusinessUnit();
         return CustomerDto.builder()
                 .id(customer.getId())
                 .customerCode(customer.getCustomerCode())
@@ -72,6 +81,8 @@ public class CustomerDto {
                 .taxNumber(customer.getTaxNumber())
                 .customerType(type != null ? type.name() : null)
                 .customerTypeLabel(type != null ? type.getLabel() : "")
+                .businessUnit(bu != null ? bu.name() : null)
+                .businessUnitLabel(bu != null ? bu.getDisplayName() : "")
                 .notes(customer.getNotes())
                 .build();
     }

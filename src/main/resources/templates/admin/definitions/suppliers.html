@@ -33,6 +33,10 @@
         </a>
         <div th:replace="~{fragments/list-chrome :: search('Tedarikçi kodu, firma adı veya yetkili', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
+            <select id="business-unit-filter" class="erp-toolbar-filter" aria-label="İşletme birimi">
+                <option value="">Tüm birimler</option>
+                <option th:each="bu : ${businessUnits}" th:value="${bu.name()}" th:text="${bu.displayName}"></option>
+            </select>
             <select id="supplier-type-filter" class="erp-toolbar-filter" aria-label="Tedarikçi tipi">
                 <option value="">Tüm tedarikçi tipleri</option>
                 <option th:each="type : ${supplierTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
@@ -75,7 +79,11 @@
                 ajaxURLGenerator: function (url, config, params) {
                     return erpGridAjaxUrl(url, params, "search-input", function () {
                         const type = document.getElementById("supplier-type-filter")?.value || "";
-                        return type ? "&type=" + encodeURIComponent(type) : "";
+                        const unit = document.getElementById("business-unit-filter")?.value || "";
+                        let extra = "";
+                        if (type) extra += "&type=" + encodeURIComponent(type);
+                        if (unit) extra += "&unit=" + encodeURIComponent(unit);
+                        return extra;
                     });
                 },
                 ajaxResponse: function (url, params, response) {
@@ -104,6 +112,16 @@
                                 <div class="font-semibold text-slate-800">${gridText(row.companyName)}</div>
                                 <div class="text-xs text-slate-400">${gridText(row.address)}</div>
                             </div>`;
+                        }
+                    },
+                    {
+                        title: "İşletme Birimi",
+                        field: "businessUnitLabel",
+                        width: 140,
+                        formatter: function (cell) {
+                            const val = gridText(cell.getValue());
+                            if (!val || val === "—") return '<span class="text-slate-400">Genel</span>';
+                            return `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">${val}</span>`;
                         }
                     },
                     {
@@ -151,6 +169,7 @@
             attachTabulatorPagingAnimation(window.definitionTable);
             bindGridSearch(window.definitionTable, "search-input");
             bindGridSelectFilter(window.definitionTable, "supplier-type-filter");
+            bindGridSelectFilter(window.definitionTable, "business-unit-filter");
             window.definitionTable.on("renderComplete", () => {
                 if (window.lucide) window.lucide.createIcons();
             });

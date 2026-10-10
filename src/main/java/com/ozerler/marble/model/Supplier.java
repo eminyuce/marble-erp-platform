@@ -47,6 +47,10 @@ public class Supplier extends AuditableEntity {
     @Builder.Default
     private SupplierType supplierType = SupplierType.CONSUMABLE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "business_unit", length = 30)
+    private com.ozerler.marble.model.enums.BusinessUnit businessUnit;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 

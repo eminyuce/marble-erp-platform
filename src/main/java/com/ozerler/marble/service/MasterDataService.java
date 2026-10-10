@@ -251,8 +251,15 @@ public class MasterDataService {
 
     public TabulatorResponse<CustomerDto> getCustomersPaged(int page, int size, String search, CustomerType type,
                                                             String sortField, String sortDir) {
+        return getCustomersPaged(page, size, search, type, null, sortField, sortDir);
+    }
+
+    public TabulatorResponse<CustomerDto> getCustomersPaged(int page, int size, String search, CustomerType type,
+                                                            BusinessUnit unit, String sortField, String sortDir) {
         Page<Customer> result = GridPages.execute(page, size, sortField, sortDir, GridPages.CUSTOMER_SORTS,
-                pageable -> customerRepository.search(GridPages.normalizeSearch(search), type, pageable));
+                pageable -> unit != null
+                        ? customerRepository.search(GridPages.normalizeSearch(search), type, unit, pageable)
+                        : customerRepository.search(GridPages.normalizeSearch(search), type, pageable));
         return TabulatorResponse.of(
                 result.getContent().stream().map(CustomerDto::fromEntity).toList(),
                 result.getTotalPages(),
@@ -306,8 +313,15 @@ public class MasterDataService {
 
     public TabulatorResponse<SupplierDto> getSuppliersPaged(int page, int size, String search, SupplierType type,
                                                             String sortField, String sortDir) {
+        return getSuppliersPaged(page, size, search, type, null, sortField, sortDir);
+    }
+
+    public TabulatorResponse<SupplierDto> getSuppliersPaged(int page, int size, String search, SupplierType type,
+                                                            BusinessUnit unit, String sortField, String sortDir) {
         Page<Supplier> result = GridPages.execute(page, size, sortField, sortDir, GridPages.SUPPLIER_SORTS,
-                pageable -> supplierRepository.search(GridPages.normalizeSearch(search), type, pageable));
+                pageable -> unit != null
+                        ? supplierRepository.search(GridPages.normalizeSearch(search), type, unit, pageable)
+                        : supplierRepository.search(GridPages.normalizeSearch(search), type, pageable));
         return TabulatorResponse.of(
                 result.getContent().stream().map(SupplierDto::fromEntity).toList(),
                 result.getTotalPages(),

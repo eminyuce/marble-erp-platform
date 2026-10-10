@@ -22,6 +22,20 @@
         </div>
     </div>
 
+    <!-- Unified Tab Navigation: Faturalar vs Giderler -->
+    <div class="flex items-center gap-2 border-b border-slate-200 pb-3">
+        <a th:href="@{/invoices}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="receipt" class="w-4 h-4 text-emerald-600"></i>
+            <span>Faturalar (Alış &amp; Satış)</span>
+        </a>
+        <a th:href="@{/expenses}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-amber-600 text-white shadow-xs">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+            <span>İşletme Giderleri</span>
+        </a>
+    </div>
+
     <!-- KPI Summary Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3" th:if="${summary != null}">
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"

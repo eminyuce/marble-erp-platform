@@ -33,6 +33,13 @@
                                 <option th:each="type : ${supplierTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
                             </select>
                         </div>
+                        <div class="erp-form-field">
+                            <label class="erp-form-label" for="businessUnit">Ana İşletme Birimi</label>
+                            <select id="businessUnit" th:field="*{businessUnit}" class="erp-form-select">
+                                <option value="">Genel (Tüm Birimler)</option>
+                                <option th:each="bu : ${businessUnits}" th:value="${bu.name()}" th:text="${bu.displayName}"></option>
+                            </select>
+                        </div>
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="companyName">Firma / ünvan adı <span class="req">*</span></label>
                             <input id="companyName" type="text" th:field="*{companyName}" required class="erp-form-input">

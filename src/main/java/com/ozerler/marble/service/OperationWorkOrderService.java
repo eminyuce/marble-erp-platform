@@ -101,7 +101,16 @@ public class OperationWorkOrderService {
         recordHistory(saved, null, OperationWorkOrderStatus.NEW, "İş emri oluşturuldu");
 
         // If stock is allocated and used right away, deduct from stock and record movement
-        if (slab != null) {
+        if (block != null) {
+            block.setStatus(BlockStatus.IN_PROCESS);
+            if (customer != null && block.getAssignedCustomer() == null) {
+                block.setAssignedCustomer(customer);
+            }
+            blockRepository.save(block);
+            BigDecimal ton = block.getEffectiveTonnage() != null ? block.getEffectiveTonnage() : BigDecimal.ONE;
+            stockMovementService.recordWorkOrderConsumption(saved, null, null, block,
+                    form.usedQuantity() != null ? form.usedQuantity() : ton, "ton");
+        } else if (slab != null) {
             slab.setStatus(SlabStatus.RESERVED);
             if (customer != null) slab.setCustomer(customer);
             slabRepository.save(slab);
@@ -129,6 +138,15 @@ public class OperationWorkOrderService {
 
         OperationWorkOrderStatus prevStatus = order.getStatus();
         order.setStatus(newStatus);
+
+        if (newStatus == OperationWorkOrderStatus.IN_PRODUCTION && order.getSourceBlock() != null) {
+            Block b = order.getSourceBlock();
+            if (b.getStatus() != BlockStatus.IN_PROCESS) {
+                b.setStatus(BlockStatus.IN_PROCESS);
+                blockRepository.save(b);
+            }
+        }
+
         OperationWorkOrder saved = workOrderRepository.save(order);
 
         recordHistory(saved, prevStatus, newStatus, notes);

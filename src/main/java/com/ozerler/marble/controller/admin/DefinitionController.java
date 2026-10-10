@@ -262,6 +262,7 @@ public class DefinitionController extends AbstractController {
     @GetMapping("/customers")
     public String listCustomers(Model model) {
         model.addAttribute("customerTypes", CustomerType.values());
+        model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("currentSection", "definitions-customers");
         return "admin/definitions/customers";
     }
@@ -290,9 +291,10 @@ public class DefinitionController extends AbstractController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "type", required = false) CustomerType type,
+            @RequestParam(value = "unit", required = false) BusinessUnit unit,
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir) {
-        return masterDataService.getCustomersPaged(page, size, search, type, sortField, sortDir);
+        return masterDataService.getCustomersPaged(page, size, search, type, unit, sortField, sortDir);
     }
 
     @PostMapping("/customers/save")
@@ -327,6 +329,7 @@ public class DefinitionController extends AbstractController {
     @GetMapping("/suppliers")
     public String listSuppliers(Model model) {
         model.addAttribute("supplierTypes", SupplierType.values());
+        model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("currentSection", "definitions-suppliers");
         return "admin/definitions/suppliers";
     }
@@ -355,9 +358,10 @@ public class DefinitionController extends AbstractController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "type", required = false) SupplierType type,
+            @RequestParam(value = "unit", required = false) BusinessUnit unit,
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir) {
-        return masterDataService.getSuppliersPaged(page, size, search, type, sortField, sortDir);
+        return masterDataService.getSuppliersPaged(page, size, search, type, unit, sortField, sortDir);
     }
 
     @PostMapping("/suppliers/save")
@@ -477,6 +481,7 @@ public class DefinitionController extends AbstractController {
         model.addAttribute("customer", customer);
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("customerTypes", CustomerType.values());
+        model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("currentSection", "definitions-customers");
     }
 
@@ -484,6 +489,7 @@ public class DefinitionController extends AbstractController {
         model.addAttribute("supplier", supplier);
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("supplierTypes", SupplierType.values());
+        model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("currentSection", "definitions-suppliers");
     }
 

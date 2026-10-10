@@ -47,6 +47,10 @@ public class Customer extends AuditableEntity {
     @Builder.Default
     private CustomerType customerType = CustomerType.CONSTRUCTION;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "business_unit", length = 30)
+    private com.ozerler.marble.model.enums.BusinessUnit businessUnit;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 

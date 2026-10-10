@@ -7,6 +7,7 @@ import com.ozerler.marble.dto.BlockDto;
 import com.ozerler.marble.dto.FileStorageDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.BlockCustomerMark;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.StockLocationType;
@@ -50,6 +51,7 @@ public class BlockController extends AbstractController {
     @GetMapping
     public String blocksIndex(Model model) {
         model.addAttribute("summary", quarryBlockService.quarrySummary());
+        model.addAttribute("customers", blockCustomerMarkService.customers());
         return "erp/blocks/index";
     }
 
@@ -578,7 +580,11 @@ public class BlockController extends AbstractController {
     @GetMapping("/{id}/sell")
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     public String showSellForm(@PathVariable("id") Long id) {
-        return "redirect:/invoices/create?type=SALES&department=QUARRY&blockId=" + id;
+        Block block = quarryBlockService.getBlockById(id);
+        String custParam = (block != null && block.getAssignedCustomer() != null)
+                ? "&customerId=" + block.getAssignedCustomer().getId()
+                : "";
+        return "redirect:/invoices/create?type=SALES&department=QUARRY&blockId=" + id + custParam;
     }
 
     @PostMapping("/{id}/sell-to-customer")
@@ -616,6 +622,22 @@ public class BlockController extends AbstractController {
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.block.mark.success", null, locale));
         return "redirect:/blocks/" + id;
+    }
+
+    @PostMapping("/{id}/api/mark")
+    @ResponseBody
+    @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
+    public ResponseEntity<?> markBlockApi(@PathVariable("id") Long id,
+                                          @RequestParam("customerId") Long customerId,
+                                          @RequestParam(value = "offerPrice", required = false) BigDecimal offerPrice,
+                                          @RequestParam(value = "currency", defaultValue = "TRY") String currency) {
+        try {
+            BlockCustomerMark mark = blockCustomerMarkService.markBlock(id, customerId, LocalDate.now(), null, offerPrice, currency);
+            return ResponseEntity.ok(java.util.Map.of("success", true, "markId", mark.getId()));
+        } catch (Exception e) {
+            log.error("Failed to mark block {}", id, e);
+            return ResponseEntity.badRequest().body(java.util.Map.of("success", false, "message", e.getMessage()));
+        }
     }
 
     @PostMapping("/marks/{markId}/sell")
