@@ -23,6 +23,10 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     boolean existsByInvoiceNo(String invoiceNo);
 
+    boolean existsByProjectId(Long projectId);
+
+    boolean existsByCustomerId(Long customerId);
+
     @Query("SELECT DISTINCT i FROM Invoice i " +
            "LEFT JOIN FETCH i.customer " +
            "LEFT JOIN FETCH i.supplier " +

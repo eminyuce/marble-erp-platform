@@ -268,8 +268,15 @@ public class DefinitionController extends AbstractController {
     }
 
     @GetMapping("/customers/create")
-    public String createCustomerForm(Model model) {
-        populateCustomerForm(model, newCustomer(), false);
+    public String createCustomerForm(@RequestParam(value = "unit", required = false) BusinessUnit unit, Model model) {
+        Customer customer = newCustomer();
+        if (unit != null) {
+            customer.setBusinessUnit(unit);
+            if (unit == BusinessUnit.SITE) {
+                customer.setCustomerType(CustomerType.CONSTRUCTION);
+            }
+        }
+        populateCustomerForm(model, customer, false);
         return "admin/definitions/customer-form";
     }
 

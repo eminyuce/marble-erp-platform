@@ -52,6 +52,7 @@ public class MasterDataService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final CostTransactionRepository costTransactionRepository;
     private final BlockCustomerMarkRepository blockCustomerMarkRepository;
+    private final InvoiceRepository invoiceRepository;
 
     // =========================================================================
     // MACHINES
@@ -296,8 +297,9 @@ public class MasterDataService {
         Customer customer = getCustomerById(id);
         if (salesOrderRepository.existsByCustomerId(id)
                 || blockCustomerMarkRepository.existsByCustomerId(id)
-                || blockRepository.existsBySoldCustomer_Id(id)) {
-            throw new IllegalStateException("Bu müşteriye ait satış, işaret veya satılan blok kayıtları mevcuttur. Müşteri silinemez.");
+                || blockRepository.existsBySoldCustomer_Id(id)
+                || invoiceRepository.existsByCustomerId(id)) {
+            throw new IllegalStateException("Bu müşteriye ait satış, fatura, işaret veya satılan blok kayıtları mevcuttur. Müşteri silinemez.");
         }
         customerRepository.delete(customer);
         log.info("Customer deleted successfully. ID: {}, Code: {}", id, customer.getCustomerCode());

@@ -17,6 +17,7 @@ import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.repository.CostTransactionRepository;
 import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.InvoiceRepository;
 import com.ozerler.marble.repository.MachineFuelEntryRepository;
 import com.ozerler.marble.repository.MachineRepository;
 import com.ozerler.marble.repository.PurchaseOrderRepository;
@@ -74,6 +75,8 @@ class MasterDataServiceTest {
     private CostTransactionRepository costTransactionRepository;
     @Mock
     private BlockCustomerMarkRepository blockCustomerMarkRepository;
+    @Mock
+    private InvoiceRepository invoiceRepository;
 
     private MasterDataService masterDataService;
     private Locale previousLocale;
@@ -86,7 +89,7 @@ class MasterDataServiceTest {
                 machineRepository, stockLocationRepository, quarryRepository, customerRepository,
                 supplierRepository, costCenterRepository, machineFuelEntryRepository, blockRepository,
                 salesOrderRepository, purchaseOrderRepository, costTransactionRepository,
-                blockCustomerMarkRepository);
+                blockCustomerMarkRepository, invoiceRepository);
     }
 
     @AfterEach

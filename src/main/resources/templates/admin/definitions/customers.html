@@ -8,6 +8,7 @@
 <body>
 <div layout:fragment="content" class="erp-list-page" data-definition-page
      x-data="{
+    activeUnit: '',
     deleteModalOpen: false,
     deleteId: null,
     deleteName: '',
@@ -15,25 +16,80 @@
         this.deleteId = id;
         this.deleteName = name;
         this.deleteModalOpen = true;
+    },
+    setUnit(u) {
+        this.activeUnit = u;
+        const sel = document.getElementById('business-unit-filter');
+        if (sel) sel.value = u;
+        if (window.definitionTable) window.definitionTable.setPage(1);
     }
 }">
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
-            <div th:replace="~{fragments/list-chrome :: breadcrumb('Müşteriler')}"></div>
-            <h2 class="admin-page-title">Müşteri Rehberi</h2>
-            <p class="erp-list-lead">Satış siparişleri, blok rezervasyonları ve şantiye sözleşmelerinde kullanılan cari hesap kartları.</p>
+            <div th:replace="~{fragments/list-chrome :: breadcrumb('Cari Hesaplar')}"></div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-1">
+                <div>
+                    <h2 class="admin-page-title text-2xl font-black text-slate-900 flex items-center gap-2">
+                        <i data-lucide="users" class="w-7 h-7 text-blue-600"></i>
+                        <span>Cari Hesaplar / Müşteriler</span>
+                    </h2>
+                    <p class="erp-list-lead text-xs text-slate-600 mt-1">
+                        Ocak, Fabrika, Atölye ve Şantiye carilerini oluşturun, birim bazında filtreleyin, düzenleyin ve yönetin.
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a th:href="@{/admin/definitions/customers/create}" class="erp-btn-primary">
+                        <i data-lucide="user-plus"></i>
+                        <span>+ Yeni Cari Aç</span>
+                    </a>
+                    <a th:href="@{/projects}" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition border border-slate-300">
+                        <i data-lucide="building-2" class="w-4 h-4 text-cyan-600"></i>
+                        <span>Şantiyeler Modülü</span>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Birim Kırılımı Hızlı Filtre Sekmeleri (Ocak, Fabrika, Atölye, Şantiye) -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+        <button type="button" @click="setUnit('')"
+                :class="activeUnit === '' ? 'bg-slate-900 text-white font-bold shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'"
+                class="px-4 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+            <span>Tüm Cariler</span>
+        </button>
+        <button type="button" @click="setUnit('QUARRY')"
+                :class="activeUnit === 'QUARRY' ? 'bg-amber-600 text-white font-bold shadow-sm' : 'bg-white text-amber-900 hover:bg-amber-50 border border-amber-200'"
+                class="px-4 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="mountain" class="w-3.5 h-3.5 text-amber-600" :class="activeUnit === 'QUARRY' ? 'text-white' : ''"></i>
+            <span>Ocak Müşterileri</span>
+        </button>
+        <button type="button" @click="setUnit('FACTORY')"
+                :class="activeUnit === 'FACTORY' ? 'bg-blue-600 text-white font-bold shadow-sm' : 'bg-white text-blue-900 hover:bg-blue-50 border border-blue-200'"
+                class="px-4 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="factory" class="w-3.5 h-3.5 text-blue-600" :class="activeUnit === 'FACTORY' ? 'text-white' : ''"></i>
+            <span>Fabrika Müşterileri</span>
+        </button>
+        <button type="button" @click="setUnit('WORKSHOP')"
+                :class="activeUnit === 'WORKSHOP' ? 'bg-rose-600 text-white font-bold shadow-sm' : 'bg-white text-rose-900 hover:bg-rose-50 border border-rose-200'"
+                class="px-4 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="scissors" class="w-3.5 h-3.5 text-rose-600" :class="activeUnit === 'WORKSHOP' ? 'text-white' : ''"></i>
+            <span>Atölye Müşterileri</span>
+        </button>
+        <button type="button" @click="setUnit('SITE')"
+                :class="activeUnit === 'SITE' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'bg-white text-cyan-900 hover:bg-cyan-50 border border-cyan-200'"
+                class="px-4 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="building-2" class="w-3.5 h-3.5 text-cyan-600" :class="activeUnit === 'SITE' ? 'text-white' : ''"></i>
+            <span>Şantiye Müşterileri</span>
+        </button>
+    </div>
+
     <div class="erp-toolbar">
-        <a th:href="@{/admin/definitions/customers/create}" class="erp-btn-primary">
-            <i data-lucide="plus"></i>
-            <span>Yeni müşteri</span>
-        </a>
-        <div th:replace="~{fragments/list-chrome :: search('Müşteri kodu, firma adı veya yetkili', 'search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: search('Müşteri kodu, firma adı veya yetkili ara...', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
-            <select id="business-unit-filter" class="erp-toolbar-filter" aria-label="İşletme birimi">
+            <select id="business-unit-filter" class="erp-toolbar-filter" aria-label="İşletme birimi" @change="activeUnit = $el.value">
                 <option value="">Tüm birimler</option>
                 <option th:each="bu : ${businessUnits}" th:value="${bu.name()}" th:text="${bu.displayName}"></option>
             </select>

@@ -27,6 +27,7 @@ import java.util.Locale;
 @Controller
 @RequestMapping("/projects")
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class ProjectController {
 
     private final ProjectSiteService projectSiteService;
@@ -202,5 +203,20 @@ public class ProjectController {
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.project.install.success", null, locale));
         return "redirect:/projects/" + projectId;
+    }
+
+    @PostMapping("/{id}/delete")
+    @PreAuthorize(Constants.PRE_AUTH_SITE_WRITE)
+    public String deleteProject(@PathVariable("id") Long id,
+                                Locale locale,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            constructionSiteService.deleteProject(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Şantiye kaydı başarıyla silindi.");
+        } catch (Exception e) {
+            log.error("Şantiye silinemedi: ID={}", id, e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Şantiye silinemedi: " + e.getMessage());
+        }
+        return "redirect:/projects";
     }
 }

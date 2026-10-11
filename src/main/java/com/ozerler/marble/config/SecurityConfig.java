@@ -77,6 +77,15 @@ public class SecurityConfig {
                                 "/admin/dashboard/systemhealth/**",
                                 "/admin/dashboard/systemhealth"
                         ).authenticated()
+                        // Customer & Supplier definitions accessible to operational roles (Cari Yönetimi)
+                        .requestMatchers(
+                                "/admin/definitions/customers/**",
+                                "/admin/definitions/customers",
+                                "/admin/definitions/suppliers/**",
+                                "/admin/definitions/suppliers",
+                                "/accounts/**",
+                                "/accounts"
+                        ).hasAnyRole("ADMIN", "EXECUTIVE", "SALES", "FINANCE", "QUARRY_CHIEF", "FACTORY_MANAGER", "WORKSHOP_CHIEF", "SITE_ENGINEER")
                         // Admin area strictly restricted to ROLE_ADMIN & ROLE_EXECUTIVE
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "EXECUTIVE")
                         // OpenAPI / Swagger UI — authenticated admins only; disabled in prod via springdoc

@@ -8,9 +8,17 @@
 <div layout:fragment="content" class="erp-list-page space-y-5"
      x-data="{
         statusFilter: '',
+        deleteModalOpen: false,
+        deleteId: null,
+        deleteName: '',
         setStatusFilter(st) {
             this.statusFilter = st;
             if (typeof reloadProjectsGrid === 'function') reloadProjectsGrid();
+        },
+        confirmDeleteProject(id, name) {
+            this.deleteId = id;
+            this.deleteName = name;
+            this.deleteModalOpen = true;
         },
         gridExtraQuery() {
             return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
@@ -106,6 +114,23 @@
 
     <!-- DataGrid Shell -->
     <div th:replace="~{fragments/list-chrome :: gridShell('projects-table')}"></div>
+
+    <!-- Delete Confirmation Modal -->
+    <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-6 space-y-4"
+             @click.outside="deleteModalOpen = false">
+            <h3 class="text-base font-bold text-slate-900">Şantiyeyi Sil</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                <strong x-text="deleteName"></strong> şantiyesini silmek istediğinize emin misiniz? Aktif fatura kaydı bulunan şantiyeler silinemez.
+            </p>
+            <form :action="'/projects/' + deleteId + '/delete'" method="post" class="flex items-center justify-end gap-3 pt-2">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="button" @click="deleteModalOpen = false" class="erp-btn-secondary">Vazgeç</button>
+                <button type="submit" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold cursor-pointer">Evet, Sil</button>
+            </form>
+        </div>
+    </div>
 </div>
 
 <th:block layout:fragment="scripts">
@@ -208,10 +233,11 @@
                         responsive: 0,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
+                            const safeName = (row.name || '').replace(/'/g, "\\'");
                             return gridActionsHtml([
                                 {icon: 'eye', label: 'Detay', href: '/projects/' + row.id},
                                 {icon: 'edit-3', label: 'Düzenle', href: '/projects/' + row.id + '/edit'},
-                                {icon: 'map-pin', label: 'Mahaller', href: '/projects/' + row.id}
+                                {icon: 'trash-2', label: 'Sil', onclick: "window.projectsPageState && window.projectsPageState.confirmDeleteProject(" + row.id + ", '" + safeName + "')", danger: true}
                             ]);
                         }
                     }

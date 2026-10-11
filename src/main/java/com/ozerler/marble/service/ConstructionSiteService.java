@@ -20,6 +20,7 @@ import com.ozerler.marble.model.enums.SurfaceFinish;
 import com.ozerler.marble.repository.ConstructionSiteStonePlanRepository;
 import com.ozerler.marble.repository.CostTransactionRepository;
 import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.InvoiceRepository;
 import com.ozerler.marble.repository.MaterialLotRepository;
 import com.ozerler.marble.repository.PalletRepository;
 import com.ozerler.marble.repository.ProjectLocationRepository;
@@ -31,6 +32,7 @@ import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockReservationRepository;
 import com.ozerler.marble.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +43,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ConstructionSiteService {
 
@@ -57,6 +60,37 @@ public class ConstructionSiteService {
     private final MaterialLotRepository materialLotRepository;
     private final PalletRepository palletRepository;
     private final ProjectSiteService projectSiteService;
+    private final InvoiceRepository invoiceRepository;
+
+    @Transactional
+    public void deleteProject(Long id) {
+        Project project = projectSiteService.getProjectById(id);
+        if (invoiceRepository != null && invoiceRepository.existsByProjectId(id)) {
+            throw new IllegalStateException("Bu şantiyeye bağlı fatura kayıtları bulunmaktadır. İlişkili verilerin korunması için şantiye silinemez.");
+        }
+
+        installationRepository.deleteAll(installationRepository.findByProjectIdOrderByInstalledOnDesc(id));
+
+        List<ConstructionSiteStonePlan> plans = stonePlanRepository.findByProjectIdOrderByIdAsc(id);
+        for (ConstructionSiteStonePlan plan : plans) {
+            allocationRepository.deleteAll(allocationRepository.findByStonePlanId(plan.getId()));
+        }
+        stonePlanRepository.deleteAll(plans);
+
+        stockReservationRepository.deleteAll(stockReservationRepository.findByProjectId(id));
+        consumptionRepository.deleteAll(consumptionRepository.findByProjectId(id));
+        costTransactionRepository.deleteAll(costTransactionRepository.findByProjectId(id));
+
+        List<ProjectLocation> locations = projectLocationRepository.findByProjectId(id);
+        for (ProjectLocation loc : locations) {
+            loc.setParent(null);
+        }
+        projectLocationRepository.saveAll(locations);
+        projectLocationRepository.deleteAll(locations);
+
+        projectRepository.delete(project);
+        log.info("Project deleted successfully: ID={}, Code={}", id, project.getProjectCode());
+    }
 
     @Transactional
     public Project updateProject(Long id, String projectCode, String name, String customerName, Long customerId,

@@ -7,10 +7,10 @@
 <body>
 <div layout:fragment="content" class="erp-form-page">
 
-    <div th:replace="~{fragments/form-page :: breadcrumb('Müşteriler', @{/admin/definitions/customers}, ${(isEdit ?: false) ? 'Düzenle' : 'Yeni kayıt'})}"></div>
+    <div th:replace="~{fragments/form-page :: breadcrumb('Cari Hesaplar', @{/admin/definitions/customers}, ${(isEdit ?: false) ? 'Cariyi Düzenle' : 'Yeni Cari Kaydı'})}"></div>
     <div th:replace="~{fragments/form-page :: heading(
-        ${(isEdit ?: false) ? 'Müşteri düzenle' : 'Yeni müşteri'},
-        ${(isEdit ?: false) ? 'Cari kod, iletişim ve vergi bilgilerini güncelleyin.' : 'Satış, rezervasyon ve şantiye sözleşmelerinde kullanılacak cari kartı ekleyin.'},
+        ${(isEdit ?: false) ? 'Cari kartını düzenle' : 'Yeni cari hesap aç'},
+        ${(isEdit ?: false) ? 'Ocak, Fabrika, Atölye veya Şantiye cari kartı bilgilerini güncelleyin.' : 'Ocak, Fabrika, Atölye veya Şantiye satış ve siparişlerinde kullanılacak cari hesap kartı ekleyin.'},
         ${(isEdit ?: false) ? 'Cari #' + customer?.customerCode : ''},
         @{/admin/definitions/customers})}"></div>
 
