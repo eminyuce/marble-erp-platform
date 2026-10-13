@@ -21,6 +21,12 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     Optional<Invoice> findByInvoiceNo(String invoiceNo);
 
+    @Query("SELECT i FROM Invoice i LEFT JOIN FETCH i.customer WHERE i.id = :id")
+    Optional<Invoice> findByIdWithCustomer(@Param("id") Long id);
+
+    @Query("SELECT i FROM Invoice i LEFT JOIN FETCH i.customer ORDER BY i.invoiceDate DESC, i.id DESC")
+    List<Invoice> findAllWithCustomer();
+
     boolean existsByInvoiceNo(String invoiceNo);
 
     boolean existsByProjectId(Long projectId);

@@ -95,7 +95,7 @@ public class CollectionController extends AbstractController {
                                     @RequestParam(value = "customerId", required = false) Long customerId,
                                     Model model) {
 
-        Invoice invoice = invoiceId != null ? invoiceRepository.findById(invoiceId).orElse(null) : null;
+        Invoice invoice = invoiceId != null ? invoiceRepository.findByIdWithCustomer(invoiceId).orElse(null) : null;
         if (invoice != null && invoice.getCustomer() != null && customerId == null) {
             customerId = invoice.getCustomer().getId();
         }
@@ -103,7 +103,7 @@ public class CollectionController extends AbstractController {
         model.addAttribute("selectedInvoice", invoice);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("customers", customerRepository.findAll());
-        model.addAttribute("invoices", invoiceRepository.findAll());
+        model.addAttribute("invoices", invoiceRepository.findAllWithCustomer());
         model.addAttribute("methods", CollectionMethod.values());
         model.addAttribute("activeNav", "collections");
 

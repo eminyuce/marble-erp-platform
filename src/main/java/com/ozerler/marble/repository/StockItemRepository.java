@@ -19,6 +19,10 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     Optional<StockItem> findByItemCode(String itemCode);
 
+    @EntityGraph(attributePaths = "stockLocation")
+    @Query("SELECT s FROM StockItem s WHERE s.quantity > 0")
+    List<StockItem> findPositiveQuantityWithLocation();
+
     boolean existsByItemCode(String itemCode);
 
     List<StockItem> findByProductTypeAndStatus(StockProductType productType, String status);

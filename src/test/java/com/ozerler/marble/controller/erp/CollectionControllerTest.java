@@ -4,6 +4,7 @@ import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.CheckRecord;
 import com.ozerler.marble.model.CollectionRecord;
 import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.Invoice;
 import com.ozerler.marble.model.enums.CheckStatus;
 import com.ozerler.marble.model.enums.CollectionMethod;
 import com.ozerler.marble.repository.CustomerRepository;
@@ -26,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -194,5 +196,39 @@ class CollectionControllerTest {
         assertThat(view).isEqualTo("redirect:/collections/checks");
         assertThat(redirectAttributes.getFlashAttributes()).containsKey("successMessage");
         verify(collectionService).updateCheckStatus(50L, CheckStatus.BOUNCED, "Karşılıksız");
+    }
+
+    @Test
+    @DisplayName("new collection form loads invoices with their customers")
+    void newCollectionForm_LoadsInvoicesWithCustomer() {
+        when(customerRepository.findAll()).thenReturn(List.of());
+        when(invoiceRepository.findAllWithCustomer()).thenReturn(List.of());
+
+        Model model = new ConcurrentModel();
+        String view = controller.newCollectionForm(null, null, model);
+
+        assertThat(view).isEqualTo("collections/form");
+        assertThat(model.getAttribute("invoices")).isEqualTo(List.of());
+        verify(invoiceRepository).findAllWithCustomer();
+    }
+
+    @Test
+    @DisplayName("new collection form preselects the customer from the fetched invoice")
+    void newCollectionForm_PreselectsCustomerFromInvoice() {
+        Customer customer = Customer.builder().companyName("Özerler").build();
+        customer.setId(4L);
+        Invoice invoice = Invoice.builder().invoiceNo("FTR-1").customer(customer).build();
+        invoice.setId(9L);
+
+        when(invoiceRepository.findByIdWithCustomer(9L)).thenReturn(Optional.of(invoice));
+        when(invoiceRepository.findAllWithCustomer()).thenReturn(List.of(invoice));
+        when(customerRepository.findAll()).thenReturn(List.of(customer));
+
+        Model model = new ConcurrentModel();
+        String view = controller.newCollectionForm(9L, null, model);
+
+        assertThat(view).isEqualTo("collections/form");
+        assertThat(model.getAttribute("selectedCustomerId")).isEqualTo(4L);
+        assertThat(model.getAttribute("selectedInvoice")).isSameAs(invoice);
     }
 }

@@ -382,8 +382,7 @@ public class InvoiceController extends AbstractController {
         // 5. Ebatlı Ürün Stoğu
         if (department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP) {
             if (stockType == null || stockType.isBlank() || "SIZED".equalsIgnoreCase(stockType)) {
-                List<StockItem> stockItems = stockItemRepository.findAll().stream()
-                        .filter(st -> st.getQuantity() != null && st.getQuantity().compareTo(BigDecimal.ZERO) > 0)
+                List<StockItem> stockItems = stockItemRepository.findPositiveQuantityWithLocation().stream()
                         .filter(st -> {
                             if (department != null && st.getStockLocation() != null) {
                                 return department.equals(st.getStockLocation().getBusinessUnit());

@@ -44,4 +44,20 @@ class StockItemRepositoryQueryTest {
         assertThat(query.value()).contains("SELECT s FROM StockItem s");
         assertThat(query.countQuery()).contains("SELECT COUNT(s) FROM StockItem s");
     }
+
+    @Test
+    @DisplayName("findPositiveQuantityWithLocation loads stockLocation so business unit can be read outside the session")
+    void findPositiveQuantityWithLocationFetchesStockLocation() throws Exception {
+        EntityGraph entityGraph = StockItemRepository.class
+                .getMethod("findPositiveQuantityWithLocation")
+                .getAnnotation(EntityGraph.class);
+        Query query = StockItemRepository.class
+                .getMethod("findPositiveQuantityWithLocation")
+                .getAnnotation(Query.class);
+
+        assertThat(entityGraph).isNotNull();
+        assertThat(entityGraph.attributePaths()).contains("stockLocation");
+        assertThat(query).isNotNull();
+        assertThat(query.value()).contains("s.quantity > 0");
+    }
 }

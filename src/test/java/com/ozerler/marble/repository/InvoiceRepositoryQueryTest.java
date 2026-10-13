@@ -26,4 +26,27 @@ class InvoiceRepositoryQueryTest {
         assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH it.stockItem");
         assertThat(query.value()).contains("WHERE i.id = :id");
     }
+
+    @Test
+    @DisplayName("findAllWithCustomer fetches the customer so collection forms can read companyName after the session closes")
+    void findAllWithCustomerFetchesCustomer() throws Exception {
+        Query query = InvoiceRepository.class
+                .getMethod("findAllWithCustomer")
+                .getAnnotation(Query.class);
+
+        assertThat(query).isNotNull();
+        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
+    }
+
+    @Test
+    @DisplayName("findByIdWithCustomer fetches the customer for the preselected collection invoice")
+    void findByIdWithCustomerFetchesCustomer() throws Exception {
+        Query query = InvoiceRepository.class
+                .getMethod("findByIdWithCustomer", Long.class)
+                .getAnnotation(Query.class);
+
+        assertThat(query).isNotNull();
+        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
+        assertThat(query.value()).contains("WHERE i.id = :id");
+    }
 }
