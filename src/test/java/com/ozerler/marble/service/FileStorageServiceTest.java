@@ -161,8 +161,28 @@ class FileStorageServiceTest {
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", null);
 
         assertThat(saved.isText()).isTrue();
+        assertThat(saved.isMarkdown()).isFalse();
         assertThat(saved.isDocument()).isTrue();
         assertThat(saved.getObjectKey()).contains("documents/");
+    }
+
+    @Test
+    @DisplayName("storeFile should save Markdown document successfully")
+    void storeFile_Markdown_Success() throws IOException {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "jeoloji_notu.md",
+                "text/markdown",
+                "# Ocak notu\nKalsit damari var.".getBytes());
+        stubSuccessfulUpload();
+
+        FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 4L);
+
+        assertThat(saved.isMarkdown()).isTrue();
+        assertThat(saved.isText()).isFalse();
+        assertThat(saved.isDocument()).isTrue();
+        assertThat(saved.getMimeType()).isEqualTo("text/markdown");
+        assertThat(saved.getObjectKey()).startsWith("documents/block/4/");
+        assertThat(saved.getObjectKey()).endsWith(".md");
     }
 
     @Test

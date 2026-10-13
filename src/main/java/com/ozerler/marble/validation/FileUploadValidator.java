@@ -23,7 +23,7 @@ public class FileUploadValidator {
     );
 
     static final Set<String> ALLOWED_DOCUMENT_EXTENSIONS = Set.of(
-            "pdf", "docx", "doc", "txt", "xlsx", "xls", "csv"
+            "pdf", "docx", "doc", "txt", "md", "xlsx", "xls", "csv"
     );
 
     private static final Set<String> ALLOWED_EXTENSIONS;
@@ -51,7 +51,8 @@ public class FileUploadValidator {
                     "application/zip")),
             Map.entry("xls", Set.of("application/vnd.ms-excel", "application/octet-stream")),
             Map.entry("csv", Set.of("text/csv", "application/csv", "text/plain", "text/x-csv")),
-            Map.entry("txt", Set.of("text/plain"))
+            Map.entry("txt", Set.of("text/plain")),
+            Map.entry("md", Set.of("text/markdown", "text/x-markdown", "text/plain"))
     );
 
     private final ObjectStorageProperties storageProperties;
@@ -120,6 +121,7 @@ public class FileUploadValidator {
             case "xls" -> "application/vnd.ms-excel";
             case "csv" -> "text/csv";
             case "txt" -> "text/plain";
+            case "md" -> "text/markdown";
             case "jpg", "jpeg" -> "image/jpeg";
             case "png" -> "image/png";
             case "webp" -> "image/webp";
@@ -157,7 +159,7 @@ public class FileUploadValidator {
             }
             case "pdf" -> requireAsciiPrefix(header, "%PDF", "PDF");
             case "docx", "xlsx" -> requireMagic(header, new byte[]{0x50, 0x4B}, "Office Open XML");
-            case "svg", "txt", "csv", "doc", "xls" -> {
+            case "svg", "txt", "md", "csv", "doc", "xls" -> {
                 // Textual or legacy binary formats without a strict short magic header.
             }
             default -> {

@@ -246,6 +246,9 @@ public class FileUploadController extends AbstractController {
         if (mime == null || mime.isBlank()) {
             mime = "application/octet-stream";
         }
+        if (!attachment && fileStorage.isMarkdown()) {
+            mime = "text/plain;charset=UTF-8";
+        }
 
         ContentDisposition contentDisposition = (attachment
                 ? ContentDisposition.attachment()

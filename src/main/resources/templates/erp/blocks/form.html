@@ -199,7 +199,7 @@
                 </section>
 
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Görseller, belgeler ve notlar', 'Blok fotoğrafları, SVG/PDF/Excel/CSV/DOCX teknik raporları ve jeolojik tanım')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Görseller, belgeler ve notlar', 'Blok fotoğrafları, SVG/PDF/Excel/CSV/DOCX/MD teknik raporları ve jeolojik tanım')}"></div>
 
                     <!-- Mevcut Ekli Dosyalar (Düzenleme Modunda) -->
                     <div th:if="${isEdit and attachedFiles != null and !#lists.isEmpty(attachedFiles)}" class="erp-form-field erp-form-field--full">
@@ -210,7 +210,9 @@
                         <div id="attached-files-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-1">
                             <div th:each="file : ${attachedFiles}" th:id="'attached-file-card-' + ${file.id}"
                                  class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300 transition-all shadow-2xs">
-                                <div class="flex items-center gap-3 min-w-0">
+                                <a th:href="@{'/api/upload/view/' + ${file.id}}" target="_blank" rel="noopener"
+                                   class="flex items-center gap-3 min-w-0 text-left"
+                                   title="Önizlemek için tıklayın">
                                     <!-- Görsel Önizleme veya Dosya İkonu -->
                                     <div class="w-10 h-10 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-200 shadow-2xs">
                                         <img th:if="${file.image}" th:src="${file.filePath}" alt="Ek" class="w-full h-full object-cover">
@@ -218,14 +220,18 @@
                                         <span th:if="${file.excel}" class="text-xs font-bold text-emerald-600">XLS</span>
                                         <span th:if="${file.csv}" class="text-xs font-bold text-teal-600">CSV</span>
                                         <span th:if="${file.word}" class="text-xs font-bold text-blue-600">DOC</span>
+                                        <span th:if="${file.markdown}" class="text-xs font-bold text-amber-600">MD</span>
                                         <span th:if="${file.text}" class="text-xs font-bold text-amber-600">TXT</span>
-                                        <span th:if="${!file.image and !file.pdf and !file.excel and !file.csv and !file.word and !file.text}" class="text-xs font-bold text-slate-600">DOS</span>
+                                        <span th:if="${!file.image and !file.pdf and !file.excel and !file.csv and !file.word and !file.text and !file.markdown}" class="text-xs font-bold text-slate-600">DOS</span>
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="text-xs font-semibold text-slate-800 truncate" th:text="${file.originalName}" th:title="${file.originalName}">Dosya Adı</p>
-                                        <p class="text-[11px] text-slate-400 mt-0.5" th:text="${file.formattedSize}">1.2 MB</p>
+                                        <p class="text-xs font-semibold text-blue-700 truncate" th:text="${file.originalName}" th:title="${file.originalName}">Dosya Adı</p>
+                                        <p class="text-[11px] text-slate-400 mt-0.5">
+                                            <span th:text="${file.formattedSize}">1.2 MB</span>
+                                            <span class="text-blue-700"> · Önizlemek için tıklayın</span>
+                                        </p>
                                     </div>
-                                </div>
+                                </a>
                                 <div class="flex items-center gap-1.5 shrink-0 ml-2">
                                     <a th:href="@{'/api/upload/download/' + ${file.id}}" th:download="${file.originalName}" target="_blank"
                                        class="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition"
@@ -245,10 +251,11 @@
                     <!-- Çoklu Dosya Yükleme Alanı (FilePond) -->
                     <div class="erp-form-field">
                         <label class="erp-form-label" for="block-filepond">
-                            Dosya Ekle (Görsel, SVG, PDF, Excel, CSV, DOCX, TXT)
+                            Dosya Ekle (Görsel, SVG, PDF, Excel, CSV, DOCX, TXT, MD)
                             <span class="text-xs font-normal text-slate-400 ml-1">Birden fazla dosya seçebilirsiniz</span>
                         </label>
-                        <input type="file" id="block-filepond" name="file" multiple class="filepond">
+                        <input type="file" id="block-filepond" name="file" multiple class="filepond"
+                               accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,.pdf,.xlsx,.xls,.csv,.doc,.docx,.txt,.md">
                         <div id="uploaded-files-container"></div>
                         <input type="hidden" id="photo-urls-input" name="photoUrls"
                                th:value="${isEdit and block != null ? block.photoUrls : ''}">

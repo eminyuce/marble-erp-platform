@@ -28,7 +28,7 @@
 - **Enterprise System Settings & Security**: Database-backed dynamic controls for Two-Factor Authentication (2FA), Google reCAPTCHA v2/v3, dynamic SMTP dispatch, and customizable HTML email templates.
 - **Operational Report Center**: Multi-tab live reporting engine exporting 6 domain datasets to auto-formatted Excel (`.xlsx`) and UTF-8 BOM CSV (`.csv`).
 - **Structured JSON Observability**: Production-grade Logstash JSON logging over Logback with MDC diagnostic correlation (`traceId`, `userId`) and a dedicated `/admin/dashboard/systemhealth/` metric cockpit.
-- **Object File Storage**: Block photos, SVG, PDF, Excel, and Word attachments stored in private RustFS buckets (S3 API), with metadata in PostgreSQL.
+- **Object File Storage**: Block photos, SVG, PDF, Excel, Word, CSV, TXT, and Markdown attachments stored in private RustFS buckets (S3 API), with metadata in PostgreSQL. MinIO is not used.
 
 ---
 
@@ -157,7 +157,7 @@ Seeded via Flyway migration ([V4__add_settings_and_admin_eimece.sql](src/main/re
 | `/costs` | `GET` | `ROLE_FINANCE` | Multi-layer Activity-Based Costing & margin simulator |
 | `/reports` | `GET` | Authenticated | Operational Report Center (Quarry, Factory, Site, Cost) |
 | `/reports/export` | `GET` | Authenticated | Instant Excel (`.xlsx`) and CSV (`.csv`) export engine |
-| `/api/upload` | `POST` | Authenticated | Upload images, SVG, PDF, Excel, Word, CSV, TXT to RustFS |
+| `/api/upload` | `POST` | Authenticated | Upload images, SVG, PDF, Excel, Word, CSV, TXT, and Markdown to RustFS |
 | `/api/upload/download/{id}` | `GET` | Authenticated | Stream a stored file as an attachment |
 | `/api/upload/{id}/download-url` | `GET` | Authenticated | Short-lived RustFS presigned download URL |
 | `/passport/{code}` | `GET` | Public | Digital Stone Passport & reverse genealogy by QR scan |
@@ -176,6 +176,10 @@ Seeded via Flyway migration ([V4__add_settings_and_admin_eimece.sql](src/main/re
 ## 📦 File Storage (RustFS)
 
 Uploads are stored in **RustFS** (S3 API, Docker). PostgreSQL keeps only metadata in `file_storage`. The RustFS bucket is private.
+
+MinIO has been removed from production. Deploys do not start a MinIO container, and RustFS does not mount a MinIO disk. The only object store is `marble-rustfs`.
+
+Accepted uploads: images (JPG, PNG, WEBP, GIF, BMP, SVG), PDF, Excel (XLSX, XLS), CSV, Word (DOCX, DOC), TXT, and Markdown (`.md`). After a file is uploaded, click it to open a preview and confirm it is the right image or document.
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d rustfs

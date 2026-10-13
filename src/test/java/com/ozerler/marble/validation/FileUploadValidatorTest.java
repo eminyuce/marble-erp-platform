@@ -58,6 +58,16 @@ class FileUploadValidatorTest {
     }
 
     @Test
+    @DisplayName("valid Markdown file is accepted")
+    void validMarkdown() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "jeoloji.md", "text/markdown", "# Ocak notu".getBytes());
+        FileUploadValidator.ValidatedUpload result = validator.validate(file);
+        assertThat(result.cleanExtension()).isEqualTo("md");
+        assertThat(result.mimeType()).isEqualTo("text/markdown");
+    }
+
+    @Test
     @DisplayName("invalid extension is rejected")
     void invalidExtension() {
         MockMultipartFile file = new MockMultipartFile("file", "a.exe", "application/octet-stream", "MZ".getBytes());

@@ -190,6 +190,30 @@ class FileUploadControllerTest {
     }
 
     @Test
+    @DisplayName("viewFile should open Markdown inline as readable text")
+    void viewFile_Markdown_OpensInlineAsText() {
+        FileStorage storage = FileStorage.builder()
+                .id(11L)
+                .fileName("blocks_11111111.md")
+                .originalName("jeoloji_notu.md")
+                .mimeType("text/markdown")
+                .build();
+
+        ByteArrayResource resource = new ByteArrayResource("# Ocak notu".getBytes());
+
+        when(fileStorageService.requireAccessibleFile(11L)).thenReturn(storage);
+        when(fileStorageService.loadAsResource(11L)).thenReturn(resource);
+
+        ResponseEntity<Resource> response = fileUploadController.viewFile(11L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentDisposition().getType()).isEqualTo("inline");
+        assertThat(response.getHeaders().getContentDisposition().getFilename()).isEqualTo("jeoloji_notu.md");
+        assertThat(response.getHeaders().getContentType().toString()).contains("text/plain");
+        assertThat(response.getBody()).isEqualTo(resource);
+    }
+
+    @Test
     @DisplayName("downloadFile should preserve XLSX filename and spreadsheet MIME type")
     void downloadFile_Xlsx_PreservesOriginalFilename() {
         FileStorage storage = FileStorage.builder()

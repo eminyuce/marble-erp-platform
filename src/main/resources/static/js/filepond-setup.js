@@ -91,14 +91,30 @@ function initMultiFilePond(inputSelector, containerSelector, entityType, entityI
             'text/x-csv',
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'text/plain'
+            'text/plain',
+            'text/markdown',
+            'text/x-markdown'
         ],
-        labelIdle: 'Dosyaları sürükleyin veya <span class="filepond--label-action">Gözatın</span> (Fotoğraf, SVG, PDF, Excel, CSV, DOCX, TXT)',
+        labelIdle: 'Dosyaları sürükleyin veya <span class="filepond--label-action">Gözatın</span> (Fotoğraf, SVG, PDF, Excel, CSV, DOCX, TXT, MD)',
         labelFileProcessing: 'Yükleniyor...',
-        labelFileProcessingComplete: 'Yükleme tamamlandı',
+        labelFileProcessingComplete: 'Yüklendi — önizlemek için tıklayın',
         labelTapToCancel: 'İptal etmek için dokunun',
         labelTapToRetry: 'Tekrar denemek için dokunun',
         labelTapToUndo: 'Kaldırmak için dokunun',
+        onactivatefile: (fileItem) => {
+            openUploadedFile(fileItem);
+        },
+        onaddfile: (error, fileItem) => {
+            if (!error) {
+                markFilePreviewable(fileItem);
+                setTimeout(() => markFilePreviewable(fileItem), 0);
+            }
+        },
+        onprocessfile: (error, fileItem) => {
+            if (!error) {
+                markFilePreviewable(fileItem);
+            }
+        },
         server: {
             process: (fieldName, file, metadata, load, error, progress, abort) => {
                 const formData = new FormData();
@@ -137,6 +153,9 @@ function initMultiFilePond(inputSelector, containerSelector, entityType, entityI
                                     container.appendChild(hidden);
                                 }
                             }
+                            if (fileId) {
+                                rememberUploadedPreview(container, fileId, file.name);
+                            }
                             load(fileId ? String(fileId) : request.responseText);
                         } catch (err) {
                             load(request.responseText);
@@ -172,6 +191,10 @@ function initMultiFilePond(inputSelector, containerSelector, entityType, entityI
                     const hidden = document.getElementById('file-hidden-' + uniqueFileId);
                     if (hidden) {
                         hidden.remove();
+                    }
+                    const preview = document.getElementById('file-preview-link-' + uniqueFileId);
+                    if (preview) {
+                        preview.remove();
                     }
                     load();
                 }).catch(err => {
@@ -223,7 +246,53 @@ function deleteAttachedFile(fileId, elementId) {
     });
 }
 
+function openUploadedFile(fileItemOrId) {
+    if (fileItemOrId && typeof fileItemOrId === 'object') {
+        const serverId = fileItemOrId.serverId;
+        if (serverId && /^\d+$/.test(String(serverId))) {
+            window.open('/api/upload/view/' + encodeURIComponent(serverId), '_blank', 'noopener');
+            return;
+        }
+        if (fileItemOrId.file) {
+            const url = URL.createObjectURL(fileItemOrId.file);
+            window.open(url, '_blank', 'noopener');
+        }
+        return;
+    }
+    if (fileItemOrId) {
+        window.open('/api/upload/view/' + encodeURIComponent(fileItemOrId), '_blank', 'noopener');
+    }
+}
+
+function markFilePreviewable(fileItem) {
+    const element = document.getElementById('filepond--item-' + fileItem.id);
+    if (!element) {
+        return;
+    }
+    element.title = 'Önizlemek için tıklayın';
+    element.style.cursor = 'pointer';
+}
+
+function rememberUploadedPreview(container, fileId, fileName) {
+    if (!container || !fileId) {
+        return;
+    }
+    const linkId = 'file-preview-link-' + fileId;
+    if (document.getElementById(linkId)) {
+        return;
+    }
+    const link = document.createElement('a');
+    link.id = linkId;
+    link.href = '/api/upload/view/' + encodeURIComponent(fileId);
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.className = 'mt-2 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100';
+    link.textContent = 'Önizle: ' + (fileName || 'dosya');
+    container.appendChild(link);
+}
+
 window.initFilePond = initFilePond;
 window.initMultiFilePond = initMultiFilePond;
 window.deleteAttachedFile = deleteAttachedFile;
+window.openUploadedFile = openUploadedFile;
 

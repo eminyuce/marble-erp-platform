@@ -54,6 +54,9 @@ public class FileStorageDto {
     @JsonProperty("text")
     private boolean text;
 
+    @JsonProperty("markdown")
+    private boolean markdown;
+
     @JsonProperty("excel")
     private boolean excel;
 
@@ -84,6 +87,7 @@ public class FileStorageDto {
                 .pdf(entity.isPdf())
                 .word(entity.isWord())
                 .text(entity.isText())
+                .markdown(entity.isMarkdown())
                 .excel(entity.isExcel())
                 .csv(entity.isCsv())
                 .extension(entity.getFileExtension())

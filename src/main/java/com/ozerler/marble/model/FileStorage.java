@@ -100,7 +100,18 @@ public class FileStorage extends AuditableEntity {
     }
 
     @Transient
+    public boolean isMarkdown() {
+        if (originalName != null && originalName.toLowerCase().endsWith(".md")) {
+            return true;
+        }
+        return mimeType != null && mimeType.toLowerCase().contains("markdown");
+    }
+
+    @Transient
     public boolean isText() {
+        if (isMarkdown()) {
+            return false;
+        }
         if ("text/plain".equalsIgnoreCase(mimeType)) {
             return true;
         }
@@ -135,7 +146,7 @@ public class FileStorage extends AuditableEntity {
 
     @Transient
     public boolean isDocument() {
-        return isPdf() || isWord() || isText() || isExcel() || isCsv();
+        return isPdf() || isWord() || isText() || isMarkdown() || isExcel() || isCsv();
     }
 
     @Transient
