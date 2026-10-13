@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * In-memory object storage used by the {@code test} profile so Spring Boot tests
- * do not require a live MinIO process.
+ * do not require a live RustFS process.
  */
 @Service
 @Profile({"test", "local"})

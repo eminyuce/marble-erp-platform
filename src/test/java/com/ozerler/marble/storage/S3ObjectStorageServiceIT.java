@@ -28,30 +28,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 class S3ObjectStorageServiceIT {
 
-    private static final String ACCESS_KEY = "testkey";
-    private static final String SECRET_KEY = "testsecret";
+    private static final String ACCESS_KEY = "rustfstest";
+    private static final String SECRET_KEY = "rustfstestsecret";
     private static final String BUCKET = "erp-files";
 
     @Container
     @SuppressWarnings("resource")
-    static final GenericContainer<?> minio = new GenericContainer<>(DockerImageName.parse("quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z"))
-            .withEnv("MINIO_ROOT_USER", ACCESS_KEY)
-            .withEnv("MINIO_ROOT_PASSWORD", SECRET_KEY)
-            .withCommand("server", "/data")
+    static final GenericContainer<?> rustfs = new GenericContainer<>(DockerImageName.parse("rustfs/rustfs:1.0.1"))
+            .withEnv("RUSTFS_ACCESS_KEY", ACCESS_KEY)
+            .withEnv("RUSTFS_SECRET_KEY", SECRET_KEY)
+            .withEnv("RUSTFS_ADDRESS", ":9000")
+            .withEnv("RUSTFS_CONSOLE_ENABLE", "false")
             .withExposedPorts(9000)
-            .waitingFor(Wait.forHttp("/minio/health/live").forPort(9000).forStatusCode(200));
+            .waitingFor(Wait.forHttp("/health").forPort(9000).forStatusCode(200));
 
     @Test
-    @DisplayName("S3-compatible MinIO client can upload, download, exist-check, presign, and delete")
-    void objectLifecycleAgainstMinio() throws Exception {
-        String endpoint = "http://" + minio.getHost() + ":" + minio.getMappedPort(9000);
+    @DisplayName("S3-compatible RustFS client can upload, download, exist-check, presign, and delete")
+    void objectLifecycleAgainstRustFs() throws Exception {
+        String endpoint = "http://" + rustfs.getHost() + ":" + rustfs.getMappedPort(9000);
         ObjectStorageProperties properties = new ObjectStorageProperties();
-        properties.getMinio().setEndpoint(endpoint);
-        properties.getMinio().setPublicEndpoint(endpoint);
-        properties.getMinio().setAccessKey(ACCESS_KEY);
-        properties.getMinio().setSecretKey(SECRET_KEY);
-        properties.getMinio().setBucket(BUCKET);
-        properties.getMinio().setRegion("us-east-1");
+        properties.getRustfs().setEndpoint(endpoint);
+        properties.getRustfs().setPublicEndpoint(endpoint);
+        properties.getRustfs().setAccessKey(ACCESS_KEY);
+        properties.getRustfs().setSecretKey(SECRET_KEY);
+        properties.getRustfs().setBucket(BUCKET);
+        properties.getRustfs().setRegion("us-east-1");
 
         try (S3Client s3Client = s3Client(endpoint);
              S3Presigner presigner = s3Presigner(endpoint)) {
@@ -59,7 +60,7 @@ class S3ObjectStorageServiceIT {
             storage.ensureBucketExists();
 
             String key = "documents/block/1/sample.txt";
-            byte[] payload = "minio-integration".getBytes(StandardCharsets.UTF_8);
+            byte[] payload = "rustfs-integration".getBytes(StandardCharsets.UTF_8);
             storage.upload(key, new ByteArrayInputStream(payload), payload.length, "text/plain");
 
             assertThat(storage.exists(key)).isTrue();

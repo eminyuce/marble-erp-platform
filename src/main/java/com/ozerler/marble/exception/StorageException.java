@@ -1,7 +1,7 @@
 package com.ozerler.marble.exception;
 
 /**
- * Raised when object storage (MinIO / S3) cannot complete an operation.
+ * Raised when object storage (RustFS / S3) cannot complete an operation.
  * Callers must not expose the cause message to end users.
  */
 public class StorageException extends RuntimeException {

@@ -125,10 +125,10 @@ if (-not $SkipPostgres) {
         throw "Failed to start the PostgreSQL container."
     }
     Wait-PostgresHealthy -TimeoutSeconds $PostgresWaitSeconds
-    Write-Host "[DOCKER] Starting MinIO..." -ForegroundColor Yellow
-    docker compose -f $ComposeFile up -d minio
+    Write-Host "[DOCKER] Starting RustFS..." -ForegroundColor Yellow
+    docker compose -f $ComposeFile up -d rustfs
     if ($LASTEXITCODE -ne 0) {
-        throw "Failed to start the MinIO container."
+        throw "Failed to start the RustFS container."
     }
 } else {
     Write-Host "[SKIP] PostgreSQL Docker step skipped." -ForegroundColor Yellow
@@ -137,8 +137,8 @@ if (-not $SkipPostgres) {
 Write-Host ""
 Write-Host "App:         http://localhost:$AppPort" -ForegroundColor Green
 Write-Host "Admin:       http://localhost:$AppPort/account/adminlogin/" -ForegroundColor Green
-Write-Host "MinIO API:   http://localhost:9000" -ForegroundColor Green
-Write-Host "MinIO UI:    http://localhost:9001" -ForegroundColor Green
+Write-Host "RustFS API:  http://localhost:9000" -ForegroundColor Green
+Write-Host "RustFS UI:   http://localhost:9001" -ForegroundColor Green
 Write-Host "Email:       admin@eimece.test" -ForegroundColor White
 Write-Host "Pass:        B2u5c8JB" -ForegroundColor White
 Write-Host ""

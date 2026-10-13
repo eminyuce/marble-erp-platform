@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Idempotent migration of leftover local-disk files into MinIO.
+ * Idempotent migration of leftover local-disk files into RustFS.
  * Original files are never deleted by this process.
  */
 @Slf4j

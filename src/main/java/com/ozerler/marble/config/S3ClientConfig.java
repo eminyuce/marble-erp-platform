@@ -18,18 +18,18 @@ import java.net.URI;
 
 @Configuration
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "app.storage.type", havingValue = "minio", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.storage.type", havingValue = "rustfs", matchIfMissing = true)
 public class S3ClientConfig {
 
     private final ObjectStorageProperties storageProperties;
 
     @Bean
     public S3Client s3Client() {
-        ObjectStorageProperties.Minio minio = requireConfiguredMinio();
+        ObjectStorageProperties.RustFs rustFs = requireConfiguredRustFs();
         return S3Client.builder()
-                .endpointOverride(URI.create(minio.getEndpoint()))
-                .region(Region.of(minio.getRegion()))
-                .credentialsProvider(staticCredentials(minio))
+                .endpointOverride(URI.create(rustFs.getEndpoint()))
+                .region(Region.of(rustFs.getRegion()))
+                .credentialsProvider(staticCredentials(rustFs))
                 .serviceConfiguration(s3Configuration())
                 .httpClient(UrlConnectionHttpClient.create())
                 .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
@@ -39,15 +39,15 @@ public class S3ClientConfig {
 
     @Bean
     public S3Presigner s3Presigner() {
-        ObjectStorageProperties.Minio minio = requireConfiguredMinio();
-        String publicEndpoint = minio.getPublicEndpoint();
+        ObjectStorageProperties.RustFs rustFs = requireConfiguredRustFs();
+        String publicEndpoint = rustFs.getPublicEndpoint();
         if (publicEndpoint == null || publicEndpoint.isBlank()) {
-            publicEndpoint = minio.getEndpoint();
+            publicEndpoint = rustFs.getEndpoint();
         }
         return S3Presigner.builder()
                 .endpointOverride(URI.create(publicEndpoint))
-                .region(Region.of(minio.getRegion()))
-                .credentialsProvider(staticCredentials(minio))
+                .region(Region.of(rustFs.getRegion()))
+                .credentialsProvider(staticCredentials(rustFs))
                 .serviceConfiguration(s3Configuration())
                 .build();
     }
@@ -58,24 +58,24 @@ public class S3ClientConfig {
                 .build();
     }
 
-    private static StaticCredentialsProvider staticCredentials(ObjectStorageProperties.Minio minio) {
+    private static StaticCredentialsProvider staticCredentials(ObjectStorageProperties.RustFs rustFs) {
         return StaticCredentialsProvider.create(
-                AwsBasicCredentials.create(minio.getAccessKey(), minio.getSecretKey()));
+                AwsBasicCredentials.create(rustFs.getAccessKey(), rustFs.getSecretKey()));
     }
 
-    private ObjectStorageProperties.Minio requireConfiguredMinio() {
-        ObjectStorageProperties.Minio minio = storageProperties.getMinio();
-        if (minio.getAccessKey() == null || minio.getAccessKey().isBlank()
-                || minio.getSecretKey() == null || minio.getSecretKey().isBlank()) {
+    private ObjectStorageProperties.RustFs requireConfiguredRustFs() {
+        ObjectStorageProperties.RustFs rustFs = storageProperties.getRustfs();
+        if (rustFs.getAccessKey() == null || rustFs.getAccessKey().isBlank()
+                || rustFs.getSecretKey() == null || rustFs.getSecretKey().isBlank()) {
             throw new IllegalStateException(
-                    "MinIO credentials are not configured. Set MINIO_ACCESS_KEY and MINIO_SECRET_KEY.");
+                    "RustFS credentials are not configured. Set RUSTFS_ACCESS_KEY and RUSTFS_SECRET_KEY.");
         }
-        if (minio.getEndpoint() == null || minio.getEndpoint().isBlank()) {
-            throw new IllegalStateException("MinIO endpoint is not configured. Set MINIO_ENDPOINT.");
+        if (rustFs.getEndpoint() == null || rustFs.getEndpoint().isBlank()) {
+            throw new IllegalStateException("RustFS endpoint is not configured. Set RUSTFS_ENDPOINT.");
         }
-        if (minio.getBucket() == null || minio.getBucket().isBlank()) {
-            throw new IllegalStateException("MinIO bucket is not configured. Set MINIO_BUCKET.");
+        if (rustFs.getBucket() == null || rustFs.getBucket().isBlank()) {
+            throw new IllegalStateException("RustFS bucket is not configured. Set RUSTFS_BUCKET.");
         }
-        return minio;
+        return rustFs;
     }
 }

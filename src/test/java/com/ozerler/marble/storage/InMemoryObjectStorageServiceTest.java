@@ -26,7 +26,7 @@ class InMemoryObjectStorageServiceTest {
     @DisplayName("upload, exists, download, presign, and delete work together")
     void lifecycle() throws Exception {
         String key = "images/block/1/a.png";
-        byte[] payload = "hello-minio".getBytes(StandardCharsets.UTF_8);
+        byte[] payload = "hello-rustfs".getBytes(StandardCharsets.UTF_8);
 
         storage.upload(key, new ByteArrayInputStream(payload), payload.length, "image/png");
 

@@ -206,22 +206,20 @@ DB_URL=jdbc:postgresql://127.0.0.1:5432/marble_erp
 DB_POOL_MAX=10
 DB_POOL_MIN_IDLE=2
 
-# Legacy filesystem paths — kept only so existing files can be migrated to MinIO.
-# New uploads go to MinIO, not these directories.
+# Legacy filesystem paths — kept only so existing files can be migrated to RustFS.
+# New uploads go to RustFS, not these directories.
 APP_UPLOAD_DIR=/opt/marble-erp/uploads
 APP_MEDIA_DIR=/opt/marble-erp/media
 
-# MinIO object storage (S3-compatible). Required. Do not leave CHANGE_ME in production.
-STORAGE_TYPE=minio
-MINIO_ENDPOINT=http://127.0.0.1:9000
-MINIO_PUBLIC_ENDPOINT=http://127.0.0.1:9000
-MINIO_ACCESS_KEY=CHANGE_ME
-MINIO_SECRET_KEY=CHANGE_ME
-MINIO_BUCKET=erp-files
-MINIO_REGION=us-east-1
-MINIO_ROOT_USER=CHANGE_ME
-MINIO_ROOT_PASSWORD=CHANGE_ME
-MINIO_DATA_DIR=/opt/minio/data
+# RustFS object storage (S3-compatible Docker). Required. Do not leave CHANGE_ME in production.
+STORAGE_TYPE=rustfs
+RUSTFS_ENDPOINT=http://127.0.0.1:9000
+RUSTFS_PUBLIC_ENDPOINT=http://127.0.0.1:9000
+RUSTFS_ACCESS_KEY=CHANGE_ME
+RUSTFS_SECRET_KEY=CHANGE_ME
+RUSTFS_BUCKET=erp-files
+RUSTFS_REGION=us-east-1
+RUSTFS_DATA_DIR=/opt/rustfs/data
 
 # Public Domain and CORS Configuration
 CORS_ALLOWED_ORIGIN=https://ozerler.naklink.com
@@ -277,7 +275,7 @@ esac
 # --- Dry run / interactive confirmation ------------------------------------
 if [ "$DRY_RUN" -eq 1 ]; then
     echo "Dry run preview. Actions that would be executed:"
-    echo "  1. Ensure Docker PostgreSQL (marble-erp-postgres) and MinIO (marble-minio) are running"
+    echo "  1. Ensure Docker PostgreSQL (marble-erp-postgres) and RustFS (marble-rustfs) are running"
     echo "  2. Build frontend (npm install && npm run build) unless --skip-frontend"
     echo "  3. Package backend (./mvnw clean package -DskipTests)"
     echo "  4. Stop systemd service ($SERVICE_NAME)"
@@ -321,36 +319,51 @@ fi
 # --- Deploy directory & environment file -----------------------------------
 sudo_cmd mkdir -p "$DEPLOY_DIR/uploads" "$DEPLOY_DIR/logs" "$DEPLOY_DIR/media/images" "$DEPLOY_DIR/media/documents"
 
-# Legacy media/uploads stay on disk so existing files can be migrated into MinIO.
+# Legacy media/uploads stay on disk so existing files can be migrated into RustFS.
 # They are no longer the live upload target.
 MEDIA_DIR="${DEPLOY_DIR}/media"
 TARGET_USER="${SERVICE_USER:-eyuce}"
 TARGET_GROUP="${SERVICE_GROUP:-eyuce}"
-echo "[STORAGE] Preserving legacy media directories for MinIO migration: $MEDIA_DIR and $DEPLOY_DIR/uploads"
+echo "[STORAGE] Preserving legacy media directories for RustFS migration: $MEDIA_DIR and $DEPLOY_DIR/uploads"
 sudo_cmd chown -R "${TARGET_USER}:${TARGET_GROUP}" "$MEDIA_DIR" "$DEPLOY_DIR/uploads" || true
 sudo_cmd chmod -R u+rwX "$MEDIA_DIR" "$DEPLOY_DIR/uploads" || true
 
-ensure_minio_env_keys() {
+ensure_rustfs_env_keys() {
     if [ ! -f "$ENV_FILE" ]; then
         return 0
     fi
-    if grep -q '^MINIO_ENDPOINT=' "$ENV_FILE"; then
+    if grep -q '^STORAGE_TYPE=minio$' "$ENV_FILE"; then
+        echo "[ENV] Switching STORAGE_TYPE from minio to rustfs in $ENV_FILE"
+        sudo_cmd sed -i 's/^STORAGE_TYPE=minio$/STORAGE_TYPE=rustfs/' "$ENV_FILE"
+    fi
+    if grep -q '^RUSTFS_ENDPOINT=' "$ENV_FILE"; then
         return 0
     fi
-    echo "[ENV] Appending MinIO object-storage settings to $ENV_FILE"
-    sudo_cmd tee -a "$ENV_FILE" >/dev/null <<'EOF'
+    echo "[ENV] Appending RustFS object-storage settings to $ENV_FILE"
+    local access_key secret_key storage_line
+    access_key="$(grep -E '^MINIO_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+    secret_key="$(grep -E '^MINIO_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+    if [ -z "$access_key" ] || [ "$access_key" = "CHANGE_ME" ]; then
+        access_key="CHANGE_ME"
+    fi
+    if [ -z "$secret_key" ] || [ "$secret_key" = "CHANGE_ME" ]; then
+        secret_key="CHANGE_ME"
+    fi
+    storage_line=""
+    if ! grep -q '^STORAGE_TYPE=' "$ENV_FILE"; then
+        storage_line="STORAGE_TYPE=rustfs"
+    fi
+    sudo_cmd tee -a "$ENV_FILE" >/dev/null <<EOF
 
-# MinIO object storage (S3-compatible). Required after the filesystem-to-MinIO migration.
-STORAGE_TYPE=minio
-MINIO_ENDPOINT=http://127.0.0.1:9000
-MINIO_PUBLIC_ENDPOINT=http://127.0.0.1:9000
-MINIO_ACCESS_KEY=CHANGE_ME
-MINIO_SECRET_KEY=CHANGE_ME
-MINIO_BUCKET=erp-files
-MINIO_REGION=us-east-1
-MINIO_ROOT_USER=CHANGE_ME
-MINIO_ROOT_PASSWORD=CHANGE_ME
-MINIO_DATA_DIR=/opt/minio/data
+# RustFS object storage (S3-compatible Docker). Do not mount a MinIO data directory.
+${storage_line}
+RUSTFS_ENDPOINT=http://127.0.0.1:9000
+RUSTFS_PUBLIC_ENDPOINT=http://127.0.0.1:9000
+RUSTFS_ACCESS_KEY=${access_key}
+RUSTFS_SECRET_KEY=${secret_key}
+RUSTFS_BUCKET=erp-files
+RUSTFS_REGION=us-east-1
+RUSTFS_DATA_DIR=/opt/rustfs/data
 EOF
 }
 
@@ -358,10 +371,10 @@ if [ ! -f "$ENV_FILE" ]; then
     echo "[ENV] Writing initial $ENV_FILE"
     write_env_template
 else
-    ensure_minio_env_keys
+    ensure_rustfs_env_keys
 fi
 if grep -Eq 'CHANGE_ME|YOUR_PUBLIC_HOST|YOUR_STRONG' "$ENV_FILE"; then
-    die "$ENV_FILE still contains placeholders (CHANGE_ME / YOUR_PUBLIC_HOST). Edit real values (including MinIO keys) and re-run."
+    die "$ENV_FILE still contains placeholders (CHANGE_ME / YOUR_PUBLIC_HOST). Edit real values (including RustFS keys) and re-run."
 fi
 
 # Ensure correct base deploy directory permissions
@@ -383,33 +396,30 @@ if command -v docker >/dev/null 2>&1; then
         fi
     fi
 
-    MINIO_DATA_DIR_VALUE="$(grep -E '^MINIO_DATA_DIR=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
-    MINIO_DATA_DIR_VALUE="${MINIO_DATA_DIR_VALUE:-/opt/minio/data}"
-    sudo_cmd mkdir -p "$MINIO_DATA_DIR_VALUE"
-    if docker inspect marble-minio >/dev/null 2>&1; then
-        if ! docker inspect -f '{{.State.Running}}' marble-minio 2>/dev/null | grep -q "true"; then
-            echo "[MINIO] Starting Docker container 'marble-minio'..."
-            docker start marble-minio
+    RUSTFS_DATA_DIR_VALUE="$(grep -E '^RUSTFS_DATA_DIR=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+    RUSTFS_DATA_DIR_VALUE="${RUSTFS_DATA_DIR_VALUE:-/opt/rustfs/data}"
+    sudo_cmd mkdir -p "$RUSTFS_DATA_DIR_VALUE"
+    if docker inspect marble-rustfs >/dev/null 2>&1; then
+        if ! docker inspect -f '{{.State.Running}}' marble-rustfs 2>/dev/null | grep -q "true"; then
+            echo "[RUSTFS] Starting Docker container 'marble-rustfs'..."
+            docker start marble-rustfs
             sleep 2
         fi
     elif [ -f "$REPO_ROOT/docker/docker-compose.yml" ]; then
-        echo "[MINIO] Creating MinIO container from docker/docker-compose.yml (data: $MINIO_DATA_DIR_VALUE)"
-        MINIO_ROOT_USER_VALUE="$(grep -E '^MINIO_ROOT_USER=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
-        MINIO_ROOT_PASSWORD_VALUE="$(grep -E '^MINIO_ROOT_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
-        if [ -z "$MINIO_ROOT_USER_VALUE" ]; then
-            MINIO_ROOT_USER_VALUE="$(grep -E '^MINIO_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
-        fi
-        if [ -z "$MINIO_ROOT_PASSWORD_VALUE" ]; then
-            MINIO_ROOT_PASSWORD_VALUE="$(grep -E '^MINIO_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
-        fi
+        echo "[RUSTFS] Creating RustFS container from docker/docker-compose.yml (data: $RUSTFS_DATA_DIR_VALUE)"
+        RUSTFS_ACCESS_KEY_VALUE="$(grep -E '^RUSTFS_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+        RUSTFS_SECRET_KEY_VALUE="$(grep -E '^RUSTFS_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
         (cd "$REPO_ROOT" && \
-            MINIO_DATA_DIR="$MINIO_DATA_DIR_VALUE" \
-            MINIO_ROOT_USER="$MINIO_ROOT_USER_VALUE" \
-            MINIO_ROOT_PASSWORD="$MINIO_ROOT_PASSWORD_VALUE" \
-            docker compose -f docker/docker-compose.yml up -d minio)
+            RUSTFS_DATA_DIR="$RUSTFS_DATA_DIR_VALUE" \
+            RUSTFS_ACCESS_KEY="$RUSTFS_ACCESS_KEY_VALUE" \
+            RUSTFS_SECRET_KEY="$RUSTFS_SECRET_KEY_VALUE" \
+            docker compose -f docker/docker-compose.yml up -d rustfs)
+    fi
+    if docker inspect marble-rustfs >/dev/null 2>&1; then
+        echo "[RUSTFS] Docker container 'marble-rustfs' is present. Backup this data directory: $RUSTFS_DATA_DIR_VALUE"
     fi
     if docker inspect marble-minio >/dev/null 2>&1; then
-        echo "[MINIO] Docker container 'marble-minio' is present. Backup this data directory: $MINIO_DATA_DIR_VALUE"
+        echo "[RUSTFS] Legacy container 'marble-minio' is still present. RustFS does not read MinIO disks. Copy objects with an S3 client, then stop marble-minio."
     fi
 fi
 

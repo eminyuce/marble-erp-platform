@@ -7,7 +7,7 @@ import java.time.Duration;
 
 /**
  * S3-compatible object storage port. Business services depend on this
- * abstraction rather than MinIO or AWS SDK types.
+ * abstraction rather than RustFS or AWS SDK types.
  */
 public interface ObjectStorageService {
 

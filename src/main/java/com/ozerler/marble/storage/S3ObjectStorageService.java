@@ -30,7 +30,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "app.storage.type", havingValue = "minio", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.storage.type", havingValue = "rustfs", matchIfMissing = true)
 public class S3ObjectStorageService implements ObjectStorageService {
 
     private static final String HEALTH_PROBE_PREFIX = ".health-probe/";
@@ -167,13 +167,13 @@ public class S3ObjectStorageService implements ObjectStorageService {
             return DependencyHealth.up();
         } catch (Exception e) {
             log.error("Object storage health check failed bucket={}", bucket, e);
-            return DependencyHealth.down("MinIO erişilemiyor");
+            return DependencyHealth.down("RustFS erişilemiyor");
         }
     }
 
     @Override
     public String getBucketName() {
-        return storageProperties.getMinio().getBucket();
+        return storageProperties.getRustfs().getBucket();
     }
 
     private void createPrivateBucket(String bucket) {
