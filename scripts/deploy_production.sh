@@ -336,35 +336,61 @@ ensure_rustfs_env_keys() {
         echo "[ENV] Switching STORAGE_TYPE from minio to rustfs in $ENV_FILE"
         sudo_cmd sed -i 's/^STORAGE_TYPE=minio$/STORAGE_TYPE=rustfs/' "$ENV_FILE"
     fi
-    if grep -q '^RUSTFS_ENDPOINT=' "$ENV_FILE"; then
-        return 0
+
+    # Append each key at most once. A later deploy must not grow marble-erp.env.
+    local access_key secret_key
+    access_key="$(grep -E '^RUSTFS_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | head -n 1 | cut -d'=' -f2- | tr -d ' "' || true)"
+    secret_key="$(grep -E '^RUSTFS_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | head -n 1 | cut -d'=' -f2- | tr -d ' "' || true)"
+    if [ -z "$access_key" ]; then
+        access_key="$(grep -E '^MINIO_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | head -n 1 | cut -d'=' -f2- | tr -d ' "' || true)"
     fi
-    echo "[ENV] Appending RustFS object-storage settings to $ENV_FILE"
-    local access_key secret_key storage_line
-    access_key="$(grep -E '^MINIO_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
-    secret_key="$(grep -E '^MINIO_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+    if [ -z "$secret_key" ]; then
+        secret_key="$(grep -E '^MINIO_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | head -n 1 | cut -d'=' -f2- | tr -d ' "' || true)"
+    fi
     if [ -z "$access_key" ] || [ "$access_key" = "CHANGE_ME" ]; then
         access_key="CHANGE_ME"
     fi
     if [ -z "$secret_key" ] || [ "$secret_key" = "CHANGE_ME" ]; then
         secret_key="CHANGE_ME"
     fi
-    storage_line=""
-    if ! grep -q '^STORAGE_TYPE=' "$ENV_FILE"; then
-        storage_line="STORAGE_TYPE=rustfs"
-    fi
-    sudo_cmd tee -a "$ENV_FILE" >/dev/null <<EOF
 
-# RustFS object storage (S3-compatible Docker). Do not mount a MinIO data directory.
-${storage_line}
-RUSTFS_ENDPOINT=http://127.0.0.1:9000
-RUSTFS_PUBLIC_ENDPOINT=http://127.0.0.1:9000
-RUSTFS_ACCESS_KEY=${access_key}
-RUSTFS_SECRET_KEY=${secret_key}
-RUSTFS_BUCKET=erp-files
-RUSTFS_REGION=us-east-1
-RUSTFS_DATA_DIR=/opt/rustfs/data
-EOF
+    local -a missing_lines=()
+    if ! grep -q '^STORAGE_TYPE=' "$ENV_FILE"; then
+        missing_lines+=("STORAGE_TYPE=rustfs")
+    fi
+    if ! grep -q '^RUSTFS_ENDPOINT=' "$ENV_FILE"; then
+        missing_lines+=("RUSTFS_ENDPOINT=http://127.0.0.1:9000")
+    fi
+    if ! grep -q '^RUSTFS_PUBLIC_ENDPOINT=' "$ENV_FILE"; then
+        missing_lines+=("RUSTFS_PUBLIC_ENDPOINT=http://127.0.0.1:9000")
+    fi
+    if ! grep -q '^RUSTFS_ACCESS_KEY=' "$ENV_FILE"; then
+        missing_lines+=("RUSTFS_ACCESS_KEY=${access_key}")
+    fi
+    if ! grep -q '^RUSTFS_SECRET_KEY=' "$ENV_FILE"; then
+        missing_lines+=("RUSTFS_SECRET_KEY=${secret_key}")
+    fi
+    if ! grep -q '^RUSTFS_BUCKET=' "$ENV_FILE"; then
+        missing_lines+=("RUSTFS_BUCKET=erp-files")
+    fi
+    if ! grep -q '^RUSTFS_REGION=' "$ENV_FILE"; then
+        missing_lines+=("RUSTFS_REGION=us-east-1")
+    fi
+    if ! grep -q '^RUSTFS_DATA_DIR=' "$ENV_FILE"; then
+        missing_lines+=("RUSTFS_DATA_DIR=/opt/rustfs/data")
+    fi
+    if [ "${#missing_lines[@]}" -eq 0 ]; then
+        return 0
+    fi
+
+    echo "[ENV] Appending missing RustFS object-storage settings to $ENV_FILE"
+    {
+        echo ""
+        if ! grep -q '^RUSTFS_ENDPOINT=' "$ENV_FILE" && ! grep -q '^RUSTFS_BUCKET=' "$ENV_FILE"; then
+            echo "# RustFS object storage (S3-compatible Docker). Do not mount a MinIO data directory."
+        fi
+        printf '%s\n' "${missing_lines[@]}"
+    } | sudo_cmd tee -a "$ENV_FILE" >/dev/null
 }
 
 if [ ! -f "$ENV_FILE" ]; then
@@ -399,21 +425,48 @@ if command -v docker >/dev/null 2>&1; then
     RUSTFS_DATA_DIR_VALUE="$(grep -E '^RUSTFS_DATA_DIR=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
     RUSTFS_DATA_DIR_VALUE="${RUSTFS_DATA_DIR_VALUE:-/opt/rustfs/data}"
     sudo_cmd mkdir -p "$RUSTFS_DATA_DIR_VALUE"
-    if docker inspect marble-rustfs >/dev/null 2>&1; then
-        if ! docker inspect -f '{{.State.Running}}' marble-rustfs 2>/dev/null | grep -q "true"; then
-            echo "[RUSTFS] Starting Docker container 'marble-rustfs'..."
-            docker start marble-rustfs
-            sleep 2
-        fi
+    if docker inspect marble-rustfs >/dev/null 2>&1 \
+        && docker inspect -f '{{.State.Running}}' marble-rustfs 2>/dev/null | grep -q "true"; then
+        :
     elif [ -f "$REPO_ROOT/docker/docker-compose.yml" ]; then
+        echo "[RUSTFS] Removing legacy MinIO container if present..."
+        docker stop marble-minio 2>/dev/null || true
+        docker rm marble-minio 2>/dev/null || true
+        # also clean any half-created rustfs
+        docker rm -f marble-rustfs marble-rustfs-perms 2>/dev/null || true
+
+        # crucial: --remove-orphans
+        # `down` also removes the Postgres service in this compose file. The named
+        # volume is kept (no -v). Postgres is started again immediately below.
+        postgres_was_running=0
+        if docker inspect -f '{{.State.Running}}' marble-erp-postgres 2>/dev/null | grep -q "true"; then
+            postgres_was_running=1
+        fi
+        (cd "$REPO_ROOT" && docker compose -f docker/docker-compose.yml down --remove-orphans 2>/dev/null || true)
+
         echo "[RUSTFS] Creating RustFS container from docker/docker-compose.yml (data: $RUSTFS_DATA_DIR_VALUE)"
         RUSTFS_ACCESS_KEY_VALUE="$(grep -E '^RUSTFS_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
         RUSTFS_SECRET_KEY_VALUE="$(grep -E '^RUSTFS_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+        set +e
         (cd "$REPO_ROOT" && \
             RUSTFS_DATA_DIR="$RUSTFS_DATA_DIR_VALUE" \
             RUSTFS_ACCESS_KEY="$RUSTFS_ACCESS_KEY_VALUE" \
             RUSTFS_SECRET_KEY="$RUSTFS_SECRET_KEY_VALUE" \
-            docker compose -f docker/docker-compose.yml up -d rustfs)
+            docker compose -f docker/docker-compose.yml up -d --remove-orphans rustfs)
+        rustfs_up_status=$?
+        set -e
+        if [ "$postgres_was_running" -eq 1 ]; then
+            echo "[DB] Restoring Docker container 'marble-erp-postgres' after RustFS cleanup..."
+            if docker inspect marble-erp-postgres >/dev/null 2>&1; then
+                docker start marble-erp-postgres
+            else
+                (cd "$REPO_ROOT" && docker compose -f docker/docker-compose.yml up -d postgres)
+            fi
+            sleep 2
+        fi
+        if [ "$rustfs_up_status" -ne 0 ]; then
+            die "RustFS container create failed (docker compose up --remove-orphans rustfs)."
+        fi
     fi
     if docker inspect marble-rustfs >/dev/null 2>&1; then
         echo "[RUSTFS] Docker container 'marble-rustfs' is present. Backup this data directory: $RUSTFS_DATA_DIR_VALUE"
