@@ -51,7 +51,7 @@ class FileStorageMigrationServiceTest {
     }
 
     @Test
-    @DisplayName("dry-run reports files that would be uploaded without writing to MinIO")
+    @DisplayName("dry-run reports files that would be uploaded without writing to RustFS")
     void dryRunDoesNotUpload() throws Exception {
         Path images = Files.createDirectories(tempDir.resolve("images"));
         Files.writeString(images.resolve("legacy.jpg"), "jpeg-bytes");

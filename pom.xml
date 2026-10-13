@@ -181,7 +181,7 @@
             <version>8.0</version>
         </dependency>
 
-        <!-- S3-compatible object storage (MinIO / AWS S3) -->
+        <!-- S3-compatible object storage (RustFS / AWS S3) -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>

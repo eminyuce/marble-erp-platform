@@ -394,12 +394,12 @@ class FileStorageServiceTest {
     @DisplayName("checkStorageHealth should report DOWN when object storage is unavailable")
     void checkStorageHealth_WhenStorageDown_ReportsDown() {
         when(objectStorageService.checkHealth())
-                .thenReturn(DependencyHealth.down("MinIO erişilemiyor"));
+                .thenReturn(DependencyHealth.down("RustFS erişilemiyor"));
 
         var health = fileStorageService.checkStorageHealth();
 
         assertThat(health.getStatus()).isEqualTo("DOWN");
-        assertThat(health.getError()).contains("MinIO");
+        assertThat(health.getError()).contains("RustFS");
     }
 
     private void stubSuccessfulUpload() {

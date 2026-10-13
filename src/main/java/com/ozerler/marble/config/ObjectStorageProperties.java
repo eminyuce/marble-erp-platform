@@ -14,9 +14,9 @@ import java.time.Duration;
 public class ObjectStorageProperties {
 
     /**
-     * {@code minio} for production and local Docker; {@code memory} for automated tests.
+     * {@code rustfs} for production and local Docker; {@code memory} for automated tests.
      */
-    private String type = "minio";
+    private String type = "rustfs";
 
     /**
      * Local media directory used only to migrate legacy filesystem files.
@@ -32,13 +32,13 @@ public class ObjectStorageProperties {
 
     private long maxFileSizeBytes = 50L * 1024 * 1024;
 
-    private Minio minio = new Minio();
+    private RustFs rustfs = new RustFs();
 
     private Migrate migrate = new Migrate();
 
     @Getter
     @Setter
-    public static class Minio {
+    public static class RustFs {
         private String endpoint = "http://localhost:9000";
         /**
          * Browser-facing endpoint for presigned URLs. When empty, {@link #endpoint} is used.

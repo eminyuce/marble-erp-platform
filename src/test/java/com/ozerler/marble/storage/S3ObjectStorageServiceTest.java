@@ -31,13 +31,13 @@ class S3ObjectStorageServiceTest {
     @BeforeEach
     void setUp() {
         ObjectStorageProperties properties = new ObjectStorageProperties();
-        properties.getMinio().setBucket("erp-files");
+        properties.getRustfs().setBucket("erp-files");
         storage = new S3ObjectStorageService(s3Client, s3Presigner, properties);
     }
 
     @Test
     @DisplayName("checkHealth returns UP when bucket probe succeeds")
-    void checkHealth_WhenMinioReachable_ReturnsUp() {
+    void checkHealth_WhenRustFsReachable_ReturnsUp() {
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
                 .thenReturn(PutObjectResponse.builder().build());
 
@@ -48,15 +48,15 @@ class S3ObjectStorageServiceTest {
     }
 
     @Test
-    @DisplayName("checkHealth returns DOWN when MinIO cannot be reached")
-    void checkHealth_WhenMinioUnreachable_ReturnsDown() {
+    @DisplayName("checkHealth returns DOWN when RustFS cannot be reached")
+    void checkHealth_WhenRustFsUnreachable_ReturnsDown() {
         when(s3Client.headBucket(any(HeadBucketRequest.class)))
                 .thenThrow(new RuntimeException("Connection refused"));
 
         var health = storage.checkHealth();
 
         assertThat(health.getStatus()).isEqualTo("DOWN");
-        assertThat(health.getError()).isEqualTo("MinIO erişilemiyor");
+        assertThat(health.getError()).isEqualTo("RustFS erişilemiyor");
     }
 
     @Test
@@ -68,6 +68,6 @@ class S3ObjectStorageServiceTest {
         var health = storage.checkHealth();
 
         assertThat(health.getStatus()).isEqualTo("DOWN");
-        assertThat(health.getError()).isEqualTo("MinIO erişilemiyor");
+        assertThat(health.getError()).isEqualTo("RustFS erişilemiyor");
     }
 }

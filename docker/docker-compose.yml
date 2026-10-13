@@ -20,25 +20,42 @@ services:
     networks:
       - marble-network
 
-  minio:
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
-    container_name: marble-minio
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-marbleminio}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-marbleminio_change_me}
-    ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+  rustfs-perms:
+    image: alpine:3.24.1
+    container_name: marble-rustfs-perms
+    user: root
+    restart: "no"
     volumes:
-      - ${MINIO_DATA_DIR:-minio_data}:/data
+      - ${RUSTFS_DATA_DIR:-rustfs_data}:/data
+    command: ["chown", "-R", "10001:10001", "/data"]
+    networks:
+      - marble-network
+
+  rustfs:
+    image: rustfs/rustfs:1.0.1
+    container_name: marble-rustfs
+    restart: unless-stopped
+    depends_on:
+      rustfs-perms:
+        condition: service_completed_successfully
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_OBS_LOGGER_LEVEL: error
+    ports:
+      - "${RUSTFS_API_PORT:-9000}:9000"
+      - "${RUSTFS_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - ${RUSTFS_DATA_DIR:-rustfs_data}:/data
     healthcheck:
-      test: ["CMD-SHELL", "timeout 5 bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"]
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/health"]
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 20s
     networks:
       - marble-network
 
@@ -51,8 +68,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      minio:
-        condition: service_started
+      rustfs:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-marble_erp}
@@ -60,13 +77,13 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-marblepass}
       APP_UPLOAD_DIR: /app/uploads
       APP_MEDIA_DIR: /app/media
-      STORAGE_TYPE: minio
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:9000}
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-marbleminio}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-marbleminio_change_me}
-      MINIO_BUCKET: ${MINIO_BUCKET:-erp-files}
-      MINIO_REGION: ${MINIO_REGION:-us-east-1}
+      STORAGE_TYPE: rustfs
+      RUSTFS_ENDPOINT: http://rustfs:9000
+      RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-http://localhost:9000}
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
+      RUSTFS_BUCKET: ${RUSTFS_BUCKET:-erp-files}
+      RUSTFS_REGION: ${RUSTFS_REGION:-us-east-1}
     ports:
       - "${APP_PORT:-81}:81"
     volumes:
@@ -88,7 +105,7 @@ volumes:
     driver: local
   media_data:
     driver: local
-  minio_data:
+  rustfs_data:
     driver: local
 
 networks:

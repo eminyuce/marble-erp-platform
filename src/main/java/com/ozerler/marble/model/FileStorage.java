@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 /**
  * Reusable entity representing uploaded file metadata stored in the database.
- * Metadata for binaries stored in S3-compatible object storage (MinIO).
+ * Metadata for binaries stored in S3-compatible object storage (RustFS).
  * Associated with business entities using {@code entityType} and {@code entityId}.
  */
 @Entity
