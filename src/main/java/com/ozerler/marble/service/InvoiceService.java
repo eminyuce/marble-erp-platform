@@ -128,8 +128,12 @@ public class InvoiceService {
         if (itemForms != null && !itemForms.isEmpty()) {
             for (InvoiceItemForm f : itemForms) {
                 if (f.productName() == null || f.productName().isBlank()) continue;
-                BigDecimal qty = f.quantity() != null ? f.quantity() : BigDecimal.ONE;
-                BigDecimal price = f.unitPrice() != null ? f.unitPrice() : BigDecimal.ZERO;
+                BigDecimal qty = f.quantity() != null
+                        ? f.quantity().setScale(2, RoundingMode.HALF_UP)
+                        : BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
+                BigDecimal price = f.unitPrice() != null
+                        ? f.unitPrice().setScale(2, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
                 BigDecimal lineTot = qty.multiply(price).setScale(2, RoundingMode.HALF_UP);
 
                 Block block = f.blockId() != null ? blockRepository.findById(f.blockId()).orElse(null) : null;
@@ -142,9 +146,11 @@ public class InvoiceService {
                 boolean isRunningMeter = unit.equalsIgnoreCase("m.t.") || unit.equalsIgnoreCase("metretül") || unit.equalsIgnoreCase("mt");
 
                 if (isRunningMeter && width != null && width.compareTo(BigDecimal.ZERO) > 0) {
-                    calcM2 = qty.multiply(width).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+                    calcM2 = qty.multiply(width).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
                 } else if ("m2".equalsIgnoreCase(unit) || "m²".equalsIgnoreCase(unit)) {
-                    calcM2 = qty;
+                    calcM2 = qty.setScale(2, RoundingMode.HALF_UP);
+                } else if (calcM2 != null) {
+                    calcM2 = calcM2.setScale(2, RoundingMode.HALF_UP);
                 }
 
                 InvoiceItem item = InvoiceItem.builder()
@@ -263,18 +269,24 @@ public class InvoiceService {
                 if (item.getStockItem() != null) {
                     StockItem st = item.getStockItem();
                     BigDecimal deduction = item.getCalculatedM2() != null && item.getCalculatedM2().compareTo(BigDecimal.ZERO) > 0
-                            ? item.getCalculatedM2()
-                            : item.getQuantity();
+                            ? item.getCalculatedM2().setScale(2, RoundingMode.HALF_UP)
+                            : item.getQuantity().setScale(2, RoundingMode.HALF_UP);
                     if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
-                        deduction = BigDecimal.ONE;
+                        deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
                     }
-                    BigDecimal currentQty = st.getQuantity() != null ? st.getQuantity() : BigDecimal.ZERO;
+                    BigDecimal currentQty = st.getQuantity() != null
+                            ? st.getQuantity().setScale(2, RoundingMode.HALF_UP)
+                            : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
                     if (currentQty.compareTo(deduction) < 0) {
-                        throw new IllegalArgumentException(String.format(
-                                "Yetersiz stok. Mevcut stok: %s %s.",
-                                currentQty.stripTrailingZeros().toPlainString(),
-                                st.getUnit() != null ? st.getUnit() : "adet"
-                        ));
+                        if (deduction.subtract(currentQty).compareTo(new BigDecimal("0.01")) <= 0) {
+                            deduction = currentQty;
+                        } else {
+                            throw new IllegalArgumentException(String.format(
+                                    "Yetersiz stok. Mevcut stok: %s %s.",
+                                    currentQty.stripTrailingZeros().toPlainString(),
+                                    st.getUnit() != null ? st.getUnit() : "adet"
+                            ));
+                        }
                     }
                 }
             }
@@ -385,17 +397,23 @@ public class InvoiceService {
                     if (item.getStockItem() != null) {
                         StockItem st = item.getStockItem();
                         BigDecimal deduction = item.getCalculatedM2() != null && item.getCalculatedM2().compareTo(BigDecimal.ZERO) > 0
-                                ? item.getCalculatedM2()
-                                : item.getQuantity();
+                                ? item.getCalculatedM2().setScale(2, RoundingMode.HALF_UP)
+                                : item.getQuantity().setScale(2, RoundingMode.HALF_UP);
                         if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
-                            deduction = BigDecimal.ONE;
+                            deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
                         }
-                        BigDecimal currentQty = st.getQuantity() != null ? st.getQuantity() : BigDecimal.ZERO;
-                        BigDecimal newQty = currentQty.subtract(deduction);
-                        st.setQuantity(newQty);
-                        if (newQty.compareTo(BigDecimal.ZERO) == 0 && (st.getProductType() == StockProductType.SLAB || st.getProductType() == StockProductType.SIZED)) {
+                        BigDecimal currentQty = st.getQuantity() != null
+                                ? st.getQuantity().setScale(2, RoundingMode.HALF_UP)
+                                : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+                        if (deduction.compareTo(currentQty) > 0 && deduction.subtract(currentQty).compareTo(new BigDecimal("0.01")) <= 0) {
+                            deduction = currentQty;
+                        }
+                        BigDecimal newQty = currentQty.subtract(deduction).setScale(2, RoundingMode.HALF_UP);
+                        if (newQty.compareTo(BigDecimal.ZERO) <= 0) {
+                            newQty = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
                             st.setStatus("SOLD");
                         }
+                        st.setQuantity(newQty);
                         stockItemRepository.save(st);
 
                         String movCode = UniqueCodes.yearly("MOV-SLS", stockMovementRepository::existsByMovementCode);

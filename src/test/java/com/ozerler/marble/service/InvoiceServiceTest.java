@@ -147,7 +147,7 @@ class InvoiceServiceTest {
                 "ALF-001", LocalDate.now(), null, InvoiceType.PURCHASE, BusinessUnit.QUARRY,
                 null, null, null, null, new BigDecimal("20"), false, "Tedarikçi Petrol", "Yakıt Alımı", items);
 
-        verify(quarryInventoryService).addFuelStock(eq(new BigDecimal("5000")), eq(new BigDecimal("42.00")), any(), any());
+        verify(quarryInventoryService).addFuelStock(eq(new BigDecimal("5000.00")), eq(new BigDecimal("42.00")), any(), any());
         verify(costTransactionRepository, never()).save(any());
     }
 

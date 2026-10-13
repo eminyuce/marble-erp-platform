@@ -338,8 +338,15 @@ public class ProductionController {
     }
 
     @GetMapping("/pallets")
-    public String pallets(Model model) {
-        model.addAttribute("pallets", palletShipmentService.pallets());
+    public String pallets(@RequestParam(value = "department", required = false) BusinessUnit department, Model model) {
+        List<com.ozerler.marble.model.Pallet> allPallets = palletShipmentService.pallets();
+        if (department != null) {
+            allPallets = allPallets.stream()
+                    .filter(p -> department.equals(p.getDepartment()))
+                    .toList();
+        }
+        model.addAttribute("pallets", allPallets);
+        model.addAttribute("selectedDepartment", department);
         model.addAttribute("shippablePallets", palletShipmentService.shippablePallets());
         model.addAttribute("palletLocationTypes", new com.ozerler.marble.model.enums.StockLocationType[]{
                 com.ozerler.marble.model.enums.StockLocationType.PALLET_STOCK_YARD,
@@ -369,7 +376,7 @@ public class ProductionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets";
+        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
     }
 
     @PostMapping("/pallets/{id}/items")
@@ -383,6 +390,7 @@ public class ProductionController {
                                 @RequestParam(value = "thicknessCm", required = false) BigDecimal thicknessCm,
                                 @RequestParam(value = "quantity", required = false) Integer quantity,
                                 @RequestParam(value = "areaM2", required = false) BigDecimal areaM2,
+                                @RequestParam(value = "department", required = false) BusinessUnit department,
                                 RedirectAttributes redirectAttributes) {
         try {
             palletShipmentService.addItem(palletId, materialLotId, stockItemId, null, productName, widthCm, lengthCm, thicknessCm, quantity, areaM2);
@@ -390,7 +398,54 @@ public class ProductionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets";
+        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+    }
+
+    @PostMapping("/pallets/{id}/close")
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
+    public String closePallet(@PathVariable("id") Long id,
+                              @RequestParam(value = "department", required = false) BusinessUnit department,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            palletShipmentService.closePallet(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Palet başarıyla kapatıldı.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+    }
+
+    @PostMapping("/pallets/{id}/reopen")
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
+    public String reopenPallet(@PathVariable("id") Long id,
+                               @RequestParam(value = "department", required = false) BusinessUnit department,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            palletShipmentService.reopenPallet(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Palet tekrar kullanıma açıldı.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+    }
+
+    @PostMapping("/pallets/{id}/sell")
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
+    public String sellFromPallet(@PathVariable("id") Long id,
+                                 @RequestParam("palletItemId") Long palletItemId,
+                                 @RequestParam("pieces") int pieces,
+                                 @RequestParam(value = "customerId", required = false) Long customerId,
+                                 @RequestParam(value = "unitPrice", required = false) BigDecimal unitPrice,
+                                 @RequestParam(value = "notes", required = false) String notes,
+                                 @RequestParam(value = "department", required = false) BusinessUnit department,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            palletShipmentService.sellFromPallet(id, palletItemId, pieces, customerId, unitPrice, notes);
+            redirectAttributes.addFlashAttribute("successMessage", "Paletten " + pieces + " adet satış başarıyla gerçekleştirildi ve stoktan düşüldü.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
     }
 
     @PostMapping("/shipments")

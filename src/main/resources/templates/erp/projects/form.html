@@ -28,12 +28,45 @@
                                    class="erp-form-input" style="font-family:var(--font-mono);"
                                    placeholder="PROJ-2026-0043">
                         </div>
-                        <div class="erp-form-field">
-                            <label class="erp-form-label" for="customerName">Müşteri / işveren <span
-                                    class="req">*</span></label>
-                            <input id="customerName" type="text" name="customerName" required class="erp-form-input"
-                                   th:value="${record != null ? record.customerName : ''}"
-                                   placeholder="ABC İnşaat A.Ş.">
+                        <div class="erp-form-field erp-form-field--full"
+                             x-data="{
+                                 cariMode: '[[${(record != null and record.customer != null) ? 'existing' : ((record != null and record.customerName != null and record.customerName != '') ? 'existing' : 'existing')}]]',
+                                 selectedCustomerId: '[[${record != null and record.customer != null ? record.customer.id : ''}]]',
+                                 customName: '[[${record != null ? record.customerName : ''}]]'
+                             }">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="erp-form-label mb-0" for="customerSelect">Müşteri / Cari (İşveren) <span class="req">*</span></label>
+                                <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-xs">
+                                    <button type="button" class="px-2.5 py-1 rounded-md font-bold transition cursor-pointer"
+                                            :class="cariMode === 'existing' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                                            @click="cariMode = 'existing'">Mevcut Cari Seç</button>
+                                    <button type="button" class="px-2.5 py-1 rounded-md font-bold transition cursor-pointer"
+                                            :class="cariMode === 'new' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                                            @click="cariMode = 'new'">+ Yeni Cari Aç</button>
+                                </div>
+                            </div>
+
+                            <!-- 1. Mevcut Cari Seçimi -->
+                            <div x-show="cariMode === 'existing'">
+                                <select id="customerId" name="customerId" x-model="selectedCustomerId"
+                                        class="erp-form-select"
+                                        :required="cariMode === 'existing'">
+                                    <option value="">-- Mevcut Müşterilerden Seçiniz --</option>
+                                    <option th:each="c : ${customers}" th:value="${c.id}"
+                                            th:text="${c.companyName + ' (' + c.customerCode + ')'}"
+                                            th:selected="${record != null and record.customer != null and record.customer.id == c.id}"></option>
+                                </select>
+                                <p class="text-[11px] text-slate-500 mt-1">Sistemde kayıtlı olan eski/mevcut müşterilere yeni şantiye bağlayabilirsiniz.</p>
+                            </div>
+
+                            <!-- 2. Yeni Cari Açma -->
+                            <div x-show="cariMode === 'new'" style="display: none;">
+                                <input id="customerName" type="text" name="customerName" x-model="customName"
+                                       class="erp-form-input"
+                                       :required="cariMode === 'new'"
+                                       placeholder="Örn: Akdeniz İnşaat Taahhüt Ltd. Şti.">
+                                <p class="text-[11px] text-slate-500 mt-1">Yeni bir cari kart otomatik olarak oluşturulacak ve bu şantiyeye bağlanacaktır.</p>
+                            </div>
                         </div>
                         <div class="erp-form-field erp-form-field--full">
                             <label class="erp-form-label" for="name">Şantiye adı <span class="req">*</span></label>

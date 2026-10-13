@@ -3,8 +3,6 @@
       layout:decorate="~{layout/base}">
 <head>
     <title>Yeni Ebatlı Ürün Girişi — Fabrika | Özerler Mermer ERP</title>
-</head>
-<body>
     <script>
         function sizedProductFormState() {
             return {
@@ -13,7 +11,12 @@
                     { desc: '', thickness: 2.0, width: 60, length: 60, count: 100 }
                 ],
                 addRow() {
-                    this.rows.push({ desc: '', thickness: 2.0, width: 60, length: 60, count: 100 });
+                    this.rows.push({ desc: this.defaultDesc || '', thickness: 2.0, width: 60, length: 60, count: 100 });
+                    this.$nextTick(() => {
+                        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                            window.lucide.createIcons();
+                        }
+                    });
                 },
                 removeRow(i) {
                     if (this.rows.length > 1) {
@@ -38,8 +41,10 @@
                 get primaryCount() { return this.rows[0] ? this.rows[0].count : 1; }
             };
         }
+        window.sizedProductFormState = sizedProductFormState;
     </script>
-
+</head>
+<body>
     <div layout:fragment="content" class="erp-form-page max-w-4xl mx-auto space-y-6"
          x-data="sizedProductFormState()">
 

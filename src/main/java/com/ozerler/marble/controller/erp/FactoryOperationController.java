@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.ozerler.marble.dto.TabulatorResponse;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +55,23 @@ public class FactoryOperationController extends AbstractController {
                 .map(b -> b.getActualTonnage() != null ? b.getActualTonnage() : b.getApproximateTonnage())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        BigDecimal totalCostValue = blocks.stream()
+                .map(b -> b.getTotalCost() != null ? b.getTotalCost() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalSaleValue = blocks.stream()
+                .map(b -> {
+                    if (b.getSalePrice() != null && b.getSalePrice().compareTo(BigDecimal.ZERO) > 0) {
+                        return b.getSalePrice();
+                    }
+                    if (b.getUnitMarketValuePerTon() != null && b.getUnitMarketValuePerTon().compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal ton = b.getActualTonnage() != null ? b.getActualTonnage() : (b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO);
+                        return b.getUnitMarketValuePerTon().multiply(ton);
+                    }
+                    return b.getTotalCost() != null ? b.getTotalCost() : BigDecimal.ZERO;
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         model.addAttribute("blocks", blocks);
         model.addAttribute("incomingBlocks", incomingBlocks);
         model.addAttribute("customers", customers);
@@ -61,6 +79,8 @@ public class FactoryOperationController extends AbstractController {
         model.addAttribute("generalStockOnly", generalStockOnly);
         model.addAttribute("totalBlockCount", blocks.size());
         model.addAttribute("totalWeightTon", totalWeightTon);
+        model.addAttribute("totalCostValue", totalCostValue);
+        model.addAttribute("totalSaleValue", totalSaleValue);
         model.addAttribute("activeSection", "factory");
         model.addAttribute("activeSubSection", "blocks");
 
@@ -96,6 +116,19 @@ public class FactoryOperationController extends AbstractController {
             map.put("isGeneralStock", b.getAssignedCustomer() == null);
             map.put("statusLabel", "Kesilmemiş Blok");
             map.put("notes", b.getNotes() != null ? b.getNotes() : "");
+
+            BigDecimal cost = b.getTotalCost() != null ? b.getTotalCost() : BigDecimal.ZERO;
+            BigDecimal saleOrMarket = b.getSalePrice();
+            if ((saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) && b.getUnitMarketValuePerTon() != null) {
+                BigDecimal ton = b.getActualTonnage() != null ? b.getActualTonnage() : (b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO);
+                saleOrMarket = b.getUnitMarketValuePerTon().multiply(ton).setScale(2, RoundingMode.HALF_UP);
+            }
+            if (saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) {
+                saleOrMarket = cost;
+            }
+            map.put("totalCost", cost);
+            map.put("salePrice", saleOrMarket);
+
             return map;
         }).collect(Collectors.toList());
 

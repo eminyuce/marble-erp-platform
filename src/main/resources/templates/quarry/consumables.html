@@ -10,10 +10,16 @@
         consumeModalOpen: false,
         addModalOpen: false,
         selectedItemId: '',
+        selectedItemName: '',
+        selectedItemUnit: 'adet',
+        selectedItemMax: null,
         consumeQty: 1,
         selectedMachineId: '',
-        openConsumeModal(id) {
-            this.selectedItemId = id || '';
+        openConsumeModal(id, desc, qty, unit) {
+            this.selectedItemId = id ? String(id) : '';
+            this.selectedItemName = desc || '';
+            this.selectedItemMax = (qty !== undefined && qty !== null) ? Number(qty) : null;
+            this.selectedItemUnit = unit || 'adet';
             this.consumeQty = 1;
             this.consumeModalOpen = true;
         }
@@ -199,18 +205,10 @@
                               class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800">Tükendi</span>
                     </td>
                     <td class="py-3 px-4 text-right">
-                        <button type="button" @click="openConsumeModal([[${c.id}]])"
+                        <button type="button"
+                                th:attr="@click='openConsumeModal(' + ${c.id} + ', \'' + ${#strings.escapeJavaScript(c.description)} + '\', ' + ${c.quantity} + ', \'' + ${c.unit != null ? c.unit : 'adet'} + '\')'"
                                 th:disabled="${c.quantity == null or c.quantity <= 0 or (c.quarryCategory != null and c.quarryCategory.name() == 'MAZOT')}"
                                 class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed text-emerald-800 rounded-lg text-xs font-bold transition inline-flex items-center gap-1 cursor-pointer border border-emerald-200">
-                            <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                            <span>Kullan</span>
-                        </button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
                             <i data-lucide="check" class="w-3.5 h-3.5"></i>
                             <span>Kullan</span>
                         </button>
@@ -250,9 +248,15 @@
 
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Kullanılan Miktar *</label>
-                        <input type="number" step="1" min="1" name="quantity" required x-model="consumeQty"
-                               placeholder="1"
-                               class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <div class="relative">
+                            <input type="number" step="0.01" min="0.01" :max="selectedItemMax" name="quantity" required x-model="consumeQty"
+                                   placeholder="1"
+                                   class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none pr-16" />
+                            <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-slate-500" x-text="selectedItemUnit"></span>
+                        </div>
+                        <p x-show="selectedItemMax" class="text-[11px] text-slate-500 mt-1">
+                            Mevcut Stok: <span class="font-bold text-slate-800" x-text="selectedItemMax + ' ' + selectedItemUnit"></span>
+                        </p>
                     </div>
 
                     <div>

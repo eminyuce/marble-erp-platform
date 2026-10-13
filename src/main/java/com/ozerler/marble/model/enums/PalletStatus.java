@@ -7,7 +7,8 @@ public enum PalletStatus {
     READY("enum.pallet_status.ready"),
     LOADED("enum.pallet_status.loaded"),
     SHIPPED("enum.pallet_status.shipped"),
-    DELIVERED("enum.pallet_status.delivered");
+    DELIVERED("enum.pallet_status.delivered"),
+    CLOSED("enum.pallet_status.closed");
 
     private final String messageKey;
 

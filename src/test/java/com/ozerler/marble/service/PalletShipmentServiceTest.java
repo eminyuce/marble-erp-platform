@@ -16,6 +16,10 @@ import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.ShipmentItemRepository;
 import com.ozerler.marble.repository.ShipmentRepository;
 import com.ozerler.marble.repository.StockLocationRepository;
+import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.StockItemRepository;
+import com.ozerler.marble.repository.StockMovementRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,6 +51,12 @@ class PalletShipmentServiceTest {
     private ShipmentItemRepository shipmentItemRepository;
     @Mock
     private MaterialLotRepository materialLotRepository;
+    @Mock
+    private StockItemRepository stockItemRepository;
+    @Mock
+    private SlabRepository slabRepository;
+    @Mock
+    private StockMovementRepository stockMovementRepository;
     @Mock
     private CustomerRepository customerRepository;
     @Mock
@@ -164,5 +174,48 @@ class PalletShipmentServiceTest {
 
         assertThat(shippable).hasSize(1);
         assertThat(shippable.get(0).getId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("Palet kapatılabilmeli ve tekrar açılabilmeli")
+    void closeAndReopenPallet_Success() {
+        Pallet pallet = Pallet.builder().id(5L).status("READY").build();
+        when(palletRepository.findById(5L)).thenReturn(Optional.of(pallet));
+
+        palletShipmentService.closePallet(5L);
+        assertThat(pallet.getStatus()).isEqualTo("CLOSED");
+
+        palletShipmentService.reopenPallet(5L);
+        assertThat(pallet.getStatus()).isEqualTo("READY");
+    }
+
+    @Test
+    @DisplayName("Paletten adet bazlı satış yapılınca asıl stoktan ve palet kaleminden düşülmeli")
+    void sellFromPallet_Success() {
+        Customer customer = Customer.builder().id(1L).companyName("Alıcı Ltd.").build();
+        Pallet pallet = Pallet.builder().id(10L).palletCode("PAL-001").status("READY").customer(customer).build();
+        StockItem stockItem = StockItem.builder().id(100L).pieceCount(50).quantity(new BigDecimal("20.00")).status("AVAILABLE").build();
+
+        PalletItem item = PalletItem.builder()
+                .id(200L)
+                .pallet(pallet)
+                .stockItem(stockItem)
+                .widthCm(new BigDecimal("60.00"))
+                .lengthCm(new BigDecimal("60.00"))
+                .quantity(20)
+                .areaM2(new BigDecimal("7.20"))
+                .build();
+
+        when(palletRepository.findById(10L)).thenReturn(Optional.of(pallet));
+        when(palletItemRepository.findById(200L)).thenReturn(Optional.of(item));
+
+        palletShipmentService.sellFromPallet(10L, 200L, 5, 1L, new BigDecimal("150.00"), "Nakit satış");
+
+        // 5 adet düştü -> 15 kaldı
+        assertThat(item.getQuantity()).isEqualTo(15);
+        verify(palletItemRepository).save(item);
+        // StockItem pieceCount: 50 - 5 = 45
+        assertThat(stockItem.getPieceCount()).isEqualTo(45);
+        verify(stockItemRepository).save(stockItem);
     }
 }

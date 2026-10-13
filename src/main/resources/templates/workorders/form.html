@@ -3,8 +3,6 @@
       layout:decorate="~{layout/base}">
 <head>
     <title>Yeni İş Emri Oluştur | Özerler Mermer ERP</title>
-</head>
-<body>
     <script>
         function workOrderFormState(el) {
             const hasStock = el && el.dataset ? el.dataset.hasStock === 'true' : false;
@@ -19,6 +17,11 @@
                 ],
                 addDimRow() {
                     this.dimRows.push({ width: 60, length: 120, thickness: 2.0, count: 1, note: '' });
+                    this.$nextTick(() => {
+                        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                            window.lucide.createIcons();
+                        }
+                    });
                 },
                 removeDimRow(i) {
                     if (this.dimRows.length > 1) {
@@ -54,8 +57,10 @@
                 }
             };
         }
+        window.workOrderFormState = workOrderFormState;
     </script>
-
+</head>
+<body>
     <div layout:fragment="content" class="erp-form-page max-w-4xl mx-auto space-y-6"
          th:data-has-stock="${selectedBlock != null or selectedSlab != null or selectedStockItem != null}"
          th:data-stock-type="${selectedBlock != null ? 'BLOCK' : (selectedStockItem != null ? 'SIZED' : 'SLAB')}"

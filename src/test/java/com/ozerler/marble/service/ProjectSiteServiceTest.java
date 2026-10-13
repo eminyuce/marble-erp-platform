@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.ProjectLocationRepository;
 import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.SiteConsumptionRepository;
@@ -23,12 +24,14 @@ class ProjectSiteServiceTest {
     private ProjectLocationRepository projectLocationRepository;
     @Mock
     private SiteConsumptionRepository siteConsumptionRepository;
+    @Mock
+    private CustomerRepository customerRepository;
 
     private ProjectSiteService projectSiteService;
 
     @BeforeEach
     void setUp() {
-        projectSiteService = new ProjectSiteService(projectRepository, projectLocationRepository, siteConsumptionRepository, null);
+        projectSiteService = new ProjectSiteService(projectRepository, projectLocationRepository, siteConsumptionRepository, customerRepository, null);
     }
 
     @Test

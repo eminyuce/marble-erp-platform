@@ -268,7 +268,9 @@ public class FactoryStockService {
         BigDecimal thick = thicknessCm != null ? thicknessCm : new BigDecimal("2.00");
         BigDecimal w = widthCm != null ? widthCm : new BigDecimal("60.00");
         BigDecimal l = lengthCm != null ? lengthCm : new BigDecimal("60.00");
-        BigDecimal qty = quantity != null ? quantity : w.multiply(l).multiply(BigDecimal.valueOf(pieceCount)).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+        BigDecimal qty = quantity != null
+                ? quantity.setScale(2, RoundingMode.HALF_UP)
+                : w.multiply(l).multiply(BigDecimal.valueOf(pieceCount)).divide(BigDecimal.valueOf(10000), 2, RoundingMode.HALF_UP);
 
         QualityGrade grade = QualityGrade.A;
         if (qualityGradeStr != null) {
@@ -278,6 +280,8 @@ public class FactoryStockService {
         if (surfaceFinishStr != null) {
             try { surface = SurfaceFinish.valueOf(surfaceFinishStr); } catch (Exception ignored) {}
         }
+
+        BigDecimal actualProduced = actualProducedQuantity != null ? actualProducedQuantity.setScale(2, RoundingMode.HALF_UP) : qty;
 
         StockItem item = StockItem.builder()
                 .itemCode(code)
@@ -291,7 +295,7 @@ public class FactoryStockService {
                 .quantity(qty)
                 .unit("m2")
                 .pieceCount(Math.max(1, pieceCount))
-                .actualProducedQuantity(actualProducedQuantity != null ? actualProducedQuantity : qty)
+                .actualProducedQuantity(actualProduced)
                 .customer(customer)
                 .stockLocation(sizedLoc)
                 .qualityGrade(grade)

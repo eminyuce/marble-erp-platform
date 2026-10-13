@@ -21,4 +21,6 @@ public class QuarrySummaryDto {
     BigDecimal costPerTonThisMonth;
     boolean unallocatedCarryForward;
     String expensePeriod;
+    BigDecimal totalCostInStock;
+    BigDecimal totalMarketValueInStock;
 }

@@ -17,6 +17,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByCustomerCode(String customerCode);
 
+    Optional<Customer> findByCompanyNameIgnoreCase(String companyName);
+
     List<Customer> findAllByOrderByCompanyNameAsc();
 
     @Query("SELECT c FROM Customer c WHERE LOWER(c.customerCode) LIKE LOWER(CONCAT('%', :query, '%')) " +

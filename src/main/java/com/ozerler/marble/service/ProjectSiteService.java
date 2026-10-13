@@ -31,6 +31,7 @@ public class ProjectSiteService {
     private final ProjectRepository projectRepository;
     private final ProjectLocationRepository projectLocationRepository;
     private final SiteConsumptionRepository siteConsumptionRepository;
+    private final com.ozerler.marble.repository.CustomerRepository customerRepository;
     private final org.springframework.context.MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
@@ -86,17 +87,39 @@ public class ProjectSiteService {
     }
 
     @Transactional
-    public Project createProject(String projectCode, String name, String customerName,
+    public Project createProject(String projectCode, String name, String customerName, Long customerId,
                                  BigDecimal contractValue, BigDecimal estimatedCost,
                                  LocalDate startDate, LocalDate deliveryDate, String notes) {
 
         Objects.requireNonNull(projectCode, getMessage("error.project.code.required"));
         Objects.requireNonNull(name, getMessage("error.project.name.required"));
 
+        com.ozerler.marble.model.Customer customer = null;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+            if (customer != null && (customerName == null || customerName.isBlank())) {
+                customerName = customer.getCompanyName();
+            }
+        } else if (customerName != null && !customerName.isBlank()) {
+            final String finalCustName = customerName.trim();
+            customer = customerRepository.findByCompanyNameIgnoreCase(finalCustName)
+                    .orElseGet(() -> {
+                        String generatedCode = "CARI-" + (System.currentTimeMillis() % 100000);
+                        com.ozerler.marble.model.Customer newCust = com.ozerler.marble.model.Customer.builder()
+                                .customerCode(generatedCode)
+                                .companyName(finalCustName)
+                                .customerType(com.ozerler.marble.model.enums.CustomerType.CONSTRUCTION)
+                                .businessUnit(com.ozerler.marble.model.enums.BusinessUnit.SITE)
+                                .build();
+                        return customerRepository.save(newCust);
+                    });
+        }
+
         Project project = Project.builder()
                 .projectCode(projectCode.trim())
                 .name(name.trim())
-                .customerName(customerName != null ? customerName.trim() : "")
+                .customer(customer)
+                .customerName(customerName != null ? customerName.trim() : (customer != null ? customer.getCompanyName() : ""))
                 .contractValue(contractValue != null ? contractValue : BigDecimal.ZERO)
                 .estimatedCost(estimatedCost != null ? estimatedCost : BigDecimal.ZERO)
                 .actualCost(BigDecimal.ZERO)
@@ -107,6 +130,13 @@ public class ProjectSiteService {
                 .build();
 
         return projectRepository.save(project);
+    }
+
+    @Transactional
+    public Project createProject(String projectCode, String name, String customerName,
+                                 BigDecimal contractValue, BigDecimal estimatedCost,
+                                 LocalDate startDate, LocalDate deliveryDate, String notes) {
+        return createProject(projectCode, name, customerName, null, contractValue, estimatedCost, startDate, deliveryDate, notes);
     }
 
     @Transactional

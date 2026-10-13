@@ -110,7 +110,7 @@
     </div>
 
     <!-- KPI Summary Cards (Canonical Standard) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
                 :class="generalStockFilter === '' && selectedCustomerId === '' ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
                 @click="selectedCustomerId = ''; setStockFilter('')">
@@ -149,6 +149,17 @@
             <div class="text-lg font-black text-slate-900 mt-1">Müşterili Bloklar</div>
             <div class="text-xs text-slate-500 mt-0.5">Cari bağlantılı stok</div>
         </button>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4">
+            <div class="text-[11px] uppercase tracking-wide text-emerald-700 font-semibold flex items-center gap-1">
+                <i data-lucide="circle-dollar-sign" class="w-3.5 h-3.5"></i> Toplam Stok Değeri
+            </div>
+            <div class="text-base font-black text-slate-900 mt-1 font-mono"
+                 th:text="${totalCostValue != null ? #numbers.formatDecimal(totalCostValue, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+            <div class="text-[11px] text-slate-500 mt-0.5 truncate">
+                Satış: <span class="font-bold text-slate-700" th:text="${totalSaleValue != null ? #numbers.formatDecimal(totalSaleValue, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">—</span>
+            </div>
+        </div>
     </div>
 
     <!-- Operational Filter Chips & Customer Select -->
@@ -360,6 +371,32 @@
                         width: 130,
                         formatter: function () {
                             return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800">Kesilmemiş Blok</span>`;
+                        }
+                    },
+                    {
+                        title: "Maliyet Değeri",
+                        field: "totalCost",
+                        width: 130,
+                        headerHozAlign: "right",
+                        hozAlign: "right",
+                        formatter: function (cell) {
+                            const val = cell.getValue();
+                            if (val == null) return `<span class="text-slate-400">—</span>`;
+                            const num = Number(val).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            return `<span class="font-bold text-slate-800">${num} TL</span>`;
+                        }
+                    },
+                    {
+                        title: "Satış / Değer",
+                        field: "salePrice",
+                        width: 130,
+                        headerHozAlign: "right",
+                        hozAlign: "right",
+                        formatter: function (cell) {
+                            const val = cell.getValue();
+                            if (val == null) return `<span class="text-slate-400">—</span>`;
+                            const num = Number(val).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            return `<span class="font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">${num} TL</span>`;
                         }
                     },
                     {

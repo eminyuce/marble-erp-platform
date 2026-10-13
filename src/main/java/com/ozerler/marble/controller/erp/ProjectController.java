@@ -33,6 +33,7 @@ public class ProjectController {
     private final ProjectSiteService projectSiteService;
     private final ConstructionSiteService constructionSiteService;
     private final CostAnalysisService costAnalysisService;
+    private final com.ozerler.marble.repository.CustomerRepository customerRepository;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -56,6 +57,7 @@ public class ProjectController {
 
     @GetMapping("/create")
     public String showCreateForm(Locale locale, Model model) {
+        model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.project.title.create", null, locale));
         return "erp/projects/form";
     }
@@ -64,7 +66,8 @@ public class ProjectController {
     @PreAuthorize(Constants.PRE_AUTH_SITE_WRITE)
     public String createProject(@RequestParam("projectCode") String projectCode,
                                 @RequestParam("name") String name,
-                                @RequestParam("customerName") String customerName,
+                                @RequestParam(value = "customerName", required = false) String customerName,
+                                @RequestParam(value = "customerId", required = false) Long customerId,
                                 @RequestParam("contractValue") BigDecimal contractValue,
                                 @RequestParam("estimatedCost") BigDecimal estimatedCost,
                                 @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -75,11 +78,12 @@ public class ProjectController {
                                 RedirectAttributes redirectAttributes) {
 
         try {
-            projectSiteService.createProject(projectCode, name, customerName, contractValue, estimatedCost, startDate, deliveryDate, notes);
+            projectSiteService.createProject(projectCode, name, customerName, customerId, contractValue, estimatedCost, startDate, deliveryDate, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.project.create.success", null, locale));
             return "redirect:/projects";
         } catch (Exception e) {
+            model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
             model.addAttribute("pageTitle", messageSource.getMessage("erp.project.title.create", null, locale));
@@ -90,6 +94,7 @@ public class ProjectController {
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
         Project project = projectSiteService.getProjectById(id);
+        model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
         model.addAttribute("project", project);
         model.addAttribute("record", project);
         model.addAttribute("isEdit", true);

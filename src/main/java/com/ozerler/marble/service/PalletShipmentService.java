@@ -35,9 +35,13 @@ import java.util.stream.Collectors;
 
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.StockMovement;
 import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.model.enums.StockMovementType;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockItemRepository;
+import com.ozerler.marble.repository.StockMovementRepository;
 import java.math.RoundingMode;
 
 @Service
@@ -55,6 +59,7 @@ public class PalletShipmentService {
     private final ProjectRepository projectRepository;
     private final StockLocationRepository stockLocationRepository;
     private final PalletLocationMovementRepository palletLocationMovementRepository;
+    private final StockMovementRepository stockMovementRepository;
 
     @Transactional
     public Pallet createPallet(String palletCode, Long customerId, Long projectId, String warehouseLocation, BusinessUnit department) {
@@ -250,5 +255,139 @@ public class PalletShipmentService {
     @Transactional(readOnly = true)
     public List<MaterialLot> availableLots() {
         return materialLotRepository.findByStatus(MaterialLotStatus.AVAILABLE);
+    }
+
+    @Transactional
+    public void sellFromPallet(Long palletId, Long palletItemId, int piecesToSell, Long customerId, BigDecimal unitPrice, String notes) {
+        Pallet pallet = palletRepository.findById(palletId)
+                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
+        if ("SHIPPED".equalsIgnoreCase(pallet.getStatus())) {
+            throw new IllegalStateException("Sevk edilmiş paletten satış yapılamaz.");
+        }
+
+        PalletItem item = palletItemRepository.findById(palletItemId)
+                .orElseThrow(() -> new IllegalArgumentException("Palet ürünü bulunamadı: " + palletItemId));
+        if (item.getPallet() == null || !palletId.equals(item.getPallet().getId())) {
+            throw new IllegalArgumentException("Seçilen ürün bu palete ait değil.");
+        }
+
+        if (piecesToSell <= 0) {
+            throw new IllegalArgumentException("Satılacak adet en az 1 olmalıdır.");
+        }
+
+        int currentItemQty = item.getQuantity() != null ? item.getQuantity() : 1;
+        if (piecesToSell > currentItemQty) {
+            throw new IllegalArgumentException("Palette yalnızca " + currentItemQty + " adet ürün bulunmaktadır. " + piecesToSell + " adet satılamaz.");
+        }
+
+        // 1. Satılan alanı (m2) hesapla
+        BigDecimal unitArea = BigDecimal.ZERO;
+        if (item.getEffectiveWidthCm() != null && item.getEffectiveLengthCm() != null
+                && item.getEffectiveWidthCm().compareTo(BigDecimal.ZERO) > 0
+                && item.getEffectiveLengthCm().compareTo(BigDecimal.ZERO) > 0) {
+            unitArea = item.getEffectiveWidthCm().multiply(item.getEffectiveLengthCm())
+                    .divide(new BigDecimal("10000"), 4, RoundingMode.HALF_UP);
+        } else if (item.getAreaM2() != null && currentItemQty > 0) {
+            unitArea = item.getAreaM2().divide(BigDecimal.valueOf(currentItemQty), 4, RoundingMode.HALF_UP);
+        }
+        BigDecimal soldArea = unitArea.multiply(BigDecimal.valueOf(piecesToSell)).setScale(2, RoundingMode.HALF_UP);
+
+        // 2. Müşteri belirleme
+        Customer customer = customerId != null
+                ? customerRepository.findById(customerId).orElse(null)
+                : pallet.getCustomer();
+
+        // 3. İlgili asıl stoktan düşüş yap
+        if (item.getStockItem() != null) {
+            StockItem st = item.getStockItem();
+            if (st.getPieceCount() != null) {
+                st.setPieceCount(Math.max(0, st.getPieceCount() - piecesToSell));
+            }
+            if (st.getQuantity() != null) {
+                BigDecimal newQty = st.getQuantity().subtract(soldArea).setScale(2, RoundingMode.HALF_UP);
+                if (newQty.compareTo(BigDecimal.ZERO) <= 0) {
+                    st.setQuantity(BigDecimal.ZERO);
+                    st.setStatus("SOLD");
+                } else {
+                    st.setQuantity(newQty);
+                }
+            }
+            stockItemRepository.save(st);
+        }
+
+        if (item.getMaterialLot() != null) {
+            MaterialLot lot = item.getMaterialLot();
+            if (lot.getTotalAreaM2() != null) {
+                BigDecimal newArea = lot.getTotalAreaM2().subtract(soldArea).setScale(2, RoundingMode.HALF_UP);
+                if (newArea.compareTo(BigDecimal.ZERO) <= 0) {
+                    lot.setTotalAreaM2(BigDecimal.ZERO);
+                    lot.setStatus(MaterialLotStatus.SHIPPED);
+                } else {
+                    lot.setTotalAreaM2(newArea);
+                }
+                materialLotRepository.save(lot);
+            }
+        }
+
+        if (item.getSlab() != null) {
+            Slab slab = item.getSlab();
+            slab.setStatus(SlabStatus.SOLD);
+            if (customer != null) {
+                slab.setCustomer(customer);
+            }
+            slabRepository.save(slab);
+        }
+
+        // 4. Stok Hareketi kaydet
+        if (stockMovementRepository != null) {
+            String movCode = UniqueCodes.yearly("MOV-PAL", stockMovementRepository::existsByMovementCode);
+            stockMovementRepository.save(StockMovement.builder()
+                    .movementCode(movCode)
+                    .movementDate(LocalDateTime.now())
+                    .movementType(StockMovementType.OUTGOING)
+                    .sourceDepartment(pallet.getDepartment() != null ? pallet.getDepartment() : BusinessUnit.FACTORY)
+                    .fromLocation(pallet.getCurrentLocation())
+                    .customer(customer)
+                    .stockItem(item.getStockItem())
+                    .slab(item.getSlab())
+                    .itemDescription("Paletten Parçalı Satış: " + pallet.getPalletCode() + " — " + item.getDisplayName() + " (" + piecesToSell + " adet)")
+                    .quantity(soldArea.compareTo(BigDecimal.ZERO) > 0 ? soldArea : BigDecimal.valueOf(piecesToSell))
+                    .quantityUnit(soldArea.compareTo(BigDecimal.ZERO) > 0 ? "m2" : "adet")
+                    .notes("Palet: " + pallet.getPalletCode() + ", Satılan Adet: " + piecesToSell + (notes != null && !notes.isBlank() ? " | " + notes : ""))
+                    .build());
+        }
+
+        // 5. Palet kalemini güncelle veya tamamen bittiyse sil
+        int remainingQty = currentItemQty - piecesToSell;
+        if (remainingQty <= 0) {
+            palletItemRepository.delete(item);
+        } else {
+            item.setQuantity(remainingQty);
+            BigDecimal remainingArea = item.getAreaM2().subtract(soldArea).setScale(4, RoundingMode.HALF_UP);
+            item.setAreaM2(remainingArea.compareTo(BigDecimal.ZERO) > 0 ? remainingArea : BigDecimal.ZERO);
+            palletItemRepository.save(item);
+        }
+
+        // 6. Palet hareket geçmişine not düş
+        recordPalletMovement(pallet, pallet.getCurrentLocation(), pallet.getCurrentLocation(),
+                "Paletten " + piecesToSell + " adet satış yapıldı (" + soldArea + " m²)" + (customer != null ? " — Müşteri: " + customer.getCompanyName() : ""));
+    }
+
+    @Transactional
+    public void closePallet(Long palletId) {
+        Pallet pallet = palletRepository.findById(palletId)
+                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
+        pallet.setStatus("CLOSED");
+        palletRepository.save(pallet);
+        recordPalletMovement(pallet, pallet.getCurrentLocation(), pallet.getCurrentLocation(), "Palet kapatıldı");
+    }
+
+    @Transactional
+    public void reopenPallet(Long palletId) {
+        Pallet pallet = palletRepository.findById(palletId)
+                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
+        pallet.setStatus("READY");
+        palletRepository.save(pallet);
+        recordPalletMovement(pallet, pallet.getCurrentLocation(), pallet.getCurrentLocation(), "Palet tekrar kullanıma ve düzenlemeye açıldı");
     }
 }

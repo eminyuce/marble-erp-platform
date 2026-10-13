@@ -20,7 +20,7 @@
               method="post" class="erp-form">
             <div class="erp-form-body">
                 <section class="erp-form-section">
-                    <div th:replace="~{fragments/form-page :: section('Kaynak ve hedef', 'İşlenecek plaka ve mahal')}"></div>
+                    <div th:replace="~{fragments/form-page :: section('Kaynak ve hedef', 'İşlenecek plaka ve hedef şantiye / sipariş')}"></div>
                     <div class="erp-form-grid">
                         <div class="erp-form-field erp-form-field--full" th:if="${!(isEdit ?: false)}">
                             <label class="erp-form-label" for="slabId">İşlenecek plaka <span
@@ -31,20 +31,14 @@
                                         th:text="${s.slabCode + ' (' + (s.surfaceFinish != null ? s.surfaceFinish.label : '') + ', ' + (s.qualityGrade != null ? s.qualityGrade.label : '') + ', ' + s.surfaceAreaM2 + ' m², ' + s.costPerM2 + ' TL/m²)'}"></option>
                             </select>
                         </div>
-                        <div class="erp-form-field">
-                            <label class="erp-form-label" for="projectId">Hedef şantiye</label>
+                        <div class="erp-form-field erp-form-field--full">
+                            <label class="erp-form-label" for="projectId">Hedef şantiye / proje (Opsiyonel)</label>
                             <select id="projectId" name="projectId" class="erp-form-select">
                                 <option value=""
-                                        th:selected="${record == null or record.project == null}">Şantiye seçilmedi</option>
+                                        th:selected="${record == null or record.project == null}">Genel Atölye Siparişi (Şantiyesiz)</option>
                                 <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"
                                         th:selected="${isEdit and record != null and record.project != null and record.project.id == p.id}"></option>
                             </select>
-                        </div>
-                        <div class="erp-form-field">
-                            <label class="erp-form-label" for="targetLocationDesc">Hedef mahal / konum</label>
-                            <input id="targetLocationDesc" type="text" name="targetLocationDesc"
-                                   class="erp-form-input" placeholder="Lobi duvar kaplama A blok"
-                                   th:value="${isEdit and record != null and !#lists.isEmpty(record.items) ? record.items[0].targetLocation : ''}">
                         </div>
                     </div>
                 </section>

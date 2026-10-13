@@ -661,6 +661,9 @@ public class QuarryBlockService {
                     .sum();
         }
 
+        BigDecimal totalCostInStock = blockRepository.sumTotalCostInStock();
+        BigDecimal totalMarketValueInStock = blockRepository.sumTotalMarketValueInStock();
+
         return QuarrySummaryDto.builder()
                 .producedTonsThisMonth(analysis.getProductionQuantity())
                 .productionYardCount(blockRepository.countByCurrentLocation_LocationTypeAndStatusNot(
@@ -677,6 +680,8 @@ public class QuarryBlockService {
                 .costPerTonThisMonth(analysis.getUnitCost() != null ? analysis.getUnitCost() : BigDecimal.ZERO)
                 .unallocatedCarryForward(analysis.isUnallocatedCarryForward())
                 .expensePeriod(period)
+                .totalCostInStock(totalCostInStock)
+                .totalMarketValueInStock(totalMarketValueInStock)
                 .build();
     }
 
