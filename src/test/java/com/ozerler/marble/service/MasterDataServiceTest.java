@@ -14,6 +14,7 @@ import com.ozerler.marble.model.enums.StockLocationType;
 import com.ozerler.marble.model.enums.SupplierType;
 import com.ozerler.marble.repository.BlockCustomerMarkRepository;
 import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CollectionRecordRepository;
 import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.repository.CostTransactionRepository;
 import com.ozerler.marble.repository.CustomerRepository;
@@ -77,6 +78,8 @@ class MasterDataServiceTest {
     private BlockCustomerMarkRepository blockCustomerMarkRepository;
     @Mock
     private InvoiceRepository invoiceRepository;
+    @Mock
+    private CollectionRecordRepository collectionRecordRepository;
 
     private MasterDataService masterDataService;
     private Locale previousLocale;
@@ -89,7 +92,7 @@ class MasterDataServiceTest {
                 machineRepository, stockLocationRepository, quarryRepository, customerRepository,
                 supplierRepository, costCenterRepository, machineFuelEntryRepository, blockRepository,
                 salesOrderRepository, purchaseOrderRepository, costTransactionRepository,
-                blockCustomerMarkRepository, invoiceRepository);
+                blockCustomerMarkRepository, invoiceRepository, collectionRecordRepository);
     }
 
     @AfterEach

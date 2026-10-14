@@ -84,4 +84,17 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     BigDecimal sumAmountByTypeThisMonth(@Param("invoiceType") InvoiceType invoiceType,
                                        @Param("startDate") LocalDate startDate,
                                        @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM Invoice i " +
+           "WHERE i.customer.id = :customerId " +
+           "AND i.invoiceType = com.ozerler.marble.model.enums.InvoiceType.SALES " +
+           "AND i.status != com.ozerler.marble.model.enums.InvoiceStatus.CANCELLED")
+    BigDecimal sumSalesTotalByCustomer(@Param("customerId") Long customerId);
+
+    @Query("SELECT i.customer.id, COALESCE(SUM(i.totalAmount), 0) FROM Invoice i " +
+           "WHERE i.customer.id IN :customerIds " +
+           "AND i.invoiceType = com.ozerler.marble.model.enums.InvoiceType.SALES " +
+           "AND i.status != com.ozerler.marble.model.enums.InvoiceStatus.CANCELLED " +
+           "GROUP BY i.customer.id")
+    List<Object[]> sumSalesTotalByCustomerIds(@Param("customerIds") List<Long> customerIds);
 }

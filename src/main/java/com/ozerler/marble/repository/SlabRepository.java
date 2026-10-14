@@ -35,6 +35,9 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
 
     List<Slab> findByStatus(SlabStatus status);
 
+    @EntityGraph(attributePaths = {"block"})
+    List<Slab> findByStatusIn(List<SlabStatus> statuses);
+
     @Query("SELECT s FROM Slab s JOIN FETCH s.block b JOIN FETCH b.quarry WHERE s.id = :id")
     Optional<Slab> findByIdWithBlockAndQuarry(@Param("id") Long id);
 

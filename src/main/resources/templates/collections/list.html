@@ -90,6 +90,12 @@
             Havale / EFT
         </button>
         <button type="button" class="erp-yard-chip"
+                :class="methodFilter === 'CREDIT_CARD' ? 'erp-yard-chip--active' : ''"
+                @click="setMethodFilter('CREDIT_CARD')">
+            <i data-lucide="credit-card" class="w-3.5 h-3.5 inline mr-1 text-amber-600"></i>
+            Kredi Kartı
+        </button>
+        <button type="button" class="erp-yard-chip"
                 :class="methodFilter === 'CHECK' ? 'erp-yard-chip--active' : ''"
                 @click="setMethodFilter('CHECK')">
             <i data-lucide="calendar" class="w-3.5 h-3.5 inline mr-1 text-purple-600"></i>
@@ -180,6 +186,7 @@
                             let cls = "bg-slate-100 text-slate-800";
                             if (row.method === "CASH") cls = "bg-emerald-100 text-emerald-800";
                             else if (row.method === "BANK_TRANSFER") cls = "bg-blue-100 text-blue-800";
+                            else if (row.method === "CREDIT_CARD") cls = "bg-amber-100 text-amber-800";
                             else if (row.method === "CHECK") cls = "bg-purple-100 text-purple-800";
                             return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${cls}">
                                 ${gridText(cell.getValue())}

@@ -119,6 +119,13 @@ public class ProcurementController {
         return "redirect:/procurement/" + id;
     }
 
+    @PostMapping("/{id}/deliver")
+    public String deliverOrder(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        procurementService.updateStatus(id, PurchaseOrderStatus.DELIVERED);
+        redirectAttributes.addFlashAttribute("successMessage", "Sipariş teslim alındı (geldi) olarak işaretlendi.");
+        return "redirect:/procurement/" + id;
+    }
+
     private void populateProcurementForm(Model model, java.util.Locale locale) {
         model.addAttribute("suppliers", procurementService.getAllSuppliers());
         model.addAttribute("projects", procurementService.getAllProjects());

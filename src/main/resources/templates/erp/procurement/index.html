@@ -85,6 +85,12 @@
             Bekleyenler
         </button>
         <button type="button" class="erp-yard-chip"
+                :class="statusFilter === 'CONFIRMED' ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter('CONFIRMED')">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5 inline mr-1"></i>
+            Onaylananlar
+        </button>
+        <button type="button" class="erp-yard-chip"
                 :class="statusFilter === 'DELIVERED' ? 'erp-yard-chip--active' : ''"
                 @click="setStatusFilter('DELIVERED')">
             <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
@@ -202,14 +208,14 @@
                     },
                     {
                         title: "İşlemler",
-                        width: 120,
+                        width: 160,
                         headerSort: false,
                         responsive: 0,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
                             return gridActionsHtml([
-                                {icon: 'eye', label: 'Detay', href: '/procurement/' + row.id},
-                                {icon: 'edit-3', label: 'Düzenle', href: '/procurement/' + row.id}
+                                {icon: 'receipt', label: 'Faturalaştır', href: '/invoices/new?type=PURCHASE&purchaseOrderId=' + row.id},
+                                {icon: 'eye', label: 'Detay', href: '/procurement/' + row.id}
                             ]);
                         }
                     }

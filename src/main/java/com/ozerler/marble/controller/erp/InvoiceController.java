@@ -45,6 +45,7 @@ public class InvoiceController extends AbstractController {
     private final SlabRepository slabRepository;
     private final ProjectRepository projectRepository;
     private final com.ozerler.marble.service.QuarryInventoryService quarryInventoryService;
+    private final com.ozerler.marble.service.ProcurementService procurementService;
 
     @GetMapping
     public String index(@RequestParam(value = "type", required = false) InvoiceType invoiceType,
@@ -118,7 +119,34 @@ public class InvoiceController extends AbstractController {
     public String newInvoiceForm(@RequestParam(value = "type", defaultValue = "SALES") InvoiceType type,
                                  @RequestParam(value = "department", defaultValue = "FACTORY") BusinessUnit department,
                                  @RequestParam(value = "blockId", required = false) Long blockId,
+                                 @RequestParam(value = "purchaseOrderId", required = false) Long purchaseOrderId,
                                  Model model) {
+
+        if (purchaseOrderId != null) {
+            try {
+                com.ozerler.marble.model.PurchaseOrder po = procurementService.getOrderById(purchaseOrderId);
+                if (po != null) {
+                    type = InvoiceType.PURCHASE;
+                    if (po.getBusinessUnit() != null) {
+                        department = po.getBusinessUnit();
+                    }
+                    model.addAttribute("prefillPurchaseOrder", po);
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    List<Map<String, Object>> itemMaps = po.getItems().stream().map(it -> {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("itemName", it.getItemName());
+                        m.put("description", it.getItemType() != null ? it.getItemType().getLabel() : "");
+                        m.put("quantity", it.getQuantity() != null ? it.getQuantity() : BigDecimal.ONE);
+                        m.put("unit", it.getUnit() != null ? it.getUnit() : "ADET");
+                        m.put("unitPrice", it.getUnitPrice() != null ? it.getUnitPrice() : BigDecimal.ZERO);
+                        return m;
+                    }).toList();
+                    model.addAttribute("prefillPoItemsJson", mapper.writeValueAsString(itemMaps));
+                }
+            } catch (Exception e) {
+                log.warn("Could not load PO for invoice prefill: {}", purchaseOrderId, e);
+            }
+        }
 
         model.addAttribute("defaultType", type);
         model.addAttribute("defaultDepartment", department);
@@ -164,6 +192,7 @@ public class InvoiceController extends AbstractController {
                                 @RequestParam(value = "itemStockItemId", required = false) List<Long> stockItemIds,
                                 @RequestParam(value = "itemWidthCm", required = false) List<BigDecimal> widthCms,
                                 @RequestParam(value = "itemCalculatedM2", required = false) List<BigDecimal> calculatedM2s,
+                                @RequestParam(value = "purchaseOrderId", required = false) Long purchaseOrderId,
                                 RedirectAttributes redirectAttributes) {
 
         try {
@@ -194,6 +223,14 @@ public class InvoiceController extends AbstractController {
                     customerId, supplierId, targetDepartment, projectId, effectiveTaxRate,
                     directExpense, effectiveStatus, partyName, notes, itemForms, quarryCategory
             );
+
+            if (purchaseOrderId != null) {
+                try {
+                    procurementService.updateStatus(purchaseOrderId, com.ozerler.marble.model.enums.PurchaseOrderStatus.DELIVERED);
+                } catch (Exception ex) {
+                    log.warn("Could not update purchase order status to DELIVERED: {}", purchaseOrderId, ex);
+                }
+            }
 
             redirectAttributes.addFlashAttribute("successMessage", "Fatura (" + invoice.getInvoiceNo() + ") başarıyla oluşturuldu. Toplam: " + invoice.getTotalAmount() + " TL");
             return "redirect:/invoices/" + invoice.getId();

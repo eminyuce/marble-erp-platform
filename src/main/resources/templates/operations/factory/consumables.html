@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Fabrika Sarf Malzeme Deposu | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        consumeModalOpen: false,
+        addStockModalOpen: false,
+        newCardModalOpen: false,
+        selectedItemId: '',
+        selectedItemDesc: '',
+        selectedItemUnit: 'adet',
+        selectedItemMaxQty: 0,
+        consumeQty: '',
+        onConsumableSelect(evt) {
+            const opt = evt.target.selectedOptions ? evt.target.selectedOptions[0] : null;
+            if (opt) {
+                this.selectedItemUnit = opt.dataset.unit || 'adet';
+                this.selectedItemMaxQty = parseFloat(opt.dataset.max) || 0;
+            } else {
+                this.selectedItemUnit = 'adet';
+                this.selectedItemMaxQty = 0;
+            }
+        },
+        openConsumeModal(id, desc, unit, maxQty) {
+            this.selectedItemId = id;
+            this.selectedItemDesc = desc;
+            this.selectedItemUnit = unit;
+            this.selectedItemMaxQty = maxQty;
+            this.consumeQty = '';
+            this.consumeModalOpen = true;
+        }
+     }">
+
+    <!-- Header Section -->
+    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Operasyon', '/operations/factory', 'Fabrika — Sarf Malzeme Deposu')}"></div>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="wrench" class="w-7 h-7 text-emerald-600 inline-block"></i>
+                <span>Fabrika — Sarf Malzeme Deposu</span>
+            </h2>
+            <p class="erp-list-lead">
+                Fabrikada kullanılan elmas segmanlar, kesme telleri, epoksi reçineler, cila abrasivleri ve bakım sarfiyatlarının stok yönetimi.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Sarf malzemeler kullanıldıkça girilen miktar ve net birim maliyeti üzerinden doğrudan Fabrika giderine yazılır.')}"></span>
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" @click="consumeModalOpen = true; selectedItemId = '';"
+                    class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                <i data-lucide="check-square" class="w-4 h-4"></i>
+                <span>Malzeme Kullan</span>
+            </button>
+            <button type="button" @click="newCardModalOpen = true"
+                    class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i>
+                <span>Yeni Stok Kartı</span>
+            </button>
+            <button type="button" @click="addStockModalOpen = true"
+                    class="px-3.5 py-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
+                <i data-lucide="download" class="w-4 h-4 text-slate-500"></i>
+                <span>Stoğa Ekle</span>
+            </button>
+            <a th:href="@{/invoices/new(type='PURCHASE',department='FACTORY')}"
+               class="px-3.5 py-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs"
+               title="Fatura Girişi">
+                <i data-lucide="receipt" class="w-4 h-4 text-slate-500"></i>
+                <span>Fatura ile Alış</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Sub-Navigation Bar for Factory -->
+    <div class="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
+        <a th:href="@{/operations/factory/blocks}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="boxes" class="w-4 h-4"></i>
+            <span>Blok Stok Sahası</span>
+        </a>
+        <a th:href="@{/operations/factory/slabs}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i>
+            <span>Plaka Stok Sahası</span>
+        </a>
+        <a th:href="@{/operations/factory/sized}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="layout-grid" class="w-4 h-4 text-emerald-600"></i>
+            <span>Ebatlı Stok Sahası</span>
+        </a>
+        <a th:href="@{/operations/factory/orders}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="clipboard-list" class="w-4 h-4 text-purple-600"></i>
+            <span>Fabrika Siparişleri</span>
+        </a>
+        <a th:href="@{/operations/factory/fuel}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="fuel" class="w-4 h-4 text-amber-600"></i>
+            <span>Mazot Deposu</span>
+        </a>
+        <a th:href="@{/operations/factory/consumables}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-emerald-600 text-white shadow-xs">
+            <i data-lucide="wrench" class="w-4 h-4"></i>
+            <span>Sarf Malzeme Deposu</span>
+        </a>
+    </div>
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kayıtlı Sarf Kartları</span>
+                <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-700"><i data-lucide="layers" class="w-4 h-4"></i></span>
+            </div>
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono"
+                 th:text="${consumables != null ? consumables.size() : 0} + ' Kalem'">0 Kalem</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">Fabrika deposunda tanımlı malzemeler</div>
+        </div>
+
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Toplam Depo Değeri</span>
+                <span class="p-1.5 rounded-lg bg-blue-50 text-blue-700"><i data-lucide="coins" class="w-4 h-4"></i></span>
+            </div>
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono"
+                 th:text="${totalValue != null ? #numbers.formatDecimal(totalValue, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">KDV hariç net toplam sarf stok değeri</div>
+        </div>
+
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Masraf Merkezi</span>
+                <span class="p-1.5 rounded-lg bg-purple-50 text-purple-700"><i data-lucide="building" class="w-4 h-4"></i></span>
+            </div>
+            <div class="text-xl font-black text-slate-900 mt-1">CC-002 (Fabrika)</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">Kullanıldıkça Fabrika maliyetine aktarılır</div>
+        </div>
+
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Sarf Tipi</span>
+                <span class="p-1.5 rounded-lg bg-amber-50 text-amber-700"><i data-lucide="disc" class="w-4 h-4"></i></span>
+            </div>
+            <div class="text-xl font-black text-slate-900 mt-1">Segman / Tel / Cila</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">Katrak, ST, cila ve makine sarfları</div>
+        </div>
+    </div>
+
+    <!-- Sarf Malzemeleri Tablosu -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+            <div class="flex items-center gap-2">
+                <i data-lucide="package" class="w-4 h-4 text-slate-500"></i>
+                <h3 class="text-sm font-bold text-slate-900">Fabrika Sarf Malzeme Stok Durumu</h3>
+            </div>
+            <span class="text-xs text-slate-500 font-medium" th:text="${consumables != null ? consumables.size() : 0} + ' malzeme'">0 malzeme</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] tracking-wider font-semibold">
+                <tr>
+                    <th class="px-4 py-3">Stok Kodu</th>
+                    <th class="px-4 py-3">Malzeme Tanımı</th>
+                    <th class="px-4 py-3 text-right">Mevcut Miktar</th>
+                    <th class="px-4 py-3">Birim</th>
+                    <th class="px-4 py-3 text-right">Birim Fiyat (Net)</th>
+                    <th class="px-4 py-3 text-right">Toplam Değer</th>
+                    <th class="px-4 py-3">Notlar</th>
+                    <th class="px-4 py-3 text-center">İşlem</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                <tr th:if="${consumables == null or consumables.isEmpty()}">
+                    <td colspan="8" class="px-4 py-8 text-center text-slate-400">
+                        <i data-lucide="package-open" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                        Henüz fabrika sarf malzeme stok kartı bulunmuyor.
+                    </td>
+                </tr>
+                <tr th:each="item : ${consumables}" class="hover:bg-slate-50/80 transition">
+                    <td class="px-4 py-3 font-mono font-bold text-slate-800" th:text="${item.itemCode}">FB-SRF-01</td>
+                    <td class="px-4 py-3">
+                        <div class="font-bold text-slate-900" th:text="${item.description}">Katrak Segmanı</div>
+                    </td>
+                    <td class="px-4 py-3 text-right font-mono font-bold"
+                        :class="${item.quantity != null and item.quantity <= 5} ? 'text-rose-600' : 'text-slate-900'"
+                        th:text="${item.quantity != null ? #numbers.formatDecimal(item.quantity, 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</td>
+                    <td class="px-4 py-3 text-slate-500 uppercase text-[11px]" th:text="${item.unit}">ADET</td>
+                    <td class="px-4 py-3 text-right font-mono"
+                        th:text="${item.unitPrice != null ? #numbers.formatDecimal(item.unitPrice, 1, 'POINT', 2, 'COMMA') + ' ₺' : '—'}">—</td>
+                    <td class="px-4 py-3 text-right font-mono font-bold text-emerald-700"
+                        th:text="${item.quantity != null and item.unitPrice != null ? #numbers.formatDecimal((item.quantity * item.unitPrice), 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</td>
+                    <td class="px-4 py-3 text-slate-500 truncate max-w-xs" th:text="${item.notes != null ? item.notes : '—'}">—</td>
+                    <td class="px-4 py-3 text-center">
+                        <button type="button"
+                                th:data-id="${item.id}"
+                                th:data-desc="${item.description}"
+                                th:data-unit="${item.unit}"
+                                th:data-qty="${item.quantity != null ? item.quantity : 0}"
+                                @click="openConsumeModal($el.dataset.id, $el.dataset.desc, $el.dataset.unit, parseFloat($el.dataset.qty) || 0)"
+                                class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition shadow-2xs cursor-pointer inline-flex items-center gap-1">
+                            <i data-lucide="check" class="w-3 h-3"></i>
+                            <span>Kullan</span>
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 1. Malzeme Kullan / Giderleştir Modalı -->
+    <div x-show="consumeModalOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4" @click.away="consumeModalOpen = false">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600"><i data-lucide="check-square" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Fabrika Sarf Malzemesi Kullan</h3>
+                        <p class="text-xs text-slate-500">Kullanılan miktar doğrudan Fabrika giderine yazılır</p>
+                    </div>
+                </div>
+                <button type="button" @click="consumeModalOpen = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form th:action="@{/operations/factory/consumables/consume}" method="post" class="space-y-4">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div th:if="${consumables != null and !consumables.isEmpty()}">
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Kullanılacak Malzeme *</label>
+                    <select name="stockItemId" required x-model="selectedItemId" @change="onConsumableSelect($event)"
+                            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="">-- Malzeme Seçiniz --</option>
+                        <option th:each="it : ${consumables}"
+                                th:value="${it.id}"
+                                th:data-unit="${it.unit}"
+                                th:data-max="${it.quantity != null ? it.quantity : 0}"
+                                th:text="${it.description + ' (Stokta: ' + (it.quantity != null ? it.quantity : 0) + ' ' + it.unit + ' - Birim: ' + (it.unitPrice != null ? it.unitPrice : 0) + ' ₺)'}"></option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            Kullanılan Miktar (<span x-text="selectedItemUnit">adet</span>) *
+                        </label>
+                        <input type="number" step="0.01" name="quantity" required min="0.01" :max="selectedItemMaxQty" x-model="consumeQty"
+                               class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                               placeholder="Örn: 2" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">İlgili Araç / Ekipman</label>
+                        <select name="machineId" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <option value="">-- Genel / Belirtilmedi --</option>
+                            <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.name + ' (' + v.code + ')'}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Kullanım Yeri / Açıklama</label>
+                    <input type="text" name="notes"
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                           placeholder="Katrak 1 kesim bıçak değişimi vb." />
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" @click="consumeModalOpen = false"
+                            class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                        Vazgeç
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer">
+                        Kullan &amp; Giderleştir
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Yeni Stok Kartı Açma Modalı -->
+    <div x-show="newCardModalOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4" @click.away="newCardModalOpen = false">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="p-2 rounded-xl bg-blue-50 text-blue-600"><i data-lucide="plus-circle" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Yeni Fabrika Stok Kartı</h3>
+                        <p class="text-xs text-slate-500">Fabrika sarf deposuna yeni malzeme kartı tanımlayın</p>
+                    </div>
+                </div>
+                <button type="button" @click="newCardModalOpen = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form th:action="@{/operations/factory/stock-cards/new}" method="post" class="space-y-4">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Malzeme Adı / Tanımı *</label>
+                    <input type="text" name="description" required
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                           placeholder="Örn: Katrak 80 Lama Segmanı" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Stok Kodu (Opsiyonel)</label>
+                        <input type="text" name="itemCode"
+                               class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                               placeholder="FB-SRF-01" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Ölçü Birimi *</label>
+                        <select name="unit" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="adet">Adet</option>
+                            <option value="m.t.">Metretül (m.t.)</option>
+                            <option value="kg">Kilogram (kg)</option>
+                            <option value="litre">Litre</option>
+                            <option value="paket">Paket</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Açılış Stok Miktarı</label>
+                        <input type="number" step="0.01" name="initialQuantity" min="0" value="0"
+                               class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                               placeholder="0" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Net Birim Fiyat (TL)</label>
+                        <input type="number" step="0.01" name="netUnitPrice" min="0" value="0"
+                               class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                               placeholder="0.00" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Açıklama / Not</label>
+                    <input type="text" name="notes"
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                           placeholder="Tedarikçi bilgisi vb." />
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" @click="newCardModalOpen = false"
+                            class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                        Vazgeç
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer">
+                        Kartı Oluştur
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Stoğa Ekle Modalı -->
+    <div x-show="addStockModalOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4" @click.away="addStockModalOpen = false">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600"><i data-lucide="download" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Fabrika Sarf Stoğuna Giriş</h3>
+                        <p class="text-xs text-slate-500">Mevcut bir sarf malzemesinin stok miktarını artırın</p>
+                    </div>
+                </div>
+                <button type="button" @click="addStockModalOpen = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form th:action="@{/operations/factory/consumables/add}" method="post" class="space-y-4">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Malzeme Seçin *</label>
+                    <select name="description" required
+                            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="">-- Malzeme Seçiniz --</option>
+                        <option th:each="it : ${consumables}" th:value="${it.description}" th:text="${it.description + ' (' + it.itemCode + ')'}"></option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Giriş Miktarı *</label>
+                        <input type="number" step="0.01" name="quantity" required min="0.01"
+                               class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                               placeholder="Örn: 50" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Birim Fiyat (Net TL)</label>
+                        <input type="number" step="0.01" name="netUnitPrice" min="0"
+                               class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                               placeholder="Örn: 95.00" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Not / Fatura No</label>
+                    <input type="text" name="notes"
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                           placeholder="Sevkiyat girişi vb." />
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" @click="addStockModalOpen = false"
+                            class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                        Vazgeç
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer">
+                        Stoğa Ekle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

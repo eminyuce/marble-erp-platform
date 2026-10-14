@@ -81,6 +81,16 @@
             <i data-lucide="clipboard-list" class="w-4 h-4 text-purple-600"></i>
             <span>Fabrika Siparişleri</span>
         </a>
+        <a th:href="@{/operations/factory/fuel}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="fuel" class="w-4 h-4 text-amber-600"></i>
+            <span>Mazot Deposu</span>
+        </a>
+        <a th:href="@{/operations/factory/consumables}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="wrench" class="w-4 h-4 text-emerald-600"></i>
+            <span>Sarf Malzeme Deposu</span>
+        </a>
     </div>
 
     <!-- KPI Summary Cards -->
@@ -239,22 +249,42 @@
                         }
                     },
                     {
-                        title: "Kaynak Blok",
+                        title: "Kaynak",
                         field: "sourceBlockCode",
                         width: 130,
                         formatter: function (cell) {
-                            return `<span class="font-bold text-slate-900">${gridText(cell.getValue())}</span>`;
+                            const row = cell.getRow().getData();
+                            if (row.sourceBlockCode && row.sourceBlockCode !== '—') {
+                                return `<span class="font-bold text-slate-900">${gridText(row.sourceBlockCode)}</span>`;
+                            }
+                            if (row.notes && row.notes.includes('[Kaynak Plaka:')) {
+                                const match = row.notes.match(/\[Kaynak Plaka:\s*([^\]]+)\]/);
+                                return `<span class="font-bold text-indigo-700 font-mono text-xs">${gridText(match ? match[1] : 'Plaka')}</span>`;
+                            }
+                            return `<span class="text-slate-400 text-xs italic">Bağımsız</span>`;
                         }
                     },
                     {
                         title: "Taş Türü & Tanım",
                         field: "description",
-                        minWidth: 180,
+                        minWidth: 160,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
                             return `<div>
                                 <div class="font-bold text-slate-900">${gridText(row.description || row.stoneType)}</div>
-                                <div class="text-[11px] text-slate-500">${gridText(row.stoneType)} · ${gridText(row.surfaceFinish)}</div>
+                                <div class="text-[11px] text-slate-500">${gridText(row.stoneType)}</div>
+                            </div>`;
+                        }
+                    },
+                    {
+                        title: "Yüzey & Kenar",
+                        field: "surfaceFinish",
+                        width: 130,
+                        formatter: function (cell) {
+                            const row = cell.getRow().getData();
+                            return `<div>
+                                <div class="font-semibold text-slate-800 text-xs">${gridText(row.surfaceFinish || 'Cilalı')}</div>
+                                <div class="text-[11px] text-slate-500">${gridText(row.edgeFinish || 'Pahlı')}</div>
                             </div>`;
                         }
                     },

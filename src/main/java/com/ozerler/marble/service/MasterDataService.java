@@ -20,8 +20,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -53,6 +57,7 @@ public class MasterDataService {
     private final CostTransactionRepository costTransactionRepository;
     private final BlockCustomerMarkRepository blockCustomerMarkRepository;
     private final InvoiceRepository invoiceRepository;
+    private final CollectionRecordRepository collectionRecordRepository;
 
     // =========================================================================
     // MACHINES
@@ -261,8 +266,42 @@ public class MasterDataService {
                 pageable -> unit != null
                         ? customerRepository.search(GridPages.normalizeSearch(search), type, unit, pageable)
                         : customerRepository.search(GridPages.normalizeSearch(search), type, pageable));
+
+        List<Customer> customers = result.getContent();
+        List<Long> customerIds = customers.stream().map(Customer::getId).filter(Objects::nonNull).toList();
+
+        Map<Long, BigDecimal> salesMap = new HashMap<>();
+        if (!customerIds.isEmpty() && invoiceRepository != null) {
+            try {
+                invoiceRepository.sumSalesTotalByCustomerIds(customerIds).forEach(row -> {
+                    if (row != null && row.length >= 2 && row[0] != null) {
+                        salesMap.put((Long) row[0], (BigDecimal) row[1]);
+                    }
+                });
+            } catch (Exception ignored) {}
+        }
+
+        Map<Long, BigDecimal> collectionsMap = new HashMap<>();
+        if (!customerIds.isEmpty() && collectionRecordRepository != null) {
+            try {
+                collectionRecordRepository.sumAmountByCustomerIds(customerIds).forEach(row -> {
+                    if (row != null && row.length >= 2 && row[0] != null) {
+                        collectionsMap.put((Long) row[0], (BigDecimal) row[1]);
+                    }
+                });
+            } catch (Exception ignored) {}
+        }
+
+        List<CustomerDto> dtos = customers.stream().map(c -> {
+            CustomerDto dto = CustomerDto.fromEntity(c);
+            BigDecimal sales = salesMap.getOrDefault(c.getId(), BigDecimal.ZERO);
+            BigDecimal collections = collectionsMap.getOrDefault(c.getId(), BigDecimal.ZERO);
+            dto.setBalance(sales.subtract(collections));
+            return dto;
+        }).toList();
+
         return TabulatorResponse.of(
-                result.getContent().stream().map(CustomerDto::fromEntity).toList(),
+                dtos,
                 result.getTotalPages(),
                 result.getTotalElements());
     }

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Fabrika Mazot Deposu &amp; Araç Takibi | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-5"
+     x-data="{
+        dispenseModalOpen: false,
+        addStockModalOpen: false,
+        selectedVehicleId: '',
+        dispenseLitres: '',
+        workingHoursOrKm: '',
+        maxLitres: /*[[${currentLiters}]]*/ 0,
+        validateDispense() {
+            return this.dispenseLitres > 0 && this.dispenseLitres <= this.maxLitres;
+        }
+     }">
+
+    <!-- Header Section -->
+    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Operasyon', '/operations/factory', 'Fabrika — Mazot Deposu')}"></div>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="fuel" class="w-7 h-7 text-amber-600 inline-block"></i>
+                <span>Fabrika — Mazot Deposu &amp; Araç Takibi</span>
+            </h2>
+            <p class="erp-list-lead">
+                Fabrikadaki mazotlu forklift ve tırların akaryakıt ikmali ve fabrika ana tankı stok takibi.
+                <span th:replace="~{fragments/erp-ops :: tip('', 'Mazot depodan çıktığı anda KDV hariç tutar üzerinden Fabrika masraf merkezine otomatik gider yazılır.')}"></span>
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" @click="dispenseModalOpen = true"
+                    class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                <i data-lucide="droplet" class="w-4 h-4"></i>
+                <span>Araca Mazot Ver</span>
+            </button>
+            <button type="button" @click="addStockModalOpen = true"
+                    class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i>
+                <span>Depo Dolumu</span>
+            </button>
+            <a th:href="@{/invoices/new(type='PURCHASE',department='FACTORY')}"
+               class="px-3 py-2.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs"
+               title="Fatura Girişi ile Depo Dolumu">
+                <i data-lucide="receipt" class="w-4 h-4 text-slate-500"></i>
+                <span>Fatura ile Giriş</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Sub-Navigation Bar for Factory -->
+    <div class="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
+        <a th:href="@{/operations/factory/blocks}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="boxes" class="w-4 h-4"></i>
+            <span>Blok Stok Sahası</span>
+        </a>
+        <a th:href="@{/operations/factory/slabs}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i>
+            <span>Plaka Stok Sahası</span>
+        </a>
+        <a th:href="@{/operations/factory/sized}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="layout-grid" class="w-4 h-4 text-emerald-600"></i>
+            <span>Ebatlı Stok Sahası</span>
+        </a>
+        <a th:href="@{/operations/factory/orders}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="clipboard-list" class="w-4 h-4 text-purple-600"></i>
+            <span>Fabrika Siparişleri</span>
+        </a>
+        <a th:href="@{/operations/factory/fuel}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-amber-600 text-white shadow-xs">
+            <i data-lucide="fuel" class="w-4 h-4"></i>
+            <span>Mazot Deposu</span>
+        </a>
+        <a th:href="@{/operations/factory/consumables}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="wrench" class="w-4 h-4 text-emerald-600"></i>
+            <span>Sarf Malzeme Deposu</span>
+        </a>
+    </div>
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Fabrika Tank Mevcut Stok</span>
+                <span class="p-1.5 rounded-lg bg-amber-50 text-amber-700"><i data-lucide="fuel" class="w-4 h-4"></i></span>
+            </div>
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono"
+                 th:text="${#numbers.formatDecimal(currentLiters, 1, 'POINT', 0, 'COMMA')} + ' Litre'">0 Litre</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">Fabrika ana tankında kullanıma hazır motorin</div>
+        </div>
+
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Ortalama Birim Fiyat (Net)</span>
+                <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-700"><i data-lucide="tag" class="w-4 h-4"></i></span>
+            </div>
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono"
+                 th:text="${tank != null and tank.unitPrice != null ? #numbers.formatDecimal(tank.unitPrice, 1, 'POINT', 2, 'COMMA') + ' TL/L' : '—'}">0,00 TL/L</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">KDV hariç net stok birim maliyeti</div>
+        </div>
+
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kayıtlı Araçlar (Forklift/Tır)</span>
+                <span class="p-1.5 rounded-lg bg-blue-50 text-blue-700"><i data-lucide="truck" class="w-4 h-4"></i></span>
+            </div>
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono"
+                 th:text="${vehicles != null ? vehicles.size() : 0} + ' Araç'">0 Araç</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">Dizel forkliftler ve sevkiyat tırları</div>
+        </div>
+
+        <div class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Toplam Stok Değeri</span>
+                <span class="p-1.5 rounded-lg bg-purple-50 text-purple-700"><i data-lucide="coins" class="w-4 h-4"></i></span>
+            </div>
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono"
+                 th:text="${#numbers.formatDecimal((currentLiters * (tank != null and tank.unitPrice != null ? tank.unitPrice : 0)), 1, 'POINT', 2, 'COMMA')} + ' TL'">0,00 TL</div>
+            <div class="text-xs text-slate-500 font-medium mt-0.5">KDV hariç fabrika mazot stok değeri</div>
+        </div>
+    </div>
+
+    <!-- Son Mazot Çıkışları Tablosu -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+            <div class="flex items-center gap-2">
+                <i data-lucide="history" class="w-4 h-4 text-slate-500"></i>
+                <h3 class="text-sm font-bold text-slate-900">Son Araç Mazot İkmalleri</h3>
+            </div>
+            <span class="text-xs text-slate-500 font-medium" th:text="${entries != null ? entries.size() : 0} + ' kayıt'">0 kayıt</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] tracking-wider font-semibold">
+                <tr>
+                    <th class="px-4 py-3">Tarih</th>
+                    <th class="px-4 py-3">Araç / Makine</th>
+                    <th class="px-4 py-3">Tip</th>
+                    <th class="px-4 py-3 text-right">Litre</th>
+                    <th class="px-4 py-3 text-right">Net Birim Fiyat</th>
+                    <th class="px-4 py-3 text-right">Gider Tutarı (Net)</th>
+                    <th class="px-4 py-3">Saat / KM</th>
+                    <th class="px-4 py-3">Fiş / Teslim Alan</th>
+                    <th class="px-4 py-3">Açıklama</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                <tr th:if="${entries == null or entries.isEmpty()}">
+                    <td colspan="9" class="px-4 py-8 text-center text-slate-400">
+                        <i data-lucide="fuel" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                        Henüz fabrika araçlarına mazot çıkışı kaydedilmedi.
+                    </td>
+                </tr>
+                <tr th:each="entry : ${entries}" class="hover:bg-slate-50/80 transition">
+                    <td class="px-4 py-3 font-mono" th:text="${entry.entryDate}">2026-04-14</td>
+                    <td class="px-4 py-3">
+                        <div class="font-bold text-slate-900" th:text="${entry.machine.name}">Forklift 1</div>
+                        <div class="text-[10px] font-mono text-slate-400" th:text="${entry.machine.code}">FCT-FRK-01</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700"
+                              th:text="${entry.machine.machineType != null ? entry.machine.machineType.label : 'Araç'}">Forklift</span>
+                    </td>
+                    <td class="px-4 py-3 text-right font-mono font-bold text-amber-700"
+                        th:text="${#numbers.formatDecimal(entry.litres, 1, 'POINT', 0, 'COMMA')} + ' L'">50 L</td>
+                    <td class="px-4 py-3 text-right font-mono"
+                        th:text="${#numbers.formatDecimal(entry.pricePerLitre, 1, 'POINT', 2, 'COMMA')} + ' ₺'">42,00 ₺</td>
+                    <td class="px-4 py-3 text-right font-mono font-bold text-emerald-700"
+                        th:text="${#numbers.formatDecimal(entry.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' ₺'">2.100,00 ₺</td>
+                    <td class="px-4 py-3 font-mono" th:text="${entry.workingHoursOrKm != null ? entry.workingHoursOrKm : '—'}">—</td>
+                    <td class="px-4 py-3">
+                        <div class="text-slate-800" th:text="${entry.receiptNo != null and !entry.receiptNo.isBlank() ? 'Fiş: ' + entry.receiptNo : '—'}">—</div>
+                        <div class="text-[10px] text-slate-500" th:text="${entry.receivedBy != null ? 'Alan: ' + entry.receivedBy : ''}"></div>
+                    </td>
+                    <td class="px-4 py-3 text-slate-500 truncate max-w-xs" th:text="${entry.notes != null ? entry.notes : '—'}">—</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 1. Araca Mazot Çıkış Modalı -->
+    <div x-show="dispenseModalOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4" @click.away="dispenseModalOpen = false">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="p-2 rounded-xl bg-amber-50 text-amber-600"><i data-lucide="droplet" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Araca Mazot Ver</h3>
+                        <p class="text-xs text-slate-500">Fabrika forklift ve tırlarına akaryakıt çıkışı</p>
+                    </div>
+                </div>
+                <button type="button" @click="dispenseModalOpen = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form th:action="@{/operations/factory/fuel/dispense}" method="post" class="space-y-4">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center justify-between">
+                    <span>Mevcut Fabrika Mazot Stoğu:</span>
+                    <strong class="font-mono text-sm font-black" th:text="${#numbers.formatDecimal(currentLiters, 1, 'POINT', 0, 'COMMA')} + ' Litre'">0 Litre</strong>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Araç / Forklift / Tır Seçin *</label>
+                    <select name="machineId" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        <option value="">-- Araç Seçiniz --</option>
+                        <option th:each="v : ${vehicles}" th:value="${v.id}" th:text="${v.name + ' (' + v.code + ')'}"></option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Verilen Mazot (Litre) *</label>
+                        <input type="number" step="0.01" name="litres" required min="0.1" th:max="${currentLiters}"
+                               class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none font-mono"
+                               placeholder="Örn: 60" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Çalışma Saati / KM</label>
+                        <input type="number" step="0.1" name="workingHoursOrKm"
+                               class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none font-mono"
+                               placeholder="Örn: 1250" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Fiş / Belge No</label>
+                        <input type="text" name="receiptNo"
+                               class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                               placeholder="Örn: FS-998" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Teslim Alan (Şoför/Operatör)</label>
+                        <input type="text" name="receivedBy"
+                               class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                               placeholder="Örn: Mehmet Usta" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Açıklama / Not</label>
+                    <input type="text" name="notes"
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                           placeholder="Sevkiyat öncesi tam dolum vb." />
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" @click="dispenseModalOpen = false"
+                            class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                        Vazgeç
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer">
+                        Mazotu Çık &amp; Giderleştir
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Depo Dolumu Modalı -->
+    <div x-show="addStockModalOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4" @click.away="addStockModalOpen = false">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600"><i data-lucide="plus-circle" class="w-5 h-5"></i></span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Fabrika Mazot Deposu Dolumu</h3>
+                        <p class="text-xs text-slate-500">Doğrudan ana tanka akaryakıt girişi</p>
+                    </div>
+                </div>
+                <button type="button" @click="addStockModalOpen = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form th:action="@{/operations/factory/fuel/add}" method="post" class="space-y-4">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Giriş Yapılacak Miktar (Litre) *</label>
+                    <input type="number" step="0.01" name="litres" required min="1"
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                           placeholder="Örn: 2000" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">KDV Hariç Net Birim Fiyat (TL / Litre)</label>
+                    <input type="number" step="0.01" name="netUnitPrice" min="0"
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                           placeholder="Örn: 42.50" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Fatura No / İrsaliye No</label>
+                    <input type="text" name="invoiceNo"
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                           placeholder="Örn: GIB20260000123" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Açıklama</label>
+                    <input type="text" name="notes"
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                           placeholder="Tedarikçi tanker teslimatı" />
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" @click="addStockModalOpen = false"
+                            class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                        Vazgeç
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer">
+                        Depoya Ekle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

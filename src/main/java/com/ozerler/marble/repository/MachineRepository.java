@@ -29,6 +29,11 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
     @Query("SELECT m FROM Machine m WHERE (:search IS NULL "
             + "OR LOWER(m.code) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(m.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-            + "AND (:unit IS NULL OR m.businessUnit = :unit)")
+            + "AND (:unit IS NULL OR m.businessUnit = :unit) "
+            + "AND (m.machineType NOT IN (com.ozerler.marble.model.enums.MachineType.GANGSAW, "
+            + "com.ozerler.marble.model.enums.MachineType.ST, "
+            + "com.ozerler.marble.model.enums.MachineType.SLAB_POLISHING, "
+            + "com.ozerler.marble.model.enums.MachineType.STRIP_POLISHING, "
+            + "com.ozerler.marble.model.enums.MachineType.FACTORY_BRIDGE_SAW))")
     Page<Machine> search(@Param("search") String search, @Param("unit") BusinessUnit unit, Pageable pageable);
 }

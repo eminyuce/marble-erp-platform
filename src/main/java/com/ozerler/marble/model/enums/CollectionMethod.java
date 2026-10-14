@@ -5,6 +5,7 @@ import com.ozerler.marble.util.MessageUtils;
 public enum CollectionMethod {
     CASH("enum.collection_method.cash", "Nakit"),
     BANK_TRANSFER("enum.collection_method.bank_transfer", "EFT / Havale"),
+    CREDIT_CARD("enum.collection_method.credit_card", "Kredi Kartı"),
     CHECK("enum.collection_method.check", "Çek");
 
     private final String messageKey;

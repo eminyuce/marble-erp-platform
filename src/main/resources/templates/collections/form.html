@@ -12,7 +12,7 @@
             return this.method === 'CHECK';
         },
         isBank() {
-            return this.method === 'BANK_TRANSFER' || this.method === 'CHECK';
+            return this.method === 'BANK_TRANSFER' || this.method === 'CREDIT_CARD' || this.method === 'CHECK';
         }
      }">
 
@@ -24,44 +24,54 @@
             <span>Yeni Tahsilat Kaydı</span>
         </h2>
         <p class="erp-form-lead text-sm text-slate-600">
-            Nakit, banka transferi veya çek yöntemiyle müşteriden yapılan tahsilatı sisteme kaydedin.
+            Nakit, banka transferi, kredi kartı veya çek yöntemiyle müşteriden yapılan tahsilatı sisteme kaydedin.
         </p>
     </div>
 
     <form th:action="@{/collections/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
         <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-        <!-- Tahsilat Yöntemi Seçimi (Nakit, EFT/Havale, Çek) -->
+        <!-- Tahsilat Yöntemi Seçimi (Nakit, EFT/Havale, Kredi Kartı, Çek) -->
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-2">Tahsilat Yöntemi *</label>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <label class="flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition"
                        :class="method === 'CASH' ? 'border-emerald-600 bg-emerald-50/50 text-emerald-900 ring-2 ring-emerald-500/20 font-bold' : 'border-slate-200 text-slate-700 hover:bg-slate-50'">
                     <input type="radio" name="method" value="CASH" x-model="method" class="sr-only" checked />
-                    <i data-lucide="banknote" class="w-5 h-5" :class="method === 'CASH' ? 'text-emerald-600' : 'text-slate-400'"></i>
+                    <i data-lucide="banknote" class="w-5 h-5 shrink-0" :class="method === 'CASH' ? 'text-emerald-600' : 'text-slate-400'"></i>
                     <div>
-                        <div class="text-sm font-bold">1. Nakit</div>
-                        <div class="text-[11px] font-normal text-slate-500">Kasa tahsilatı</div>
+                        <div class="text-xs font-bold">1. Nakit</div>
+                        <div class="text-[10px] font-normal text-slate-500">Kasa</div>
                     </div>
                 </label>
 
-                <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                <label class="flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition"
                        :class="method === 'BANK_TRANSFER' ? 'border-blue-600 bg-blue-50/50 text-blue-900 ring-2 ring-blue-500/20 font-bold' : 'border-slate-200 text-slate-700 hover:bg-slate-50'">
                     <input type="radio" name="method" value="BANK_TRANSFER" x-model="method" class="sr-only" />
-                    <i data-lucide="landmark" class="w-5 h-5" :class="method === 'BANK_TRANSFER' ? 'text-blue-600' : 'text-slate-400'"></i>
+                    <i data-lucide="landmark" class="w-5 h-5 shrink-0" :class="method === 'BANK_TRANSFER' ? 'text-blue-600' : 'text-slate-400'"></i>
                     <div>
-                        <div class="text-sm font-bold">2. EFT / Havale</div>
-                        <div class="text-[11px] font-normal text-slate-500">Banka transferi</div>
+                        <div class="text-xs font-bold">2. EFT / Havale</div>
+                        <div class="text-[10px] font-normal text-slate-500">Banka</div>
                     </div>
                 </label>
 
-                <label class="flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition"
+                <label class="flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition"
+                       :class="method === 'CREDIT_CARD' ? 'border-amber-600 bg-amber-50/50 text-amber-900 ring-2 ring-amber-500/20 font-bold' : 'border-slate-200 text-slate-700 hover:bg-slate-50'">
+                    <input type="radio" name="method" value="CREDIT_CARD" x-model="method" class="sr-only" />
+                    <i data-lucide="credit-card" class="w-5 h-5 shrink-0" :class="method === 'CREDIT_CARD' ? 'text-amber-600' : 'text-slate-400'"></i>
+                    <div>
+                        <div class="text-xs font-bold">3. Kredi Kartı</div>
+                        <div class="text-[10px] font-normal text-slate-500">POS</div>
+                    </div>
+                </label>
+
+                <label class="flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition"
                        :class="method === 'CHECK' ? 'border-purple-600 bg-purple-50/50 text-purple-900 ring-2 ring-purple-500/20 font-bold' : 'border-slate-200 text-slate-700 hover:bg-slate-50'">
                     <input type="radio" name="method" value="CHECK" x-model="method" class="sr-only" />
-                    <i data-lucide="calendar-check" class="w-5 h-5" :class="method === 'CHECK' ? 'text-purple-600' : 'text-slate-400'"></i>
+                    <i data-lucide="calendar-check" class="w-5 h-5 shrink-0" :class="method === 'CHECK' ? 'text-purple-600' : 'text-slate-400'"></i>
                     <div>
-                        <div class="text-sm font-bold">3. Çek</div>
-                        <div class="text-[11px] font-normal text-slate-500">Vade tarihli çek</div>
+                        <div class="text-xs font-bold">4. Çek</div>
+                        <div class="text-[10px] font-normal text-slate-500">Vadeli çek</div>
                     </div>
                 </label>
             </div>

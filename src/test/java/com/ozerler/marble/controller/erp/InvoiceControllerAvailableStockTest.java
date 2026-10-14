@@ -52,6 +52,9 @@ class InvoiceControllerAvailableStockTest {
     @Mock
     private QuarryInventoryService quarryInventoryService;
 
+    @Mock
+    private com.ozerler.marble.service.ProcurementService procurementService;
+
     @InjectMocks
     private InvoiceController controller;
 

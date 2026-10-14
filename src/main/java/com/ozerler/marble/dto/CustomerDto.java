@@ -66,6 +66,9 @@ public class CustomerDto {
     @JsonProperty("notes")
     private String notes;
 
+    @JsonProperty("balance")
+    private java.math.BigDecimal balance;
+
     public static CustomerDto fromEntity(Customer customer) {
         CustomerType type = customer.getCustomerType();
         com.ozerler.marble.model.enums.BusinessUnit bu = customer.getBusinessUnit();

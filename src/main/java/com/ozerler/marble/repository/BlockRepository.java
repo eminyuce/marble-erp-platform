@@ -230,40 +230,46 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     @Query("SELECT b FROM Block b " +
            "LEFT JOIN FETCH b.quarry " +
-           "LEFT JOIN FETCH b.assignedCustomer " +
+           "LEFT JOIN FETCH b.assignedCustomer cust " +
            "LEFT JOIN FETCH b.currentLocation " +
            "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) " +
            "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) " +
            "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) " +
-           "AND (:customerId IS NULL OR b.assignedCustomer.id = :customerId) " +
-           "AND (:generalStockOnly = false OR b.assignedCustomer IS NULL) " +
+           "AND (:customerId IS NULL OR cust.id = :customerId) " +
+           "AND (:generalStockOnly = false OR cust IS NULL) " +
            "ORDER BY b.arrivalDate DESC, b.id DESC")
     List<Block> findFactoryUncutBlocksFiltered(@Param("customerId") Long customerId,
                                               @Param("generalStockOnly") boolean generalStockOnly);
 
     @EntityGraph(attributePaths = {"quarry", "assignedCustomer", "currentLocation"})
     @Query(value = "SELECT b FROM Block b " +
+           "LEFT JOIN b.quarry q " +
+           "LEFT JOIN b.assignedCustomer cust " +
+           "LEFT JOIN b.currentLocation loc " +
            "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) " +
-           "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) " +
+           "       OR (loc IS NOT NULL AND loc.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) " +
            "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) " +
-           "AND (:customerId IS NULL OR b.assignedCustomer.id = :customerId) " +
-           "AND (:generalStockOnly = false OR b.assignedCustomer IS NULL) " +
+           "AND (:customerId IS NULL OR cust.id = :customerId) " +
+           "AND (:generalStockOnly = false OR cust IS NULL) " +
            "AND (:search IS NULL OR :search = '' " +
            "     OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
            "     OR LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "     OR LOWER(COALESCE(b.quarry.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "     OR LOWER(COALESCE(b.assignedCustomer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+           "     OR LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "     OR LOWER(COALESCE(cust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
            countQuery = "SELECT COUNT(b) FROM Block b " +
+           "LEFT JOIN b.quarry q " +
+           "LEFT JOIN b.assignedCustomer cust " +
+           "LEFT JOIN b.currentLocation loc " +
            "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) " +
-           "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) " +
+           "       OR (loc IS NOT NULL AND loc.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) " +
            "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) " +
-           "AND (:customerId IS NULL OR b.assignedCustomer.id = :customerId) " +
-           "AND (:generalStockOnly = false OR b.assignedCustomer IS NULL) " +
+           "AND (:customerId IS NULL OR cust.id = :customerId) " +
+           "AND (:generalStockOnly = false OR cust IS NULL) " +
            "AND (:search IS NULL OR :search = '' " +
            "     OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
            "     OR LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "     OR LOWER(COALESCE(b.quarry.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "     OR LOWER(COALESCE(b.assignedCustomer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+           "     OR LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "     OR LOWER(COALESCE(cust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<Block> searchFactoryUncutBlocks(@Param("customerId") Long customerId,
                                          @Param("generalStockOnly") boolean generalStockOnly,
                                          @Param("search") String search,

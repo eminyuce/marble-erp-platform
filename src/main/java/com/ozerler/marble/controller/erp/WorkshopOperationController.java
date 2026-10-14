@@ -141,12 +141,13 @@ public class WorkshopOperationController extends AbstractController {
     @GetMapping("/sized")
     public String workshopSized(@RequestParam(value = "customerId", required = false) Long customerId,
                                 @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
+                                @RequestParam(value = "customerOnly", defaultValue = "false") boolean customerOnly,
                                 @RequestParam(value = "search", required = false) String search,
                                 @RequestParam(value = "page", defaultValue = "0") int page,
                                 @RequestParam(value = "size", defaultValue = "20") int size,
                                 Model model) {
 
-        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(customerId, generalStockOnly, search, page, size);
+        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(customerId, generalStockOnly, customerOnly, search, page, size);
         List<Customer> customers = customerRepository.findAll();
 
         BigDecimal totalStockM2 = itemsPage.getContent().stream()
@@ -161,6 +162,7 @@ public class WorkshopOperationController extends AbstractController {
         model.addAttribute("totalItemsCount", totalItemsCount);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("generalStockOnly", generalStockOnly);
+        model.addAttribute("customerOnly", customerOnly);
         model.addAttribute("search", search);
         model.addAttribute("activeSection", "workshop");
         model.addAttribute("activeSubSection", "sized");
@@ -175,10 +177,11 @@ public class WorkshopOperationController extends AbstractController {
             @RequestParam(value = "size", defaultValue = "25") int size,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "customerId", required = false) Long customerId,
-            @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly) {
+            @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
+            @RequestParam(value = "customerOnly", defaultValue = "false") boolean customerOnly) {
 
         int pageIndex = Math.max(0, page - 1);
-        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(customerId, generalStockOnly, search, pageIndex, size);
+        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(customerId, generalStockOnly, customerOnly, search, pageIndex, size);
 
         DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 

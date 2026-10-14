@@ -42,7 +42,7 @@ public class DefinitionController extends AbstractController {
     @GetMapping("/machines")
     public String listMachines(Model model) {
         model.addAttribute("businessUnits", BusinessUnit.values());
-        model.addAttribute("machineTypes", MachineType.values());
+        model.addAttribute("machineTypes", java.util.Arrays.stream(MachineType.values()).filter(t -> !t.isElectric()).toList());
         model.addAttribute("currentSection", "definitions-machines");
         return "admin/definitions/machines";
     }
@@ -466,7 +466,7 @@ public class DefinitionController extends AbstractController {
         model.addAttribute("machine", machine);
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("businessUnits", BusinessUnit.values());
-        model.addAttribute("machineTypes", MachineType.values());
+        model.addAttribute("machineTypes", java.util.Arrays.stream(MachineType.values()).filter(t -> !t.isElectric()).toList());
         model.addAttribute("currentSection", "definitions-machines");
     }
 

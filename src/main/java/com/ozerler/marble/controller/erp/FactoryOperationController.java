@@ -4,6 +4,7 @@ import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.repository.*;
+import com.ozerler.marble.service.FactoryInventoryService;
 import com.ozerler.marble.service.FactoryStockService;
 import com.ozerler.marble.service.OperationWorkOrderService;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class FactoryOperationController extends AbstractController {
     private final BlockRepository blockRepository;
     private final SlabRepository slabRepository;
     private final StockItemRepository stockItemRepository;
+    private final FactoryInventoryService factoryInventoryService;
 
     @GetMapping
     public String index() {
@@ -357,6 +359,7 @@ public class FactoryOperationController extends AbstractController {
             map.put("stoneType", it.getStoneType() != null ? it.getStoneType() : "Mermer");
             map.put("description", it.getDescription() != null ? it.getDescription() : "Ebatlı Mermer");
             map.put("surfaceFinish", it.getSurfaceFinish() != null ? it.getSurfaceFinish().getDisplayName() : "Cilalı");
+            map.put("edgeFinish", it.getEdgeFinish() != null ? it.getEdgeFinish() : "Düz");
             map.put("thicknessCm", it.getThicknessCm() != null ? it.getThicknessCm() + " cm" : "2 cm");
             map.put("dimensions", (it.getWidthCm() != null && it.getLengthCm() != null) ? (it.getWidthCm() + "×" + it.getLengthCm() + " cm") : "—");
             map.put("quantity", it.getQuantity());
@@ -388,6 +391,7 @@ public class FactoryOperationController extends AbstractController {
     @GetMapping({"/sized/new", "/sized/create"})
     public String newSizedForm(Model model) {
         model.addAttribute("blocks", blockRepository.findAllWithQuarry());
+        model.addAttribute("slabs", slabRepository.findByStatusIn(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("qualityGrades", QualityGrade.values());
         model.addAttribute("surfaceFinishes", SurfaceFinish.values());
@@ -398,6 +402,7 @@ public class FactoryOperationController extends AbstractController {
 
     @PostMapping({"/sized/new", "/sized/create"})
     public String createSizedItem(@RequestParam(value = "blockId", required = false) Long blockId,
+                                  @RequestParam(value = "slabId", required = false) Long slabId,
                                   @RequestParam(value = "description", required = false) String description,
                                   @RequestParam(value = "thicknessCm", required = false) BigDecimal thicknessCm,
                                   @RequestParam(value = "widthCm", required = false) BigDecimal widthCm,
@@ -416,12 +421,15 @@ public class FactoryOperationController extends AbstractController {
                                   @RequestParam(value = "rowLengthCm", required = false) List<BigDecimal> rowLengths,
                                   @RequestParam(value = "rowPieceCount", required = false) List<Integer> rowPieceCounts,
                                   @RequestParam(value = "rowQuantity", required = false) List<BigDecimal> rowQuantities,
+                                  @RequestParam(value = "rowSurfaceFinish", required = false) List<String> rowSurfaceFinishes,
+                                  @RequestParam(value = "rowEdgeFinish", required = false) List<String> rowEdgeFinishes,
                                   RedirectAttributes redirectAttributes) {
         try {
             if (rowWidths != null && !rowWidths.isEmpty()) {
                 List<StockItem> items = factoryStockService.createSizedItemsBatch(
-                        blockId, customerId, description, qualityGrade, surfaceFinish, edgeFinish, notes,
-                        rowDescriptions, rowThicknesses, rowWidths, rowLengths, rowPieceCounts, rowQuantities
+                        blockId, slabId, customerId, description, qualityGrade, surfaceFinish, edgeFinish, notes,
+                        rowDescriptions, rowThicknesses, rowWidths, rowLengths, rowPieceCounts, rowQuantities,
+                        rowSurfaceFinishes, rowEdgeFinishes
                 );
                 BigDecimal totalM2 = items.stream().map(i -> i.getQuantity() != null ? i.getQuantity() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
                 redirectAttributes.addFlashAttribute("successMessage", items.size() + " grup ebatlı ürün (" + totalM2 + " m²) başarıyla Ebatlı Stok Sahasına eklendi.");
@@ -429,7 +437,7 @@ public class FactoryOperationController extends AbstractController {
             }
 
             StockItem item = factoryStockService.createSizedItem(
-                    blockId, description, thicknessCm, widthCm, lengthCm, quantity, pieceCount,
+                    blockId, slabId, description, thicknessCm, widthCm, lengthCm, quantity, pieceCount,
                     actualProducedQuantity, customerId, qualityGrade, surfaceFinish, edgeFinish, notes
             );
             redirectAttributes.addFlashAttribute("successMessage", "Ebatlı ürün (" + item.getItemCode() + ") Ebatlı Stok Sahasına eklendi.");
@@ -470,5 +478,141 @@ public class FactoryOperationController extends AbstractController {
         model.addAttribute("activeSubSection", "orders");
 
         return "operations/factory/orders";
+    }
+
+    // --- 5. FABRİKA MAZOT DEPOSU & ARAÇ TAKİBİ (MADDE 15) ---
+    @GetMapping("/fuel")
+    public String factoryFuelIndex(Model model) {
+        StockItem tank = factoryInventoryService.getOrCreateFactoryFuelTankStockItem();
+        BigDecimal currentLiters = tank.getQuantity() != null ? tank.getQuantity() : BigDecimal.ZERO;
+        List<Machine> vehicles = factoryInventoryService.getFactoryVehicles();
+        List<MachineFuelEntry> entries = factoryInventoryService.getRecentFuelEntries();
+
+        model.addAttribute("tank", tank);
+        model.addAttribute("currentLiters", currentLiters);
+        model.addAttribute("vehicles", vehicles);
+        model.addAttribute("entries", entries);
+        model.addAttribute("activeSection", "factory");
+        model.addAttribute("activeSubSection", "fuel");
+        return "operations/factory/fuel";
+    }
+
+    @PostMapping("/fuel/dispense")
+    public String dispenseFactoryFuel(@RequestParam("machineId") Long machineId,
+                                      @RequestParam("litres") BigDecimal litres,
+                                      @RequestParam(value = "workingHoursOrKm", required = false) BigDecimal workingHoursOrKm,
+                                      @RequestParam(value = "receiptNo", required = false) String receiptNo,
+                                      @RequestParam(value = "issuedBy", required = false) String issuedBy,
+                                      @RequestParam(value = "receivedBy", required = false) String receivedBy,
+                                      @RequestParam(value = "notes", required = false) String notes,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            MachineFuelEntry entry = factoryInventoryService.dispenseFuel(
+                    machineId, litres, java.time.LocalDate.now(), workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    String.format("%s aracına %s litre mazot verildi. Tutar (KDV hariç net): %s TL fabrika giderine yazıldı.",
+                            entry.getMachine().getName(), litres, entry.getTotalAmount()));
+        } catch (Exception e) {
+            log.error("Fabrika mazot çıkış hatası: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/operations/factory/fuel";
+    }
+
+    @PostMapping("/fuel/add")
+    public String addFactoryFuelStock(@RequestParam("litres") BigDecimal litres,
+                                      @RequestParam(value = "netUnitPrice", required = false) BigDecimal netUnitPrice,
+                                      @RequestParam(value = "invoiceNo", required = false) String invoiceNo,
+                                      @RequestParam(value = "notes", required = false) String notes,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            StockItem updated = factoryInventoryService.addFuelStock(litres, netUnitPrice, null,
+                    notes != null ? notes : (invoiceNo != null ? "Fatura: " + invoiceNo : "Doğrudan Depo Girişi"));
+            redirectAttributes.addFlashAttribute("successMessage",
+                    String.format("%s litre mazot fabrika deposuna eklendi. Güncel stok: %s litre.", litres, updated.getQuantity()));
+        } catch (Exception e) {
+            log.error("Fabrika mazot dolum hatası: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/operations/factory/fuel";
+    }
+
+    // --- 6. FABRİKA SARF MALZEME DEPOSU (MADDE 16) ---
+    @GetMapping("/consumables")
+    public String factoryConsumablesIndex(Model model) {
+        List<StockItem> consumables = factoryInventoryService.getAllFactoryConsumables();
+        List<Machine> vehicles = factoryInventoryService.getFactoryVehicles();
+
+        BigDecimal totalValue = consumables.stream()
+                .filter(item -> item.getQuantity() != null && item.getUnitPrice() != null)
+                .map(item -> item.getQuantity().multiply(item.getUnitPrice()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        model.addAttribute("consumables", consumables);
+        model.addAttribute("totalValue", totalValue);
+        model.addAttribute("vehicles", vehicles);
+        model.addAttribute("activeSection", "factory");
+        model.addAttribute("activeSubSection", "consumables");
+        return "operations/factory/consumables";
+    }
+
+    @PostMapping("/consumables/consume")
+    public String consumeFactoryConsumable(@RequestParam("stockItemId") Long stockItemId,
+                                           @RequestParam("quantity") BigDecimal quantity,
+                                           @RequestParam(value = "machineId", required = false) Long machineId,
+                                           @RequestParam(value = "notes", required = false) String notes,
+                                           RedirectAttributes redirectAttributes) {
+        try {
+            StockItem item = factoryInventoryService.consumeConsumable(stockItemId, quantity, machineId, notes);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    String.format("%s malzemesinden %s %s kullanıldı ve fabrikanın giderine yazıldı. Kalan stok: %s %s.",
+                            item.getDescription(), quantity, item.getUnit(), item.getQuantity(), item.getUnit()));
+        } catch (Exception e) {
+            log.error("Fabrika sarf malzeme tüketim hatası: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/operations/factory/consumables";
+    }
+
+    @PostMapping("/consumables/add")
+    public String addFactoryConsumableStock(@RequestParam(value = "itemCode", required = false) String itemCode,
+                                            @RequestParam("description") String description,
+                                            @RequestParam("quantity") BigDecimal quantity,
+                                            @RequestParam(value = "unit", defaultValue = "adet") String unit,
+                                            @RequestParam(value = "netUnitPrice", required = false) BigDecimal netUnitPrice,
+                                            @RequestParam(value = "notes", required = false) String notes,
+                                            RedirectAttributes redirectAttributes) {
+        try {
+            StockItem item = factoryInventoryService.createStockCard(
+                    description, unit, quantity, netUnitPrice, itemCode, notes);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    String.format("%s (%s %s) fabrika stok kartı ve depo girişi kaydedildi.",
+                            item.getDescription(), quantity, item.getUnit()));
+        } catch (Exception e) {
+            log.error("Fabrika stok ekleme hatası: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/operations/factory/consumables";
+    }
+
+    @PostMapping("/stock-cards/new")
+    public String createFactoryStockCard(@RequestParam("description") String description,
+                                         @RequestParam(value = "unit", defaultValue = "adet") String unit,
+                                         @RequestParam(value = "initialQuantity", required = false) BigDecimal initialQuantity,
+                                         @RequestParam(value = "netUnitPrice", required = false) BigDecimal netUnitPrice,
+                                         @RequestParam(value = "itemCode", required = false) String itemCode,
+                                         @RequestParam(value = "notes", required = false) String notes,
+                                         RedirectAttributes redirectAttributes) {
+        try {
+            StockItem item = factoryInventoryService.createStockCard(
+                    description, unit, initialQuantity, netUnitPrice, itemCode, notes);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    String.format("Yeni fabrika stok kartı (%s - %s) başarıyla tanımlandı.",
+                            item.getItemCode(), item.getDescription()));
+        } catch (Exception e) {
+            log.error("Fabrika stok kartı oluşturma hatası: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/operations/factory/consumables";
     }
 }

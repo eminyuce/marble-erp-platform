@@ -79,7 +79,7 @@
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="factory" aria-hidden="true"></i></span>
                             <h3 class="admin-mega-card-title">Operasyon</h3>
-                            <span class="admin-mega-count">3</span>
+                            <span class="admin-mega-count">5</span>
                         </header>
                         <div class="admin-mega-card-body">
                             <a class="admin-mega-item" th:href="@{/blocks}" data-search="ocaklar ocak blok takibi üretim sahası stok tonaj tahmini gerçek sevkiyat"
@@ -96,6 +96,16 @@
                                data-search="atölye ebatlama siparişler iş emri plaka nesting" title="Atölye">
                                 <i data-lucide="hammer" aria-hidden="true"></i>
                                 <span>Atölye</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/operations/factory/fuel}"
+                               data-search="fabrika mazot deposu yakıt forklift tır araç" title="Fabrika Mazot Deposu">
+                                <i data-lucide="fuel" aria-hidden="true"></i>
+                                <span>Fabrika Mazot Deposu</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/operations/factory/consumables}"
+                               data-search="fabrika sarf malzeme deposu ambar gider" title="Fabrika Sarf Deposu">
+                                <i data-lucide="wrench" aria-hidden="true"></i>
+                                <span>Fabrika Sarf Deposu</span>
                             </a>
                         </div>
                     </section>
@@ -192,54 +202,68 @@
                                 <i data-lucide="list-ordered" aria-hidden="true"></i>
                                 <span>Tüm İş Emirleri</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/work-orders/create}" data-search="yeni iş emri sipariş oluştur taş yüzey kenar"
-                               title="Yeni İş Emri Oluştur">
-                                <i data-lucide="plus" aria-hidden="true"></i>
-                                <span>Yeni İş Emri Oluştur</span>
-                            </a>
-                            <a class="admin-mega-item" th:href="@{/operations/factory/orders}" data-search="fabrika siparişleri iş emirleri"
-                               title="Fabrika Siparişleri">
+                            <a class="admin-mega-item" th:href="@{/work-orders/create(department='FACTORY')}" data-search="fabrika sipariş oluştur iş emri üretim kesim"
+                               title="Fabrika Siparişi Oluştur">
                                 <i data-lucide="factory" aria-hidden="true"></i>
-                                <span>Fabrika Siparişleri</span>
+                                <span>Fabrika Siparişi Oluştur</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/work-orders/create(department='WORKSHOP')}" data-search="atölye sipariş oluştur iş emri ebatlama"
+                               title="Atölye Siparişi Oluştur">
+                                <i data-lucide="hammer" aria-hidden="true"></i>
+                                <span>Atölye Siparişi Oluştur</span>
                             </a>
                         </div>
                     </section>
 
                     <section class="admin-mega-card admin-mega-card--sales" data-mega-group="projects">
                         <header class="admin-mega-card-head">
-                            <span class="admin-mega-card-icon"><i data-lucide="building-2"
-                                                                  aria-hidden="true"></i></span>
-                            <h3 class="admin-mega-card-title">Şantiye ve maliyet</h3>
-                            <span class="admin-mega-count">6</span>
+                            <span class="admin-mega-card-icon"><i data-lucide="building-2" aria-hidden="true"></i></span>
+                            <h3 class="admin-mega-card-title">Şantiyeler</h3>
+                            <span class="admin-mega-count">3</span>
                         </header>
                         <div class="admin-mega-card-body">
                             <a class="admin-mega-item" th:href="@{/projects}"
-                               data-search="şantiye proje wbs mahal müşteri" title="Şantiyeler">
+                               data-search="şantiye proje wbs mahal müşteri" title="Tüm Şantiyeler">
                                 <i data-lucide="map-pin" aria-hidden="true"></i>
-                                <span>Şantiyeler</span>
+                                <span>Tüm Şantiyeler</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/sales}" data-search="satış sipariş müşteri fatura"
-                               title="Satışlar">
-                                <i data-lucide="shopping-cart" aria-hidden="true"></i>
-                                <span>Satışlar</span>
-                            </a>
-                            <a class="admin-mega-item" th:href="@{/procurement}"
-                               data-search="satın alma tedarik sipariş malzeme" title="Satın Alma">
+                            <a class="admin-mega-item" th:href="@{/procurement(department='PROJECT')}"
+                               data-search="şantiye tedarik satın alma malzeme tedariği" title="Şantiye Tedariği & Satın Alma">
                                 <i data-lucide="truck" aria-hidden="true"></i>
-                                <span>Satın Alma</span>
+                                <span>Şantiye Tedariği & Satın Alma</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/expenses}"
-                               data-search="expenses expense gider giderler masraf harcama satın alma maliyet ocak fabrika atölye şantiye fatura"
-                               title="Giderler ve Satın Alma">
-                                <i data-lucide="receipt" aria-hidden="true"></i>
-                                <span>Giderler ve Satın Alma</span>
+                            <a class="admin-mega-item" th:href="@{/sales}" data-search="şantiye satış müşteri sözleşme fatura"
+                               title="Şantiye Satışları">
+                                <i data-lucide="shopping-cart" aria-hidden="true"></i>
+                                <span>Şantiye Satışları</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/costs}" data-search="maliyet analizi ocak fabrika atölye şantiye"
+                        </div>
+                    </section>
+
+                    <section class="admin-mega-card admin-mega-card--sales" data-mega-group="costs">
+                        <header class="admin-mega-card-head">
+                            <span class="admin-mega-card-icon"><i data-lucide="calculator" aria-hidden="true"></i></span>
+                            <h3 class="admin-mega-card-title">Maliyet Yönetimi</h3>
+                            <span class="admin-mega-count">4</span>
+                        </header>
+                        <div class="admin-mega-card-body">
+                            <a class="admin-mega-item" th:href="@{/costs}" data-search="maliyet analizi ocak fabrika atölye şantiye birim maliyet kar zarar"
                                title="Maliyet Analizi">
-                                <i data-lucide="calculator" aria-hidden="true"></i>
+                                <i data-lucide="pie-chart" aria-hidden="true"></i>
                                 <span>Maliyet Analizi</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/reports}" data-search="rapor excel csv dışa aktarma"
+                            <a class="admin-mega-item" th:href="@{/expenses}"
+                               data-search="expenses expense gider giderler masraf harcama satın alma fatura"
+                               title="Giderler & Masraflar">
+                                <i data-lucide="receipt" aria-hidden="true"></i>
+                                <span>Giderler & Masraflar</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/procurement}"
+                               data-search="satın alma tedarik sipariş malzeme" title="Tüm Satın Alma">
+                                <i data-lucide="shopping-bag" aria-hidden="true"></i>
+                                <span>Tüm Satın Alma</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/reports}" data-search="rapor excel csv dışa aktarma maliyet raporları"
                                title="Rapor Merkezi">
                                 <i data-lucide="file-spreadsheet" aria-hidden="true"></i>
                                 <span>Rapor Merkezi</span>

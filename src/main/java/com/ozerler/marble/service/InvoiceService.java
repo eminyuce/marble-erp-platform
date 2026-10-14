@@ -40,6 +40,7 @@ public class InvoiceService {
     private final CostCenterRepository costCenterRepository;
     private final StockMovementRepository stockMovementRepository;
     private final QuarryInventoryService quarryInventoryService;
+    private final FactoryInventoryService factoryInventoryService;
     private final BlockCustomerMarkRepository blockCustomerMarkRepository;
 
     public record InvoiceItemForm(String productName, String description, BigDecimal quantity, String unit,
@@ -501,6 +502,19 @@ public class InvoiceService {
                             quarryInventoryService.addConsumableStock(null, item.getProductName(), item.getQuantity(), item.getUnit(), item.getUnitPrice(), saved, saved.getNotes());
                         }
                     }
+                } else if (department == BusinessUnit.FACTORY) {
+                    for (InvoiceItem item : saved.getItems()) {
+                        String pName = item.getProductName() != null ? item.getProductName().toLowerCase() : "";
+                        String unit = item.getUnit() != null ? item.getUnit().toLowerCase() : "";
+                        boolean isFuel = (saved.getQuarryCategory() == QuarryCategory.MAZOT)
+                                || (item.getStockItem() != null && (item.getStockItem().getQuarryCategory() == QuarryCategory.MAZOT || item.getStockItem().getProductType() == StockProductType.FUEL))
+                                || pName.contains("mazot") || pName.contains("dizel") || pName.contains("diesel") || unit.contains("lt") || unit.contains("litre");
+                        if (isFuel) {
+                            factoryInventoryService.addFuelStock(item.getQuantity(), item.getUnitPrice(), saved, saved.getNotes());
+                        } else {
+                            factoryInventoryService.addConsumableStock(null, item.getProductName(), item.getQuantity(), item.getUnit(), item.getUnitPrice(), saved, saved.getNotes());
+                        }
+                    }
                 }
             }
         }
@@ -632,7 +646,9 @@ public class InvoiceService {
                         String pName = item.getProductName() != null ? item.getProductName().toLowerCase() : "";
                         boolean isFuel = pName.contains("mazot") || pName.contains("dizel") || pName.contains("diesel");
                         if (isFuel) {
-                            StockItem tank = quarryInventoryService.getOrCreateFuelTankStockItem();
+                            StockItem tank = invoice.getDepartment() == BusinessUnit.FACTORY
+                                    ? factoryInventoryService.getOrCreateFactoryFuelTankStockItem()
+                                    : quarryInventoryService.getOrCreateFuelTankStockItem();
                             BigDecimal cur = tank.getQuantity() != null ? tank.getQuantity() : BigDecimal.ZERO;
                             tank.setQuantity(cur.compareTo(item.getQuantity()) >= 0 ? cur.subtract(item.getQuantity()) : BigDecimal.ZERO);
                             stockItemRepository.save(tank);

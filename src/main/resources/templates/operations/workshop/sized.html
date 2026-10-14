@@ -8,22 +8,45 @@
 <div layout:fragment="content" class="erp-list-page space-y-5"
      th:data-initial-customer-id="${selectedCustomerId != null ? selectedCustomerId : ''}"
      th:data-initial-general-stock="${generalStockOnly ? 'true' : ''}"
+     th:data-initial-customer-only="${customerOnly ? 'true' : ''}"
      x-data="{
         selectedCustomerId: $el.dataset.initialCustomerId || '',
         generalStockFilter: $el.dataset.initialGeneralStock || '',
+        customerOnlyFilter: $el.dataset.initialCustomerOnly || '',
+        resetFilters() {
+            this.selectedCustomerId = '';
+            this.generalStockFilter = '';
+            this.customerOnlyFilter = '';
+            if (typeof reloadWorkshopSizedGrid === 'function') reloadWorkshopSizedGrid();
+        },
         setGeneralStock(val) {
             this.generalStockFilter = val;
+            if (val === 'true') {
+                this.customerOnlyFilter = '';
+                this.selectedCustomerId = '';
+            }
+            if (typeof reloadWorkshopSizedGrid === 'function') reloadWorkshopSizedGrid();
+        },
+        setCustomerOnly(val) {
+            this.customerOnlyFilter = val;
+            if (val === 'true') {
+                this.generalStockFilter = '';
+            }
             if (typeof reloadWorkshopSizedGrid === 'function') reloadWorkshopSizedGrid();
         },
         onCustomerChange(val) {
             this.selectedCustomerId = val;
-            if (val) this.generalStockFilter = '';
+            if (val) {
+                this.generalStockFilter = '';
+                this.customerOnlyFilter = '';
+            }
             if (typeof reloadWorkshopSizedGrid === 'function') reloadWorkshopSizedGrid();
         },
         gridExtraQuery() {
             let q = '';
             if (this.selectedCustomerId) q += '&customerId=' + encodeURIComponent(this.selectedCustomerId);
             if (this.generalStockFilter === 'true') q += '&generalStockOnly=true';
+            if (this.customerOnlyFilter === 'true') q += '&customerOnly=true';
             return q;
         }
      }"
@@ -76,8 +99,8 @@
     <!-- KPI Summary Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="generalStockFilter === '' && selectedCustomerId === '' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
-                @click="selectedCustomerId = ''; setGeneralStock('')">
+                :class="generalStockFilter === '' && customerOnlyFilter === '' && selectedCustomerId === '' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="resetFilters()">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Tüm Ebatlı Ürünler</div>
             <div class="text-lg font-black text-slate-900 mt-1">
                 <span th:text="${totalItemsCount != null ? totalItemsCount : 0}">0</span> kalem
@@ -87,7 +110,7 @@
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
                 :class="generalStockFilter === 'true' ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
-                @click="selectedCustomerId = ''; setGeneralStock('true')">
+                @click="setGeneralStock('true')">
             <div class="text-[11px] uppercase tracking-wide text-blue-600 font-semibold flex items-center gap-1">
                 <i data-lucide="globe" class="w-3.5 h-3.5"></i> Genel Stok (Serbest)
             </div>
@@ -96,8 +119,8 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="selectedCustomerId !== '' ? 'erp-summary-card--active ring-2 ring-indigo-500' : ''"
-                @click="if (customers &amp;&amp; customers.length &gt; 0) { selectedCustomerId = customers[0].id; onCustomerChange(selectedCustomerId); }">
+                :class="customerOnlyFilter === 'true' || selectedCustomerId !== '' ? 'erp-summary-card--active ring-2 ring-indigo-500' : ''"
+                @click="setCustomerOnly('true')">
             <div class="text-[11px] uppercase tracking-wide text-indigo-600 font-semibold flex items-center gap-1">
                 <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Proje / Müşteri Bağlantılı
             </div>
@@ -110,13 +133,19 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div class="erp-yard-filters">
             <button type="button" class="erp-yard-chip"
-                    :class="generalStockFilter === '' && selectedCustomerId === '' ? 'erp-yard-chip--active' : ''"
-                    @click="selectedCustomerId = ''; setGeneralStock('')">Tüm Ürünler</button>
+                    :class="generalStockFilter === '' && customerOnlyFilter === '' && selectedCustomerId === '' ? 'erp-yard-chip--active' : ''"
+                    @click="resetFilters()">Tüm Ürünler</button>
             <button type="button" class="erp-yard-chip"
                     :class="generalStockFilter === 'true' ? 'erp-yard-chip--active' : ''"
-                    @click="selectedCustomerId = ''; setGeneralStock('true')">
+                    @click="setGeneralStock('true')">
                 <i data-lucide="globe" class="w-3.5 h-3.5 inline mr-1"></i>
                 Genel Stok
+            </button>
+            <button type="button" class="erp-yard-chip"
+                    :class="customerOnlyFilter === 'true' ? 'erp-yard-chip--active' : ''"
+                    @click="setCustomerOnly('true')">
+                <i data-lucide="user-check" class="w-3.5 h-3.5 inline mr-1"></i>
+                Müşteri / Proje Rezerve
             </button>
         </div>
 

@@ -7,6 +7,8 @@ public enum StockLocationType {
     DISPATCH_YARD("enum.stock_location_type.dispatch_yard", BusinessUnit.QUARRY),
     QUARRY_FUEL_TANK("enum.stock_location_type.quarry_fuel_tank", BusinessUnit.QUARRY),
     QUARRY_CONSUMABLES_WAREHOUSE("enum.stock_location_type.quarry_consumables_warehouse", BusinessUnit.QUARRY),
+    FACTORY_FUEL_TANK("enum.stock_location_type.factory_fuel_tank", BusinessUnit.FACTORY),
+    FACTORY_CONSUMABLES_WAREHOUSE("enum.stock_location_type.factory_consumables_warehouse", BusinessUnit.FACTORY),
     FACTORY_BLOCK_YARD("enum.stock_location_type.factory_block_yard", BusinessUnit.FACTORY),
     SLAB_STOCK_YARD("enum.stock_location_type.slab_stock_yard", BusinessUnit.FACTORY),
     SIZED_STOCK_YARD("enum.stock_location_type.sized_stock_yard", BusinessUnit.FACTORY),

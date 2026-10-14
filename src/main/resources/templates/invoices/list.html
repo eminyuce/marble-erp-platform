@@ -251,32 +251,54 @@
                             return `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
                                 ${gridText(label)}
                             </span>`;
+                        },
+                        bottomCalc: function() { return "TOPLAM:"; },
+                        bottomCalcFormatter: function() {
+                            return `<span class="font-bold text-slate-700 text-xs uppercase tracking-wider">TOPLAM:</span>`;
                         }
                     },
                     {
                         title: "Ara Toplam",
                         field: "subtotalAmount",
                         width: 130,
+                        headerHozAlign: "right",
+                        hozAlign: "right",
                         formatter: function (cell) {
                             return `<span class="font-mono text-slate-700 text-xs">${gridMoney(cell.getValue())}</span>`;
+                        },
+                        bottomCalc: "sum",
+                        bottomCalcFormatter: function (cell) {
+                            return `<span class="font-mono font-bold text-slate-900 text-xs">${gridMoney(cell.getValue())}</span>`;
                         }
                     },
                     {
                         title: "KDV",
                         field: "taxAmount",
                         width: 110,
+                        headerHozAlign: "right",
+                        hozAlign: "right",
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
                             const rate = row.taxRate != null ? row.taxRate : 20;
                             return `<span class="font-mono text-slate-600 text-xs">${gridMoney(cell.getValue())} <span class="text-[10px] text-slate-400">(%${rate})</span></span>`;
+                        },
+                        bottomCalc: "sum",
+                        bottomCalcFormatter: function (cell) {
+                            return `<span class="font-mono font-bold text-slate-800 text-xs">${gridMoney(cell.getValue())}</span>`;
                         }
                     },
                     {
                         title: "Genel Toplam",
                         field: "totalAmount",
                         width: 140,
+                        headerHozAlign: "right",
+                        hozAlign: "right",
                         formatter: function (cell) {
                             return `<strong class="font-mono text-emerald-700 text-sm">${gridMoney(cell.getValue())}</strong>`;
+                        },
+                        bottomCalc: "sum",
+                        bottomCalcFormatter: function (cell) {
+                            return `<strong class="font-mono font-black text-emerald-800 text-sm bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block">${gridMoney(cell.getValue())}</strong>`;
                         }
                     },
                     {

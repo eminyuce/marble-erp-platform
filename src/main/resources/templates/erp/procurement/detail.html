@@ -37,14 +37,26 @@
         </div>
     </div>
 
-    <!-- Confirm button -->
-    <div th:if="${order.status.name() == 'DRAFT'}" class="flex items-center gap-2">
-        <form th:action="@{'/procurement/' + ${order.id} + '/confirm'}" method="post" style="display:inline">
+    <!-- Action buttons (Onayla, Teslim Al, Faturalaştır) -->
+    <div class="flex flex-wrap items-center gap-2">
+        <form th:if="${order.status.name() == 'DRAFT'}" th:action="@{'/procurement/' + ${order.id} + '/confirm'}" method="post" style="display:inline">
             <button type="submit"
-                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm">
-                <i data-lucide="check" class="w-4 h-4 inline-block mr-1"></i> Siparişi Onayla
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5">
+                <i data-lucide="check" class="w-4 h-4"></i> Siparişi Onayla
             </button>
         </form>
+
+        <form th:if="${order.status.name() == 'SENT' or order.status.name() == 'CONFIRMED'}" th:action="@{'/procurement/' + ${order.id} + '/deliver'}" method="post" style="display:inline">
+            <button type="submit"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5">
+                <i data-lucide="package-check" class="w-4 h-4"></i> Sipariş Geldi / Teslim Al
+            </button>
+        </form>
+
+        <a th:href="@{/invoices/new(type='PURCHASE', purchaseOrderId=${order.id})}"
+           class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5">
+            <i data-lucide="receipt" class="w-4 h-4"></i> Faturalaştır
+        </a>
     </div>
 
     <!-- Kalem Listesi -->

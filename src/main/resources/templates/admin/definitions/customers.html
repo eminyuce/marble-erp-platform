@@ -200,11 +200,19 @@
                         }
                     },
                     {
-                        title: "Vergi Dairesi / No",
-                        minWidth: 160,
+                        title: "Bakiye",
+                        field: "balance",
+                        width: 140,
+                        headerHozAlign: "right",
+                        hozAlign: "right",
                         formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<span class="font-mono text-slate-600">${gridText(row.taxOffice)} / ${gridText(row.taxNumber)}</span>`;
+                            const val = cell.getValue() != null ? Number(cell.getValue()) : 0;
+                            if (val > 0.009) {
+                                return `<span class="font-mono font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">${gridMoney(val)} (B)</span>`;
+                            } else if (val < -0.009) {
+                                return `<span class="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${gridMoney(Math.abs(val))} (A)</span>`;
+                            }
+                            return `<span class="font-mono text-slate-400">0,00 TL</span>`;
                         }
                     },
                     {

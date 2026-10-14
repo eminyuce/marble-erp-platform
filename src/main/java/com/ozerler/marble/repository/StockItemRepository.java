@@ -74,6 +74,40 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
                                @Param("search") String search,
                                Pageable pageable);
 
+    @EntityGraph(attributePaths = {"customer", "sourceBlock", "stockLocation"})
+    @Query(value = "SELECT s FROM StockItem s " +
+           "LEFT JOIN s.customer c " +
+           "LEFT JOIN s.sourceBlock b " +
+           "LEFT JOIN s.stockLocation l " +
+           "WHERE (:productType IS NULL OR s.productType = :productType) " +
+           "AND (:status IS NULL OR s.status = :status) " +
+           "AND (:customerId IS NULL OR c.id = :customerId) " +
+           "AND (:generalStockOnly = false OR s.customer IS NULL) " +
+           "AND (:customerOnly = false OR s.customer IS NOT NULL) " +
+           "AND (:search IS NULL OR :search = '' " +
+           "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "ORDER BY s.id DESC",
+           countQuery = "SELECT COUNT(s) FROM StockItem s " +
+           "LEFT JOIN s.customer c " +
+           "WHERE (:productType IS NULL OR s.productType = :productType) " +
+           "AND (:status IS NULL OR s.status = :status) " +
+           "AND (:customerId IS NULL OR c.id = :customerId) " +
+           "AND (:generalStockOnly = false OR s.customer IS NULL) " +
+           "AND (:customerOnly = false OR s.customer IS NOT NULL) " +
+           "AND (:search IS NULL OR :search = '' " +
+           "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<StockItem> searchItemsDetailed(@Param("productType") StockProductType productType,
+                                       @Param("status") String status,
+                                       @Param("customerId") Long customerId,
+                                       @Param("generalStockOnly") boolean generalStockOnly,
+                                       @Param("customerOnly") boolean customerOnly,
+                                       @Param("search") String search,
+                                       Pageable pageable);
+
     @Query("SELECT COUNT(s) FROM StockItem s WHERE s.productType = :productType AND s.status = 'AVAILABLE'")
     long countAvailableByProductType(@Param("productType") StockProductType productType);
 

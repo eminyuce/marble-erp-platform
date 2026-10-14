@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.MachineFuelEntry;
 import com.ozerler.marble.model.enums.BusinessUnit;
@@ -55,14 +56,28 @@ public class MachineFuelService {
         entry.calculateTotal();
         MachineFuelEntry saved = fuelEntryRepository.save(entry);
 
-        costCenterRepository.findByCode("CC-001").ifPresent(center -> expenseService.recordExpense(
-                new ExpenseService.ExpenseDraft(
-                        center.getId(), ExpenseType.DIESEL, null, machine.getBusinessUnit(), saved.getTotalAmount(),
-                        "TRY", receiptNo, entry.getEntryDate(), entry.getEntryDate(),
-                        YearMonth.from(entry.getEntryDate()).toString(),
-                        YearMonth.now().toString(),
-                        null, null, null, null, machine, null, null, machine.getCode(),
-                        "Mazot: " + machine.getName() + " / " + litres + " L (" + (workingHoursOrKm != null ? workingHoursOrKm + " saat/km" : "Saat belirtilmedi") + ")")));
+        CostCenter center = null;
+        if (machine.getBusinessUnit() == BusinessUnit.FACTORY) {
+            center = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.FACTORY)
+                    .or(() -> costCenterRepository.findByCode("CC-002"))
+                    .orElse(null);
+        } else {
+            center = costCenterRepository.findByCode("CC-001")
+                    .or(() -> costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.QUARRY))
+                    .orElse(null);
+        }
+
+        if (center != null) {
+            CostCenter finalCenter = center;
+            expenseService.recordExpense(
+                    new ExpenseService.ExpenseDraft(
+                            finalCenter.getId(), ExpenseType.DIESEL, null, machine.getBusinessUnit(), saved.getTotalAmount(),
+                            "TRY", receiptNo, entry.getEntryDate(), entry.getEntryDate(),
+                            YearMonth.from(entry.getEntryDate()).toString(),
+                            YearMonth.now().toString(),
+                            null, null, null, null, machine, null, null, machine.getCode(),
+                            "Mazot: " + machine.getName() + " / " + litres + " L (" + (workingHoursOrKm != null ? workingHoursOrKm + " saat/km" : "Saat belirtilmedi") + ")"));
+        }
         return saved;
     }
 
@@ -100,6 +115,7 @@ public class MachineFuelService {
     public List<Machine> quarryAndFactoryMachines() {
         return machineRepository.findAll().stream()
                 .filter(m -> m.isActive() && (m.getBusinessUnit() == BusinessUnit.QUARRY || m.getBusinessUnit() == BusinessUnit.FACTORY))
+                .filter(m -> m.getMachineType() == null || !m.getMachineType().isElectric())
                 .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
                 .toList();
     }

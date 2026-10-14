@@ -226,9 +226,9 @@ public class FactoryStockService {
     // --- 3. FABRİKA EBATLI STOK SAHASI ---
 
     @Transactional(readOnly = true)
-    public Page<StockItem> getSizedStockItemsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+    public Page<StockItem> getSizedStockItemsPaged(Long customerId, boolean generalStockOnly, boolean customerOnly, String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        Page<StockItem> items = stockItemRepository.searchItems(StockProductType.SIZED, null, customerId, generalStockOnly, search, pageable);
+        Page<StockItem> items = stockItemRepository.searchItemsDetailed(StockProductType.SIZED, null, customerId, generalStockOnly, customerOnly, search, pageable);
         if (items.hasContent()) {
             items.getContent().forEach(it -> {
                 if (it.getSourceBlock() != null) {
@@ -245,14 +245,35 @@ public class FactoryStockService {
         return items;
     }
 
+    @Transactional(readOnly = true)
+    public Page<StockItem> getSizedStockItemsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+        return getSizedStockItemsPaged(customerId, generalStockOnly, false, search, page, size);
+    }
+
     @Transactional
     public StockItem createSizedItem(Long blockId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
                                      BigDecimal lengthCm, BigDecimal quantity, int pieceCount,
                                      BigDecimal actualProducedQuantity, Long customerId, String qualityGradeStr,
                                      String surfaceFinishStr, String edgeFinish, String notes) {
+        return createSizedItem(blockId, null, description, thicknessCm, widthCm, lengthCm, quantity, pieceCount,
+                actualProducedQuantity, customerId, qualityGradeStr, surfaceFinishStr, edgeFinish, notes);
+    }
+
+    @Transactional
+    public StockItem createSizedItem(Long blockId, Long slabId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
+                                     BigDecimal lengthCm, BigDecimal quantity, int pieceCount,
+                                     BigDecimal actualProducedQuantity, Long customerId, String qualityGradeStr,
+                                     String surfaceFinishStr, String edgeFinish, String notes) {
 
         Block block = blockId != null ? blockRepository.findById(blockId).orElse(null) : null;
+        Slab slab = slabId != null ? slabRepository.findById(slabId).orElse(null) : null;
+        if (block == null && slab != null && slab.getBlock() != null) {
+            block = slab.getBlock();
+        }
         Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
+        if (customer == null && slab != null && slab.getCustomer() != null) {
+            customer = slab.getCustomer();
+        }
 
         StockLocation sizedLoc = stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.SIZED_STOCK_YARD)
                 .orElseGet(() -> stockLocationRepository.save(StockLocation.builder()
@@ -283,11 +304,17 @@ public class FactoryStockService {
 
         BigDecimal actualProduced = actualProducedQuantity != null ? actualProducedQuantity.setScale(2, RoundingMode.HALF_UP) : qty;
 
+        String combinedNotes = notes;
+        if (slab != null) {
+            String slabInfo = "[Kaynak Plaka: " + slab.getSlabCode() + "]";
+            combinedNotes = (combinedNotes != null && !combinedNotes.isBlank()) ? combinedNotes + " " + slabInfo : slabInfo;
+        }
+
         StockItem item = StockItem.builder()
                 .itemCode(code)
                 .productType(StockProductType.SIZED)
                 .sourceBlock(block)
-                .stoneType(block != null ? block.getStoneType() : "Mermer")
+                .stoneType(block != null ? block.getStoneType() : (slab != null && slab.getBlock() != null ? slab.getBlock().getStoneType() : "Mermer"))
                 .description(description != null && !description.isBlank() ? description : "Ebatlı Mermer " + thick + "x" + w + "x" + l)
                 .thicknessCm(thick)
                 .widthCm(w)
@@ -303,7 +330,7 @@ public class FactoryStockService {
                 .edgeFinish(edgeFinish != null ? edgeFinish : "DUZ")
                 .status("AVAILABLE")
                 .productionDate(LocalDate.now())
-                .notes(notes)
+                .notes(combinedNotes)
                 .build();
 
         StockItem saved = stockItemRepository.save(item);
@@ -318,6 +345,18 @@ public class FactoryStockService {
                                                  List<String> descriptions, List<BigDecimal> thicknesses,
                                                  List<BigDecimal> widths, List<BigDecimal> lengths,
                                                  List<Integer> pieceCounts, List<BigDecimal> quantities) {
+        return createSizedItemsBatch(blockId, null, customerId, defaultDescription, qualityGradeStr, surfaceFinishStr,
+                edgeFinish, notes, descriptions, thicknesses, widths, lengths, pieceCounts, quantities, null, null);
+    }
+
+    @Transactional
+    public List<StockItem> createSizedItemsBatch(Long blockId, Long slabId, Long customerId, String defaultDescription,
+                                                 String qualityGradeStr, String surfaceFinishStr, String edgeFinish,
+                                                 String notes,
+                                                 List<String> descriptions, List<BigDecimal> thicknesses,
+                                                 List<BigDecimal> widths, List<BigDecimal> lengths,
+                                                 List<Integer> pieceCounts, List<BigDecimal> quantities,
+                                                 List<String> rowSurfaceFinishes, List<String> rowEdgeFinishes) {
         List<StockItem> created = new ArrayList<>();
         if (widths == null || widths.isEmpty()) return created;
 
@@ -334,7 +373,12 @@ public class FactoryStockService {
                     ? descriptions.get(i).trim()
                     : (defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Ebatlı Mermer " + t + "x" + w + "x" + l));
 
-            StockItem item = createSizedItem(blockId, desc, t, w, l, qty, count, qty, customerId, qualityGradeStr, surfaceFinishStr, edgeFinish, notes);
+            String rowSurface = (rowSurfaceFinishes != null && i < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(i) != null && !rowSurfaceFinishes.get(i).isBlank())
+                    ? rowSurfaceFinishes.get(i).trim() : surfaceFinishStr;
+            String rowEdge = (rowEdgeFinishes != null && i < rowEdgeFinishes.size() && rowEdgeFinishes.get(i) != null && !rowEdgeFinishes.get(i).isBlank())
+                    ? rowEdgeFinishes.get(i).trim() : edgeFinish;
+
+            StockItem item = createSizedItem(blockId, slabId, desc, t, w, l, qty, count, qty, customerId, qualityGradeStr, rowSurface, rowEdge, notes);
             created.add(item);
         }
         return created;
