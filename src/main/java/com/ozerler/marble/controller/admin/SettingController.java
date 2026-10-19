@@ -39,6 +39,7 @@ public class SettingController extends AbstractController {
     private final SettingService settingService;
     private final EmailService emailService;
     private final MessageSource messageSource;
+    private final com.ozerler.marble.service.DatabaseBackupService backupService;
 
     @GetMapping
     public String index(Model model) {
@@ -47,6 +48,8 @@ public class SettingController extends AbstractController {
 
         model.addAttribute("settings", settings);
         model.addAttribute("templates", templates);
+        model.addAttribute("backups", backupService.listBackups());
+        model.addAttribute("backupStatus", backupService.getStatus());
         model.addAttribute("currentSection", "settings");
         return "admin/settings/index";
     }

@@ -19,12 +19,18 @@ import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import com.ozerler.marble.dto.StoredObjectMetadata;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import jakarta.annotation.PostConstruct;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -174,6 +180,30 @@ public class S3ObjectStorageService implements ObjectStorageService {
     @Override
     public String getBucketName() {
         return storageProperties.getRustfs().getBucket();
+    }
+
+    @Override
+    public List<StoredObjectMetadata> listObjects(String prefix) {
+        String bucket = getBucketName();
+        List<StoredObjectMetadata> result = new ArrayList<>();
+        try {
+            ListObjectsV2Request.Builder reqBuilder = ListObjectsV2Request.builder().bucket(bucket);
+            if (prefix != null && !prefix.isBlank()) {
+                reqBuilder.prefix(prefix);
+            }
+            ListObjectsV2Response response = s3Client.listObjectsV2(reqBuilder.build());
+            for (S3Object s3Object : response.contents()) {
+                result.add(StoredObjectMetadata.builder()
+                        .key(s3Object.key())
+                        .sizeBytes(s3Object.size())
+                        .lastModified(s3Object.lastModified())
+                        .build());
+            }
+            return result;
+        } catch (S3Exception e) {
+            log.error("Object listing failed bucket={} prefix={}", bucket, prefix, e);
+            throw new StorageException("Unable to list stored objects", e);
+        }
     }
 
     private void createPrivateBucket(String bucket) {

@@ -100,6 +100,19 @@ app:
     migrate:
       enabled: ${STORAGE_MIGRATE_ENABLED:false}
       dry-run: ${STORAGE_MIGRATE_DRY_RUN:true}
+  backup:
+    enabled: true
+    temp-dir: ${APP_BACKUP_TEMP_DIR:/tmp/erp-backups}
+    rustfs:
+      prefix: ${BACKUP_PREFIX:backups/}
+      presigned-url-duration-minutes: ${BACKUP_PRESIGNED_MINUTES:30}
+    database:
+      pg-dump-path: ${PG_DUMP_PATH:pg_dump}
+      pg-restore-path: ${PG_RESTORE_PATH:psql}
+      allow-fallback-dump: ${BACKUP_ALLOW_FALLBACK:true}
+    retention:
+      retention-days: ${BACKUP_RETENTION_DAYS:10}
+      cleanup-cron: ${BACKUP_CLEANUP_CRON:0 0 3 * * ?}
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"

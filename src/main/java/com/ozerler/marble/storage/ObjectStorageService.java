@@ -26,4 +26,6 @@ public interface ObjectStorageService {
     DependencyHealth checkHealth();
 
     String getBucketName();
+
+    java.util.List<com.ozerler.marble.dto.StoredObjectMetadata> listObjects(String prefix);
 }

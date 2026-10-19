@@ -30,14 +30,14 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:24-jre-noble
 WORKDIR /app
 
-# Install curl for container health checks
-RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+# Install curl for container health checks and postgresql-client & gzip for database backups
+RUN apt-get update && apt-get install -y --no-install-recommends curl postgresql-client gzip ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # Create unprivileged user
 RUN useradd -m -u 1001 marbleuser && \
-    mkdir -p /app/uploads /app/media && \
-    chown -R marbleuser:marbleuser /app
+    mkdir -p /app/uploads /app/media /app/backups /tmp/erp-backups && \
+    chown -R marbleuser:marbleuser /app /tmp/erp-backups
 
 USER marbleuser
 

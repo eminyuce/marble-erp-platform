@@ -1,6 +1,7 @@
 package com.ozerler.marble.storage;
 
 import com.ozerler.marble.dto.DependencyHealth;
+import com.ozerler.marble.dto.StoredObjectMetadata;
 import com.ozerler.marble.exception.StorageException;
 import com.ozerler.marble.exception.StoredFileNotFoundException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,7 +40,7 @@ public class InMemoryObjectStorageService implements ObjectStorageService {
         validateObjectKey(objectKey);
         try {
             byte[] bytes = inputStream.readAllBytes();
-            objects.put(objectKey, new StoredObject(bytes, contentType));
+            objects.put(objectKey, new StoredObject(bytes, contentType, Instant.now()));
         } catch (Exception e) {
             throw new StorageException("Unable to store the uploaded file", e);
         }
@@ -84,12 +88,29 @@ public class InMemoryObjectStorageService implements ObjectStorageService {
         return BUCKET;
     }
 
+    @Override
+    public List<StoredObjectMetadata> listObjects(String prefix) {
+        List<StoredObjectMetadata> result = new ArrayList<>();
+        for (Map.Entry<String, StoredObject> entry : objects.entrySet()) {
+            String key = entry.getKey();
+            if (prefix == null || prefix.isBlank() || key.startsWith(prefix)) {
+                result.add(StoredObjectMetadata.builder()
+                        .key(key)
+                        .sizeBytes(entry.getValue().content().length)
+                        .lastModified(entry.getValue().createdAt())
+                        .contentType(entry.getValue().contentType())
+                        .build());
+            }
+        }
+        return result;
+    }
+
     private static void validateObjectKey(String objectKey) {
         if (objectKey == null || objectKey.isBlank() || objectKey.contains("..")) {
             throw new StorageException("Invalid object storage key");
         }
     }
 
-    private record StoredObject(byte[] content, String contentType) {
+    private record StoredObject(byte[] content, String contentType, Instant createdAt) {
     }
 }
