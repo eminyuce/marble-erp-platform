@@ -24,6 +24,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -42,13 +44,13 @@ public class SettingController extends AbstractController {
     private final com.ozerler.marble.service.DatabaseBackupService backupService;
 
     @GetMapping
-    public String index(Model model) {
+    public String index(Model model, HttpServletRequest request) {
         Map<String, String> settings = settingService.getAllSettingsAsMap();
         List<EmailTemplate> templates = emailService.getAllTemplates();
 
         model.addAttribute("settings", settings);
         model.addAttribute("templates", templates);
-        model.addAttribute("backups", backupService.listBackups());
+        model.addAttribute("backups", backupService.listBackups(request.getServerName()));
         model.addAttribute("backupStatus", backupService.getStatus());
         model.addAttribute("currentSection", "settings");
         return "admin/settings/index";

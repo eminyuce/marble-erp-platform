@@ -2,16 +2,27 @@ package com.ozerler.marble.controller.admin;
 
 import com.ozerler.marble.dto.BackupItemDto;
 import com.ozerler.marble.dto.BackupOperationStatus;
+import com.ozerler.marble.exception.StorageException;
+import com.ozerler.marble.exception.StoredFileNotFoundException;
 import com.ozerler.marble.service.DatabaseBackupService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/settings/backups")
@@ -29,8 +40,8 @@ public class BackupAdminController {
 
     @GetMapping("/api/list")
     @ResponseBody
-    public ResponseEntity<List<BackupItemDto>> getBackupsApi() {
-        return ResponseEntity.ok(backupService.listBackups());
+    public ResponseEntity<List<BackupItemDto>> getBackupsApi(HttpServletRequest request) {
+        return ResponseEntity.ok(backupService.listBackups(request.getServerName()));
     }
 
     @GetMapping("/api/status")
@@ -62,10 +73,54 @@ public class BackupAdminController {
         }
     }
 
-    @GetMapping("/download/{fileName}")
-    public String downloadBackup(@PathVariable String fileName) {
-        String downloadUrl = backupService.generatePresignedDownloadUrl(fileName);
-        return "redirect:" + downloadUrl;
+    @GetMapping("/download/{fileName:.+}")
+    public ResponseEntity<StreamingResponseBody> downloadBackup(@PathVariable String fileName, HttpServletRequest request) {
+        Optional<String> presigned = backupService.browserPresignedUrl(fileName, request.getServerName());
+        if (presigned.isPresent()) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.LOCATION, presigned.get())
+                    .cacheControl(CacheControl.noStore())
+                    .body(output -> output.flush());
+        }
+        DatabaseBackupService.BackupContent content = backupService.openDownload(fileName);
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(content.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, attachmentDisposition(content.fileName()))
+                .header("X-Content-Type-Options", "nosniff")
+                .cacheControl(CacheControl.noStore());
+        if (content.sizeBytes() >= 0) {
+            response.contentLength(content.sizeBytes());
+        }
+        return response.body(output -> backupService.writeBackup(content.body(), output, content.fileName()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> invalidBackupFileName(IllegalArgumentException ex) {
+        return jsonError(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(StoredFileNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> missingBackup(StoredFileNotFoundException ex) {
+        return jsonError(HttpStatus.NOT_FOUND, "Yedek dosyası bulunamadı.");
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<Map<String, Object>> backupStorageFailure(StorageException ex) {
+        log.error("Backup storage request failed: {}", ex.getMessage());
+        return jsonError(HttpStatus.BAD_GATEWAY, "Yedek deposuna erişilemedi. Lütfen tekrar deneyin.");
+    }
+
+    private static String attachmentDisposition(String fileName) {
+        return ContentDisposition.attachment()
+                .filename(fileName, StandardCharsets.UTF_8)
+                .build()
+                .toString();
+    }
+
+    private static ResponseEntity<Map<String, Object>> jsonError(HttpStatus status, String message) {
+        return ResponseEntity.status(status)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("success", false, "message", message));
     }
 
     @PostMapping("/restore")

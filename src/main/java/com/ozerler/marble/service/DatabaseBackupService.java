@@ -4,7 +4,10 @@ import com.ozerler.marble.config.BackupProperties;
 import com.ozerler.marble.dto.BackupItemDto;
 import com.ozerler.marble.dto.BackupOperationStatus;
 import com.ozerler.marble.dto.StoredObjectMetadata;
+import com.ozerler.marble.exception.StorageException;
+import com.ozerler.marble.exception.StoredFileNotFoundException;
 import com.ozerler.marble.storage.ObjectStorageService;
+import com.ozerler.marble.storage.RustFsBrowserAccess;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +22,7 @@ import software.amazon.awssdk.services.s3.model.*;
 import javax.sql.DataSource;
 import java.io.*;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +37,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -41,8 +46,13 @@ import java.util.zip.GZIPOutputStream;
 @RequiredArgsConstructor
 public class DatabaseBackupService {
 
+    private static final Pattern SAFE_BACKUP_FILE_NAME =
+            Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,180}\\.sql\\.gz");
+    private static final String BACKUP_CONTENT_TYPE = "application/gzip";
+
     private final ObjectStorageService objectStorageService;
     private final BackupProperties properties;
+    private final RustFsBrowserAccess browserAccess;
 
     @Autowired(required = false)
     private S3Client s3Client;
@@ -181,11 +191,14 @@ public class DatabaseBackupService {
     // 2. YEDEKLERİ LİSTELEME
     // ─────────────────────────────────────────────────────────────
     public List<BackupItemDto> listBackups() {
+        return listBackups(null);
+    }
+
+    public List<BackupItemDto> listBackups(String requestHost) {
         String prefix = properties.getRustfs().getPrefix();
         List<StoredObjectMetadata> objects = objectStorageService.listObjects(prefix);
         List<BackupItemDto> result = new ArrayList<>();
-
-        Duration expiry = Duration.ofMinutes(properties.getRustfs().getPresignedUrlDurationMinutes());
+        boolean presignForBrowser = canIssueBrowserUrl(requestHost);
 
         for (StoredObjectMetadata obj : objects) {
             if (obj.getKey() == null || !obj.getKey().endsWith(".sql.gz")) {
@@ -194,12 +207,13 @@ public class DatabaseBackupService {
 
             String key = obj.getKey();
             String fileName = key.contains("/") ? key.substring(key.lastIndexOf('/') + 1) : key;
-            String downloadUrl = "";
-            try {
-                downloadUrl = objectStorageService.createPresignedUrl(key, expiry);
-            } catch (Exception e) {
-                log.debug("Presigned URL üretilemedi key={}: {}", key, e.getMessage());
-                downloadUrl = "/admin/settings/backups/download/" + fileName;
+            String downloadUrl = authenticatedDownloadPath(fileName);
+            if (presignForBrowser && isSafeBackupFileName(fileName)) {
+                try {
+                    downloadUrl = browserPresignedUrl(fileName, requestHost).orElse(downloadUrl);
+                } catch (StoredFileNotFoundException ex) {
+                    log.debug("Backup disappeared while listing fileName={}", fileName);
+                }
             }
 
             result.add(BackupItemDto.builder()
@@ -221,9 +235,73 @@ public class DatabaseBackupService {
     // 3. PRESIGNED DOWNLOAD URL OLUŞTURMA
     // ─────────────────────────────────────────────────────────────
     public String generatePresignedDownloadUrl(String fileName) {
-        String s3Key = properties.getRustfs().getPrefix() + fileName;
-        Duration expiry = Duration.ofMinutes(properties.getRustfs().getPresignedUrlDurationMinutes());
-        return objectStorageService.createPresignedUrl(s3Key, expiry);
+        String key = backupObjectKey(fileName);
+        if (!objectStorageService.exists(key)) {
+            throw new StoredFileNotFoundException("Yedek dosyası bulunamadı: " + fileName);
+        }
+        return objectStorageService.createPresignedUrl(key, presignedTtl());
+    }
+
+    /**
+     * Presigned URL when the user's browser can reach RustFS. Empty when RustFS is
+     * only on the internal network, so the caller streams the object instead.
+     * The returned string is the signer output unchanged, so the signature stays valid.
+     */
+    public Optional<String> browserPresignedUrl(String fileName, String requestHost) {
+        if (!canIssueBrowserUrl(requestHost)) {
+            return Optional.empty();
+        }
+        try {
+            String rawUrl = generatePresignedDownloadUrl(fileName);
+            if (!isSafeLocationHeader(rawUrl) || !browserAccess.isBrowserSafeUrl(URI.create(rawUrl))) {
+                log.info("Presigned backup URL is not browser-reachable; streaming fileName={}", fileName);
+                return Optional.empty();
+            }
+            return Optional.of(rawUrl);
+        } catch (StoredFileNotFoundException ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            if (ex instanceof IllegalArgumentException && !isSafeBackupFileName(fileName)) {
+                throw ex;
+            }
+            log.warn("Presigned backup URL could not be created; streaming fileName={}", fileName);
+            return Optional.empty();
+        }
+    }
+
+    public BackupContent openDownload(String fileName) {
+        String key = backupObjectKey(fileName);
+        long sizeBytes = sizeOf(key);
+        try {
+            InputStream body = objectStorageService.download(key);
+            return new BackupContent(fileName, sizeBytes, BACKUP_CONTENT_TYPE, body);
+        } catch (StoredFileNotFoundException ex) {
+            throw new StoredFileNotFoundException("Yedek dosyası bulunamadı: " + fileName);
+        }
+    }
+
+    public void writeBackup(InputStream input, OutputStream output, String fileName) {
+        try (InputStream source = input) {
+            source.transferTo(output);
+            output.flush();
+        } catch (IOException ex) {
+            if (isClientAbort(ex)) {
+                log.info("Backup download interrupted fileName={}", fileName);
+                return;
+            }
+            log.error("Backup download failed while streaming fileName={}", fileName, ex);
+            throw new StorageException("Yedek indirilemedi.", ex);
+        } catch (RuntimeException ex) {
+            if (isClientAbort(ex)) {
+                log.info("Backup download interrupted fileName={}", fileName);
+                return;
+            }
+            if (ex instanceof StorageException storageException) {
+                throw storageException;
+            }
+            log.error("Backup download failed while streaming fileName={}", fileName, ex);
+            throw new StorageException("Yedek indirilemedi.", ex);
+        }
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -450,6 +528,73 @@ public class DatabaseBackupService {
         return new DbConnectionInfo(host, port, database, datasourceUsername, datasourcePassword, isH2);
     }
 
+    private boolean canIssueBrowserUrl(String requestHost) {
+        return properties.getRustfs().getPresignedUrlDurationMinutes() > 0
+                && browserAccess.canBrowserUsePresignedUrl(requestHost);
+    }
+
+    private Duration presignedTtl() {
+        int minutes = properties.getRustfs().getPresignedUrlDurationMinutes();
+        if (minutes <= 0) {
+            throw new IllegalStateException("Yedek indirme bağlantısı süresi yapılandırılmamış.");
+        }
+        return Duration.ofMinutes(minutes);
+    }
+
+    private String backupObjectKey(String fileName) {
+        if (!isSafeBackupFileName(fileName)) {
+            throw new IllegalArgumentException("Geçersiz yedek dosya adı.");
+        }
+        return properties.getRustfs().getPrefix() + fileName;
+    }
+
+    private long sizeOf(String key) {
+        List<StoredObjectMetadata> objects = objectStorageService.listObjects(key);
+        for (StoredObjectMetadata metadata : objects) {
+            if (key.equals(metadata.getKey())) {
+                return metadata.getSizeBytes();
+            }
+        }
+        return -1L;
+    }
+
+    static boolean isSafeBackupFileName(String fileName) {
+        return fileName != null
+                && !fileName.contains("..")
+                && fileName.indexOf('/') < 0
+                && fileName.indexOf('\\') < 0
+                && SAFE_BACKUP_FILE_NAME.matcher(fileName).matches();
+    }
+
+    static String authenticatedDownloadPath(String fileName) {
+        String encoded = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+        return "/admin/settings/backups/download/" + encoded;
+    }
+
+    private static boolean isSafeLocationHeader(String value) {
+        return value != null
+                && !value.isBlank()
+                && value.indexOf('\r') < 0
+                && value.indexOf('\n') < 0
+                && (value.startsWith("https://") || value.startsWith("http://"));
+    }
+
+    static boolean isClientAbort(Throwable error) {
+        Throwable current = error;
+        while (current != null) {
+            String typeName = current.getClass().getName();
+            if (typeName.endsWith("ClientAbortException") || typeName.endsWith("AsyncRequestNotUsableException")) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message != null && message.toLowerCase(Locale.ROOT).contains("broken pipe")) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
     private String formatFileSize(long bytes) {
         if (bytes < 1024) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(1024));
@@ -458,4 +603,6 @@ public class DatabaseBackupService {
     }
 
     private record DbConnectionInfo(String host, int port, String database, String username, String password, boolean isH2) {}
+
+    public record BackupContent(String fileName, long sizeBytes, String contentType, InputStream body) {}
 }
