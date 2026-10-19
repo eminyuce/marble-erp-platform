@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 import java.time.Instant;
@@ -109,50 +110,17 @@ public class DatabaseBackupService {
             boolean dumped = false;
             DbConnectionInfo dbInfo = resolveDbInfo();
 
-            // 1. pg_dump komutu ile yedeği almayı dene
             if (dbInfo != null && !dbInfo.isH2()) {
-                try {
-                    ProcessBuilder pb = new ProcessBuilder(
-                            properties.getDatabase().getPgDumpPath(),
-                            "-h", dbInfo.host(),
-                            "-p", String.valueOf(dbInfo.port()),
-                            "-U", dbInfo.username(),
-                            "-F", "p",
-                            "--no-owner",
-                            "--no-privileges",
-                            dbInfo.database()
-                    );
-                    pb.environment().put("PGPASSWORD", dbInfo.password() != null ? dbInfo.password() : "");
-
-                    Process process = pb.start();
-
-                    try (InputStream stdout = process.getInputStream();
-                         OutputStream fos = Files.newOutputStream(tempFile);
-                         GZIPOutputStream gzos = new GZIPOutputStream(new BufferedOutputStream(fos))) {
-                        stdout.transferTo(gzos);
-                    }
-
-                    int exitCode = process.waitFor();
-                    if (exitCode == 0 && Files.size(tempFile) > 0) {
-                        dumped = true;
-                        log.info("pg_dump ile yedekleme başarıyla tamamlandı: {}", fileName);
-                    } else {
-                        String err = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-                        log.warn("pg_dump tamamlanamadı (kod: {}): {}", exitCode, err);
-                        if (!properties.getDatabase().isAllowFallbackDump()) {
-                            throw new RuntimeException("pg_dump başarısız oldu (kod: " + exitCode + "): " + err);
-                        }
-                    }
-                } catch (IOException ioException) {
-                    log.warn("pg_dump çalıştırılamadı ({}). Fallback kontrol ediliyor.", ioException.getMessage());
-                    if (!properties.getDatabase().isAllowFallbackDump()) {
-                        throw new RuntimeException("Sistemde 'pg_dump' aracı bulunamadı: " + ioException.getMessage(), ioException);
-                    }
+                dumped = dumpWithPgDump(tempFile, dbInfo, fileName);
+                if (!dumped) {
+                    dumped = dumpWithDockerPgDump(tempFile, dbInfo, fileName);
+                }
+                if (!dumped) {
+                    dumped = dumpWithJdbc(tempFile, dbInfo, fileName);
                 }
             }
 
-            // 2. pg_dump bulunamadıysa veya test/H2 modundaysa fallback dump üret
-            if (!dumped && properties.getDatabase().isAllowFallbackDump()) {
+            if (!dumped && properties.getDatabase().isAllowFallbackDump() && (dbInfo == null || dbInfo.isH2())) {
                 generateFallbackDump(tempFile, dbInfo);
                 dumped = true;
             }
@@ -182,7 +150,9 @@ public class DatabaseBackupService {
             operationStatus.fail("Yedek alma hatası: " + e.getMessage());
             try {
                 Files.deleteIfExists(tempFile);
-            } catch (IOException ignored) {}
+            } catch (IOException cleanupError) {
+                log.warn("Geçici yedek dosyası silinemedi: {}", cleanupError.getMessage());
+            }
             return CompletableFuture.failedFuture(e);
         }
     }
@@ -398,7 +368,9 @@ public class DatabaseBackupService {
             try {
                 Files.deleteIfExists(tempCompressed);
                 Files.deleteIfExists(tempSql);
-            } catch (IOException ignored) {}
+            } catch (IOException cleanupError) {
+                log.warn("Geçici geri yükleme dosyası silinemedi: {}", cleanupError.getMessage());
+            }
             return CompletableFuture.failedFuture(e);
         }
     }
@@ -456,6 +428,111 @@ public class DatabaseBackupService {
     // ─────────────────────────────────────────────────────────────
     // YARDIMCI VE FALLBACK METOTLARI
     // ─────────────────────────────────────────────────────────────
+
+    private boolean dumpWithPgDump(Path tempFile, DbConnectionInfo dbInfo, String fileName) {
+        ProcessBuilder builder = new ProcessBuilder(
+                properties.getDatabase().getPgDumpPath(),
+                "-h", dbInfo.host(),
+                "-p", String.valueOf(dbInfo.port()),
+                "-U", dbInfo.username() == null ? "" : dbInfo.username(),
+                "-F", "p",
+                "--no-owner",
+                "--no-privileges",
+                dbInfo.database()
+        );
+        builder.environment().put("PGPASSWORD", dbInfo.password() != null ? dbInfo.password() : "");
+        return runDumpProcess(builder, tempFile, fileName, "pg_dump");
+    }
+
+    private boolean dumpWithDockerPgDump(Path tempFile, DbConnectionInfo dbInfo, String fileName) {
+        String container = properties.getDatabase().getDockerContainer();
+        if (container == null || container.isBlank()) {
+            return false;
+        }
+        if (!container.matches("[A-Za-z0-9][A-Za-z0-9_.-]{0,120}")) {
+            log.warn("Geçersiz PostgreSQL konteyner adı, docker pg_dump atlandı.");
+            return false;
+        }
+        ProcessBuilder builder = new ProcessBuilder(
+                "docker", "exec", container,
+                "pg_dump",
+                "-U", dbInfo.username() == null ? "" : dbInfo.username(),
+                "-d", dbInfo.database(),
+                "-F", "p",
+                "--no-owner",
+                "--no-privileges"
+        );
+        return runDumpProcess(builder, tempFile, fileName, "docker pg_dump");
+    }
+
+    private boolean runDumpProcess(ProcessBuilder builder, Path tempFile, String fileName, String source) {
+        try {
+            Process process = builder.start();
+            process.getOutputStream().close();
+            StringBuilder errors = new StringBuilder();
+            Thread errorReader = new Thread(() -> {
+                try {
+                    errors.append(new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8));
+                } catch (IOException exception) {
+                    errors.append(exception.getMessage());
+                }
+            }, source + "-stderr");
+            errorReader.setDaemon(true);
+            errorReader.start();
+
+            long bytes;
+            try (InputStream stdout = process.getInputStream();
+                 OutputStream fos = Files.newOutputStream(tempFile);
+                 GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(fos))) {
+                bytes = stdout.transferTo(gzip);
+            }
+            int exitCode = process.waitFor();
+            errorReader.join(2000);
+            if (exitCode == 0 && bytes > 0) {
+                log.info("{} ile yedekleme tamamlandı: {} ({} bayt)", source, fileName, bytes);
+                return true;
+            }
+            String error = errors.toString().trim();
+            if (!properties.getDatabase().isAllowFallbackDump()) {
+                throw new IllegalStateException(source + " başarısız oldu (kod: " + exitCode + "): " + error);
+            }
+            log.warn("{} tamamlanamadı (kod: {}): {}", source, exitCode, error);
+            return false;
+        } catch (IOException exception) {
+            if (!properties.getDatabase().isAllowFallbackDump()) {
+                throw new IllegalStateException(source + " çalıştırılamadı: " + exception.getMessage(), exception);
+            }
+            log.warn("{} çalıştırılamadı: {}", source, exception.getMessage());
+            return false;
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(source + " kesildi.", exception);
+        }
+    }
+
+    private boolean dumpWithJdbc(Path tempFile, DbConnectionInfo dbInfo, String fileName) throws IOException, SQLException {
+        if (dataSource == null) {
+            log.warn("PostgreSQL veri yedeği için DataSource yok.");
+            return false;
+        }
+        log.info("pg_dump yok. PostgreSQL satırları JDBC ile yazılıyor: {}", fileName);
+        try (Connection connection = dataSource.getConnection()) {
+            boolean originalAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            connection.setReadOnly(true);
+            try (OutputStream fos = Files.newOutputStream(tempFile);
+                 GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(fos));
+                 Writer writer = new OutputStreamWriter(gzip, StandardCharsets.UTF_8)) {
+                long rows = new PostgresDataDump().write(connection, writer, dbInfo.database());
+                log.info("PostgreSQL veri yedeği yazıldı: {} satır, dosya {}", rows, fileName);
+            } finally {
+                connection.rollback();
+                connection.setReadOnly(false);
+                connection.setAutoCommit(originalAutoCommit);
+            }
+            return true;
+        }
+    }
 
     private void generateFallbackDump(Path targetGzFile, DbConnectionInfo dbInfo) throws IOException {
         log.info("Fallback SQL dump üretiliyor: {}", targetGzFile);

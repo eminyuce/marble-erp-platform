@@ -47,6 +47,9 @@ server:
   forward-headers-strategy: framework
 
 app:
+  backup:
+    database:
+      docker-container: ${PG_DOCKER_CONTAINER:marble-erp-postgres}
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:81}
     allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.onrender.com}

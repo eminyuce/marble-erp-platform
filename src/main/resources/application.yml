@@ -109,6 +109,7 @@ app:
     database:
       pg-dump-path: ${PG_DUMP_PATH:pg_dump}
       pg-restore-path: ${PG_RESTORE_PATH:psql}
+      docker-container: ${PG_DOCKER_CONTAINER:}
       allow-fallback-dump: ${BACKUP_ALLOW_FALLBACK:true}
     retention:
       retention-days: ${BACKUP_RETENTION_DAYS:10}

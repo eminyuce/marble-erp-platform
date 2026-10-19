@@ -29,6 +29,7 @@ public class BackupProperties {
     public static class DatabaseProperties {
         private String pgDumpPath = "pg_dump";
         private String pgRestorePath = "psql";
+        private String dockerContainer = "";
         private boolean allowFallbackDump = true;
     }
 
