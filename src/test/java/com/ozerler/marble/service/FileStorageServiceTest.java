@@ -205,8 +205,8 @@ class FileStorageServiceTest {
     void storeFile_Xls_Success() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "quarry_measurements.xls",
-                "application/vnd.ms-excel",
-                "fake-xls-content".getBytes());
+                "application/octet-stream",
+                TestFiles.oleCompound());
         stubSuccessfulUpload();
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 11L);

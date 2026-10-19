@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -126,5 +127,30 @@ class FileStorageMigrationServiceTest {
         assertThat(record.getBucketName()).isEqualTo("erp-files");
         assertThat(Files.exists(images.resolve("legacy.jpg"))).isTrue();
         verify(objectStorageService).upload(anyString(), any(InputStream.class), anyLong(), anyString());
+    }
+
+    @Test
+    @DisplayName("missing stored MIME type is detected from the file bytes")
+    void detectsMimeWhenRecordHasNone() throws Exception {
+        Path documents = Files.createDirectories(tempDir.resolve("documents"));
+        Files.writeString(documents.resolve("notes.txt"), "ocak notu");
+        FileStorage record = FileStorage.builder()
+                .id(12L)
+                .fileName("notes.txt")
+                .originalName("notes.txt")
+                .fileSize(9L)
+                .filePath("/media/documents/notes.txt")
+                .entityType("BLOCK")
+                .entityId(4L)
+                .build();
+        when(fileStorageRepository.findByDeletedFalse()).thenReturn(List.of(record));
+        when(objectStorageService.getBucketName()).thenReturn("erp-files");
+        when(objectStorageService.exists(anyString())).thenReturn(false, true);
+        when(fileStorageRepository.save(any(FileStorage.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        FileStorageMigrationService.MigrationResult result = migrationService.migrate(false);
+
+        assertThat(result.migrated()).isEqualTo(1);
+        verify(objectStorageService).upload(anyString(), any(InputStream.class), anyLong(), eq("text/plain"));
     }
 }

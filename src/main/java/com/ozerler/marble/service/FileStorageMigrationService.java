@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,7 +21,6 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Idempotent migration of leftover local-disk files into RustFS.
@@ -95,9 +95,7 @@ public class FileStorageMigrationService {
             long size = Files.size(source);
             try (InputStream raw = Files.newInputStream(source);
                  DigestInputStream digestStream = new DigestInputStream(raw, digest)) {
-                String mime = record.getMimeType() != null
-                        ? record.getMimeType()
-                        : FileUploadValidator.detectMimeType(stripDot(extension));
+                String mime = storedOrDetectedMime(record, source);
                 objectStorageService.upload(objectKey, digestStream, size, mime);
             }
             if (!objectStorageService.exists(objectKey)) {
@@ -151,12 +149,17 @@ public class FileStorageMigrationService {
         return Paths.get(relative);
     }
 
-    private static String stripDot(String extension) {
-        if (extension == null || extension.isBlank()) {
-            return "";
+    private static String storedOrDetectedMime(FileStorage record, Path source) throws IOException {
+        if (record.getMimeType() != null && !record.getMimeType().isBlank()) {
+            return record.getMimeType();
         }
-        String cleaned = extension.startsWith(".") ? extension.substring(1) : extension;
-        return cleaned.toLowerCase(Locale.ROOT);
+        String filename = record.getOriginalName();
+        if (filename == null || filename.isBlank()) {
+            filename = record.getFileName();
+        }
+        try (InputStream in = Files.newInputStream(source)) {
+            return FileUploadValidator.detectMimeType(filename, in.readNBytes(FileUploadValidator.MEDIA_TYPE_PREFIX_BYTES));
+        }
     }
 
     public record MigrationResult(int examined, int migrated, int skipped, int failed, boolean dryRun) {

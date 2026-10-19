@@ -4,12 +4,15 @@ import com.ozerler.marble.config.ObjectStorageProperties;
 import com.ozerler.marble.exception.FileValidationException;
 import com.ozerler.marble.util.Filenames;
 import lombok.RequiredArgsConstructor;
+import org.apache.tika.Tika;
+import org.apache.tika.mime.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +29,11 @@ public class FileUploadValidator {
             "pdf", "docx", "doc", "txt", "md", "xlsx", "xls", "csv"
     );
 
+    /**
+     * How many leading bytes are enough for Tika's magic-byte detector.
+     */
+    public static final int MEDIA_TYPE_PREFIX_BYTES = 64 * 1024;
+
     private static final Set<String> ALLOWED_EXTENSIONS;
 
     static {
@@ -35,25 +43,36 @@ public class FileUploadValidator {
         ALLOWED_EXTENSIONS = Set.copyOf(extensions);
     }
 
-    private static final Map<String, Set<String>> ALLOWED_MIME_BY_EXTENSION = Map.ofEntries(
-            Map.entry("jpg", Set.of("image/jpeg")),
-            Map.entry("jpeg", Set.of("image/jpeg")),
-            Map.entry("png", Set.of("image/png")),
-            Map.entry("webp", Set.of("image/webp")),
-            Map.entry("gif", Set.of("image/gif")),
-            Map.entry("bmp", Set.of("image/bmp")),
-            Map.entry("svg", Set.of("image/svg+xml", "image/svg", "text/xml", "application/xml", "text/plain")),
-            Map.entry("pdf", Set.of("application/pdf")),
-            Map.entry("docx", Set.of("application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    /**
+     * Types Tika may report for an extension. The first entry is the type stored
+     * on the file; the rest are acceptable aliases and generic parents. Tika does
+     * not apply this allowlist, and the client Content-Type header is ignored.
+     */
+    private static final Map<String, List<String>> PERMITTED_MEDIA_TYPES_BY_EXTENSION = Map.ofEntries(
+            Map.entry("jpg", List.of("image/jpeg")),
+            Map.entry("jpeg", List.of("image/jpeg")),
+            Map.entry("png", List.of("image/png")),
+            Map.entry("webp", List.of("image/webp")),
+            Map.entry("gif", List.of("image/gif")),
+            Map.entry("bmp", List.of("image/bmp")),
+            Map.entry("svg", List.of("image/svg+xml", "image/svg", "text/xml", "application/xml", "text/plain")),
+            Map.entry("pdf", List.of("application/pdf")),
+            Map.entry("docx", List.of(
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "application/x-tika-ooxml",
                     "application/zip")),
-            Map.entry("doc", Set.of("application/msword", "application/octet-stream")),
-            Map.entry("xlsx", Set.of("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            Map.entry("doc", List.of("application/msword", "application/x-tika-msoffice")),
+            Map.entry("xlsx", List.of(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/x-tika-ooxml",
                     "application/zip")),
-            Map.entry("xls", Set.of("application/vnd.ms-excel", "application/octet-stream")),
-            Map.entry("csv", Set.of("text/csv", "application/csv", "text/plain", "text/x-csv")),
-            Map.entry("txt", Set.of("text/plain")),
-            Map.entry("md", Set.of("text/markdown", "text/x-markdown", "text/plain"))
+            Map.entry("xls", List.of("application/vnd.ms-excel", "application/x-tika-msoffice")),
+            Map.entry("csv", List.of("text/csv", "application/csv", "text/plain", "text/x-csv")),
+            Map.entry("txt", List.of("text/plain")),
+            Map.entry("md", List.of("text/markdown", "text/x-web-markdown", "text/x-markdown", "text/plain"))
     );
+
+    private static final Tika TIKA = new Tika();
 
     private final ObjectStorageProperties storageProperties;
     private final SvgContentValidator svgContentValidator;
@@ -86,25 +105,18 @@ public class FileUploadValidator {
             throw new FileValidationException("Unsupported file type: " + cleanExtension);
         }
 
-        String declaredMime = file.getContentType();
-        if (declaredMime != null && !declaredMime.isBlank() && !"application/octet-stream".equalsIgnoreCase(declaredMime)) {
-            String mimeBase = declaredMime.split(";", 2)[0].trim().toLowerCase(Locale.ROOT);
-            Set<String> allowedMimes = ALLOWED_MIME_BY_EXTENSION.getOrDefault(cleanExtension, Set.of());
-            if (!allowedMimes.contains(mimeBase)) {
-                throw new FileValidationException("File content type does not match the file extension");
-            }
-        }
-
-        byte[] header = readHeader(file, 16);
-        validateSignature(cleanExtension, header);
+        byte[] content = readContent(file, cleanExtension);
+        String detectedMimeType = detectMimeType(originalFilename, content);
+        requirePermittedMediaType(cleanExtension, detectedMimeType);
+        validateSignature(cleanExtension, content);
 
         byte[] svgBytes = null;
         if ("svg".equals(cleanExtension)) {
-            svgBytes = readAll(file);
-            svgContentValidator.validate(svgBytes);
+            svgContentValidator.validate(content);
+            svgBytes = content;
         }
 
-        String mimeType = resolveMimeType(cleanExtension, declaredMime);
+        String mimeType = preferredMediaType(cleanExtension);
         return new ValidatedUpload(originalFilename, rawExtension, cleanExtension, mimeType, file.getSize(), svgBytes);
     }
 
@@ -112,31 +124,27 @@ public class FileUploadValidator {
         return extension != null && ALLOWED_IMAGE_EXTENSIONS.contains(extension.toLowerCase(Locale.ROOT));
     }
 
-    public static String detectMimeType(String extension) {
-        return switch (extension.toLowerCase(Locale.ROOT)) {
-            case "pdf" -> "application/pdf";
-            case "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-            case "doc" -> "application/msword";
-            case "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            case "xls" -> "application/vnd.ms-excel";
-            case "csv" -> "text/csv";
-            case "txt" -> "text/plain";
-            case "md" -> "text/markdown";
-            case "jpg", "jpeg" -> "image/jpeg";
-            case "png" -> "image/png";
-            case "webp" -> "image/webp";
-            case "gif" -> "image/gif";
-            case "bmp" -> "image/bmp";
-            case "svg" -> "image/svg+xml";
-            default -> "application/octet-stream";
-        };
+    public static String detectMimeType(String filename, byte[] content) {
+        byte[] prefix = content == null ? new byte[0] : content;
+        String detected = filename == null || filename.isBlank()
+                ? TIKA.detect(prefix)
+                : TIKA.detect(prefix, filename);
+        return MediaType.parse(detected).getBaseType().toString();
     }
 
-    private static String resolveMimeType(String extension, String declaredMime) {
-        if (declaredMime != null && !declaredMime.isBlank() && !"application/octet-stream".equalsIgnoreCase(declaredMime)) {
-            return declaredMime.split(";", 2)[0].trim();
+    private static void requirePermittedMediaType(String extension, String detectedMimeType) {
+        List<String> permitted = PERMITTED_MEDIA_TYPES_BY_EXTENSION.getOrDefault(extension, List.of());
+        if (!permitted.contains(detectedMimeType)) {
+            throw new FileValidationException("File content type does not match the file extension");
         }
-        return detectMimeType(extension);
+    }
+
+    private static String preferredMediaType(String extension) {
+        List<String> permitted = PERMITTED_MEDIA_TYPES_BY_EXTENSION.get(extension);
+        if (permitted == null || permitted.isEmpty()) {
+            throw new FileValidationException("Unsupported file type: " + extension);
+        }
+        return permitted.get(0);
     }
 
     private static void validateSignature(String extension, byte[] header) {
@@ -160,7 +168,8 @@ public class FileUploadValidator {
             case "pdf" -> requireAsciiPrefix(header, "%PDF", "PDF");
             case "docx", "xlsx" -> requireMagic(header, new byte[]{0x50, 0x4B}, "Office Open XML");
             case "svg", "txt", "md", "csv", "doc", "xls" -> {
-                // Textual or legacy binary formats without a strict short magic header.
+                // SVG is checked by SvgContentValidator. Text and legacy OLE
+                // documents have no short magic header beyond Tika's detection.
             }
             default -> {
             }
@@ -188,7 +197,14 @@ public class FileUploadValidator {
         }
     }
 
-    private static byte[] readHeader(MultipartFile file, int length) {
+    private static byte[] readContent(MultipartFile file, String extension) {
+        if ("svg".equals(extension)) {
+            return readAll(file);
+        }
+        return readPrefix(file, MEDIA_TYPE_PREFIX_BYTES);
+    }
+
+    private static byte[] readPrefix(MultipartFile file, int length) {
         try (InputStream in = file.getInputStream()) {
             return in.readNBytes(length);
         } catch (IOException e) {

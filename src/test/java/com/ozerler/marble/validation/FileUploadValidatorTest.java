@@ -76,12 +76,48 @@ class FileUploadValidatorTest {
     }
 
     @Test
-    @DisplayName("MIME type that does not match the extension is rejected")
-    void mimeMismatch() {
+    @DisplayName("client Content-Type is ignored when the bytes match the extension")
+    void clientContentTypeIsIgnored() {
         MockMultipartFile file = new MockMultipartFile("file", "a.jpg", "application/pdf", TestFiles.jpeg());
+        FileUploadValidator.ValidatedUpload result = validator.validate(file);
+        assertThat(result.mimeType()).isEqualTo("image/jpeg");
+    }
+
+    @Test
+    @DisplayName("content whose detected type is outside the allowlist is rejected")
+    void detectedTypeOutsideAllowlist() {
+        MockMultipartFile file = new MockMultipartFile("file", "data.csv", "text/csv", TestFiles.png());
         assertThatThrownBy(() -> validator.validate(file))
                 .isInstanceOf(FileValidationException.class)
                 .hasMessageContaining("content type");
+    }
+
+    @Test
+    @DisplayName("Tika detects markdown and the stored type stays text/markdown")
+    void markdownDetectionUsesTika() {
+        byte[] content = "# Ocak notu".getBytes();
+        assertThat(FileUploadValidator.detectMimeType("jeoloji.md", content)).isEqualTo("text/x-web-markdown");
+
+        MockMultipartFile file = new MockMultipartFile("file", "jeoloji.md", "application/octet-stream", content);
+        assertThat(validator.validate(file).mimeType()).isEqualTo("text/markdown");
+    }
+
+    @Test
+    @DisplayName("plain text renamed to xls is rejected")
+    void plainTextXlsIsRejected() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "notes.xls", "application/vnd.ms-excel", "fake-xls-content".getBytes());
+        assertThatThrownBy(() -> validator.validate(file))
+                .isInstanceOf(FileValidationException.class)
+                .hasMessageContaining("content type");
+    }
+
+    @Test
+    @DisplayName("OLE compound document with an xls name is accepted")
+    void oleXlsIsAccepted() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "sheet.xls", "application/octet-stream", TestFiles.oleCompound());
+        assertThat(validator.validate(file).mimeType()).isEqualTo("application/vnd.ms-excel");
     }
 
     @Test

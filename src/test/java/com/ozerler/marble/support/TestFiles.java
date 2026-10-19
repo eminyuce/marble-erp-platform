@@ -40,6 +40,10 @@ public final class TestFiles {
         return new byte[]{0x50, 0x4B, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00};
     }
 
+    public static byte[] oleCompound() {
+        return new byte[]{(byte) 0xD0, (byte) 0xCF, 0x11, (byte) 0xE0, (byte) 0xA1, (byte) 0xB1, 0x1A, (byte) 0xE1};
+    }
+
     public static byte[] svg() {
         return """
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
