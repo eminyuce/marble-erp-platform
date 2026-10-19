@@ -1,6 +1,13 @@
 package com.ozerler.marble.support;
 
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public final class TestFiles {
 
@@ -38,6 +45,40 @@ public final class TestFiles {
 
     public static byte[] zipOffice() {
         return new byte[]{0x50, 0x4B, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00};
+    }
+
+    public static byte[] docx() {
+        try (XWPFDocument document = new XWPFDocument();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            document.createParagraph().createRun().setText("ocak notu");
+            document.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to build DOCX fixture", e);
+        }
+    }
+
+    public static byte[] xlsx() {
+        try (XSSFWorkbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            workbook.createSheet("density").createRow(0).createCell(0).setCellValue("sample");
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to build XLSX fixture", e);
+        }
+    }
+
+    public static byte[] plainZip() {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+             ZipOutputStream zip = new ZipOutputStream(out)) {
+            zip.putNextEntry(new ZipEntry("notes.txt"));
+            zip.write("not an office document".getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to build ZIP fixture", e);
+        }
     }
 
     public static byte[] oleCompound() {

@@ -22,6 +22,12 @@ class FileUploadValidatorTest {
         validator = new FileUploadValidator(properties, new SvgContentValidator());
     }
 
+    private static FileUploadValidator officeValidator() {
+        ObjectStorageProperties properties = new ObjectStorageProperties();
+        properties.setMaxFileSizeBytes(1024 * 1024);
+        return new FileUploadValidator(properties, new SvgContentValidator());
+    }
+
     @Test
     @DisplayName("valid PNG is accepted")
     void validPng() {
@@ -118,6 +124,63 @@ class FileUploadValidatorTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "sheet.xls", "application/octet-stream", TestFiles.oleCompound());
         assertThat(validator.validate(file).mimeType()).isEqualTo("application/vnd.ms-excel");
+    }
+
+    @Test
+    @DisplayName("valid DOCX package is accepted")
+    void validDocx() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "analysis.docx", "application/octet-stream", TestFiles.docx());
+        FileUploadValidator.ValidatedUpload result = officeValidator().validate(file);
+        assertThat(result.cleanExtension()).isEqualTo("docx");
+        assertThat(result.mimeType()).isEqualTo(
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    }
+
+    @Test
+    @DisplayName("valid XLSX package is accepted")
+    void validXlsx() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "density.xlsx", "application/octet-stream", TestFiles.xlsx());
+        FileUploadValidator.ValidatedUpload result = officeValidator().validate(file);
+        assertThat(result.cleanExtension()).isEqualTo("xlsx");
+        assertThat(result.mimeType()).isEqualTo(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
+    @Test
+    @DisplayName("plain ZIP renamed to DOCX is rejected")
+    void plainZipRenamedToDocx() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "notes.docx", "application/zip", TestFiles.plainZip());
+        assertThatThrownBy(() -> officeValidator().validate(file))
+                .isInstanceOf(FileValidationException.class)
+                .hasMessageContaining("Office Open XML");
+    }
+
+    @Test
+    @DisplayName("plain ZIP renamed to XLSX is rejected")
+    void plainZipRenamedToXlsx() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "notes.xlsx", "application/zip", TestFiles.plainZip());
+        assertThatThrownBy(() -> officeValidator().validate(file))
+                .isInstanceOf(FileValidationException.class)
+                .hasMessageContaining("Office Open XML");
+    }
+
+    @Test
+    @DisplayName("truncated ZIP renamed to an Office extension is rejected")
+    void truncatedZipRenamedToOfficeExtension() {
+        MockMultipartFile docx = new MockMultipartFile(
+                "file", "broken.docx", "application/zip", TestFiles.zipOffice());
+        MockMultipartFile xlsx = new MockMultipartFile(
+                "file", "broken.xlsx", "application/zip", TestFiles.zipOffice());
+        assertThatThrownBy(() -> validator.validate(docx))
+                .isInstanceOf(FileValidationException.class)
+                .hasMessageContaining("Office Open XML");
+        assertThatThrownBy(() -> validator.validate(xlsx))
+                .isInstanceOf(FileValidationException.class)
+                .hasMessageContaining("Office Open XML");
     }
 
     @Test

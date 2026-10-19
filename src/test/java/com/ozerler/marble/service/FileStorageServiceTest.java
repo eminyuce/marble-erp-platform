@@ -140,7 +140,7 @@ class FileStorageServiceTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "analysis.docx",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                TestFiles.zipOffice());
+                TestFiles.docx());
         stubSuccessfulUpload();
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", null);
@@ -191,7 +191,7 @@ class FileStorageServiceTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "block_density_analysis.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                TestFiles.zipOffice());
+                TestFiles.xlsx());
         stubSuccessfulUpload();
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 11L);

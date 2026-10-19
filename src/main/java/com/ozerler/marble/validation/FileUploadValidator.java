@@ -4,11 +4,17 @@ import com.ozerler.marble.config.ObjectStorageProperties;
 import com.ozerler.marble.exception.FileValidationException;
 import com.ozerler.marble.util.Filenames;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.EncryptedDocumentException;
+import org.apache.poi.UnsupportedFileFormatException;
+import org.apache.poi.ooxml.POIXMLException;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -109,6 +115,9 @@ public class FileUploadValidator {
         String detectedMimeType = detectMimeType(originalFilename, content);
         requirePermittedMediaType(cleanExtension, detectedMimeType);
         validateSignature(cleanExtension, content);
+        if ("docx".equals(cleanExtension) || "xlsx".equals(cleanExtension)) {
+            validateOfficePackage(cleanExtension, readAll(file));
+        }
 
         byte[] svgBytes = null;
         if ("svg".equals(cleanExtension)) {
@@ -173,6 +182,35 @@ public class FileUploadValidator {
             }
             default -> {
             }
+        }
+    }
+
+    /**
+     * PK magic and the filename do not prove that a ZIP is a Word or Excel package.
+     * POI opens the OPC package and requires the matching document part.
+     */
+    private static void validateOfficePackage(String extension, byte[] content) {
+        try {
+            switch (extension) {
+                case "docx" -> {
+                    try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(content))) {
+                        if (document.getDocument() == null) {
+                            throw new FileValidationException("File content does not match the Office Open XML type");
+                        }
+                    }
+                }
+                case "xlsx" -> {
+                    try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(content))) {
+                        if (workbook.getCTWorkbook() == null) {
+                            throw new FileValidationException("File content does not match the Office Open XML type");
+                        }
+                    }
+                }
+                default -> {
+                }
+            }
+        } catch (IOException | POIXMLException | UnsupportedFileFormatException | EncryptedDocumentException e) {
+            throw new FileValidationException("File content does not match the Office Open XML type");
         }
     }
 
