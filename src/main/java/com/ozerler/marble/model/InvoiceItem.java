@@ -76,10 +76,17 @@ public class InvoiceItem extends AuditableEntity {
     @Column(name = "calculated_m2", precision = 12, scale = 4)
     private BigDecimal calculatedM2;
 
-    public boolean isRunningMeter() {
+    public static boolean isRunningMeterUnit(String unit) {
         if (unit == null) return false;
         String u = unit.trim().toLowerCase();
-        return u.equals("m.t.") || u.equals("mt") || u.equals("metretül") || u.equals("metretul");
+        return u.equals("m.t.") || u.equals("mt") || u.equals("m.t") || u.equals("m.tül") || u.equals("m.tul")
+                || u.equals("metretül") || u.equals("metretul") || u.equals("metre tül") || u.equals("metre tul")
+                || u.equals("lineer metre") || u.equals("lineer")
+                || u.contains("tül") || u.contains("tul") || u.contains("lineer");
+    }
+
+    public boolean isRunningMeter() {
+        return isRunningMeterUnit(this.unit);
     }
 
     public void calculateLineTotal() {
@@ -89,10 +96,16 @@ public class InvoiceItem extends AuditableEntity {
             this.lineTotal = BigDecimal.ZERO;
         }
 
-        if (isRunningMeter() && quantity != null && widthCm != null && widthCm.compareTo(BigDecimal.ZERO) > 0) {
-            this.calculatedM2 = quantity.multiply(widthCm).divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+        BigDecimal w = this.widthCm;
+        if ((w == null || w.compareTo(BigDecimal.ZERO) <= 0) && this.stockItem != null && this.stockItem.getWidthCm() != null) {
+            w = this.stockItem.getWidthCm();
+            this.widthCm = w;
+        }
+
+        if (isRunningMeter() && quantity != null && w != null && w.compareTo(BigDecimal.ZERO) > 0) {
+            this.calculatedM2 = quantity.multiply(w).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
         } else if ("m2".equalsIgnoreCase(unit) || "m²".equalsIgnoreCase(unit)) {
-            this.calculatedM2 = quantity;
+            this.calculatedM2 = quantity != null ? quantity.setScale(2, RoundingMode.HALF_UP) : null;
         }
     }
 }

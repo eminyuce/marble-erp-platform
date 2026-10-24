@@ -154,7 +154,8 @@ public class OperationWorkOrderService {
 
     @Transactional
     public OperationWorkOrder updateStatus(Long orderId, OperationWorkOrderStatus newStatus, String notes) {
-        OperationWorkOrder order = workOrderRepository.findById(orderId)
+        OperationWorkOrder order = workOrderRepository.findByIdWithDetails(orderId)
+                .or(() -> workOrderRepository.findById(orderId))
                 .orElseThrow(() -> new IllegalArgumentException("İş emri bulunamadı: " + orderId));
 
         OperationWorkOrderStatus prevStatus = order.getStatus();
@@ -172,6 +173,8 @@ public class OperationWorkOrderService {
 
         recordHistory(saved, prevStatus, newStatus, notes);
 
+        initializeDetails(saved);
+
         return saved;
     }
 
@@ -185,7 +188,10 @@ public class OperationWorkOrderService {
                 .changedAt(LocalDateTime.now())
                 .notes(notes)
                 .build();
-        historyRepository.save(history);
+        WorkOrderStatusHistory savedHistory = historyRepository.save(history);
+        if (order.getStatusHistory() != null) {
+            order.getStatusHistory().add(0, savedHistory);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -198,8 +204,33 @@ public class OperationWorkOrderService {
 
     @Transactional(readOnly = true)
     public OperationWorkOrder getOrderById(Long id) {
-        return workOrderRepository.findById(id)
+        OperationWorkOrder order = workOrderRepository.findByIdWithDetails(id)
+                .or(() -> workOrderRepository.findById(id))
                 .orElseThrow(() -> new IllegalArgumentException("İş emri bulunamadı: " + id));
+        initializeDetails(order);
+        return order;
+    }
+
+    private void initializeDetails(OperationWorkOrder order) {
+        if (order == null) return;
+        if (order.getCustomer() != null) {
+            order.getCustomer().getCompanyName();
+        }
+        if (order.getSourceBlock() != null) {
+            order.getSourceBlock().getBlockCode();
+        }
+        if (order.getSourceSlab() != null) {
+            order.getSourceSlab().getSlabCode();
+        }
+        if (order.getSourceStockItem() != null) {
+            order.getSourceStockItem().getItemCode();
+        }
+        if (order.getItems() != null) {
+            order.getItems().size();
+        }
+        if (order.getStatusHistory() != null) {
+            order.getStatusHistory().size();
+        }
     }
 
     @Transactional(readOnly = true)

@@ -21,6 +21,14 @@ public interface OperationWorkOrderRepository extends JpaRepository<OperationWor
 
     boolean existsByOrderNo(String orderNo);
 
+    @Query("SELECT DISTINCT o FROM OperationWorkOrder o " +
+           "LEFT JOIN FETCH o.customer " +
+           "LEFT JOIN FETCH o.sourceStockItem " +
+           "LEFT JOIN FETCH o.sourceSlab " +
+           "LEFT JOIN FETCH o.sourceBlock " +
+           "WHERE o.id = :id")
+    Optional<OperationWorkOrder> findByIdWithDetails(@Param("id") Long id);
+
     @Query("SELECT o FROM OperationWorkOrder o " +
            "LEFT JOIN FETCH o.customer " +
            "LEFT JOIN FETCH o.sourceStockItem " +

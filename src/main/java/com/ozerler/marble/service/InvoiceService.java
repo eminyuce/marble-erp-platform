@@ -143,9 +143,19 @@ public class InvoiceService {
                 StockItem stockItem = f.stockItemId() != null ? stockItemRepository.findById(f.stockItemId()).orElse(null) : null;
 
                 BigDecimal width = f.widthCm();
+                if ((width == null || width.compareTo(BigDecimal.ZERO) <= 0) && stockItem != null && stockItem.getWidthCm() != null) {
+                    width = stockItem.getWidthCm();
+                }
+                if ((width == null || width.compareTo(BigDecimal.ZERO) <= 0) && slab != null && slab.getWidthCm() != null) {
+                    width = slab.getWidthCm();
+                }
+                if ((width == null || width.compareTo(BigDecimal.ZERO) <= 0) && block != null && block.getWidthCm() != null) {
+                    width = BigDecimal.valueOf(block.getWidthCm());
+                }
+
                 BigDecimal calcM2 = f.calculatedM2();
                 String unit = f.unit() != null && !f.unit().isBlank() ? f.unit() : "m2";
-                boolean isRunningMeter = unit.equalsIgnoreCase("m.t.") || unit.equalsIgnoreCase("metretül") || unit.equalsIgnoreCase("mt");
+                boolean isRunningMeter = InvoiceItem.isRunningMeterUnit(unit);
 
                 if (isRunningMeter && width != null && width.compareTo(BigDecimal.ZERO) > 0) {
                     calcM2 = qty.multiply(width).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
@@ -248,6 +258,22 @@ public class InvoiceService {
         return saved;
     }
 
+    private BigDecimal getEffectiveStockQuantity(InvoiceItem item, StockItem st) {
+        if (item == null) return BigDecimal.ZERO;
+        if (item.getCalculatedM2() != null && item.getCalculatedM2().compareTo(BigDecimal.ZERO) > 0) {
+            return item.getCalculatedM2().setScale(2, RoundingMode.HALF_UP);
+        }
+        if (item.isRunningMeter()) {
+            BigDecimal w = item.getWidthCm() != null && item.getWidthCm().compareTo(BigDecimal.ZERO) > 0
+                    ? item.getWidthCm()
+                    : (st != null ? st.getWidthCm() : null);
+            if (w != null && w.compareTo(BigDecimal.ZERO) > 0 && item.getQuantity() != null) {
+                return item.getQuantity().multiply(w).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+            }
+        }
+        return item.getQuantity() != null ? item.getQuantity().setScale(2, RoundingMode.HALF_UP) : BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
+    }
+
     /**
      * Fatura kesinleştiğinde stok hareketlerini ve kontrollerini icra eder.
      * Yetersiz stok varsa kesinleşme iptal edilir ve stok eksiye düşürülmez (Madde 11).
@@ -278,9 +304,7 @@ public class InvoiceService {
                 }
                 if (item.getStockItem() != null) {
                     StockItem st = item.getStockItem();
-                    BigDecimal deduction = item.getCalculatedM2() != null && item.getCalculatedM2().compareTo(BigDecimal.ZERO) > 0
-                            ? item.getCalculatedM2().setScale(2, RoundingMode.HALF_UP)
-                            : item.getQuantity().setScale(2, RoundingMode.HALF_UP);
+                    BigDecimal deduction = getEffectiveStockQuantity(item, st);
                     if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
                         deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
                     }
@@ -406,9 +430,7 @@ public class InvoiceService {
                     }
                     if (item.getStockItem() != null) {
                         StockItem st = item.getStockItem();
-                        BigDecimal deduction = item.getCalculatedM2() != null && item.getCalculatedM2().compareTo(BigDecimal.ZERO) > 0
-                                ? item.getCalculatedM2().setScale(2, RoundingMode.HALF_UP)
-                                : item.getQuantity().setScale(2, RoundingMode.HALF_UP);
+                        BigDecimal deduction = getEffectiveStockQuantity(item, st);
                         if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
                             deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
                         }
@@ -525,6 +547,23 @@ public class InvoiceService {
                         }
                     }
                 }
+
+                // Ebatlı / Plaka vb. stok kalemine alış faturasından m² / m.tül bazında giriş
+                for (InvoiceItem item : saved.getItems()) {
+                    if (item.getStockItem() != null
+                            && (item.getStockItem().getProductType() == null
+                                || (item.getStockItem().getProductType() != StockProductType.FUEL
+                                    && item.getStockItem().getProductType() != StockProductType.CONSUMABLE))) {
+                        StockItem st = item.getStockItem();
+                        BigDecimal qtyToAdd = getEffectiveStockQuantity(item, st);
+                        BigDecimal cur = st.getQuantity() != null ? st.getQuantity() : BigDecimal.ZERO;
+                        st.setQuantity(cur.add(qtyToAdd).setScale(2, RoundingMode.HALF_UP));
+                        if ("SOLD".equalsIgnoreCase(st.getStatus())) {
+                            st.setStatus("AVAILABLE");
+                        }
+                        stockItemRepository.save(st);
+                    }
+                }
             }
         }
 
@@ -619,12 +658,10 @@ public class InvoiceService {
                     }
                     if (item.getStockItem() != null) {
                         StockItem st = item.getStockItem();
-                        BigDecimal deduction = item.getCalculatedM2() != null && item.getCalculatedM2().compareTo(BigDecimal.ZERO) > 0
-                                ? item.getCalculatedM2()
-                                : item.getQuantity();
-                        if (deduction == null) deduction = BigDecimal.ONE;
+                        BigDecimal deduction = getEffectiveStockQuantity(item, st);
+                        if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
                         BigDecimal current = st.getQuantity() != null ? st.getQuantity() : BigDecimal.ZERO;
-                        st.setQuantity(current.add(deduction));
+                        st.setQuantity(current.add(deduction).setScale(2, RoundingMode.HALF_UP));
                         st.setStatus("AVAILABLE");
                         stockItemRepository.save(st);
 
@@ -663,8 +700,9 @@ public class InvoiceService {
                             stockItemRepository.save(tank);
                         } else if (item.getStockItem() != null) {
                             StockItem st = item.getStockItem();
+                            BigDecimal effectiveQty = getEffectiveStockQuantity(item, st);
                             BigDecimal cur = st.getQuantity() != null ? st.getQuantity() : BigDecimal.ZERO;
-                            st.setQuantity(cur.compareTo(item.getQuantity()) >= 0 ? cur.subtract(item.getQuantity()) : BigDecimal.ZERO);
+                            st.setQuantity(cur.compareTo(effectiveQty) >= 0 ? cur.subtract(effectiveQty).setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO);
                             stockItemRepository.save(st);
                         }
                     }

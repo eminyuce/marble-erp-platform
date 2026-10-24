@@ -140,4 +140,43 @@ class OperationWorkOrderLineItemsTest {
         verify(workOrderRepository).save(captor.capture());
         assertThat(captor.getValue().getItems()).isNotEmpty();
     }
+
+    @Test
+    @DisplayName("updateStatus successfully approves work order and records history")
+    void testUpdateStatusToApproved() {
+        OperationWorkOrder existing = OperationWorkOrder.builder()
+                .id(10L)
+                .orderNo("WO-APP-001")
+                .status(OperationWorkOrderStatus.NEW)
+                .build();
+
+        when(workOrderRepository.findByIdWithDetails(10L)).thenReturn(Optional.of(existing));
+        when(workOrderRepository.save(any(OperationWorkOrder.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        OperationWorkOrder updated = workOrderService.updateStatus(10L, OperationWorkOrderStatus.APPROVED, "Müşteri onayladı");
+
+        assertThat(updated.getStatus()).isEqualTo(OperationWorkOrderStatus.APPROVED);
+        verify(historyRepository).save(any());
+        verify(workOrderRepository).save(existing);
+    }
+
+    @Test
+    @DisplayName("getOrderById fetches order and safely initializes proxies")
+    void testGetOrderByIdWithDetails() {
+        Customer c = Customer.builder().id(1L).companyName("Acme Mermer").build();
+        OperationWorkOrder order = OperationWorkOrder.builder()
+                .id(20L)
+                .orderNo("WO-DET-001")
+                .customer(c)
+                .status(OperationWorkOrderStatus.APPROVED)
+                .build();
+
+        when(workOrderRepository.findByIdWithDetails(20L)).thenReturn(Optional.of(order));
+
+        OperationWorkOrder fetched = workOrderService.getOrderById(20L);
+
+        assertThat(fetched).isNotNull();
+        assertThat(fetched.getCustomerDisplayName()).isEqualTo("Acme Mermer");
+        verify(workOrderRepository).findByIdWithDetails(20L);
+    }
 }

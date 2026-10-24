@@ -18,8 +18,33 @@
         </div>
         <div class="flex items-center gap-2 shrink-0">
             <span class="px-3 py-1.5 text-xs font-bold rounded-xl"
-                  th:classappend="${order.status != null and order.status.name() == 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : (order.status != null and order.status.name() == 'IN_PRODUCTION' ? 'bg-blue-100 text-blue-800' : (order.status != null and order.status.name() == 'DISPATCHED' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'))}"
+                  th:classappend="${order.status != null and order.status.name() == 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : (order.status != null and order.status.name() == 'APPROVED' ? 'bg-teal-100 text-teal-800' : (order.status != null and order.status.name() == 'IN_PRODUCTION' ? 'bg-blue-100 text-blue-800' : (order.status != null and order.status.name() == 'DISPATCHED' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800')))}"
                   th:text="${order.status != null ? order.status.label : 'Yeni'}">Yeni</span>
+
+            <!-- Hızlı Onay Butonu (NEW ise) -->
+            <form th:if="${order.status != null and order.status.name() == 'NEW'}"
+                  th:action="@{'/work-orders/' + ${order.id} + '/status'}" method="post" class="inline">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <input type="hidden" name="status" value="APPROVED" />
+                <input type="hidden" name="notes" value="İş emri onaylandı" />
+                <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm cursor-pointer">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <span>İş Emrini Onayla</span>
+                </button>
+            </form>
+
+            <!-- Hızlı Üretime Al Butonu (APPROVED ise) -->
+            <form th:if="${order.status != null and order.status.name() == 'APPROVED'}"
+                  th:action="@{'/work-orders/' + ${order.id} + '/status'}" method="post" class="inline">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <input type="hidden" name="status" value="IN_PRODUCTION" />
+                <input type="hidden" name="notes" value="Üretime alındı" />
+                <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition shadow-sm cursor-pointer">
+                    <i data-lucide="play" class="w-4 h-4"></i>
+                    <span>Üretime Başla</span>
+                </button>
+            </form>
+
             <button type="button" onclick="window.print()" class="erp-btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition">
                 <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i>
                 <span>Yazdır</span>
@@ -136,7 +161,7 @@
                             </td>
                             <td class="p-2.5">
                                 <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200"
-                                      th:text="${it.edgeOperation + (it.edgeUnit != null ? ' (' + it.edgeUnit + ')' : '')}">Pah (m.t.)</span>
+                                      th:text="${it.edgeOperation != null ? it.edgeOperation : 'Pah'}">Pah</span>
                             </td>
                             <td class="p-2.5 text-slate-600" th:text="${it.notes != null and not #strings.isEmpty(it.notes) ? it.notes : '—'}">—</td>
                         </tr>

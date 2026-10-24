@@ -100,8 +100,13 @@
                     this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
                 }
             },
+            isMtUnit(unit) {
+                if (!unit) return false;
+                const u = String(unit).toLowerCase().trim();
+                return u === 'm.t.' || u === 'mt' || u === 'm.t' || u === 'm.tül' || u === 'm.tul' || u === 'metretül' || u === 'metretul' || u === 'metre tül' || u === 'lineer metre' || u === 'lineer';
+            },
             getLineCalcM2(line) {
-                if (line.unit === 'm.t.' && parseFloat(line.widthCm) > 0) {
+                if (this.isMtUnit(line.unit) && parseFloat(line.widthCm) > 0) {
                     return (((parseFloat(line.quantity) || 0) * parseFloat(line.widthCm)) / 100).toFixed(2);
                 }
                 return '';
@@ -752,14 +757,15 @@
                                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right" />
                                 </td>
 
-                                <!-- Birim (Birim Tanımlamaları: litre, adet, m.t. ve diğerleri) -->
+                                <!-- Birim (Birim Tanımlamaları: litre, adet, m.tül, m2 ve diğerleri) -->
                                 <td class="p-2">
                                     <select name="itemUnit" x-model="line.unit" required
                                             class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
-                                        <option value="litre">litre</option>
-                                        <option value="adet">adet</option>
-                                        <option value="m.t.">m.t. (Metretül)</option>
+                                        <option value="m.tül">m.tül (Metre Tül)</option>
                                         <option value="m2">m²</option>
+                                        <option value="adet">adet</option>
+                                        <option value="litre">litre</option>
+                                        <option value="m.t.">m.t. (Metretül)</option>
                                         <option value="ton">ton</option>
                                         <option value="kg">kg</option>
                                         <option value="m3">m³</option>
@@ -769,19 +775,19 @@
                                 <!-- Genişlik (cm) - Metretül satışı için -->
                                 <td class="p-2">
                                     <input type="number" step="0.1" name="itemWidthCm" x-model.number="line.widthCm"
-                                           :placeholder="line.unit === 'm.t.' ? 'En (cm) *' : '—'"
-                                           :disabled="line.unit !== 'm.t.'"
+                                           :placeholder="isMtUnit(line.unit) ? 'En (cm) *' : '—'"
+                                           :disabled="!isMtUnit(line.unit)"
                                            class="w-full px-2 py-1.5 border rounded-lg text-xs text-center font-mono focus:ring-1 focus:outline-none"
-                                           :class="line.unit === 'm.t.' ? 'border-amber-400 bg-amber-50 text-amber-950 font-bold focus:ring-amber-500' : 'border-slate-200 bg-slate-100 text-slate-400'" />
+                                           :class="isMtUnit(line.unit) ? 'border-amber-400 bg-amber-50 text-amber-950 font-bold focus:ring-amber-500' : 'border-slate-200 bg-slate-100 text-slate-400'" />
                                 </td>
 
                                 <!-- Hesaplanan m² (Metretül x Genişlik / 100) -->
                                 <td class="p-2 text-center font-mono font-bold text-xs">
-                                    <template x-if="line.unit === 'm.t.' && line.widthCm > 0">
+                                    <template x-if="isMtUnit(line.unit) && line.widthCm > 0">
                                         <span class="px-2 py-1 bg-teal-50 border border-teal-200 text-teal-800 rounded-lg inline-block"
                                               x-text="getLineCalcM2(line) + ' m²'"></span>
                                     </template>
-                                    <template x-if="line.unit !== 'm.t.' || !line.widthCm">
+                                    <template x-if="!isMtUnit(line.unit) || !line.widthCm">
                                         <span class="text-slate-400">—</span>
                                     </template>
                                 </td>

@@ -161,11 +161,11 @@ public class OperationWorkOrderController extends AbstractController {
         return "workorders/form";
     }
 
-    @PostMapping({"/new", "/create"})
+    @PostMapping({"", "/", "/new", "/create"})
     public String createOrder(@RequestParam(value = "orderNo", required = false) String orderNo,
                               @RequestParam(value = "customerId", required = false) Long customerId,
-                              @RequestParam(value = "orderDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderDate,
-                              @RequestParam(value = "dueDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dueDate,
+                              @RequestParam(value = "orderDate", required = false) String orderDateStr,
+                              @RequestParam(value = "dueDate", required = false) String dueDateStr,
                               @RequestParam("department") BusinessUnit department,
                               @RequestParam(value = "responsiblePerson", required = false) String responsiblePerson,
                               @RequestParam(value = "stoneType", required = false) String stoneType,
@@ -194,6 +194,9 @@ public class OperationWorkOrderController extends AbstractController {
                               RedirectAttributes redirectAttributes) {
 
         try {
+            LocalDate orderDate = parseDateSafely(orderDateStr, LocalDate.now());
+            LocalDate dueDate = parseDateSafely(dueDateStr, LocalDate.now().plusDays(14));
+
             List<OperationWorkOrderItem> items = new ArrayList<>();
             BigDecimal effectiveWidth = widthCm;
             BigDecimal effectiveLength = lengthCm;
@@ -311,8 +314,22 @@ public class OperationWorkOrderController extends AbstractController {
             OperationWorkOrder order = workOrderService.updateStatus(id, status, notes);
             redirectAttributes.addFlashAttribute("successMessage", "İş Emri (" + order.getOrderNo() + ") durumu güncellendi: " + status.getLabel());
         } catch (Exception e) {
+            log.error("İş emri durumu güncellenemedi: id={}, status={}", id, status, e);
             redirectAttributes.addFlashAttribute("errorMessage", "Durum güncellenirken hata: " + e.getMessage());
         }
         return "redirect:/work-orders/" + id;
+    }
+
+    private LocalDate parseDateSafely(String val, LocalDate fallback) {
+        if (val == null || val.isBlank()) return fallback;
+        try {
+            return LocalDate.parse(val.trim());
+        } catch (Exception e) {
+            try {
+                return LocalDate.parse(val.trim(), java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+            } catch (Exception ex) {
+                return fallback;
+            }
+        }
     }
 }

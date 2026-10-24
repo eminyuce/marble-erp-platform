@@ -377,4 +377,98 @@ class InvoiceServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Fatura bulunamadı: 999");
     }
+
+    @Test
+    @DisplayName("Sales invoice with m.tül unit calculates m2 and deducts calculated m2 from stock")
+    void createInvoice_RunningMeterSales_DeductsCalculatedM2() {
+        StockItem sized = StockItem.builder()
+                .id(100L)
+                .itemCode("EBT-M1")
+                .description("Mermer Basamak")
+                .widthCm(new BigDecimal("50"))
+                .quantity(new BigDecimal("20.00"))
+                .unit("m2")
+                .status("AVAILABLE")
+                .build();
+
+        when(stockItemRepository.findById(100L)).thenReturn(Optional.of(sized));
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> {
+            Invoice invObj = inv.getArgument(0);
+            invObj.setId(101L);
+            return invObj;
+        });
+
+        List<InvoiceService.InvoiceItemForm> items = List.of(
+                new InvoiceService.InvoiceItemForm(
+                        "Basamak", "50cm genişlik",
+                        new BigDecimal("10"), // 10 m.tül
+                        "m.tül",
+                        new BigDecimal("100"),
+                        null, null, 100L,
+                        new BigDecimal("50"), // width = 50 cm -> 10 * 50 / 100 = 5.00 m2
+                        null
+                )
+        );
+
+        Invoice saved = invoiceService.createInvoice(
+                "FAT-MT-01", LocalDate.now(), null, InvoiceType.SALES, BusinessUnit.WORKSHOP,
+                null, null, null, null, new BigDecimal("20"), false, "Müşteri A", "Metretül Satış", items
+        );
+
+        assertThat(saved).isNotNull();
+        assertThat(saved.getItems()).hasSize(1);
+        InvoiceItem item = saved.getItems().get(0);
+        assertThat(item.getCalculatedM2()).isEqualByComparingTo("5.00");
+
+        // Stock was 20.00, deducted 5.00 m2 -> should be 15.00 m2
+        assertThat(sized.getQuantity()).isEqualByComparingTo("15.00");
+        verify(stockItemRepository, atLeastOnce()).save(sized);
+    }
+
+    @Test
+    @DisplayName("Purchase invoice with m.tül unit calculates m2 and adds calculated m2 to stock")
+    void createInvoice_RunningMeterPurchase_AddsCalculatedM2() {
+        StockItem sized = StockItem.builder()
+                .id(200L)
+                .itemCode("EBT-P1")
+                .description("Gelen Süpürgelik")
+                .widthCm(new BigDecimal("10"))
+                .quantity(new BigDecimal("5.00"))
+                .unit("m2")
+                .status("AVAILABLE")
+                .build();
+
+        when(stockItemRepository.findById(200L)).thenReturn(Optional.of(sized));
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> {
+            Invoice invObj = inv.getArgument(0);
+            invObj.setId(201L);
+            return invObj;
+        });
+
+        List<InvoiceService.InvoiceItemForm> items = List.of(
+                new InvoiceService.InvoiceItemForm(
+                        "Süpürgelik", "10cm genişlik",
+                        new BigDecimal("100"), // 100 m.tül
+                        "m.tül",
+                        new BigDecimal("50"),
+                        null, null, 200L,
+                        new BigDecimal("10"), // 10 cm width -> 100 * 10 / 100 = 10.00 m2
+                        null
+                )
+        );
+
+        Invoice saved = invoiceService.createInvoice(
+                "ALIS-MT-01", LocalDate.now(), null, InvoiceType.PURCHASE, BusinessUnit.FACTORY,
+                null, 1L, null, null, new BigDecimal("20"), false, "Tedarikçi A", "Metretül Alış", items
+        );
+
+        assertThat(saved).isNotNull();
+        assertThat(saved.getItems()).hasSize(1);
+        InvoiceItem item = saved.getItems().get(0);
+        assertThat(item.getCalculatedM2()).isEqualByComparingTo("10.00");
+
+        // Stock was 5.00, added 10.00 m2 -> should be 15.00 m2
+        assertThat(sized.getQuantity()).isEqualByComparingTo("15.00");
+        verify(stockItemRepository, atLeastOnce()).save(sized);
+    }
 }
