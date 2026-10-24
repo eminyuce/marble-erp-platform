@@ -100,6 +100,51 @@
             </div>
         </div>
 
+        <!-- Sipariş Kalemleri ve İşlem Detayları -->
+        <div th:if="${order.items != null and not #lists.isEmpty(order.items)}" class="border-t border-slate-100 pt-6">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-1.5">
+                <i data-lucide="ruler" class="w-4 h-4 text-indigo-600"></i>
+                <span>Sipariş Ebat, Adet ve İşlem Satırları</span>
+            </h4>
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase text-[11px]">
+                        <tr>
+                            <th class="py-2.5 px-3 w-8 text-center">#</th>
+                            <th class="py-2.5 px-3">Ebat (Kalınlık × En × Boy)</th>
+                            <th class="py-2.5 px-3 text-right">Adet</th>
+                            <th class="py-2.5 px-3 text-right">Hesaplanan Alan</th>
+                            <th class="py-2.5 px-3 text-right">Hesaplanan Metretül</th>
+                            <th class="py-2.5 px-3">Yüzey İşlemi</th>
+                            <th class="py-2.5 px-3">Kenar İşlemi</th>
+                            <th class="py-2.5 px-3">Mahâl / Not</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr th:each="it, stat : ${order.items}" class="hover:bg-slate-50/70 transition font-medium">
+                            <td class="p-2.5 text-center font-bold text-slate-400 font-mono" th:text="${stat.index + 1}">1</td>
+                            <td class="p-2.5 font-bold text-slate-900"
+                                th:text="${(it.thicknessCm != null ? it.thicknessCm + 'cm ' : '') + it.widthCm + ' × ' + it.lengthCm + ' cm'}">2cm 60×120 cm</td>
+                            <td class="p-2.5 text-right font-black font-mono text-slate-800" th:text="${it.pieceCount}">10</td>
+                            <td class="p-2.5 text-right font-mono font-bold text-indigo-700"
+                                th:text="${it.calculatedM2 != null ? #numbers.formatDecimal(it.calculatedM2, 1, 'POINT', 2, 'COMMA') + ' m²' : '—'}">7,20 m²</td>
+                            <td class="p-2.5 text-right font-mono font-bold text-blue-700"
+                                th:text="${it.calculatedMt != null ? #numbers.formatDecimal(it.calculatedMt, 1, 'POINT', 2, 'COMMA') + ' m.t.' : '—'}">12,00 m.t.</td>
+                            <td class="p-2.5">
+                                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                      th:text="${it.surfaceOperation + (it.surfaceUnit != null ? ' (' + it.surfaceUnit + ')' : '')}">Cilalı (m²)</span>
+                            </td>
+                            <td class="p-2.5">
+                                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200"
+                                      th:text="${it.edgeOperation + (it.edgeUnit != null ? ' (' + it.edgeUnit + ')' : '')}">Pah (m.t.)</span>
+                            </td>
+                            <td class="p-2.5 text-slate-600" th:text="${it.notes != null and not #strings.isEmpty(it.notes) ? it.notes : '—'}">—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- 3. Bağlantılı Hammadde / Stok Bilgisi -->
         <div th:if="${order.sourceSlab != null or order.sourceStockItem != null or order.sourceBlock != null}"
              class="bg-indigo-50/60 border border-indigo-200 rounded-2xl p-4 text-xs space-y-2">

@@ -13,8 +13,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.ozerler.marble.dto.TabulatorResponse;
@@ -161,8 +164,8 @@ public class OperationWorkOrderController extends AbstractController {
     @PostMapping({"/new", "/create"})
     public String createOrder(@RequestParam(value = "orderNo", required = false) String orderNo,
                               @RequestParam(value = "customerId", required = false) Long customerId,
-                              @RequestParam(value = "orderDate", required = false) LocalDate orderDate,
-                              @RequestParam(value = "dueDate", required = false) LocalDate dueDate,
+                              @RequestParam(value = "orderDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderDate,
+                              @RequestParam(value = "dueDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dueDate,
                               @RequestParam("department") BusinessUnit department,
                               @RequestParam(value = "responsiblePerson", required = false) String responsiblePerson,
                               @RequestParam(value = "stoneType", required = false) String stoneType,
@@ -183,10 +186,15 @@ public class OperationWorkOrderController extends AbstractController {
                               @RequestParam(value = "dimLengthCm", required = false) List<BigDecimal> dimLengths,
                               @RequestParam(value = "dimThicknessCm", required = false) List<BigDecimal> dimThicknesses,
                               @RequestParam(value = "dimPieceCount", required = false) List<Integer> dimPieceCounts,
+                              @RequestParam(value = "dimSurfaceOp", required = false) List<String> dimSurfaceOps,
+                              @RequestParam(value = "dimSurfaceUnit", required = false) List<String> dimSurfaceUnits,
+                              @RequestParam(value = "dimEdgeOp", required = false) List<String> dimEdgeOps,
+                              @RequestParam(value = "dimEdgeUnit", required = false) List<String> dimEdgeUnits,
                               @RequestParam(value = "dimNote", required = false) List<String> dimNotes,
                               RedirectAttributes redirectAttributes) {
 
         try {
+            List<OperationWorkOrderItem> items = new ArrayList<>();
             BigDecimal effectiveWidth = widthCm;
             BigDecimal effectiveLength = lengthCm;
             BigDecimal effectiveThickness = thicknessCm;
@@ -194,8 +202,9 @@ public class OperationWorkOrderController extends AbstractController {
             StringBuilder breakdownBuilder = new StringBuilder();
 
             if (dimWidths != null && !dimWidths.isEmpty()) {
-                breakdownBuilder.append("=== SİPARİŞ ÖLÇÜ LİSTESİ ===\n");
+                breakdownBuilder.append("=== SİPARİŞ ÖLÇÜ & İŞLEM LİSTESİ ===\n");
                 BigDecimal sumM2 = BigDecimal.ZERO;
+                BigDecimal sumMt = BigDecimal.ZERO;
                 int totalPieces = 0;
                 for (int i = 0; i < dimWidths.size(); i++) {
                     BigDecimal w = dimWidths.get(i);
@@ -203,25 +212,64 @@ public class OperationWorkOrderController extends AbstractController {
                     BigDecimal l = (dimLengths != null && i < dimLengths.size()) ? dimLengths.get(i) : BigDecimal.ZERO;
                     BigDecimal t = (dimThicknesses != null && i < dimThicknesses.size()) ? dimThicknesses.get(i) : new BigDecimal("2.0");
                     int pcs = (dimPieceCounts != null && i < dimPieceCounts.size() && dimPieceCounts.get(i) != null) ? dimPieceCounts.get(i) : 1;
+                    String sOp = (dimSurfaceOps != null && i < dimSurfaceOps.size() && dimSurfaceOps.get(i) != null && !dimSurfaceOps.get(i).isBlank())
+                            ? dimSurfaceOps.get(i).trim() : (surfaceOperation != null ? surfaceOperation : "Cilalı");
+                    String sUnit = (dimSurfaceUnits != null && i < dimSurfaceUnits.size() && dimSurfaceUnits.get(i) != null && !dimSurfaceUnits.get(i).isBlank())
+                            ? dimSurfaceUnits.get(i).trim() : "m2";
+                    String eOp = (dimEdgeOps != null && i < dimEdgeOps.size() && dimEdgeOps.get(i) != null && !dimEdgeOps.get(i).isBlank())
+                            ? dimEdgeOps.get(i).trim() : (edgeOperation != null ? edgeOperation : "Pah");
+                    String eUnit = (dimEdgeUnits != null && i < dimEdgeUnits.size() && dimEdgeUnits.get(i) != null && !dimEdgeUnits.get(i).isBlank())
+                            ? dimEdgeUnits.get(i).trim() : "m.t.";
                     String dNote = (dimNotes != null && i < dimNotes.size() && dimNotes.get(i) != null) ? dimNotes.get(i).trim() : "";
 
                     BigDecimal rowM2 = w.multiply(l).multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(10000), 2, java.math.RoundingMode.HALF_UP);
+                    BigDecimal rowMt = l.multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
                     sumM2 = sumM2.add(rowM2);
+                    sumMt = sumMt.add(rowMt);
                     totalPieces += pcs;
 
                     if (effectiveWidth == null) effectiveWidth = w;
                     if (effectiveLength == null) effectiveLength = l;
                     if (effectiveThickness == null) effectiveThickness = t;
 
-                    breakdownBuilder.append(String.format("%d. %s x %s x %s cm — %d Adet (%s m²)%s\n",
-                            (i + 1), w, l, t, pcs, rowM2, dNote.isEmpty() ? "" : " [" + dNote + "]"));
+                    OperationWorkOrderItem item = OperationWorkOrderItem.builder()
+                            .thicknessCm(t)
+                            .widthCm(w)
+                            .lengthCm(l)
+                            .pieceCount(pcs)
+                            .calculatedM2(rowM2)
+                            .calculatedMt(rowMt)
+                            .surfaceOperation(sOp)
+                            .surfaceUnit(sUnit)
+                            .edgeOperation(eOp)
+                            .edgeUnit(eUnit)
+                            .notes(dNote)
+                            .itemOrder(i)
+                            .build();
+                    items.add(item);
+
+                    breakdownBuilder.append(String.format("%d. %s x %s x %s cm — %d Adet (%s m² | %s m.t.) [Yüzey: %s (%s), Kenar: %s (%s)]%s\n",
+                            (i + 1), w, l, t, pcs, rowM2, rowMt, sOp, sUnit, eOp, eUnit, dNote.isEmpty() ? "" : " {" + dNote + "}"));
                 }
-                breakdownBuilder.append(String.format("-------------------------------------------\nTOPLAM: %d Adet | %s m²\n", totalPieces, sumM2));
+                breakdownBuilder.append(String.format("-------------------------------------------\nTOPLAM: %d Adet | %s m² | %s m.t.\n", totalPieces, sumM2, sumMt));
 
                 if (effectiveQuantity == null || effectiveQuantity.compareTo(BigDecimal.ZERO) <= 0) {
-                    effectiveQuantity = "adet".equalsIgnoreCase(quantityUnit) ? BigDecimal.valueOf(totalPieces) : sumM2;
+                    if ("adet".equalsIgnoreCase(quantityUnit)) {
+                        effectiveQuantity = BigDecimal.valueOf(totalPieces);
+                    } else if ("m.t.".equalsIgnoreCase(quantityUnit) || "mt".equalsIgnoreCase(quantityUnit)) {
+                        effectiveQuantity = sumMt;
+                    } else {
+                        effectiveQuantity = sumM2;
+                    }
                 }
             }
+
+            String topSurface = (surfaceOperation != null && !surfaceOperation.isBlank())
+                    ? surfaceOperation
+                    : (!items.isEmpty() && items.get(0).getSurfaceOperation() != null ? items.get(0).getSurfaceOperation() : "Cilalı");
+            String topEdge = (edgeOperation != null && !edgeOperation.isBlank())
+                    ? edgeOperation
+                    : (!items.isEmpty() && items.get(0).getEdgeOperation() != null ? items.get(0).getEdgeOperation() : "Pah");
 
             String finalNotes = notes != null ? notes.trim() : "";
             if (breakdownBuilder.length() > 0) {
@@ -231,8 +279,8 @@ public class OperationWorkOrderController extends AbstractController {
             OperationWorkOrderService.WorkOrderCreateForm form = new OperationWorkOrderService.WorkOrderCreateForm(
                     orderNo, customerId, orderDate, dueDate, department, responsiblePerson,
                     stoneType, colorQuality, effectiveThickness, effectiveWidth, effectiveLength, effectiveQuantity, quantityUnit,
-                    surfaceOperation, edgeOperation, sourceStockItemId, sourceSlabId, sourceBlockId,
-                    usedQuantity, finalNotes
+                    topSurface, topEdge, sourceStockItemId, sourceSlabId, sourceBlockId,
+                    usedQuantity, finalNotes, items
             );
 
             OperationWorkOrder order = workOrderService.createWorkOrder(form);

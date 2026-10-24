@@ -28,6 +28,7 @@ public class CollectionService {
     private final CheckRecordRepository checkRepository;
     private final CustomerRepository customerRepository;
     private final InvoiceRepository invoiceRepository;
+    private final CariTransactionService cariTransactionService;
 
     public record CheckFormData(String checkNo, LocalDate checkDate, LocalDate dueDate, String bankName) {}
 
@@ -89,6 +90,10 @@ public class CollectionService {
         if (invoice != null) {
             invoice.setStatus(InvoiceStatus.PAID);
             invoiceRepository.save(invoice);
+        }
+
+        if (savedCollection.getCustomer() != null) {
+            cariTransactionService.syncCollection(savedCollection);
         }
 
         return savedCollection;

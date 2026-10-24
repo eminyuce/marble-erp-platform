@@ -53,8 +53,23 @@ public class OperationWorkOrderService {
             Long sourceSlabId,
             Long sourceBlockId,
             BigDecimal usedQuantity,
-            String notes
-    ) {}
+            String notes,
+            List<OperationWorkOrderItem> items
+    ) {
+        public WorkOrderCreateForm(
+                String orderNo, Long customerId, LocalDate orderDate, LocalDate dueDate,
+                BusinessUnit department, String responsiblePerson, String stoneType,
+                String colorQuality, BigDecimal thicknessCm, BigDecimal widthCm,
+                BigDecimal lengthCm, BigDecimal quantity, String quantityUnit,
+                String surfaceOperation, String edgeOperation, Long sourceStockItemId,
+                Long sourceSlabId, Long sourceBlockId, BigDecimal usedQuantity, String notes
+        ) {
+            this(orderNo, customerId, orderDate, dueDate, department, responsiblePerson,
+                    stoneType, colorQuality, thicknessCm, widthCm, lengthCm, quantity,
+                    quantityUnit, surfaceOperation, edgeOperation, sourceStockItemId,
+                    sourceSlabId, sourceBlockId, usedQuantity, notes, List.of());
+        }
+    }
 
     @Transactional
     public OperationWorkOrder createWorkOrder(WorkOrderCreateForm form) {
@@ -94,6 +109,12 @@ public class OperationWorkOrderService {
                 .usedQuantity(form.usedQuantity())
                 .notes(form.notes())
                 .build();
+
+        if (form.items() != null && !form.items().isEmpty()) {
+            for (OperationWorkOrderItem it : form.items()) {
+                order.addItem(it);
+            }
+        }
 
         OperationWorkOrder saved = workOrderRepository.save(order);
 

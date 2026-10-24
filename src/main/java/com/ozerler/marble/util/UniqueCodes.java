@@ -35,7 +35,7 @@ public final class UniqueCodes {
     public static String yearly(String prefix, int modulus, Predicate<String> exists) {
         int year = Year.now().getValue();
         int safeModulus = Math.max(modulus, 1);
-        return allocate(() -> String.format("%s-%d-%d", prefix, year, System.nanoTime() % safeModulus), exists);
+        return allocate(() -> String.format("%s-%d-%d", prefix, year, Math.abs(System.nanoTime() % safeModulus)), exists);
     }
 
     public static String sequential(String prefix, int year, int startSequence, int width, Predicate<String> exists) {

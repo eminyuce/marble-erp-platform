@@ -98,9 +98,24 @@ public class OperationWorkOrder extends AuditableEntity {
     private String notes;
 
     @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("itemOrder ASC, id ASC")
+    @Builder.Default
+    private List<OperationWorkOrderItem> items = new ArrayList<>();
+
+    @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("changedAt DESC")
     @Builder.Default
     private List<WorkOrderStatusHistory> statusHistory = new ArrayList<>();
+
+    public void addItem(OperationWorkOrderItem item) {
+        if (item != null) {
+            item.setWorkOrder(this);
+            if (this.items == null) {
+                this.items = new ArrayList<>();
+            }
+            this.items.add(item);
+        }
+    }
 
     @Transient
     public String getCustomerDisplayName() {

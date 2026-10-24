@@ -42,6 +42,7 @@ public class InvoiceService {
     private final QuarryInventoryService quarryInventoryService;
     private final FactoryInventoryService factoryInventoryService;
     private final BlockCustomerMarkRepository blockCustomerMarkRepository;
+    private final CariTransactionService cariTransactionService;
 
     public record InvoiceItemForm(String productName, String description, BigDecimal quantity, String unit,
                                   BigDecimal unitPrice, Long blockId, Long slabId, Long stockItemId,
@@ -193,6 +194,10 @@ public class InvoiceService {
             saved = invoiceRepository.save(saved);
         }
 
+        if (saved.getCustomer() != null && saved.getStatus() != InvoiceStatus.CANCELLED) {
+            cariTransactionService.syncInvoice(saved);
+        }
+
         return saved;
     }
 
@@ -236,7 +241,11 @@ public class InvoiceService {
         processStockForInvoice(invoice);
         invoice.setStatus(InvoiceStatus.ISSUED);
         invoice.setStockProcessed(true);
-        return invoiceRepository.save(invoice);
+        Invoice saved = invoiceRepository.save(invoice);
+        if (saved.getCustomer() != null) {
+            cariTransactionService.syncInvoice(saved);
+        }
+        return saved;
     }
 
     /**
@@ -671,7 +680,9 @@ public class InvoiceService {
         }
 
         log.info("Fatura {} başarıyla iptal edildi ve stok/maliyet hareketleri geri alındı.", invoice.getInvoiceNo());
-        return invoiceRepository.save(invoice);
+        Invoice cancelled = invoiceRepository.save(invoice);
+        cariTransactionService.removeInvoiceSync(cancelled.getId());
+        return cancelled;
     }
 
     @Transactional

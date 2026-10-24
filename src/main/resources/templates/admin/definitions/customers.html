@@ -155,7 +155,8 @@
                         width: 140,
                         responsive: 0,
                         formatter: function (cell) {
-                            return `<span class="font-mono font-bold text-slate-900">${gridText(cell.getValue())}</span>`;
+                            const row = cell.getRow().getData();
+                            return `<a href="/admin/definitions/customers/${row.id}/transactions" class="font-mono font-bold text-indigo-600 hover:text-indigo-800 hover:underline" title="Cari Hesap Hareketleri">${gridText(cell.getValue())}</a>`;
                         }
                     },
                     {
@@ -165,7 +166,7 @@
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
                             return `<div>
-                                <div class="font-semibold text-slate-800">${gridText(row.companyName)}</div>
+                                <a href="/admin/definitions/customers/${row.id}/transactions" class="font-bold text-slate-900 hover:text-indigo-600 hover:underline block" title="Cari Hesap Hareketleri">${gridText(row.companyName)}</a>
                                 <div class="text-xs text-slate-400">${gridText(row.address)}</div>
                             </div>`;
                         }
@@ -217,18 +218,29 @@
                     },
                     {
                         title: "İşlemler",
-                        width: 120,
+                        width: 150,
                         headerSort: false,
                         responsive: 0,
                         formatter: function (cell) {
                             const id = cell.getRow().getData().id;
                             return gridActionsHtml([
+                                {icon: "file-text", label: "Hesap Hareketleri", href: "/admin/definitions/customers/" + id + "/transactions"},
                                 {icon: "edit-3", label: "Düzenle", href: "/admin/definitions/customers/" + id + "/edit"},
                                 {icon: "trash-2", label: "Sil", onclick: "confirmDefinitionDelete(" + id + ")", danger: true}
                             ]);
                         }
                     }
                 ]
+            });
+
+            window.definitionTable.on("rowClick", (e, row) => {
+                if (e.target.closest("button") || e.target.closest("a") || e.target.closest(".tabulator-responsive-collapse-toggle")) {
+                    return;
+                }
+                const data = row.getData();
+                if (data && data.id) {
+                    window.location.href = "/admin/definitions/customers/" + data.id + "/transactions";
+                }
             });
 
             document.getElementById("business-unit-filter")?.addEventListener("change", () => {

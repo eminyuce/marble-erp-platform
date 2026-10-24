@@ -127,7 +127,7 @@
                 <span class="p-2 rounded-xl bg-blue-50 text-blue-700"><i data-lucide="layers" class="w-5 h-5"></i></span>
             </div>
             <div class="text-3xl font-black text-slate-900 mt-2 font-mono"
-                 th:text="${consumables != null ? #aggregates.sum(consumables.![quantity]) : 0} + ' Birim'">0 Birim</div>
+                 th:text="${totalQuantity != null ? #numbers.formatDecimal(totalQuantity, 1, 'POINT', 0, 'COMMA') : 0} + ' Birim'">0 Birim</div>
             <div class="text-xs text-slate-500 mt-1">Depodaki toplam stok miktarı</div>
         </div>
 
@@ -192,7 +192,7 @@
                     <td class="py-3 px-4 text-right font-mono"
                         th:text="${c.unitPrice != null ? #numbers.formatDecimal(c.unitPrice, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">150,00 TL</td>
                     <td class="py-3 px-4 text-right font-mono font-bold text-slate-900"
-                        th:text="${c.quantity != null and c.unitPrice != null ? #numbers.formatDecimal(c.quantity * c.unitPrice, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">0,00 TL</td>
+                        th:text="${c.quantity != null and c.unitPrice != null ? #numbers.formatDecimal(c.quantity.multiply(c.unitPrice), 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">0,00 TL</td>
                     <td class="py-3 px-4">
                         <span th:if="${c.quantity != null and c.quantity > 0}"
                               class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Stokta</span>
@@ -201,7 +201,11 @@
                     </td>
                     <td class="py-3 px-4 text-right">
                         <button type="button"
-                                th:attr="@click='openConsumeModal(' + ${c.id} + ', \'' + ${#strings.escapeJavaScript(c.description)} + '\', ' + ${c.quantity} + ', \'' + ${c.unit != null ? c.unit : 'adet'} + '\')'"
+                                th:data-id="${c.id}"
+                                th:data-desc="${c.description}"
+                                th:data-qty="${c.quantity != null ? c.quantity : 0}"
+                                th:data-unit="${c.unit != null ? c.unit : 'adet'}"
+                                @click="openConsumeModal($el.dataset.id, $el.dataset.desc, parseFloat($el.dataset.qty), $el.dataset.unit)"
                                 th:disabled="${c.quantity == null or c.quantity <= 0 or (c.quarryCategory != null and c.quarryCategory.name() == 'MAZOT')}"
                                 class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed text-emerald-800 rounded-lg text-xs font-bold transition inline-flex items-center gap-1 cursor-pointer border border-emerald-200">
                             <i data-lucide="check" class="w-3.5 h-3.5"></i>

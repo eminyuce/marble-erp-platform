@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${customer.companyName + ' — Cari Hesap Hareketleri | Özerler Mermer ERP'}">Cari Hareketleri</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-list-page space-y-6"
+     x-data="{
+        searchQuery: '',
+        addModalOpen: false,
+        editModalOpen: false,
+        deleteModalOpen: false,
+        editId: null,
+        editDate: '',
+        editType: 'BORC_DEKONTU',
+        editDirection: 'DEBIT',
+        editDocNo: '',
+        editAmount: '0.00',
+        editDesc: '',
+        editNotes: '',
+        deleteId: null,
+        deleteDesc: '',
+        openTxEdit(item) {
+            this.editId = item.id;
+            this.editDate = item.transactionDate || '';
+            this.editType = item.transactionType || 'BORC_DEKONTU';
+            this.editDocNo = item.documentNo || '';
+            const debit = parseFloat(item.debitAmount) || 0;
+            const credit = parseFloat(item.creditAmount) || 0;
+            if (debit > 0) {
+                this.editDirection = 'DEBIT';
+                this.editAmount = debit.toFixed(2);
+            } else {
+                this.editDirection = 'CREDIT';
+                this.editAmount = credit.toFixed(2);
+            }
+            this.editDesc = item.description || '';
+            this.editNotes = item.notes || '';
+            this.editModalOpen = true;
+        },
+        openDeleteModal(id, desc) {
+            this.deleteId = id;
+            this.deleteDesc = desc || 'Bu cari hareketi';
+            this.deleteModalOpen = true;
+        },
+        matchesSearchEl(el) {
+            if (!this.searchQuery) return true;
+            const q = this.searchQuery.toLowerCase();
+            const desc = (el && el.dataset && el.dataset.desc ? el.dataset.desc : '').toLowerCase();
+            const doc = (el && el.dataset && el.dataset.doc ? el.dataset.doc : '').toLowerCase();
+            const type = (el && el.dataset && el.dataset.type ? el.dataset.type : '').toLowerCase();
+            return desc.includes(q) || doc.includes(q) || type.includes(q);
+        }
+     }">
+
+    <!-- Alert Messages -->
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="erp-list-header-main">
+            <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Cariler', '/admin/definitions/customers', ${customer.companyName})}"></div>
+            <h2 class="admin-page-title flex items-center gap-2">
+                <i data-lucide="book-open" class="w-7 h-7 text-indigo-600 inline-block"></i>
+                <span th:text="${customer.companyName}">Cari Hesap Ekstresi</span>
+                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 ml-2" th:text="${customer.customerCode}">CR-001</span>
+            </h2>
+            <p class="erp-list-lead">
+                Cari hesaba ait tüm fatura, tahsilat, ödeme, borç ve alacak dekont hareketleri ve güncel ekstre dökümü.
+            </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <a th:href="@{/admin/definitions/customers}"
+               class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Carilere Dön</span>
+            </a>
+            <button type="button" onclick="window.print()"
+                    class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i>
+                <span>Yazdır / Ekstre</span>
+            </button>
+            <button type="button" @click="addModalOpen = true"
+                    class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>+ Yeni Hareket Ekle</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Cari Bilgi Kartı -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 text-xs">
+            <div>
+                <span class="text-slate-400 block font-semibold">Cari Kodu</span>
+                <span class="font-bold text-slate-900 font-mono text-sm" th:text="${customer.customerCode}">CR-001</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block font-semibold">Firma / Ünvan</span>
+                <span class="font-bold text-slate-900" th:text="${customer.companyName}">Firma Adı</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block font-semibold">Müşteri Tipi</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-800"
+                      th:text="${customer.customerType != null ? customer.customerType.displayName : 'Genel'}">Müşteri</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block font-semibold">İşletme Birimi</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800"
+                      th:text="${customer.businessUnit != null ? customer.businessUnit.displayName : 'Genel'}">Ocak</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block font-semibold">Telefon / E-posta</span>
+                <span class="font-semibold text-slate-800" th:text="${(customer.phone != null ? customer.phone : '') + (customer.email != null ? ' | ' + customer.email : '')}">—</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block font-semibold">Vergi No / Dairesi</span>
+                <span class="font-semibold text-slate-800" th:text="${(customer.taxOffice != null ? customer.taxOffice + ' - ' : '') + (customer.taxNumber != null ? customer.taxNumber : '—')}">—</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Toplam Borç -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Toplam Borç (Satış/Dekont)</span>
+                <span class="p-2 rounded-xl bg-rose-50 text-rose-600"><i data-lucide="trending-up" class="w-5 h-5"></i></span>
+            </div>
+            <div class="text-2xl font-black text-rose-700 mt-2 font-mono"
+                 th:text="${#numbers.formatDecimal(summary.totalDebit, 1, 'POINT', 2, 'COMMA') + ' TL'}">0,00 TL</div>
+            <div class="text-xs text-slate-500 mt-1">Müşterinin toplam borç tutarı</div>
+        </div>
+
+        <!-- Toplam Alacak -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Toplam Alacak (Tahsilat/Ödeme)</span>
+                <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600"><i data-lucide="trending-down" class="w-5 h-5"></i></span>
+            </div>
+            <div class="text-2xl font-black text-emerald-700 mt-2 font-mono"
+                 th:text="${#numbers.formatDecimal(summary.totalCredit, 1, 'POINT', 2, 'COMMA') + ' TL'}">0,00 TL</div>
+            <div class="text-xs text-slate-500 mt-1">Müşteriden yapılan tahsilatlar</div>
+        </div>
+
+        <!-- Güncel Bakiye -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Güncel Net Bakiye</span>
+                <span class="p-2 rounded-xl bg-indigo-50 text-indigo-600"><i data-lucide="scale" class="w-5 h-5"></i></span>
+            </div>
+            <div class="text-2xl font-black mt-2 font-mono flex items-center gap-2"
+                 th:classappend="${summary.netBalance > 0.009 ? 'text-rose-700' : (summary.netBalance < -0.009 ? 'text-emerald-700' : 'text-slate-800')}">
+                <span th:text="${#numbers.formatDecimal(summary.netBalance.abs(), 1, 'POINT', 2, 'COMMA') + ' TL'}">0,00 TL</span>
+                <span class="text-xs px-2 py-0.5 rounded-full font-bold uppercase"
+                      th:classappend="${summary.netBalance > 0.009 ? 'bg-rose-100 text-rose-800' : (summary.netBalance < -0.009 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600')}"
+                      th:text="${summary.balanceStatus}">BORÇLU (B)</span>
+            </div>
+            <div class="text-xs text-slate-500 mt-1" th:text="${summary.netBalance > 0 ? 'Müşterinin işletmeye borcu vardır' : (summary.netBalance < 0 ? 'İşletmenin müşteriye borcu vardır' : 'Hesap bakiyesi sıfır')}">Durum</div>
+        </div>
+
+        <!-- Toplam Hareket -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Hareket Sayısı</span>
+                <span class="p-2 rounded-xl bg-blue-50 text-blue-600"><i data-lucide="layers" class="w-5 h-5"></i></span>
+            </div>
+            <div class="text-2xl font-black text-slate-900 mt-2 font-mono"
+                 th:text="${summary.transactionCount + ' Kayıt'}">0 Kayıt</div>
+            <div class="text-xs text-slate-500 mt-1">İşlem ve evrak geçmişi</div>
+        </div>
+    </div>
+
+    <!-- Hareketler Tablosu & Arama Çubuğu -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <i data-lucide="list" class="w-4 h-4 text-slate-500"></i>
+                <h3 class="text-sm font-bold text-slate-900">Hesap Hareketleri &amp; Ekstre Dökümü</h3>
+            </div>
+            <div class="relative w-full sm:w-64">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+                <input type="text" x-model="searchQuery" placeholder="Hareketlerde ara..."
+                       class="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-100 uppercase tracking-wider text-[11px]">
+                <tr>
+                    <th class="py-3 px-4 w-12 text-center">#</th>
+                    <th class="py-3 px-4 w-28">Tarih</th>
+                    <th class="py-3 px-4 w-36">İşlem Türü</th>
+                    <th class="py-3 px-4 w-36">Evrak / Belge No</th>
+                    <th class="py-3 px-4">Açıklama</th>
+                    <th class="py-3 px-4 text-right w-32">Borç (TL)</th>
+                    <th class="py-3 px-4 text-right w-32">Alacak (TL)</th>
+                    <th class="py-3 px-4 text-right w-36">Yürüyen Bakiye</th>
+                    <th class="py-3 px-4 text-right w-24">İşlemler</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700 font-medium">
+                <tr th:if="${transactions == null or transactions.isEmpty()}">
+                    <td colspan="9" class="py-8 text-center text-slate-400">
+                        Bu cariye ait henüz hesap hareketi bulunmuyor. Yukarıdaki "+ Yeni Hareket Ekle" butonuyla ekleyebilirsiniz.
+                    </td>
+                </tr>
+                <tr th:each="t, iter : ${transactions}" class="hover:bg-slate-50/80 transition"
+                    th:data-desc="${t.description != null ? t.description : ''}"
+                    th:data-doc="${t.documentNo != null ? t.documentNo : ''}"
+                    th:data-type="${t.transactionTypeLabel != null ? t.transactionTypeLabel : ''}"
+                    x-show="matchesSearchEl($el)">
+                    <td class="py-3 px-4 text-center font-mono text-slate-400 text-xs" th:text="${iter.count}">1</td>
+                    <td class="py-3 px-4 font-mono font-semibold text-slate-800" th:text="${t.formattedDate}">01.09.2026</td>
+                    <td class="py-3 px-4">
+                        <span th:if="${t.transactionType != null and t.transactionType.name() == 'SATIS_FATURASI'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">Satış Faturası</span>
+                        <span th:if="${t.transactionType != null and t.transactionType.name() == 'ALIS_FATURASI'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Alış Faturası</span>
+                        <span th:if="${t.transactionType != null and t.transactionType.name() == 'TAHSILAT'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Tahsilat</span>
+                        <span th:if="${t.transactionType != null and t.transactionType.name() == 'ODEME'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Ödeme</span>
+                        <span th:if="${t.transactionType != null and t.transactionType.name() == 'BORC_DEKONTU'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">Borç Dekontu</span>
+                        <span th:if="${t.transactionType != null and t.transactionType.name() == 'ALACAK_DEKONTU'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-teal-100 text-teal-800 border border-teal-200">Alacak Dekontu</span>
+                        <span th:if="${t.transactionType != null and t.transactionType.name() == 'DEVIR_BAKIYE'}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-300">Devir Bakiyesi</span>
+                        <span th:if="${t.transactionType != null and (t.transactionType.name() == 'VIRMAN' or t.transactionType.name() == 'DIGER')}"
+                              class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200" th:text="${t.transactionTypeLabel}">Diğer</span>
+                    </td>
+                    <td class="py-3 px-4 font-mono font-bold text-slate-900">
+                        <span th:text="${t.documentNo != null ? t.documentNo : '—'}">FTR-2026-001</span>
+                    </td>
+                    <td class="py-3 px-4 text-slate-800">
+                        <div class="font-semibold" th:text="${t.description}">Açıklama</div>
+                        <div class="text-[11px] text-slate-400" th:if="${t.notes != null and not t.notes.isEmpty()}" th:text="${t.notes}">Not</div>
+                    </td>
+                    <td class="py-3 px-4 text-right font-mono font-bold"
+                        th:classappend="${t.debitAmount > 0 ? 'text-rose-700' : 'text-slate-400'}"
+                        th:text="${t.debitAmount > 0 ? #numbers.formatDecimal(t.debitAmount, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">0,00 TL</td>
+                    <td class="py-3 px-4 text-right font-mono font-bold"
+                        th:classappend="${t.creditAmount > 0 ? 'text-emerald-700' : 'text-slate-400'}"
+                        th:text="${t.creditAmount > 0 ? #numbers.formatDecimal(t.creditAmount, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">0,00 TL</td>
+                    <td class="py-3 px-4 text-right font-mono font-bold"
+                        th:classappend="${t.runningBalance > 0.009 ? 'text-rose-700' : (t.runningBalance < -0.009 ? 'text-emerald-700' : 'text-slate-600')}"
+                        th:text="${#numbers.formatDecimal(t.runningBalance.abs(), 1, 'POINT', 2, 'COMMA') + (t.runningBalance > 0.009 ? ' (B)' : (t.runningBalance < -0.009 ? ' (A)' : ''))}">0,00 TL</td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="inline-flex items-center gap-1">
+                            <button type="button"
+                                    th:attr="data-id=${t.id},data-date=${t.transactionDate},data-type=${t.transactionType},data-doc=${t.documentNo},data-debit=${t.debitAmount},data-credit=${t.creditAmount},data-desc=${t.description},data-notes=${t.notes}"
+                                    @click="openTxEdit({
+                                        id: $el.dataset.id,
+                                        transactionDate: $el.dataset.date,
+                                        transactionType: $el.dataset.type,
+                                        documentNo: $el.dataset.doc,
+                                        debitAmount: $el.dataset.debit,
+                                        creditAmount: $el.dataset.credit,
+                                        description: $el.dataset.desc,
+                                        notes: $el.dataset.notes
+                                    })"
+                                    class="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition" title="Düzenle">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button"
+                                    th:attr="data-id=${t.id},data-desc=${t.description}"
+                                    @click="openDeleteModal($el.dataset.id, $el.dataset.desc)"
+                                    class="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Sil">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL 1: YENİ CARİ HAREKET EKLE -->
+    <div x-show="addModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-900/60" @click="addModalOpen = false"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block p-6 my-8 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-600"></i>
+                        <span>Yeni Cari Hareket Ekle</span>
+                    </h3>
+                    <button type="button" @click="addModalOpen = false" class="text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <form th:action="@{'/admin/definitions/customers/' + ${customer.id} + '/transactions'}" method="post" class="mt-4 space-y-4">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">İşlem Tarihi *</label>
+                            <input type="date" name="transactionDate" required
+                                   th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Hareket Türü *</label>
+                            <select name="transactionType" required
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50">
+                                <option th:each="ty : ${transactionTypes}" th:value="${ty.name()}" th:text="${ty.label}"
+                                        th:selected="${ty.name() == 'BORC_DEKONTU'}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">İşlem Yönü *</label>
+                            <select name="direction" required
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50">
+                                <option value="DEBIT">Borç (Cariye Borç Yaz)</option>
+                                <option value="CREDIT">Alacak (Cariye Alacak Yaz)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Tutar (TL) *</label>
+                            <input type="number" step="0.01" min="0.01" name="amount" required placeholder="0.00"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-black font-mono text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Evrak / Belge No (Opsiyonel)</label>
+                        <input type="text" name="documentNo" placeholder="Örn: DEK-2026-001"
+                               class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Açıklama *</label>
+                        <input type="text" name="description" required placeholder="Örn: Banka havalesi, Nakliye farkı dekontu"
+                               class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Notlar / Detay</label>
+                        <textarea name="notes" rows="2" placeholder="Ek muhasebe notları..."
+                                  class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                        <button type="button" @click="addModalOpen = false" class="erp-btn-secondary">Vazgeç</button>
+                        <button type="submit"
+                                class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <span>Hareketi Kaydet</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: CARİ HAREKET DÜZENLE -->
+    <div x-show="editModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-900/60" @click="editModalOpen = false"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block p-6 my-8 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="edit-3" class="w-5 h-5 text-indigo-600"></i>
+                        <span>Cari Hareketi Düzenle</span>
+                    </h3>
+                    <button type="button" @click="editModalOpen = false" class="text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <form :action="'/admin/definitions/customers/' + [[${customer.id}]] + '/transactions/' + editId + '/edit'" method="post" class="mt-4 space-y-4">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">İşlem Tarihi *</label>
+                            <input type="date" name="transactionDate" required x-model="editDate"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Hareket Türü *</label>
+                            <select name="transactionType" required x-model="editType"
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50">
+                                <option th:each="ty : ${transactionTypes}" th:value="${ty.name()}" th:text="${ty.label}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">İşlem Yönü *</label>
+                            <select name="direction" required x-model="editDirection"
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50">
+                                <option value="DEBIT">Borç (Cariye Borç Yaz)</option>
+                                <option value="CREDIT">Alacak (Cariye Alacak Yaz)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Tutar (TL) *</label>
+                            <input type="number" step="0.01" min="0.01" name="amount" required x-model="editAmount"
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-black font-mono text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Evrak / Belge No</label>
+                        <input type="text" name="documentNo" x-model="editDocNo"
+                               class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Açıklama *</label>
+                        <input type="text" name="description" required x-model="editDesc"
+                               class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Notlar</label>
+                        <textarea name="notes" rows="2" x-model="editNotes"
+                                  class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                        <button type="button" @click="editModalOpen = false" class="erp-btn-secondary">Vazgeç</button>
+                        <button type="submit"
+                                class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <span>Değişiklikleri Güncelle</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: HAREKET SİLME ONAYI -->
+    <div x-show="deleteModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-900/60" @click="deleteModalOpen = false"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block p-6 my-8 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div class="flex items-center gap-3 text-rose-600 pb-3 border-b border-slate-100">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                    <h3 class="text-base font-bold text-slate-900">Cari Hareketi Sil</h3>
+                </div>
+                <p class="text-xs text-slate-600 my-4">
+                    <strong x-text="deleteDesc"></strong> kaydını silmek istediğinize emin misiniz? Bu işlem bakiye ve ekstre tutarlarını doğrudan etkileyecektir.
+                </p>
+                <form :action="'/admin/definitions/customers/' + [[${customer.id}]] + '/transactions/' + deleteId + '/delete'" method="post" class="flex items-center justify-end gap-3 pt-2">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="button" @click="deleteModalOpen = false" class="erp-btn-secondary">Vazgeç</button>
+                    <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <span>Evet, Sil</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>

@@ -13,10 +13,10 @@
                 stockType: sType,
                 quantityUnit: 'm2',
                 dimRows: [
-                    { width: 60, length: 120, thickness: 2.0, count: initCount, note: '' }
+                    { width: 60, length: 120, thickness: 2.0, count: initCount, surfaceOp: 'Cilalı', surfaceUnit: 'm2', edgeOp: 'Pah', edgeUnit: 'm.t.', note: '' }
                 ],
                 addDimRow() {
-                    this.dimRows.push({ width: 60, length: 120, thickness: 2.0, count: 1, note: '' });
+                    this.dimRows.push({ width: 60, length: 120, thickness: 2.0, count: 1, surfaceOp: 'Cilalı', surfaceUnit: 'm2', edgeOp: 'Pah', edgeUnit: 'm.t.', note: '' });
                     this.$nextTick(() => {
                         if (window.lucide && typeof window.lucide.createIcons === 'function') {
                             window.lucide.createIcons();
@@ -34,11 +34,19 @@
                     const c = parseInt(r.count) || 1;
                     return ((w * l * c) / 10000).toFixed(2);
                 },
+                calcRowMt(r) {
+                    const l = parseFloat(r.length) || 0;
+                    const c = parseInt(r.count) || 1;
+                    return ((l * c) / 100).toFixed(2);
+                },
                 get totalPieces() {
                     return this.dimRows.reduce((sum, r) => sum + (parseInt(r.count) || 1), 0);
                 },
                 get totalM2() {
                     return this.dimRows.reduce((sum, r) => sum + parseFloat(this.calcRowM2(r)), 0).toFixed(2);
+                },
+                get totalMt() {
+                    return this.dimRows.reduce((sum, r) => sum + parseFloat(this.calcRowMt(r)), 0).toFixed(2);
                 },
                 get primaryWidth() {
                     return this.dimRows[0] ? this.dimRows[0].width : '';
@@ -52,6 +60,9 @@
                 get plannedQty() {
                     if (this.quantityUnit === 'adet') {
                         return this.totalPieces;
+                    }
+                    if (this.quantityUnit === 'm.t.' || this.quantityUnit === 'mt') {
+                        return this.totalMt;
                     }
                     return this.totalM2;
                 }
@@ -78,6 +89,9 @@
             Fabrika, Atölye veya Şantiye departmanına iş emri girin, taş özellikleri, yüzey ve kenar işlemlerini belirleyin ve stoktan hammadde bağlayın.
         </p>
     </div>
+
+    <!-- Alert Messages (Success/Error) -->
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
 
     <form th:action="@{/work-orders/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
         <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -128,7 +142,7 @@
                 <!-- Termin Tarihi -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1.5">Termin Tarihi *</label>
-                    <input type="date" name="dueDate" required
+                    <input type="date" name="dueDate" th:value="${#temporals.format(#temporals.createNow().plusDays(14), 'yyyy-MM-dd')}" required
                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                 </div>
 
@@ -200,46 +214,94 @@
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse min-w-[700px]">
+                    <table class="w-full text-left text-xs border-collapse min-w-[950px]">
                         <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
                             <tr>
-                                <th class="py-2.5 px-3 w-10 text-center">#</th>
-                                <th class="py-2.5 px-3 w-28">Kalınlık (cm)</th>
-                                <th class="py-2.5 px-3 w-28">En (cm) *</th>
-                                <th class="py-2.5 px-3 w-28">Boy (cm) *</th>
-                                <th class="py-2.5 px-3 w-24">Adet *</th>
-                                <th class="py-2.5 px-3 w-28 text-center">Hesaplanan m²</th>
-                                <th class="py-2.5 px-3">Mahâl / Açıklama Notu</th>
-                                <th class="py-2.5 px-2 w-12 text-center">Sil</th>
+                                <th class="py-2.5 px-2 w-8 text-center">#</th>
+                                <th class="py-2.5 px-2 w-20">Kalınlık (cm)</th>
+                                <th class="py-2.5 px-2 w-20">En (cm) *</th>
+                                <th class="py-2.5 px-2 w-20">Boy (cm) *</th>
+                                <th class="py-2.5 px-2 w-16 text-right">Adet *</th>
+                                <th class="py-2.5 px-2 w-44">Yüzey İşlemi &amp; Birim *</th>
+                                <th class="py-2.5 px-2 w-44">Kenar İşlemi &amp; Birim *</th>
+                                <th class="py-2.5 px-2 w-32 text-center">Hesaplanan (m² / m.t.)</th>
+                                <th class="py-2.5 px-2">Mahâl / Açıklama Notu</th>
+                                <th class="py-2.5 px-1 w-10 text-center">Sil</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 font-medium">
                             <template x-for="(row, idx) in dimRows" :key="idx">
                                 <tr class="hover:bg-slate-50/70 transition">
-                                    <td class="p-2 text-center font-bold text-slate-400 font-mono" x-text="idx + 1">1</td>
+                                    <td class="p-2 text-center font-bold text-slate-400 font-mono text-[11px]" x-text="idx + 1">1</td>
                                     <td class="p-2">
                                         <input type="number" step="0.1" min="0.1" name="dimThicknessCm" x-model.number="row.thickness" required
-                                               class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
                                     </td>
                                     <td class="p-2">
                                         <input type="number" step="0.1" min="1" name="dimWidthCm" x-model.number="row.width" required placeholder="En"
-                                               class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
                                     </td>
                                     <td class="p-2">
                                         <input type="number" step="0.1" min="1" name="dimLengthCm" x-model.number="row.length" required placeholder="Boy"
-                                               class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
                                     </td>
                                     <td class="p-2">
                                         <input type="number" step="1" min="1" name="dimPieceCount" x-model.number="row.count" required
-                                               class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-right" />
-                                    </td>
-                                    <td class="p-2 text-center font-mono font-bold text-xs">
-                                        <span class="px-2 py-1 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-lg inline-block"
-                                              x-text="calcRowM2(row) + ' m²'">0,00 m²</span>
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-right" />
                                     </td>
                                     <td class="p-2">
-                                        <input type="text" name="dimNote" x-model="row.note" placeholder="Örn: Mutfak tezgahı, Zemin kaplama"
-                                               class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
+                                        <div class="flex items-center gap-1">
+                                            <select name="dimSurfaceOp" x-model="row.surfaceOp" required
+                                                    class="w-2/3 px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                                                <option value="Cilalı">Cilalı</option>
+                                                <option value="Honlu">Honlu</option>
+                                                <option value="Fırçalı">Fırçalı</option>
+                                                <option value="Kumlama">Kumlama</option>
+                                                <option value="Leather">Leather</option>
+                                                <option value="Çekiçleme">Çekiçleme</option>
+                                                <option value="Yakılmış">Yakılmış</option>
+                                                <option value="Ham">Ham</option>
+                                                <option value="Diğer">Diğer</option>
+                                            </select>
+                                            <select name="dimSurfaceUnit" x-model="row.surfaceUnit" required title="İşlem Birimi"
+                                                    class="w-1/3 px-1.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 bg-slate-50 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-center">
+                                                <option value="m2">m²</option>
+                                                <option value="m.t.">m.t.</option>
+                                                <option value="adet">adet</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td class="p-2">
+                                        <div class="flex items-center gap-1">
+                                            <select name="dimEdgeOp" x-model="row.edgeOp" required
+                                                    class="w-2/3 px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                                                <option value="Pah">Pah</option>
+                                                <option value="Düz">Düz</option>
+                                                <option value="Profil">Profil</option>
+                                                <option value="Yuvarlatma">Yuvarlatma</option>
+                                                <option value="Çift Pah">Çift Pah</option>
+                                                <option value="Balıksırtı">Balıksırtı</option>
+                                                <option value="Gönye Kesim">Gönye Kesim</option>
+                                                <option value="Yok">Yok</option>
+                                                <option value="Diğer">Diğer</option>
+                                            </select>
+                                            <select name="dimEdgeUnit" x-model="row.edgeUnit" required title="İşlem Birimi"
+                                                    class="w-1/3 px-1.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 bg-slate-50 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-center">
+                                                <option value="m.t.">m.t.</option>
+                                                <option value="m2">m²</option>
+                                                <option value="adet">adet</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td class="p-2 text-center font-mono text-[11px] space-y-0.5">
+                                        <div class="px-1.5 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded font-bold"
+                                             x-text="calcRowM2(row) + ' m²'">0,00 m²</div>
+                                        <div class="px-1.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-800 rounded font-bold"
+                                             x-text="calcRowMt(row) + ' m.t.'">0,00 m.t.</div>
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="text" name="dimNote" x-model="row.note" placeholder="Mahâl / not..."
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
                                     </td>
                                     <td class="p-2 text-center">
                                         <button type="button" @click="removeDimRow(idx)" class="p-1 text-slate-400 hover:text-rose-600 rounded-md transition" title="Satırı Sil">
@@ -259,10 +321,17 @@
                         <span>•</span>
                         <span>Toplam Adet: <strong class="text-slate-900 font-mono" x-text="totalPieces">1</strong></span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-slate-600 font-bold">Toplam Hesaplanan Alan:</span>
-                        <span class="px-3 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl font-black font-mono text-sm"
-                              x-text="totalM2 + ' m²'">0.00 m²</span>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-600 font-bold">Toplam Alan:</span>
+                            <span class="px-2.5 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl font-black font-mono text-xs"
+                                  x-text="totalM2 + ' m²'">0.00 m²</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-600 font-bold">Toplam Metretül:</span>
+                            <span class="px-2.5 py-1 bg-blue-100 text-blue-900 border border-blue-300 rounded-xl font-black font-mono text-xs"
+                                  x-text="totalMt + ' m.t.'">0.00 m.t.</span>
+                        </div>
                     </div>
                 </div>
             </div>

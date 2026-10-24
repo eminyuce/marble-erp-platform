@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/quarry")
@@ -109,8 +110,14 @@ public class QuarryInventoryController extends AbstractController {
                 .map(item -> item.getQuantity().multiply(item.getUnitPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        BigDecimal totalQuantity = consumables.stream()
+                .map(StockItem::getQuantity)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         model.addAttribute("consumables", consumables);
         model.addAttribute("totalValue", totalValue);
+        model.addAttribute("totalQuantity", totalQuantity);
         model.addAttribute("machines", machines);
         model.addAttribute("categories", QuarryCategory.values());
         model.addAttribute("selectedCategory", category != null ? category.name() : "");
