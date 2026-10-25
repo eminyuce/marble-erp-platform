@@ -91,7 +91,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             + " (:stockFilter = 'IN_TRANSIT' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)) OR "
             + " (:stockFilter = 'MARKED' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.MARKED OR (b.assignedCustomer IS NOT NULL AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))) OR "
             + " (:stockFilter = 'DISPATCHED' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)) OR "
-            + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED)))",
+            + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))",
             countQuery = "SELECT COUNT(DISTINCT b) FROM Block b "
                     + "LEFT JOIN b.currentLocation loc "
                     + "LEFT JOIN b.soldCustomer soldCust "
@@ -108,7 +108,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                     + " (:stockFilter = 'IN_TRANSIT' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)) OR "
                     + " (:stockFilter = 'MARKED' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.MARKED OR (b.assignedCustomer IS NOT NULL AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))) OR "
                     + " (:stockFilter = 'DISPATCHED' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)) OR "
-                    + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED)))")
+                    + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))")
     Page<Block> searchBlocksWithStockFilter(@Param("search") String search,
                                             @Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
                                             @Param("status") BlockStatus status,
@@ -217,7 +217,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             + " (:stockFilter = 'IN_TRANSIT' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)) OR "
             + " (:stockFilter = 'MARKED' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.MARKED OR (b.assignedCustomer IS NOT NULL AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))) OR "
             + " (:stockFilter = 'DISPATCHED' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)) OR "
-            + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED))) "
+            + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL)) "
             + "GROUP BY b.quarry.id")
     List<Object[]> sumGridMetricsWithStockFilterByQuarry(@Param("search") String search,
                                                          @Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
@@ -231,6 +231,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
            "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) " +
            "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) " +
            "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) " +
+           "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL " +
            "ORDER BY b.arrivalDate DESC, b.id DESC")
     List<Block> findFactoryUncutBlocks();
 
@@ -241,6 +242,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
            "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) " +
            "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) " +
            "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) " +
+           "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL " +
            "AND (:customerId IS NULL OR cust.id = :customerId) " +
            "AND (:generalStockOnly = false OR cust IS NULL) " +
            "ORDER BY b.arrivalDate DESC, b.id DESC")
@@ -255,6 +257,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
            "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) " +
            "       OR (loc IS NOT NULL AND loc.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) " +
            "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) " +
+           "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL " +
            "AND (:customerId IS NULL OR cust.id = :customerId) " +
            "AND (:generalStockOnly = false OR cust IS NULL) " +
            "AND (:search IS NULL OR :search = '' " +
@@ -269,6 +272,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
            "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) " +
            "       OR (loc IS NOT NULL AND loc.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) " +
            "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) " +
+           "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL " +
            "AND (:customerId IS NULL OR cust.id = :customerId) " +
            "AND (:generalStockOnly = false OR cust IS NULL) " +
            "AND (:search IS NULL OR :search = '' " +
@@ -320,7 +324,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     @Query("SELECT COUNT(b) FROM Block b WHERE b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)")
     long countDispatchedToFactoryBlocks();
 
-    @Query("SELECT COUNT(b) FROM Block b WHERE b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED)")
+    @Query("SELECT COUNT(b) FROM Block b WHERE b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL")
     long countInStockBlocks();
 
     @Query("SELECT COALESCE(SUM(b.totalCost), 0) FROM Block b WHERE b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED)")

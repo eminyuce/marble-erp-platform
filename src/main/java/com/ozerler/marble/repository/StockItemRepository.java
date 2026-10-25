@@ -43,6 +43,10 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     Optional<StockItem> findFirstByStockLocation_LocationTypeAndProductType(com.ozerler.marble.model.enums.StockLocationType locationType, StockProductType productType);
 
+    List<StockItem> findByProjectId(Long projectId);
+
+    List<StockItem> findByProjectIdAndQuantityGreaterThan(Long projectId, BigDecimal minQty);
+
     @EntityGraph(attributePaths = {"customer", "sourceBlock", "stockLocation"})
     @Query(value = "SELECT s FROM StockItem s " +
            "LEFT JOIN s.customer c " +

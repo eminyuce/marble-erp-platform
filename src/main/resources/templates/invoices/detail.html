@@ -137,6 +137,7 @@
                             <th class="py-3 px-3">Ürün / Hizmet</th>
                             <th class="py-3 px-3">Açıklama</th>
                             <th class="py-3 px-3 text-right">Miktar</th>
+                            <th class="py-3 px-3 text-right text-rose-700 font-bold" title="Zayi / Fire Miktarı (Maliyete aktarıldı)">Fire Miktarı</th>
                             <th class="py-3 px-3">Birim</th>
                             <th class="py-3 px-3 text-center">Genişlik (cm)</th>
                             <th class="py-3 px-3 text-center">Hesaplanan m²</th>
@@ -156,8 +157,13 @@
                             </td>
                             <td class="py-3 px-3 text-slate-500" th:text="${item.description != null ? item.description : '—'}">—</td>
                             <td class="py-3 px-3 text-right font-bold font-mono" th:text="${item.quantity != null ? #numbers.formatDecimal(item.quantity, 1, 'POINT', 2, 'COMMA') : '—'}">10,00</td>
+                            <td class="py-3 px-3 text-right font-semibold font-mono text-rose-700">
+                                <span th:if="${item.wasteQuantity != null and item.wasteQuantity.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                      th:text="${#numbers.formatDecimal(item.wasteQuantity, 1, 'POINT', 2, 'COMMA')}">1,50</span>
+                                <span th:if="${item.wasteQuantity == null or item.wasteQuantity.compareTo(T(java.math.BigDecimal).ZERO) == 0}" class="text-slate-400">—</span>
+                            </td>
                             <td class="py-3 px-3 text-slate-600">
-                                <span th:text="${item.unit == 'm.t.' ? 'm.t. (Metretül)' : item.unit}">m2</span>
+                                <span th:text="${item.unitLabel == 'm.t.' ? 'm.t. (Metretül)' : item.unitLabel}">m²</span>
                             </td>
                             <td class="py-3 px-3 text-center font-mono text-slate-700">
                                 <span th:if="${item.widthCm != null and item.widthCm.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
@@ -212,6 +218,7 @@
                 </div>
             </div>
         </div>
+    </div>
 
     <!-- İptal Onay Modalı (Madde 12) -->
     <div x-show="cancelModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">

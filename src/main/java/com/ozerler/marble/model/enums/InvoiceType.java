@@ -16,10 +16,13 @@ public enum InvoiceType {
 
     public String getLabel() {
         try {
-            return MessageUtils.getMessage(messageKey);
-        } catch (Exception e) {
-            return defaultLabel;
+            String msg = MessageUtils.getMessage(messageKey);
+            if (msg != null && !msg.equals(messageKey) && !msg.isBlank()) {
+                return msg;
+            }
+        } catch (Exception ignored) {
         }
+        return defaultLabel;
     }
 
     public String getDisplayName() {

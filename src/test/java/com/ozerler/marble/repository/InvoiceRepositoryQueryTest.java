@@ -49,4 +49,25 @@ class InvoiceRepositoryQueryTest {
         assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
         assertThat(query.value()).contains("WHERE i.id = :id");
     }
+
+    @Test
+    @DisplayName("searchInvoices fetches customer, supplier, and project so list grid serialization does not fail outside session")
+    void searchInvoicesFetchesCustomerSupplierAndProject() throws Exception {
+        Query query = InvoiceRepository.class
+                .getMethod("searchInvoices",
+                        com.ozerler.marble.model.enums.InvoiceType.class,
+                        com.ozerler.marble.model.enums.BusinessUnit.class,
+                        com.ozerler.marble.model.enums.InvoiceStatus.class,
+                        Long.class,
+                        java.time.LocalDate.class,
+                        java.time.LocalDate.class,
+                        String.class,
+                        org.springframework.data.domain.Pageable.class)
+                .getAnnotation(Query.class);
+
+        assertThat(query).isNotNull();
+        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
+        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.supplier");
+        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.project");
+    }
 }

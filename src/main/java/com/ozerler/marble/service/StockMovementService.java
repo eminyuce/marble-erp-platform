@@ -218,6 +218,52 @@ public class StockMovementService {
     }
 
     @Transactional
+    public StockMovement recordWorkshopSizedProduction(StockItem item, Slab sourceSlab, StockItem sourceItem, Customer customer) {
+        return recordMovement(
+                StockMovementType.PRODUCTION,
+                BusinessUnit.WORKSHOP,
+                BusinessUnit.WORKSHOP,
+                TargetDestination.WORKSHOP,
+                null,
+                item.getStockLocation(),
+                item.getSourceBlock(),
+                sourceSlab,
+                item,
+                "Atölye Ebatlı Ürün Üretimi: " + item.getItemCode() + " - " + item.getDescription(),
+                item.getQuantity(),
+                item.getUnit(),
+                null,
+                customer,
+                null,
+                null,
+                "Atölye Ebatlı Stok Sahasına eklendi" + (customer != null ? " (" + customer.getCompanyName() + ")" : " (Genel Stok)")
+        );
+    }
+
+    @Transactional
+    public StockMovement recordWorkshopWaste(StockItem item, Project project, BigDecimal wasteQty, String unit, String reason) {
+        return recordMovement(
+                StockMovementType.SCRAP,
+                BusinessUnit.WORKSHOP,
+                project != null ? BusinessUnit.SITE : BusinessUnit.WORKSHOP,
+                project != null ? TargetDestination.SITE : TargetDestination.WORKSHOP,
+                item != null ? item.getStockLocation() : null,
+                null,
+                item != null ? item.getSourceBlock() : null,
+                null,
+                item,
+                "Atölye Üretim/Ebatlama Fire Çıkışı: " + (item != null ? item.getItemCode() : "Hammadde"),
+                wasteQty,
+                unit != null ? unit : "m2",
+                null,
+                null,
+                null,
+                null,
+                reason != null ? reason : "Atölyede kesim firesi zayi olarak düşüldü ve maliyetleştirildi"
+        );
+    }
+
+    @Transactional
     public StockMovement recordWorkOrderConsumption(OperationWorkOrder order, StockItem item, Slab slab, Block block, BigDecimal qty, String unit) {
         return recordMovement(
                 StockMovementType.PRODUCTION_CONSUMPTION,

@@ -46,9 +46,12 @@ public class InvoiceService {
 
     public record InvoiceItemForm(String productName, String description, BigDecimal quantity, String unit,
                                   BigDecimal unitPrice, Long blockId, Long slabId, Long stockItemId,
-                                  BigDecimal widthCm, BigDecimal calculatedM2) {
+                                  BigDecimal widthCm, BigDecimal calculatedM2, BigDecimal wasteQuantity) {
         public InvoiceItemForm(String productName, String description, BigDecimal quantity, String unit, BigDecimal unitPrice, Long blockId, Long stockItemId) {
-            this(productName, description, quantity, unit, unitPrice, blockId, null, stockItemId, null, null);
+            this(productName, description, quantity, unit, unitPrice, blockId, null, stockItemId, null, null, BigDecimal.ZERO);
+        }
+        public InvoiceItemForm(String productName, String description, BigDecimal quantity, String unit, BigDecimal unitPrice, Long blockId, Long slabId, Long stockItemId, BigDecimal widthCm, BigDecimal calculatedM2) {
+            this(productName, description, quantity, unit, unitPrice, blockId, slabId, stockItemId, widthCm, calculatedM2, BigDecimal.ZERO);
         }
     }
 
@@ -165,6 +168,10 @@ public class InvoiceService {
                     calcM2 = calcM2.setScale(2, RoundingMode.HALF_UP);
                 }
 
+                BigDecimal wasteQty = f.wasteQuantity() != null
+                        ? f.wasteQuantity().setScale(2, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO;
+
                 InvoiceItem item = InvoiceItem.builder()
                         .invoice(invoice)
                         .productName(f.productName().trim())
@@ -173,6 +180,7 @@ public class InvoiceService {
                         .unit(unit)
                         .widthCm(width)
                         .calculatedM2(calcM2)
+                        .wasteQuantity(wasteQty)
                         .unitPrice(price)
                         .lineTotal(lineTot)
                         .block(block)
@@ -308,17 +316,24 @@ public class InvoiceService {
                     if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
                         deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
                     }
+                    BigDecimal wasteQty = item.getWasteQuantity() != null && item.getWasteQuantity().compareTo(BigDecimal.ZERO) > 0
+                            ? item.getWasteQuantity().setScale(2, RoundingMode.HALF_UP)
+                            : BigDecimal.ZERO;
+                    BigDecimal totalNeeded = deduction.add(wasteQty);
+
                     BigDecimal currentQty = st.getQuantity() != null
                             ? st.getQuantity().setScale(2, RoundingMode.HALF_UP)
                             : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-                    if (currentQty.compareTo(deduction) < 0) {
-                        if (deduction.subtract(currentQty).compareTo(new BigDecimal("0.01")) <= 0) {
-                            deduction = currentQty;
+                    if (currentQty.compareTo(totalNeeded) < 0) {
+                        if (totalNeeded.subtract(currentQty).compareTo(new BigDecimal("0.01")) <= 0) {
+                            // negligible precision difference
                         } else {
                             throw new IllegalArgumentException(String.format(
-                                    "Yetersiz stok. Mevcut stok: %s %s.",
+                                    "Yetersiz stok. Mevcut stok: %s %s (İstenen Satış: %s, Fire: %s).",
                                     currentQty.stripTrailingZeros().toPlainString(),
-                                    st.getUnit() != null ? st.getUnit() : "adet"
+                                    st.getUnit() != null ? st.getUnit() : "adet",
+                                    deduction.stripTrailingZeros().toPlainString(),
+                                    wasteQty.stripTrailingZeros().toPlainString()
                             ));
                         }
                     }
@@ -344,6 +359,11 @@ public class InvoiceService {
                             StockLocation wsYard = StockLocations.require(stockLocationRepository, StockLocationType.WORKSHOP_STOCK);
                             recordBlockMovement(b, prevLoc, wsYard, "Dahili Transfer Faturası (" + saved.getInvoiceNo() + ") ile Atölyeye sevk edildi");
                             b.setCurrentLocation(wsYard);
+                        } else if (targetDepartment == BusinessUnit.SITE) {
+                            b.setStatus(BlockStatus.AT_FACTORY);
+                            StockLocation siteYard = StockLocations.require(stockLocationRepository, StockLocationType.SITE_STOCK);
+                            recordBlockMovement(b, prevLoc, siteYard, "Dahili Transfer Faturası (" + saved.getInvoiceNo() + ") ile Şantiyeye sevk edildi");
+                            b.setCurrentLocation(siteYard);
                         }
                         blockRepository.save(b);
 
@@ -364,16 +384,36 @@ public class InvoiceService {
                                 .notes("Dahili Transfer Faturası: " + saved.getInvoiceNo())
                                 .build());
                     }
-                    if (item.getSlab() != null && targetDepartment == BusinessUnit.WORKSHOP) {
+                    if (item.getSlab() != null) {
                         Slab s = item.getSlab();
-                        s.setStatus(SlabStatus.IN_CUTTING);
-                        slabRepository.save(s);
+                        if (targetDepartment == BusinessUnit.WORKSHOP) {
+                            s.setStatus(SlabStatus.IN_CUTTING);
+                            slabRepository.save(s);
+                        } else if (targetDepartment == BusinessUnit.SITE) {
+                            s.setStatus(SlabStatus.RESERVED);
+                            if (project != null && project.getCustomer() != null) {
+                                s.setCustomer(project.getCustomer());
+                            }
+                            slabRepository.save(s);
+                        }
                     }
-                    if (item.getStockItem() != null && targetDepartment == BusinessUnit.WORKSHOP) {
+                    if (item.getStockItem() != null) {
                         StockItem st = item.getStockItem();
-                        StockLocation wsYard = StockLocations.require(stockLocationRepository, StockLocationType.WORKSHOP_STOCK);
-                        st.setStockLocation(wsYard);
-                        stockItemRepository.save(st);
+                        if (targetDepartment == BusinessUnit.WORKSHOP) {
+                            StockLocation wsYard = StockLocations.require(stockLocationRepository, StockLocationType.WORKSHOP_STOCK);
+                            st.setStockLocation(wsYard);
+                            stockItemRepository.save(st);
+                        } else if (targetDepartment == BusinessUnit.SITE) {
+                            StockLocation siteYard = StockLocations.require(stockLocationRepository, StockLocationType.SITE_STOCK);
+                            st.setStockLocation(siteYard);
+                            if (project != null) {
+                                st.setProject(project);
+                                if (project.getCustomer() != null) {
+                                    st.setCustomer(project.getCustomer());
+                                }
+                            }
+                            stockItemRepository.save(st);
+                        }
                     }
                 } else {
                     // Dış Müşteriye Satış: Stoktan düş
@@ -434,13 +474,18 @@ public class InvoiceService {
                         if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
                             deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
                         }
+                        BigDecimal wasteQty = item.getWasteQuantity() != null && item.getWasteQuantity().compareTo(BigDecimal.ZERO) > 0
+                                ? item.getWasteQuantity().setScale(2, RoundingMode.HALF_UP)
+                                : BigDecimal.ZERO;
+                        BigDecimal totalDeduction = deduction.add(wasteQty).setScale(2, RoundingMode.HALF_UP);
+
                         BigDecimal currentQty = st.getQuantity() != null
                                 ? st.getQuantity().setScale(2, RoundingMode.HALF_UP)
                                 : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-                        if (deduction.compareTo(currentQty) > 0 && deduction.subtract(currentQty).compareTo(new BigDecimal("0.01")) <= 0) {
-                            deduction = currentQty;
+                        if (totalDeduction.compareTo(currentQty) > 0 && totalDeduction.subtract(currentQty).compareTo(new BigDecimal("0.01")) <= 0) {
+                            totalDeduction = currentQty;
                         }
-                        BigDecimal newQty = currentQty.subtract(deduction).setScale(2, RoundingMode.HALF_UP);
+                        BigDecimal newQty = currentQty.subtract(totalDeduction).setScale(2, RoundingMode.HALF_UP);
                         if (newQty.compareTo(BigDecimal.ZERO) <= 0) {
                             newQty = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
                             st.setStatus("SOLD");
@@ -461,13 +506,64 @@ public class InvoiceService {
                                 .quantity(deduction)
                                 .quantityUnit(st.getUnit() != null ? st.getUnit() : "adet")
                                 .invoice(saved)
-                                .notes("Fatura no: " + saved.getInvoiceNo() + ", Alıcı: " + saved.getPartyName())
+                                .notes("Fatura no: " + saved.getInvoiceNo() + ", Alıcı: " + saved.getPartyName() + (wasteQty.compareTo(BigDecimal.ZERO) > 0 ? " (Fire: " + wasteQty + ")" : ""))
                                 .build());
+
+                        if (wasteQty.compareTo(BigDecimal.ZERO) > 0) {
+                            String scrapMovCode = UniqueCodes.yearly("MOV-SCR", stockMovementRepository::existsByMovementCode);
+                            stockMovementRepository.save(StockMovement.builder()
+                                    .movementCode(scrapMovCode)
+                                    .movementDate(LocalDateTime.now())
+                                    .movementType(StockMovementType.SCRAP)
+                                    .sourceDepartment(department)
+                                    .fromLocation(st.getStockLocation())
+                                    .stockItem(st)
+                                    .customer(customer)
+                                    .itemDescription("Fatura Fire Düşümü: " + (st.getDescription() != null ? st.getDescription() : st.getItemCode()))
+                                    .quantity(wasteQty)
+                                    .quantityUnit(st.getUnit() != null ? st.getUnit() : "adet")
+                                    .invoice(saved)
+                                    .notes("Fatura no: " + saved.getInvoiceNo() + " kapsamında oluşan fire miktarı")
+                                    .build());
+
+                            BigDecimal unitCost = (st.getUnitPrice() != null && st.getUnitPrice().compareTo(BigDecimal.ZERO) > 0)
+                                    ? st.getUnitPrice()
+                                    : (item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO);
+                            BigDecimal wasteCost = wasteQty.multiply(unitCost).setScale(2, RoundingMode.HALF_UP);
+                            if (wasteCost.compareTo(BigDecimal.ZERO) > 0) {
+                                CostCenter wasteCc = (project != null)
+                                        ? costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE)
+                                                .or(() -> costCenterRepository.findByCode("CC-005")).orElse(null)
+                                        : costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(department).orElse(null);
+                                if (wasteCc != null) {
+                                    CostTransaction wasteTx = CostTransaction.builder()
+                                            .costCenter(wasteCc)
+                                            .project(project)
+                                            .constructionSite(project)
+                                            .expenseType(ExpenseType.DIRECT_RAW)
+                                            .expenseCategory(ExpenseCategory.MATERIAL)
+                                            .amount(wasteCost)
+                                            .businessUnit(project != null ? BusinessUnit.SITE : department)
+                                            .documentNo(saved.getInvoiceNo())
+                                            .invoiceDate(saved.getInvoiceDate())
+                                            .entryDate(LocalDate.now())
+                                            .expensePeriod(YearMonth.from(saved.getInvoiceDate()).toString())
+                                            .description("Fatura Fire Maliyeti (" + saved.getInvoiceNo() + "): " + (st.getDescription() != null ? st.getDescription() : st.getItemCode()) + " (" + wasteQty + " " + (st.getUnit() != null ? st.getUnit() : "m2") + ")")
+                                            .build();
+                                    costTransactionRepository.save(wasteTx);
+                                    if (project != null) {
+                                        BigDecimal totalCosts = costTransactionRepository.sumByProjectId(project.getId());
+                                        project.setActualCost(totalCosts != null ? totalCosts : BigDecimal.ZERO);
+                                        projectRepository.save(project);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            // Dahili Transfer Faturası: Hedef birime (Fabrika vb.) hammadde gideri/maliyeti olarak yansıt
+            // Dahili Transfer Faturası: Hedef birime (Fabrika, Şantiye vb.) hammadde gideri/maliyeti olarak yansıt
             if (targetDepartment != null && subtotal.compareTo(BigDecimal.ZERO) > 0) {
                 CostCenter targetCc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(targetDepartment)
                         .or(() -> costCenterRepository.findAll().stream().filter(c -> targetDepartment.equals(c.getBusinessUnit())).findFirst())
@@ -477,6 +573,8 @@ public class InvoiceService {
                 if (targetCc != null) {
                     CostTransaction tx = CostTransaction.builder()
                             .costCenter(targetCc)
+                            .project(project)
+                            .constructionSite(project)
                             .expenseType(ExpenseType.DIRECT_RAW)
                             .expenseCategory(ExpenseCategory.MATERIAL)
                             .amount(subtotal)
@@ -485,9 +583,14 @@ public class InvoiceService {
                             .invoiceDate(saved.getInvoiceDate())
                             .entryDate(LocalDate.now())
                             .expensePeriod(YearMonth.from(saved.getInvoiceDate()).toString())
-                            .description("Dahili Transfer Faturası (" + department.getDisplayName() + " -> " + targetDepartment.getDisplayName() + "): Hammadde Maliyeti — " + saved.getInvoiceNo())
+                            .description("Dahili Transfer Faturası (" + department.getDisplayName() + " -> " + targetDepartment.getDisplayName() + (project != null ? " / " + project.getName() : "") + "): Hammadde Maliyeti — " + saved.getInvoiceNo())
                             .build();
                     costTransactionRepository.save(tx);
+                    if (project != null) {
+                        BigDecimal totalCosts = costTransactionRepository.sumByProjectId(project.getId());
+                        project.setActualCost(totalCosts != null ? totalCosts : BigDecimal.ZERO);
+                        projectRepository.save(project);
+                    }
                 }
             }
         }

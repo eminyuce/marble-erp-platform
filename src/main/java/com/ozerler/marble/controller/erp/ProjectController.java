@@ -34,6 +34,7 @@ public class ProjectController {
     private final ConstructionSiteService constructionSiteService;
     private final CostAnalysisService costAnalysisService;
     private final com.ozerler.marble.repository.CustomerRepository customerRepository;
+    private final com.ozerler.marble.repository.StockItemRepository stockItemRepository;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -137,6 +138,7 @@ public class ProjectController {
         model.addAttribute("profit", costAnalysisService.profitFor(project));
         model.addAttribute("supplyRoutes", SupplyRoute.values());
         model.addAttribute("surfaceFinishes", SurfaceFinish.values());
+        model.addAttribute("siteStockItems", stockItemRepository.findByProjectId(id));
         return "erp/projects/detail";
     }
 

@@ -538,6 +538,7 @@ window.attachTabulatorPagingAnimation = attachTabulatorPagingAnimation;
 window.camelizeTabulatorRows = camelizeTabulatorRows;
 window.applyTabulatorTotal = applyTabulatorTotal;
 window.gridText = gridText;
+window.gridDate = gridDate;
 window.gridNumber = gridNumber;
 window.gridMoney = gridMoney;
 window.gridArea = gridArea;

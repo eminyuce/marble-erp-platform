@@ -13,7 +13,8 @@ public enum StockLocationType {
     SLAB_STOCK_YARD("enum.stock_location_type.slab_stock_yard", BusinessUnit.FACTORY),
     SIZED_STOCK_YARD("enum.stock_location_type.sized_stock_yard", BusinessUnit.FACTORY),
     PALLET_STOCK_YARD("enum.stock_location_type.pallet_stock_yard", BusinessUnit.FACTORY),
-    WORKSHOP_STOCK("enum.stock_location_type.workshop_stock", BusinessUnit.WORKSHOP);
+    WORKSHOP_STOCK("enum.stock_location_type.workshop_stock", BusinessUnit.WORKSHOP),
+    SITE_STOCK("enum.stock_location_type.site_stock", BusinessUnit.SITE);
 
     private final String messageKey;
     private final BusinessUnit businessUnit;

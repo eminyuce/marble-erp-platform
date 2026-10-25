@@ -76,6 +76,13 @@ public class InvoiceItem extends AuditableEntity {
     @Column(name = "calculated_m2", precision = 12, scale = 4)
     private BigDecimal calculatedM2;
 
+    /**
+     * Satış faturasında verilen ve stoktan düşülüp maliyete atılan fire miktarı.
+     */
+    @Column(name = "waste_quantity", precision = 14, scale = 4)
+    @Builder.Default
+    private BigDecimal wasteQuantity = BigDecimal.ZERO;
+
     public static boolean isRunningMeterUnit(String unit) {
         if (unit == null) return false;
         String u = unit.trim().toLowerCase();
@@ -87,6 +94,23 @@ public class InvoiceItem extends AuditableEntity {
 
     public boolean isRunningMeter() {
         return isRunningMeterUnit(this.unit);
+    }
+
+    public String getUnitLabel() {
+        if (unit == null || unit.isBlank()) {
+            return "m²";
+        }
+        String u = unit.trim();
+        return switch (u.toLowerCase(java.util.Locale.ROOT)) {
+            case "m2", "m²", "square_meter", "sqm" -> "m²";
+            case "m3", "m³", "cubic_meter", "cbm" -> "m³";
+            case "m.t.", "mt", "m.t", "m.tül", "m.tul", "metretül", "metretul", "metre tül", "metre tul", "lineer metre", "lineer" -> "m.t.";
+            case "ton", "tons", "t" -> "ton";
+            case "adet", "piece", "pieces", "pcs", "ad" -> "adet";
+            case "litre", "liter", "lt", "l" -> "litre";
+            case "kg", "kilogram" -> "kg";
+            default -> u;
+        };
     }
 
     public void calculateLineTotal() {

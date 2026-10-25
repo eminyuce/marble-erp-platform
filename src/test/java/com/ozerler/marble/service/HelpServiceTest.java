@@ -111,6 +111,8 @@ class HelpServiceTest {
         assertThat(helpService.resolvePageKey("/blocks/12/photos")).contains("block-photos");
         assertThat(helpService.resolvePageKey("/blocks/12/photos/8")).contains("block-photos");
         assertThat(helpService.resolvePageKey("/admin/settings/templates/3/preview")).contains("email-preview");
+        assertThat(helpService.resolvePageKey("/invoices")).contains("invoices");
+        assertThat(helpService.resolvePageKey("/invoices/10")).contains("invoices");
         assertThat(helpService.resolvePageKey("/unknown")).isEmpty();
         assertThat(helpService.resolvePageKey("/roles")).isEmpty();
     }

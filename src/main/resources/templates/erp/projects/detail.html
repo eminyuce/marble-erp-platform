@@ -254,6 +254,56 @@
         </div>
     </div>
 
+    <!-- Şantiye Malzeme Deposu (Dahili Transferle Gelen Ürünler) -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="p-2 rounded-xl bg-amber-50 text-amber-700"><i data-lucide="boxes" class="w-5 h-5"></i></span>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Şantiye Malzeme Deposu / Sahadaki Ürünler</h3>
+                    <p class="text-xs text-slate-500">Fabrika ve atölyeden dahili malzeme faturası veya üretimle bu şantiyeye sevk edilen malzemeler</p>
+                </div>
+            </div>
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-900"
+                  th:text="${siteStockItems != null ? siteStockItems.size() + ' Kalem Malzeme' : '0 Kalem'}">0 Kalem</span>
+        </div>
+
+        <div th:if="${siteStockItems == null or siteStockItems.isEmpty()}" class="text-center py-8 text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            Henüz bu şantiye deposuna aktarılmış malzeme bulunmamaktadır. Fabrika veya atölyeden Dahili Transfer faturası düzenleyerek bu şantiyeye malzeme aktarabilirsiniz.
+        </div>
+
+        <div th:if="${siteStockItems != null and !siteStockItems.isEmpty()}" class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-2.5 px-3">Kod</th>
+                        <th class="py-2.5 px-3">Açıklama / Ürün</th>
+                        <th class="py-2.5 px-3">Taş Cinsi</th>
+                        <th class="py-2.5 px-3">Ölçü</th>
+                        <th class="py-2.5 px-3 text-right">Mevcut Miktar</th>
+                        <th class="py-2.5 px-3 text-center">Adet</th>
+                        <th class="py-2.5 px-3">Yüzey / Kenar</th>
+                        <th class="py-2.5 px-3">Durum</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    <tr th:each="st : ${siteStockItems}" class="hover:bg-slate-50 transition">
+                        <td class="py-2.5 px-3 font-mono font-bold text-slate-900" th:text="${st.itemCode}">EBT-01</td>
+                        <td class="py-2.5 px-3 font-bold text-slate-900" th:text="${st.description}">Traverten Basamak</td>
+                        <td class="py-2.5 px-3 text-slate-600" th:text="${st.stoneType != null ? st.stoneType : '—'}">Traverten</td>
+                        <td class="py-2.5 px-3 font-mono text-slate-600" th:text="${(st.thicknessCm != null ? st.thicknessCm + 'x' : '') + (st.widthCm != null ? st.widthCm + 'x' : '') + (st.lengthCm != null ? st.lengthCm + ' cm' : '—')}">2x60x60 cm</td>
+                        <td class="py-2.5 px-3 text-right font-black font-mono text-emerald-700 bg-emerald-50/30" th:text="${#numbers.formatDecimal(st.quantity, 1, 'POINT', 2, 'COMMA') + ' ' + (st.unit != null ? st.unit : 'm²')}">12,50 m²</td>
+                        <td class="py-2.5 px-3 text-center font-bold font-mono text-slate-800" th:text="${st.pieceCount != null ? st.pieceCount : '—'}">20</td>
+                        <td class="py-2.5 px-3 text-slate-600" th:text="${(st.surfaceFinish != null ? st.surfaceFinish.displayName : '') + ' / ' + (st.edgeFinish != null ? st.edgeFinish : '')}">Cilalı / Pahlı</td>
+                        <td class="py-2.5 px-3">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800" th:text="${st.status == 'AVAILABLE' ? 'Şantiyede / Hazır' : st.status}">Şantiyede</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Audit Information -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
         <div th:replace="~{fragments/audit :: auditInfo(${project?.createdDate}, ${project?.updatedDate}, ${project?.addUserId}, ${project?.updateUserId})}"></div>

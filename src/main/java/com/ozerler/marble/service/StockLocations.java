@@ -44,6 +44,7 @@ final class StockLocations {
             case SIZED_STOCK_YARD -> "FAB-EBATLI";
             case PALLET_STOCK_YARD -> Constants.STOCK_LOCATION_PALLET_STOCK_YARD;
             case WORKSHOP_STOCK -> Constants.STOCK_LOCATION_WORKSHOP_STOCK;
+            case SITE_STOCK -> "SNT-STK-01";
         };
     }
 }

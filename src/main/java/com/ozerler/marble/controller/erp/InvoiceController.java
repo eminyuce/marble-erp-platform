@@ -193,6 +193,7 @@ public class InvoiceController extends AbstractController {
                                 @RequestParam(value = "itemStockItemId", required = false) List<Long> stockItemIds,
                                 @RequestParam(value = "itemWidthCm", required = false) List<BigDecimal> widthCms,
                                 @RequestParam(value = "itemCalculatedM2", required = false) List<BigDecimal> calculatedM2s,
+                                @RequestParam(value = "itemWasteQuantity", required = false) List<BigDecimal> wasteQuantities,
                                 @RequestParam(value = "purchaseOrderId", required = false) Long purchaseOrderId,
                                 RedirectAttributes redirectAttributes) {
 
@@ -211,8 +212,9 @@ public class InvoiceController extends AbstractController {
                     Long stkId = (stockItemIds != null && i < stockItemIds.size()) ? stockItemIds.get(i) : null;
                     BigDecimal width = (widthCms != null && i < widthCms.size()) ? widthCms.get(i) : null;
                     BigDecimal calcM2 = (calculatedM2s != null && i < calculatedM2s.size()) ? calculatedM2s.get(i) : null;
+                    BigDecimal waste = (wasteQuantities != null && i < wasteQuantities.size()) ? wasteQuantities.get(i) : BigDecimal.ZERO;
 
-                    itemForms.add(new InvoiceService.InvoiceItemForm(pName, desc, qty, unit, price, blkId, slbId, stkId, width, calcM2));
+                    itemForms.add(new InvoiceService.InvoiceItemForm(pName, desc, qty, unit, price, blkId, slbId, stkId, width, calcM2, waste));
                 }
             }
 

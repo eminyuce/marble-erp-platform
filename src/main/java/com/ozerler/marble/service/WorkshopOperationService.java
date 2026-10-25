@@ -17,19 +17,9 @@ import com.ozerler.marble.model.enums.MaterialLotStatus;
 import com.ozerler.marble.model.enums.OperationStatus;
 import com.ozerler.marble.model.enums.ProductForm;
 import com.ozerler.marble.model.enums.StockLocationType;
-import com.ozerler.marble.model.enums.WorkshopProcessType;
-import com.ozerler.marble.model.enums.WorkshopReceiptSource;
-import com.ozerler.marble.model.enums.WorkshopWorkPurpose;
-import com.ozerler.marble.repository.CostCenterRepository;
-import com.ozerler.marble.repository.CutItemRepository;
-import com.ozerler.marble.repository.CutOrderRepository;
-import com.ozerler.marble.repository.MachineRepository;
-import com.ozerler.marble.repository.MaterialLotRepository;
-import com.ozerler.marble.repository.PurchaseOrderItemRepository;
-import com.ozerler.marble.repository.StockLocationRepository;
-import com.ozerler.marble.repository.SupplierRepository;
-import com.ozerler.marble.repository.WorkshopMaterialReceiptRepository;
-import com.ozerler.marble.repository.WorkshopOperationRepository;
+import com.ozerler.marble.model.*;
+import com.ozerler.marble.model.enums.*;
+import com.ozerler.marble.repository.*;
 import com.ozerler.marble.util.MessageUtils;
 import com.ozerler.marble.util.UniqueCodes;
 import lombok.RequiredArgsConstructor;
@@ -37,9 +27,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -58,6 +50,12 @@ public class WorkshopOperationService {
     private final CutItemRepository cutItemRepository;
     private final CostCenterRepository costCenterRepository;
     private final ExpenseService expenseService;
+    private final StockItemRepository stockItemRepository;
+    private final SlabRepository slabRepository;
+    private final CustomerRepository customerRepository;
+    private final ProjectRepository projectRepository;
+    private final StockMovementService stockMovementService;
+    private final CostTransactionRepository costTransactionRepository;
 
     @Transactional
     public WorkshopMaterialReceipt receiveMaterial(WorkshopReceiptSource source, Long supplierId,
@@ -206,5 +204,209 @@ public class WorkshopOperationService {
             order.setMachineName(machine.getName());
         }
         return cutOrderRepository.save(order);
+    }
+
+    @Transactional
+    public List<StockItem> produceWorkshopSizedItemsBatch(
+            String sourceType, // "SLAB", "SIZED", "NONE"
+            Long slabId,
+            Long sourceStockItemId,
+            BigDecimal consumedQuantity,
+            BigDecimal wasteQuantity,
+            Long customerId,
+            Long projectId,
+            String defaultDescription,
+            String qualityGradeStr,
+            String surfaceFinishStr,
+            String edgeFinish,
+            String notes,
+            List<String> descriptions,
+            List<BigDecimal> thicknesses,
+            List<BigDecimal> widths,
+            List<BigDecimal> lengths,
+            List<Integer> pieceCounts,
+            List<BigDecimal> quantities,
+            List<String> rowSurfaceFinishes,
+            List<String> rowEdgeFinishes
+    ) {
+        List<StockItem> created = new ArrayList<>();
+        if (widths == null || widths.isEmpty()) return created;
+
+        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
+        Project project = projectId != null ? projectRepository.findById(projectId).orElse(null) : null;
+
+        Slab sourceSlab = null;
+        StockItem sourceStockItem = null;
+        Block sourceBlock = null;
+        String stoneType = "Mermer";
+
+        if ("SLAB".equalsIgnoreCase(sourceType) && slabId != null) {
+            sourceSlab = slabRepository.findById(slabId).orElse(null);
+            if (sourceSlab != null) {
+                sourceBlock = sourceSlab.getBlock();
+                if (sourceSlab.getStoneType() != null && !sourceSlab.getStoneType().isBlank()) {
+                    stoneType = sourceSlab.getStoneType();
+                } else if (sourceBlock != null && sourceBlock.getStoneType() != null) {
+                    stoneType = sourceBlock.getStoneType();
+                }
+            }
+        } else if ("SIZED".equalsIgnoreCase(sourceType) && sourceStockItemId != null) {
+            sourceStockItem = stockItemRepository.findById(sourceStockItemId).orElse(null);
+            if (sourceStockItem != null) {
+                sourceBlock = sourceStockItem.getSourceBlock();
+                if (sourceStockItem.getStoneType() != null && !sourceStockItem.getStoneType().isBlank()) {
+                    stoneType = sourceStockItem.getStoneType();
+                } else if (sourceBlock != null && sourceBlock.getStoneType() != null) {
+                    stoneType = sourceBlock.getStoneType();
+                }
+            }
+        }
+
+        BigDecimal totalProducedM2 = BigDecimal.ZERO;
+
+        StockLocation workshopLoc = stockLocationRepository
+                .findByLocationTypeAndActiveTrue(StockLocationType.WORKSHOP_STOCK)
+                .orElseGet(() -> stockLocationRepository.save(StockLocation.builder()
+                        .code("ATLY-MAML-01")
+                        .name("Atölye Mamul / Ebatlı Stok Sahası")
+                        .businessUnit(BusinessUnit.WORKSHOP)
+                        .locationType(StockLocationType.WORKSHOP_STOCK)
+                        .active(true)
+                        .build()));
+
+        QualityGrade grade = QualityGrade.A;
+        if (qualityGradeStr != null) {
+            try { grade = QualityGrade.valueOf(qualityGradeStr); } catch (Exception ignored) {}
+        }
+        SurfaceFinish surface = SurfaceFinish.POLISHED;
+        if (surfaceFinishStr != null) {
+            try { surface = SurfaceFinish.valueOf(surfaceFinishStr); } catch (Exception ignored) {}
+        }
+
+        for (int i = 0; i < widths.size(); i++) {
+            BigDecimal w = widths.get(i);
+            if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) continue;
+            BigDecimal l = (lengths != null && i < lengths.size() && lengths.get(i) != null) ? lengths.get(i) : w;
+            BigDecimal t = (thicknesses != null && i < thicknesses.size() && thicknesses.get(i) != null) ? thicknesses.get(i) : new BigDecimal("2.0");
+            int count = (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null) ? pieceCounts.get(i) : 1;
+            BigDecimal qty = (quantities != null && i < quantities.size() && quantities.get(i) != null)
+                    ? quantities.get(i)
+                    : w.multiply(l).multiply(BigDecimal.valueOf(count)).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+
+            totalProducedM2 = totalProducedM2.add(qty);
+
+            String desc = (descriptions != null && i < descriptions.size() && descriptions.get(i) != null && !descriptions.get(i).isBlank())
+                    ? descriptions.get(i).trim()
+                    : (defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Atölye Ebatlı " + t + "x" + w + "x" + l));
+
+            String rowSurfaceStr = (rowSurfaceFinishes != null && i < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(i) != null && !rowSurfaceFinishes.get(i).isBlank())
+                    ? rowSurfaceFinishes.get(i).trim() : surfaceFinishStr;
+            SurfaceFinish rowSurface = surface;
+            if (rowSurfaceStr != null) {
+                try { rowSurface = SurfaceFinish.valueOf(rowSurfaceStr); } catch (Exception ignored) {}
+            }
+
+            String rowEdge = (rowEdgeFinishes != null && i < rowEdgeFinishes.size() && rowEdgeFinishes.get(i) != null && !rowEdgeFinishes.get(i).isBlank())
+                    ? rowEdgeFinishes.get(i).trim() : (edgeFinish != null ? edgeFinish : "DUZ");
+
+            String itemCode = UniqueCodes.yearly("ATL-EBT", stockItemRepository::existsByItemCode);
+
+            String combinedNotes = notes;
+            if (sourceSlab != null) {
+                String slabInfo = "[Kaynak Plaka: " + sourceSlab.getSlabCode() + "]";
+                combinedNotes = (combinedNotes != null && !combinedNotes.isBlank()) ? combinedNotes + " " + slabInfo : slabInfo;
+            } else if (sourceStockItem != null) {
+                String srcInfo = "[Yeniden Ebatlama - Kaynak Ürün: " + sourceStockItem.getItemCode() + "]";
+                combinedNotes = (combinedNotes != null && !combinedNotes.isBlank()) ? combinedNotes + " " + srcInfo : srcInfo;
+            }
+
+            StockItem item = StockItem.builder()
+                    .itemCode(itemCode)
+                    .productType(StockProductType.SIZED)
+                    .sourceBlock(sourceBlock)
+                    .stoneType(stoneType)
+                    .description(desc)
+                    .thicknessCm(t)
+                    .widthCm(w)
+                    .lengthCm(l)
+                    .quantity(qty.setScale(2, RoundingMode.HALF_UP))
+                    .unit("m2")
+                    .pieceCount(count)
+                    .actualProducedQuantity(qty.setScale(2, RoundingMode.HALF_UP))
+                    .customer(customer)
+                    .project(project)
+                    .stockLocation(workshopLoc)
+                    .qualityGrade(grade)
+                    .surfaceFinish(rowSurface)
+                    .edgeFinish(rowEdge)
+                    .status("AVAILABLE")
+                    .productionDate(LocalDate.now())
+                    .notes(combinedNotes)
+                    .build();
+
+            StockItem saved = stockItemRepository.save(item);
+            stockMovementService.recordWorkshopSizedProduction(saved, sourceSlab, sourceStockItem, customer);
+            created.add(saved);
+        }
+
+        // Kaynak hammadde düşümü
+        BigDecimal effectiveConsumed = (consumedQuantity != null && consumedQuantity.compareTo(BigDecimal.ZERO) > 0)
+                ? consumedQuantity
+                : totalProducedM2.add(wasteQuantity != null ? wasteQuantity : BigDecimal.ZERO);
+
+        if (sourceSlab != null && effectiveConsumed.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal currentArea = sourceSlab.getSurfaceAreaM2() != null ? sourceSlab.getSurfaceAreaM2() : BigDecimal.ZERO;
+            if (effectiveConsumed.compareTo(currentArea) >= 0) {
+                sourceSlab.setStatus(SlabStatus.IN_CUTTING);
+                sourceSlab.setSurfaceAreaM2(BigDecimal.ZERO);
+            } else {
+                sourceSlab.setSurfaceAreaM2(currentArea.subtract(effectiveConsumed));
+            }
+            slabRepository.save(sourceSlab);
+        } else if (sourceStockItem != null && effectiveConsumed.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal currentQty = sourceStockItem.getQuantity() != null ? sourceStockItem.getQuantity() : BigDecimal.ZERO;
+            if (effectiveConsumed.compareTo(currentQty) >= 0) {
+                sourceStockItem.setQuantity(BigDecimal.ZERO);
+                sourceStockItem.setStatus("CONSUMED");
+            } else {
+                sourceStockItem.setQuantity(currentQty.subtract(effectiveConsumed));
+            }
+            stockItemRepository.save(sourceStockItem);
+        }
+
+        // Fire miktarı ve maliyeti
+        if (wasteQuantity != null && wasteQuantity.compareTo(BigDecimal.ZERO) > 0) {
+            StockItem refItem = !created.isEmpty() ? created.get(0) : sourceStockItem;
+            stockMovementService.recordWorkshopWaste(refItem, project, wasteQuantity, "m2", "Atölyede kesim firesi zayi olarak düşüldü");
+
+            if (project != null) {
+                CostCenter cc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE)
+                        .or(() -> costCenterRepository.findByCode("CC-005")).orElse(null);
+                if (cc != null) {
+                    BigDecimal unitPrice = (sourceStockItem != null && sourceStockItem.getUnitPrice() != null)
+                            ? sourceStockItem.getUnitPrice() : new BigDecimal("400.00");
+                    BigDecimal wasteCost = wasteQuantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
+                    CostTransaction wasteTx = CostTransaction.builder()
+                            .costCenter(cc)
+                            .project(project)
+                            .constructionSite(project)
+                            .expenseType(ExpenseType.DIRECT_RAW)
+                            .amount(wasteCost)
+                            .businessUnit(BusinessUnit.SITE)
+                            .documentNo("ATL-FIRE-" + LocalDate.now())
+                            .invoiceDate(LocalDate.now())
+                            .entryDate(LocalDate.now())
+                            .expensePeriod(YearMonth.now().toString())
+                            .description("Atölye Kesim/Ebatlama Fire Maliyeti (" + wasteQuantity + " m²): " + (refItem != null ? refItem.getItemCode() : "Hammadde"))
+                            .build();
+                    costTransactionRepository.save(wasteTx);
+                    BigDecimal totalCosts = costTransactionRepository.sumByProjectId(project.getId());
+                    project.setActualCost(totalCosts != null ? totalCosts : BigDecimal.ZERO);
+                    projectRepository.save(project);
+                }
+            }
+        }
+
+        return created;
     }
 }

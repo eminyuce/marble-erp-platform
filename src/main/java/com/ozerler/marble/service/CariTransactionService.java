@@ -53,7 +53,7 @@ public class CariTransactionService {
                     .transactionTypeLabel(t.getTransactionType() != null ? t.getTransactionType().getLabel() : "İşlem")
                     .debit(t.getTransactionType() != null && t.getTransactionType().isDefaultDebit())
                     .documentNo(t.getDocumentNo())
-                    .description(t.getDescription())
+                    .description(normalizeDescription(t.getDescription()))
                     .debitAmount(debit)
                     .creditAmount(credit)
                     .runningBalance(runningBalance)
@@ -212,5 +212,20 @@ public class CariTransactionService {
         tx.setNotes(collection.getNotes());
 
         transactionRepository.save(tx);
+    }
+
+    private String normalizeDescription(String desc) {
+        if (desc == null || desc.isBlank()) {
+            return desc;
+        }
+        return desc
+                .replace("(CASH)", "(Nakit)")
+                .replace("(BANK_TRANSFER)", "(EFT / Havale)")
+                .replace("(CREDIT_CARD)", "(Kredi Kartı)")
+                .replace("(CHECK)", "(Çek)")
+                .replace("(enum.collection_method.cash)", "(Nakit)")
+                .replace("(enum.collection_method.bank_transfer)", "(EFT / Havale)")
+                .replace("(enum.collection_method.credit_card)", "(Kredi Kartı)")
+                .replace("(enum.collection_method.check)", "(Çek)");
     }
 }

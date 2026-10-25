@@ -81,6 +81,10 @@ public class StockItem extends AuditableEntity {
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stock_location_id")
     private StockLocation stockLocation;
 

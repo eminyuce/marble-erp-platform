@@ -65,7 +65,11 @@
             </p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-            <a th:href="@{/work-orders/create(department='WORKSHOP')}" class="erp-btn-primary">
+            <a th:href="@{/operations/workshop/sized/new}" class="erp-btn-primary">
+                <i data-lucide="scissors"></i>
+                <span>+ Yeni Ebatlama / Üretim</span>
+            </a>
+            <a th:href="@{/work-orders/create(department='WORKSHOP')}" class="erp-btn-secondary">
                 <i data-lucide="plus"></i>
                 <span>Yeni Atölye Siparişi</span>
             </a>
@@ -293,6 +297,19 @@
                         width: 110,
                         formatter: function (cell) {
                             return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800">${gridText(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
+                        title: "İşlem",
+                        width: 140,
+                        headerHozAlign: "center",
+                        hozAlign: "center",
+                        formatter: function (cell) {
+                            const id = cell.getRow().getData().id;
+                            return `<a href="/operations/workshop/sized/new?sourceStockItemId=${id}" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition inline-flex items-center gap-1">
+                                <i data-lucide="scissors" class="w-3 h-3 text-amber-700"></i>
+                                <span>Yeniden Ebatla</span>
+                            </a>`;
                         }
                     }
                 ]

@@ -624,6 +624,15 @@
             return value === undefined || value === null || value === "" ? "—" : String(value);
         };
     }
+    if (typeof window.gridDate !== "function") {
+        window.gridDate = function (value) {
+            if (!value) {
+                return "—";
+            }
+            var d = new Date(value);
+            return isNaN(d.getTime()) ? String(value) : d.toLocaleDateString("tr-TR");
+        };
+    }
     if (typeof window.gridNumber !== "function") {
         window.gridNumber = function (value, format) {
             if (value === undefined || value === null || value === "") {

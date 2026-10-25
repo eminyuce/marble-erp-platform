@@ -22,6 +22,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.ozerler.marble.model.enums.QualityGrade;
+import com.ozerler.marble.model.enums.StockProductType;
+import com.ozerler.marble.model.enums.SurfaceFinish;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.StockItemRepository;
+import com.ozerler.marble.service.WorkshopOperationService;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -39,6 +49,10 @@ public class WorkshopOperationController extends AbstractController {
     private final OperationWorkOrderService workOrderService;
     private final FactoryStockService factoryStockService;
     private final CustomerRepository customerRepository;
+    private final WorkshopOperationService workshopOperationService;
+    private final SlabRepository slabRepository;
+    private final StockItemRepository stockItemRepository;
+    private final ProjectRepository projectRepository;
 
     @GetMapping
     public String index(@RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
@@ -224,5 +238,67 @@ public class WorkshopOperationController extends AbstractController {
         }).collect(Collectors.toList());
 
         return TabulatorResponse.of(data, itemsPage.getTotalPages(), itemsPage.getTotalElements());
+    }
+
+    // --- 4. ATÖLYE EBATLAMA / YENİDEN EBATLAMA ÜRETİM MODÜLÜ ---
+    @GetMapping({"/sized/new", "/sized/create"})
+    public String newWorkshopSizedForm(
+            @RequestParam(value = "slabId", required = false) Long slabId,
+            @RequestParam(value = "sourceStockItemId", required = false) Long sourceStockItemId,
+            Model model) {
+        model.addAttribute("slabs", slabRepository.findByStatusIn(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
+        model.addAttribute("sourceSizedItems", stockItemRepository.findByProductTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
+        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("qualityGrades", QualityGrade.values());
+        model.addAttribute("surfaceFinishes", SurfaceFinish.values());
+        model.addAttribute("prefillSlabId", slabId);
+        model.addAttribute("prefillSourceStockItemId", sourceStockItemId);
+        model.addAttribute("activeSection", "workshop");
+        model.addAttribute("activeSubSection", "sized");
+        return "operations/workshop/sized-form";
+    }
+
+    @PostMapping({"/sized/new", "/sized/create"})
+    public String createWorkshopSizedItem(
+            @RequestParam(value = "sourceType", defaultValue = "SLAB") String sourceType,
+            @RequestParam(value = "slabId", required = false) Long slabId,
+            @RequestParam(value = "sourceStockItemId", required = false) Long sourceStockItemId,
+            @RequestParam(value = "consumedQuantity", required = false) BigDecimal consumedQuantity,
+            @RequestParam(value = "wasteQuantity", required = false) BigDecimal wasteQuantity,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "customerId", required = false) Long customerId,
+            @RequestParam(value = "projectId", required = false) Long projectId,
+            @RequestParam(value = "qualityGrade", required = false) String qualityGrade,
+            @RequestParam(value = "surfaceFinish", required = false) String surfaceFinish,
+            @RequestParam(value = "edgeFinish", required = false) String edgeFinish,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "rowDescription", required = false) List<String> rowDescriptions,
+            @RequestParam(value = "rowThicknessCm", required = false) List<BigDecimal> rowThicknesses,
+            @RequestParam(value = "rowWidthCm", required = false) List<BigDecimal> rowWidths,
+            @RequestParam(value = "rowLengthCm", required = false) List<BigDecimal> rowLengths,
+            @RequestParam(value = "rowPieceCount", required = false) List<Integer> rowPieceCounts,
+            @RequestParam(value = "rowQuantity", required = false) List<BigDecimal> rowQuantities,
+            @RequestParam(value = "rowSurfaceFinish", required = false) List<String> rowSurfaceFinishes,
+            @RequestParam(value = "rowEdgeFinish", required = false) List<String> rowEdgeFinishes,
+            RedirectAttributes redirectAttributes) {
+        try {
+            List<StockItem> created = workshopOperationService.produceWorkshopSizedItemsBatch(
+                    sourceType, slabId, sourceStockItemId, consumedQuantity, wasteQuantity,
+                    customerId, projectId, description, qualityGrade, surfaceFinish, edgeFinish, notes,
+                    rowDescriptions, rowThicknesses, rowWidths, rowLengths, rowPieceCounts, rowQuantities,
+                    rowSurfaceFinishes, rowEdgeFinishes
+            );
+            BigDecimal totalM2 = created.stream()
+                    .map(i -> i.getQuantity() != null ? i.getQuantity() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Atölye ebatlama işlemi başarıyla tamamlandı. " + created.size() + " grup ürün (" + totalM2 + " m²) Atölye Ebatlı Stok Sahasına eklendi.");
+            return "redirect:/operations/workshop/sized";
+        } catch (Exception e) {
+            log.error("Atölye ebatlı ürün üretim hatası", e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
+            return "redirect:/operations/workshop/sized/new";
+        }
     }
 }

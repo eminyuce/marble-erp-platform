@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Atölye Ebatlama &amp; Yeniden Ebatlama — Üretim | Özerler Mermer ERP</title>
+    <script>
+        function workshopSizedFormState(prefillSlab, prefillSourceItem) {
+            let initialSource = 'SLAB';
+            if (prefillSourceItem) initialSource = 'SIZED';
+            else if (prefillSlab) initialSource = 'SLAB';
+
+            return {
+                sourceType: initialSource,
+                selectedSlabId: prefillSlab || '',
+                selectedSourceItemId: prefillSourceItem || '',
+                consumedQuantity: '',
+                wasteQuantity: '',
+                defaultDesc: '',
+                defaultSurface: 'Cilalı',
+                defaultEdge: 'Pahlı',
+                rows: [
+                    { desc: '', thickness: 2.0, width: 60, length: 60, count: 100, surfaceFinish: 'Cilalı', edgeFinish: 'Pahlı' }
+                ],
+                addRow() {
+                    this.rows.push({
+                        desc: this.defaultDesc || '',
+                        thickness: 2.0,
+                        width: 60,
+                        length: 60,
+                        count: 100,
+                        surfaceFinish: this.defaultSurface || 'Cilalı',
+                        edgeFinish: this.defaultEdge || 'Pahlı'
+                    });
+                    this.$nextTick(() => {
+                        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                            window.lucide.createIcons();
+                        }
+                    });
+                },
+                removeRow(i) {
+                    if (this.rows.length > 1) {
+                        this.rows.splice(i, 1);
+                    }
+                },
+                calcRowM2(r) {
+                    const w = parseFloat(r.width) || 0;
+                    const l = parseFloat(r.length) || 0;
+                    const c = parseInt(r.count) || 1;
+                    return ((w * l * c) / 10000).toFixed(2);
+                },
+                get totalPieces() {
+                    return this.rows.reduce((sum, r) => sum + (parseInt(r.count) || 0), 0);
+                },
+                get totalM2() {
+                    return this.rows.reduce((sum, r) => sum + parseFloat(this.calcRowM2(r)), 0).toFixed(2);
+                },
+                get effectiveConsumed() {
+                    if (this.consumedQuantity && parseFloat(this.consumedQuantity) > 0) {
+                        return parseFloat(this.consumedQuantity).toFixed(2);
+                    }
+                    const prod = parseFloat(this.totalM2) || 0;
+                    const waste = parseFloat(this.wasteQuantity) || 0;
+                    return (prod + waste).toFixed(2);
+                },
+                get primaryWidth() { return this.rows[0] ? this.rows[0].width : 60; },
+                get primaryLength() { return this.rows[0] ? this.rows[0].length : 60; },
+                get primaryThickness() { return this.rows[0] ? this.rows[0].thickness : 2.0; },
+                get primaryCount() { return this.rows[0] ? this.rows[0].count : 1; }
+            };
+        }
+        window.workshopSizedFormState = workshopSizedFormState;
+    </script>
+</head>
+<body>
+    <div layout:fragment="content" class="erp-form-page max-w-5xl mx-auto space-y-6"
+         th:data-prefill-slab="${prefillSlabId != null ? prefillSlabId : ''}"
+         th:data-prefill-source-item="${prefillSourceStockItemId != null ? prefillSourceStockItemId : ''}"
+         x-data="workshopSizedFormState($el.dataset.prefillSlab, $el.dataset.prefillSourceItem)">
+
+    <!-- Header & Breadcrumb -->
+    <div class="erp-form-header">
+        <div th:replace="~{fragments/list-chrome :: breadcrumbTrail('Atölye Ebatlı Sahası', '/operations/workshop/sized', 'Yeni Ebatlama / Üretim')}"></div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
+            <div>
+                <h2 class="admin-page-title text-2xl font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="scissors" class="w-7 h-7 text-emerald-600"></i>
+                    <span>Atölye Ebatlama &amp; Yeniden Ebatlama Üretimi</span>
+                </h2>
+                <p class="erp-form-lead text-sm text-slate-600 mt-1">
+                    Atölyede plakadan ebatlama veya mevcut ebatlı ürünlerin yeniden ebatlanması işlemini gerçekleştirin. Ürünler doğrudan Atölye Mamul Stok Sahasına kaydedilir.
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a th:href="@{/operations/workshop/sized}" class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition">
+                    &larr; Ebatlı Sahaya Dön
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form th:action="@{/operations/workshop/sized/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <!-- Geriye dönük uyumluluk gizli alanları -->
+        <input type="hidden" name="thicknessCm" :value="primaryThickness">
+        <input type="hidden" name="widthCm" :value="primaryWidth">
+        <input type="hidden" name="lengthCm" :value="primaryLength">
+        <input type="hidden" name="pieceCount" :value="primaryCount">
+        <input type="hidden" name="quantity" :value="totalM2">
+
+        <!-- 1. KESİM KAYNAĞI SEÇİMİ (PLAKADAN EBATLAMA VEYA YENİDEN EBATLAMA) -->
+        <div class="bg-gradient-to-r from-emerald-50/60 to-slate-50 p-5 rounded-2xl border border-emerald-100 space-y-4">
+            <div>
+                <label class="block text-xs font-black uppercase tracking-wider text-slate-800 mb-2 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i>
+                    <span>1. Kesim Kaynağı Seçimi *</span>
+                </label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <!-- A) Plakadan Ebatlama -->
+                    <label class="p-3.5 rounded-xl border cursor-pointer transition flex items-start gap-3"
+                           :class="sourceType === 'SLAB' ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-500' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'">
+                        <input type="radio" name="sourceType" value="SLAB" x-model="sourceType" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
+                        <div>
+                            <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i>
+                                <span>Plakadan Ebatlama</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1">
+                                Stoktaki ham veya cilalı plakayı ebatlayarak parçalara ayırır.
+                            </p>
+                        </div>
+                    </label>
+
+                    <!-- B) Ebatlı Üründen Yeniden Ebatlama -->
+                    <label class="p-3.5 rounded-xl border cursor-pointer transition flex items-start gap-3"
+                           :class="sourceType === 'SIZED' ? 'bg-amber-50 border-amber-500 text-amber-950 ring-2 ring-amber-500' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'">
+                        <input type="radio" name="sourceType" value="SIZED" x-model="sourceType" class="mt-0.5 text-amber-600 focus:ring-amber-500">
+                        <div>
+                            <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 text-amber-600"></i>
+                                <span>Yeniden Ebatlama</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1">
+                                Mevcut ebatlı stok ürününü daha küçük ölçülere keser / düzeltir.
+                            </p>
+                        </div>
+                    </label>
+
+                    <!-- C) Bağımsız / Serbest Stok -->
+                    <label class="p-3.5 rounded-xl border cursor-pointer transition flex items-start gap-3"
+                           :class="sourceType === 'NONE' ? 'bg-slate-100 border-slate-400 text-slate-950 ring-1 ring-slate-400' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'">
+                        <input type="radio" name="sourceType" value="NONE" x-model="sourceType" class="mt-0.5 text-slate-600 focus:ring-slate-500">
+                        <div>
+                            <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                <i data-lucide="plus-circle" class="w-4 h-4 text-slate-600"></i>
+                                <span>Bağımsız Stok Girişi</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1">
+                                Hammadde bağlantısı olmadan doğrudan mamul girişi.
+                            </p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Kaynak Plaka Seçimi -->
+            <div x-show="sourceType === 'SLAB'" class="space-y-1">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Kaynak Plaka Seçiniz *</label>
+                <select name="slabId" x-model="selectedSlabId" :required="sourceType === 'SLAB'"
+                        class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <option value="">-- Stoktaki Plakalardan Seçiniz --</option>
+                    <option th:each="s : ${slabs}" th:value="${s.id}"
+                            th:selected="${prefillSlabId != null and prefillSlabId == s.id}"
+                            th:text="${s.slabCode + ' | ' + (s.stoneType != null ? s.stoneType : (s.block != null ? s.block.stoneType : 'Mermer')) + ' | ' + s.thicknessCm + ' cm (' + s.widthCm + 'x' + s.lengthCm + ' cm) | Alan: ' + s.surfaceAreaM2 + ' m² | ' + (s.customer != null ? s.customer.companyName : 'Genel Stok')}"></option>
+                </select>
+                <p class="text-[11px] text-slate-500">Seçilen plaka kesim sonucu üretilen m² ve fire kadar stoktan düşülecektir.</p>
+            </div>
+
+            <!-- Kaynak Ebatlı Ürün Seçimi (Yeniden Ebatlama) -->
+            <div x-show="sourceType === 'SIZED'" class="space-y-1">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Yeniden Ebatlanacak Kaynak Ürün Seçiniz *</label>
+                <select name="sourceStockItemId" x-model="selectedSourceItemId" :required="sourceType === 'SIZED'"
+                        class="w-full px-3.5 py-2.5 bg-white border border-amber-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <option value="">-- Stoktaki Ebatlı Ürünlerden Seçiniz --</option>
+                    <option th:each="it : ${sourceSizedItems}" th:value="${it.id}"
+                            th:selected="${prefillSourceStockItemId != null and prefillSourceStockItemId == it.id}"
+                            th:text="${it.itemCode + ' | ' + it.description + ' | ' + it.thicknessCm + 'x' + it.widthCm + 'x' + it.lengthCm + ' cm | Stok: ' + it.quantity + ' ' + it.unit + ' (' + (it.pieceCount != null ? it.pieceCount : 1) + ' adet) | ' + (it.customer != null ? it.customer.companyName : 'Genel Stok')}"></option>
+                </select>
+                <p class="text-[11px] text-amber-800">Yeniden ebatlanan miktar kaynak ürünün mevcut stoğundan otomatik düşülür.</p>
+            </div>
+
+            <!-- Hammadde Tüketim & Fire Bilgisi -->
+            <div x-show="sourceType !== 'NONE'" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">
+                        Hammadde Tüketim Miktarı (m²) <span class="text-slate-400 font-normal">(Opsiyonel - Boşsa Üretilen + Fire)</span>
+                    </label>
+                    <input type="number" step="0.01" min="0" name="consumedQuantity" x-model="consumedQuantity"
+                           :placeholder="'Otomatik: ' + effectiveConsumed + ' m²'"
+                           class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-rose-700 mb-1 flex items-center gap-1">
+                        <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                        <span>İşlem Sırasında Oluşan Fire Miktarı (m²)</span>
+                    </label>
+                    <input type="number" step="0.01" min="0" name="wasteQuantity" x-model="wasteQuantity" placeholder="0.00"
+                           class="w-full px-3.5 py-2 border border-rose-300 bg-rose-50/50 rounded-xl text-xs font-mono font-bold text-rose-900 focus:ring-2 focus:ring-rose-500 focus:outline-none" />
+                    <p class="text-[10px] text-rose-600 mt-1">Fire miktarı zayi olarak düşülür; proje/şantiye seçilmişse doğrudan şantiye maliyetine yazılır.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. GENEL ÜRÜN BİLGİLERİ & MÜŞTERİ / PROJE BAĞLANTISI -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-slate-100">
+            <!-- Genel Ürün Tanımı / Taş Cinsi -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Genel Ürün / Taş Cinsi Tanımı *</label>
+                <input type="text" name="description" x-model="defaultDesc" required placeholder="Örn: Klasik Traverten Basamak / Döşeme"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            </div>
+
+            <!-- Müşteri Ataması -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Müşteri (Opsiyonel - Boşsa Genel Stok)</label>
+                <select name="customerId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <option value="">-- Genel Stok / Müşterisiz --</option>
+                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                </select>
+            </div>
+
+            <!-- Şantiye / Proje Seçimi (Maliyet Takibi İçin) -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                    <span>Şantiye / Proje (Opsiyonel)</span>
+                    <span class="text-[10px] text-amber-600 font-semibold uppercase">Maliyet / Fire</span>
+                </label>
+                <select name="projectId"
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <option value="">-- Projesiz (Atölye Genel Üretim) --</option>
+                    <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name + ' (' + p.projectCode + ')'}"></option>
+                </select>
+                <p class="text-[10px] text-slate-500 mt-1">Proje seçildiğinde oluşan kesim firesi doğrudan bu projenin maliyetine aktarılır.</p>
+            </div>
+
+            <!-- Kalite Sınıfı -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kalite Sınıfı</label>
+                <select name="qualityGrade" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <option th:each="q : ${qualityGrades}" th:value="${q.name()}" th:text="${q.displayName}"></option>
+                </select>
+            </div>
+
+            <!-- Varsayılan Yüzey İşlemi -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Varsayılan Yüzey İşlemi</label>
+                <input type="text" name="surfaceFinish" x-model="defaultSurface" placeholder="Honlu, Cilalı, Kumlama, Fırçalı vb."
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            </div>
+
+            <!-- Varsayılan Kenar İşlemi -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Varsayılan Kenar İşlemi</label>
+                <input type="text" name="edgeFinish" x-model="defaultEdge" placeholder="Düz, Pahlı, Yarım Balıksırtı, Profil vb."
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            </div>
+        </div>
+
+        <!-- 3. DİNAMİK EBAT SATIRLARI TABLOSU -->
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="layout-grid" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Ebat, Adet ve İşlem Satırları</span>
+                    </h3>
+                    <p class="text-xs text-slate-500">Üretilen her ebat için kalınlık, en, boy, adet, yüzey işlemi ve kenar işlemini ayrı ayrı belirleyin.</p>
+                </div>
+                <button type="button" @click="addRow()"
+                        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>+ Yeni Ebat Satırı Ekle</span>
+                </button>
+            </div>
+
+            <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse min-w-[950px]">
+                        <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                            <tr>
+                                <th class="py-2.5 px-3 w-10 text-center">#</th>
+                                <th class="py-2.5 px-2 w-24">Kalınlık (cm)*</th>
+                                <th class="py-2.5 px-2 w-24">En (cm)*</th>
+                                <th class="py-2.5 px-2 w-24">Boy (cm)*</th>
+                                <th class="py-2.5 px-2 w-20">Adet*</th>
+                                <th class="py-2.5 px-2 w-24 text-center">m²</th>
+                                <th class="py-2.5 px-2 w-32">Yüzey İşlemi</th>
+                                <th class="py-2.5 px-2 w-32">Kenar İşlemi</th>
+                                <th class="py-2.5 px-3">Tanım / Not</th>
+                                <th class="py-2.5 px-2 w-10 text-center">Sil</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium">
+                            <template x-for="(row, idx) in rows" :key="idx">
+                                <tr class="hover:bg-slate-50/70 transition">
+                                    <td class="p-2 text-center font-bold text-slate-400 font-mono" x-text="idx + 1">1</td>
+                                    <td class="p-2">
+                                        <input type="number" step="0.1" min="0.1" name="rowThicknessCm" x-model.number="row.thickness" required
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="number" step="0.1" min="1" name="rowWidthCm" x-model.number="row.width" required placeholder="En"
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="number" step="0.1" min="1" name="rowLengthCm" x-model.number="row.length" required placeholder="Boy"
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="number" min="1" name="rowPieceCount" x-model.number="row.count" required
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right" />
+                                    </td>
+                                    <td class="p-2 text-center font-mono font-bold text-emerald-800 bg-emerald-50/40" x-text="calcRowM2(row)">
+                                        3.60
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="text" name="rowSurfaceFinish" x-model="row.surfaceFinish" placeholder="Cilalı / Honlu"
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-800 focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="text" name="rowEdgeFinish" x-model="row.edgeFinish" placeholder="Pahlı / Profil"
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-800 focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="text" name="rowDescription" x-model="row.desc" placeholder="Örn: Merdiven Basamağı"
+                                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                                    </td>
+                                    <td class="p-2 text-center">
+                                        <button type="button" @click="removeRow(idx)"
+                                                :disabled="rows.length <= 1"
+                                                class="text-slate-400 hover:text-rose-600 disabled:opacity-30 disabled:cursor-not-allowed transition p-1">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Toplam Özet Kartı -->
+            <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="flex items-center gap-6">
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Toplam Kalem</div>
+                        <div class="text-sm font-black text-slate-900 font-mono" x-text="rows.length + ' satır'"></div>
+                    </div>
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Toplam Adet</div>
+                        <div class="text-sm font-black text-slate-900 font-mono" x-text="totalPieces + ' adet'"></div>
+                    </div>
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Toplam Üretilen Alan</div>
+                        <div class="text-base font-black text-emerald-700 font-mono" x-text="totalM2 + ' m²'"></div>
+                    </div>
+                    <div x-show="sourceType !== 'NONE'">
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-amber-800">Düşülecek Hammadde</div>
+                        <div class="text-sm font-black text-amber-900 font-mono" x-text="effectiveConsumed + ' m²'"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. EK NOTLAR & BUTONLAR -->
+        <div class="space-y-4 pt-2">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Atölye Üretim / Kesim Notu</label>
+                <textarea name="notes" rows="2" placeholder="Usta, kesim tezgâhı veya parti ile ilgili açıklamalar..."
+                          class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <a th:href="@{/operations/workshop/sized}" class="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition">
+                    Vazgeç
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-2 cursor-pointer">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>Atölye Üretimini Kaydet ve Stoğa Ekle</span>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    </div>
+</body>
+</html>

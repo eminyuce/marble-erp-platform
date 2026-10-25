@@ -44,9 +44,10 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
            "WHERE i.id = :id")
     Optional<Invoice> findByIdWithDetails(@Param("id") Long id);
 
-    @Query("SELECT i FROM Invoice i " +
+    @Query(value = "SELECT i FROM Invoice i " +
            "LEFT JOIN FETCH i.customer " +
            "LEFT JOIN FETCH i.supplier " +
+           "LEFT JOIN FETCH i.project " +
            "WHERE (:invoiceType IS NULL OR i.invoiceType = :invoiceType) " +
            "AND (:department IS NULL OR i.department = :department) " +
            "AND (:status IS NULL OR i.status = :status) " +
@@ -57,7 +58,20 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
            "OR LOWER(i.invoiceNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
            "OR LOWER(COALESCE(i.partyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
            "OR LOWER(COALESCE(i.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
-           "ORDER BY i.invoiceDate DESC, i.id DESC")
+           "ORDER BY i.invoiceDate DESC, i.id DESC",
+           countQuery = "SELECT COUNT(i) FROM Invoice i " +
+           "LEFT JOIN i.customer " +
+           "LEFT JOIN i.supplier " +
+           "WHERE (:invoiceType IS NULL OR i.invoiceType = :invoiceType) " +
+           "AND (:department IS NULL OR i.department = :department) " +
+           "AND (:status IS NULL OR i.status = :status) " +
+           "AND (:customerId IS NULL OR i.customer.id = :customerId) " +
+           "AND (:startDate IS NULL OR i.invoiceDate >= :startDate) " +
+           "AND (:endDate IS NULL OR i.invoiceDate <= :endDate) " +
+           "AND (:search IS NULL OR :search = '' " +
+           "OR LOWER(i.invoiceNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "OR LOWER(COALESCE(i.partyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+           "OR LOWER(COALESCE(i.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<Invoice> searchInvoices(@Param("invoiceType") InvoiceType invoiceType,
                                 @Param("department") BusinessUnit department,
                                 @Param("status") InvoiceStatus status,

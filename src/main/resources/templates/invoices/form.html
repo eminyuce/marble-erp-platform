@@ -18,7 +18,7 @@
         }
 
         let initialLines = [
-            { productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' }
+            { productName: '', description: '', quantity: 1, wasteQuantity: 0, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' }
         ];
 
         if (prefillPoItems && prefillPoItems.length > 0) {
@@ -26,6 +26,7 @@
                 productName: it.itemName || '',
                 description: it.description || '',
                 quantity: parseFloat(it.quantity) || 1,
+                wasteQuantity: 0,
                 unit: it.unit || 'ADET',
                 widthCm: '',
                 unitPrice: parseFloat(it.unitPrice) || 0,
@@ -39,6 +40,7 @@
                     productName: el.dataset.prefillBlockName || '',
                     description: el.dataset.prefillBlockDesc || '',
                     quantity: parseFloat(el.dataset.prefillBlockQty) || 1,
+                    wasteQuantity: 0,
                     unit: 'ton',
                     widthCm: '',
                     unitPrice: prefillPrice,
@@ -81,6 +83,9 @@
             lines: initialLines,
 
             init() {
+                if (this.invoiceType === 'PURCHASE' && (this.purchaseCategory === 'MAZOT' || this.purchaseCategory === 'ELEKTRIK')) {
+                    this.onPurchaseCategoryChange(this.purchaseCategory);
+                }
                 this.$nextTick(() => {
                     if (window.lucide) window.lucide.createIcons();
                 });
@@ -89,7 +94,18 @@
                 }
             },
             addLine() {
-                this.lines.push({ productName: '', description: '', quantity: 1, unit: 'm2', widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' });
+                let defaultName = '';
+                let defaultUnit = 'm2';
+                if (this.invoiceType === 'PURCHASE') {
+                    if (this.purchaseCategory === 'MAZOT') {
+                        defaultName = 'Motorin (Mazot)';
+                        defaultUnit = 'litre';
+                    } else if (this.purchaseCategory === 'ELEKTRIK') {
+                        defaultName = 'Elektrik Tüketim Bedeli';
+                        defaultUnit = 'adet';
+                    }
+                }
+                this.lines.push({ productName: defaultName, description: '', quantity: 1, wasteQuantity: 0, unit: defaultUnit, widthCm: '', unitPrice: 0, blockId: '', slabId: '', stockItemId: '' });
                 this.lines = [...this.lines];
                 this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
             },
@@ -143,8 +159,8 @@
                     this.newStockForm.category = 'MAZOT';
                     this.newStockForm.unit = 'litre';
                     this.lines.forEach(l => {
+                        l.productName = 'Motorin (Mazot)';
                         l.unit = 'litre';
-                        if (!l.productName) l.productName = 'Motorin (Mazot)';
                     });
                 } else if (cat === 'ELEKTRIK') {
                     this.directExpense = true;
@@ -152,7 +168,7 @@
                     this.newStockForm.unit = 'adet';
                     this.newStockForm.isExpense = true;
                     this.lines.forEach(l => {
-                        if (!l.productName) l.productName = 'Elektrik Faturası';
+                        l.productName = 'Elektrik Tüketim Bedeli';
                         l.unit = 'adet';
                     });
                 } else if (cat === 'SARF_MALZEME') {
@@ -347,9 +363,9 @@
             <div>
                 <h2 class="admin-page-title text-2xl font-black text-slate-900 flex items-center gap-2">
                     <i data-lucide="receipt" class="w-7 h-7 text-emerald-600"></i>
-                    <span>Yeni Fatura Oluştur</span>
+                    <span x-text="invoiceType === 'PURCHASE' ? 'Yeni Alış Faturası' : 'Yeni Satış Faturası'">Yeni Fatura Oluştur</span>
                 </h2>
-                <p class="erp-form-lead text-sm text-slate-600 mt-1">
+                <p class="erp-form-lead text-sm text-slate-600 mt-1" x-text="invoiceType === 'PURCHASE' ? 'Tedarikçi alımlarını kaydedin, depoya stok girişi yapın veya doğrudan işletme gideri olarak muhasebeleştirin.' : 'Ocak, Fabrika veya Atölye çıkışlarını faturalandırın, dahili transfer yapın veya şantiye maliyetine bağlayın.'">
                     Ocak, Fabrika veya Atölye çıkışlarını faturalandırın, dahili transfer yapın veya şantiye maliyetine bağlayın.
                 </p>
             </div>
@@ -365,6 +381,7 @@
                     <span>+ Yeni Stok Kartı Aç</span>
                 </button>
                 <button type="button" @click="openStockModal()"
+                        x-show="!(invoiceType === 'PURCHASE' && (purchaseCategory === 'MAZOT' || purchaseCategory === 'ELEKTRIK'))"
                         class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-300 shadow-2xs cursor-pointer">
                     <i data-lucide="boxes" class="w-4 h-4 text-emerald-600"></i>
                     <span>Stoktan Seç</span>
@@ -379,7 +396,7 @@
         <div class="text-xs text-emerald-950 leading-relaxed space-y-1">
             <p><strong>Operasyonel Kurallar:</strong> Ocak, Fabrika ve Atölye'den yapılan tüm çıkışlar fatura ile kayıt altına alınır.</p>
             <p class="text-slate-600">
-                • <strong>Dahili Sevkiyat:</strong> Fabrika veya Atölye'ye gönderilen mermerlerde müşteri seçimi gerekmez; ürünler doğrudan o birimin stoğuna geçer.<br>
+                • <strong>Dahili Sevkiyat:</strong> Fabrika, Atölye veya Şantiye'ye gönderilen malzemelerde müşteri seçimi gerekmez; ürünler doğrudan o birimin stoğuna geçer.<br>
                 • <strong>Şantiye Maliyet Takibi:</strong> Atölye/Fabrika çıkışında proje seçildiğinde malzeme maliyeti doğrudan o şantiyeye bağımsız olarak kaydedilir.<br>
                 • <strong>Metretül Satış:</strong> Birim "m.t." seçildiğinde genişlik (cm) girilir, sistem m² karşılığını otomatik hesaplar ve stoktan m² olarak düşer.
             </p>
@@ -409,9 +426,10 @@
                        class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-mono text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
             </div>
 
-            <!-- Çıkış Yapan / Düzenleyen Departman -->
+            <!-- Çıkış / Giriş Yapan Departman -->
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">Çıkış Yapan Birim / Departman *</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5"
+                       x-text="invoiceType === 'PURCHASE' ? 'Giriş Yapılan Birim / Departman *' : 'Çıkış Yapan Birim / Departman *'">Çıkış Yapan Birim / Departman *</label>
                 <select name="department" x-model="department" required
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                     <option th:each="d : ${departments}" th:value="${d.name()}"
@@ -435,12 +453,12 @@
             </div>
 
             <!-- Proje / Şantiye Seçimi (Maliyet Takibi İçin) -->
-            <div x-show="department !== 'QUARRY'">
+            <div x-show="department !== 'QUARRY' && destinationMode !== 'INTERNAL'">
                 <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
                     <span>Şantiye / Proje (Opsiyonel)</span>
                     <span class="text-[10px] text-amber-600 font-semibold uppercase">Maliyet</span>
                 </label>
-                <select name="projectId"
+                <select name="projectId" :disabled="destinationMode === 'INTERNAL'"
                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
                     <option value="">-- Şantiye / Proje Yok (Genel Satış) --</option>
                     <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name + ' (' + p.projectCode + ')'}"></option>
@@ -468,7 +486,7 @@
                     <label class="inline-flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border"
                            :class="destinationMode === 'INTERNAL' ? 'bg-amber-50 border-amber-500 text-amber-950' : 'bg-slate-50 border-slate-200 text-slate-700'">
                         <input type="radio" x-model="destinationMode" value="INTERNAL" class="text-amber-600 focus:ring-amber-500">
-                        <span>Dahili Birim Transferi (Ocaklar / Fabrika / Atölye)</span>
+                        <span>Dahili Birim Transferi (Ocaklar / Fabrika / Atölye / Şantiye)</span>
                     </label>
                 </div>
 
@@ -499,13 +517,25 @@
                                      class="w-full px-3.5 py-2.5 bg-white border border-amber-300 rounded-xl text-sm font-bold text-amber-950 focus:ring-2 focus:ring-amber-500 focus:outline-none">
                                 <option value="FACTORY">Fabrika (Plaka / Blok Sahası)</option>
                                 <option value="WORKSHOP">Atölye (Ebatlama &amp; Mamul)</option>
+                                <option value="SITE">Şantiye (Proje / Montaj Sahası)</option>
                                 <option value="QUARRY">Ocaklar</option>
                             </select>
                         </div>
-                        <div class="text-xs text-amber-900 flex items-center">
+                        <div x-show="targetDepartment === 'SITE'">
+                            <label class="block text-xs font-bold text-amber-900 mb-1.5">Hedef Şantiye / Proje *</label>
+                            <select name="projectId" :disabled="destinationMode !== 'INTERNAL' || targetDepartment !== 'SITE'" :required="destinationMode === 'INTERNAL' && targetDepartment === 'SITE'"
+                                    class="w-full px-3.5 py-2.5 bg-white border border-amber-300 rounded-xl text-sm font-bold text-amber-950 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <option value="">-- Hedef Şantiye / Proje Seçiniz --</option>
+                                <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name + ' (' + p.projectCode + ')'}"></option>
+                            </select>
+                            <p class="text-[11px] text-amber-800 mt-1">
+                                Aktarılan ürünler seçilen şantiyenin deposuna girer ve şantiye maliyetine işlenir.
+                            </p>
+                        </div>
+                        <div x-show="targetDepartment !== 'SITE'" class="text-xs text-amber-900 flex items-center">
                             <div class="bg-white/80 p-3 rounded-xl border border-amber-200 w-full">
                                 <i data-lucide="arrow-right-left" class="w-4 h-4 text-amber-600 inline mr-1"></i>
-                                <strong>Otomatik Stok Transferi:</strong> Müşteri cari seçimine gerek yoktur. Bu faturayla çıkan blok veya plakalar doğrudan seçilen birimin stoğuna kaydedilecektir.
+                                <strong>Otomatik Stok Transferi:</strong> Müşteri cari seçimine gerek yoktur. Bu faturayla çıkan ürünler doğrudan seçilen birimin stoğuna kaydedilecektir.
                             </div>
                         </div>
                     </div>
@@ -699,6 +729,7 @@
                         <span>+ Yeni Stok Kartı Aç</span>
                     </button>
                     <button type="button" @click="openStockModal()"
+                            x-show="!(invoiceType === 'PURCHASE' && (purchaseCategory === 'MAZOT' || purchaseCategory === 'ELEKTRIK'))"
                             class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition border border-emerald-300 cursor-pointer">
                         <i data-lucide="boxes" class="w-3.5 h-3.5 text-emerald-600"></i>
                         <span>Stoktan Seç</span>
@@ -712,12 +743,13 @@
             </div>
 
             <div class="overflow-x-auto border border-slate-200 rounded-2xl">
-                <table class="w-full text-left text-xs text-slate-700 border-collapse min-w-[850px]">
+                <table class="w-full text-left text-xs text-slate-700 border-collapse min-w-[950px]">
                     <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
                         <tr>
                             <th class="py-3 px-3 min-w-[200px]">Ürün / Hizmet *</th>
                             <th class="py-3 px-3 min-w-[140px]">Açıklama / Ebat</th>
                             <th class="py-3 px-3 w-24">Miktar *</th>
+                            <th class="py-3 px-3 w-24 text-rose-700 font-bold" title="Satış veya üretim esnasında oluşan zayi/fire miktarı. Stoktan düşülür ve maliyete atılır.">Fire Miktarı</th>
                             <th class="py-3 px-3 w-28">Birim *</th>
                             <th class="py-3 px-3 w-28">Genişlik (cm)</th>
                             <th class="py-3 px-3 w-28 text-center">Hesaplanan m²</th>
@@ -743,6 +775,7 @@
                                             <i data-lucide="check" class="w-3 h-3"></i> Stok Bağlı
                                         </span>
                                     </div>
+                                    <span x-show="invoiceType === 'PURCHASE' && (purchaseCategory === 'MAZOT' || purchaseCategory === 'ELEKTRIK')" class="text-[10px] text-emerald-600 font-semibold block mt-0.5">(Otomatik Dolduruldu)</span>
                                 </td>
 
                                 <!-- Açıklama -->
@@ -756,6 +789,14 @@
                                     <input type="number" step="0.01" name="itemQuantity" x-model.number="line.quantity" required
                                            @blur="if (line.quantity) line.quantity = parseFloat(Number(line.quantity).toFixed(2))"
                                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                </td>
+
+                                <!-- Fire Miktarı -->
+                                <td class="p-2">
+                                    <input type="number" step="0.01" name="itemWasteQuantity" x-model.number="line.wasteQuantity"
+                                           placeholder="0.00"
+                                           @blur="if (line.wasteQuantity) line.wasteQuantity = parseFloat(Number(line.wasteQuantity).toFixed(2))"
+                                           class="w-full px-2.5 py-1.5 border border-rose-200 bg-rose-50/40 rounded-lg text-xs font-semibold text-rose-900 focus:bg-white focus:ring-1 focus:ring-rose-500 focus:outline-none text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </td>
 
                                 <!-- Birim (Birim Tanımlamaları: litre, adet, m.tül, m2 ve diğerleri) -->
