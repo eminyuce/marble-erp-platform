@@ -236,6 +236,25 @@ function gridArea(value) {
     return amount === "—" ? "—" : amount + " m²";
 }
 
+function gridDate(value) {
+    if (value === undefined || value === null || value === "" || value === "—") {
+        return "—";
+    }
+    if (typeof value === "string") {
+        const str = value.trim();
+        // Check if already in dd.MM.yyyy format
+        if (/^\d{2}\.\d{2}\.\d{4}/.test(str)) {
+            return str.substring(0, 10);
+        }
+        // ISO format YYYY-MM-DD...
+        if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+            const parts = str.substring(0, 10).split("-");
+            return parts[2] + "." + parts[1] + "." + parts[0];
+        }
+    }
+    return String(value);
+}
+
 function formatTurkishNumber(val, decimals = null) {
     if (val === undefined || val === null || val === "") return "";
     const n = typeof val === "number" ? val : parseFloat(String(val).replace(/\./g, "").replace(",", "."));

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -303,7 +304,7 @@ public class InvoiceController extends AbstractController {
                         }
                         return b2.getId().compareTo(b1.getId());
                     })
-                    .limit(50)
+                    .limit(500)
                     .toList();
             for (Block b : blocks) {
                 Map<String, Object> m = new HashMap<>();
@@ -317,7 +318,7 @@ public class InvoiceController extends AbstractController {
                 BigDecimal ton = b.getActualTonnage() != null && b.getActualTonnage().compareTo(BigDecimal.ZERO) > 0
                         ? b.getActualTonnage()
                         : (b.getEstimatedTonnage() != null ? b.getEstimatedTonnage() : BigDecimal.ONE);
-                m.put("quantity", ton);
+                m.put("quantity", scaleQuantity(ton));
                 m.put("unit", "ton");
                 m.put("widthCm", b.getWidthCm());
                 boolean isMarked = b.getAssignedCustomer() != null;
@@ -344,7 +345,7 @@ public class InvoiceController extends AbstractController {
                         m.put("name", "Ocak Mazot Stoğu (Dizel)");
                         m.put("stoneType", "Akaryakıt");
                         m.put("dimensions", "Ana Depo Tankı");
-                        m.put("quantity", fuelTank.getQuantity() != null ? fuelTank.getQuantity() : BigDecimal.ZERO);
+                        m.put("quantity", scaleQuantity(fuelTank.getQuantity()));
                         m.put("unit", "litre");
                         m.put("unitPrice", fuelTank.getUnitPrice() != null ? fuelTank.getUnitPrice() : BigDecimal.ZERO);
                         m.put("directExpense", false);
@@ -382,7 +383,7 @@ public class InvoiceController extends AbstractController {
                         m.put("name", ci.getDescription() != null ? ci.getDescription() : ci.getItemCode());
                         m.put("stoneType", catLabel);
                         m.put("dimensions", "—");
-                        m.put("quantity", ci.getQuantity());
+                        m.put("quantity", scaleQuantity(ci.getQuantity()));
                         m.put("unit", ci.getUnit() != null ? ci.getUnit() : "adet");
                         m.put("unitPrice", ci.getUnitPrice());
                         m.put("directExpense", Boolean.TRUE.equals(ci.getDirectExpense()));
@@ -397,7 +398,7 @@ public class InvoiceController extends AbstractController {
             if (stockType == null || stockType.isBlank() || "SLAB".equalsIgnoreCase(stockType)) {
                 List<Slab> slabs = slabRepository.findByStatus(SlabStatus.AVAILABLE).stream()
                         .filter(sl -> s.isEmpty() || sl.getSlabCode().toLowerCase().contains(s))
-                        .limit(50)
+                        .limit(500)
                         .toList();
                 for (Slab sl : slabs) {
                     Map<String, Object> m = new HashMap<>();
@@ -408,7 +409,7 @@ public class InvoiceController extends AbstractController {
                     m.put("name", "Plaka: " + sl.getSlabCode());
                     m.put("stoneType", "Plaka");
                     m.put("dimensions", sl.getWidthCm() + "x" + sl.getLengthCm() + "x" + sl.getThicknessCm() + " cm");
-                    m.put("quantity", sl.getSurfaceAreaM2() != null ? sl.getSurfaceAreaM2() : BigDecimal.ONE);
+                    m.put("quantity", scaleQuantity(sl.getSurfaceAreaM2() != null ? sl.getSurfaceAreaM2() : BigDecimal.ONE));
                     m.put("unit", "m2");
                     m.put("widthCm", sl.getWidthCm());
                     result.add(m);
@@ -427,7 +428,7 @@ public class InvoiceController extends AbstractController {
                             return true;
                         })
                         .filter(st -> s.isEmpty() || (st.getProductCode() != null && st.getProductCode().toLowerCase().contains(s)) || (st.getStoneType() != null && st.getStoneType().toLowerCase().contains(s)))
-                        .limit(50)
+                        .limit(500)
                         .toList();
                 for (StockItem st : stockItems) {
                     Map<String, Object> m = new HashMap<>();
@@ -438,7 +439,7 @@ public class InvoiceController extends AbstractController {
                     m.put("name", (st.getProductCode() != null ? st.getProductCode() : st.getItemCode()) + " — " + (st.getStoneType() != null ? st.getStoneType() : "Ebatlı Mermer"));
                     m.put("stoneType", st.getStoneType() != null ? st.getStoneType() : "—");
                     m.put("dimensions", (st.getWidthCm() != null ? st.getWidthCm() : "") + "x" + (st.getLengthCm() != null ? st.getLengthCm() : "") + "x" + (st.getThicknessCm() != null ? st.getThicknessCm() : "") + " cm");
-                    m.put("quantity", st.getQuantity());
+                    m.put("quantity", scaleQuantity(st.getQuantity()));
                     m.put("unit", st.getUnit() != null ? st.getUnit() : "m2");
                     m.put("widthCm", st.getWidthCm());
                     result.add(m);
@@ -447,6 +448,11 @@ public class InvoiceController extends AbstractController {
         }
 
         return result;
+    }
+
+    private BigDecimal scaleQuantity(BigDecimal qty) {
+        if (qty == null) return BigDecimal.ZERO;
+        return qty.setScale(2, RoundingMode.HALF_UP);
     }
 
     @PostMapping("/api/create-stock-card")

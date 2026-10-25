@@ -16,6 +16,7 @@ public class QuarrySummaryDto {
     long readyForDispatchCount;
     long inTransitCount;
     long totalInStockCount;
+    long markedCount;
     BigDecimal fuelStockLiters;
     long consumablesCount;
     BigDecimal costPerTonThisMonth;

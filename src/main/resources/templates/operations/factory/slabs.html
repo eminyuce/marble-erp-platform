@@ -280,6 +280,14 @@
                         }
                     },
                     {
+                        title: "Oluşturma Tarihi",
+                        field: "createdDate",
+                        width: 125,
+                        formatter: function (cell) {
+                            return `<span class="text-xs text-slate-700 font-mono font-medium">${gridDate(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
                         title: "Kaynak Blok",
                         field: "sourceBlockCode",
                         width: 130,

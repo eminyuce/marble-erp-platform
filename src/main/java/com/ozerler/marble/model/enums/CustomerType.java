@@ -16,4 +16,8 @@ public enum CustomerType {
     public String getLabel() {
         return MessageUtils.getMessage(messageKey);
     }
+
+    public String getDisplayName() {
+        return getLabel();
+    }
 }

@@ -198,20 +198,21 @@
     </div>
 
     <!-- MODAL 1: Makineye Mazot Ver (Çıkış) -->
-    <div x-show="dispenseModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity bg-slate-900/60" @click="dispenseModalOpen = false"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-            <div class="inline-block p-6 my-8 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="droplet" class="w-5 h-5 text-amber-600"></i>
-                        <span>Makineye Mazot Ver (Çıkış)</span>
-                    </h3>
-                    <button type="button" @click="dispenseModalOpen = false" class="text-slate-400 hover:text-slate-600">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
-                </div>
+    <div x-show="dispenseModalOpen" x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         @click.self="dispenseModalOpen = false"
+         style="display:none;">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative z-10"
+             @click.stop>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="droplet" class="w-5 h-5 text-amber-600"></i>
+                    <span>Makineye Mazot Ver (Çıkış)</span>
+                </h3>
+                <button type="button" @click="dispenseModalOpen = false" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
 
                 <form th:action="@{/quarry/fuel/dispense}" method="post" class="mt-4 space-y-4">
                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -282,25 +283,25 @@
                         </button>
                     </div>
                 </form>
-            </div>
         </div>
     </div>
 
     <!-- MODAL 2: Depo Dolumu (Stok Ekle) -->
-    <div x-show="addStockModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity bg-slate-900/60" @click="addStockModalOpen = false"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-            <div class="inline-block p-6 my-8 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-600"></i>
-                        <span>Depo Dolumu (Mazot Stok Girişi)</span>
-                    </h3>
-                    <button type="button" @click="addStockModalOpen = false" class="text-slate-400 hover:text-slate-600">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
-                </div>
+    <div x-show="addStockModalOpen" x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         @click.self="addStockModalOpen = false"
+         style="display:none;">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative z-10"
+             @click.stop>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-600"></i>
+                    <span>Depo Dolumu (Mazot Stok Girişi)</span>
+                </h3>
+                <button type="button" @click="addStockModalOpen = false" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
 
                 <form th:action="@{/quarry/fuel/add}" method="post" class="mt-4 space-y-4">
                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -344,7 +345,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
         </div>
     </div>
 </div>

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Locale;
 
 /**
@@ -45,6 +46,10 @@ public class BlockDto {
     @JsonProperty("extraction_date")
     @JsonAlias("extractionDate")
     private LocalDate extractionDate;
+
+    @JsonProperty("created_at")
+    @JsonAlias("createdAt")
+    private LocalDateTime createdAt;
 
     @JsonProperty("width_cm")
     @JsonAlias("widthCm")
@@ -202,6 +207,7 @@ public class BlockDto {
                 .blockCode(b.getBlockCode() != null ? b.getBlockCode().toUpperCase(Locale.ROOT) : "")
                 .quarrySection(b.getQuarrySection())
                 .extractionDate(b.getExtractionDate())
+                .createdAt(b.getCreatedDate() != null ? b.getCreatedDate() : (b.getExtractionDate() != null ? b.getExtractionDate().atStartOfDay() : null))
                 .widthCm(b.getWidthCm())
                 .lengthCm(b.getLengthCm())
                 .heightCm(b.getHeightCm())

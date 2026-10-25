@@ -18,20 +18,7 @@ function initDualEditor(containerId, hiddenInputId, options) {
 
     container.dataset.editorReady = "1";
     container.innerHTML = `
-        <div class="w-full col-span-full border border-slate-200 rounded-lg overflow-hidden bg-white shadow-xs">
-            <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2">
-                <div class="flex items-center gap-2">
-                    <button type="button" data-editor-tab="visual"
-                            class="px-3 py-1 text-xs font-semibold rounded bg-white text-slate-800 shadow-2xs border border-slate-200 transition">
-                        Zengin Metin
-                    </button>
-                    <button type="button" data-editor-tab="code"
-                            class="px-3 py-1 text-xs font-semibold rounded text-slate-600 hover:text-slate-900 transition">
-                        Kaynak Kod
-                    </button>
-                </div>
-                <span class="text-xs text-slate-400 font-mono">HTML Editör (Tam Genişlik)</span>
-            </div>
+        <div class="w-full col-span-full border border-slate-300 rounded-xl overflow-hidden bg-white shadow-2xs focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500 transition">
             <div data-editor-pane="visual" class="p-4 ${paneMin} focus:outline-none prose prose-slate max-w-none text-slate-800 text-sm leading-relaxed"></div>
             <div data-editor-pane="code" class="hidden">
                 <textarea data-editor-code class="w-full h-56 p-4 font-mono text-xs bg-slate-900 text-emerald-400 border-0 focus:ring-0 resize-y"></textarea>
@@ -46,38 +33,46 @@ function initDualEditor(containerId, hiddenInputId, options) {
     const codeBtn = container.querySelector("[data-editor-tab='code']");
 
     visualPane.innerHTML = initialContent;
-    codeArea.value = initialContent;
+    if (codeArea) {
+        codeArea.value = initialContent;
+    }
     visualPane.setAttribute("contenteditable", "true");
 
     const activeTabClass = "px-3 py-1 text-xs font-semibold rounded bg-white text-slate-800 shadow-sm border border-slate-200 transition";
     const idleTabClass = "px-3 py-1 text-xs font-semibold rounded text-slate-600 hover:text-slate-900 transition";
 
     function updateContent(fromCode) {
-        if (fromCode) {
+        if (fromCode && codeArea) {
             visualPane.innerHTML = codeArea.value;
             hiddenInput.value = codeArea.value;
         } else {
-            codeArea.value = visualPane.innerHTML;
+            if (codeArea) {
+                codeArea.value = visualPane.innerHTML;
+            }
             hiddenInput.value = visualPane.innerHTML;
         }
     }
 
     visualPane.addEventListener("input", () => updateContent(false));
-    codeArea.addEventListener("input", () => updateContent(true));
-    visualBtn.addEventListener("click", () => {
-        visualPane.classList.remove("hidden");
-        codePane.classList.add("hidden");
-        visualBtn.className = activeTabClass;
-        codeBtn.className = idleTabClass;
-        updateContent(false);
-    });
-    codeBtn.addEventListener("click", () => {
-        visualPane.classList.add("hidden");
-        codePane.classList.remove("hidden");
-        codeBtn.className = activeTabClass;
-        visualBtn.className = idleTabClass;
-        updateContent(false);
-    });
+    if (codeArea) {
+        codeArea.addEventListener("input", () => updateContent(true));
+    }
+    if (visualBtn && codeBtn) {
+        visualBtn.addEventListener("click", () => {
+            visualPane.classList.remove("hidden");
+            codePane.classList.add("hidden");
+            visualBtn.className = activeTabClass;
+            codeBtn.className = idleTabClass;
+            updateContent(false);
+        });
+        codeBtn.addEventListener("click", () => {
+            visualPane.classList.add("hidden");
+            codePane.classList.remove("hidden");
+            codeBtn.className = activeTabClass;
+            visualBtn.className = idleTabClass;
+            updateContent(false);
+        });
+    }
 
     const form = hiddenInput.form;
     if (form) {

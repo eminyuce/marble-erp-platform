@@ -675,6 +675,7 @@ public class QuarryBlockService {
                 .readyForDispatchCount(readyForDispatch)
                 .inTransitCount(inTransit)
                 .totalInStockCount(totalInStock)
+                .markedCount(blockRepository.countMarkedBlocks())
                 .fuelStockLiters(fuelLiters)
                 .consumablesCount(consumablesCount)
                 .costPerTonThisMonth(analysis.getUnitCost() != null ? analysis.getUnitCost() : BigDecimal.ZERO)

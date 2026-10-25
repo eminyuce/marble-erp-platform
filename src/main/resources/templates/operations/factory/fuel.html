@@ -197,8 +197,9 @@
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         @click.self="dispenseModalOpen = false"
          style="display: none;">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4" @click.away="dispenseModalOpen = false">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4" @click.stop>
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-2">
                     <span class="p-2 rounded-xl bg-amber-50 text-amber-600"><i data-lucide="droplet" class="w-5 h-5"></i></span>

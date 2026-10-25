@@ -249,6 +249,14 @@
                         }
                     },
                     {
+                        title: "Üretim Tarihi",
+                        field: "productionDate",
+                        width: 125,
+                        formatter: function (cell) {
+                            return `<span class="text-xs text-slate-700 font-mono font-medium">${gridDate(cell.getValue())}</span>`;
+                        }
+                    },
+                    {
                         title: "Kaynak",
                         field: "sourceBlockCode",
                         width: 130,

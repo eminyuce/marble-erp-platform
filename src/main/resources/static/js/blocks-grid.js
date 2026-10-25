@@ -89,6 +89,16 @@ function initBlocksGrid() {
                 }
             },
             {
+                title: "Oluşturma Tarihi",
+                field: "extractionDate",
+                minWidth: 125,
+                formatter: function (cell) {
+                    const row = cell.getRow().getData();
+                    const d = cell.getValue() || row.createdAt || row.created_at;
+                    return `<span class="text-xs text-slate-700 font-mono font-medium">${gridDate(d)}</span>`;
+                }
+            },
+            {
                 title: "Saha",
                 field: "locationName",
                 minWidth: 130,

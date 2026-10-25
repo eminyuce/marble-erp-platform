@@ -305,7 +305,7 @@
                 }
                 targetLine.productName = item.name;
                 targetLine.description = (item.dimensions ? item.dimensions + ' ' : '') + (item.stoneType ? item.stoneType : '');
-                targetLine.quantity = (item.quantity && parseFloat(item.quantity) > 0) ? item.quantity : 1;
+                targetLine.quantity = (item.quantity && parseFloat(item.quantity) > 0) ? parseFloat(Number(item.quantity).toFixed(2)) : 1;
                 targetLine.unit = item.unit || (this.purchaseCategory === 'MAZOT' ? 'litre' : 'adet');
                 targetLine.widthCm = item.widthCm || '';
                 targetLine.unitPrice = item.unitPrice || 0;
@@ -754,7 +754,8 @@
                                 <!-- Miktar -->
                                 <td class="p-2">
                                     <input type="number" step="0.01" name="itemQuantity" x-model.number="line.quantity" required
-                                           class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right" />
+                                           @blur="if (line.quantity) line.quantity = parseFloat(Number(line.quantity).toFixed(2))"
+                                           class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </td>
 
                                 <!-- Birim (Birim Tanımlamaları: litre, adet, m.tül, m2 ve diğerleri) -->
@@ -893,7 +894,7 @@
     <!-- 5. Stoktan Ürün Seçim Modalı (Madde 4) -->
     <div x-show="stockModalOpen" style="display:none"
          class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-5xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
              @click.away="stockModalOpen = false">
 
             <!-- Modal Header -->
@@ -903,7 +904,12 @@
                         <i data-lucide="boxes" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-slate-900">Stoktan Ürün Seç</h3>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-slate-900">Stoktan Ürün Seç</h3>
+                            <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"
+                                  x-show="!stockLoading && stockItemsList.length > 0"
+                                  x-text="stockItemsList.length + ' ürün bulundu'"></span>
+                        </div>
                         <p class="text-xs text-slate-500">Mevcut blok, plaka veya ebatlı mamul stoklarını faturaya ekleyin.</p>
                     </div>
                 </div>
@@ -957,7 +963,7 @@
             </div>
 
             <!-- Liste -->
-            <div class="max-h-96 overflow-y-auto p-4 divide-y divide-slate-100">
+            <div class="max-h-[70vh] overflow-y-auto p-4 divide-y divide-slate-100">
                 <div x-show="stockLoading" class="py-8 text-center text-xs text-slate-500">
                     <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto text-emerald-600 mb-2"></i>
                     Stoklar yükleniyor...

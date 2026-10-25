@@ -221,13 +221,13 @@
         </div>
 
         <!-- 5. Durum Değişiklik Tarihçesi -->
-        <div th:if="${order.statusHistories != null and not #lists.isEmpty(order.statusHistories)}" class="border-t border-slate-100 pt-6">
+        <div th:if="${(order.statusHistory != null and not #lists.isEmpty(order.statusHistory)) or (order.statusHistories != null and not #lists.isEmpty(order.statusHistories))}" class="border-t border-slate-100 pt-6">
             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
                 <i data-lucide="history" class="w-4 h-4 text-slate-500"></i>
                 <span>Durum Geçmişi ve Tarihçe</span>
             </h4>
             <div class="space-y-2">
-                <div th:each="h : ${order.statusHistories}" class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+                <div th:each="h : ${order.statusHistory != null ? order.statusHistory : order.statusHistories}" class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
                     <div class="flex items-center gap-2">
                         <span class="px-2 py-0.5 rounded-md font-bold text-[10px] bg-indigo-100 text-indigo-800" th:text="${h.newStatus != null ? h.newStatus.label : ''}">Üretimde</span>
                         <span class="text-slate-500 font-medium" th:if="${h.notes != null}" th:text="${h.notes}">Not</span>
