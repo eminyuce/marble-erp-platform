@@ -191,10 +191,13 @@ FINISHED_AT=\$finished
 EXIT_CODE=\$2
 STATUS_EOF
 }
-write_status RUNNING ""
+    write_status RUNNING ""
 code=0
 {
-    if [ -f /stack/.env ]; then
+    if [ ! -f /stack/docker-compose.prod.yml ]; then
+        echo "Sunucuda compose dosyası yok: ${host_stack}/docker-compose.prod.yml"
+        code=1
+    elif [ -f /stack/.env ]; then
         echo "\$ docker compose -f docker-compose.prod.yml pull"
         docker compose --env-file /stack/.env -f /stack/docker-compose.prod.yml pull || code=1
         if [ "\$code" -eq 0 ]; then
@@ -250,7 +253,11 @@ EOF
 }
 
 if [ "$FOREGROUND" -ne 1 ]; then
-    require_compose_file
+    # Inside the app container /stack is optional. The rollout container
+    # mounts MARBLE_HOST_STACK_DIR from the host and reads the compose file there.
+    if [ "${MARBLE_IN_CONTAINER:-}" != "true" ]; then
+        require_compose_file
+    fi
     prepare_log
     write_status "RUNNING" "$(iso_now)" "" ""
     if [ "${MARBLE_IN_CONTAINER:-}" = "true" ]; then
