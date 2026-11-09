@@ -15,12 +15,23 @@ RUN npm run build
 
 FROM eclipse-temurin:24-jdk-noble AS build
 WORKDIR /build
-COPY mvnw pom.xml ./
-COPY .mvn .mvn
-RUN chmod +x mvnw && sed -i 's/\r$//' mvnw && ./mvnw -B -DskipTests dependency:resolve
+
+# The repo mvnw script only execs a Maven already on PATH. The JDK image has none.
+# Pin the same distribution declared in .mvn/wrapper/maven-wrapper.properties.
+ARG MAVEN_VERSION=3.9.9
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL -o /tmp/maven.tgz "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/apache-maven-${MAVEN_VERSION}-bin.tar.gz" \
+    && tar -xzf /tmp/maven.tgz -C /opt \
+    && ln -s "/opt/apache-maven-${MAVEN_VERSION}/bin/mvn" /usr/local/bin/mvn \
+    && rm -f /tmp/maven.tgz
+
+COPY pom.xml .
+RUN mvn -B -DskipTests dependency:resolve
 COPY src ./src
 COPY --from=frontend /src/src/main/resources/static/css/app.css src/main/resources/static/css/app.css
-RUN ./mvnw -B -DskipTests package
+RUN mvn -B -DskipTests package
 
 FROM eclipse-temurin:24-jre-noble AS runtime
 WORKDIR /app
