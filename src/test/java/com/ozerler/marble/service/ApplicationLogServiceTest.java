@@ -107,9 +107,17 @@ class ApplicationLogServiceTest {
     }
 
     @Test
-    @DisplayName("getKpiMetrics should aggregate 24 hour stats")
+    @DisplayName("getKpiMetrics counts every stored row and the last 24 hours separately")
     void shouldAggregateKpis() {
+        when(applicationLogRepository.count()).thenReturn(400L);
         when(applicationLogRepository.countByTimestampAfter(any(LocalDateTime.class))).thenReturn(150L);
+        when(applicationLogRepository.countByLevel(any(String.class)))
+                .thenAnswer(inv -> switch ((String) inv.getArgument(0)) {
+                    case "ERROR" -> 28L;
+                    case "WARN" -> 40L;
+                    case "INFO" -> 300L;
+                    default -> 0L;
+                });
         when(applicationLogRepository.countByLevelAndTimestampAfter(any(String.class), any(LocalDateTime.class)))
                 .thenAnswer(inv -> {
                     String lvl = inv.getArgument(0);
@@ -123,6 +131,10 @@ class ApplicationLogServiceTest {
 
         ApplicationLogKpiDto kpis = applicationLogService.getKpiMetrics();
 
+        assertThat(kpis.getTotalCount()).isEqualTo(400L);
+        assertThat(kpis.getErrorCount()).isEqualTo(28L);
+        assertThat(kpis.getWarnCount()).isEqualTo(40L);
+        assertThat(kpis.getInfoCount()).isEqualTo(300L);
         assertThat(kpis.getTotalLast24Hours()).isEqualTo(150L);
         assertThat(kpis.getErrorLast24Hours()).isEqualTo(5L);
         assertThat(kpis.getWarnLast24Hours()).isEqualTo(12L);
