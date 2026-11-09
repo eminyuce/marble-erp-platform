@@ -104,7 +104,7 @@ public class DeploymentService {
         List<String> argv = buildWrapperArgv();
         Path repoDir = Path.of(properties.getRepoDir());
         HostCommandRunner.HostCommandResult result = hostCommandRunner.run(
-                new HostCommandRunner.HostCommand(argv, repoDir, Duration.ofSeconds(20)));
+                new HostCommandRunner.HostCommand(argv, repoDir, Duration.ofSeconds(60)));
 
         if (!result.isSuccess()) {
             return DeploymentStartResult.builder()

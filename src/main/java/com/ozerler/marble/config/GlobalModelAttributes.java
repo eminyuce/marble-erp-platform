@@ -17,7 +17,7 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20261109-settings-logs-nav}")
+    @Value("${app.asset-version:20261109-dockerhub-rollout-fix}")
     private String configuredAssetVersion;
 
     private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();

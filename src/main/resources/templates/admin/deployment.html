@@ -44,6 +44,9 @@
                     this.timer = setInterval(() => this.tick(), 700);
                 },
                 async tick() {
+                    if (this.starting) {
+                        return;
+                    }
                     if (this.watching || this.status.state === 'RUNNING' || this.downtime) {
                         await this.pollLog();
                     } else if (!this._idleTicks) {
@@ -260,7 +263,11 @@
         };
     </script>
 
-    <div class="space-y-5" x-data="deploymentConsole()" x-init="init()">
+    <div class="flex flex-col lg:flex-row gap-5" x-data="deploymentConsole()" x-init="init()">
+        <aside class="w-full lg:w-[260px] flex-shrink-0">
+            <nav th:replace="~{admin/settings/sidebar :: categories(current='deployment')}"></nav>
+        </aside>
+        <div class="flex-1 min-w-0 space-y-5">
         <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 pb-4 border-b border-slate-200">
             <div class="flex items-start gap-3">
                 <div class="p-3 bg-violet-600 text-white rounded-2xl shadow-lg shadow-violet-700/20 ring-4 ring-violet-100">
@@ -419,6 +426,7 @@
                          x-text="logText || idleTerminal()"></pre>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </div>
