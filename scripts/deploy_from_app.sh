@@ -193,23 +193,24 @@ STATUS_EOF
 }
     write_status RUNNING ""
 code=0
+STACK='${host_stack}'
 {
-    if [ ! -f /stack/docker-compose.prod.yml ]; then
-        echo "Sunucuda compose dosyası yok: ${host_stack}/docker-compose.prod.yml"
+    if [ ! -f "\$STACK/docker-compose.prod.yml" ]; then
+        echo "Sunucuda compose dosyası yok: \$STACK/docker-compose.prod.yml"
         code=1
-    elif [ -f /stack/.env ]; then
+    elif [ -f "\$STACK/.env" ]; then
         echo "\$ docker compose -f docker-compose.prod.yml pull"
-        docker compose --env-file /stack/.env -f /stack/docker-compose.prod.yml pull || code=1
+        docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" pull || code=1
         if [ "\$code" -eq 0 ]; then
             echo "\$ docker compose -f docker-compose.prod.yml up -d"
-            docker compose --env-file /stack/.env -f /stack/docker-compose.prod.yml up -d || code=1
+            docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" up -d || code=1
         fi
     else
         echo "\$ docker compose -f docker-compose.prod.yml pull"
-        docker compose -f /stack/docker-compose.prod.yml pull || code=1
+        docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" pull || code=1
         if [ "\$code" -eq 0 ]; then
             echo "\$ docker compose -f docker-compose.prod.yml up -d"
-            docker compose -f /stack/docker-compose.prod.yml up -d || code=1
+            docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d || code=1
         fi
     fi
     if [ "\$code" -eq 0 ]; then
@@ -246,7 +247,7 @@ EOF
         --name "$ROLLOUT_NAME" \
         --label marble-erp.rollout=true \
         -v /var/run/docker.sock:/var/run/docker.sock \
-        -v "${host_stack}:/stack:ro" \
+        -v "${host_stack}:${host_stack}:ro" \
         -v "${host_logs}:/logs" \
         docker:27.5.1-cli \
         sh /logs/rollout.sh
