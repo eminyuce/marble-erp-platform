@@ -115,6 +115,8 @@ class DeploymentServiceTest {
 
         assertThat(status.isCanStart()).isFalse();
         assertThat(status.isLinuxHost()).isFalse();
+        assertThat(status.getImageRepository()).isEqualTo("guvenulu/marble-erp-platform");
+        assertThat(status.getImageTag()).isEqualTo("latest");
         assertThat(status.getBlockingReasons()).anyMatch(reason -> reason.contains("Linux"));
     }
 

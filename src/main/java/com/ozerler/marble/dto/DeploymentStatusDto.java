@@ -37,6 +37,12 @@ public class DeploymentStatusDto {
     @JsonProperty("headMessage")
     String headMessage;
 
+    @JsonProperty("imageRepository")
+    String imageRepository;
+
+    @JsonProperty("imageTag")
+    String imageTag;
+
     @JsonProperty("startedAt")
     String startedAt;
 

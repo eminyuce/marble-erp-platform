@@ -20,14 +20,21 @@ public class DeploymentProperties {
     private boolean enabled = false;
 
     /**
-     * Root-owned wrapper installed by {@code scripts/deploy_production.sh}.
+     * Wrapper that pulls the Docker Hub image and recreates the Compose stack.
      */
     private String command = "/usr/local/sbin/marble-erp-inapp-deploy";
 
     /**
-     * Git clone that is hard-reset to {@code origin/main} before deploy.
+     * Directory that contains {@code docker-compose.prod.yml}.
      */
     private String repoDir = "/home/eyuce/marble-erp-platform";
+
+    /**
+     * Image published by GitHub Actions. Shown on the deployment screen.
+     */
+    private String imageRepository = "guvenulu/marble-erp-platform";
+
+    private String imageTag = "latest";
 
     private String logFile = "/opt/marble-erp/logs/inapp-deploy.log";
 

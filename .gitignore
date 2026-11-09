@@ -41,6 +41,11 @@ frontend/.npm
 .pnp
 .pnp.js
 
+### Secrets ###
+.env
+.env.*
+!.env.example
+
 ### OS / Temporary ###
 .DS_Store
 Thumbs.db

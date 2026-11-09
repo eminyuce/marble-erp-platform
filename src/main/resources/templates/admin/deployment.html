@@ -159,14 +159,14 @@
                     if (this.status.state === 'RUNNING' || this.starting) {
                         return 'Yayın sürüyor...';
                     }
-                    return this.confirming ? "Evet, main'den yayınla" : "main dalından yayınla";
+                    return this.confirming ? "Evet, imajı çek ve yenile" : "Güncel imajı yayına al";
                 },
                 actionHint() {
                     if (this.downtime) {
                         return 'Sunucu yeniden başlıyor. Bağlantı otomatik kurulacak.';
                     }
                     if (this.confirming) {
-                        return 'Servis duracak. Yaklaşık 1–2 dakika kesinti olur. Emin misiniz?';
+                        return 'Uygulama konteyneri yenilenecek. Kısa bir kesinti olur. Veritabanı silinmez. Emin misiniz?';
                     }
                     return this.status.message || '';
                 },
@@ -210,13 +210,11 @@
                 },
                 idleTerminal() {
                     return [
-                        'eyuce@eyucedev:~$ cd marble-erp-platform/',
-                        'eyuce@eyucedev:~/marble-erp-platform$ sudo git fetch origin main',
-                        'eyuce@eyucedev:~/marble-erp-platform$ sudo git reset --hard origin/main',
-                        'eyuce@eyucedev:~/marble-erp-platform$ sudo ./scripts/deploy_production.sh -y',
+                        '$ docker compose -f docker-compose.prod.yml pull',
+                        '$ docker compose -f docker-compose.prod.yml up -d',
                         '',
-                        '# Bu adımlar, Yayınla düğmesiyle buradan çalışır.',
-                        '# SSH oturumu açmanıza gerek yoktur.'
+                        '# GitHub Actions imajı Docker Hub a yükler.',
+                        '# Bu düğme sunucuda derleme yapmaz; hazır imajı çeker.'
                     ].join('\n');
                 }
             };
@@ -240,13 +238,13 @@
                     </div>
                     <div class="space-y-1 mt-1.5">
                         <p class="text-xs text-slate-700 font-medium leading-relaxed">
-                            Yazılım ekibinin sisteme eklediği en güncel özellikleri, ekran yeniliklerini ve hata düzeltmelerini tek bir tuşla canlı sisteme aktararak tüm personelin kullanımına hazır hale getirir.
+                            Yazılım ekibinin gönderdiği son sürüm GitHub Actions ile Docker Hub imajına dönüşür. Bu düğme o imajı sunucuya indirir ve uygulamayı yeniden başlatır.
                         </p>
                         <p class="text-[11px] text-slate-500 font-medium">
-                            SSH olmadan çalışma kopyasını <strong>origin/main</strong> ile eşitler, sonra üretim paketini kurar.
-                            Araçlar: <code class="font-mono text-[11px]">git fetch origin main</code>,
-                            <code class="font-mono text-[11px]">git reset --hard origin/main</code>
-                            ve <code class="font-mono text-[11px]">./scripts/deploy_production.sh -y</code>
+                            Sunucuda kod derlenmez. Çalışan komutlar:
+                            <code class="font-mono text-[11px]">docker compose pull</code>
+                            ve
+                            <code class="font-mono text-[11px]">docker compose up -d</code>
                         </p>
                     </div>
                 </div>
@@ -262,19 +260,18 @@
             <div class="xl:col-span-1 space-y-5">
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
                     <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-                        <i data-lucide="git-branch" class="w-4 h-4 text-violet-600"></i>
-                        <h2 class="text-sm font-bold text-slate-900">Kaynak</h2>
+                        <i data-lucide="container" class="w-4 h-4 text-violet-600"></i>
+                        <h2 class="text-sm font-bold text-slate-900">İmaj</h2>
                     </div>
                     <dl class="space-y-3 text-xs">
                         <div>
-                            <dt class="text-slate-400 font-semibold uppercase tracking-wide">Dal</dt>
-                            <dd class="font-mono font-bold text-slate-800 mt-0.5" x-text="status.branch || 'main'"></dd>
+                            <dt class="text-slate-400 font-semibold uppercase tracking-wide">Docker Hub</dt>
+                            <dd class="font-mono font-bold text-slate-800 mt-0.5 break-all" x-text="status.imageRepository || '—'"></dd>
                         </div>
                         <div>
-                            <dt class="text-slate-400 font-semibold uppercase tracking-wide">Son commit</dt>
-                            <dd class="font-mono text-slate-800 mt-0.5" x-text="status.headCommit || '—'"></dd>
-                            <dd class="text-slate-500 mt-1 leading-relaxed"
-                                x-text="status.headMessage || 'Commit bilgisi okunamadı'"></dd>
+                            <dt class="text-slate-400 font-semibold uppercase tracking-wide">Etiket</dt>
+                            <dd class="font-mono text-slate-800 mt-0.5" x-text="status.imageTag || 'latest'"></dd>
+                            <dd class="text-slate-500 mt-1 leading-relaxed">main dalına her gönderimde latest güncellenir. v1.0.0 gibi bir etiket de ayrıca yayınlanır.</dd>
                         </div>
                         <div>
                             <dt class="text-slate-400 font-semibold uppercase tracking-wide">Durum</dt>
@@ -289,14 +286,13 @@
                         <h2 class="text-sm font-bold text-slate-900">Ne olur?</h2>
                     </div>
                     <ol class="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed">
-                        <li><code class="font-mono">git fetch origin main</code> sonra <code class="font-mono">git reset --hard origin/main</code> çalışır. Sunucudaki yerel farklar silinir; kurulan kod GitHub’daki son main’dir.</li>
-                        <li>Önyüz ve JAR derlenir.</li>
-                        <li><code class="font-mono">marble-erp</code> servisi durur (kısa kesinti).</li>
-                        <li>Yeni JAR kurulur, servis ayağa kalkar, sağlık kontrolü yapılır.</li>
+                        <li>Kod main dalına geçince GitHub Actions imajı Docker Hub’a yükler.</li>
+                        <li>Düğme bu imajı indirir. Sunucuda Maven veya npm çalışmaz.</li>
+                        <li>Uygulama konteyneri yeni imajla değişir. Kısa kesinti olur. Veritabanındaki kayıtlar silinmez.</li>
+                        <li>Sağlık kontrolü tamamlanınca ekran yeniden bağlanır.</li>
                     </ol>
                     <p class="text-[11px] text-slate-500 leading-relaxed">
-                        Bu sekme açık kalsın. Servis durunca bağlantı kopar; ekran yeniden bağlanıp kalan günlüğü
-                        gösterir.
+                        Bu sekme açık kalsın. Konteyner yenilenince bağlantı kopar; ekran yeniden bağlanıp kalan günlüğü gösterir.
                     </p>
                 </div>
 
@@ -347,7 +343,7 @@
                             <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
                             <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                            <span class="ml-2 font-mono">eyuce@eyucedev:~/marble-erp-platform</span>
+                            <span class="ml-2 font-mono">docker compose -f docker-compose.prod.yml</span>
                         </div>
                         <span class="text-[10px] font-mono text-slate-500" x-text="reconnectLabel()"></span>
                     </div>
