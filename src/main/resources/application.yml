@@ -117,11 +117,13 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20261013-md-file-preview"
+  asset-version: "20261109-dockerhub-deploy"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy
     repo-dir: /home/eyuce/marble-erp-platform
+    image-repository: ${DOCKERHUB_USERNAME:guvenulu}/marble-erp-platform
+    image-tag: ${APP_TAG:latest}
     log-file: /opt/marble-erp/logs/inapp-deploy.log
     status-file: /opt/marble-erp/logs/inapp-deploy.status
     lock-file: /opt/marble-erp/logs/inapp-deploy.lock

@@ -62,7 +62,7 @@ services:
   app:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: Dockerfile
     container_name: marble-erp-app
     restart: always
     depends_on:
@@ -72,6 +72,9 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      PORT: "81"
+      SERVER_PORT: "81"
+      DB_HOST: postgres
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-marble_erp}
       DB_USERNAME: ${DB_USERNAME:-marbleuser}
       DB_PASSWORD: ${DB_PASSWORD:-marblepass}
@@ -94,7 +97,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
     networks:
       - marble-network
 

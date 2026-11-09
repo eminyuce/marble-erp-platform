@@ -50,9 +50,9 @@ public class DeploymentService {
             blockingReasons.add("Bu makina Linux üretim sunucusu değil.");
         }
         if (!commandAvailable) {
-            blockingReasons.add("Yayın yardımcısı henüz kurulmadı. Bir kez SSH ile sudo ./scripts/deploy_production.sh -y çalıştırın.");
+            blockingReasons.add("Yayın yardımcısı henüz yok. İmajın içinde marble-erp-inapp-deploy olmalı.");
         } else if (!sudoReady) {
-            blockingReasons.add("Servis kullanıcısının şifresiz sudo yetkisi yok. Bir kez SSH ile sudo ./scripts/deploy_production.sh -y çalıştırın.");
+            blockingReasons.add("Yayın yardımcısı çalıştırılamadı. Konteynerde sudo kapalı olmalı, sunucuda şifresiz sudo gerekir.");
         }
         if (fileStatus.state() == DeploymentState.RUNNING) {
             blockingReasons.add("Bir yayın işlemi zaten sürüyor.");
@@ -72,6 +72,8 @@ public class DeploymentService {
                 .branch(gitHead.branch())
                 .headCommit(gitHead.commit())
                 .headMessage(gitHead.message())
+                .imageRepository(properties.getImageRepository())
+                .imageTag(properties.getImageTag())
                 .startedAt(emptyToNull(fileStatus.startedAt()))
                 .finishedAt(emptyToNull(fileStatus.finishedAt()))
                 .message(statusMessage(state, canStart))
@@ -115,7 +117,7 @@ public class DeploymentService {
         return DeploymentStartResult.builder()
                 .accepted(true)
                 .state(DeploymentState.RUNNING)
-                .message("Yayın başlatıldı. main dalı çekilecek ve üretim paketi kurulacak.")
+                .message("Yayın başlatıldı. Docker Hub imajı indirilip uygulama konteyneri yenilenecek.")
                 .build();
     }
 
@@ -318,7 +320,7 @@ public class DeploymentService {
             case FAILED -> "Son yayın başarısız oldu. Günlüğü inceleyin.";
             case UNAVAILABLE -> "Bu ortamdan yayın başlatılamaz.";
             case IDLE -> canStart
-                    ? "main dalından üretim yayını başlatmaya hazır."
+                    ? "Docker Hub imajını çekip yayına almaya hazır."
                     : "Yayın şu anda başlatılamaz.";
         };
     }
@@ -328,7 +330,7 @@ public class DeploymentService {
             return "Yayın süreci başlatılamadı.";
         }
         if (output.toLowerCase(Locale.ROOT).contains("password")) {
-            return "sudo şifre istedi. Bir kez SSH ile sudo ./scripts/deploy_production.sh -y çalıştırın.";
+            return "Yayın yardımcısı şifre istedi. Konteynerde sudo kapalı olmalı.";
         }
         return output.lines().findFirst().orElse("Yayın süreci başlatılamadı.");
     }

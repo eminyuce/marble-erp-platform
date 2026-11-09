@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Özerler Mermer ERP — In-app production deploy
+# Özerler Mermer ERP — In-app production rollout
 #
-# Invoked from the ERP "Sistem Araçları > Deployment" screen (or by sudo from
-# the marble-erp service user). Must survive `systemctl stop marble-erp`, so
-# the real work is re-parented into a transient systemd unit.
+# The admin screen starts this script. It does not compile source and it does
+# not reset git. GitHub Actions has already pushed the image to Docker Hub.
+# This script pulls that image and recreates the Compose stack.
 #
-# Installed (root-owned) copy:
-#   /usr/local/sbin/marble-erp-inapp-deploy
-#
-# Usage:
-#   marble-erp-inapp-deploy --ping
-#   marble-erp-inapp-deploy --repo /home/eyuce/marble-erp-platform
+# The work is detached so it survives replacement of the app container:
+#   - host JVM: systemd-run
+#   - app container: a sibling "marble-erp-rollout" container
 # ==============================================================================
 
 set -euo pipefail
@@ -23,20 +20,21 @@ LOCK_FILE="${MARBLE_DEPLOY_LOCK:-/opt/marble-erp/logs/inapp-deploy.lock}"
 GIT_REMOTE="${MARBLE_GIT_REMOTE:-origin}"
 GIT_BRANCH="${MARBLE_GIT_BRANCH:-main}"
 UNIT_NAME="marble-erp-inapp-deploy"
+ROLLOUT_NAME="marble-erp-rollout"
 FOREGROUND=0
 
 usage() {
     cat <<'EOF'
 Usage: marble-erp-inapp-deploy [options]
 
-  --ping             Print READY and exit (sudo / path probe).
-  --foreground       Fetch origin/main, hard-reset, then deploy (used by systemd-run).
-  --repo DIR         Git clone root (default: /home/eyuce/marble-erp-platform)
+  --ping             Print READY and exit.
+  --foreground       Pull the Docker Hub image and recreate the stack.
+  --repo DIR         Directory that contains docker-compose.prod.yml
   --log FILE         Deploy log path
   --status FILE      Status file path
   --lock FILE        flock path
-  --remote NAME      Git remote (default: origin)
-  --branch NAME      Git branch (default: main)
+  --remote NAME      Accepted for compatibility. Not used.
+  --branch NAME      Accepted for compatibility. Not used.
   -h, --help         Show this help
 EOF
 }
@@ -112,35 +110,25 @@ prepare_log() {
     chmod 644 "$LOG_FILE" 2>/dev/null || true
 }
 
-# Git 2.35.2+ refuses a work tree owned by another user (CVE-2022-24765).
-# Interactive SSH uses `sudo git pull` (root, clone owned by eyuce). systemd-run
-# starts a clean root service whose gitconfig does not yet trust that path.
-ensure_git_safe_directory() {
-    local dir="$1"
-    local existing=""
-    if [ "$(id -u)" -ne 0 ]; then
-        return 0
-    fi
-    existing="$(git config --system --get-all safe.directory 2>/dev/null || true)"
-    if printf '%s\n' "$existing" | grep -Fxq "$dir"; then
-        return 0
-    fi
-    git config --system --add safe.directory "$dir"
+compose_file() {
+    echo "${REPO_ROOT}/docker-compose.prod.yml"
 }
 
-# Same effective command as: sudo git -c safe.directory=* ...
-git_cmd() {
-    git -c safe.directory="$REPO_ROOT" -c safe.directory='*' "$@"
+require_compose_file() {
+    if [ ! -f "$(compose_file)" ]; then
+        echo "docker-compose.prod.yml bulunamadı: $(compose_file)" >&2
+        exit 1
+    fi
 }
 
 detach_into_independent_unit() {
     if ! command -v systemd-run >/dev/null 2>&1; then
-        echo "systemd-run is required so deploy survives marble-erp restart." >&2
+        echo "systemd-run bulunamadı. Yayın, uygulama yeniden başlarken ayakta kalamaz." >&2
         exit 1
     fi
     systemctl reset-failed "${UNIT_NAME}.service" 2>/dev/null || true
     if systemctl is-active --quiet "${UNIT_NAME}.service"; then
-        echo "A deploy is already running (${UNIT_NAME}.service)." >&2
+        echo "Bir yayın zaten sürüyor (${UNIT_NAME}.service)." >&2
         exit 2
     fi
     local unit_home="${HOME:-}"
@@ -155,9 +143,6 @@ detach_into_independent_unit() {
         --property=KillMode=mixed \
         --working-directory="${REPO_ROOT}" \
         --setenv=HOME="$unit_home" \
-        --setenv=GIT_CONFIG_COUNT=1 \
-        --setenv=GIT_CONFIG_KEY_0=safe.directory \
-        --setenv=GIT_CONFIG_VALUE_0="$REPO_ROOT" \
         /bin/bash "$0" \
             --foreground \
             --repo "$REPO_ROOT" \
@@ -168,11 +153,111 @@ detach_into_independent_unit() {
             --branch "$GIT_BRANCH"
 }
 
+detach_into_sibling_container() {
+    local host_stack="${MARBLE_HOST_STACK_DIR:-}"
+    local host_logs="${MARBLE_HOST_LOG_DIR:-}"
+    if [ -z "$host_stack" ] || [ -z "$host_logs" ]; then
+        echo "MARBLE_HOST_STACK_DIR ve MARBLE_HOST_LOG_DIR tanımlı değil." >&2
+        exit 1
+    fi
+    if ! command -v docker >/dev/null 2>&1; then
+        echo "İmajın içinde docker istemcisi yok." >&2
+        exit 1
+    fi
+    if docker ps -q --filter "name=^${ROLLOUT_NAME}$" | grep -q .; then
+        echo "Bir yayın zaten sürüyor (${ROLLOUT_NAME})." >&2
+        exit 2
+    fi
+    docker rm -f "$ROLLOUT_NAME" >/dev/null 2>&1 || true
+
+    local started_at
+    started_at="$(iso_now)"
+    local rollout_script
+    rollout_script="$(dirname "$LOG_FILE")/rollout.sh"
+    cat > "$rollout_script" <<EOF
+#!/bin/sh
+LOG=/logs/inapp-deploy.log
+STATUS=/logs/inapp-deploy.status
+STARTED='${started_at}'
+write_status() {
+    finished=""
+    if [ "\$1" != "RUNNING" ]; then
+        finished=\$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    fi
+    cat > "\$STATUS" <<STATUS_EOF
+STATE=\$1
+STARTED_AT=\$STARTED
+FINISHED_AT=\$finished
+EXIT_CODE=\$2
+STATUS_EOF
+}
+write_status RUNNING ""
+code=0
+{
+    if [ -f /stack/.env ]; then
+        echo "\$ docker compose -f docker-compose.prod.yml pull"
+        docker compose --env-file /stack/.env -f /stack/docker-compose.prod.yml pull || code=1
+        if [ "\$code" -eq 0 ]; then
+            echo "\$ docker compose -f docker-compose.prod.yml up -d"
+            docker compose --env-file /stack/.env -f /stack/docker-compose.prod.yml up -d || code=1
+        fi
+    else
+        echo "\$ docker compose -f docker-compose.prod.yml pull"
+        docker compose -f /stack/docker-compose.prod.yml pull || code=1
+        if [ "\$code" -eq 0 ]; then
+            echo "\$ docker compose -f docker-compose.prod.yml up -d"
+            docker compose -f /stack/docker-compose.prod.yml up -d || code=1
+        fi
+    fi
+    if [ "\$code" -eq 0 ]; then
+        echo "Uygulama konteynerinin sağlığı bekleniyor."
+        i=0
+        ok=0
+        while [ "\$i" -lt 40 ]; do
+            health=\$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' marble-erp 2>/dev/null || echo missing)
+            echo "health=\$health"
+            if [ "\$health" = "healthy" ]; then
+                echo "[OK] Docker Hub imajı yayında."
+                ok=1
+                break
+            fi
+            i=\$((i + 1))
+            sleep 3
+        done
+        if [ "\$ok" -ne 1 ]; then
+            echo "[FAIL] Uygulama konteyneri sağlıklı olmadı."
+            code=1
+        fi
+    fi
+} >> "\$LOG" 2>&1
+if [ "\$code" -eq 0 ]; then
+    write_status SUCCESS 0
+else
+    write_status FAILED "\$code"
+fi
+exit "\$code"
+EOF
+    chmod 755 "$rollout_script" 2>/dev/null || true
+
+    docker run -d \
+        --name "$ROLLOUT_NAME" \
+        --label marble-erp.rollout=true \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v "${host_stack}:/stack:ro" \
+        -v "${host_logs}:/logs" \
+        docker:27.5.1-cli \
+        sh /logs/rollout.sh
+}
+
 if [ "$FOREGROUND" -ne 1 ]; then
+    require_compose_file
     prepare_log
     write_status "RUNNING" "$(iso_now)" "" ""
-    ensure_git_safe_directory "$REPO_ROOT"
-    detach_into_independent_unit
+    if [ "${MARBLE_IN_CONTAINER:-}" = "true" ]; then
+        detach_into_sibling_container
+    else
+        detach_into_independent_unit
+    fi
     exit 0
 fi
 
@@ -181,12 +266,11 @@ write_status "RUNNING" "$STARTED_AT" "" ""
 
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
-    echo "Deploy lock is held: $LOCK_FILE" >&2
+    echo "Yayın kilidi dolu: $LOCK_FILE" >&2
     write_status "FAILED" "$STARTED_AT" "$(iso_now)" "2"
     exit 2
 fi
 
-# Also append to the log file in case systemd StandardOutput is not wired.
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 cleanup() {
@@ -197,57 +281,40 @@ cleanup() {
         write_status "SUCCESS" "$STARTED_AT" "$finished" "0"
     else
         write_status "FAILED" "$STARTED_AT" "$finished" "$code"
-        echo "[FAIL] In-app deploy exited with code $code"
+        echo "[FAIL] Yayın çıkış kodu $code"
     fi
 }
 trap cleanup EXIT
 
-export GIT_TERMINAL_PROMPT=0
+require_compose_file
+if ! command -v docker >/dev/null 2>&1; then
+    echo "Bu makinede docker komutu yok." >&2
+    exit 1
+fi
 
 echo "======================================================================"
-echo "   Özerler Mermer ERP — In-app deploy (no SSH)"
+echo "   Özerler Mermer ERP — Docker Hub yayını"
 echo "======================================================================"
-echo "Started:    $STARTED_AT"
-echo "Repo:       $REPO_ROOT"
-echo "Branch:     ${GIT_REMOTE}/${GIT_BRANCH}"
-echo "Log:        $LOG_FILE"
+echo "Started:  $STARTED_AT"
+echo "Compose:  $(compose_file)"
+echo "Log:      $LOG_FILE"
 echo
-
-if [ ! -d "$REPO_ROOT/.git" ]; then
-    echo "ERROR: Not a git repository: $REPO_ROOT" >&2
-    exit 1
-fi
-
-if [ ! -x "$REPO_ROOT/scripts/deploy_production.sh" ]; then
-    echo "ERROR: Missing deploy script: $REPO_ROOT/scripts/deploy_production.sh" >&2
-    exit 1
-fi
 
 cd "$REPO_ROOT"
-ensure_git_safe_directory "$REPO_ROOT"
+compose_args=(-f "$(compose_file)")
+if [ -f "${REPO_ROOT}/.env" ]; then
+    compose_args=(--env-file "${REPO_ROOT}/.env" "${compose_args[@]}")
+fi
 
-# Always match the remote branch. Local commits and edits on the server are discarded.
-echo "\$ git reset --hard HEAD"
-git_cmd reset --hard HEAD || true
+echo "\$ docker compose -f docker-compose.prod.yml pull"
+docker compose "${compose_args[@]}" pull
 
-echo "\$ git clean -fd"
-git_cmd clean -fd || true
+echo "\$ docker compose -f docker-compose.prod.yml up -d"
+docker compose "${compose_args[@]}" up -d
 
-echo "\$ git fetch ${GIT_REMOTE} ${GIT_BRANCH}"
-git_cmd fetch "$GIT_REMOTE" "$GIT_BRANCH"
-
-echo "\$ git checkout -f -B ${GIT_BRANCH} ${GIT_REMOTE}/${GIT_BRANCH}"
-git_cmd checkout -f -B "$GIT_BRANCH" "${GIT_REMOTE}/${GIT_BRANCH}"
-
-echo "\$ git reset --hard ${GIT_REMOTE}/${GIT_BRANCH}"
-git_cmd reset --hard "${GIT_REMOTE}/${GIT_BRANCH}"
-
-echo "\$ git clean -fd"
-git_cmd clean -fd
+if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet marble-erp.service; then
+    echo "NOT: systemd marble-erp hâlâ çalışıyor. Yeni yığın sağlıklıysa eski JAR servisini durdurun."
+fi
 
 echo
-echo "\$ ./scripts/deploy_production.sh -y"
-"$REPO_ROOT/scripts/deploy_production.sh" -y
-
-echo
-echo "[OK] In-app deploy finished."
+echo "[OK] Docker Hub imajı çekildi ve yığın yenilendi."

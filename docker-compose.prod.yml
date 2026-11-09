@@ -1,0 +1,146 @@
+# Production stack for the server. The image is built by GitHub Actions
+# and pulled from Docker Hub. This file does not compile the application.
+#
+#   cp .env.example .env
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Open http://localhost:81
+# DB_HOST inside the app container is the service name "postgres", never localhost.
+# The in-app Yayınla button pulls this image and recreates the stack.
+
+name: marble-erp
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: marble-erp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-marble_erp}
+      POSTGRES_USER: ${DB_USERNAME:-marbleuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-marblepass}
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  rustfs-perms:
+    image: alpine:3.24.1
+    user: root
+    restart: "no"
+    volumes:
+      - rustfs_data:/data
+    command: ["chown", "-R", "10001:10001", "/data"]
+
+  rustfs:
+    image: rustfs/rustfs:1.0.1
+    container_name: marble-rustfs
+    restart: unless-stopped
+    depends_on:
+      rustfs-perms:
+        condition: service_completed_successfully
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_OBS_LOGGER_LEVEL: error
+    ports:
+      - "127.0.0.1:${RUSTFS_API_PORT:-9000}:9000"
+      - "127.0.0.1:${RUSTFS_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - rustfs_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  deploy-log-perms:
+    image: alpine:3.24.1
+    user: root
+    restart: "no"
+    volumes:
+      - ${MARBLE_HOST_LOG_DIR:-/opt/marble-erp/logs}:/logs
+    command: ["sh", "-c", "mkdir -p /logs && chown 1001:1001 /logs && chmod 755 /logs"]
+
+  app:
+    image: ${DOCKERHUB_USERNAME:-guvenulu}/marble-erp-platform:${APP_TAG:-latest}
+    container_name: marble-erp
+    restart: unless-stopped
+    group_add:
+      - "${DOCKER_GID:-999}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+      deploy-log-perms:
+        condition: service_completed_successfully
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      PORT: "81"
+      SERVER_PORT: "81"
+      DOCKERHUB_USERNAME: ${DOCKERHUB_USERNAME:-guvenulu}
+      APP_TAG: ${APP_TAG:-latest}
+      MARBLE_IN_CONTAINER: "true"
+      MARBLE_HOST_STACK_DIR: ${MARBLE_HOST_STACK_DIR:-/opt/marble-erp}
+      MARBLE_HOST_LOG_DIR: ${MARBLE_HOST_LOG_DIR:-/opt/marble-erp/logs}
+      APP_DEPLOYMENT_ENABLED: "true"
+      APP_DEPLOYMENT_USE_SUDO: "false"
+      APP_DEPLOYMENT_COMMAND: /usr/local/sbin/marble-erp-inapp-deploy
+      APP_DEPLOYMENT_REPO_DIR: /stack
+      APP_DEPLOYMENT_LOG_FILE: /opt/marble-erp/logs/inapp-deploy.log
+      APP_DEPLOYMENT_STATUS_FILE: /opt/marble-erp/logs/inapp-deploy.status
+      APP_DEPLOYMENT_LOCK_FILE: /opt/marble-erp/logs/inapp-deploy.lock
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-marble_erp}
+      DB_USERNAME: ${DB_USERNAME:-marbleuser}
+      DB_PASSWORD: ${DB_PASSWORD:-marblepass}
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-marble_erp}
+      APP_UPLOAD_DIR: /app/uploads
+      APP_MEDIA_DIR: /app/media
+      STORAGE_TYPE: rustfs
+      RUSTFS_ENDPOINT: http://rustfs:9000
+      RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-http://localhost:9000}
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
+      RUSTFS_BUCKET: ${RUSTFS_BUCKET:-erp-files}
+      RUSTFS_REGION: ${RUSTFS_REGION:-us-east-1}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:81}
+      PG_DUMP_PATH: pg_dump
+    ports:
+      - "${APP_PORT:-81}:81"
+    volumes:
+      - uploads_data:/app/uploads
+      - media_data:/app/media
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker-compose.prod.yml:/stack/docker-compose.prod.yml:ro
+      - type: bind
+        source: ./.env
+        target: /stack/.env
+        read_only: true
+        required: false
+      - ${MARBLE_HOST_LOG_DIR:-/opt/marble-erp/logs}:/opt/marble-erp/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:81/health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+volumes:
+  postgres_data:
+  rustfs_data:
+  uploads_data:
+  media_data:

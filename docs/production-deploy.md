@@ -68,7 +68,7 @@ Do not store secrets in git. Use placeholders locally; put real values only in `
 
 ## Build (same steps as Docker / CI)
 
-Frontend CSS is compiled into `src/main/resources/static/css/app.css` **before** Maven packages the JAR. Image builds do this inside `docker/Dockerfile`; on the host you do it explicitly:
+Frontend CSS is compiled into `src/main/resources/static/css/app.css` **before** Maven packages the JAR. Image builds do this inside the root `Dockerfile`; on the host you do it explicitly:
 
 ```bash
 cd frontend && npm install && npm run build && cd ..
@@ -249,13 +249,29 @@ Database: Flyway migrations are **forward**. Rolling back the JAR does not undo 
 
 ---
 
-## Docker / CI path (do not mix blindly)
+## Docker Hub production
 
-- **This host (current):** native JAR + systemd + `/opt/marble-erp/app.jar`.
-- **Repo CI:** push to `main` builds `docker/Dockerfile` and SSHs to the VPS to `docker compose up` and probe `http://localhost:8080/actuator/health`.
-- **Compose file in git:** `docker/docker-compose.yml` publishes the app on port **81** inside a compose network whose DB host is `postgres`.
+GitHub Actions (`.github/workflows/docker-publish.yml`) builds the root `Dockerfile` and pushes `${DOCKERHUB_USERNAME}/marble-erp-platform` to Docker Hub.
 
-Do not run `run_local.sh`, `docker compose up` for the app, **and** systemd `java -jar` on port 8080 at the same time. Pick one process manager.
+- A push to `main` updates the `latest` tag.
+- A `v*` tag, such as `v1.0.0`, also publishes `v1.0.0`, `1.0.0` and `1.2`-style minor tags. Semver tags receive `latest` as well.
+- Repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` are the Docker Hub account and an access token. The token is not the Docker Hub password.
+
+On the server, copy `docker-compose.prod.yml` and a filled `.env` (start from `.env.example`), then:
+
+```bash
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+curl -fsS http://127.0.0.1:81/health/
+```
+
+The admin screen **Yeni Gelişmeleri Sahaya Taşı** (`/admin/deployment`) runs the same pull and `up -d`. It does not fetch git and it does not build a JAR. The button starts a separate rollout container so the update continues while the app container is replaced.
+
+The app container listens on port **81**. Its database host is the Compose service `postgres`. `DB_URL` is set to `jdbc:postgresql://postgres:5432/...` so a host-side `DB_HOST=127.0.0.1` cannot point the container at itself. RustFS is reached at `http://rustfs:9000`. Postgres and RustFS ports are published on `127.0.0.1` only.
+
+`docker/docker-compose.yml` is the local build of the same Dockerfile. `scripts/deploy_production.sh` remains the systemd JAR path.
+
+Do not run `run_local.sh`, this Compose stack, and systemd `java -jar` against the same database and ports at the same time. Pick one process manager.
 
 ---
 
