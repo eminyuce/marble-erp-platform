@@ -75,7 +75,7 @@ public class OperationWorkOrderController extends AbstractController {
             map.put("targetDeliveryDate", ord.getDueDate() != null ? ord.getDueDate().toString() : "");
             map.put("department", ord.getDepartment() != null ? ord.getDepartment().name() : "");
             map.put("departmentLabel", ord.getDepartment() != null ? ord.getDepartment().getDisplayName() : "");
-            map.put("customerName", ord.getCustomer() != null ? ord.getCustomer().getCompanyName() : "Genel Sipariş");
+            map.put("customerName", ord.getCustomerDisplayName());
             map.put("stoneType", ord.getStoneType() != null ? ord.getStoneType() : "—");
             map.put("quantity", ord.getQuantity() != null ? ord.getQuantity() : BigDecimal.ZERO);
             map.put("unit", ord.getUnit() != null ? ord.getUnit() : "m²");

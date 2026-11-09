@@ -199,7 +199,10 @@ public class OperationWorkOrderService {
                                                 Long customerId, LocalDate startDate, LocalDate endDate,
                                                 String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        return workOrderRepository.searchOrders(dept, status, customerId, startDate, endDate, search, pageable);
+        Page<OperationWorkOrder> pageResult = workOrderRepository.searchOrders(
+                dept, status, customerId, startDate, endDate, search, pageable);
+        pageResult.getContent().forEach(this::initializeDetails);
+        return pageResult;
     }
 
     @Transactional(readOnly = true)
@@ -214,7 +217,9 @@ public class OperationWorkOrderService {
     private void initializeDetails(OperationWorkOrder order) {
         if (order == null) return;
         if (order.getCustomer() != null) {
-            order.getCustomer().getCompanyName();
+            order.rememberCustomerName(order.getCustomer().getCompanyName());
+        } else {
+            order.rememberCustomerName(null);
         }
         if (order.getSourceBlock() != null) {
             order.getSourceBlock().getBlockCode();

@@ -10,6 +10,7 @@ import lombok.Getter;
 @Builder
 public class EmailPlaceholderSample {
     private final String key;
+    private final String label;
     private final String sampleValue;
     private final boolean known;
 }

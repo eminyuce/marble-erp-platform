@@ -117,9 +117,42 @@ public class OperationWorkOrder extends AuditableEntity {
         }
     }
 
+    /**
+     * Company name copied while the persistence session is still open.
+     * The detail page reads this instead of the lazy customer association.
+     */
+    @Transient
+    private boolean customerNameLoaded;
+
+    @Transient
+    private String loadedCustomerName;
+
+    public void rememberCustomerName(String companyName) {
+        this.loadedCustomerName = companyName;
+        this.customerNameLoaded = true;
+    }
+
     @Transient
     public String getCustomerDisplayName() {
-        return customer != null ? customer.getCompanyName() : "Genel Sipariş";
+        if (customerNameLoaded) {
+            return blankTo(loadedCustomerName, "Genel Sipariş");
+        }
+        if (customer == null) {
+            return "Genel Sipariş";
+        }
+        return blankTo(customer.getCompanyName(), "Genel Sipariş");
+    }
+
+    @Transient
+    public String getCustomerNameForView() {
+        if (!customerNameLoaded) {
+            return "Genel Stok";
+        }
+        return blankTo(loadedCustomerName, "Genel Stok");
+    }
+
+    private static String blankTo(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
     }
 
     @Transient

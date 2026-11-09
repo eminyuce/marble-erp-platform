@@ -149,6 +149,8 @@ class EmailServiceTest {
         assertThat(samples).extracting(sample -> sample.getKey())
                 .containsExactly("fullName", "email");
         assertThat(samples.get(0).isKnown()).isTrue();
+        assertThat(samples.get(0).getLabel()).isEqualTo("Ad Soyad");
+        assertThat(samples.get(1).getLabel()).isEqualTo("E-Posta");
         assertThat(samples.get(0).getSampleValue()).contains("Ahmet");
         assertThat(samples.get(1).getSampleValue()).isEqualTo("ahmet.yilmaz@ozerler.test");
     }

@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 @Repository
 public interface ApplicationLogRepository extends JpaRepository<ApplicationLog, Long>, JpaSpecificationExecutor<ApplicationLog> {
 
+    long countByLevel(String level);
+
     long countByLevelAndTimestampAfter(String level, LocalDateTime timestamp);
 
     long countByTimestampAfter(LocalDateTime timestamp);

@@ -368,11 +368,27 @@ public class EmailService {
             String value = samples.get(key);
             result.add(EmailPlaceholderSample.builder()
                     .key(key)
+                    .label(placeholderLabel(template, key))
                     .sampleValue(value != null ? value : "—")
                     .known(value != null)
                     .build());
         }
         return result;
+    }
+
+    private static String placeholderLabel(EmailTemplate template, String key) {
+        if (template == null || key == null) {
+            return key;
+        }
+        return EmailTemplateCatalog.getByKey(template.getTemplateKey())
+                .map(EmailTemplateCatalog.TemplateMeta::getPlaceholders)
+                .orElseGet(List::of)
+                .stream()
+                .filter(def -> key.equals(def.getKey()))
+                .map(EmailTemplateCatalog.PlaceholderDef::getLabel)
+                .filter(label -> label != null && !label.isBlank())
+                .findFirst()
+                .orElse(key);
     }
 
     private static String normalizePlaceholderKey(String raw) {

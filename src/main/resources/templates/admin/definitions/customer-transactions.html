@@ -103,12 +103,12 @@
             <div>
                 <span class="text-slate-400 block font-semibold">Müşteri Tipi</span>
                 <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-800"
-                      th:text="${customer.customerType != null ? customer.customerType.displayName : 'Genel'}">Müşteri</span>
+                      th:text="${customerTypeLabel}">Müşteri</span>
             </div>
             <div>
                 <span class="text-slate-400 block font-semibold">İşletme Birimi</span>
                 <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800"
-                      th:text="${customer.businessUnit != null ? customer.businessUnit.displayName : 'Genel'}">Ocak</span>
+                      th:text="${businessUnitLabel}">Ocak</span>
             </div>
             <div>
                 <span class="text-slate-400 block font-semibold">Telefon / E-posta</span>

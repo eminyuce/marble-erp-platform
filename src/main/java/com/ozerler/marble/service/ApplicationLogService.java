@@ -118,6 +118,10 @@ public class ApplicationLogService {
                 .errorLast24Hours(errors)
                 .warnLast24Hours(warns)
                 .infoLast24Hours(infos)
+                .totalCount(applicationLogRepository.count())
+                .errorCount(applicationLogRepository.countByLevel("ERROR"))
+                .warnCount(applicationLogRepository.countByLevel("WARN"))
+                .infoCount(applicationLogRepository.countByLevel("INFO"))
                 .build();
     }
 

@@ -63,7 +63,7 @@
             </div>
             <div>
                 <span class="text-slate-400 block font-semibold">Müşteri / Cari</span>
-                <span class="font-bold text-sm text-slate-900" th:text="${order.customer != null ? order.customer.companyName : 'Genel Stok'}">ABC Marble</span>
+                <span class="font-bold text-sm text-slate-900" th:text="${order.customerNameForView}">ABC Marble</span>
             </div>
             <div>
                 <span class="text-slate-400 block font-semibold">Sipariş Tarihi</span>

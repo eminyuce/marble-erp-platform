@@ -182,7 +182,7 @@
                                 <span th:text="'{{' + sample.key + '}}'">{{key}}</span>
                             </td>
                             <td class="p-3 text-slate-700 font-medium">
-                                <span th:text="${catalogMeta != null ? catalogMeta.placeholders.?[key == #root.sample.key].?[0]?.label ?: sample.key : sample.key}">Parametre</span>
+                                <span th:text="${sample.label}">Parametre</span>
                             </td>
                             <td class="p-3 font-mono text-slate-800 bg-slate-50/70">
                                 <span th:text="${sample.sampleValue}">Örnek Değer</span>

@@ -6,7 +6,7 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
-     th:attr="data-kpi-total=${kpis != null ? kpis.totalLast24Hours : 0}, data-kpi-error=${kpis != null ? kpis.errorLast24Hours : 0}, data-kpi-warn=${kpis != null ? kpis.warnLast24Hours : 0}, data-kpi-info=${kpis != null ? kpis.infoLast24Hours : 0}"
+     th:attr="data-kpi-total=${kpis != null ? kpis.totalCount : 0}, data-kpi-error=${kpis != null ? kpis.errorCount : 0}, data-kpi-warn=${kpis != null ? kpis.warnCount : 0}, data-kpi-info=${kpis != null ? kpis.infoCount : 0}, data-kpi-total-24=${kpis != null ? kpis.totalLast24Hours : 0}, data-kpi-error-24=${kpis != null ? kpis.errorLast24Hours : 0}, data-kpi-warn-24=${kpis != null ? kpis.warnLast24Hours : 0}, data-kpi-info-24=${kpis != null ? kpis.infoLast24Hours : 0}"
      x-data="{
         levelFilter: '',
         startDate: '',
@@ -23,25 +23,37 @@
         kpiError: 0,
         kpiWarn: 0,
         kpiInfo: 0,
+        kpiTotal24: 0,
+        kpiError24: 0,
+        kpiWarn24: 0,
+        kpiInfo24: 0,
 
         init() {
             this.kpiTotal = parseInt(this.$el.dataset.kpiTotal || '0', 10);
             this.kpiError = parseInt(this.$el.dataset.kpiError || '0', 10);
             this.kpiWarn = parseInt(this.$el.dataset.kpiWarn || '0', 10);
             this.kpiInfo = parseInt(this.$el.dataset.kpiInfo || '0', 10);
+            this.kpiTotal24 = parseInt(this.$el.dataset.kpiTotal24 || '0', 10);
+            this.kpiError24 = parseInt(this.$el.dataset.kpiError24 || '0', 10);
+            this.kpiWarn24 = parseInt(this.$el.dataset.kpiWarn24 || '0', 10);
+            this.kpiInfo24 = parseInt(this.$el.dataset.kpiInfo24 || '0', 10);
             this.fetchKpis();
+        },
+        applyKpis(data) {
+            if (!data) return;
+            this.kpiTotal = data.totalCount || 0;
+            this.kpiError = data.errorCount || 0;
+            this.kpiWarn = data.warnCount || 0;
+            this.kpiInfo = data.infoCount || 0;
+            this.kpiTotal24 = data.totalLast24Hours || 0;
+            this.kpiError24 = data.errorLast24Hours || 0;
+            this.kpiWarn24 = data.warnLast24Hours || 0;
+            this.kpiInfo24 = data.infoLast24Hours || 0;
         },
         fetchKpis() {
             fetch('/admin/settings/logs/api/kpis')
                 .then(r => r.json())
-                .then(data => {
-                    if (data) {
-                        this.kpiTotal = data.totalLast24Hours || 0;
-                        this.kpiError = data.errorLast24Hours || 0;
-                        this.kpiWarn = data.warnLast24Hours || 0;
-                        this.kpiInfo = data.infoLast24Hours || 0;
-                    }
-                })
+                .then(data => this.applyKpis(data))
                 .catch(() => {});
         },
         formatNumber(val) {
@@ -149,10 +161,7 @@
                 if (res.success) {
                     this.cleanupMessage = res.message;
                     if (res.kpis) {
-                        this.kpiTotal = res.kpis.totalLast24Hours || 0;
-                        this.kpiError = res.kpis.errorLast24Hours || 0;
-                        this.kpiWarn = res.kpis.warnLast24Hours || 0;
-                        this.kpiInfo = res.kpis.infoLast24Hours || 0;
+                        this.applyKpis(res.kpis);
                     } else {
                         this.fetchKpis();
                     }
@@ -227,11 +236,12 @@
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
                 :class="levelFilter === '' ? 'erp-summary-card--active ring-2 ring-slate-400' : ''"
                 @click="setLevelFilter('')">
-            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Son 24 Saat Toplam</div>
+            <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Kayıtlı log</div>
             <div class="text-xl font-black text-slate-900 mt-1">
-                <span x-text="formatNumber(kpiTotal)" th:text="${#numbers.formatInteger(kpis.totalLast24Hours, 0, 'POINT')}">0</span>
+                <span x-text="formatNumber(kpiTotal)" th:text="${#numbers.formatInteger(kpis.totalCount, 0, 'POINT')}">0</span>
                 <span class="text-xs font-normal text-slate-400">kayıt</span>
             </div>
+            <div class="text-[11px] text-slate-400 mt-1" x-text="'Son 24 saat: ' + formatNumber(kpiTotal24)"></div>
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
@@ -241,9 +251,10 @@
                 <i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i> Hatalar (ERROR)
             </div>
             <div class="text-xl font-black text-rose-700 mt-1">
-                <span x-text="formatNumber(kpiError)" th:text="${#numbers.formatInteger(kpis.errorLast24Hours, 0, 'POINT')}">0</span>
+                <span x-text="formatNumber(kpiError)" th:text="${#numbers.formatInteger(kpis.errorCount, 0, 'POINT')}">0</span>
                 <span class="text-xs font-normal text-rose-400">hata</span>
             </div>
+            <div class="text-[11px] text-rose-400 mt-1" x-text="'Son 24 saat: ' + formatNumber(kpiError24)"></div>
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
@@ -253,9 +264,10 @@
                 <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Uyarılar (WARN)
             </div>
             <div class="text-xl font-black text-amber-700 mt-1">
-                <span x-text="formatNumber(kpiWarn)" th:text="${#numbers.formatInteger(kpis.warnLast24Hours, 0, 'POINT')}">0</span>
+                <span x-text="formatNumber(kpiWarn)" th:text="${#numbers.formatInteger(kpis.warnCount, 0, 'POINT')}">0</span>
                 <span class="text-xs font-normal text-amber-400">uyarı</span>
             </div>
+            <div class="text-[11px] text-amber-500 mt-1" x-text="'Son 24 saat: ' + formatNumber(kpiWarn24)"></div>
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
@@ -265,9 +277,10 @@
                 <i data-lucide="info" class="w-3.5 h-3.5"></i> Bilgi (INFO)
             </div>
             <div class="text-xl font-black text-blue-700 mt-1">
-                <span x-text="formatNumber(kpiInfo)" th:text="${#numbers.formatInteger(kpis.infoLast24Hours, 0, 'POINT')}">0</span>
+                <span x-text="formatNumber(kpiInfo)" th:text="${#numbers.formatInteger(kpis.infoCount, 0, 'POINT')}">0</span>
                 <span class="text-xs font-normal text-blue-400">işlem</span>
             </div>
+            <div class="text-[11px] text-blue-400 mt-1" x-text="'Son 24 saat: ' + formatNumber(kpiInfo24)"></div>
         </button>
     </div>
 

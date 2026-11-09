@@ -88,6 +88,9 @@
                         }
                         const data = await res.json();
                         this.downtime = false;
+                        if (typeof data.offset === 'number' && data.offset < this.offset) {
+                            this.logText = '';
+                        }
                         if (typeof data.nextOffset === 'number') {
                             this.offset = data.nextOffset;
                         }
@@ -163,7 +166,8 @@
                 },
                 actionHint() {
                     if (this.downtime) {
-                        return 'Sunucu yeniden başlıyor. Bağlantı otomatik kurulacak.';
+                        const step = this.progressSummary().phase;
+                        return 'Uygulama yeniden başlıyor. Son adım: ' + step + '. Bağlantı otomatik kurulacak.';
                     }
                     if (this.confirming) {
                         return 'Uygulama konteyneri yenilenecek. Kısa bir kesinti olur. Veritabanı silinmez. Emin misiniz?';
@@ -204,9 +208,44 @@
                     return map[this.status.state] || 'bg-slate-400';
                 },
                 reconnectLabel() {
-                    if (this.downtime) return 'bağlantı kesildi — bekleniyor';
+                    if (this.downtime) return 'yeniden bağlanıyor — ' + this.progressSummary().phase;
                     if (this.status.state === 'RUNNING') return 'canlı çıktı';
                     return 'günlük';
+                },
+                progressSummary() {
+                    const lines = (this.logText || '').split('\n').map(line => line.trim()).filter(Boolean);
+                    const services = new Map();
+                    let phase = 'komut bekleniyor';
+                    let lastCommand = 'docker compose -f docker-compose.prod.yml';
+                    lines.forEach(line => {
+                        if (line.includes('docker compose') && line.includes('pull')) {
+                            lastCommand = 'docker compose -f docker-compose.prod.yml pull';
+                            phase = 'imajlar indiriliyor';
+                        }
+                        if (line.includes('docker compose') && line.includes('up -d')) {
+                            lastCommand = 'docker compose -f docker-compose.prod.yml up -d';
+                            phase = 'konteynerler açılıyor';
+                        }
+                        const image = line.match(/^(\S+)\s+(Pulling|Pulled|Skipped.*)$/);
+                        if (image) {
+                            services.set(image[1], image[2].startsWith('Skipped') ? 'hazır' : (image[2] === 'Pulled' ? 'indirildi' : 'indiriliyor'));
+                        }
+                        const container = line.match(/^Container\s+(\S+)\s+(.+)$/);
+                        if (container) {
+                            services.set(container[1], container[2]);
+                            phase = 'konteynerler açılıyor';
+                        }
+                        if (line.startsWith('health=')) {
+                            phase = 'sağlık: ' + line.slice('health='.length);
+                        }
+                        if (line.includes('[OK]')) phase = 'yayın tamam';
+                        if (line.includes('[FAIL]')) phase = 'yayın başarısız';
+                    });
+                    return {
+                        phase: phase,
+                        lastCommand: lastCommand,
+                        services: Array.from(services, ([name, state]) => ({ name: name, state: state }))
+                    };
                 },
                 idleTerminal() {
                     return [
@@ -271,11 +310,19 @@
                         <div>
                             <dt class="text-slate-400 font-semibold uppercase tracking-wide">Etiket</dt>
                             <dd class="font-mono text-slate-800 mt-0.5" x-text="status.imageTag || 'latest'"></dd>
-                            <dd class="text-slate-500 mt-1 leading-relaxed">main dalına her gönderimde latest güncellenir. v1.0.0 gibi bir etiket de ayrıca yayınlanır.</dd>
+                            <dd class="text-slate-500 mt-1 leading-relaxed">main dalına her gönderimde yalnızca latest etiketi güncellenir.</dd>
                         </div>
                         <div>
                             <dt class="text-slate-400 font-semibold uppercase tracking-wide">Durum</dt>
                             <dd class="text-slate-700 mt-0.5 leading-relaxed" x-text="status.message"></dd>
+                        </div>
+                        <div x-show="status.startedAt">
+                            <dt class="text-slate-400 font-semibold uppercase tracking-wide">Başlangıç</dt>
+                            <dd class="font-mono text-slate-800 mt-0.5" x-text="status.startedAt"></dd>
+                        </div>
+                        <div x-show="status.finishedAt">
+                            <dt class="text-slate-400 font-semibold uppercase tracking-wide">Bitiş</dt>
+                            <dd class="font-mono text-slate-800 mt-0.5" x-text="status.finishedAt"></dd>
                         </div>
                     </dl>
                 </div>
@@ -335,6 +382,25 @@
                         </div>
                     </div>
                     <p class="text-[11px] text-rose-700" x-show="errorMessage" x-text="errorMessage" x-cloak></p>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="text-sm font-bold text-slate-900">Yayın bilgisi</h2>
+                        <span class="text-[11px] font-semibold text-violet-700" x-text="progressSummary().phase"></span>
+                    </div>
+                    <p class="text-xs font-mono text-slate-600 break-all" x-text="progressSummary().lastCommand"></p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" x-show="progressSummary().services.length" x-cloak>
+                        <template x-for="service in progressSummary().services" :key="service.name">
+                            <div class="flex items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs">
+                                <span class="font-mono font-semibold text-slate-800 truncate" x-text="service.name"></span>
+                                <span class="text-slate-500" x-text="service.state"></span>
+                            </div>
+                        </template>
+                    </div>
+                    <p class="text-[11px] text-slate-500" x-show="!progressSummary().services.length">
+                        Yayın başlayınca indirilen imajlar ve konteyner durumları burada görünür.
+                    </p>
                 </div>
 
                 <div class="rounded-2xl border border-slate-800 bg-[#0b1220] shadow-inner overflow-hidden">
