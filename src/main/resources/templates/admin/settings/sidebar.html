@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="categories(current)"
+     class="settings-sidebar bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto overflow-y-hidden lg:overflow-hidden lg:sticky lg:top-[64px]">
+    <div class="settings-sidebar-title px-4 pt-4 pb-2">
+        <h2 class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Ayar Kategorileri</h2>
+    </div>
+
+    <div class="px-3 pb-1">
+        <p class="px-2 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5">
+            <i data-lucide="layout-grid" class="w-3 h-3"></i>
+            Genel
+        </p>
+        <a th:href="@{/admin/settings(tab='general')}"
+           class="settings-sidebar-item"
+           th:classappend="${current == 'general'} ? 'settings-sidebar-item--active' : 'settings-sidebar-item--idle'">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4 flex-shrink-0"></i>
+            <span class="flex-1 text-left">Genel Ayarlar</span>
+        </a>
+    </div>
+
+    <div class="px-3 pb-1">
+        <p class="px-2 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5">
+            <i data-lucide="shield" class="w-3 h-3"></i>
+            Güvenlik
+        </p>
+        <a th:href="@{/admin/settings(tab='security')}"
+           class="settings-sidebar-item"
+           th:classappend="${current == 'security'} ? 'settings-sidebar-item--active' : 'settings-sidebar-item--idle'">
+            <i data-lucide="shield-check" class="w-4 h-4 flex-shrink-0"></i>
+            <span class="flex-1 text-left">2FA &amp; reCAPTCHA</span>
+        </a>
+        <a th:href="@{/admin/settings(tab='rate-limiting')}"
+           class="settings-sidebar-item"
+           th:classappend="${current == 'rate-limiting'} ? 'settings-sidebar-item--active' : 'settings-sidebar-item--idle'">
+            <i data-lucide="shield-alert" class="w-4 h-4 flex-shrink-0"></i>
+            <span class="flex-1 text-left">İstek Sınırlandırma</span>
+        </a>
+    </div>
+
+    <div class="px-3 pb-1">
+        <p class="px-2 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5">
+            <i data-lucide="mail" class="w-3 h-3"></i>
+            E-Posta &amp; Bildirimler
+        </p>
+        <a th:href="@{/admin/settings(tab='smtp')}"
+           class="settings-sidebar-item"
+           th:classappend="${current == 'smtp'} ? 'settings-sidebar-item--active' : 'settings-sidebar-item--idle'">
+            <i data-lucide="server" class="w-4 h-4 flex-shrink-0"></i>
+            <span class="flex-1 text-left">SMTP Posta Sunucusu</span>
+        </a>
+        <a th:href="@{/admin/settings(tab='templates')}"
+           class="settings-sidebar-item"
+           th:classappend="${current == 'templates'} ? 'settings-sidebar-item--active' : 'settings-sidebar-item--idle'">
+            <i data-lucide="file-code" class="w-4 h-4 flex-shrink-0"></i>
+            <span class="flex-1 text-left">E-Posta Şablonları</span>
+        </a>
+    </div>
+
+    <div class="px-3 pb-3">
+        <p class="px-2 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 flex items-center gap-1.5">
+            <i data-lucide="wrench" class="w-3 h-3"></i>
+            Sistem Araçları
+        </p>
+        <a th:href="@{/admin/settings(tab='tools')}"
+           class="settings-sidebar-item"
+           th:classappend="${current == 'tools'} ? 'settings-sidebar-item--active' : 'settings-sidebar-item--idle'">
+            <i data-lucide="wrench" class="w-4 h-4 flex-shrink-0"></i>
+            <span class="flex-1 text-left">Araçlar &amp; Bakım</span>
+        </a>
+        <a th:href="@{/admin/settings(tab='backups')}"
+           class="settings-sidebar-item"
+           th:classappend="${current == 'backups'} ? 'settings-sidebar-item--active' : 'settings-sidebar-item--idle'">
+            <i data-lucide="database" class="w-4 h-4 flex-shrink-0"></i>
+            <span class="flex-1 text-left">Yedekleme &amp; RustFS</span>
+        </a>
+        <a th:href="@{/admin/settings/logs}"
+           class="settings-sidebar-item"
+           th:classappend="${current == 'logs'} ? 'settings-sidebar-item--active' : 'settings-sidebar-item--idle'">
+            <i data-lucide="scroll-text" class="w-4 h-4 flex-shrink-0"></i>
+            <span class="flex-1 text-left">Uygulama Logları &amp; Analiz</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-700 flex-shrink-0">Loglar</span>
+        </a>
+        <a th:href="@{/admin/deployment}"
+           class="settings-sidebar-item"
+           th:classappend="${current == 'deployment'} ? 'settings-sidebar-item--active' : 'settings-sidebar-item--idle'">
+            <i data-lucide="rocket" class="w-4 h-4 flex-shrink-0"></i>
+            <span class="flex-1 text-left">Yeni Gelişmeleri Sahaya Taşı</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-100 text-violet-700 flex-shrink-0">Canlı</span>
+        </a>
+    </div>
+</nav>
+</body>
+</html>
