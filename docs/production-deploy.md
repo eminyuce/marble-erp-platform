@@ -253,8 +253,7 @@ Database: Flyway migrations are **forward**. Rolling back the JAR does not undo 
 
 GitHub Actions (`.github/workflows/docker-publish.yml`) builds the root `Dockerfile` and pushes `${DOCKERHUB_USERNAME}/marble-erp-platform` to Docker Hub.
 
-- A push to `main` updates the `latest` tag.
-- A `v*` tag, such as `v1.0.0`, also publishes `v1.0.0`, `1.0.0` and `1.2`-style minor tags. Semver tags receive `latest` as well.
+- A push to `main`, and a manual run of the workflow, updates only the `latest` tag.
 - Repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` are the Docker Hub account and an access token. The token is not the Docker Hub password.
 
 On the server, copy `docker-compose.prod.yml` and a filled `.env` (start from `.env.example`), then:

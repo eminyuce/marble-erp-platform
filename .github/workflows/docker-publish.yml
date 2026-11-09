@@ -1,14 +1,10 @@
 name: Publish Docker image
 
-# main push  -> Docker Hub tag latest
-# v* tag     -> latest, v1.2.3, 1.2.3 and 1.2
-# Actions tab -> workflow_dispatch also publishes the selected ref
+# main push and a manual run publish only the latest tag.
 on:
   push:
     branches:
       - main
-    tags:
-      - "v*"
   workflow_dispatch:
 
 concurrency:
@@ -40,11 +36,7 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/marble-erp-platform
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=semver,pattern={{raw}}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,format=short
+            type=raw,value=latest
           labels: |
             org.opencontainers.image.title=Marble ERP Platform
             org.opencontainers.image.source=https://github.com/eminyuce/marble-erp-platform
