@@ -199,6 +199,12 @@
      :class="{ 'is-compact': density === 'compact' }"
      x-init="window.logsPageState = $data">
 
+    <div class="flex flex-col lg:flex-row gap-5">
+        <aside class="w-full lg:w-[260px] flex-shrink-0">
+            <nav th:replace="~{admin/settings/sidebar :: categories(current='logs')}"></nav>
+        </aside>
+        <div class="flex-1 min-w-0 space-y-5">
+
     <!-- Header Section -->
     <div class="erp-list-header">
         <div class="erp-list-header-main">
@@ -367,6 +373,9 @@
 
     <!-- Tabulator Grid Shell -->
     <div th:replace="~{fragments/list-chrome :: gridShell('logs-table')}"></div>
+
+        </div>
+    </div>
 
     <!-- ═══════════════════════════════════════════════════════════════
          DETAIL MODAL
