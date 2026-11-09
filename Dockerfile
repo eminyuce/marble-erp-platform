@@ -60,6 +60,7 @@ RUN arch="x86_64" \
     && rm -rf /tmp/docker /tmp/docker.tgz
 
 COPY --chmod=755 scripts/deploy_from_app.sh /usr/local/sbin/marble-erp-inapp-deploy
+COPY docker-compose.prod.yml /stack/docker-compose.prod.yml
 COPY --from=build --chown=1001:1001 --link /build/target/marble-erp-platform-*.jar /app/app.jar
 
 LABEL org.opencontainers.image.title="Marble ERP Platform" \
