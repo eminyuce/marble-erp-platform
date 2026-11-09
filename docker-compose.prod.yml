@@ -75,7 +75,9 @@ services:
     restart: "no"
     volumes:
       - ${MARBLE_HOST_LOG_DIR:-/opt/marble-erp/logs}:/logs
-    command: ["sh", "-c", "mkdir -p /logs && chown 1001:1001 /logs && chmod 755 /logs"]
+      - uploads_data:/uploads
+      - media_data:/media
+    command: ["sh", "-c", "mkdir -p /logs /uploads /media && chown -R 1001:1001 /logs /uploads /media && chmod 755 /logs /uploads /media"]
 
   app:
     image: ${DOCKERHUB_USERNAME:-guvenulu}/marble-erp-platform:${APP_TAG:-latest}
@@ -129,8 +131,6 @@ services:
       - uploads_data:/app/uploads
       - media_data:/app/media
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./docker-compose.prod.yml:/stack/docker-compose.prod.yml:ro
-      - ./.env:/stack/.env:ro
       - ${MARBLE_HOST_LOG_DIR:-/opt/marble-erp/logs}:/opt/marble-erp/logs
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:81/health/ || exit 1"]

@@ -168,6 +168,27 @@ class DeploymentServiceTest {
         assertThat(status.getState()).isEqualTo(DeploymentState.FAILED);
     }
 
+    @Test
+    @DisplayName("docker-compose.prod.yml avoids /stack file bind mounts and fixes volume permissions recursively")
+    void prodCompose_AvoidsStackFileMountsAndFixesVolumePerms() throws Exception {
+        String compose = Files.readString(Path.of("docker-compose.prod.yml"), StandardCharsets.UTF_8);
+
+        assertThat(compose).doesNotContain("./docker-compose.prod.yml:/stack/docker-compose.prod.yml");
+        assertThat(compose).doesNotContain("./.env:/stack/.env");
+        assertThat(compose).contains("chown -R 1001:1001 /logs /uploads /media");
+    }
+
+    @Test
+    @DisplayName("deploy_from_app.sh syncs compose file from pulled image and marks status FAILED if docker run fails")
+    void deployFromAppScript_SyncsComposeFileAndHandlesLaunchFailure() throws Exception {
+        String script = Files.readString(Path.of("scripts/deploy_from_app.sh"), StandardCharsets.UTF_8);
+
+        assertThat(script).contains("-v \"${host_stack}:${host_stack}\"");
+        assertThat(script).contains("docker cp \"\\$cid:/stack/docker-compose.prod.yml\"");
+        assertThat(script).contains("write_status \"FAILED\" \"$started_at\"");
+        assertThat(script).contains("chown -R 1001:1001 /logs");
+    }
+
     private static final class RecordingCommandRunner implements HostCommandRunner {
         private final List<List<String>> startedCommands = new ArrayList<>();
         private String pingOutput = DeploymentService.PING_TOKEN;

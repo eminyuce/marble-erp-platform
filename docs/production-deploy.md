@@ -258,7 +258,7 @@ GitHub Actions (`.github/workflows/docker-publish.yml`) builds the root `Dockerf
 
 The live server at `/opt/marble-erp` already runs this stack. Its Postgres data is the external volume `docker_postgres_data`. Its RustFS files are the directory `/opt/rustfs/data`. The in-app button runs `pull` and `up -d` against that directory. Do not replace that compose file with a copy that creates new `postgres_data` or `rustfs_data` volumes, and do not run `docker compose down -v`.
 
-`docker-compose.prod.yml` in this repository uses those same disks. Compose on the server is 2.40.3, so the `.env` mount is a plain read-only bind. The long `required: false` form is not valid there. The app service also mounts `./docker-compose.prod.yml` at `/stack/docker-compose.prod.yml` so the in-app button can see it.
+`docker-compose.prod.yml` in this repository uses those same disks. The image already includes `/stack/docker-compose.prod.yml`, so the `app` service does not bind-mount `docker-compose.prod.yml` or `.env` from the host. During an in-app rollout, the rollout helper pulls the latest image from Docker Hub, syncs `/stack/docker-compose.prod.yml` from that image into `/opt/marble-erp/docker-compose.prod.yml`, and runs `docker compose --project-directory /opt/marble-erp` against the host stack directory.
 
 On a new server, create the external volume and the RustFS directory before the first `up`, copy `docker-compose.prod.yml` and a filled `.env` (start from `.env.example`), then:
 
