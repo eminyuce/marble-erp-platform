@@ -5,7 +5,9 @@ import com.ozerler.marble.dto.CariSummaryDto;
 import com.ozerler.marble.dto.CariTransactionDto;
 import com.ozerler.marble.model.CariTransaction;
 import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CariTransactionType;
+import com.ozerler.marble.model.enums.CustomerType;
 import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.service.CariTransactionService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,8 @@ public class CariTransactionController extends AbstractController {
         CariSummaryDto summary = cariTransactionService.getCustomerSummary(customerId);
 
         model.addAttribute("customer", customer);
+        model.addAttribute("customerTypeLabel", labelOf(customer.getCustomerType()));
+        model.addAttribute("businessUnitLabel", labelOf(customer.getBusinessUnit()));
         model.addAttribute("transactions", transactions);
         model.addAttribute("summary", summary);
         model.addAttribute("transactionTypes", CariTransactionType.values());
@@ -118,5 +122,13 @@ public class CariTransactionController extends AbstractController {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
         return "redirect:/admin/definitions/customers/" + customerId + "/transactions";
+    }
+
+    private static String labelOf(CustomerType customerType) {
+        return customerType == null ? "Genel" : customerType.getLabel();
+    }
+
+    private static String labelOf(BusinessUnit businessUnit) {
+        return businessUnit == null ? "Genel" : businessUnit.getLabel();
     }
 }
