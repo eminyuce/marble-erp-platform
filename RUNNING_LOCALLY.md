@@ -67,26 +67,157 @@ The application will start on **`http://localhost:8080`**.
 
 ---
 
-### Option B: Full Stack in Docker Compose
+### Option B: Full Stack in Docker Compose (Local Build or Docker Hub Image)
 
-Run Spring Boot, PostgreSQL, and RustFS together in isolated containers.
+Because PostgreSQL (`postgres:16-alpine`), RustFS (`rustfs/rustfs:1.0.1`), and Marble ERP (`guvenulu/marble-erp-platform:latest`) run as separate containers, running `docker run ... guvenulu/marble-erp-platform:latest` alone will fail unless PostgreSQL and RustFS are already running and reachable. Additionally, the application listens on port **81** inside the container (not `85`), so host port mappings must target `:81` (for example `-p 8081:81` or `-p 81:81`).
 
+#### 1. From the Cloned Git Repository:
 ```bash
-# Start both PostgreSQL and the application
+# Pull pre-built images from Docker Hub and start PostgreSQL + RustFS + App
+docker compose -f docker/docker-compose.yml pull
+docker compose -f docker/docker-compose.yml up -d
+
+# Or build the image locally from source and start all services:
 docker compose -f docker/docker-compose.yml up -d --build
 
 # View real-time container logs
 docker compose -f docker/docker-compose.yml logs -f app
 ```
 
-> [!NOTE]
-> In the full Docker Compose setup, the application exposes port **81**:
-> - App URL: **`http://localhost:81`**
-> - Admin Login: **`http://localhost:81/account/adminlogin/`**
-
-To stop the containers:
+#### 2. Without Cloning the Repository (Linux / macOS — Extract Compose from Docker Hub Image):
 ```bash
-docker compose -f docker/docker-compose.yml down
+mkdir -p ~/marble-erp-local && cd ~/marble-erp-local
+docker run --rm guvenulu/marble-erp-platform:latest --print-compose > docker-compose.yml
+docker compose up -d
+```
+
+#### 3. Windows PowerShell Copy-Paste Setup (Port `8081 -> 81` + PostgreSQL + RustFS):
+If you are on Windows PowerShell and want to run the complete stack from Docker Hub on `http://localhost:8081`:
+
+```powershell
+# 1. Remove any standalone failed container if present
+docker rm -f marble-erp 2>$null
+
+# 2. Create and enter a local working directory
+mkdir -Force "$HOME\marble-erp-local"
+cd "$HOME\marble-erp-local"
+
+# 3. Write docker-compose.yml (PostgreSQL + RustFS + Marble ERP on port 8081:81)
+@"
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: marble-erp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: marble_erp
+      POSTGRES_USER: marbleuser
+      POSTGRES_PASSWORD: marblepass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marbleuser -d marble_erp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rustfs-perms:
+    image: alpine:3.20
+    user: "0:0"
+    command: ["sh", "-c", "chown -R 10001:10001 /data /logs"]
+    volumes:
+      - rustfs_data:/data
+      - rustfs_logs:/logs
+
+  rustfs:
+    image: rustfs/rustfs:1.0.1
+    container_name: marble-rustfs
+    restart: unless-stopped
+    depends_on:
+      rustfs-perms:
+        condition: service_completed_successfully
+    environment:
+      RUSTFS_ACCESS_KEY: marblerustfs
+      RUSTFS_SECRET_KEY: marblerustfs_change_me
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - rustfs_data:/data
+      - rustfs_logs:/logs
+
+  app-perms:
+    image: alpine:3.20
+    user: "0:0"
+    command: ["sh", "-c", "chown -R 1001:1001 /uploads /media"]
+    volumes:
+      - uploads_data:/uploads
+      - media_data:/media
+
+  app:
+    image: guvenulu/marble-erp-platform:latest
+    container_name: marble-erp
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rustfs:
+        condition: service_started
+      app-perms:
+        condition: service_completed_successfully
+    ports:
+      - "8081:81"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 81
+      DB_URL: jdbc:postgresql://postgres:5432/marble_erp
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: marble_erp
+      DB_USERNAME: marbleuser
+      DB_PASSWORD: marblepass
+      APP_UPLOAD_DIR: /app/uploads
+      APP_MEDIA_DIR: /app/media
+      STORAGE_TYPE: rustfs
+      RUSTFS_ENDPOINT: http://rustfs:9000
+      RUSTFS_PUBLIC_ENDPOINT: http://localhost:9000
+      RUSTFS_ACCESS_KEY: marblerustfs
+      RUSTFS_SECRET_KEY: marblerustfs_change_me
+      RUSTFS_BUCKET: erp-files
+      RUSTFS_REGION: us-east-1
+    volumes:
+      - uploads_data:/app/uploads
+      - media_data:/app/media
+
+volumes:
+  postgres_data:
+  rustfs_data:
+  rustfs_logs:
+  uploads_data:
+  media_data:
+"@ | Set-Content -Encoding UTF8 docker-compose.yml
+
+# 4. Start the full stack
+docker compose up -d
+
+# 5. Check container status and logs
+docker compose ps
+docker logs -f marble-erp
+```
+
+> [!NOTE]
+> - Default `docker/docker-compose.yml` exposes port **81** (`http://localhost:81/account/adminlogin/`).
+> - In the Windows PowerShell snippet above, host port **8081** maps to container port **81** (`http://localhost:8081/account/adminlogin/`).
+
+To stop the containers without deleting your local database volume:
+```bash
+docker compose down
 ```
 
 ---
