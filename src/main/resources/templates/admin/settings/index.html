@@ -7,7 +7,52 @@
 </head>
 <body>
 <div layout:fragment="content" class="space-y-5" x-data="{
-    activeTab: new URLSearchParams(window.location.search).get('tab') || 'general'
+    activeTab: new URLSearchParams(window.location.search).get('tab') || 'general',
+    titles: {
+        general: {
+            title: 'Genel Ayarlar',
+            lead: 'Liste tablolarının satır sayısı ve ekrandaki bildirim süresi.'
+        },
+        security: {
+            title: '2FA ve reCAPTCHA',
+            lead: 'Girişte iki adımlı doğrulama ve bot koruması.'
+        },
+        'rate-limiting': {
+            title: 'İstek Sınırlandırma',
+            lead: 'Aynı adresten gelen aşırı istekleri otomatik keser.'
+        },
+        smtp: {
+            title: 'SMTP Posta Sunucusu',
+            lead: 'Doğrulama kodu, fire ve sevkiyat postalarının çıkış ayarları.'
+        },
+        templates: {
+            title: 'E-Posta Şablonları',
+            lead: 'Operasyon postalarının konu satırı ve gövde tasarımı.'
+        },
+        tools: {
+            title: 'Araçlar ve Bakım',
+            lead: 'Log, sistem sağlığı ve saha yayını kısayolları.'
+        },
+        backups: {
+            title: 'Yedekleme ve RustFS',
+            lead: 'Veritabanı yedeğini alın, indirin veya geri yükleyin.'
+        }
+    },
+    pageTitle() {
+        const item = this.titles[this.activeTab];
+        return item ? item.title : 'Sistem ve Güvenlik Ayarları';
+    },
+    pageLead() {
+        const item = this.titles[this.activeTab];
+        return item ? item.lead : 'Genel yapılandırma, güvenlik, e-posta ve sistem araçları';
+    },
+    syncDocumentTitle() {
+        document.title = this.pageTitle() + ' • Özerler Mermer ERP';
+    },
+    init() {
+        this.syncDocumentTitle();
+        this.$watch('activeTab', () => this.syncDocumentTitle());
+    }
 }">
 
     <!-- Page Header -->
@@ -18,8 +63,8 @@
                     <i data-lucide="settings" class="w-5 h-5 text-white"></i>
                 </span>
                 <div>
-                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">Sistem ve Güvenlik Ayarları</h1>
-                    <p class="text-xs text-slate-500 font-medium">Genel yapılandırma, güvenlik, e-posta ve sistem
+                    <h1 class="admin-page-title" x-text="pageTitle()">Sistem ve Güvenlik Ayarları</h1>
+                    <p class="text-xs text-slate-500 font-medium" x-text="pageLead()">Genel yapılandırma, güvenlik, e-posta ve sistem
                         araçları</p>
                 </div>
             </div>

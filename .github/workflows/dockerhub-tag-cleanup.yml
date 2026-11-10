@@ -1,0 +1,49 @@
+name: Clean old Docker Hub tags
+
+# Deletes Hub tags that have not been updated for 14 days.
+# latest, prod, stable and semantic version tags are kept.
+# The job log names every tag it deletes.
+#
+# DOCKERHUB_TOKEN must be a Docker Hub access token with Delete scope
+# (Hub → Account Settings → Personal access tokens). The same secret
+# used by docker-publish.yml is enough when that token can delete tags.
+on:
+  schedule:
+    # Sunday 02:00 UTC (05:00 Europe/Istanbul)
+    - cron: "0 2 * * 0"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Log the tags that would be deleted, without deleting them
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dockerhub-tag-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check tag decisions
+        run: python scripts/cleanup_dockerhub_tags.py --self-test
+
+      - name: Delete tags older than 14 days
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_REPOSITORY: marble-erp-platform
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'true' || 'false' }}
+        run: python scripts/cleanup_dockerhub_tags.py
