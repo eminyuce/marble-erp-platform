@@ -117,7 +117,7 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.0"
-  asset-version: "20261110-prod-safe-docker"
+  asset-version: "20261110-settings-titles"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy
