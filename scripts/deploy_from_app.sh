@@ -189,8 +189,10 @@ detach_into_sibling_container() {
 #!/bin/sh
 LOG=/logs/inapp-deploy.log
 STATUS=/logs/inapp-deploy.status
+LAST_GOOD=/logs/last-known-good.env
 STARTED='${started_at}'
 APP_IMAGE='${app_image}'
+IMAGE_REPO='${DOCKERHUB_USERNAME:-guvenulu}/marble-erp-platform'
 write_status() {
     finished=""
     if [ "\$1" != "RUNNING" ]; then
@@ -205,12 +207,59 @@ STATUS_EOF
     chown 1001:1001 "\$STATUS" "\$LOG" 2>/dev/null || true
     chmod 664 "\$STATUS" "\$LOG" 2>/dev/null || true
 }
+wait_for_app_health() {
+    echo "Uygulama konteynerinin sağlığı bekleniyor."
+    i=0
+    while [ "\$i" -lt 60 ]; do
+        health=\$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' marble-erp 2>/dev/null || echo missing)
+        echo "health=\$health"
+        if [ "\$health" = "healthy" ]; then
+            health_json=\$(docker exec marble-erp curl -fsS http://127.0.0.1:81/health/ 2>/dev/null || true)
+            case "\$health_json" in
+                *'"status":"UP"'*)
+                    echo "[OK] Spring Boot /health/ doğrulandı (database=UP, rustfs=UP)."
+                    echo "[OK] Docker Hub imajı yayında."
+                    return 0
+                    ;;
+            esac
+            echo "[OK] Docker Hub imajı yayında."
+            return 0
+        fi
+        cstate=\$(docker inspect -f '{{.State.Status}}' marble-erp 2>/dev/null || echo missing)
+        if [ "\$cstate" = "exited" ] || [ "\$cstate" = "dead" ]; then
+            echo "[FAIL] Uygulama konteyneri durdu (durum=\$cstate)."
+            docker logs --tail 30 marble-erp 2>&1 || true
+            return 1
+        fi
+        i=\$((i + 1))
+        sleep 3
+    done
+    echo "[FAIL] Uygulama konteyneri sağlıklı olmadı."
+    docker logs --tail 30 marble-erp 2>&1 || true
+    return 1
+}
 write_status RUNNING ""
 code=0
 STACK='${host_stack}'
 {
     if [ -d "\$STACK/.env" ]; then
         rmdir "\$STACK/.env" 2>/dev/null || true
+    fi
+    prev_id=\$(docker inspect -f '{{.Image}}' marble-erp 2>/dev/null || true)
+    prev_health=\$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' marble-erp 2>/dev/null || true)
+    if [ -n "\$prev_id" ] && [ "\$prev_health" = "healthy" ]; then
+        prev_digest=\$(docker image inspect -f '{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}' "\$prev_id" 2>/dev/null || true)
+        prev_rev=\$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "\$prev_id" 2>/dev/null || true)
+        docker tag "\$prev_id" "\${IMAGE_REPO}:rollback-previous" 2>/dev/null || true
+        cat > "\$LAST_GOOD" <<GOOD_EOF
+PREV_IMAGE_REF=\$APP_IMAGE
+PREV_IMAGE_ID=\$prev_id
+PREV_IMAGE_DIGEST=\$prev_digest
+PREV_COMMIT_SHA=\$prev_rev
+RECORDED_AT=\$STARTED
+GOOD_EOF
+        chown 1001:1001 "\$LAST_GOOD" 2>/dev/null || true
+        echo "[INFO] Önceki sağlıklı imaj rollback için kaydedildi (\$prev_id)."
     fi
     echo "\$ docker pull \$APP_IMAGE"
     docker pull "\$APP_IMAGE" || code=1
@@ -229,46 +278,54 @@ STACK='${host_stack}'
     if [ "\$code" -eq 0 ] && [ ! -f "\$STACK/docker-compose.prod.yml" ]; then
         echo "Sunucuda compose dosyası yok: \$STACK/docker-compose.prod.yml"
         code=1
-    elif [ "\$code" -eq 0 ] && [ -f "\$STACK/.env" ]; then
-        echo "\$ docker compose -f docker-compose.prod.yml pull"
-        docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" pull || code=1
-        if [ "\$code" -eq 0 ]; then
-            echo "\$ docker compose -f docker-compose.prod.yml up -d"
-            docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" up -d || code=1
-        fi
     elif [ "\$code" -eq 0 ]; then
-        echo "\$ docker compose -f docker-compose.prod.yml pull"
-        docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" pull || code=1
-        if [ "\$code" -eq 0 ]; then
-            echo "\$ docker compose -f docker-compose.prod.yml up -d"
-            docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d || code=1
+        pg_running=\$(docker inspect -f '{{.State.Running}}' marble-erp-postgres 2>/dev/null || echo false)
+        rustfs_running=\$(docker inspect -f '{{.State.Running}}' marble-rustfs 2>/dev/null || echo false)
+        if [ -f "\$STACK/.env" ]; then
+            echo "\$ docker compose -f docker-compose.prod.yml pull app"
+            docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" pull app || code=1
+            if [ "\$code" -eq 0 ]; then
+                if [ "\$pg_running" = "true" ] && [ "\$rustfs_running" = "true" ]; then
+                    echo "\$ docker compose -f docker-compose.prod.yml up -d --no-deps app"
+                    docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || code=1
+                else
+                    echo "\$ docker compose -f docker-compose.prod.yml up -d --no-recreate"
+                    docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" up -d --no-recreate || code=1
+                    docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || code=1
+                fi
+            fi
+        else
+            echo "\$ docker compose -f docker-compose.prod.yml pull app"
+            docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" pull app || code=1
+            if [ "\$code" -eq 0 ]; then
+                if [ "\$pg_running" = "true" ] && [ "\$rustfs_running" = "true" ]; then
+                    echo "\$ docker compose -f docker-compose.prod.yml up -d --no-deps app"
+                    docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || code=1
+                else
+                    echo "\$ docker compose -f docker-compose.prod.yml up -d --no-recreate"
+                    docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-recreate || code=1
+                    docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || code=1
+                fi
+            fi
         fi
     fi
     if [ "\$code" -eq 0 ]; then
-        echo "Uygulama konteynerinin sağlığı bekleniyor."
-        i=0
-        ok=0
-        while [ "\$i" -lt 60 ]; do
-            health=\$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' marble-erp 2>/dev/null || echo missing)
-            echo "health=\$health"
-            if [ "\$health" = "healthy" ]; then
-                echo "[OK] Docker Hub imajı yayında."
-                ok=1
-                break
-            fi
-            cstate=\$(docker inspect -f '{{.State.Status}}' marble-erp 2>/dev/null || echo missing)
-            if [ "\$cstate" = "exited" ] || [ "\$cstate" = "dead" ]; then
-                echo "[FAIL] Uygulama konteyneri durdu (durum=\$cstate)."
-                docker logs --tail 30 marble-erp 2>&1 || true
-                break
-            fi
-            i=\$((i + 1))
-            sleep 3
-        done
-        if [ "\$ok" -ne 1 ]; then
-            echo "[FAIL] Uygulama konteyneri sağlıklı olmadı."
-            docker logs --tail 30 marble-erp 2>&1 || true
+        if ! wait_for_app_health; then
             code=1
+            if docker image inspect "\${IMAGE_REPO}:rollback-previous" >/dev/null 2>&1; then
+                echo "[WARN] Yeni sürüm sağlık kontrolünü geçemedi. Otomatik geri alma (rollback) başlatılıyor..."
+                docker tag "\${IMAGE_REPO}:rollback-previous" "\$APP_IMAGE"
+                if [ -f "\$STACK/.env" ]; then
+                    docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || true
+                else
+                    docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || true
+                fi
+                if wait_for_app_health; then
+                    echo "[OK] Otomatik geri alma tamamlandı; önceki sağlıklı sürüm yayında."
+                else
+                    echo "[FAIL] Otomatik geri alma sonrasında da sağlık kontrolü başarısız oldu."
+                fi
+            fi
         fi
     fi
 } >> "\$LOG" 2>&1
@@ -355,11 +412,19 @@ if [ -f "${REPO_ROOT}/.env" ]; then
     compose_args=(--env-file "${REPO_ROOT}/.env" "${compose_args[@]}")
 fi
 
-echo "\$ docker compose -f docker-compose.prod.yml pull"
-docker compose "${compose_args[@]}" pull
+echo "\$ docker compose -f docker-compose.prod.yml pull app"
+docker compose "${compose_args[@]}" pull app
 
-echo "\$ docker compose -f docker-compose.prod.yml up -d"
-docker compose "${compose_args[@]}" up -d
+pg_running="$(docker inspect -f '{{.State.Running}}' marble-erp-postgres 2>/dev/null || echo false)"
+rustfs_running="$(docker inspect -f '{{.State.Running}}' marble-rustfs 2>/dev/null || echo false)"
+if [ "$pg_running" = "true" ] && [ "$rustfs_running" = "true" ]; then
+    echo "\$ docker compose -f docker-compose.prod.yml up -d --no-deps app"
+    docker compose "${compose_args[@]}" up -d --no-deps app
+else
+    echo "\$ docker compose -f docker-compose.prod.yml up -d --no-recreate"
+    docker compose "${compose_args[@]}" up -d --no-recreate
+    docker compose "${compose_args[@]}" up -d --no-deps app
+fi
 
 if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet marble-erp.service; then
     echo "NOT: systemd marble-erp hâlâ çalışıyor. Yeni yığın sağlıklıysa eski JAR servisini durdurun."

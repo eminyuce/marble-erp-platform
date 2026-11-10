@@ -47,25 +47,38 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && mkdir -p /app/uploads /app/media \
     && chown -R 1001:1001 /app
 
-# Static docker client so the admin page can start a rollout container.
-# The client is glibc-compatible; the Alpine docker CLI image is not copied in.
+# Static docker client + docker compose v2 CLI plugin so the admin page and
+# container diagnostics have full Docker and Compose CLI support.
 ARG TARGETARCH=amd64
 ARG DOCKER_CLI_VERSION=27.5.1
+ARG DOCKER_COMPOSE_VERSION=v2.32.4
 RUN arch="x86_64" \
     && if [ "$TARGETARCH" = "arm64" ]; then arch="aarch64"; fi \
     && curl -fsSL -o /tmp/docker.tgz "https://download.docker.com/linux/static/stable/${arch}/docker-${DOCKER_CLI_VERSION}.tgz" \
     && tar -xzf /tmp/docker.tgz -C /tmp \
     && mv /tmp/docker/docker /usr/local/bin/docker \
     && chmod 755 /usr/local/bin/docker \
-    && rm -rf /tmp/docker /tmp/docker.tgz
+    && rm -rf /tmp/docker /tmp/docker.tgz \
+    && mkdir -p /usr/local/lib/docker/cli-plugins /stack/scripts \
+    && curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-linux-${arch}" \
+    && chmod 755 /usr/local/lib/docker/cli-plugins/docker-compose
 
+COPY --chmod=755 scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY --chmod=755 scripts/deploy_from_app.sh /usr/local/sbin/marble-erp-inapp-deploy
+COPY --chmod=755 scripts/deploy_from_app.sh scripts/backup_production.sh scripts/restore_production.sh scripts/rollback_production.sh scripts/init_fresh_install.sh /stack/scripts/
 COPY docker-compose.prod.yml /stack/docker-compose.prod.yml
+COPY docker/docker-compose.yml /stack/docker-compose.yml
+COPY .env.example /stack/.env.example
 COPY --from=build --chown=1001:1001 --link /build/target/marble-erp-platform-*.jar /app/app.jar
+
+ARG APP_VERSION=1.0.0
+ARG GIT_COMMIT_SHA=unknown
 
 LABEL org.opencontainers.image.title="Marble ERP Platform" \
       org.opencontainers.image.source="https://github.com/eminyuce/marble-erp-platform" \
-      org.opencontainers.image.description="Ozerler Mermer ERP"
+      org.opencontainers.image.description="Ozerler Mermer ERP" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${GIT_COMMIT_SHA}"
 
 USER 1001:1001
 
@@ -73,6 +86,8 @@ USER 1001:1001
 # Do not set PORT here; Compose pins both so the process listens on 81.
 ENV SERVER_PORT=81 \
     SPRING_PROFILES_ACTIVE=prod \
+    APP_VERSION="${APP_VERSION}" \
+    APP_GIT_SHA="${GIT_COMMIT_SHA}" \
     APP_UPLOAD_DIR=/app/uploads \
     APP_MEDIA_DIR=/app/media \
     JAVA_OPTS="-XX:+UseSerialGC -Xms256m -Xmx768m -XX:MaxMetaspaceSize=192m -XX:+ExitOnOutOfMemoryError"
@@ -82,4 +97,4 @@ EXPOSE 81
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
   CMD curl -fsS http://127.0.0.1:81/health/ || exit 1
 
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

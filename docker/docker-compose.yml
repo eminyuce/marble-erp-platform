@@ -59,17 +59,34 @@ services:
     networks:
       - marble-network
 
+  app-perms:
+    image: alpine:3.24.1
+    container_name: marble-app-perms
+    user: root
+    restart: "no"
+    volumes:
+      - uploads_data:/uploads
+      - media_data:/media
+    command: ["sh", "-c", "mkdir -p /uploads /media && chown -R 1001:1001 /uploads /media && chmod 755 /uploads /media"]
+    networks:
+      - marble-network
+
   app:
+    image: ${DOCKERHUB_USERNAME:-guvenulu}/marble-erp-platform:${APP_TAG:-latest}
     build:
       context: ..
       dockerfile: Dockerfile
     container_name: marble-erp-app
+    init: true
+    stop_grace_period: 30s
     restart: always
     depends_on:
       postgres:
         condition: service_healthy
       rustfs:
         condition: service_healthy
+      app-perms:
+        condition: service_completed_successfully
     environment:
       SPRING_PROFILES_ACTIVE: prod
       PORT: "81"

@@ -82,6 +82,8 @@ services:
   app:
     image: ${DOCKERHUB_USERNAME:-guvenulu}/marble-erp-platform:${APP_TAG:-latest}
     container_name: marble-erp
+    init: true
+    stop_grace_period: 30s
     restart: unless-stopped
     group_add:
       - "${DOCKER_GID:-999}"

@@ -251,28 +251,59 @@ Database: Flyway migrations are **forward**. Rolling back the JAR does not undo 
 
 ## Docker Hub production
 
-GitHub Actions (`.github/workflows/docker-publish.yml`) builds the root `Dockerfile` and pushes `${DOCKERHUB_USERNAME}/marble-erp-platform` to Docker Hub.
+GitHub Actions (`.github/workflows/docker-publish.yml`) and GitLab CI (`.gitlab-ci.yml`) build the root `Dockerfile` and push `${DOCKERHUB_USERNAME}/marble-erp-platform` to Docker Hub.
 
-- A push to `main`, and a manual run of the workflow, updates only the `latest` tag.
+- Every push to `main` publishes both an immutable Git commit SHA tag (e.g., `guvenulu/marble-erp-platform:<short-sha>`) and `latest`.
+- Git tags matching `v*` publish immutable semantic version tags (e.g., `1.0.0`, `1.0`).
+- Every built image embeds `APP_GIT_SHA`, `APP_VERSION`, and OCI image labels (`org.opencontainers.image.revision`), plus bundled stack templates under `/stack/docker-compose.prod.yml`, `/stack/docker-compose.yml`, `/stack/.env.example`, and `/stack/scripts/*`.
 - Repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` are the Docker Hub account and an access token. The token is not the Docker Hub password.
 
-The live server at `/opt/marble-erp` already runs this stack. Its Postgres data is the external volume `docker_postgres_data`. Its RustFS files are the directory `/opt/rustfs/data`. The in-app button runs `pull` and `up -d` against that directory. Do not replace that compose file with a copy that creates new `postgres_data` or `rustfs_data` volumes, and do not run `docker compose down -v`.
+### Production Data Preservation Rules
 
-`docker-compose.prod.yml` in this repository uses those same disks. The image already includes `/stack/docker-compose.prod.yml`, so the `app` service does not bind-mount `docker-compose.prod.yml` or `.env` from the host. During an in-app rollout, the rollout helper pulls the latest image from Docker Hub, syncs `/stack/docker-compose.prod.yml` from that image into `/opt/marble-erp/docker-compose.prod.yml`, and runs `docker compose --project-directory /opt/marble-erp` against the host stack directory.
+The live server at `/opt/marble-erp` already runs this stack:
+- **PostgreSQL (`marble-erp-postgres`):** Uses the external volume `docker_postgres_data`.
+- **RustFS (`marble-rustfs`):** Uses the host directory `/opt/rustfs/data` (bucket `erp-files`).
+- **Application (`marble-erp`):** Uses `guvenulu/marble-erp-platform:${APP_TAG:-latest}` on network `marble-erp_default`.
 
-On a new server, create the external volume and the RustFS directory before the first `up`, copy `docker-compose.prod.yml` and a filled `.env` (start from `.env.example`), then:
+**Never** run `docker compose down -v`, `docker volume rm`, or `docker volume prune` in production, and never replace `docker_postgres_data` or `/opt/rustfs/data` with empty volumes.
+
+### Application-Only Rollout (`--no-deps app`) & Automatic Rollback
+
+When `marble-erp-postgres` and `marble-rustfs` are already running, production updates (`scripts/deploy_from_app.sh` and the in-app button at `/settings/deployment` or `/admin/deployment`) perform an **application-only** update:
+
+1. Records the currently running healthy image ID, digest, and commit SHA in `/opt/marble-erp/logs/last-known-good.env` and tags the image as `guvenulu/marble-erp-platform:rollback-previous`.
+2. Pulls only the application service:
+   ```bash
+   docker compose --project-directory /opt/marble-erp -f /opt/marble-erp/docker-compose.prod.yml pull app
+   ```
+3. Recreates only the `marble-erp` container without touching `postgres` or `rustfs`:
+   ```bash
+   docker compose --project-directory /opt/marble-erp -f /opt/marble-erp/docker-compose.prod.yml up -d --no-deps app
+   ```
+4. Waits up to 90 seconds for both Docker health (`healthy`) and HTTP `http://127.0.0.1:81/health/` (`"status":"UP"`).
+5. If health verification fails, automatically rolls back to `guvenulu/marble-erp-platform:rollback-previous` using `up -d --no-deps app`.
+
+### Operational Scripts (Backup, Restore, Rollback, Fresh Install)
+
+| Script | Purpose |
+| :--- | :--- |
+| `./scripts/backup_production.sh` | Creates a timestamped, checksum-verified backup of PostgreSQL (`pg_dump -Fc` + `.sql.gz` + `pg_restore --list` verification) and RustFS (`/opt/rustfs/data` `tar.gz` + archive integrity check). |
+| `./scripts/rollback_production.sh [image-tag]` | Rolls back only the `marble-erp` container (`up -d --no-deps app`) to `guvenulu/marble-erp-platform:rollback-previous` (or the specified tag) and verifies `/health/`. |
+| `./scripts/restore_production.sh --confirm-restore <backup_dir>` | Safety-gated restore script that takes a pre-restore safety backup before restoring PostgreSQL and/or RustFS from a verified backup directory. |
+| `./scripts/init_fresh_install.sh <target_dir>` | Initializes a separate, brand-new customer installation. Refuses to run if `/opt/marble-erp/docker-compose.prod.yml` or `docker_postgres_data` already exists. |
+
+### Running the Full Stack on Any Machine from Docker Hub
+
+Because each container runs a single process (Spring Boot in `app`, PostgreSQL in `postgres`, RustFS in `rustfs`), starting the full stack on a new machine requires Docker Compose. You can extract the bundled `docker-compose.yml` directly from the Docker Hub image without cloning the repository:
 
 ```bash
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
+mkdir -p marble-erp && cd marble-erp
+docker run --rm guvenulu/marble-erp-platform:latest --print-compose > docker-compose.yml
+docker compose up -d
 curl -fsS http://127.0.0.1:81/health/
 ```
 
-The admin screen **Yeni Gelişmeleri Sahaya Taşı** (`/admin/deployment`) runs the same pull and `up -d`. It does not fetch git and it does not build a JAR. The button starts a separate rollout container so the update continues while the app container is replaced. That rollout reads `/opt/marble-erp/docker-compose.prod.yml` on the host. The rollout container mounts that directory at the same host path, so `./docker-compose.prod.yml` and `./.env` stay `/opt/marble-erp/...` on the server. Mounting the directory at `/stack` makes Docker look for `/stack/.env` on the host, the app container fails to start, and the public site goes down. Do not press the in-app button to recover. From `/opt/marble-erp` on the host, run `docker compose -f docker-compose.prod.yml up -d` and do not use `-v`.
-
-The app container listens on port **81**. Its database host is the Compose service `postgres`. `DB_URL` is set to `jdbc:postgresql://postgres:5432/...` so a host-side `DB_HOST=127.0.0.1` cannot point the container at itself. RustFS is reached at `http://rustfs:9000`. Postgres and RustFS ports are published on `127.0.0.1` only.
-
-`docker/docker-compose.yml` is the local build of the same Dockerfile. `scripts/deploy_production.sh` remains the systemd JAR path.
+The app container listens on port **81**. Inside Docker Compose, its database host is `postgres` (`jdbc:postgresql://postgres:5432/marble_erp`) and RustFS is reached at `http://rustfs:9000`. If someone runs `docker run` directly outside Compose without setting `DB_HOST` or `RUSTFS_ENDPOINT`, `/usr/local/bin/docker-entrypoint.sh` automatically falls back to `host.docker.internal`.
 
 Do not run `run_local.sh`, this Compose stack, and systemd `java -jar` against the same database and ports at the same time. Pick one process manager.
 

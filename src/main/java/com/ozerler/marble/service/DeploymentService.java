@@ -228,6 +228,13 @@ public class DeploymentService {
     private GitHead readGitHead() {
         Path repoDir = Path.of(properties.getRepoDir());
         if (!Files.isDirectory(repoDir.resolve(".git"))) {
+            String envSha = System.getenv("APP_GIT_SHA");
+            String envVersion = System.getenv("APP_VERSION");
+            if (envSha != null && !envSha.isBlank() && !"unknown".equalsIgnoreCase(envSha)) {
+                String shortSha = envSha.length() > 7 ? envSha.substring(0, 7) : envSha;
+                String msg = (envVersion != null && !envVersion.isBlank()) ? "v" + envVersion : "docker-image";
+                return new GitHead(properties.getGitBranch(), shortSha, msg);
+            }
             return GitHead.unknown();
         }
         String branch = firstLine(runGit(repoDir, List.of("git", "rev-parse", "--abbrev-ref", "HEAD")));
