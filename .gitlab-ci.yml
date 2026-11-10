@@ -1,0 +1,99 @@
+# ==============================================================================
+# Özerler Mermer ERP — Production-Safe GitLab CI/CD Pipeline
+#
+# Enforces:
+#   1. Automated unit & integration tests (./mvnw -B test)
+#   2. Static code quality checks (./mvnw -B pmd:check)
+#   3. Multi-stage Docker build with immutable SHA/semver tags + latest
+#   4. Zero-data-loss production rollout (app container only, automatic rollback)
+# ==============================================================================
+
+stages:
+  - test
+  - quality
+  - build-and-push
+  - deploy
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  DOCKER_BUILDKIT: "1"
+  IMAGE_NAME: "${DOCKERHUB_USERNAME}/marble-erp-platform"
+  APP_VERSION: "1.0.0"
+
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - .m2/repository
+    - frontend/node_modules
+
+unit-and-integration-tests:
+  stage: test
+  image: eclipse-temurin:24-jdk-noble
+  script:
+    - ./mvnw -B test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+
+code-quality-pmd:
+  stage: quality
+  image: eclipse-temurin:24-jdk-noble
+  script:
+    - ./mvnw -B pmd:check
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+
+docker-build-and-push:
+  stage: build-and-push
+  image: docker:27.5.1
+  services:
+    - docker:27.5.1-dind
+  needs:
+    - unit-and-integration-tests
+    - code-quality-pmd
+  before_script:
+    - test -n "$DOCKERHUB_USERNAME" || (echo "DOCKERHUB_USERNAME is required" && exit 1)
+    - test -n "$DOCKERHUB_TOKEN" || (echo "DOCKERHUB_TOKEN is required" && exit 1)
+    - printf '%s' "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+  script:
+    - SHORT_SHA="${CI_COMMIT_SHORT_SHA}"
+    - FULL_SHA="${CI_COMMIT_SHA}"
+    - TAG_ARGS="-t ${IMAGE_NAME}:sha-${SHORT_SHA} -t ${IMAGE_NAME}:${FULL_SHA}"
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        TAG_ARGS="$TAG_ARGS -t ${IMAGE_NAME}:latest -t ${IMAGE_NAME}:${APP_VERSION}"
+      fi
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        CLEAN_VER="${CI_COMMIT_TAG#v}"
+        TAG_ARGS="$TAG_ARGS -t ${IMAGE_NAME}:${CLEAN_VER} -t ${IMAGE_NAME}:${CI_COMMIT_TAG} -t ${IMAGE_NAME}:latest"
+      fi
+    - >
+      docker build
+      --pull
+      --build-arg GIT_COMMIT_SHA="${FULL_SHA}"
+      --build-arg APP_VERSION="${APP_VERSION}"
+      --label "org.opencontainers.image.revision=${FULL_SHA}"
+      --label "org.opencontainers.image.version=${APP_VERSION}"
+      $TAG_ARGS
+      .
+    - docker push --all-tags "${IMAGE_NAME}"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+
+deploy-production:
+  stage: deploy
+  image: docker:27.5.1-cli
+  needs:
+    - docker-build-and-push
+  when: manual
+  environment:
+    name: production
+  script:
+    - ./scripts/deploy_from_app.sh --foreground --repo "${MARBLE_HOST_STACK_DIR:-/opt/marble-erp}"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/

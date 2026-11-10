@@ -189,6 +189,56 @@ class DeploymentServiceTest {
         assertThat(script).contains("chown -R 1001:1001 /logs");
     }
 
+    @Test
+    @DisplayName("deploy_from_app.sh performs app-only update with --no-deps app, deep health check, and automatic rollback")
+    void deployFromAppScript_UsesAppOnlyUpdateAndAutomaticRollback() throws Exception {
+        String script = Files.readString(Path.of("scripts/deploy_from_app.sh"), StandardCharsets.UTF_8);
+
+        assertThat(script).contains("pull app");
+        assertThat(script).contains("up -d --no-deps app");
+        assertThat(script).contains("rollback-previous");
+        assertThat(script).contains("last-known-good.env");
+        assertThat(script).contains("/health/");
+        assertThat(script).doesNotContain("down -v");
+        assertThat(script).doesNotContain("volume rm");
+        assertThat(script).doesNotContain("volume prune");
+    }
+
+    @Test
+    @DisplayName("Dockerfile and .dockerignore bundle compose files, .env.example, scripts, and docker-compose v2 plugin")
+    void dockerfileAndDockerignore_BundleStackAndComposePlugin() throws Exception {
+        String dockerfile = Files.readString(Path.of("Dockerfile"), StandardCharsets.UTF_8);
+        String dockerignore = Files.readString(Path.of(".dockerignore"), StandardCharsets.UTF_8);
+
+        assertThat(dockerignore).contains("!.env.example");
+        assertThat(dockerfile).contains("/usr/local/lib/docker/cli-plugins/docker-compose");
+        assertThat(dockerfile).contains("COPY docker-compose.prod.yml /stack/docker-compose.prod.yml");
+        assertThat(dockerfile).contains("COPY docker/docker-compose.yml /stack/docker-compose.yml");
+        assertThat(dockerfile).contains("COPY .env.example /stack/.env.example");
+        assertThat(dockerfile).contains("ENTRYPOINT [\"/usr/local/bin/docker-entrypoint.sh\"]");
+    }
+
+    @Test
+    @DisplayName("Production compose, CI/CD pipelines, and operational scripts enforce zero-data-loss rules")
+    void productionInfrastructure_EnforcesZeroDataLossRules() throws Exception {
+        String prodCompose = Files.readString(Path.of("docker-compose.prod.yml"), StandardCharsets.UTF_8);
+        String githubWorkflow = Files.readString(Path.of(".github/workflows/docker-publish.yml"), StandardCharsets.UTF_8);
+        String gitlabCi = Files.readString(Path.of(".gitlab-ci.yml"), StandardCharsets.UTF_8);
+        String backupScript = Files.readString(Path.of("scripts/backup_production.sh"), StandardCharsets.UTF_8);
+        String rollbackScript = Files.readString(Path.of("scripts/rollback_production.sh"), StandardCharsets.UTF_8);
+        String freshInstallScript = Files.readString(Path.of("scripts/init_fresh_install.sh"), StandardCharsets.UTF_8);
+
+        assertThat(prodCompose).contains("name: ${POSTGRES_VOLUME_NAME:-docker_postgres_data}");
+        assertThat(prodCompose).contains("external: true");
+        assertThat(githubWorkflow).contains("type=sha");
+        assertThat(githubWorkflow).contains("GIT_COMMIT_SHA=${{ github.sha }}");
+        assertThat(gitlabCi).contains("./scripts/deploy_from_app.sh --foreground");
+        assertThat(backupScript).contains("-Fc");
+        assertThat(backupScript).contains("pg_restore --list");
+        assertThat(rollbackScript).contains("up -d --no-deps app");
+        assertThat(freshInstallScript).contains("Existing production installation detected");
+    }
+
     private static final class RecordingCommandRunner implements HostCommandRunner {
         private final List<List<String>> startedCommands = new ArrayList<>();
         private String pingOutput = DeploymentService.PING_TOKEN;

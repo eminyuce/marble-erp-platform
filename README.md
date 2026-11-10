@@ -128,6 +128,68 @@ Full object-storage, backup, and filesystem-migration notes: [docs/storage.md](d
 
 ---
 
+## 🐳 Docker Hub Deployment & Zero-Data-Loss Production Operations
+
+The application image (`guvenulu/marble-erp-platform`) follows a single-responsibility container architecture (PostgreSQL and RustFS run in their own dedicated containers), while bundling all required Compose definitions (`/stack/docker-compose.yml`, `/stack/docker-compose.prod.yml`, `/stack/.env.example`), operational scripts (`/stack/scripts/*`), and the `docker compose` v2 CLI plugin inside the image.
+
+### 1. Run Full Stack from Docker Hub on Any Machine (PostgreSQL + RustFS + App)
+
+**Option A — Without cloning the Git repository (directly from the Docker Hub image):**
+```bash
+mkdir -p marble-erp && cd marble-erp
+docker run --rm guvenulu/marble-erp-platform:latest --print-compose > docker-compose.yml
+docker compose up -d
+```
+
+**Option B — From a cloned Git repository:**
+```bash
+cp .env.example .env
+docker compose -f docker/docker-compose.yml up -d
+```
+
+- **ERP Application:** `http://localhost:81`
+- **Health Check:** `http://localhost:81/health/`
+- **RustFS S3 API:** `http://localhost:9000`
+- **RustFS Console:** `http://localhost:9001`
+
+### 2. Zero-Data-Loss Production Application Rollouts
+
+In production (`/opt/marble-erp`), PostgreSQL (`marble-erp-postgres`, volume `docker_postgres_data`) and RustFS (`marble-rustfs`, mount `/opt/rustfs/data`, bucket `erp-files`) hold live production data and must **never** be recreated or reset during application updates:
+
+- **In-App One-Click Update (`/settings/deployment`):**
+  1. Records the currently running healthy image ID, repo digest, and Git SHA in `/opt/marble-erp/logs/last-known-good.env` and tags it as `guvenulu/marble-erp-platform:rollback-previous`.
+  2. Pulls only the application image: `docker compose -f docker-compose.prod.yml pull app`.
+  3. Recreates only the `marble-erp` container without touching `postgres` or `rustfs`: `docker compose -f docker-compose.prod.yml up -d --no-deps app`.
+  4. Verifies both Docker container health (`healthy`) and `/health/` (`"status":"UP"`, database + RustFS connectivity).
+  5. Automatically rolls back to `guvenulu/marble-erp-platform:rollback-previous` if health verification fails.
+
+- **Manual Production Commands (Backup, Update, Rollback, Restore):**
+  ```bash
+  # 1. Create a verified backup of PostgreSQL (pg_dump -Fc + .sql.gz) and RustFS (/opt/rustfs/data)
+  ./scripts/backup_production.sh
+
+  # 2. Update only the application container (PostgreSQL & RustFS remain untouched)
+  cd /opt/marble-erp
+  docker compose -f docker-compose.prod.yml pull app
+  docker compose -f docker-compose.prod.yml up -d --no-deps app
+
+  # 3. Roll back the application container to the previous known-good image
+  ./scripts/rollback_production.sh
+
+  # 4. Restore from a verified backup directory (requires explicit --confirm-restore flag)
+  ./scripts/restore_production.sh --confirm-restore /opt/marble-erp/backups/<TIMESTAMP>
+  ```
+
+- **Fresh Customer / New Server Installation (Isolated from Existing Production):**
+  ```bash
+  ./scripts/init_fresh_install.sh /opt/marble-erp-new
+  ```
+  *(Refuses to run if `/opt/marble-erp/docker-compose.prod.yml` or volume `docker_postgres_data` already exists.)*
+
+See [`DOCKER_PRODUCTION_DEPLOYMENT_REPORT.md`](DOCKER_PRODUCTION_DEPLOYMENT_REPORT.md) and [`docs/production-deploy.md`](docs/production-deploy.md) for full architecture and operational details.
+
+---
+
 ## 🔑 Authentication & Default Credentials
 
 Seeded via Flyway migration ([V4__add_settings_and_admin_eimece.sql](src/main/resources/db/migration/V4__add_settings_and_admin_eimece.sql)):

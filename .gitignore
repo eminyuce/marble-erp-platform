@@ -41,10 +41,14 @@ frontend/.npm
 .pnp
 .pnp.js
 
-### Secrets ###
+### Secrets & Backups ###
 .env
 .env.*
 !.env.example
+backups/
+*.dump
+*.sql.gz
+last-known-good.env
 
 ### OS / Temporary ###
 .DS_Store
