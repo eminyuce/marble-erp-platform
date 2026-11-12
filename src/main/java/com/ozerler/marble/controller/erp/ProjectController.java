@@ -37,6 +37,16 @@ public class ProjectController {
     private final com.ozerler.marble.repository.StockItemRepository stockItemRepository;
     private final MessageSource messageSource;
 
+    @GetMapping("/customers")
+    public String siteCustomers() {
+        return "redirect:/admin/definitions/customers?unit=SITE";
+    }
+
+    @GetMapping("/checks")
+    public String siteChecks() {
+        return "redirect:/collections/checks?unit=SITE";
+    }
+
     @GetMapping
     public String projectsIndex(Model model) {
         model.addAttribute("summary", projectSiteService.getProjectSummary());

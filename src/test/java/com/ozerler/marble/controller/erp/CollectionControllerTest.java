@@ -156,10 +156,10 @@ class CollectionControllerTest {
                 .build();
 
         Page<CheckRecord> pageResult = new PageImpl<>(List.of(check));
-        when(collectionService.searchChecks(isNull(), isNull(), isNull(), isNull(), isNull(), eq(0), eq(25)))
+        when(collectionService.searchChecks(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(0), eq(25)))
                 .thenReturn(pageResult);
 
-        TabulatorResponse<Map<String, Object>> response = controller.getChecksData(1, 25, null, null, null);
+        TabulatorResponse<Map<String, Object>> response = controller.getChecksData(1, 25, null, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getData()).hasSize(1);
@@ -173,14 +173,14 @@ class CollectionControllerTest {
     @DisplayName("getChecksData forwards status filter enum to collection service")
     void getChecksData_ForwardsStatusFilter() {
         Page<CheckRecord> emptyPage = new PageImpl<>(List.of());
-        when(collectionService.searchChecks(eq(CheckStatus.COLLECTED), isNull(), isNull(), isNull(), eq("vade"), eq(0), eq(25)))
+        when(collectionService.searchChecks(isNull(), eq(CheckStatus.COLLECTED), isNull(), isNull(), isNull(), eq("vade"), eq(0), eq(25)))
                 .thenReturn(emptyPage);
 
-        TabulatorResponse<Map<String, Object>> response = controller.getChecksData(1, 25, "vade", CheckStatus.COLLECTED, null);
+        TabulatorResponse<Map<String, Object>> response = controller.getChecksData(1, 25, "vade", null, CheckStatus.COLLECTED, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getData()).isEmpty();
-        verify(collectionService).searchChecks(CheckStatus.COLLECTED, null, null, null, "vade", 0, 25);
+        verify(collectionService).searchChecks(null, CheckStatus.COLLECTED, null, null, null, "vade", 0, 25);
     }
 
     @Test
@@ -191,7 +191,7 @@ class CollectionControllerTest {
                 .thenReturn(updated);
 
         RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
-        String view = controller.updateCheckStatus(50L, CheckStatus.BOUNCED, "Karşılıksız", redirectAttributes);
+        String view = controller.updateCheckStatus(50L, CheckStatus.BOUNCED, "Karşılıksız", null, redirectAttributes);
 
         assertThat(view).isEqualTo("redirect:/collections/checks");
         assertThat(redirectAttributes.getFlashAttributes()).containsKey("successMessage");

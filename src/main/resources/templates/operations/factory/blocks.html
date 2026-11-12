@@ -85,6 +85,16 @@
             <i data-lucide="wrench" class="w-4 h-4 text-emerald-600"></i>
             <span>Sarf Malzeme Deposu</span>
         </a>
+        <a th:href="@{/operations/factory/customers}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="users" class="w-4 h-4 text-blue-600"></i>
+            <span>Fabrika Carileri</span>
+        </a>
+        <a th:href="@{/operations/factory/checks}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="calendar-check" class="w-4 h-4 text-purple-600"></i>
+            <span>Fabrika Çekleri</span>
+        </a>
     </div>
 
     <!-- Yoldaki Bloklar (Bekleyen Sevkiyatlar) -->
@@ -416,6 +426,9 @@
                         responsive: 0,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
+                            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
+                            const csrfParam = document.querySelector('meta[name="_csrf_param"]')?.getAttribute('content') || '_csrf';
+                            const csrfInput = csrfToken ? `<input type="hidden" name="${csrfParam}" value="${csrfToken}">` : '';
                             return `<div class="inline-flex items-center gap-1.5">
                                 <button type="button"
                                         class="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
@@ -425,6 +438,7 @@
                                 </button>
                                 <form action="/operations/factory/blocks/${row.id}/dispatch-cutting" method="post" class="inline"
                                       onsubmit="return confirm('Bu bloğu (${row.blockCode}) kesime almak istiyor musunuz? Kesilmemiş blok stok sahasından düşülecektir.');">
+                                    ${csrfInput}
                                     <button type="submit"
                                             class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition shadow-xs cursor-pointer">
                                         <i data-lucide="scissors" class="w-3 h-3"></i>

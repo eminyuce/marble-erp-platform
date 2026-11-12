@@ -260,9 +260,10 @@ public class DefinitionController extends AbstractController {
     // =========================================================================
 
     @GetMapping("/customers")
-    public String listCustomers(Model model) {
+    public String listCustomers(@RequestParam(value = "unit", required = false) BusinessUnit unit, Model model) {
         model.addAttribute("customerTypes", CustomerType.values());
         model.addAttribute("businessUnits", BusinessUnit.values());
+        model.addAttribute("selectedUnit", unit != null ? unit.name() : "");
         model.addAttribute("currentSection", "definitions-customers");
         return "admin/definitions/customers";
     }
@@ -309,7 +310,11 @@ public class DefinitionController extends AbstractController {
         try {
             masterDataService.saveCustomer(customer);
             addSuccessFlash(redirectAttributes, "Müşteri (" + customer.getCompanyName() + ") başarıyla kaydedildi.");
-            return "redirect:/admin/definitions/customers";
+            String redirectUrl = "redirect:/admin/definitions/customers";
+            if (customer.getBusinessUnit() != null) {
+                redirectUrl += "?unit=" + customer.getBusinessUnit().name();
+            }
+            return redirectUrl;
         } catch (Exception e) {
             log.error("Error saving customer", e);
             populateCustomerForm(model, customer, customer.getId() != null);

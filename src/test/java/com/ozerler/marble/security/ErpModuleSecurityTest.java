@@ -43,7 +43,7 @@ class ErpModuleSecurityTest {
         mockMvc.perform(get("/production")).andExpect(status().isOk());
         mockMvc.perform(get("/production/accept")).andExpect(status().isOk());
         mockMvc.perform(get("/production/polish")).andExpect(status().isOk());
-        mockMvc.perform(get("/production/pallets")).andExpect(status().isOk());
+        mockMvc.perform(get("/production/pallets")).andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/operations/factory/sized"));
         mockMvc.perform(get("/production/tablet")).andExpect(status().isOk());
         mockMvc.perform(get("/workshop")).andExpect(status().isOk());
         mockMvc.perform(get("/workshop/receipts")).andExpect(status().isOk());

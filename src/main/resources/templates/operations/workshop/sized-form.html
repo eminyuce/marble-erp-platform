@@ -3,79 +3,21 @@
       layout:decorate="~{layout/base}">
 <head>
     <title>Atölye Ebatlama &amp; Yeniden Ebatlama — Üretim | Özerler Mermer ERP</title>
-    <script>
-        function workshopSizedFormState(prefillSlab, prefillSourceItem) {
-            let initialSource = 'SLAB';
-            if (prefillSourceItem) initialSource = 'SIZED';
-            else if (prefillSlab) initialSource = 'SLAB';
-
-            return {
-                sourceType: initialSource,
-                selectedSlabId: prefillSlab || '',
-                selectedSourceItemId: prefillSourceItem || '',
-                consumedQuantity: '',
-                wasteQuantity: '',
-                defaultDesc: '',
-                defaultSurface: 'Cilalı',
-                defaultEdge: 'Pahlı',
-                rows: [
-                    { desc: '', thickness: 2.0, width: 60, length: 60, count: 100, surfaceFinish: 'Cilalı', edgeFinish: 'Pahlı' }
-                ],
-                addRow() {
-                    this.rows.push({
-                        desc: this.defaultDesc || '',
-                        thickness: 2.0,
-                        width: 60,
-                        length: 60,
-                        count: 100,
-                        surfaceFinish: this.defaultSurface || 'Cilalı',
-                        edgeFinish: this.defaultEdge || 'Pahlı'
-                    });
-                    this.$nextTick(() => {
-                        if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                            window.lucide.createIcons();
-                        }
-                    });
-                },
-                removeRow(i) {
-                    if (this.rows.length > 1) {
-                        this.rows.splice(i, 1);
-                    }
-                },
-                calcRowM2(r) {
-                    const w = parseFloat(r.width) || 0;
-                    const l = parseFloat(r.length) || 0;
-                    const c = parseInt(r.count) || 1;
-                    return ((w * l * c) / 10000).toFixed(2);
-                },
-                get totalPieces() {
-                    return this.rows.reduce((sum, r) => sum + (parseInt(r.count) || 0), 0);
-                },
-                get totalM2() {
-                    return this.rows.reduce((sum, r) => sum + parseFloat(this.calcRowM2(r)), 0).toFixed(2);
-                },
-                get effectiveConsumed() {
-                    if (this.consumedQuantity && parseFloat(this.consumedQuantity) > 0) {
-                        return parseFloat(this.consumedQuantity).toFixed(2);
-                    }
-                    const prod = parseFloat(this.totalM2) || 0;
-                    const waste = parseFloat(this.wasteQuantity) || 0;
-                    return (prod + waste).toFixed(2);
-                },
-                get primaryWidth() { return this.rows[0] ? this.rows[0].width : 60; },
-                get primaryLength() { return this.rows[0] ? this.rows[0].length : 60; },
-                get primaryThickness() { return this.rows[0] ? this.rows[0].thickness : 2.0; },
-                get primaryCount() { return this.rows[0] ? this.rows[0].count : 1; }
-            };
-        }
-        window.workshopSizedFormState = workshopSizedFormState;
-    </script>
 </head>
 <body>
     <div layout:fragment="content" class="erp-form-page max-w-5xl mx-auto space-y-6"
          th:data-prefill-slab="${prefillSlabId != null ? prefillSlabId : ''}"
          th:data-prefill-source-item="${prefillSourceStockItemId != null ? prefillSourceStockItemId : ''}"
-         x-data="workshopSizedFormState($el.dataset.prefillSlab, $el.dataset.prefillSourceItem)">
+         th:data-slab-code="${selectedSlab != null ? selectedSlab.slabCode : ''}"
+         th:data-slab-desc="${selectedSlab != null ? (selectedSlab.block != null and selectedSlab.block.stoneType != null ? selectedSlab.block.stoneType : (selectedSlab.stoneType != null ? selectedSlab.stoneType : 'Mermer Plaka')) : ''}"
+         th:data-slab-thickness="${selectedSlab != null and selectedSlab.thicknessCm != null ? selectedSlab.thicknessCm : '2.0'}"
+         th:data-slab-width="${selectedSlab != null and selectedSlab.widthCm != null ? selectedSlab.widthCm : '60'}"
+         th:data-slab-length="${selectedSlab != null and selectedSlab.lengthCm != null ? selectedSlab.lengthCm : '60'}"
+         th:data-slab-surface="${selectedSlab != null and selectedSlab.surfaceFinish != null ? selectedSlab.surfaceFinish.displayName : 'Cilalı'}"
+         th:data-slab-customer-id="${selectedSlab != null and selectedSlab.customer != null ? selectedSlab.customer.id : ''}"
+         th:data-source-item-desc="${selectedSourceItem != null ? selectedSourceItem.description : ''}"
+         th:data-source-item-thickness="${selectedSourceItem != null and selectedSourceItem.thicknessCm != null ? selectedSourceItem.thicknessCm : '2.0'}"
+         x-data="workshopSizedFormState($el)">
 
     <!-- Header & Breadcrumb -->
     <div class="erp-form-header">
@@ -87,7 +29,7 @@
                     <span>Atölye Ebatlama &amp; Yeniden Ebatlama Üretimi</span>
                 </h2>
                 <p class="erp-form-lead text-sm text-slate-600 mt-1">
-                    Atölyede plakadan ebatlama veya mevcut ebatlı ürünlerin yeniden ebatlanması işlemini gerçekleştirin. Ürünler doğrudan Atölye Mamul Stok Sahasına kaydedilir.
+                    Atölyede plakadan ebatlama veya mevcut ebatlı ürünlerin yeniden ebatlanması işlemini gerçekleştirin. Üretilen mamuller Atölye Ebatlı Stok Sahasına kaydedilir.
                 </p>
             </div>
             <div class="flex items-center gap-2">
@@ -97,6 +39,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Alert Messages -->
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
 
     <form th:action="@{/operations/workshop/sized/new}" method="post" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
         <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -225,7 +170,9 @@
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Müşteri (Opsiyonel - Boşsa Genel Stok)</label>
                 <select name="customerId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                     <option value="">-- Genel Stok / Müşterisiz --</option>
-                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.companyName}"></option>
+                    <option th:each="c : ${customers}" th:value="${c.id}"
+                            th:selected="${(selectedSlab != null and selectedSlab.customer != null and selectedSlab.customer.id == c.id) or (selectedSourceItem != null and selectedSourceItem.customer != null and selectedSourceItem.customer.id == c.id)}"
+                            th:text="${c.companyName}"></option>
                 </select>
             </div>
 
@@ -393,5 +340,99 @@
     </form>
 
     </div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        function workshopSizedFormState(rootEl) {
+            const ds = (rootEl && rootEl.dataset) ? rootEl.dataset : {};
+            const prefillSlab = ds.prefillSlab || '';
+            const prefillSourceItem = ds.prefillSourceItem || '';
+
+            let initialSource = 'SLAB';
+            if (prefillSourceItem) initialSource = 'SIZED';
+            else if (prefillSlab) initialSource = 'SLAB';
+
+            const slabDesc = ds.slabDesc || ds.sourceItemDesc || '';
+            const slabThick = parseFloat(ds.slabThickness || ds.sourceItemThickness) || 2.0;
+            const slabW = parseFloat(ds.slabWidth) || 60;
+            const slabL = parseFloat(ds.slabLength) || 60;
+            const slabSurf = ds.slabSurface || 'Cilalı';
+
+            return {
+                sourceType: initialSource,
+                selectedSlabId: prefillSlab,
+                selectedSourceItemId: prefillSourceItem,
+                consumedQuantity: '',
+                wasteQuantity: '',
+                defaultDesc: slabDesc,
+                defaultSurface: slabSurf,
+                defaultEdge: 'Pahlı',
+                rows: [
+                    {
+                        desc: slabDesc || 'Ebatlı Üretim',
+                        thickness: slabThick,
+                        width: slabW,
+                        length: slabL,
+                        count: 10,
+                        surfaceFinish: slabSurf,
+                        edgeFinish: 'Pahlı'
+                    }
+                ],
+                addRow() {
+                    this.rows.push({
+                        desc: this.defaultDesc || '',
+                        thickness: this.rows[0] ? this.rows[0].thickness : 2.0,
+                        width: 60,
+                        length: 60,
+                        count: 10,
+                        surfaceFinish: this.defaultSurface || 'Cilalı',
+                        edgeFinish: this.defaultEdge || 'Pahlı'
+                    });
+                    this.$nextTick(() => {
+                        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                            window.lucide.createIcons();
+                        }
+                    });
+                },
+                removeRow(i) {
+                    if (this.rows.length > 1) {
+                        this.rows.splice(i, 1);
+                    }
+                },
+                calcRowM2(r) {
+                    const w = parseFloat(r.width) || 0;
+                    const l = parseFloat(r.length) || 0;
+                    const c = parseInt(r.count) || 1;
+                    return ((w * l * c) / 10000).toFixed(2);
+                },
+                get totalPieces() {
+                    return this.rows.reduce((sum, r) => sum + (parseInt(r.count) || 0), 0);
+                },
+                get totalM2() {
+                    return this.rows.reduce((sum, r) => sum + parseFloat(this.calcRowM2(r)), 0).toFixed(2);
+                },
+                get effectiveConsumed() {
+                    if (this.consumedQuantity && parseFloat(this.consumedQuantity) > 0) {
+                        return parseFloat(this.consumedQuantity).toFixed(2);
+                    }
+                    const prod = parseFloat(this.totalM2) || 0;
+                    const waste = parseFloat(this.wasteQuantity) || 0;
+                    return (prod + waste).toFixed(2);
+                },
+                get primaryWidth() { return this.rows[0] ? this.rows[0].width : 60; },
+                get primaryLength() { return this.rows[0] ? this.rows[0].length : 60; },
+                get primaryThickness() { return this.rows[0] ? this.rows[0].thickness : 2.0; },
+                get primaryCount() { return this.rows[0] ? this.rows[0].count : 1; }
+            };
+        }
+        window.workshopSizedFormState = workshopSizedFormState;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
+</th:block>
 </body>
 </html>

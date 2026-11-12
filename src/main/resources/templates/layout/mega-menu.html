@@ -78,8 +78,8 @@
                     <section class="admin-mega-card admin-mega-card--catalog" data-mega-group="operations">
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="factory" aria-hidden="true"></i></span>
-                            <h3 class="admin-mega-card-title">Operasyon</h3>
-                            <span class="admin-mega-count">3</span>
+                            <h3 class="admin-mega-card-title">Operasyon &amp; İmalat</h3>
+                            <span class="admin-mega-count">4</span>
                         </header>
                         <div class="admin-mega-card-body">
                             <a class="admin-mega-item" th:href="@{/blocks}" data-search="ocaklar ocak blok takibi üretim sahası stok tonaj tahmini gerçek sevkiyat"
@@ -90,12 +90,17 @@
                             <a class="admin-mega-item" th:href="@{/operations/factory}"
                                data-search="fabrika blok stok sahası ebatlı plaka kesim siparişler müşteri" title="Fabrika">
                                 <i data-lucide="factory" aria-hidden="true"></i>
-                                <span>Fabrika</span>
+                                <span>Fabrika (İmalat &amp; Stok)</span>
                             </a>
                             <a class="admin-mega-item" th:href="@{/operations/workshop}"
                                data-search="atölye ebatlama siparişler iş emri plaka nesting" title="Atölye">
                                 <i data-lucide="hammer" aria-hidden="true"></i>
-                                <span>Atölye</span>
+                                <span>Atölye (İmalat &amp; Stok)</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/projects}" data-search="şantiye proje sözleşme cari montaj mahaller"
+                               title="Şantiyeler &amp; Projeler">
+                                <i data-lucide="building-2" aria-hidden="true"></i>
+                                <span>Şantiyeler &amp; Projeler</span>
                             </a>
                         </div>
                     </section>
@@ -103,29 +108,39 @@
                     <section class="admin-mega-card admin-mega-card--sales" data-mega-group="accounts">
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="users" aria-hidden="true"></i></span>
-                            <h3 class="admin-mega-card-title">Cariler</h3>
-                            <span class="admin-mega-count">4</span>
+                            <h3 class="admin-mega-card-title">Cariler (4 Firma)</h3>
+                            <span class="admin-mega-count">6</span>
                         </header>
                         <div class="admin-mega-card-body">
                             <a class="admin-mega-item" th:href="@{/admin/definitions/customers}" data-search="cari cariler müşteri ocak fabrika atölye şantiye hesap rehber"
-                               title="Tüm Cariler / Müşteriler">
+                               title="Tüm Cariler">
                                 <i data-lucide="building" aria-hidden="true"></i>
-                                <span>Tüm Cariler / Müşteriler</span>
+                                <span>Tüm Cariler</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/admin/definitions/customers(unit='FACTORY')}" data-search="fabrika cari cariler müşteri"
+                               title="Fabrika Carileri">
+                                <i data-lucide="factory" class="text-blue-600" aria-hidden="true"></i>
+                                <span>Fabrika Carileri</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/admin/definitions/customers(unit='QUARRY')}" data-search="ocak cari cariler müşteri"
+                               title="Ocak Carileri">
+                                <i data-lucide="mountain" class="text-amber-600" aria-hidden="true"></i>
+                                <span>Ocak Carileri</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/admin/definitions/customers(unit='WORKSHOP')}" data-search="atölye cari cariler müşteri"
+                               title="Atölye Carileri">
+                                <i data-lucide="scissors" class="text-rose-600" aria-hidden="true"></i>
+                                <span>Atölye Carileri</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/admin/definitions/customers(unit='SITE')}" data-search="şantiye cari cariler müşteri"
+                               title="Şantiye Carileri">
+                                <i data-lucide="building-2" class="text-cyan-600" aria-hidden="true"></i>
+                                <span>Şantiye Carileri</span>
                             </a>
                             <a class="admin-mega-item" th:href="@{/admin/definitions/customers/create}" data-search="yeni cari hesap müşteri aç ekle ocak fabrika atölye şantiye"
                                title="Yeni Cari Aç">
                                 <i data-lucide="user-plus" aria-hidden="true"></i>
                                 <span>Yeni Cari Aç</span>
-                            </a>
-                            <a class="admin-mega-item" th:href="@{/admin/definitions/suppliers}" data-search="tedarikçi fason sarf malzeme cari"
-                               title="Tedarikçi Carileri">
-                                <i data-lucide="truck" aria-hidden="true"></i>
-                                <span>Tedarikçi Carileri</span>
-                            </a>
-                            <a class="admin-mega-item" th:href="@{/projects}" data-search="şantiye proje sözleşme cari montaj mahaller"
-                               title="Şantiyeler &amp; Projeler">
-                                <i data-lucide="building-2" aria-hidden="true"></i>
-                                <span>Şantiyeler &amp; Projeler</span>
                             </a>
                         </div>
                     </section>
@@ -158,8 +173,8 @@
                     <section class="admin-mega-card admin-mega-card--sales" data-mega-group="collections">
                         <header class="admin-mega-card-head">
                             <span class="admin-mega-card-icon"><i data-lucide="wallet" aria-hidden="true"></i></span>
-                            <h3 class="admin-mega-card-title">Tahsilat</h3>
-                            <span class="admin-mega-count">3</span>
+                            <h3 class="admin-mega-card-title">Tahsilat &amp; Çekler</h3>
+                            <span class="admin-mega-count">6</span>
                         </header>
                         <div class="admin-mega-card-body">
                             <a class="admin-mega-item" th:href="@{/collections}" data-search="tahsilat nakit eft havale çek makbuz ödeme"
@@ -167,15 +182,30 @@
                                 <i data-lucide="circle-dollar-sign" aria-hidden="true"></i>
                                 <span>Tüm Tahsilatlar</span>
                             </a>
-                            <a class="admin-mega-item" th:href="@{/collections/create}" data-search="yeni tahsilat nakit eft havale çek"
-                               title="Yeni Tahsilat Girişi">
-                                <i data-lucide="plus-circle" aria-hidden="true"></i>
-                                <span>Yeni Tahsilat Girişi</span>
-                            </a>
                             <a class="admin-mega-item" th:href="@{/collections/checks}" data-search="çek portföyü vadesi yaklaşan vadesi geçmiş çekler"
                                title="Çek Takip Portföyü">
                                 <i data-lucide="calendar-check" aria-hidden="true"></i>
-                                <span>Çek Portföyü & Takip</span>
+                                <span>Tüm Çekler</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/collections/checks(unit='FACTORY')}" data-search="fabrika çek çekler portföy"
+                               title="Fabrika Çekleri">
+                                <i data-lucide="calendar-check" class="text-blue-600" aria-hidden="true"></i>
+                                <span>Fabrika Çekleri</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/collections/checks(unit='QUARRY')}" data-search="ocak çek çekler portföy"
+                               title="Ocak Çekleri">
+                                <i data-lucide="calendar-check" class="text-amber-600" aria-hidden="true"></i>
+                                <span>Ocak Çekleri</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/collections/checks(unit='WORKSHOP')}" data-search="atölye çek çekler portföy"
+                               title="Atölye Çekleri">
+                                <i data-lucide="calendar-check" class="text-rose-600" aria-hidden="true"></i>
+                                <span>Atölye Çekleri</span>
+                            </a>
+                            <a class="admin-mega-item" th:href="@{/collections/checks(unit='SITE')}" data-search="şantiye çek çekler portföy"
+                               title="Şantiye Çekleri">
+                                <i data-lucide="calendar-check" class="text-cyan-600" aria-hidden="true"></i>
+                                <span>Şantiye Çekleri</span>
                             </a>
                         </div>
                     </section>

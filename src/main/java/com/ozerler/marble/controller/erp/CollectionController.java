@@ -6,6 +6,7 @@ import com.ozerler.marble.model.CheckRecord;
 import com.ozerler.marble.model.CollectionRecord;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.Invoice;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;
 import com.ozerler.marble.model.enums.CollectionMethod;
 import com.ozerler.marble.repository.CustomerRepository;
@@ -142,16 +143,17 @@ public class CollectionController extends AbstractController {
     }
 
     @GetMapping("/checks")
-    public String checksTracker(@RequestParam(value = "status", required = false) CheckStatus status,
+    public String checksTracker(@RequestParam(value = "unit", required = false) BusinessUnit unit,
+                                @RequestParam(value = "status", required = false) CheckStatus status,
                                 @RequestParam(value = "customerId", required = false) Long customerId,
                                 @RequestParam(value = "search", required = false) String search,
                                 @RequestParam(value = "page", defaultValue = "0") int page,
                                 @RequestParam(value = "size", defaultValue = "20") int size,
                                 Model model) {
 
-        Page<CheckRecord> checkPage = collectionService.searchChecks(status, customerId, null, null, search, page, size);
-        List<CheckRecord> approaching = collectionService.getApproachingChecks();
-        List<CheckRecord> overdue = collectionService.getOverdueChecks();
+        Page<CheckRecord> checkPage = collectionService.searchChecks(unit, status, customerId, null, null, search, page, size);
+        List<CheckRecord> approaching = collectionService.getApproachingChecks(unit);
+        List<CheckRecord> overdue = collectionService.getOverdueChecks(unit);
 
         model.addAttribute("checks", checkPage.getContent());
         model.addAttribute("page", checkPage);
@@ -159,6 +161,8 @@ public class CollectionController extends AbstractController {
         model.addAttribute("overdueChecks", overdue);
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedCustomerId", customerId);
+        model.addAttribute("selectedUnit", unit != null ? unit.name() : "");
+        model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("checkStatuses", CheckStatus.values());
         model.addAttribute("activeNav", "collections");
@@ -172,11 +176,12 @@ public class CollectionController extends AbstractController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "25") int size,
             @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "unit", required = false) BusinessUnit unit,
             @RequestParam(value = "status", required = false) CheckStatus status,
             @RequestParam(value = "customerId", required = false) Long customerId) {
 
         int pageIndex = Math.max(0, page - 1);
-        Page<CheckRecord> checkPage = collectionService.searchChecks(status, customerId, null, null, search, pageIndex, size);
+        Page<CheckRecord> checkPage = collectionService.searchChecks(unit, status, customerId, null, null, search, pageIndex, size);
 
         List<Map<String, Object>> data = checkPage.getContent().stream().map(ch -> {
             Map<String, Object> map = new HashMap<>();
@@ -184,6 +189,9 @@ public class CollectionController extends AbstractController {
             map.put("checkNo", ch.getCheckNo());
             map.put("bankName", ch.getBankName() != null ? ch.getBankName() : "—");
             map.put("customerName", ch.getCustomer() != null ? ch.getCustomer().getCompanyName() : "—");
+            BusinessUnit bu = ch.getEffectiveBusinessUnit();
+            map.put("businessUnit", bu != null ? bu.name() : "");
+            map.put("businessUnitLabel", bu != null ? bu.getDisplayName() : "Genel");
             map.put("dueDate", ch.getDueDate() != null ? ch.getDueDate().toString() : "");
             map.put("amount", ch.getAmount() != null ? ch.getAmount() : BigDecimal.ZERO);
             map.put("status", ch.getStatus() != null ? ch.getStatus().name() : "");
@@ -199,6 +207,7 @@ public class CollectionController extends AbstractController {
     public String updateCheckStatus(@PathVariable("id") Long id,
                                     @RequestParam("status") CheckStatus status,
                                     @RequestParam(value = "notes", required = false) String notes,
+                                    @RequestParam(value = "unit", required = false) BusinessUnit unit,
                                     RedirectAttributes redirectAttributes) {
         try {
             CheckRecord check = collectionService.updateCheckStatus(id, status, notes);
@@ -206,6 +215,6 @@ public class CollectionController extends AbstractController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
-        return "redirect:/collections/checks";
+        return "redirect:/collections/checks" + (unit != null ? "?unit=" + unit.name() : "");
     }
 }

@@ -338,26 +338,8 @@ public class ProductionController {
     }
 
     @GetMapping("/pallets")
-    public String pallets(@RequestParam(value = "department", required = false) BusinessUnit department, Model model) {
-        List<com.ozerler.marble.model.Pallet> allPallets = palletShipmentService.pallets();
-        if (department != null) {
-            allPallets = allPallets.stream()
-                    .filter(p -> department.equals(p.getDepartment()))
-                    .toList();
-        }
-        model.addAttribute("pallets", allPallets);
-        model.addAttribute("selectedDepartment", department);
-        model.addAttribute("shippablePallets", palletShipmentService.shippablePallets());
-        model.addAttribute("palletLocationTypes", new com.ozerler.marble.model.enums.StockLocationType[]{
-                com.ozerler.marble.model.enums.StockLocationType.PALLET_STOCK_YARD,
-                com.ozerler.marble.model.enums.StockLocationType.WORKSHOP_STOCK});
-        model.addAttribute("shipments", palletShipmentService.shipments());
-        model.addAttribute("lots", palletShipmentService.availableLots());
-        model.addAttribute("stockItems", stockItemRepository.findAll());
-        model.addAttribute("customers", palletShipmentService.customers());
-        model.addAttribute("projects", palletShipmentService.projects());
-        model.addAttribute("departments", BusinessUnit.values());
-        return "erp/production/pallets";
+    public String pallets() {
+        return "redirect:/operations/factory/sized";
     }
 
     @PostMapping("/pallets")

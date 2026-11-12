@@ -80,8 +80,12 @@ public class FactoryStockService {
         Block block = blockRepository.findById(blockId)
                 .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
 
-        if (block.getStatus() != BlockStatus.AT_FACTORY && block.getStatus() != BlockStatus.FACTORY_STOCK) {
-            throw new IllegalStateException("Yalnızca fabrikada ve henüz kesilmemiş bloklar kesime alınabilir.");
+        boolean isAtFactory = (block.getStatus() == BlockStatus.AT_FACTORY || block.getStatus() == BlockStatus.FACTORY_STOCK
+                || (block.getCurrentLocation() != null && block.getCurrentLocation().getLocationType() == StockLocationType.FACTORY_BLOCK_YARD));
+        boolean isAlreadyCutOrSold = (block.getStatus() == BlockStatus.IN_PROCESS || block.getStatus() == BlockStatus.SAWING
+                || block.getStatus() == BlockStatus.SOLD || block.getStatus() == BlockStatus.SCRAPPED);
+        if (!isAtFactory || isAlreadyCutOrSold) {
+            throw new IllegalStateException("Yalnızca fabrikada bulunan ve henüz kesilmemiş bloklar kesime alınabilir.");
         }
 
         block.setStatus(BlockStatus.IN_PROCESS);

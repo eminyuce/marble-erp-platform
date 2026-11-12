@@ -48,6 +48,16 @@ public class BlockController extends AbstractController {
     private final MessageSource messageSource;
     private final FileStorageService fileStorageService;
 
+    @GetMapping("/customers")
+    public String quarryCustomers() {
+        return "redirect:/admin/definitions/customers?unit=QUARRY";
+    }
+
+    @GetMapping("/checks")
+    public String quarryChecks() {
+        return "redirect:/collections/checks?unit=QUARRY";
+    }
+
     @GetMapping
     public String blocksIndex(Model model) {
         model.addAttribute("summary", quarryBlockService.quarrySummary());

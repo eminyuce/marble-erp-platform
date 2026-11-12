@@ -53,7 +53,7 @@ public class ErpAliasController {
 
     @GetMapping("/fabrika/ebatlama")
     public String fabrikaEbatlama() {
-        return "redirect:/production/pallets";
+        return "redirect:/operations/factory/sized";
     }
 
     @GetMapping("/atolye/is-emri")

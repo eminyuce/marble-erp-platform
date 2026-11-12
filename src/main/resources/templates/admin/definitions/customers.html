@@ -7,8 +7,9 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page" data-definition-page
+     th:data-initial-unit="${selectedUnit}"
      x-data="{
-    activeUnit: '',
+    activeUnit: $el.dataset.initialUnit || (new URLSearchParams(window.location.search)).get('unit') || '',
     deleteModalOpen: false,
     deleteId: null,
     deleteName: '',
@@ -22,8 +23,12 @@
         const sel = document.getElementById('business-unit-filter');
         if (sel) sel.value = u;
         if (window.definitionTable) window.definitionTable.setPage(1);
+    },
+    createUrl() {
+        return '/admin/definitions/customers/create' + (this.activeUnit ? '?unit=' + encodeURIComponent(this.activeUnit) : '');
     }
-}">
+}"
+     x-init="if (activeUnit) { const sel = document.getElementById('business-unit-filter'); if (sel) sel.value = activeUnit; }">
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
@@ -39,7 +44,7 @@
                     </p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a th:href="@{/admin/definitions/customers/create}" class="erp-btn-primary">
+                    <a :href="createUrl()" th:href="@{/admin/definitions/customers/create(unit=${selectedUnit})}" class="erp-btn-primary">
                         <i data-lucide="user-plus"></i>
                         <span>+ Yeni Cari Aç</span>
                     </a>
@@ -90,8 +95,9 @@
         <div th:replace="~{fragments/list-chrome :: search('Müşteri kodu, firma adı veya yetkili ara...', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
             <select id="business-unit-filter" class="erp-toolbar-filter" aria-label="İşletme birimi" @change="activeUnit = $el.value">
-                <option value="">Tüm birimler</option>
-                <option th:each="bu : ${businessUnits}" th:value="${bu.name()}" th:text="${bu.displayName}"></option>
+                <option value="" th:selected="${selectedUnit == null or selectedUnit == ''}">Tüm birimler</option>
+                <option th:each="bu : ${businessUnits}" th:value="${bu.name()}" th:text="${bu.displayName}"
+                        th:selected="${bu.name() == selectedUnit}"></option>
             </select>
             <select id="customer-type-filter" class="erp-toolbar-filter" aria-label="Müşteri tipi">
                 <option value="">Tüm müşteri tipleri</option>

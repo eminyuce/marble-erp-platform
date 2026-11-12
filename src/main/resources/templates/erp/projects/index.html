@@ -41,6 +41,25 @@
         </div>
     </div>
 
+    <!-- Sub-Navigation Bar for Projects/Site -->
+    <div class="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
+        <a th:href="@{/projects}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-cyan-600 text-white shadow-xs">
+            <i data-lucide="building-2" class="w-4 h-4"></i>
+            <span>Şantiye &amp; Projeler</span>
+        </a>
+        <a th:href="@{/projects/customers}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="users" class="w-4 h-4 text-cyan-600"></i>
+            <span>Şantiye Carileri</span>
+        </a>
+        <a th:href="@{/projects/checks}"
+           class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            <i data-lucide="calendar-check" class="w-4 h-4 text-purple-600"></i>
+            <span>Şantiye Çekleri</span>
+        </a>
+    </div>
+
     <!-- KPI Summary Cards (Blocks Standard) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"

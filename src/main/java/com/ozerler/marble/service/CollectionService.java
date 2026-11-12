@@ -1,6 +1,7 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.model.*;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;
 import com.ozerler.marble.model.enums.CollectionMethod;
 import com.ozerler.marble.model.enums.InvoiceStatus;
@@ -56,6 +57,7 @@ public class CollectionService {
                 .collectionNo(code)
                 .collectionDate(LocalDate.now())
                 .customer(customer)
+                .businessUnit(customer.getBusinessUnit())
                 .invoice(invoice)
                 .collectionMethod(method)
                 .amount(amount)
@@ -78,6 +80,7 @@ public class CollectionService {
                     .dueDate(checkData.dueDate())
                     .bankName(checkData.bankName().trim())
                     .customer(customer)
+                    .businessUnit(customer.getBusinessUnit())
                     .amount(amount)
                     .status(CheckStatus.PORTFOLIO)
                     .notes(notes)
@@ -120,24 +123,47 @@ public class CollectionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<CheckRecord> searchChecks(CheckStatus status, Long customerId,
+    public Page<CheckRecord> searchChecks(BusinessUnit unit, CheckStatus status, Long customerId,
                                           LocalDate startDate, LocalDate endDate,
                                           String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        return checkRepository.searchChecks(status, customerId, startDate, endDate, search, pageable);
+        return checkRepository.searchChecks(unit, status, customerId, startDate, endDate, search, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CheckRecord> searchChecks(CheckStatus status, Long customerId,
+                                          LocalDate startDate, LocalDate endDate,
+                                          String search, int page, int size) {
+        return searchChecks(null, status, customerId, startDate, endDate, search, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CheckRecord> getApproachingChecks(BusinessUnit unit) {
+        LocalDate today = LocalDate.now();
+        LocalDate until = today.plusDays(15);
+        if (unit == null) {
+            return checkRepository.findApproachingChecks(today, until);
+        }
+        return checkRepository.findApproachingChecksByUnit(today, until, unit);
     }
 
     @Transactional(readOnly = true)
     public List<CheckRecord> getApproachingChecks() {
+        return getApproachingChecks(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CheckRecord> getOverdueChecks(BusinessUnit unit) {
         LocalDate today = LocalDate.now();
-        LocalDate until = today.plusDays(15);
-        return checkRepository.findApproachingChecks(today, until);
+        if (unit == null) {
+            return checkRepository.findOverdueChecks(today);
+        }
+        return checkRepository.findOverdueChecksByUnit(today, unit);
     }
 
     @Transactional(readOnly = true)
     public List<CheckRecord> getOverdueChecks() {
-        LocalDate today = LocalDate.now();
-        return checkRepository.findOverdueChecks(today);
+        return getOverdueChecks(null);
     }
 
     @Transactional(readOnly = true)

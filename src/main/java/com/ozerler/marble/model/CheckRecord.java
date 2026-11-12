@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -54,8 +55,20 @@ public class CheckRecord extends AuditableEntity {
     @Builder.Default
     private CheckStatus status = CheckStatus.PORTFOLIO;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "business_unit", length = 30)
+    private BusinessUnit businessUnit;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Transient
+    public BusinessUnit getEffectiveBusinessUnit() {
+        if (businessUnit != null) {
+            return businessUnit;
+        }
+        return customer != null ? customer.getBusinessUnit() : BusinessUnit.FACTORY;
+    }
 
     @Transient
     public boolean isOverdue() {

@@ -54,6 +54,16 @@ public class WorkshopOperationController extends AbstractController {
     private final StockItemRepository stockItemRepository;
     private final ProjectRepository projectRepository;
 
+    @GetMapping("/customers")
+    public String workshopCustomers() {
+        return "redirect:/admin/definitions/customers?unit=WORKSHOP";
+    }
+
+    @GetMapping("/checks")
+    public String workshopChecks() {
+        return "redirect:/collections/checks?unit=WORKSHOP";
+    }
+
     @GetMapping
     public String index(@RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
                         @RequestParam(value = "page", defaultValue = "0") int page,
@@ -76,7 +86,7 @@ public class WorkshopOperationController extends AbstractController {
 
     @GetMapping("/pallets")
     public String pallets() {
-        return "redirect:/production/pallets?department=WORKSHOP";
+        return "redirect:/operations/workshop/sized";
     }
 
     // --- 2. ATÖLYE PLAKA STOK SAHASI ---
@@ -246,14 +256,29 @@ public class WorkshopOperationController extends AbstractController {
             @RequestParam(value = "slabId", required = false) Long slabId,
             @RequestParam(value = "sourceStockItemId", required = false) Long sourceStockItemId,
             Model model) {
-        model.addAttribute("slabs", slabRepository.findByStatusIn(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
-        model.addAttribute("sourceSizedItems", stockItemRepository.findByProductTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
+        Slab selectedSlab = slabId != null ? slabRepository.findById(slabId).orElse(null) : null;
+        StockItem selectedSourceItem = sourceStockItemId != null ? stockItemRepository.findById(sourceStockItemId).orElse(null) : null;
+
+        List<Slab> slabsList = new java.util.ArrayList<>(slabRepository.findByStatusIn(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
+        if (selectedSlab != null && slabsList.stream().noneMatch(s -> s.getId().equals(selectedSlab.getId()))) {
+            slabsList.add(0, selectedSlab);
+        }
+
+        List<StockItem> sourceSizedList = new java.util.ArrayList<>(stockItemRepository.findByProductTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
+        if (selectedSourceItem != null && sourceSizedList.stream().noneMatch(it -> it.getId().equals(selectedSourceItem.getId()))) {
+            sourceSizedList.add(0, selectedSourceItem);
+        }
+
+        model.addAttribute("slabs", slabsList);
+        model.addAttribute("sourceSizedItems", sourceSizedList);
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("projects", projectRepository.findAll());
         model.addAttribute("qualityGrades", QualityGrade.values());
         model.addAttribute("surfaceFinishes", SurfaceFinish.values());
         model.addAttribute("prefillSlabId", slabId);
         model.addAttribute("prefillSourceStockItemId", sourceStockItemId);
+        model.addAttribute("selectedSlab", selectedSlab);
+        model.addAttribute("selectedSourceItem", selectedSourceItem);
         model.addAttribute("activeSection", "workshop");
         model.addAttribute("activeSubSection", "sized");
         return "operations/workshop/sized-form";

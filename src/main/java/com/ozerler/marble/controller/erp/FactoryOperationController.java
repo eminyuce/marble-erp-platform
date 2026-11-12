@@ -43,6 +43,16 @@ public class FactoryOperationController extends AbstractController {
         return "redirect:/operations/factory/blocks";
     }
 
+    @GetMapping("/customers")
+    public String factoryCustomers() {
+        return "redirect:/admin/definitions/customers?unit=FACTORY";
+    }
+
+    @GetMapping("/checks")
+    public String factoryChecks() {
+        return "redirect:/collections/checks?unit=FACTORY";
+    }
+
     // --- 1. BLOK STOK SAHASI ---
     @GetMapping("/blocks")
     public String blockYard(@RequestParam(value = "customerId", required = false) Long customerId,

@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CollectionMethod;
 import jakarta.persistence.*;
 import lombok.*;
@@ -46,6 +47,10 @@ public class CollectionRecord extends AuditableEntity {
 
     @Column(name = "bank_name", length = 100)
     private String bankName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "business_unit", length = 30)
+    private BusinessUnit businessUnit;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
