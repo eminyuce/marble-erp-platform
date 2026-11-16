@@ -168,11 +168,24 @@
                     {
                         title: "Firma / Ünvan",
                         field: "companyName",
-                        minWidth: 200,
+                        minWidth: 220,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
+                            let projBadge = '';
+                            if (row.projectCount && row.projectCount > 0) {
+                                projBadge = `<a href="/projects?customerId=${row.id}" class="inline-flex items-center gap-1 text-[10px] font-bold text-cyan-800 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 px-2 py-0.5 rounded-full" title="Firmanın Şantiyelerini Listele">
+                                    <i data-lucide="building-2" class="w-3 h-3"></i> ${row.projectCount} Proje
+                                </a>`;
+                            } else if (row.businessUnit === 'SITE') {
+                                projBadge = `<a href="/projects/create?customerId=${row.id}" class="inline-flex items-center gap-0.5 text-[10px] font-semibold text-slate-500 hover:text-cyan-700 bg-slate-50 hover:bg-cyan-50 border border-slate-200 px-1.5 py-0.5 rounded" title="Bu firmaya yeni proje aç">
+                                    + Proje Aç
+                                </a>`;
+                            }
                             return `<div>
-                                <a href="/admin/definitions/customers/${row.id}/transactions" class="font-bold text-slate-900 hover:text-indigo-600 hover:underline block" title="Cari Hesap Hareketleri">${gridText(row.companyName)}</a>
+                                <div class="flex items-center gap-2">
+                                    <a href="/admin/definitions/customers/${row.id}/transactions" class="font-bold text-slate-900 hover:text-indigo-600 hover:underline block" title="Cari Hesap Hareketleri">${gridText(row.companyName)}</a>
+                                    ${projBadge}
+                                </div>
                                 <div class="text-xs text-slate-400">${gridText(row.address)}</div>
                             </div>`;
                         }

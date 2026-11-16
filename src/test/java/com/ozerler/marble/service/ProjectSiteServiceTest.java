@@ -72,4 +72,41 @@ class ProjectSiteServiceTest {
 
         assertThat(shortfall).isEqualTo(BigDecimal.ZERO);
     }
+
+    @Test
+    @DisplayName("getProjectsPaged with customerId passes filter to repository")
+    void getProjectsPaged_WithCustomerId_FiltersCorrectly() {
+        com.ozerler.marble.model.Customer customer = com.ozerler.marble.model.Customer.builder()
+                .id(10L)
+                .companyName("Akdeniz İnşaat")
+                .customerCode("AKD-01")
+                .build();
+
+        com.ozerler.marble.model.Project project = com.ozerler.marble.model.Project.builder()
+                .id(1L)
+                .projectCode("PRJ-001")
+                .name("Akdeniz Plaza")
+                .customer(customer)
+                .customerName(customer.getCompanyName())
+                .status(com.ozerler.marble.model.enums.ProjectStatus.ACTIVE)
+                .build();
+
+        org.springframework.data.domain.Page<com.ozerler.marble.model.Project> page =
+                new org.springframework.data.domain.PageImpl<>(java.util.List.of(project));
+
+        org.mockito.Mockito.when(projectRepository.searchProjectsFiltered(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(10L),
+                org.mockito.ArgumentMatchers.any()
+        )).thenReturn(page);
+
+        com.ozerler.marble.dto.TabulatorResponse<com.ozerler.marble.dto.ProjectDto> response =
+                projectSiteService.getProjectsPaged(1, 10, null, "ACTIVE", 10L, null, null);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getData()).hasSize(1);
+        assertThat(response.getData().get(0).getCustomerId()).isEqualTo(10L);
+        assertThat(response.getData().get(0).getCustomerCode()).isEqualTo("AKD-01");
+    }
 }

@@ -37,6 +37,14 @@ public class ProjectDto {
     @JsonAlias("customerName")
     private String customerName;
 
+    @JsonProperty("customer_id")
+    @JsonAlias("customerId")
+    private Long customerId;
+
+    @JsonProperty("customer_code")
+    @JsonAlias("customerCode")
+    private String customerCode;
+
     @JsonProperty("contract_value")
     @JsonAlias("contractValue")
     private BigDecimal contractValue;
@@ -108,6 +116,8 @@ public class ProjectDto {
                 .projectCode(p.getProjectCode())
                 .name(p.getName())
                 .customerName(p.getCustomerName())
+                .customerId(p.getCustomer() != null ? p.getCustomer().getId() : null)
+                .customerCode(p.getCustomer() != null ? p.getCustomer().getCustomerCode() : null)
                 .contractValue(p.getContractValue())
                 .estimatedCost(p.getEstimatedCost())
                 .actualCost(p.getActualCost())

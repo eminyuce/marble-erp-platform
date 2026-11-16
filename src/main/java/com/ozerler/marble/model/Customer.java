@@ -54,4 +54,8 @@ public class Customer extends AuditableEntity {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
+    @Builder.Default
+    private java.util.List<Project> projects = new java.util.ArrayList<>();
+
 }

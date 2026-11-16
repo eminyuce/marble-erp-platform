@@ -31,7 +31,7 @@
                         <div class="erp-form-field erp-form-field--full"
                              x-data="{
                                  cariMode: '[[${(record != null and record.customer != null) ? 'existing' : ((record != null and record.customerName != null and record.customerName != '') ? 'existing' : 'existing')}]]',
-                                 selectedCustomerId: '[[${record != null and record.customer != null ? record.customer.id : ''}]]',
+                                 selectedCustomerId: '[[${record != null and record.customer != null ? record.customer.id : (selectedCustomerId != null ? selectedCustomerId : '')}]]',
                                  customName: '[[${record != null ? record.customerName : ''}]]'
                              }">
                             <div class="flex items-center justify-between mb-1.5">
@@ -54,7 +54,7 @@
                                     <option value="">-- Mevcut Müşterilerden Seçiniz --</option>
                                     <option th:each="c : ${customers}" th:value="${c.id}"
                                             th:text="${c.companyName + ' (' + c.customerCode + ')'}"
-                                            th:selected="${record != null and record.customer != null and record.customer.id == c.id}"></option>
+                                            th:selected="${(record != null and record.customer != null and record.customer.id == c.id) or (selectedCustomerId != null and selectedCustomerId == c.id)}"></option>
                                 </select>
                                 <p class="text-[11px] text-slate-500 mt-1">Sistemde kayıtlı olan eski/mevcut müşterilere yeni şantiye bağlayabilirsiniz.</p>
                             </div>

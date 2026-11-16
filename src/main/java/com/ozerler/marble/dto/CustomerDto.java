@@ -69,9 +69,14 @@ public class CustomerDto {
     @JsonProperty("balance")
     private java.math.BigDecimal balance;
 
+    @JsonProperty("projectCount")
+    @JsonAlias("project_count")
+    private int projectCount;
+
     public static CustomerDto fromEntity(Customer customer) {
         CustomerType type = customer.getCustomerType();
         com.ozerler.marble.model.enums.BusinessUnit bu = customer.getBusinessUnit();
+        int pCount = (customer.getProjects() != null) ? customer.getProjects().size() : 0;
         return CustomerDto.builder()
                 .id(customer.getId())
                 .customerCode(customer.getCustomerCode())
@@ -87,6 +92,7 @@ public class CustomerDto {
                 .businessUnit(bu != null ? bu.name() : null)
                 .businessUnitLabel(bu != null ? bu.getDisplayName() : "")
                 .notes(customer.getNotes())
+                .projectCount(pCount)
                 .build();
     }
 }

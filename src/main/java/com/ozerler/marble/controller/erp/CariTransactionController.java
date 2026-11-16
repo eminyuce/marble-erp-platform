@@ -30,6 +30,7 @@ public class CariTransactionController extends AbstractController {
 
     private final CariTransactionService cariTransactionService;
     private final CustomerRepository customerRepository;
+    private final com.ozerler.marble.repository.ProjectRepository projectRepository;
 
     @GetMapping("/admin/definitions/customers/{customerId}/transactions")
     public String viewTransactions(@PathVariable("customerId") Long customerId, Model model) {
@@ -38,12 +39,14 @@ public class CariTransactionController extends AbstractController {
 
         List<CariTransactionDto> transactions = cariTransactionService.getTransactionsForCustomer(customerId);
         CariSummaryDto summary = cariTransactionService.getCustomerSummary(customerId);
+        List<com.ozerler.marble.model.Project> projects = projectRepository.findByCustomerIdOrderByStartDateDesc(customerId);
 
         model.addAttribute("customer", customer);
         model.addAttribute("customerTypeLabel", labelOf(customer.getCustomerType()));
         model.addAttribute("businessUnitLabel", labelOf(customer.getBusinessUnit()));
         model.addAttribute("transactions", transactions);
         model.addAttribute("summary", summary);
+        model.addAttribute("projects", projects);
         model.addAttribute("transactionTypes", CariTransactionType.values());
         model.addAttribute("activeNav", "accounts");
 

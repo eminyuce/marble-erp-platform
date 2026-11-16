@@ -61,17 +61,27 @@ public class ProjectSiteService {
 
     @Transactional(readOnly = true)
     public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String sortField, String sortDir) {
-        return getProjectsPaged(page, size, search, null, sortField, sortDir);
+        return getProjectsPaged(page, size, search, null, null, sortField, sortDir);
     }
 
     @Transactional(readOnly = true)
     public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String status, String sortField, String sortDir) {
-        Page<Project> projectPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PROJECT_SORTS,
-                pageable -> projectRepository.searchProjects(GridPages.normalizeSearch(search), pageable));
-        List<Project> projects = projectPage.getContent();
+        return getProjectsPaged(page, size, search, status, null, sortField, sortDir);
+    }
+
+    @Transactional(readOnly = true)
+    public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String status, Long customerId, String sortField, String sortDir) {
+        ProjectStatus pStatus = null;
         if (status != null && !status.isBlank()) {
-            projects = projects.stream().filter(p -> p.getStatus() != null && p.getStatus().name().equalsIgnoreCase(status)).toList();
+            try {
+                pStatus = ProjectStatus.valueOf(status.trim().toUpperCase());
+            } catch (Exception ignored) {
+            }
         }
+        final ProjectStatus finalStatus = pStatus;
+        Page<Project> projectPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PROJECT_SORTS,
+                pageable -> projectRepository.searchProjectsFiltered(GridPages.normalizeSearch(search), finalStatus, customerId, pageable));
+        List<Project> projects = projectPage.getContent();
         List<ProjectDto> dtos = projects.stream()
                 .map(ProjectDto::fromEntity)
                 .collect(Collectors.toList());

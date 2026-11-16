@@ -671,7 +671,7 @@ public class InvoiceService {
         }
 
         // 4. Şantiye / Proje Maliyet Takibi (KDV Hariç Net Tutar)
-        if (project != null && subtotal.compareTo(BigDecimal.ZERO) > 0) {
+        if (project != null && subtotal.compareTo(BigDecimal.ZERO) > 0 && targetDepartment == null) {
             CostCenter cc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE)
                     .or(() -> costCenterRepository.findByCode("CC-005"))
                     .or(() -> costCenterRepository.findAll().stream().findFirst())
@@ -693,6 +693,105 @@ public class InvoiceService {
                         .build();
                 costTransactionRepository.save(tx);
             }
+        }
+
+        // 5. Dahili Transfer Alış & Maliyet Kaydı (Birimler arası satış: Çıkış biriminde Satış, Giriş biriminde Alış & Maliyet)
+        if (invoiceType == InvoiceType.SALES && targetDepartment != null) {
+            handleInternalTransferPurchaseAndCost(saved);
+        }
+    }
+
+    private void handleInternalTransferPurchaseAndCost(Invoice salesInvoice) {
+        if (salesInvoice == null || salesInvoice.getTargetDepartment() == null) {
+            return;
+        }
+        if (salesInvoice.getNotes() != null && salesInvoice.getNotes().contains("Dahili Transfer Alış Kaydı")) {
+            return; // Çift işlem / döngü koruması
+        }
+
+        BusinessUnit targetDept = salesInvoice.getTargetDepartment();
+        BusinessUnit sourceDept = salesInvoice.getDepartment();
+        Project project = salesInvoice.getProject();
+        BigDecimal totalAmt = salesInvoice.getTotalAmount() != null ? salesInvoice.getTotalAmount() : BigDecimal.ZERO;
+        BigDecimal subtotal = salesInvoice.getSubtotalAmount() != null ? salesInvoice.getSubtotalAmount() : totalAmt;
+
+        // 1. Hedef birim için karşı ALIŞ faturası oluştur
+        String inInvoiceNo = salesInvoice.getInvoiceNo() + "-IN";
+        if (invoiceRepository.existsByInvoiceNo(inInvoiceNo)) {
+            inInvoiceNo = UniqueCodes.yearly("DH-GIR", invoiceRepository::existsByInvoiceNo);
+        }
+
+        Invoice purchaseInv = Invoice.builder()
+                .invoiceNo(inInvoiceNo)
+                .invoiceDate(salesInvoice.getInvoiceDate())
+                .dueDate(salesInvoice.getDueDate())
+                .invoiceType(InvoiceType.PURCHASE)
+                .department(targetDept)
+                .targetDepartment(sourceDept)
+                .project(project)
+                .partyName("Dahili Transfer: " + (sourceDept != null ? sourceDept.getDisplayName() : "Merkez"))
+                .taxRate(salesInvoice.getTaxRate())
+                .subtotalAmount(subtotal)
+                .taxAmount(salesInvoice.getTaxAmount())
+                .totalAmount(totalAmt)
+                .status(InvoiceStatus.ISSUED)
+                .stockProcessed(true)
+                .directExpense(targetDept == BusinessUnit.SITE)
+                .notes("Dahili Transfer Alış Kaydı (Kaynak Çıkış Faturası: " + salesInvoice.getInvoiceNo() + ")")
+                .build();
+
+        if (salesInvoice.getItems() != null) {
+            for (InvoiceItem sItem : salesInvoice.getItems()) {
+                InvoiceItem pItem = InvoiceItem.builder()
+                        .invoice(purchaseInv)
+                        .productName(sItem.getProductName())
+                        .description(sItem.getDescription())
+                        .quantity(sItem.getQuantity())
+                        .unit(sItem.getUnit())
+                        .widthCm(sItem.getWidthCm())
+                        .calculatedM2(sItem.getCalculatedM2())
+                        .wasteQuantity(sItem.getWasteQuantity())
+                        .unitPrice(sItem.getUnitPrice())
+                        .lineTotal(sItem.getLineTotal())
+                        .block(sItem.getBlock())
+                        .slab(sItem.getSlab())
+                        .stockItem(sItem.getStockItem())
+                        .build();
+                purchaseInv.getItems().add(pItem);
+            }
+        }
+        invoiceRepository.save(purchaseInv);
+
+        // 2. Giriş yapan birimde maliyete ekleme
+        // A) Şantiye ise projenin gerçekleşen maliyetine (actualCost) ekle
+        if (targetDept == BusinessUnit.SITE && project != null) {
+            BigDecimal currentActual = project.getActualCost() != null ? project.getActualCost() : BigDecimal.ZERO;
+            project.setActualCost(currentActual.add(totalAmt));
+            projectRepository.save(project);
+        }
+
+        // B) Masraf Merkezi / CostTransaction oluştur
+        CostCenter targetCc = (targetDept == BusinessUnit.SITE)
+                ? costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE)
+                        .or(() -> costCenterRepository.findByCode("CC-005")).orElse(null)
+                : costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(targetDept).orElse(null);
+
+        if (targetCc != null && totalAmt.compareTo(BigDecimal.ZERO) > 0) {
+            CostTransaction costTx = CostTransaction.builder()
+                    .costCenter(targetCc)
+                    .project(project)
+                    .constructionSite(project)
+                    .expenseType(ExpenseType.DIRECT_RAW)
+                    .expenseCategory(ExpenseCategory.MATERIAL)
+                    .amount(totalAmt)
+                    .businessUnit(targetDept)
+                    .documentNo(purchaseInv.getInvoiceNo())
+                    .invoiceDate(salesInvoice.getInvoiceDate())
+                    .entryDate(LocalDate.now())
+                    .expensePeriod(salesInvoice.getInvoiceDate() != null ? YearMonth.from(salesInvoice.getInvoiceDate()).toString() : YearMonth.now().toString())
+                    .description("Dahili Transfer Alış & Maliyet: " + (sourceDept != null ? sourceDept.getDisplayName() : "") + " -> " + targetDept.getDisplayName() + (project != null ? " (" + project.getName() + ")" : ""))
+                    .build();
+            costTransactionRepository.save(costTx);
         }
     }
 

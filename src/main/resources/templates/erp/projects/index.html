@@ -8,11 +8,16 @@
 <div layout:fragment="content" class="erp-list-page space-y-5"
      x-data="{
         statusFilter: '',
+        customerFilter: '[[${selectedCustomerId ?: ''}]]',
         deleteModalOpen: false,
         deleteId: null,
         deleteName: '',
         setStatusFilter(st) {
             this.statusFilter = st;
+            if (typeof reloadProjectsGrid === 'function') reloadProjectsGrid();
+        },
+        setCustomerFilter(cid) {
+            this.customerFilter = cid;
             if (typeof reloadProjectsGrid === 'function') reloadProjectsGrid();
         },
         confirmDeleteProject(id, name) {
@@ -21,7 +26,10 @@
             this.deleteModalOpen = true;
         },
         gridExtraQuery() {
-            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
+            let q = '';
+            if (this.statusFilter) q += '&status=' + encodeURIComponent(this.statusFilter);
+            if (this.customerFilter) q += '&customerId=' + encodeURIComponent(this.customerFilter);
+            return q;
         }
      }"
      x-init="window.projectsPageState = $data">
@@ -100,23 +108,45 @@
         </div>
     </div>
 
-    <!-- Operational Filter Chips -->
-    <div class="erp-yard-filters">
-        <button type="button" class="erp-yard-chip"
-                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('')">Tüm Şantiyeler</button>
-        <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'IN_PROGRESS' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('IN_PROGRESS')">
-            <i data-lucide="play" class="w-3.5 h-3.5 inline mr-1"></i>
-            Devam Edenler
-        </button>
-        <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'COMPLETED' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('COMPLETED')">
-            <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
-            Tamamlananlar
-        </button>
+    <!-- Operational Filter Chips & Customer Filter -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 erp-yard-filters">
+        <div class="flex items-center gap-2 overflow-x-auto">
+            <button type="button" class="erp-yard-chip"
+                    :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
+                    @click="setStatusFilter('')">Tüm Şantiyeler</button>
+            <button type="button" class="erp-yard-chip"
+                    :class="statusFilter === 'IN_PROGRESS' ? 'erp-yard-chip--active' : ''"
+                    @click="setStatusFilter('IN_PROGRESS')">
+                <i data-lucide="play" class="w-3.5 h-3.5 inline mr-1"></i>
+                Devam Edenler
+            </button>
+            <button type="button" class="erp-yard-chip"
+                    :class="statusFilter === 'COMPLETED' ? 'erp-yard-chip--active' : ''"
+                    @click="setStatusFilter('COMPLETED')">
+                <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
+                Tamamlananlar
+            </button>
+        </div>
+
+        <!-- Müşteri / Cari Filtresi -->
+        <div class="flex items-center gap-2 shrink-0">
+            <label class="text-xs font-bold text-slate-600 flex items-center gap-1">
+                <i data-lucide="building" class="w-3.5 h-3.5 text-cyan-600"></i>
+                <span>Firma / Cari:</span>
+            </label>
+            <select x-model="customerFilter"
+                    @change="if (typeof reloadProjectsGrid === 'function') reloadProjectsGrid()"
+                    class="text-xs font-semibold px-3 py-1.5 border border-slate-300 rounded-xl bg-white text-slate-800 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                <option value="">Tüm Firmalar / Cariler</option>
+                <option th:each="c : ${customers}" th:value="${c.id}"
+                        th:text="${c.companyName}"
+                        th:selected="${selectedCustomerId != null and selectedCustomerId == c.id}"></option>
+            </select>
+            <button type="button" x-show="customerFilter" @click="setCustomerFilter('')"
+                    class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition" title="Firma Filtresini Temizle">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Standard ERP Toolbar -->
@@ -189,12 +219,23 @@
                     {
                         title: "Şantiye Adı",
                         field: "name",
-                        minWidth: 200,
+                        minWidth: 220,
                         formatter: function (cell) {
                             const row = cell.getRow().getData();
+                            let customerHtml = `<div class="text-xs text-slate-500">${gridText(row.customerName)}</div>`;
+                            if (row.customerId) {
+                                customerHtml = `<div class="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                    <a href="/admin/definitions/customers/${row.customerId}/transactions" class="text-indigo-600 hover:text-indigo-800 hover:underline font-semibold" title="Cari Hesap Ekstresi &amp; Hareketleri">
+                                        <i data-lucide="user" class="w-3 h-3 inline"></i> ${gridText(row.customerName)}
+                                    </a>
+                                    <button type="button" onclick="window.projectsPageState.setCustomerFilter('${row.customerId}')" class="text-[10px] text-cyan-600 hover:text-cyan-800 hover:underline cursor-pointer" title="Sadece bu firmanın projelerini filtrele">
+                                        (Filtrele)
+                                    </button>
+                                </div>`;
+                            }
                             return `<div>
                         <a href="/projects/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${gridText(row.name)}</a>
-                        <div class="text-xs text-slate-500">${gridText(row.customerName)}</div>
+                        ${customerHtml}
                     </div>`;
                         }
                     },

@@ -48,8 +48,13 @@ public class ProjectController {
     }
 
     @GetMapping
-    public String projectsIndex(Model model) {
+    public String projectsIndex(@RequestParam(value = "customerId", required = false) Long customerId, Model model) {
         model.addAttribute("summary", projectSiteService.getProjectSummary());
+        model.addAttribute("selectedCustomerId", customerId);
+        model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
+        if (customerId != null) {
+            customerRepository.findById(customerId).ifPresent(c -> model.addAttribute("selectedCustomerName", c.getCompanyName()));
+        }
         return "erp/projects/index";
     }
 
@@ -60,15 +65,18 @@ public class ProjectController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "customerId", required = false) Long customerId,
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir) {
 
-        return projectSiteService.getProjectsPaged(page, size, search, status, sortField, sortDir);
+        return projectSiteService.getProjectsPaged(page, size, search, status, customerId, sortField, sortDir);
     }
 
     @GetMapping("/create")
-    public String showCreateForm(Locale locale, Model model) {
+    public String showCreateForm(@RequestParam(value = "customerId", required = false) Long customerId,
+                                 Locale locale, Model model) {
         model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
+        model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("pageTitle", messageSource.getMessage("erp.project.title.create", null, locale));
         return "erp/projects/form";
     }

@@ -471,4 +471,72 @@ class InvoiceServiceTest {
         assertThat(sized.getQuantity()).isEqualByComparingTo("15.00");
         verify(stockItemRepository, atLeastOnce()).save(sized);
     }
+
+    @Test
+    @DisplayName("Internal transfer invoice creates counterpart purchase invoice and updates site project cost")
+    void createInvoice_InternalTransfer_CreatesCounterpartPurchaseInvoiceAndUpdatesSiteCost() {
+        Project project = Project.builder()
+                .id(50L)
+                .projectCode("PRJ-050")
+                .name("Şantiye Plaza")
+                .actualCost(new BigDecimal("10000.00"))
+                .build();
+
+        StockLocation siteYard = StockLocation.builder()
+                .id(1L)
+                .code("SNT-STK-01")
+                .name("Şantiye Stoğu")
+                .locationType(StockLocationType.SITE_STOCK)
+                .active(true)
+                .build();
+
+        StockItem item = StockItem.builder()
+                .id(500L)
+                .itemCode("PLK-01")
+                .description("Mermer Plaka")
+                .quantity(new BigDecimal("50.00"))
+                .unit("m2")
+                .build();
+
+        when(projectRepository.findById(50L)).thenReturn(Optional.of(project));
+        when(stockItemRepository.findById(500L)).thenReturn(Optional.of(item));
+        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.SITE_STOCK)).thenReturn(Optional.of(siteYard));
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> {
+            Invoice invObj = inv.getArgument(0);
+            if (invObj.getId() == null) invObj.setId(999L);
+            return invObj;
+        });
+
+        List<InvoiceService.InvoiceItemForm> items = List.of(
+                new InvoiceService.InvoiceItemForm(
+                        "Döşeme Taşı", "60x60",
+                        new BigDecimal("20"),
+                        "m2",
+                        new BigDecimal("250.00"), // 20 * 250 = 5000 TL
+                        null, null, 500L,
+                        null, null
+                )
+        );
+
+        Invoice sales = invoiceService.createInvoice(
+                "FAT-TRF-01", LocalDate.now(), null,
+                InvoiceType.SALES, BusinessUnit.FACTORY,
+                null, null, BusinessUnit.SITE, 50L,
+                BigDecimal.ZERO, false, null, "Fabrikadan Şantiyeye Sevk", items
+        );
+
+        assertThat(sales).isNotNull();
+        assertThat(sales.getTargetDepartment()).isEqualTo(BusinessUnit.SITE);
+
+        // Project cost should be updated by totalAmount (5000 TL + 10000 TL = 15000 TL)
+        assertThat(project.getActualCost()).isEqualByComparingTo("15000.00");
+        verify(projectRepository, atLeastOnce()).save(project);
+
+        // Verify that counterpart purchase invoice was saved with PURCHASE type and SITE department
+        verify(invoiceRepository, times(1)).save(argThat(inv ->
+                inv.getInvoiceType() == InvoiceType.PURCHASE
+                && inv.getDepartment() == BusinessUnit.SITE
+                && inv.getTargetDepartment() == BusinessUnit.FACTORY
+        ));
+    }
 }
