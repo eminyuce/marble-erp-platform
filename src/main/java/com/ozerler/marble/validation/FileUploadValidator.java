@@ -29,6 +29,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FileUploadValidator {
 
+    /**
+     * How many leading bytes are enough for Tika's magic-byte detector.
+     */
+    public static final int MEDIA_TYPE_PREFIX_BYTES = 64 * 1024;
+
     static final Set<String> ALLOWED_IMAGE_EXTENSIONS = Set.of(
             "jpg", "jpeg", "png", "webp", "gif", "bmp", "svg"
     );
@@ -36,11 +41,6 @@ public class FileUploadValidator {
     static final Set<String> ALLOWED_DOCUMENT_EXTENSIONS = Set.of(
             "pdf", "docx", "doc", "txt", "md", "xlsx", "xls", "csv"
     );
-
-    /**
-     * How many leading bytes are enough for Tika's magic-byte detector.
-     */
-    public static final int MEDIA_TYPE_PREFIX_BYTES = 64 * 1024;
 
     private static final Set<String> ALLOWED_EXTENSIONS;
     private static final int WEBP_HEADER_LENGTH = 12;

@@ -32,6 +32,12 @@ class StockMovementRepositoryPostgresTest {
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer(
             DockerImageName.parse("postgres:16-alpine"));
 
+    @Autowired
+    private StockMovementRepository repository;
+
+    @Autowired
+    private EntityManager entityManager;
+
     @DynamicPropertySource
     static void postgres(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
@@ -42,12 +48,6 @@ class StockMovementRepositoryPostgresTest {
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.session.jdbc.initialize-schema", () -> "never");
     }
-
-    @Autowired
-    private StockMovementRepository repository;
-
-    @Autowired
-    private EntityManager entityManager;
 
     @Test
     @DisplayName("all-null filters do not send untyped parameters to PostgreSQL")

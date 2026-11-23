@@ -11,10 +11,6 @@ import java.util.regex.Pattern;
  */
 public final class Constants {
 
-    private Constants() {
-        // Prevent instantiation
-    }
-
     // =========================================================================
     // 1. System & Application Defaults
     // =========================================================================
@@ -622,4 +618,8 @@ public final class Constants {
     public static final String[] ALLOWED_CORS_METHODS = {
             "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
     };
+
+    private Constants() {
+        // Prevent instantiation
+    }
 }

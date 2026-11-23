@@ -16,9 +16,6 @@ import lombok.Getter;
  */
 public final class EmailTemplateCatalog {
 
-    private EmailTemplateCatalog() {
-    }
-
     @Getter
     @Builder
     public static class PlaceholderDef {
@@ -458,6 +455,9 @@ public final class EmailTemplateCatalog {
                         emailService.sendTemplatedEmail(user.getEmail(), model);
                         """)
                 .build());
+    }
+
+    private EmailTemplateCatalog() {
     }
 
     private static void register(TemplateMeta meta) {

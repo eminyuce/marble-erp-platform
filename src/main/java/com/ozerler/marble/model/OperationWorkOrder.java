@@ -134,16 +134,6 @@ public class OperationWorkOrder extends AuditableEntity {
     @Builder.Default
     private List<WorkOrderStatusHistory> statusHistory = new ArrayList<>();
 
-    public void addItem(OperationWorkOrderItem item) {
-        if (item != null) {
-            item.setWorkOrder(this);
-            if (this.items == null) {
-                this.items = new ArrayList<>();
-            }
-            this.items.add(item);
-        }
-    }
-
     /**
      * Company name copied while the persistence session is still open.
      * The detail page reads this instead of the lazy customer association.
@@ -153,6 +143,16 @@ public class OperationWorkOrder extends AuditableEntity {
 
     @Transient
     private String loadedCustomerName;
+
+    public void addItem(OperationWorkOrderItem item) {
+        if (item != null) {
+            item.setWorkOrder(this);
+            if (this.items == null) {
+                this.items = new ArrayList<>();
+            }
+            this.items.add(item);
+        }
+    }
 
     public void rememberCustomerName(String companyName) {
         this.loadedCustomerName = companyName;

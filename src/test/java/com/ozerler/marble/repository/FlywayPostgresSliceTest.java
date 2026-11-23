@@ -23,6 +23,9 @@ class FlywayPostgresSliceTest {
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer(
             DockerImageName.parse("postgres:16-alpine"));
 
+    @Autowired
+    private JdbcTemplate jdbc;
+
     @DynamicPropertySource
     static void postgres(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
@@ -33,9 +36,6 @@ class FlywayPostgresSliceTest {
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.session.jdbc.initialize-schema", () -> "never");
     }
-
-    @Autowired
-    private JdbcTemplate jdbc;
 
     @Test
     @DisplayName("Flyway applies the versioned scripts and the widened quantity scale")

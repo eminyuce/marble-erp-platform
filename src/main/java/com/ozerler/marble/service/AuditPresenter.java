@@ -24,11 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuditPresenter {
 
-    private final UserRepository userRepository;
-    private final Map<String, String> userDisplayCache = new ConcurrentHashMap<>();
-
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("d.MM.yyyy HH:mm", Locale.forLanguageTag("tr-TR"));
+
+    private final UserRepository userRepository;
+    private final Map<String, String> userDisplayCache = new ConcurrentHashMap<>();
 
     /**
      * Formats an auditor user id (email) to include their full name when found.

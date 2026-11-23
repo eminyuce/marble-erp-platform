@@ -71,6 +71,7 @@ public class DatabaseBackupService {
     private static final int BYTES_PER_UNIT = 1024;
     private static final int DEFAULT_POSTGRES_PORT = 5432;
     private static final int ERROR_READER_JOIN_MILLIS = 2000;
+    private static final DateTimeFormatter FILE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
 
     private final ObjectStorageService objectStorageService;
     private final BackupProperties properties;
@@ -81,7 +82,6 @@ public class DatabaseBackupService {
     private final String datasourceUsername;
     private final String datasourcePassword;
 
-    private static final DateTimeFormatter FILE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     private final BackupOperationStatus operationStatus = new BackupOperationStatus();
 
     public DatabaseBackupService(

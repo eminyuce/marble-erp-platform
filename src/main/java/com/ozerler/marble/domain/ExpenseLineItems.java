@@ -11,9 +11,6 @@ import com.ozerler.marble.model.enums.ExpenseType;
  */
 public final class ExpenseLineItems {
 
-    private ExpenseLineItems() {
-    }
-
     private static final List<ExpenseType> STANDARD_TYPES = List.of(
             ExpenseType.DIESEL,
             ExpenseType.ELECTRICITY,
@@ -47,6 +44,9 @@ public final class ExpenseLineItems {
             BusinessUnit.FACTORY, STANDARD_TYPES,
             BusinessUnit.WORKSHOP, LABOR_FIRST_TYPES,
             BusinessUnit.SITE, LABOR_FIRST_TYPES);
+
+    private ExpenseLineItems() {
+    }
 
     public static List<ExpenseType> forUnit(BusinessUnit unit) {
         return BY_UNIT.getOrDefault(unit, List.of(ExpenseType.values()));

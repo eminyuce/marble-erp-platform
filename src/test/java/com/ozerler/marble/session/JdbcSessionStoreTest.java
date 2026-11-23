@@ -43,12 +43,12 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers(disabledWithoutDocker = true)
 class JdbcSessionStoreTest {
 
-    private static final String PRINCIPAL = "admin@eimece.test";
-    private static final String SECURITY_CONTEXT = HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
-
     @Container
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer(
             DockerImageName.parse("postgres:16-alpine"));
+
+    private static final String PRINCIPAL = "admin@eimece.test";
+    private static final String SECURITY_CONTEXT = HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
 
     private static ConfigurableApplicationContext writer;
     private static ConfigurableApplicationContext reader;
