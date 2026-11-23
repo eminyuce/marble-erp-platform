@@ -1,24 +1,13 @@
 package com.ozerler.marble.service;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.ozerler.marble.model.FactoryOperation;
-import com.ozerler.marble.model.FactoryWorkOrder;
 import com.ozerler.marble.model.enums.FactoryProcessType;
-import com.ozerler.marble.model.enums.OperationStatus;
 import com.ozerler.marble.model.enums.QuantityUnit;
-import com.ozerler.marble.repository.FactoryOperationRepository;
-import com.ozerler.marble.repository.FactoryWorkOrderRepository;
 
 class FactoryProductionServiceTest {
 

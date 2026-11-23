@@ -1,8 +1,8 @@
 package com.ozerler.marble.model;
 
-import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,9 +1,9 @@
 package com.ozerler.marble.dto;
 
-import java.util.Objects;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;

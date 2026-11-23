@@ -1,8 +1,8 @@
 package com.ozerler.marble.dto;
 
-import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;

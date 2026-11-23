@@ -16,7 +16,6 @@ import com.ozerler.marble.model.FactoryOperation;
 import com.ozerler.marble.model.FactoryWorkOrder;
 import com.ozerler.marble.model.enums.FactoryProcessType;
 import com.ozerler.marble.model.enums.OperationStatus;
-import com.ozerler.marble.model.enums.QuantityUnit;
 import com.ozerler.marble.repository.FactoryOperationRepository;
 import com.ozerler.marble.repository.FactoryWorkOrderRepository;
 

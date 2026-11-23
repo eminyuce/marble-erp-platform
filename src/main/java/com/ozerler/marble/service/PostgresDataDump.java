@@ -1,6 +1,5 @@
 package com.ozerler.marble.service;
 
-import java.util.Objects;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigDecimal;
@@ -16,6 +15,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Writes a restorable SQL script of the public schema when {@code pg_dump} is not installed.
