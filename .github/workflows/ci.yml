@@ -25,10 +25,7 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Run Checkstyle
-        # TEMPORARY: continue-on-error is only for this first PR that introduces the Checkstyle gate.
-        # It must be removed in the next PR so Checkstyle violations fail the build.
-        continue-on-error: true
+      - name: Checkstyle
         run: ./mvnw -B -ntp checkstyle:check
 
       - name: Build and test
