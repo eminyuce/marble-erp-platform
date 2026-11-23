@@ -160,8 +160,9 @@ app:
     remember-me-key: ${REMEMBER_ME_KEY:local-dev-remember-me-not-for-production}
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
-  version: "1.0.6"
-  asset-version: "20261123-data-grid"
+  version: "1.0.7"
+  # Query-string cache buster for static assets (?v=). Keep in lockstep with app.version.
+  asset-version: ${app.version}
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy

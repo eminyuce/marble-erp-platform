@@ -533,6 +533,24 @@
             justify-content: flex-end;
         }
 
+        .admin-app-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: auto;
+            padding: 0.45rem 1.25rem 0.65rem;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 11px;
+        }
+        .admin-app-footer strong {
+            font-weight: 700;
+            color: #334e68;
+            font-variant-numeric: tabular-nums;
+        }
+
     </style>
 </head>
 <body class="admin-app min-h-screen antialiased"
@@ -548,6 +566,10 @@
         <div layout:fragment="content">
         </div>
     </main>
+    <footer class="admin-app-footer">
+        <span>Özerler Mermer ERP</span>
+        <span>Sürüm <strong th:text="${appVersion}">1.0.7</strong></span>
+    </footer>
 </div>
 
 <div th:replace="~{layout/mega-menu :: megaMenu}"></div>

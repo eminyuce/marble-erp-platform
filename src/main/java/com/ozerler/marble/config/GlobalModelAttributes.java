@@ -22,10 +22,11 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20261123-data-grid}")
-    private String configuredAssetVersion;
+    @Value("${app.version}")
+    private String configuredAppVersion;
 
-    private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();
+    @Value("${app.asset-version:#{null}}")
+    private String configuredAssetVersion;
 
     @ModelAttribute("gridDefaultPageSize")
     public int gridDefaultPageSize() {
@@ -55,11 +56,16 @@ public class GlobalModelAttributes {
         return helpService.resolvePageKey(request.getRequestURI()).orElse("");
     }
 
+    @ModelAttribute("appVersion")
+    public String appVersion() {
+        return configuredAppVersion;
+    }
+
     @ModelAttribute("assetVersion")
     public String assetVersion() {
         if (configuredAssetVersion != null && !configuredAssetVersion.isBlank()) {
             return configuredAssetVersion;
         }
-        return fallbackAssetVersion;
+        return configuredAppVersion;
     }
 }

@@ -82,6 +82,12 @@ class GridHeaderFilterRenderTest {
         Assertions.assertTrue(html.contains("İçermez"), "missing not-contains operator");
         Assertions.assertTrue(html.contains("name=\"cf.blockCode\""), "missing blockCode filter field");
         Assertions.assertTrue(html.contains("/grid-filter-values?grid=blocks-table"), "missing distinct-values URL");
+        Assertions.assertTrue(html.contains("/js/app.js?v=1.0.7"),
+                "app.js should be cache-busted with the app version");
+        Assertions.assertTrue(html.contains("admin-topbar-version") && html.contains("1.0.7"),
+                "header should show the application version");
+        Assertions.assertTrue(html.contains("admin-app-footer") && html.contains("Sürüm"),
+                "footer should show the application version");
     }
 
     @Test
