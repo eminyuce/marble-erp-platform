@@ -25,7 +25,10 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Checkstyle
+      - name: Run Checkstyle
+        # continue-on-error is temporary for this first PR only. Remove it in the next PR
+        # so a Checkstyle violation fails the job. verify still runs Checkstyle at validate.
+        continue-on-error: true
         run: ./mvnw -B -ntp checkstyle:check
 
       - name: Build and test
