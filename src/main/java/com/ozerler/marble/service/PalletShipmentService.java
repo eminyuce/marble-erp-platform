@@ -294,7 +294,7 @@ public class PalletShipmentService {
         if (locationType == null) {
             return pallets();
         }
-        return palletRepository.findByCurrentLocation_LocationType(locationType);
+        return palletRepository.findByCurrentLocationLocationType(locationType);
     }
 
     private void recordPalletMovement(Pallet pallet, StockLocation from, StockLocation to, String description) {

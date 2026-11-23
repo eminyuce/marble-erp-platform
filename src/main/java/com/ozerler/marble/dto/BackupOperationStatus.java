@@ -20,14 +20,14 @@ public class BackupOperationStatus {
     private Instant startTime;
     private Instant finishTime;
 
-    public synchronized void start(String operationType, String currentFile) {
+    public synchronized void start(String type, String fileName) {
         this.state = State.RUNNING;
-        this.operationType = operationType;
-        this.currentFile = currentFile;
+        this.operationType = type;
+        this.currentFile = fileName;
         this.startTime = Instant.now();
         this.finishTime = null;
         String value;
-        if ("BACKUP".equals(operationType)) {
+        if ("BACKUP".equals(type)) {
             value = "Yedek alma";
         } else {
             value = "Geri yükleme";
@@ -35,9 +35,9 @@ public class BackupOperationStatus {
         this.message = value + " işlemi başlatıldı...";
     }
 
-    public synchronized void success(String message) {
+    public synchronized void success(String resultMessage) {
         this.state = State.SUCCESS;
-        this.message = message;
+        this.message = resultMessage;
         this.finishTime = Instant.now();
     }
 

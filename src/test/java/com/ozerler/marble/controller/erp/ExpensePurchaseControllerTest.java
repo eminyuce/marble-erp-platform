@@ -49,7 +49,7 @@ class ExpensePurchaseControllerTest {
 
     @Test
     @DisplayName("index populates summary, period and options")
-    void index_PopulatesModel() {
+    void indexPopulatesModel() {
         Mockito.when(expenseService.getExpenseSummary("2026-09")).thenReturn(ExpenseSummaryDto.builder()
                 .period("2026-09")
                 .totalExpensesThisMonth(new BigDecimal("1000"))
@@ -69,7 +69,7 @@ class ExpensePurchaseControllerTest {
 
     @Test
     @DisplayName("getExpensesData delegates to expenseService")
-    void getExpensesData_DelegatesToService() {
+    void getExpensesDataDelegatesToService() {
         TabulatorResponse<ExpenseDto> expected = TabulatorResponse.of(List.of(), 1, 0L);
         Mockito.when(expenseService.getExpensesPaged(1, 25, "test", null, null,
                 BusinessUnit.QUARRY, "2026-09", null, null, null, null))
@@ -83,7 +83,7 @@ class ExpensePurchaseControllerTest {
 
     @Test
     @DisplayName("getUnitOptions returns types and centers for unit")
-    void getUnitOptions_ReturnsMap() {
+    void getUnitOptionsReturnsMap() {
         Mockito.when(formLookup.costCenters(BusinessUnit.QUARRY)).thenReturn(Collections.emptyList());
 
         Map<String, Object> options = controller.getUnitOptions(BusinessUnit.QUARRY);
@@ -94,7 +94,7 @@ class ExpensePurchaseControllerTest {
 
     @Test
     @DisplayName("deleteExpenseApi deletes expense and returns ok response")
-    void deleteExpenseApi_Success() {
+    void deleteExpenseApiSuccess() {
         Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("erp.expense.delete.success"), ArgumentMatchers.any(), ArgumentMatchers.any(Locale.class)))
                 .thenReturn("Gider silindi");
 
@@ -108,7 +108,7 @@ class ExpensePurchaseControllerTest {
 
     @Test
     @DisplayName("createForm populates lookups and returns form view")
-    void createForm_ReturnsFormView() {
+    void createFormReturnsFormView() {
         Mockito.when(formLookup.costCenters()).thenReturn(Collections.emptyList());
         Mockito.when(formLookup.quarries()).thenReturn(Collections.emptyList());
         Mockito.when(formLookup.projects()).thenReturn(Collections.emptyList());
@@ -124,7 +124,7 @@ class ExpensePurchaseControllerTest {
 
     @Test
     @DisplayName("editForm fetches expense dto and returns form view")
-    void editForm_ReturnsFormView() {
+    void editFormReturnsFormView() {
         ExpenseDto dto = ExpenseDto.builder().id(99L).build();
         Mockito.when(expenseService.getExpenseDto(99L)).thenReturn(dto);
         Mockito.when(formLookup.costCenters()).thenReturn(Collections.emptyList());
@@ -141,7 +141,7 @@ class ExpensePurchaseControllerTest {
 
     @Test
     @DisplayName("detail fetches expense dto and returns detail view")
-    void detail_ReturnsDetailView() {
+    void detailReturnsDetailView() {
         ExpenseDto dto = ExpenseDto.builder().id(55L).build();
         Mockito.when(expenseService.getExpenseDto(55L)).thenReturn(dto);
 
@@ -154,7 +154,7 @@ class ExpensePurchaseControllerTest {
 
     @Test
     @DisplayName("recordExpense saves expense and redirects")
-    void recordExpense_Success() {
+    void recordExpenseSuccess() {
         Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("erp.expense.record.success"), ArgumentMatchers.any(), ArgumentMatchers.any(Locale.class)))
                 .thenReturn("Gider kaydedildi");
 
@@ -175,7 +175,7 @@ class ExpensePurchaseControllerTest {
 
     @Test
     @DisplayName("updateExpense updates expense and redirects")
-    void updateExpense_Success() {
+    void updateExpenseSuccess() {
         Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("erp.expense.update.success"), ArgumentMatchers.any(), ArgumentMatchers.any(Locale.class)))
                 .thenReturn("Gider güncellendi");
 

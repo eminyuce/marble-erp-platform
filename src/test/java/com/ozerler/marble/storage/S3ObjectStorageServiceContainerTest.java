@@ -38,7 +38,7 @@ class S3ObjectStorageServiceContainerTest {
 
     @Container
     @SuppressWarnings("resource")
-    static final GenericContainer<?> rustfs = new GenericContainer<>(DockerImageName.parse("rustfs/rustfs:1.0.1"))
+    static final GenericContainer<?> RUSTFS = new GenericContainer<>(DockerImageName.parse("rustfs/rustfs:1.0.1"))
             .withEnv("RUSTFS_ACCESS_KEY", ACCESS_KEY)
             .withEnv("RUSTFS_SECRET_KEY", SECRET_KEY)
             .withEnv("RUSTFS_ADDRESS", ":9000")
@@ -49,7 +49,7 @@ class S3ObjectStorageServiceContainerTest {
     @Test
     @DisplayName("S3-compatible RustFS client can upload, download, exist-check, presign, and delete")
     void objectLifecycleAgainstRustFs() throws Exception {
-        String endpoint = "http://" + rustfs.getHost() + ":" + rustfs.getMappedPort(9000);
+        String endpoint = "http://" + RUSTFS.getHost() + ":" + RUSTFS.getMappedPort(9000);
         ObjectStorageProperties properties = new ObjectStorageProperties();
         properties.getRustfs().setEndpoint(endpoint);
         properties.getRustfs().setPublicEndpoint(endpoint);
@@ -83,7 +83,7 @@ class S3ObjectStorageServiceContainerTest {
     @Test
     @DisplayName("presigned image and document URLs use the public host and configured expiry")
     void presignedUrlsUsePublicEndpointAndDistinctExpiries() {
-        String internalEndpoint = "http://" + rustfs.getHost() + ":" + rustfs.getMappedPort(9000);
+        String internalEndpoint = "http://" + RUSTFS.getHost() + ":" + RUSTFS.getMappedPort(9000);
         String publicEndpoint = "http://files.example.com";
         ObjectStorageProperties properties = new ObjectStorageProperties();
         properties.getRustfs().setEndpoint(internalEndpoint);
@@ -107,7 +107,7 @@ class S3ObjectStorageServiceContainerTest {
             Assertions.assertThat(image.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
             Assertions.assertThat(document.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
             Assertions.assertThat(image.getHost()).isNotEqualTo(URI.create(internalEndpoint).getHost());
-            Assertions.assertThat(image.getAuthority()).doesNotContain(":" + rustfs.getMappedPort(9000));
+            Assertions.assertThat(image.getAuthority()).doesNotContain(":" + RUSTFS.getMappedPort(9000));
             Assertions.assertThat(queryParams(imageUrl)).containsEntry("X-Amz-Expires", "1800");
             Assertions.assertThat(queryParams(documentUrl)).containsEntry("X-Amz-Expires", "300");
             Assertions.assertThat(imageUrl).contains("response-content-type=");

@@ -92,7 +92,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("getBlockWithDetails returns the block loaded with its quarry")
-    void getBlockWithDetails_ReturnsBlock() {
+    void getBlockWithDetailsReturnsBlock() {
         Block block = Block.builder()
                 .id(5L)
                 .blockCode("BLK-001")
@@ -109,7 +109,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("getBlockWithDetails throws when the block is missing")
-    void getBlockWithDetails_MissingBlock_Throws() {
+    void getBlockWithDetailsMissingBlockThrows() {
         Mockito.when(blockRepository.findByIdWithQuarry(99L)).thenReturn(Optional.empty());
 
         Assertions.assertThatThrownBy(() -> quarryBlockService.getBlockWithDetails(99L))
@@ -118,14 +118,14 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("getBlockWithDetails rejects a null id")
-    void getBlockWithDetails_NullId_Throws() {
+    void getBlockWithDetailsNullIdThrows() {
         Assertions.assertThatThrownBy(() -> quarryBlockService.getBlockWithDetails(null))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     @DisplayName("duplicate block codes are rejected on create")
-    void registerBlock_DuplicateCode_Throws() {
+    void registerBlockDuplicateCodeThrows() {
         Mockito.when(quarryRepository.findById(1L)).thenReturn(Optional.of(Quarry.builder().id(1L).name("Ocak").build()));
         Mockito.when(blockRepository.existsByBlockCodeIgnoreCase("BLK-1")).thenReturn(true);
 
@@ -139,7 +139,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("factory transfer leaves quarry stock, enters factory yard and posts nakliye")
-    void transferToFactory_MovesToFactoryYardAndPostsExpense() {
+    void transferToFactoryMovesToFactoryYardAndPostsExpense() {
         Quarry quarry = Quarry.builder().id(1L).name("Ocak").specificGravity(new BigDecimal("2.70")).build();
         StockLocation dispatch = StockLocation.builder()
                 .id(2L).code("OCAK-SEVK").name("Stok Sahası")
@@ -189,7 +189,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("external sale stores the customer on the sold block")
-    void sellBlockExternally_SetsCustomer() {
+    void sellBlockExternallySetsCustomer() {
         StockLocation dispatch = StockLocation.builder()
                 .id(2L).code("OCAK-SEVK").name("Stok Sahası")
                 .locationType(StockLocationType.DISPATCH_YARD).businessUnit(BusinessUnit.QUARRY).build();
@@ -214,7 +214,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("registering a block without actual weighbridge weight calculates theoretical weight from dimensions and quarry specific gravity")
-    void registerBlock_WithoutActualWeight_CalculatesTheoreticalMetrics() {
+    void registerBlockWithoutActualWeightCalculatesTheoreticalMetrics() {
         Quarry quarry = Quarry.builder()
                 .id(1L)
                 .name("Afyon Ocağı")
@@ -249,7 +249,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("canDeleteBlock returns true when block is PRODUCED, unsold, has no transport cost and is unused downstream")
-    void canDeleteBlock_WhenUnused_ReturnsTrue() {
+    void canDeleteBlockWhenUnusedReturnsTrue() {
         Block block = Block.builder()
                 .id(10L)
                 .blockCode("BLK-DELETE-01")
@@ -272,7 +272,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("canDeleteBlock returns false when block has slabs cut from it")
-    void canDeleteBlock_WhenUsedInSlabs_ReturnsFalse() {
+    void canDeleteBlockWhenUsedInSlabsReturnsFalse() {
         Block block = Block.builder()
                 .id(11L)
                 .blockCode("BLK-DELETE-02")
@@ -290,7 +290,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("deleteBlock deletes block and its initial location movements when completely unused")
-    void deleteBlock_WhenUnused_DeletesSuccessfully() {
+    void deleteBlockWhenUnusedDeletesSuccessfully() {
         Block block = Block.builder()
                 .id(12L)
                 .blockCode("BLK-DELETE-03")
@@ -316,7 +316,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("deleteBlock throws IllegalStateException when block is not deletable")
-    void deleteBlock_WhenUsed_ThrowsIllegalStateException() {
+    void deleteBlockWhenUsedThrowsIllegalStateException() {
         Block block = Block.builder()
                 .id(13L)
                 .blockCode("BLK-DELETE-04")
@@ -334,7 +334,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("registerBlock with locationType assigns selected location and records initial movement")
-    void registerBlock_WithLocationType_AssignsSelectedLocationAndRecordsMovement() {
+    void registerBlockWithLocationTypeAssignsSelectedLocationAndRecordsMovement() {
         Quarry quarry = Quarry.builder().id(1L).specificGravity(new BigDecimal("2.70")).build();
         StockLocation dispatchYard = StockLocation.builder()
                 .id(2L).code("OCAK-SEVK").name("Stok Sahası")
@@ -357,7 +357,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("updateBlock with locationType change updates location and records movement")
-    void updateBlock_WithLocationTypeChange_UpdatesLocationAndRecordsMovement() {
+    void updateBlockWithLocationTypeChangeUpdatesLocationAndRecordsMovement() {
         Quarry quarry = Quarry.builder().id(1L).specificGravity(new BigDecimal("2.70")).build();
         StockLocation prodYard = StockLocation.builder()
                 .id(1L).code("OCAK-URETIM").name("Üretim Sahası")
@@ -392,7 +392,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("deleteBlock should clean up all associated files from storage and disk")
-    void deleteBlock_CleansUpAttachedFiles() {
+    void deleteBlockCleansUpAttachedFiles() {
         Long blockId = 50L;
         Block block = Block.builder()
                 .id(blockId)
@@ -411,7 +411,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("registerBlock with fileIds should attach files to newly created block")
-    void registerBlock_AttachesFileIds() {
+    void registerBlockAttachesFileIds() {
         Quarry quarry = Quarry.builder().id(1L).code("Q1").name("Quarry 1").specificGravity(new BigDecimal("2.70")).build();
         StockLocation prodYard = StockLocation.builder()
                 .id(1L).code("OCAK-URETIM").name("Üretim Sahası")
@@ -439,7 +439,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("registerBlock stores lowercase block codes as uppercase")
-    void registerBlock_LowercaseCode_PersistsUppercase() {
+    void registerBlockLowercaseCodePersistsUppercase() {
         Quarry quarry = Quarry.builder().id(1L).specificGravity(new BigDecimal("2.70")).build();
         StockLocation production = StockLocation.builder()
                 .id(1L).code("OCAK-URETIM").name("Üretim Sahası")
@@ -460,13 +460,13 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("normalizeBlockCode uppercases with Locale.ROOT so Turkish i becomes I")
-    void normalizeBlockCode_UsesRootLocale() {
+    void normalizeBlockCodeUsesRootLocale() {
         Assertions.assertThat(QuarryBlockService.normalizeBlockCode(" blk-i1 ")).isEqualTo("BLK-I1");
     }
 
     @Test
     @DisplayName("getBlocksPaged puts filtered tonnage, m2, extraction and total cost into grid meta")
-    void getBlocksPaged_IncludesFooterTotalsInMeta() {
+    void getBlocksPagedIncludesFooterTotalsInMeta() {
         Mockito.when(blockRepository.searchBlocksWithStockFilter(ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn(new PageImpl<>(List.of()));
         Mockito.when(blockCostCalculationService.expensePerTonByQuarry(ArgumentMatchers.any()))
@@ -487,7 +487,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("sell from production yard is rejected")
-    void sellBlockExternally_NotInDispatchYard_Throws() {
+    void sellBlockExternallyNotInDispatchYardThrows() {
         StockLocation production = StockLocation.builder()
                 .locationType(StockLocationType.PRODUCTION_YARD).businessUnit(BusinessUnit.QUARRY).build();
         Block block = Block.builder().id(20L).status(BlockStatus.PRODUCED).currentLocation(production).build();
@@ -501,7 +501,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("factory transfer from production yard is rejected")
-    void transferToFactory_NotInDispatchYard_Throws() {
+    void transferToFactoryNotInDispatchYardThrows() {
         StockLocation production = StockLocation.builder()
                 .locationType(StockLocationType.PRODUCTION_YARD).businessUnit(BusinessUnit.QUARRY).build();
         Block block = Block.builder().id(21L).status(BlockStatus.PRODUCED).currentLocation(production).build();
@@ -514,7 +514,7 @@ class QuarryBlockServiceTest {
 
     @Test
     @DisplayName("block codes increment per section and year")
-    void generateStandardBlockCode_UsesSectionYearSequence() {
+    void generateStandardBlockCodeUsesSectionYearSequence() {
         Mockito.when(blockRepository.countByQuarrySectionAndYear(ArgumentMatchers.eq(1L), ArgumentMatchers.eq("A-BLOK"), ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(0L);
         Mockito.when(blockRepository.existsByBlockCode("A-BLOK-2026-001")).thenReturn(false);
         Mockito.when(blockRepository.existsByBlockCodeIgnoreCase("A-BLOK-2026-001")).thenReturn(false);

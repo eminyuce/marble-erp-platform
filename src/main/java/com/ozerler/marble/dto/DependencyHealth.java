@@ -12,10 +12,10 @@ import lombok.Value;
 public class DependencyHealth {
 
     @JsonProperty("status")
-    String status;
+    private String status;
 
     @JsonProperty("error")
-    String error;
+    private String error;
 
     public static DependencyHealth up() {
         return DependencyHealth.builder().status("UP").build();

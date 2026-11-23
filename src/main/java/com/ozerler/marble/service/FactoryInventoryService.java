@@ -266,7 +266,7 @@ public class FactoryInventoryService {
 
     @Transactional(readOnly = true)
     public List<StockItem> getAllFactoryConsumables() {
-        return stockItemRepository.findByStockLocation_LocationTypeAndStatus(
+        return stockItemRepository.findByStockLocationLocationTypeAndStatus(
                 StockLocationType.FACTORY_CONSUMABLES_WAREHOUSE, "AVAILABLE");
     }
 
@@ -284,7 +284,7 @@ public class FactoryInventoryService {
             trimmedCode = null;
         }
 
-        boolean descExists = stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(
+        boolean descExists = stockItemRepository.existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(
                 BusinessUnit.FACTORY, trimmedDesc);
         if (descExists) {
             throw new IllegalArgumentException("Bu ürün adıyla kayıtlı bir fabrika stok kartı zaten mevcut: " + trimmedDesc);

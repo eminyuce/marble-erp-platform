@@ -41,7 +41,7 @@ class SlabDtoJsonTest {
 
     @Test
     @DisplayName("fromEntity maps slab enum names to Turkish labels")
-    void fromEntity_mapsTurkishLabels() {
+    void fromEntityMapsTurkishLabels() {
         Slab slab = Slab.builder()
                 .id(1L)
                 .slabCode("SLB-2026-0001")

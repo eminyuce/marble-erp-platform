@@ -8,18 +8,18 @@ import lombok.Value;
 @Value
 @Builder
 public class SiteProfitDto {
-    Long projectId;
-    String projectCode;
-    String projectName;
-    BigDecimal realizedRevenue;
-    BigDecimal materialCost;
-    BigDecimal laborCost;
-    BigDecimal taxCost;
-    BigDecimal consumableCost;
-    BigDecimal transportationCost;
-    BigDecimal otherCost;
-    BigDecimal totalCost;
-    BigDecimal netProfitOrLoss;
+    private Long projectId;
+    private String projectCode;
+    private String projectName;
+    private BigDecimal realizedRevenue;
+    private BigDecimal materialCost;
+    private BigDecimal laborCost;
+    private BigDecimal taxCost;
+    private BigDecimal consumableCost;
+    private BigDecimal transportationCost;
+    private BigDecimal otherCost;
+    private BigDecimal totalCost;
+    private BigDecimal netProfitOrLoss;
 
     public BigDecimal getMarginPct() {
         if (realizedRevenue == null || realizedRevenue.compareTo(BigDecimal.ZERO) <= 0 || netProfitOrLoss == null) {

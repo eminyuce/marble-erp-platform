@@ -51,7 +51,7 @@ class StockMovementRepositoryPostgresTest {
 
     @Test
     @DisplayName("all-null filters do not send untyped parameters to PostgreSQL")
-    void searchMovements_AllNullFilters_ReturnsRows() {
+    void searchMovementsAllNullFiltersReturnsRows() {
         repository.save(StockMovement.builder()
                 .movementCode("MV-NULL-FILTER")
                 .movementDate(LocalDateTime.of(2026, 11, 23, 9, 0))
@@ -71,7 +71,7 @@ class StockMovementRepositoryPostgresTest {
 
     @Test
     @DisplayName("a typed source filter still matches when the other filters are null")
-    void searchMovements_OnlySourceDepartment_MatchesQuarry() {
+    void searchMovementsOnlySourceDepartmentMatchesQuarry() {
         repository.save(StockMovement.builder()
                 .movementCode("MV-QUARRY-ONLY")
                 .movementDate(LocalDateTime.of(2026, 11, 23, 10, 0))

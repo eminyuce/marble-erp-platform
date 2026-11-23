@@ -50,12 +50,14 @@ public class UserService {
             try {
                 return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
-    public record UserSummaryDto(long totalUsers, long activeUsers, long suspendedUsers, long adminCount) {}
+    public record UserSummaryDto(long totalUsers, long activeUsers, long suspendedUsers, long adminCount) {
+    }
 
     @Transactional(readOnly = true)
     public UserSummaryDto getUserSummary() {

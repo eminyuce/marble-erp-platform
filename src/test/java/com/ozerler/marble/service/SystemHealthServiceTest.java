@@ -36,7 +36,7 @@ class SystemHealthServiceTest {
 
     @Test
     @DisplayName("collectHealthMetrics gathers JVM, database, environmental, and RustFS metrics")
-    void collectHealthMetrics_GathersData() throws Exception {
+    void collectHealthMetricsGathersData() throws Exception {
         stubHealthyDatabase();
         Mockito.when(environment.getActiveProfiles()).thenReturn(new String[]{"test"});
         Mockito.when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.up());
@@ -63,7 +63,7 @@ class SystemHealthServiceTest {
 
     @Test
     @DisplayName("collectHealthMetrics returns overallStatus DOWN when RustFS is unreachable")
-    void collectHealthMetrics_RustFsDown_SetsOverallStatusDown() throws Exception {
+    void collectHealthMetricsRustFsDownSetsOverallStatusDown() throws Exception {
         stubHealthyDatabase();
         Mockito.when(environment.getActiveProfiles()).thenReturn(new String[]{"test"});
         Mockito.when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.down("RustFS erişilemiyor"));
@@ -84,7 +84,7 @@ class SystemHealthServiceTest {
 
     @Test
     @DisplayName("buildHealthResponse returns UP when database and RustFS are healthy")
-    void buildHealthResponse_AllDependenciesUp() throws Exception {
+    void buildHealthResponseAllDependenciesUp() throws Exception {
         Connection connection = Mockito.mock(Connection.class);
         Statement statement = Mockito.mock(Statement.class);
 
@@ -109,7 +109,7 @@ class SystemHealthServiceTest {
 
     @Test
     @DisplayName("buildHealthResponse returns DOWN when RustFS is unreachable")
-    void buildHealthResponse_RustFsDown() throws Exception {
+    void buildHealthResponseRustFsDown() throws Exception {
         Connection connection = Mockito.mock(Connection.class);
         Statement statement = Mockito.mock(Statement.class);
 
@@ -130,7 +130,7 @@ class SystemHealthServiceTest {
 
     @Test
     @DisplayName("buildHealthResponse returns DOWN when database is unreachable")
-    void buildHealthResponse_DatabaseDown() throws Exception {
+    void buildHealthResponseDatabaseDown() throws Exception {
         Mockito.when(dataSource.getConnection()).thenThrow(new RuntimeException("Connection refused"));
         Mockito.when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.up());
 

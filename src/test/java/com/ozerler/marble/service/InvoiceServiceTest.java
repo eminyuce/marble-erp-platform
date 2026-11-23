@@ -1,8 +1,5 @@
 package com.ozerler.marble.service;
 
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -118,7 +115,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("createInvoice throws exception when stock quantity is insufficient to prevent negative stock")
-    void createInvoice_InsufficientStock_ThrowsException() {
+    void createInvoiceInsufficientStockThrowsException() {
         StockItem item = StockItem.builder()
                 .id(20L)
                 .itemCode("SRF-01")
@@ -145,7 +142,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("createInvoice transfers block to IN_TRANSIT when dispatched to Factory")
-    void createInvoice_DispatchesBlockToFactoryInTransit() {
+    void createInvoiceDispatchesBlockToFactoryInTransit() {
         Block block = Block.builder()
                 .id(5L)
                 .blockCode("BLK-100")
@@ -173,7 +170,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("createInvoice with purchase and directExpense=false adds to quarry stock")
-    void createInvoice_PurchaseStockAddition() {
+    void createInvoicePurchaseStockAddition() {
 
         Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -191,7 +188,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("createInvoice with purchase and directExpense=true records operating expense with net amount")
-    void createInvoice_PurchaseDirectExpense() {
+    void createInvoicePurchaseDirectExpense() {
         CostCenter quarryCenter = CostCenter.builder()
                 .id(1L)
                 .code("CC-001")
@@ -222,7 +219,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("createInvoice with DRAFT status does not change stock or process movements")
-    void createInvoice_DraftStatus_DoesNotProcessStock() {
+    void createInvoiceDraftStatusDoesNotProcessStock() {
         StockItem item = StockItem.builder()
                 .id(20L)
                 .itemCode("SRF-01")
@@ -249,7 +246,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("finalizeInvoice deducts stock and records movement idempotently")
-    void finalizeInvoice_DeductsStock() {
+    void finalizeInvoiceDeductsStock() {
         StockItem item = StockItem.builder()
                 .id(20L)
                 .itemCode("SRF-01")
@@ -294,7 +291,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("cancelInvoice restores deducted stock and reverses movements idempotently")
-    void cancelInvoice_RestoresStock() {
+    void cancelInvoiceRestoresStock() {
         StockItem item = StockItem.builder()
                 .id(20L)
                 .itemCode("SRF-01")
@@ -339,7 +336,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("createInvoice saves quarryCategory correctly for purchase invoice")
-    void createInvoice_PurchaseWithQuarryCategory_PersistsCategory() {
+    void createInvoicePurchaseWithQuarryCategoryPersistsCategory() {
         Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<InvoiceService.InvoiceItemForm> items = List.of(
@@ -357,7 +354,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("getInvoiceById fetches invoice with details and initializes collections")
-    void getInvoiceById_Success_InitializesCollections() {
+    void getInvoiceByIdSuccessInitializesCollections() {
         Customer customer = Customer.builder().id(10L).companyName("Müşteri A").build();
         InvoiceItem item = InvoiceItem.builder().id(1L).productName("Blok").build();
         Invoice invoice = Invoice.builder()
@@ -380,7 +377,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("getInvoiceById falls back to findById if findByIdWithDetails is empty")
-    void getInvoiceById_FallbackToFindById() {
+    void getInvoiceByIdFallbackToFindById() {
         Invoice invoice = Invoice.builder()
                 .id(2L)
                 .invoiceNo("FAT-002")
@@ -401,7 +398,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("getInvoiceById throws IllegalArgumentException when invoice is not found")
-    void getInvoiceById_NotFound_ThrowsException() {
+    void getInvoiceByIdNotFoundThrowsException() {
         Mockito.when(invoiceRepository.findByIdWithDetails(999L)).thenReturn(Optional.empty());
         Mockito.when(invoiceRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -412,7 +409,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("Sales invoice with m.tül unit calculates m2 and deducts calculated m2 from stock")
-    void createInvoice_RunningMeterSales_DeductsCalculatedM2() {
+    void createInvoiceRunningMeterSalesDeductsCalculatedM2() {
         StockItem sized = StockItem.builder()
                 .id(100L)
                 .itemCode("EBT-M1")
@@ -459,7 +456,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("Purchase invoice with m.tül unit calculates m2 and adds calculated m2 to stock")
-    void createInvoice_RunningMeterPurchase_AddsCalculatedM2() {
+    void createInvoiceRunningMeterPurchaseAddsCalculatedM2() {
         StockItem sized = StockItem.builder()
                 .id(200L)
                 .itemCode("EBT-P1")
@@ -506,7 +503,7 @@ class InvoiceServiceTest {
 
     @Test
     @DisplayName("Internal transfer invoice creates counterpart purchase invoice and updates site project cost")
-    void createInvoice_InternalTransfer_CreatesCounterpartPurchaseInvoiceAndUpdatesSiteCost() {
+    void createInvoiceInternalTransferCreatesCounterpartPurchaseInvoiceAndUpdatesSiteCost() {
         Project project = Project.builder()
                 .id(50L)
                 .projectCode("PRJ-050")

@@ -47,7 +47,7 @@ class PassportServiceTest {
 
     @Test
     @DisplayName("getPassportByCode resolves PALLET first when matching")
-    void getPassportByCode_ResolvesPallet() {
+    void getPassportByCodeResolvesPallet() {
         Pallet pallet = Pallet.builder().palletCode("PAL-2026-001").build();
         Mockito.when(palletRepository.findByPalletCode("PAL-2026-001")).thenReturn(Optional.of(pallet));
         com.ozerler.marble.dto.view.PalletRef palletView = new com.ozerler.marble.dto.view.PalletRef();
@@ -64,7 +64,7 @@ class PassportServiceTest {
 
     @Test
     @DisplayName("getPassportByCode resolves SLAB when pallet not found")
-    void getPassportByCode_ResolvesSlab() {
+    void getPassportByCodeResolvesSlab() {
         Slab slab = Slab.builder().slabCode("SLB-2026-002").build();
         Mockito.when(palletRepository.findByPalletCode("SLB-2026-002")).thenReturn(Optional.empty());
         Mockito.when(slabRepository.findBySlabCodeWithBlock("SLB-2026-002")).thenReturn(Optional.of(slab));
@@ -81,7 +81,7 @@ class PassportServiceTest {
 
     @Test
     @DisplayName("getPassportByCode returns not found when code does not match any entity")
-    void getPassportByCode_NotFound() {
+    void getPassportByCodeNotFound() {
         Mockito.when(palletRepository.findByPalletCode("UNKNOWN")).thenReturn(Optional.empty());
         Mockito.when(slabRepository.findBySlabCodeWithBlock("UNKNOWN")).thenReturn(Optional.empty());
         Mockito.when(cutItemRepository.findByItemCode("UNKNOWN")).thenReturn(Optional.empty());
@@ -96,7 +96,7 @@ class PassportServiceTest {
 
     @Test
     @DisplayName("getPassportByCode handles null or blank input gracefully")
-    void getPassportByCode_BlankInput() {
+    void getPassportByCodeBlankInput() {
         PassportResult result = passportService.getPassportByCode("   ");
 
         Assertions.assertThat(result.isFound()).isFalse();

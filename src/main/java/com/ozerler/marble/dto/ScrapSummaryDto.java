@@ -38,6 +38,7 @@ public class ScrapSummaryDto {
             try {
                 code = ScrapReasonCode.valueOf(s);
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
 

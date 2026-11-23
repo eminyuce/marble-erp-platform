@@ -36,7 +36,7 @@ class ProjectSiteServiceTest {
 
     @Test
     @DisplayName("calculateProductionRequirement calculates gross need with scrap and deducts coverage")
-    void calculateProductionRequirement_StandardInputs_ReturnsShortfall() {
+    void calculateProductionRequirementStandardInputsReturnsShortfall() {
         // Planned: 100 m2, Scrap: 10% -> Gross = 110 m2. Stock: 40, InProd: 30 -> Coverage = 70. Shortfall = 40.00
         BigDecimal plannedArea = new BigDecimal("100.00");
         BigDecimal scrapPct = new BigDecimal("10.00");
@@ -52,7 +52,7 @@ class ProjectSiteServiceTest {
 
     @Test
     @DisplayName("calculateProductionRequirement returns ZERO when stock and in-production exceed gross need")
-    void calculateProductionRequirement_ExcessCoverage_ReturnsZero() {
+    void calculateProductionRequirementExcessCoverageReturnsZero() {
         BigDecimal plannedArea = new BigDecimal("100.00");
         BigDecimal scrapPct = new BigDecimal("5.00");
         BigDecimal availableStock = new BigDecimal("150.00");
@@ -67,7 +67,7 @@ class ProjectSiteServiceTest {
 
     @Test
     @DisplayName("calculateProductionRequirement handles null inputs safely by treating them as ZERO")
-    void calculateProductionRequirement_NullInputs_SafeHandling() {
+    void calculateProductionRequirementNullInputsSafeHandling() {
         BigDecimal shortfall = projectSiteService.calculateProductionRequirement(null, null, null, null);
 
         Assertions.assertThat(shortfall).isEqualTo(BigDecimal.ZERO);
@@ -75,7 +75,7 @@ class ProjectSiteServiceTest {
 
     @Test
     @DisplayName("getProjectsPaged with customerId passes filter to repository")
-    void getProjectsPaged_WithCustomerId_FiltersCorrectly() {
+    void getProjectsPagedWithCustomerIdFiltersCorrectly() {
         com.ozerler.marble.model.Customer customer = com.ozerler.marble.model.Customer.builder()
                 .id(10L)
                 .companyName("Akdeniz İnşaat")

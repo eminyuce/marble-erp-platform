@@ -82,7 +82,7 @@ class ExpenseServiceTest {
 
     @Test
     @DisplayName("site expenses do not require a construction project")
-    void siteExpenseWithoutProject_Succeeds() {
+    void siteExpenseWithoutProjectSucceeds() {
         CostCenter center = CostCenter.builder().id(5L).code("CC-S").name("Şantiye").businessUnit(BusinessUnit.SITE).build();
         Mockito.when(costCenterRepository.findById(5L)).thenReturn(Optional.of(center));
         Mockito.when(costTransactionRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
@@ -100,7 +100,7 @@ class ExpenseServiceTest {
 
     @Test
     @DisplayName("getExpenseSummary calculates unit totals and overall sum")
-    void getExpenseSummary_ReturnsCorrectTotals() {
+    void getExpenseSummaryReturnsCorrectTotals() {
         Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, "2026-09")).thenReturn(new BigDecimal("10000"));
         Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, "2026-09")).thenReturn(new BigDecimal("20000"));
         Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, "2026-09")).thenReturn(new BigDecimal("5000"));
@@ -121,7 +121,7 @@ class ExpenseServiceTest {
 
     @Test
     @DisplayName("deleteExpense deletes open expense or throws when period is closed")
-    void deleteExpense_DeletesOrThrows() {
+    void deleteExpenseDeletesOrThrows() {
         CostTransaction tx = CostTransaction.builder()
                 .id(99L)
                 .businessUnit(BusinessUnit.QUARRY)

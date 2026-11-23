@@ -45,7 +45,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WorkshopCutService {
 
-    private static final Logger log = LoggerFactory.getLogger(WorkshopCutService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WorkshopCutService.class);
 
     private final CutOrderRepository cutOrderRepository;
     private final com.ozerler.marble.mapper.CutOrderMapper cutOrderMapper;
@@ -64,12 +64,14 @@ public class WorkshopCutService {
             try {
                 return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
-    public record WorkshopSummaryDto(long totalOrders, long activeOrders, long completedOrders, long totalPieces) {}
+    public record WorkshopSummaryDto(long totalOrders, long activeOrders, long completedOrders, long totalPieces) {
+    }
 
     @Transactional(readOnly = true)
     public WorkshopSummaryDto getWorkshopSummary() {
@@ -288,7 +290,7 @@ public class WorkshopCutService {
         } else {
             cutOrderNo = "new";
         }
-        log.info("No posted workshop expenses for cut order {}; applying {} overhead fallback",
+        LOG.info("No posted workshop expenses for cut order {}; applying {} overhead fallback",
                 cutOrderNo, Constants.WORKSHOP_OVERHEAD_FACTOR);
         return baseCostPerM2.multiply(Constants.WORKSHOP_OVERHEAD_FACTOR).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
     }

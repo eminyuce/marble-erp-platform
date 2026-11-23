@@ -1,6 +1,5 @@
 package com.ozerler.marble.controller;
 
-import static org.mockito.Mockito.eq;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -38,7 +37,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("uploadFile should return success response with FileStorageDto")
-    void uploadFile_Success() throws IOException {
+    void uploadFileSuccess() throws IOException {
         MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", "image-bytes".getBytes());
         FileStorage storage = FileStorage.builder()
                 .id(1L)
@@ -61,7 +60,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("uploadMultipleFiles should return list of FileStorageDtos")
-    void uploadMultipleFiles_Success() throws IOException {
+    void uploadMultipleFilesSuccess() throws IOException {
         MockMultipartFile f1 = new MockMultipartFile("files", "img1.png", "image/png", "img1".getBytes());
         MockMultipartFile f2 = new MockMultipartFile("files", "doc1.pdf", "application/pdf", "pdf1".getBytes());
 
@@ -80,7 +79,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("deleteFileById should delete file and return OK status")
-    void deleteFileById_Success() {
+    void deleteFileByIdSuccess() {
         Mockito.when(fileStorageService.deleteFileRecord(25L)).thenReturn(true);
 
         BackEndResponse response = fileUploadController.deleteFileById(25L);
@@ -91,7 +90,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("deleteFileById should return 404 when file is not found")
-    void deleteFileById_NotFound() {
+    void deleteFileByIdNotFound() {
         Mockito.when(fileStorageService.deleteFileRecord(999L)).thenReturn(false);
 
         BackEndResponse response = fileUploadController.deleteFileById(999L);
@@ -101,7 +100,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("revertUpload with numeric ID should delegate to deleteFileRecord")
-    void revertUpload_NumericId() {
+    void revertUploadNumericId() {
         Mockito.when(fileStorageService.deleteFileRecord(50L)).thenReturn(true);
 
         BackEndResponse response = fileUploadController.revertUpload("50");
@@ -112,7 +111,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("revertUpload with URL should delegate to deleteFile")
-    void revertUpload_FileUrl() {
+    void revertUploadFileUrl() {
         Mockito.when(fileStorageService.deleteFile("/uploads/test.jpg")).thenReturn(true);
 
         BackEndResponse response = fileUploadController.revertUpload("/uploads/test.jpg");
@@ -123,7 +122,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("downloadFile should return ResponseEntity with Resource and attachment header")
-    void downloadFile_Success() {
+    void downloadFileSuccess() {
         FileStorage storage = FileStorage.builder()
                 .id(5L)
                 .fileName("uuid-rep.pdf")
@@ -145,7 +144,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("downloadFile should preserve DOCX filename with Turkish characters")
-    void downloadFile_Docx_PreservesOriginalFilename() {
+    void downloadFileDocxPreservesOriginalFilename() {
         FileStorage storage = FileStorage.builder()
                 .id(6L)
                 .fileName("blocks_12345678.docx")
@@ -170,7 +169,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("downloadFile should preserve TXT filename")
-    void downloadFile_Txt_PreservesOriginalFilename() {
+    void downloadFileTxtPreservesOriginalFilename() {
         FileStorage storage = FileStorage.builder()
                 .id(7L)
                 .fileName("blocks_98765432.txt")
@@ -195,7 +194,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("viewFile should open Markdown inline as readable text")
-    void viewFile_Markdown_OpensInlineAsText() {
+    void viewFileMarkdownOpensInlineAsText() {
         FileStorage storage = FileStorage.builder()
                 .id(11L)
                 .fileName("blocks_11111111.md")
@@ -219,7 +218,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("downloadFile should preserve XLSX filename and spreadsheet MIME type")
-    void downloadFile_Xlsx_PreservesOriginalFilename() {
+    void downloadFileXlsxPreservesOriginalFilename() {
         FileStorage storage = FileStorage.builder()
                 .id(8L)
                 .fileName("blocks_88888888.xlsx")
@@ -244,7 +243,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("downloadFile should preserve CSV filename and text/csv MIME type")
-    void downloadFile_Csv_PreservesOriginalFilename() {
+    void downloadFileCsvPreservesOriginalFilename() {
         FileStorage storage = FileStorage.builder()
                 .id(9L)
                 .fileName("blocks_99999999.csv")
@@ -269,7 +268,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("createDownloadUrl should return the presigned URL and its expiry")
-    void createDownloadUrl_Success() {
+    void createDownloadUrlSuccess() {
         Instant expiresAt = Instant.parse("2026-11-23T12:05:00Z");
         Mockito.when(fileStorageService.createPresignedDownload(12L))
                 .thenReturn(new PresignedDownload(
@@ -291,7 +290,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("createDownloadUrl returns an image link with the 30 minute expiry")
-    void createDownloadUrl_ImageExpiry() {
+    void createDownloadUrlImageExpiry() {
         Instant expiresAt = Instant.parse("2026-11-23T12:30:00Z");
         Mockito.when(fileStorageService.createPresignedDownload(4L))
                 .thenReturn(new PresignedDownload(
@@ -310,7 +309,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("createDownloadUrl does not hide an authorization failure")
-    void createDownloadUrl_Unauthorized_Propagates() {
+    void createDownloadUrlUnauthorizedPropagates() {
         Mockito.when(fileStorageService.createPresignedDownload(3L))
                 .thenThrow(new FileAccessDeniedException("denied"));
 
@@ -320,7 +319,7 @@ class FileUploadControllerTest {
 
     @Test
     @DisplayName("viewFile should return inline content disposition")
-    void viewFile_Success() {
+    void viewFileSuccess() {
         FileStorage storage = FileStorage.builder()
                 .id(5L)
                 .fileName("uuid-photo.jpg")

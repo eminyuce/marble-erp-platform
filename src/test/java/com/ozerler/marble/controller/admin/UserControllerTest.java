@@ -1,6 +1,5 @@
 package com.ozerler.marble.controller.admin;
 
-import static org.mockito.Mockito.verify;
 
 import java.util.List;
 
@@ -84,7 +83,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("usersPage exposes all roles and Turkish label map")
-    void usersPage_exposesRoleFilters() {
+    void usersPageExposesRoleFilters() {
         Model model = new ExtendedModelMap();
 
         String view = userController.usersPage(model);
@@ -96,7 +95,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("getUsersData forwards selected roles for OR filtering")
-    void getUsersData_forwardsRoleFilters() {
+    void getUsersDataForwardsRoleFilters() {
         TabulatorResponse<UserDto> expected = TabulatorResponse.of(List.of(), 1, 0);
         Mockito.when(userService.getUsersPaged(ArgumentMatchers.eq(1), ArgumentMatchers.eq(25), ArgumentMatchers.eq(""), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(),
                 ArgumentMatchers.eq(List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")), ArgumentMatchers.eq(true)))
@@ -112,7 +111,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("getUsersData with no roles still requests the unfiltered page")
-    void getUsersData_withoutRoles_passesEmptyList() {
+    void getUsersDataWithoutRolesPassesEmptyList() {
         TabulatorResponse<UserDto> expected = TabulatorResponse.of(List.of(), 1, 0);
         Mockito.when(userService.getUsersPaged(ArgumentMatchers.eq(1), ArgumentMatchers.eq(10), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(),
                 ArgumentMatchers.eq(List.of()), ArgumentMatchers.isNull()))

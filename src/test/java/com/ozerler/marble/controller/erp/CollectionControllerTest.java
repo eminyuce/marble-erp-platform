@@ -45,7 +45,7 @@ class CollectionControllerTest {
 
     @Test
     @DisplayName("index initializes selectedMethod as empty string when no method parameter is provided")
-    void index_DefaultsToEmptyMethodWhenNull() {
+    void indexDefaultsToEmptyMethodWhenNull() {
         Mockito.when(collectionService.getMonthlyTotal()).thenReturn(BigDecimal.valueOf(10000));
         Mockito.when(collectionService.getApproachingChecksCount()).thenReturn(3L);
         Mockito.when(collectionService.searchCollectionViews(null, null, null, null, null, 0, 20)).thenReturn(Page.empty());
@@ -62,7 +62,7 @@ class CollectionControllerTest {
 
     @Test
     @DisplayName("index initializes selectedMethod with enum name when method parameter is provided")
-    void index_SetsSelectedMethodWhenProvided() {
+    void indexSetsSelectedMethodWhenProvided() {
         Mockito.when(collectionService.getMonthlyTotal()).thenReturn(BigDecimal.valueOf(10000));
         Mockito.when(collectionService.getApproachingChecksCount()).thenReturn(3L);
         Mockito.when(collectionService.searchCollectionViews(CollectionMethod.CASH, null, null, null, null, 0, 20)).thenReturn(Page.empty());
@@ -77,7 +77,7 @@ class CollectionControllerTest {
 
     @Test
     @DisplayName("getCollectionsData successfully queries all collections when method is null")
-    void getCollectionsData_ReturnsDataWhenMethodNull() {
+    void getCollectionsDataReturnsDataWhenMethodNull() {
         Customer customer = Customer.builder().companyName("Öz Marble Ltd").build();
         customer.setId(10L);
 
@@ -109,7 +109,7 @@ class CollectionControllerTest {
 
     @Test
     @DisplayName("getCollectionsData forwards method filter enum to collection service")
-    void getCollectionsData_ForwardsMethodFilter() {
+    void getCollectionsDataForwardsMethodFilter() {
         Page<CollectionRecord> emptyPage = new PageImpl<>(List.of());
         Mockito.when(collectionService.searchCollections(ArgumentMatchers.eq(CollectionMethod.BANK_TRANSFER), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.eq("test"), ArgumentMatchers.eq(0), ArgumentMatchers.eq(50)))
                 .thenReturn(emptyPage);
@@ -125,7 +125,7 @@ class CollectionControllerTest {
 
     @Test
     @DisplayName("getCollectionsData forwards customerId filter to collection service")
-    void getCollectionsData_ForwardsCustomerIdFilter() {
+    void getCollectionsDataForwardsCustomerIdFilter() {
         Page<CollectionRecord> emptyPage = new PageImpl<>(List.of());
         Mockito.when(collectionService.searchCollections(ArgumentMatchers.isNull(), ArgumentMatchers.eq(42L), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.eq(0), ArgumentMatchers.eq(25)))
                 .thenReturn(emptyPage);
@@ -141,7 +141,7 @@ class CollectionControllerTest {
 
     @Test
     @DisplayName("getChecksData returns paginated checks with customer and status details")
-    void getChecksData_ReturnsDataWhenStatusNull() {
+    void getChecksDataReturnsDataWhenStatusNull() {
         Customer customer = Customer.builder().companyName("Alp Madencilik").build();
         customer.setId(5L);
 
@@ -174,7 +174,7 @@ class CollectionControllerTest {
 
     @Test
     @DisplayName("getChecksData forwards status filter enum to collection service")
-    void getChecksData_ForwardsStatusFilter() {
+    void getChecksDataForwardsStatusFilter() {
         Page<CheckRecord> emptyPage = new PageImpl<>(List.of());
         Mockito.when(collectionService.searchChecks(ArgumentMatchers.isNull(), ArgumentMatchers.eq(CheckStatus.COLLECTED), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.eq("vade"), ArgumentMatchers.eq(0), ArgumentMatchers.eq(25)))
                 .thenReturn(emptyPage);
@@ -190,7 +190,7 @@ class CollectionControllerTest {
 
     @Test
     @DisplayName("updateCheckStatus invokes collection service and redirects to checks list")
-    void updateCheckStatus_UpdatesAndRedirects() {
+    void updateCheckStatusUpdatesAndRedirects() {
         com.ozerler.marble.dto.view.CheckRef updated = new com.ozerler.marble.dto.view.CheckRef();
         updated.setId(50L);
         updated.setCheckNo("CHK-50");
@@ -207,7 +207,7 @@ class CollectionControllerTest {
 
     @Test
     @DisplayName("new collection form loads invoices with their customers")
-    void newCollectionForm_LoadsInvoicesWithCustomer() {
+    void newCollectionFormLoadsInvoicesWithCustomer() {
         Mockito.when(formLookup.customers()).thenReturn(List.of());
         Mockito.when(formLookup.invoicesWithCustomer()).thenReturn(List.of());
 
@@ -221,7 +221,7 @@ class CollectionControllerTest {
 
     @Test
     @DisplayName("new collection form preselects the customer from the fetched invoice")
-    void newCollectionForm_PreselectsCustomerFromInvoice() {
+    void newCollectionFormPreselectsCustomerFromInvoice() {
         com.ozerler.marble.dto.view.PartyView party = new com.ozerler.marble.dto.view.PartyView();
         party.setId(4L);
         party.setCompanyName("Özerler");

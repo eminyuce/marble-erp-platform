@@ -144,6 +144,7 @@ public class ApplicationLogService {
             try {
                 com.ozerler.marble.logging.db.DatabaseLogQueue.getInstance().clear();
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
             return applicationLogRepository.deleteAllLogs();
         }

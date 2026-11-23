@@ -1,6 +1,5 @@
 package com.ozerler.marble.service;
 
-import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -73,7 +72,7 @@ class MachineFuelServiceTest {
     }
 
     @Test
-    void getFuelPaged_FiltersAndPaginatesCorrectly() {
+    void getFuelPagedFiltersAndPaginatesCorrectly() {
         Mockito.when(fuelEntryRepository.findByEntryDateBetweenOrderByEntryDateDesc(ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn(List.of(sampleEntry));
 
@@ -91,7 +90,7 @@ class MachineFuelServiceTest {
     }
 
     @Test
-    void recordFuel_SavesEntryAndLogsExpense() {
+    void recordFuelSavesEntryAndLogsExpense() {
         Mockito.when(machineRepository.findById(1L)).thenReturn(Optional.of(quarryMachine));
         Mockito.when(fuelEntryRepository.save(ArgumentMatchers.any(MachineFuelEntry.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -105,7 +104,7 @@ class MachineFuelServiceTest {
     }
 
     @Test
-    void deleteFuel_DeletesById() {
+    void deleteFuelDeletesById() {
         machineFuelService.deleteFuel(100L);
         Mockito.verify(fuelEntryRepository).deleteById(100L);
     }

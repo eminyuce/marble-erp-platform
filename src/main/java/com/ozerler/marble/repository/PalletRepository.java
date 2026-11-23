@@ -16,7 +16,7 @@ public interface PalletRepository extends JpaRepository<Pallet, Long> {
 
     boolean existsByPalletCode(String palletCode);
 
-    List<Pallet> findByCurrentLocation_LocationType(com.ozerler.marble.model.enums.StockLocationType locationType);
+    List<Pallet> findByCurrentLocationLocationType(com.ozerler.marble.model.enums.StockLocationType locationType);
 
     @EntityGraph(attributePaths = {"slabs", "currentLocation", "customer", "project"})
     @Query("SELECT p FROM Pallet p ORDER BY p.id DESC")

@@ -320,7 +320,9 @@ public class MasterDataService {
                         salesMap.put((Long) row[0], (BigDecimal) row[1]);
                     }
                 });
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+                // best effort: fall back to the default below
+            }
         }
 
         Map<Long, BigDecimal> collectionsMap = new HashMap<>();
@@ -331,7 +333,9 @@ public class MasterDataService {
                         collectionsMap.put((Long) row[0], (BigDecimal) row[1]);
                     }
                 });
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+                // best effort: fall back to the default below
+            }
         }
 
         List<CustomerDto> dtos = customers.stream().map(c -> {
@@ -378,7 +382,7 @@ public class MasterDataService {
         Customer customer = getCustomerById(id);
         if (salesOrderRepository.existsByCustomerId(id)
                 || blockCustomerMarkRepository.existsByCustomerId(id)
-                || blockRepository.existsBySoldCustomer_Id(id)
+                || blockRepository.existsBySoldCustomerId(id)
                 || invoiceRepository.existsByCustomerId(id)) {
             throw new IllegalStateException("Bu müşteriye ait satış, fatura, işaret veya satılan blok kayıtları mevcuttur. Müşteri silinemez.");
         }

@@ -35,7 +35,7 @@ class ProductionOrderDtoJsonTest {
 
     @Test
     @DisplayName("fromEntity maps COMPLETED to the Turkish status label")
-    void fromEntity_mapsTurkishStatusLabel() {
+    void fromEntityMapsTurkishStatusLabel() {
         ProductionOrder order = ProductionOrder.builder()
                 .id(1L)
                 .orderNo("PRD-2026-0001")

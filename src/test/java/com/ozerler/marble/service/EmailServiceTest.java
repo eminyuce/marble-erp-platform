@@ -36,7 +36,7 @@ class EmailServiceTest {
 
     @Test
     @DisplayName("renderHtml escapes dangerous HTML characters to prevent XSS")
-    void renderHtml_EscapesHtmlCharacters() {
+    void renderHtmlEscapesHtmlCharacters() {
         String template = "<p>Sayın {{fullName}}, işleminiz tamamlandı.</p>";
         Map<String, String> vars = Map.of("fullName", "Ahmet <script>alert('xss')</script>");
 
@@ -48,7 +48,7 @@ class EmailServiceTest {
 
     @Test
     @DisplayName("renderHtml allows raw HTML when triple braces are used")
-    void renderHtml_TripleBracesAllowsRawHtml() {
+    void renderHtmlTripleBracesAllowsRawHtml() {
         String template = "<div>{{{badgeHtml}}}</div>";
         Map<String, String> vars = Map.of("badgeHtml", "<span class='badge'>ONAYLANDI</span>");
 
@@ -59,7 +59,7 @@ class EmailServiceTest {
 
     @Test
     @DisplayName("renderSubject strips CR and LF characters to prevent SMTP header injection")
-    void renderSubject_StripsCrlfInjection() {
+    void renderSubjectStripsCrlfInjection() {
         String template = "Bildirim: {{subjectTitle}}";
         Map<String, String> vars = Map.of("subjectTitle", "Fatura Onayı\r\nBcc: hacker@evil.test");
 
@@ -72,7 +72,7 @@ class EmailServiceTest {
 
     @Test
     @DisplayName("Rendering supports both {{var}} and ${var} syntax with internal whitespace and case-insensitivity")
-    void renderTemplate_SupportsMultipleSyntaxVariants() {
+    void renderTemplateSupportsMultipleSyntaxVariants() {
         String template = "Merhaba {{ fullName }}, kodunuz: ${ OTP_CODE } ve şirket: {{companyname}}.";
         Map<String, String> vars = Map.of(
                 "fullName", "Emin",
@@ -87,7 +87,7 @@ class EmailServiceTest {
 
     @Test
     @DisplayName("Unsupplied placeholders are replaced with empty string gracefully")
-    void renderTemplate_GracefullyHandlesMissingPlaceholders() {
+    void renderTemplateGracefullyHandlesMissingPlaceholders() {
         String template = "Kaynak: {{blockCode}} ({{missingQuarry}})";
         Map<String, String> vars = Map.of("blockCode", "BLK-001");
 
@@ -98,7 +98,7 @@ class EmailServiceTest {
 
     @Test
     @DisplayName("validateTemplateSyntax rejects unclosed placeholders")
-    void validateTemplateSyntax_ThrowsOnUnclosedPlaceholders() {
+    void validateTemplateSyntaxThrowsOnUnclosedPlaceholders() {
         Assertions.assertThatThrownBy(() -> emailService.validateTemplateSyntax("Merhaba {{name"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Kapatılmamış '{{' ayracı bulundu");
@@ -110,7 +110,7 @@ class EmailServiceTest {
 
     @Test
     @DisplayName("previewTemplate generates full preview with realistic domain sample variables")
-    void previewTemplate_RendersRealisticSampleData() {
+    void previewTemplateRendersRealisticSampleData() {
         EmailTemplate template = EmailTemplate.builder()
                 .id(1L)
                 .templateKey("USER_WELCOME")
@@ -131,7 +131,7 @@ class EmailServiceTest {
 
     @Test
     @DisplayName("placeholderSamples lists declared keys with sample values")
-    void placeholderSamples_UsesDeclaredKeysAndSampleValues() {
+    void placeholderSamplesUsesDeclaredKeysAndSampleValues() {
         com.ozerler.marble.dto.EmailTemplateDto template = com.ozerler.marble.dto.EmailTemplateDto.builder()
                 .id(1L)
                 .templateKey("USER_WELCOME")
@@ -155,7 +155,7 @@ class EmailServiceTest {
 
     @Test
     @DisplayName("updateTemplate validates syntax and persists clean template")
-    void updateTemplate_ValidatesAndSaves() {
+    void updateTemplateValidatesAndSaves() {
         EmailTemplate template = EmailTemplate.builder()
                 .id(2L)
                 .templateKey("PASSWORD_RESET")

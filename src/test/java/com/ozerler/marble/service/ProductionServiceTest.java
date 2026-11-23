@@ -1,6 +1,5 @@
 package com.ozerler.marble.service;
 
-import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -59,7 +58,7 @@ class ProductionServiceTest {
 
     @Test
     @DisplayName("getOrdersPaged maps database slab aggregates instead of loading child collections")
-    void getOrdersPaged_UsesDatabaseAggregates() {
+    void getOrdersPagedUsesDatabaseAggregates() {
         ProductionOrder order = sampleOrder(7L, "PO-2026-001");
         Mockito.when(productionOrderRepository.searchOrders(ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(order)));
@@ -80,7 +79,7 @@ class ProductionServiceTest {
 
     @Test
     @DisplayName("getOrdersPaged skips aggregate query when the page is empty")
-    void getOrdersPaged_EmptyPage_SkipsAggregateQuery() {
+    void getOrdersPagedEmptyPageSkipsAggregateQuery() {
         Mockito.when(productionOrderRepository.searchOrders(ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(Page.empty());
 
@@ -92,7 +91,7 @@ class ProductionServiceTest {
 
     @Test
     @DisplayName("getOrdersPaged retries with createdDate when the grid sort field is not persistable")
-    void getOrdersPaged_UnknownSortField_FallsBackToCreatedDate() {
+    void getOrdersPagedUnknownSortFieldFallsBackToCreatedDate() {
         ProductionOrder order = sampleOrder(7L, "PO-2026-001");
         Mockito.when(productionOrderRepository.searchOrders(ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class)))
                 .thenAnswer(invocation -> {
@@ -116,7 +115,7 @@ class ProductionServiceTest {
 
     @Test
     @DisplayName("getOrderWithDetails returns the order with child collections initialized")
-    void getOrderWithDetails_ReturnsOrder() {
+    void getOrderWithDetailsReturnsOrder() {
         ProductionOrder order = sampleOrder(7L, "PO-2026-001");
         Mockito.when(productionOrderRepository.findWithDetailsById(7L)).thenReturn(Optional.of(order));
 
@@ -130,7 +129,7 @@ class ProductionServiceTest {
 
     @Test
     @DisplayName("getOrderWithDetails throws when the production order is missing")
-    void getOrderWithDetails_MissingOrder_Throws() {
+    void getOrderWithDetailsMissingOrderThrows() {
         Mockito.when(productionOrderRepository.findWithDetailsById(99L)).thenReturn(Optional.empty());
 
         Assertions.assertThatThrownBy(() -> productionService.getOrderWithDetails(99L))
@@ -139,14 +138,14 @@ class ProductionServiceTest {
 
     @Test
     @DisplayName("getOrderWithDetails rejects a null id")
-    void getOrderWithDetails_NullId_Throws() {
+    void getOrderWithDetailsNullIdThrows() {
         Assertions.assertThatThrownBy(() -> productionService.getOrderWithDetails(null))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     @DisplayName("getSlabWithDetails returns the slab")
-    void getSlabWithDetails_ReturnsSlab() {
+    void getSlabWithDetailsReturnsSlab() {
         Slab slab = Slab.builder().id(4L).slabCode("SLB-001").build();
         Mockito.when(slabRepository.findWithDetailsById(4L)).thenReturn(Optional.of(slab));
 
@@ -158,7 +157,7 @@ class ProductionServiceTest {
 
     @Test
     @DisplayName("updateSlab writes identity, dimensions, finish, and status then saves")
-    void updateSlab_UpdatesFieldsRecalculatesAreaAndSaves() {
+    void updateSlabUpdatesFieldsRecalculatesAreaAndSaves() {
         Slab existing = Slab.builder()
                 .id(4L)
                 .slabCode("SLB-OLD")
@@ -202,7 +201,7 @@ class ProductionServiceTest {
 
     @Test
     @DisplayName("updateSlab throws when the slab does not exist")
-    void updateSlab_MissingSlab_Throws() {
+    void updateSlabMissingSlabThrows() {
         Mockito.when(slabRepository.findById(99L)).thenReturn(Optional.empty());
 
         Assertions.assertThatThrownBy(() -> productionService.updateSlab(
@@ -213,7 +212,7 @@ class ProductionServiceTest {
 
     @Test
     @DisplayName("getSlabWithDetails throws when the slab is missing")
-    void getSlabWithDetails_MissingSlab_Throws() {
+    void getSlabWithDetailsMissingSlabThrows() {
         Mockito.when(slabRepository.findWithDetailsById(99L)).thenReturn(Optional.empty());
 
         Assertions.assertThatThrownBy(() -> productionService.getSlabWithDetails(99L))

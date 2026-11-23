@@ -1,6 +1,5 @@
 package com.ozerler.marble.service;
 
-import static org.mockito.Mockito.never;
 
 import java.util.List;
 
@@ -76,7 +75,7 @@ class GlobalSearchServiceTest {
 
     @Test
     @DisplayName("search returns empty without querying repositories for short terms")
-    void search_ShortQuery_DoesNotHitRepositories() {
+    void searchShortQueryDoesNotHitRepositories() {
         GlobalSearchResponse response = globalSearchService.search("a");
 
         Assertions.assertThat(response.getTotal()).isZero();
@@ -87,7 +86,7 @@ class GlobalSearchServiceTest {
 
     @Test
     @DisplayName("search fans out across all entity repositories and merges hits")
-    void search_MergesHitsFromAllSources() {
+    void searchMergesHitsFromAllSources() {
         stubEmptySearches();
         Mockito.when(blockRepository.searchByBlockCode(Mockito.eq("blok"), Mockito.any(Pageable.class)))
                 .thenReturn(List.of(Block.builder().blockCode("BLK-100").stoneType("Beyaz").build()));
@@ -119,7 +118,7 @@ class GlobalSearchServiceTest {
 
     @Test
     @DisplayName("search unwraps repository failures from worker threads")
-    void search_PropagatesRepositoryFailure() {
+    void searchPropagatesRepositoryFailure() {
         stubEmptySearches();
         Mockito.when(blockRepository.searchByBlockCode(Mockito.eq("xx"), Mockito.any(Pageable.class)))
                 .thenThrow(new IllegalStateException("blok araması başarısız"));

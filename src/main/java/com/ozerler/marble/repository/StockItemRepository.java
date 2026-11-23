@@ -35,19 +35,19 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     List<StockItem> findByCustomerIdAndStatus(Long customerId, String status);
 
-    List<StockItem> findByStockLocation_LocationTypeAndStatus(com.ozerler.marble.model.enums.StockLocationType locationType, String status);
+    List<StockItem> findByStockLocationLocationTypeAndStatus(com.ozerler.marble.model.enums.StockLocationType locationType, String status);
 
-    List<StockItem> findByStockLocation_BusinessUnitAndStatus(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String status);
+    List<StockItem> findByStockLocationBusinessUnitAndStatus(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String status);
 
     List<StockItem> findByQuarryCategoryAndStatus(com.ozerler.marble.model.enums.QuarryCategory quarryCategory, String status);
 
-    boolean existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String description);
+    boolean existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String description);
 
     boolean existsByDescriptionIgnoreCase(String description);
 
-    Optional<StockItem> findByStockLocation_BusinessUnitAndDescriptionIgnoreCase(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String description);
+    Optional<StockItem> findByStockLocationBusinessUnitAndDescriptionIgnoreCase(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String description);
 
-    Optional<StockItem> findFirstByStockLocation_LocationTypeAndProductType(com.ozerler.marble.model.enums.StockLocationType locationType, StockProductType productType);
+    Optional<StockItem> findFirstByStockLocationLocationTypeAndProductType(com.ozerler.marble.model.enums.StockLocationType locationType, StockProductType productType);
 
     List<StockItem> findByProjectId(Long projectId);
 

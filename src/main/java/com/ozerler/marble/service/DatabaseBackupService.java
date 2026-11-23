@@ -792,7 +792,9 @@ public class DatabaseBackupService {
         return String.format(Locale.US, "%.1f %cB", bytes / Math.pow(1024, exp), pre);
     }
 
-    private record DbConnectionInfo(String host, int port, String database, String username, String password, boolean isH2) {}
+    private record DbConnectionInfo(String host, int port, String database, String username, String password, boolean isH2) {
+    }
 
-    public record BackupContent(String fileName, long sizeBytes, String contentType, InputStream body) {}
+    public record BackupContent(String fileName, long sizeBytes, String contentType, InputStream body) {
+    }
 }

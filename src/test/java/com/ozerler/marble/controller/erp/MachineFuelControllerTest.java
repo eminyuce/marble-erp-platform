@@ -1,6 +1,5 @@
 package com.ozerler.marble.controller.erp;
 
-import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -36,7 +35,7 @@ class MachineFuelControllerTest {
     private MachineFuelController controller;
 
     @Test
-    void index_ReturnsFuelIndexViewWithReport() {
+    void indexReturnsFuelIndexViewWithReport() {
         Model model = new ExtendedModelMap();
         Mockito.when(machineFuelService.listViewsByPeriod(ArgumentMatchers.any())).thenReturn(List.of());
         Mockito.when(machineFuelService.getMonthlyReport(ArgumentMatchers.any())).thenReturn(List.of());
@@ -53,7 +52,7 @@ class MachineFuelControllerTest {
     }
 
     @Test
-    void showCreateForm_ReturnsFuelFormView() {
+    void showCreateFormReturnsFuelFormView() {
         Model model = new ExtendedModelMap();
         Mockito.when(machineFuelService.quarryAndFactoryMachineViews()).thenReturn(List.of());
 
@@ -65,7 +64,7 @@ class MachineFuelControllerTest {
     }
 
     @Test
-    void createFuelEntry_WhenValid_RedirectsToIndex() {
+    void createFuelEntryWhenValidRedirectsToIndex() {
         com.ozerler.marble.dto.view.MachineRef machine = new com.ozerler.marble.dto.view.MachineRef();
         machine.setId(1L);
         machine.setName("CAT 320");
@@ -91,7 +90,7 @@ class MachineFuelControllerTest {
     }
 
     @Test
-    void deleteFuelEntry_DeletesAndRedirects() {
+    void deleteFuelEntryDeletesAndRedirects() {
         RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
         String view = controller.deleteFuelEntry(5L, Locale.of("tr"), redirectAttributes);
 
@@ -101,7 +100,7 @@ class MachineFuelControllerTest {
     }
 
     @Test
-    void getFuelData_ReturnsTabulatorResponse() {
+    void getFuelDataReturnsTabulatorResponse() {
         Mockito.when(machineFuelService.getFuelPaged(1, 25, "CAT", "2026-09", "QUARRY", 1L, "entryDate", "desc"))
                 .thenReturn(com.ozerler.marble.dto.TabulatorResponse.of(List.of(), 1, 0));
 

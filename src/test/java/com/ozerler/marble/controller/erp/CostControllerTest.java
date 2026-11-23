@@ -48,7 +48,7 @@ class CostControllerTest {
 
     @Test
     @DisplayName("costsIndex computes consolidated totals and safe contribution calculations")
-    void costsIndex_ComputesTotalsAndRenders() {
+    void costsIndexComputesTotalsAndRenders() {
         CostAnalysisDto quarryDto = CostAnalysisDto.builder()
                 .businessUnit(BusinessUnit.QUARRY)
                 .businessUnitLabel("Ocak")

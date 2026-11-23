@@ -23,7 +23,7 @@ class ReleaseInfoContributorTest {
 
     @Test
     @DisplayName("actuator info exposes the pom version and omits secrets")
-    void contribute_PublishesReleaseFactsFromBuildInfo() {
+    void contributePublishesReleaseFactsFromBuildInfo() {
         Mockito.when(environment.getActiveProfiles()).thenReturn(new String[]{"prod"});
         ObjectStorageProperties storage = new ObjectStorageProperties();
         storage.setType("rustfs");
@@ -59,7 +59,7 @@ class ReleaseInfoContributorTest {
 
     @Test
     @DisplayName("git commit is shortened and a missing sha stays unknown")
-    void shortSha_TrimsAndHidesUnknown() {
+    void shortShaTrimsAndHidesUnknown() {
         Assertions.assertThat(ReleaseInfoContributor.shortSha("abcdef1234567890ffff")).isEqualTo("abcdef123456");
         Assertions.assertThat(ReleaseInfoContributor.shortSha("unknown")).isEqualTo("unknown");
         Assertions.assertThat(ReleaseInfoContributor.shortSha(null)).isEqualTo("unknown");
@@ -67,7 +67,7 @@ class ReleaseInfoContributorTest {
 
     @Test
     @DisplayName("a baked git.properties value is used when the image env sha is missing")
-    void gitCommit_UsesPropertiesWhenEnvIsUnknown() {
+    void gitCommitUsesPropertiesWhenEnvIsUnknown() {
         Properties file = new Properties();
         file.setProperty("git.commit.id", "abcdef1234567890ffff");
         Assertions.assertThat(ReleaseInfoContributor.gitCommit("unknown", file)).isEqualTo("abcdef123456");

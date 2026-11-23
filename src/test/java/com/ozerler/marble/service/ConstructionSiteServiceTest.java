@@ -1,6 +1,5 @@
 package com.ozerler.marble.service;
 
-import static org.mockito.Mockito.when;
 
 import java.util.List;
 
@@ -69,7 +68,7 @@ class ConstructionSiteServiceTest {
 
     @Test
     @DisplayName("deleteProject throws IllegalStateException when project has associated invoices")
-    void deleteProject_WithAssociatedInvoices_ThrowsException() {
+    void deleteProjectWithAssociatedInvoicesThrowsException() {
         Long projectId = 100L;
         Project project = Project.builder().id(projectId).projectCode("PRJ-100").build();
         Mockito.when(projectSiteService.getProjectById(projectId)).thenReturn(project);
@@ -84,7 +83,7 @@ class ConstructionSiteServiceTest {
 
     @Test
     @DisplayName("deleteProject cleans up all related records and deletes project successfully")
-    void deleteProject_NoInvoices_Success() {
+    void deleteProjectNoInvoicesSuccess() {
         Long projectId = 200L;
         Project project = Project.builder().id(projectId).projectCode("PRJ-200").build();
         Mockito.when(projectSiteService.getProjectById(projectId)).thenReturn(project);

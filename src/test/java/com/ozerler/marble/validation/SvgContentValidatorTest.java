@@ -13,13 +13,13 @@ class SvgContentValidatorTest {
 
     @Test
     @DisplayName("valid SVG without script or external references is accepted")
-    void validSvg_Accepted() {
+    void validSvgAccepted() {
         validator.validate(TestFiles.svg());
     }
 
     @Test
     @DisplayName("SVG with embedded script is rejected")
-    void scriptSvg_Rejected() {
+    void scriptSvgRejected() {
         Assertions.assertThatThrownBy(() -> validator.validate(TestFiles.maliciousSvg()))
                 .isInstanceOf(FileValidationException.class)
                 .hasMessageContaining("forbidden element");
@@ -27,7 +27,7 @@ class SvgContentValidatorTest {
 
     @Test
     @DisplayName("SVG with onload handler is rejected")
-    void eventHandlerSvg_Rejected() {
+    void eventHandlerSvgRejected() {
         byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" onload=\"alert(1)\"></svg>".getBytes();
         Assertions.assertThatThrownBy(() -> validator.validate(svg))
                 .isInstanceOf(FileValidationException.class);
@@ -35,7 +35,7 @@ class SvgContentValidatorTest {
 
     @Test
     @DisplayName("SVG with external image href is rejected")
-    void externalHref_Rejected() {
+    void externalHrefRejected() {
         byte[] svg = """
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                   <image xlink:href="https://evil.example/x.png"/>
@@ -47,7 +47,7 @@ class SvgContentValidatorTest {
 
     @Test
     @DisplayName("SVG with javascript URL is rejected")
-    void javascriptUrl_Rejected() {
+    void javascriptUrlRejected() {
         byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\"><a href=\"javascript:alert(1)\"/></svg>".getBytes();
         Assertions.assertThatThrownBy(() -> validator.validate(svg))
                 .isInstanceOf(FileValidationException.class);
@@ -55,7 +55,7 @@ class SvgContentValidatorTest {
 
     @Test
     @DisplayName("non-XML content is rejected")
-    void malformed_Rejected() {
+    void malformedRejected() {
         Assertions.assertThatThrownBy(() -> validator.validate("not-xml".getBytes()))
                 .isInstanceOf(FileValidationException.class);
     }

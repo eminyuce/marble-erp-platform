@@ -23,7 +23,7 @@ class JpaAuditingTest {
     @Test
     @DisplayName("JPA Auditing populates addUserId, updateUserId, createdDate and updatedDate from SecurityContext")
     @WithMockUser(username = "auditor@ozerler.com")
-    void auditing_populatesAuditFieldsFromSecurityContext() {
+    void auditingPopulatesAuditFieldsFromSecurityContext() {
         Customer customer = Customer.builder()
                 .customerCode("CUST-AUDIT-1")
                 .companyName("Audit Test Corp")
@@ -47,7 +47,7 @@ class JpaAuditingTest {
 
     @Test
     @DisplayName("JPA Auditing falls back to system@ozerler.com when no authenticated user is present")
-    void auditing_fallbackToSystemWhenUnauthenticated() {
+    void auditingFallbackToSystemWhenUnauthenticated() {
         Customer customer = Customer.builder()
                 .customerCode("CUST-AUDIT-2")
                 .companyName("System Audit Corp")

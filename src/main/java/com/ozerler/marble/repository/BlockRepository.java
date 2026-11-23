@@ -128,7 +128,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     @Query("SELECT COUNT(b) FROM Block b JOIN b.currentLocation loc WHERE loc.locationType = :locationType")
     long countByLocationType(@Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType);
 
-    long countByCurrentLocation_LocationTypeAndStatusNot(
+    long countByCurrentLocationLocationTypeAndStatusNot(
             com.ozerler.marble.model.enums.StockLocationType locationType,
             BlockStatus status);
 
@@ -141,7 +141,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     boolean existsByCurrentLocationId(Long currentLocationId);
 
-    boolean existsBySoldCustomer_Id(Long customerId);
+    boolean existsBySoldCustomerId(Long customerId);
 
     @EntityGraph(attributePaths = {"quarry"})
     List<Block> findByQuarryId(Long quarryId);

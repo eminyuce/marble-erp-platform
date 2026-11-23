@@ -26,7 +26,7 @@ public class TabulatorResponse<T> {
 
     @JsonProperty("last_page")
     @JsonAlias("lastPage")
-    private int last_page;
+    private int lastPage;
 
     @JsonProperty("total")
     @JsonAlias("total")
@@ -54,7 +54,7 @@ public class TabulatorResponse<T> {
         }
         return TabulatorResponse.<T>builder()
                 .data(Objects.requireNonNullElse(data, Collections.emptyList()))
-                .last_page(totalPagesValue)
+                .lastPage(totalPagesValue)
                 .total(totalElements)
                 .meta(meta)
                 .build();

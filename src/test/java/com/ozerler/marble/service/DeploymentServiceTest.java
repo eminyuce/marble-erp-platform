@@ -24,7 +24,7 @@ import com.ozerler.marble.dto.DeploymentStatusDto;
 class DeploymentServiceTest {
 
     @TempDir
-    Path tempDir;
+    private Path tempDir;
 
     private Path commandFile;
     private Path repoDir;
@@ -58,7 +58,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("currentStatus refuses to start when the feature is disabled")
-    void currentStatus_Disabled_CannotStart() {
+    void currentStatusDisabledCannotStart() {
         properties.setEnabled(false);
 
         DeploymentStatusDto status = deploymentService.currentStatus();
@@ -69,7 +69,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("currentStatus refuses to start when the wrapper binary is missing")
-    void currentStatus_MissingCommand_CannotStart() throws Exception {
+    void currentStatusMissingCommandCannotStart() throws Exception {
         Files.deleteIfExists(commandFile);
 
         DeploymentStatusDto status = deploymentService.currentStatus();
@@ -81,7 +81,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("startDeploy launches the wrapper and reports accepted when probes pass")
-    void startDeploy_WhenReady_StartsWrapper() {
+    void startDeployWhenReadyStartsWrapper() {
         commandRunner.pingOutput = DeploymentService.PING_TOKEN;
         commandRunner.startExitCode = 0;
         DeploymentService linuxService = new DeploymentService(properties, commandRunner) {
@@ -102,7 +102,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("currentStatus on a non-Linux host cannot start a production deploy")
-    void currentStatus_NonLinux_CannotStart() {
+    void currentStatusNonLinuxCannotStart() {
         properties.setEnabled(true);
         DeploymentService windowsService = new DeploymentService(properties, commandRunner) {
             @Override
@@ -122,7 +122,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("startDeploy is rejected while a RUNNING status file exists")
-    void startDeploy_AlreadyRunning_Rejected() throws Exception {
+    void startDeployAlreadyRunningRejected() throws Exception {
         Files.writeString(statusFile, """
                 STATE=RUNNING
                 STARTED_AT=%s
@@ -140,7 +140,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("readLog returns incremental chunks from the deploy log file")
-    void readLog_ReturnsChunksFromOffset() throws Exception {
+    void readLogReturnsChunksFromOffset() throws Exception {
         Files.writeString(logFile, "hello\nworld\n", StandardCharsets.UTF_8);
 
         DeploymentLogDto first = deploymentService.readLog(0);
@@ -154,7 +154,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("stale RUNNING status older than the timeout is treated as FAILED")
-    void currentStatus_StaleRunning_BecomesFailed() throws Exception {
+    void currentStatusStaleRunningBecomesFailed() throws Exception {
         properties.setStaleRunningMinutes(1);
         Files.writeString(statusFile, """
                 STATE=RUNNING
@@ -170,7 +170,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("docker-compose.prod.yml avoids /stack file bind mounts and fixes volume permissions recursively")
-    void prodCompose_AvoidsStackFileMountsAndFixesVolumePerms() throws Exception {
+    void prodComposeAvoidsStackFileMountsAndFixesVolumePerms() throws Exception {
         String compose = Files.readString(Path.of("docker-compose.prod.yml"), StandardCharsets.UTF_8);
 
         Assertions.assertThat(compose).doesNotContain("./docker-compose.prod.yml:/stack/docker-compose.prod.yml");
@@ -180,7 +180,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("deploy_from_app.sh syncs compose file from pulled image and marks status FAILED if docker run fails")
-    void deployFromAppScript_SyncsComposeFileAndHandlesLaunchFailure() throws Exception {
+    void deployFromAppScriptSyncsComposeFileAndHandlesLaunchFailure() throws Exception {
         String script = Files.readString(Path.of("scripts/deploy_from_app.sh"), StandardCharsets.UTF_8);
 
         Assertions.assertThat(script).contains("-v \"${host_stack}:${host_stack}\"");
@@ -191,7 +191,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("deploy_from_app.sh performs app-only update with --no-deps app, deep health check, and automatic rollback")
-    void deployFromAppScript_UsesAppOnlyUpdateAndAutomaticRollback() throws Exception {
+    void deployFromAppScriptUsesAppOnlyUpdateAndAutomaticRollback() throws Exception {
         String script = Files.readString(Path.of("scripts/deploy_from_app.sh"), StandardCharsets.UTF_8);
 
         Assertions.assertThat(script).contains("pull app");
@@ -217,7 +217,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("Dockerfile and .dockerignore bundle compose files, scripts, and docker-compose v2 plugin")
-    void dockerfileAndDockerignore_BundleStackAndComposePlugin() throws Exception {
+    void dockerfileAndDockerignoreBundleStackAndComposePlugin() throws Exception {
         String dockerfile = Files.readString(Path.of("Dockerfile"), StandardCharsets.UTF_8);
         String dockerignore = Files.readString(Path.of(".dockerignore"), StandardCharsets.UTF_8);
 
@@ -231,7 +231,7 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("Production compose, CI/CD pipelines, and operational scripts enforce zero-data-loss rules")
-    void productionInfrastructure_EnforcesZeroDataLossRules() throws Exception {
+    void productionInfrastructureEnforcesZeroDataLossRules() throws Exception {
         String prodCompose = Files.readString(Path.of("docker-compose.prod.yml"), StandardCharsets.UTF_8);
         String githubWorkflow = Files.readString(Path.of(".github/workflows/docker-publish.yml"), StandardCharsets.UTF_8);
         String gitlabCi = Files.readString(Path.of(".gitlab-ci.yml"), StandardCharsets.UTF_8);

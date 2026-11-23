@@ -21,7 +21,7 @@ import org.springframework.core.io.ClassPathResource;
 class SecretFileEnvironmentPostProcessorTest {
 
     @TempDir
-    Path directory;
+    private Path directory;
 
     @Test
     @DisplayName("a readable secret file loads and drops one trailing newline")

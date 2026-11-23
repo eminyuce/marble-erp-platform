@@ -16,7 +16,8 @@ import lombok.Getter;
  */
 public final class EmailTemplateCatalog {
 
-    private EmailTemplateCatalog() {}
+    private EmailTemplateCatalog() {
+    }
 
     @Getter
     @Builder

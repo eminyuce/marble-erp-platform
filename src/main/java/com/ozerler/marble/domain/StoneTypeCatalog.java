@@ -9,7 +9,8 @@ import java.util.Optional;
  */
 public final class StoneTypeCatalog {
 
-    public record StoneTypeItem(String code, String name, BigDecimal specificGravity, String description) {}
+    public record StoneTypeItem(String code, String name, BigDecimal specificGravity, String description) {
+    }
 
     private static final List<StoneTypeItem> CATALOG = List.of(
             new StoneTypeItem("BEJ", "Burdur / Klasik Bej", new BigDecimal("2.71"), "Standart bej mermer (2.71 t/m³)"),

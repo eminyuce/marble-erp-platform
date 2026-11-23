@@ -54,7 +54,7 @@ class S3ObjectStorageServiceTest {
 
     @Test
     @DisplayName("checkHealth returns UP when bucket probe succeeds")
-    void checkHealth_WhenRustFsReachable_ReturnsUp() {
+    void checkHealthWhenRustFsReachableReturnsUp() {
         Mockito.when(s3Client.putObject(ArgumentMatchers.any(PutObjectRequest.class), ArgumentMatchers.any(RequestBody.class)))
                 .thenReturn(PutObjectResponse.builder().build());
 
@@ -66,7 +66,7 @@ class S3ObjectStorageServiceTest {
 
     @Test
     @DisplayName("checkHealth returns DOWN when RustFS cannot be reached")
-    void checkHealth_WhenRustFsUnreachable_ReturnsDown() {
+    void checkHealthWhenRustFsUnreachableReturnsDown() {
         Mockito.when(s3Client.headBucket(ArgumentMatchers.any(HeadBucketRequest.class)))
                 .thenThrow(new RuntimeException("Connection refused"));
 
@@ -78,7 +78,7 @@ class S3ObjectStorageServiceTest {
 
     @Test
     @DisplayName("checkHealth returns DOWN when the write probe fails")
-    void checkHealth_WhenWriteProbeFails_ReturnsDown() {
+    void checkHealthWhenWriteProbeFailsReturnsDown() {
         Mockito.when(s3Client.putObject(ArgumentMatchers.any(PutObjectRequest.class), ArgumentMatchers.any(RequestBody.class)))
                 .thenThrow(new RuntimeException("Access Denied"));
 
@@ -90,7 +90,7 @@ class S3ObjectStorageServiceTest {
 
     @Test
     @DisplayName("presignedImageUrl signs for the configured image expiry and sets the image type")
-    void presignedImageUrl_UsesConfiguredImageExpiry() throws MalformedURLException {
+    void presignedImageUrlUsesConfiguredImageExpiry() throws MalformedURLException {
         stubPresigner();
 
         String url = storage.presignedImageUrl("images/block/1/photo.jpg");
@@ -103,7 +103,7 @@ class S3ObjectStorageServiceTest {
 
     @Test
     @DisplayName("presignedDocumentUrl signs for the configured document expiry")
-    void presignedDocumentUrl_UsesConfiguredDocumentExpiry() throws MalformedURLException {
+    void presignedDocumentUrlUsesConfiguredDocumentExpiry() throws MalformedURLException {
         stubPresigner();
 
         storage.presignedDocumentUrl("documents/block/1/spec.pdf");
@@ -115,7 +115,7 @@ class S3ObjectStorageServiceTest {
 
     @Test
     @DisplayName("image expiry follows presigned.url.image-expiry-minutes without a code change")
-    void presignedImageUrl_HonorsOverriddenMinutes() throws MalformedURLException {
+    void presignedImageUrlHonorsOverriddenMinutes() throws MalformedURLException {
         presignedUrlProperties.setImageExpiryMinutes(15);
         stubPresigner();
 
@@ -127,7 +127,7 @@ class S3ObjectStorageServiceTest {
 
     @Test
     @DisplayName("a real presigner stamps the public host and the image or document expiry")
-    void realPresigner_UsesPublicHostAndConfiguredExpiry() {
+    void realPresignerUsesPublicHostAndConfiguredExpiry() {
         String internalEndpoint = "http://rustfs:9000";
         String publicEndpoint = "http://files.example.com";
         ObjectStorageProperties properties = new ObjectStorageProperties();
@@ -160,7 +160,7 @@ class S3ObjectStorageServiceTest {
 
     @Test
     @DisplayName("production presigns on the application host under /erp-files/")
-    void realPresigner_UsesApplicationHostAndBucketPath() {
+    void realPresignerUsesApplicationHostAndBucketPath() {
         String publicEndpoint = "https://ozerler.naklink.com";
         ObjectStorageProperties properties = new ObjectStorageProperties();
         properties.getRustfs().setBucket("erp-files");

@@ -10,11 +10,11 @@ import lombok.Value;
 public class HelpFeedbackResponse {
 
     @JsonProperty("recorded")
-    boolean recorded;
+    private boolean recorded;
 
     @JsonProperty("helpful")
-    boolean helpful;
+    private boolean helpful;
 
     @JsonProperty("pageKey")
-    String pageKey;
+    private String pageKey;
 }

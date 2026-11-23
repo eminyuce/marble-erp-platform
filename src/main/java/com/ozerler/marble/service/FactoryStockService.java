@@ -590,11 +590,19 @@ public class FactoryStockService {
 
         QualityGrade grade = QualityGrade.A;
         if (qualityGradeStr != null) {
-            try { grade = QualityGrade.valueOf(qualityGradeStr); } catch (Exception ignored) {}
+            try {
+                grade = QualityGrade.valueOf(qualityGradeStr);
+            } catch (Exception ignored) {
+                // not a known constant: keep the default
+            }
         }
         SurfaceFinish surface = SurfaceFinish.POLISHED;
         if (surfaceFinishStr != null) {
-            try { surface = SurfaceFinish.valueOf(surfaceFinishStr); } catch (Exception ignored) {}
+            try {
+                surface = SurfaceFinish.valueOf(surfaceFinishStr);
+            } catch (Exception ignored) {
+                // not a known constant: keep the default
+            }
         }
 
         BigDecimal actualProduced;

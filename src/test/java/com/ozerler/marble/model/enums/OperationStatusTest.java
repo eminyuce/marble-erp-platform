@@ -11,7 +11,7 @@ class OperationStatusTest {
 
     @Test
     @DisplayName("labelOf returns Turkish labels for production and cut-order codes")
-    void labelOf_knownCodes_returnsTurkishLabels() {
+    void labelOfKnownCodesReturnsTurkishLabels() {
         Assertions.assertThat(OperationStatus.labelOf("PLANNED")).isEqualTo("Planlandı");
         Assertions.assertThat(OperationStatus.labelOf("IN_PROGRESS")).isEqualTo("Devam ediyor");
         Assertions.assertThat(OperationStatus.labelOf("COMPLETED")).isEqualTo("Tamamlandı");
@@ -21,7 +21,7 @@ class OperationStatusTest {
 
     @Test
     @DisplayName("labelOf falls back for blank and unknown codes")
-    void labelOf_unknownAndBlank() {
+    void labelOfUnknownAndBlank() {
         Assertions.assertThat(OperationStatus.labelOf(null)).isEmpty();
         Assertions.assertThat(OperationStatus.labelOf("")).isEmpty();
         Assertions.assertThat(OperationStatus.labelOf("CUSTOM")).isEqualTo("CUSTOM");
@@ -29,7 +29,7 @@ class OperationStatusTest {
 
     @Test
     @DisplayName("Entities expose the same Turkish status label used on detail pages")
-    void entityStatusLabel_matchesEnum() {
+    void entityStatusLabelMatchesEnum() {
         ProductionOrder production = ProductionOrder.builder().status("IN_PROGRESS").build();
         CutOrder cutOrder = CutOrder.builder().status("COMPLETED").build();
 

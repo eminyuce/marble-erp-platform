@@ -1,6 +1,5 @@
 package com.ozerler.marble.security;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -77,7 +76,7 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("Admin login page /account/adminlogin/ should be publicly accessible")
-    void adminLoginPage_publicAccess() throws Exception {
+    void adminLoginPagePublicAccess() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/account/adminlogin/"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("auth/admin-login"));
@@ -85,7 +84,7 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("Standard /login should be publicly accessible")
-    void loginPage_publicAccess() throws Exception {
+    void loginPagePublicAccess() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/login"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("auth/admin-login"));
@@ -93,7 +92,7 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("Health endpoint /health/ and /health should be publicly accessible and return status UP")
-    void healthCheck_publicAccess() throws Exception {
+    void healthCheckPublicAccess() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/health/"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("UP"))
@@ -112,7 +111,7 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("Pre-seeded admin admin@eimece.test should authenticate successfully with password B2u5c8JB")
-    void adminUser_eimeceAuthentication() throws Exception {
+    void adminUserEimeceAuthentication() throws Exception {
         mockMvc.perform(SecurityMockMvcRequestBuilders.formLogin("/account/adminlogin/")
                         .user("username", "admin@eimece.test")
                         .password("password", "B2u5c8JB"))
@@ -123,7 +122,7 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("Invalid credentials should fail authentication")
-    void invalidLogin_fails() throws Exception {
+    void invalidLoginFails() throws Exception {
         mockMvc.perform(SecurityMockMvcRequestBuilders.formLogin("/account/adminlogin/")
                         .user("username", "admin@eimece.test")
                         .password("password", "WRONG_PASSWORD"))
@@ -134,7 +133,7 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("Admin dashboard should redirect unauthenticated request to /account/adminlogin/")
-    void adminDashboard_unauthenticatedRedirects() throws Exception {
+    void adminDashboardUnauthenticatedRedirects() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
                 .andExpect(MockMvcResultMatchers.redirectedUrl("/account/adminlogin/"));
@@ -143,7 +142,7 @@ class SecurityConfigTest {
     @Test
     @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     @DisplayName("Admin user with ROLE_ADMIN should access /admin/users and /admin/settings")
-    void adminUsersAndSettings_allowedForAdmin() throws Exception {
+    void adminUsersAndSettingsAllowedForAdmin() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/users"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("admin/users/index"))
@@ -190,7 +189,7 @@ class SecurityConfigTest {
     @Test
     @WithMockUser(username = "user@example.com", roles = {"USER"})
     @DisplayName("Regular user without ROLE_ADMIN should be denied access to /admin/settings")
-    void adminSettings_deniedForRegularUser() throws Exception {
+    void adminSettingsDeniedForRegularUser() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings"))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
 
@@ -201,7 +200,7 @@ class SecurityConfigTest {
     @Test
     @WithMockUser(username = "admin@eimece.test", roles = {"ADMIN"})
     @DisplayName("Authorized user should access /reports and export reports in CSV/Excel")
-    void reports_allowedAndExportable() throws Exception {
+    void reportsAllowedAndExportable() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/reports"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("erp/reports/index"));
@@ -231,7 +230,7 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("Public digital stone passport should be accessible without authentication")
-    void digitalPassport_publicAccess() throws Exception {
+    void digitalPassportPublicAccess() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/passport/NONEXISTENT"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("erp/passport/view"));
@@ -240,7 +239,7 @@ class SecurityConfigTest {
     @Test
     @WithMockUser(username = "operator@example.com", roles = {"OPERATOR"})
     @DisplayName("Any authenticated user should access system health dashboard and see health icon in navbar")
-    void systemHealth_accessibleToAnyAuthenticatedUserAndIconPresent() throws Exception {
+    void systemHealthAccessibleToAnyAuthenticatedUserAndIconPresent() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard/systemhealth/"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("admin/system-health"))

@@ -27,6 +27,7 @@ public enum StockMovementType {
                 return msg;
             }
         } catch (Exception ignored) {
+            // best effort: fall back to the default below
         }
         return defaultLabel;
     }

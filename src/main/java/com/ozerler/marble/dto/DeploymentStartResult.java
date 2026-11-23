@@ -10,11 +10,11 @@ import lombok.Value;
 public class DeploymentStartResult {
 
     @JsonProperty("accepted")
-    boolean accepted;
+    private boolean accepted;
 
     @JsonProperty("state")
-    DeploymentState state;
+    private DeploymentState state;
 
     @JsonProperty("message")
-    String message;
+    private String message;
 }

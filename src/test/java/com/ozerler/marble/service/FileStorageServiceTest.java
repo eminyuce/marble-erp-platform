@@ -72,7 +72,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should upload image to object storage and persist metadata with view URL")
-    void storeFile_Image_Success() throws IOException {
+    void storeFileImageSuccess() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "block_front.jpg", "image/jpeg", TestFiles.jpeg());
         stubSuccessfulUpload();
@@ -92,7 +92,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should upload a valid SVG under the svg/ object-key prefix")
-    void storeFile_Svg_Success() throws IOException {
+    void storeFileSvgSuccess() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "plan.svg", "image/svg+xml", TestFiles.svg());
         stubSuccessfulUpload();
@@ -107,7 +107,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should reject SVG documents that contain script")
-    void storeFile_MaliciousSvg_ThrowsException() {
+    void storeFileMaliciousSvgThrowsException() {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "evil.svg", "image/svg+xml", TestFiles.maliciousSvg());
 
@@ -118,7 +118,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should save PDF document in documents/ object-key prefix")
-    void storeFile_Pdf_Success() throws IOException {
+    void storeFilePdfSuccess() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "geology_report.pdf", "application/pdf", TestFiles.pdf());
         stubSuccessfulUpload();
@@ -133,7 +133,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should save DOCX document successfully")
-    void storeFile_Docx_Success() throws IOException {
+    void storeFileDocxSuccess() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "analysis.docx",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -148,7 +148,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should save TXT document successfully")
-    void storeFile_Txt_Success() throws IOException {
+    void storeFileTxtSuccess() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "geology_notes.txt",
                 "text/plain",
@@ -165,7 +165,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should save Markdown document successfully")
-    void storeFile_Markdown_Success() throws IOException {
+    void storeFileMarkdownSuccess() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "jeoloji_notu.md",
                 "text/markdown",
@@ -184,7 +184,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should save XLSX document successfully")
-    void storeFile_Xlsx_Success() throws IOException {
+    void storeFileXlsxSuccess() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "block_density_analysis.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -199,7 +199,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should save XLS document successfully")
-    void storeFile_Xls_Success() throws IOException {
+    void storeFileXlsSuccess() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "quarry_measurements.xls",
                 "application/octet-stream",
@@ -214,7 +214,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should save CSV document successfully")
-    void storeFile_Csv_Success() throws IOException {
+    void storeFileCsvSuccess() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "spectrometry_data.csv",
                 "text/csv",
@@ -229,7 +229,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should allow two uploads with the same original filename")
-    void storeFile_DuplicateOriginalName_Succeeds() throws IOException {
+    void storeFileDuplicateOriginalNameSucceeds() throws IOException {
         MockMultipartFile first = new MockMultipartFile("file", "photo.jpg", "image/jpeg", TestFiles.jpeg());
         MockMultipartFile second = new MockMultipartFile("file", "photo.jpg", "image/jpeg", TestFiles.jpeg());
         stubSuccessfulUpload();
@@ -243,7 +243,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should reject empty file")
-    void storeFile_EmptyFile_ThrowsException() {
+    void storeFileEmptyFileThrowsException() {
         MockMultipartFile emptyFile = new MockMultipartFile(
                 "file", "empty.jpg", "image/jpeg", new byte[0]);
 
@@ -253,7 +253,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should reject path traversal")
-    void storeFile_PathTraversal_ThrowsException() {
+    void storeFilePathTraversalThrowsException() {
         MockMultipartFile badFile = new MockMultipartFile(
                 "file", "../evil.jpg", "image/jpeg", TestFiles.jpeg());
 
@@ -263,7 +263,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should reject unsupported file extensions (e.g. .exe, .sh)")
-    void storeFile_UnsupportedExtension_ThrowsException() {
+    void storeFileUnsupportedExtensionThrowsException() {
         MockMultipartFile badFile = new MockMultipartFile(
                 "file", "malware.exe", "application/octet-stream", "bad".getBytes());
 
@@ -273,7 +273,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("storeFile should reject JPEG extension with non-image content")
-    void storeFile_MimeAndMagicMismatch_ThrowsException() {
+    void storeFileMimeAndMagicMismatchThrowsException() {
         MockMultipartFile badFile = new MockMultipartFile(
                 "file", "disguised.jpg", "image/jpeg", "MZ executable".getBytes());
 
@@ -283,7 +283,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("attachFilesToEntity should update pending files with entityType and entityId")
-    void attachFilesToEntity_UpdatesFiles() {
+    void attachFilesToEntityUpdatesFiles() {
         FileStorage f1 = FileStorage.builder().id(10L).fileName("f1.jpg").entityType("BLOCK").build();
         FileStorage f2 = FileStorage.builder().id(11L).fileName("f2.pdf").entityType("BLOCK").build();
 
@@ -299,7 +299,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("deleteFileRecord should soft-delete metadata and remove the object")
-    void deleteFileRecord_Success() {
+    void deleteFileRecordSuccess() {
         FileStorage fs = FileStorage.builder()
                 .id(42L)
                 .fileName("uuid.png")
@@ -323,7 +323,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("deleteAllFilesForEntity should soft-delete linked files and remove objects")
-    void deleteAllFilesForEntity_Success() {
+    void deleteAllFilesForEntitySuccess() {
         FileStorage f1 = FileStorage.builder().id(1L).fileName("f1.jpg")
                 .objectKey("images/block/99/f1.jpg").entityType("BLOCK").entityId(99L).build();
         FileStorage f2 = FileStorage.builder().id(2L).fileName("f2.pdf")
@@ -342,7 +342,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("loadAsResource should stream the object from storage")
-    void loadAsResource_Success() throws IOException {
+    void loadAsResourceSuccess() throws IOException {
         FileStorage fs = FileStorage.builder()
                 .id(15L)
                 .fileName("doc.pdf")
@@ -365,7 +365,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("createPresignedDownload authorizes then signs a document for 5 minutes")
-    void createPresignedDownload_DocumentUsesShortExpiry() {
+    void createPresignedDownloadDocumentUsesShortExpiry() {
         FileStorage fs = FileStorage.builder()
                 .id(8L)
                 .objectKey("documents/block/1/a.pdf")
@@ -388,7 +388,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("createPresignedDownload signs an image for 30 minutes")
-    void createPresignedDownload_ImageUsesLongerExpiry() {
+    void createPresignedDownloadImageUsesLongerExpiry() {
         FileStorage fs = FileStorage.builder()
                 .id(9L)
                 .objectKey("images/block/1/a.jpg")
@@ -409,7 +409,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("access is checked before a presigned URL is created")
-    void createPresignedDownload_UnauthorizedUser_DoesNotSign() {
+    void createPresignedDownloadUnauthorizedUserDoesNotSign() {
         FileStorage fs = FileStorage.builder()
                 .id(3L)
                 .objectKey("images/block/pending/a.jpg")
@@ -429,7 +429,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("toView attaches a fresh image URL and does not persist it")
-    void toView_Image_SetsPresignedUrlOnlyOnTheDto() {
+    void toViewImageSetsPresignedUrlOnlyOnTheDto() {
         FileStorage fs = FileStorage.builder()
                 .id(4L)
                 .objectKey("images/block/1/a.jpg")
@@ -452,7 +452,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("unattached file cannot be downloaded by a different authenticated user")
-    void requireAccessibleFile_UnauthorizedUser_Denied() {
+    void requireAccessibleFileUnauthorizedUserDenied() {
         FileStorage fs = FileStorage.builder()
                 .id(3L)
                 .objectKey("images/block/pending/a.jpg")
@@ -468,7 +468,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("checkStorageHealth should report UP when object storage is healthy")
-    void checkStorageHealth_Success() {
+    void checkStorageHealthSuccess() {
         Mockito.when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.up());
 
         var health = fileStorageService.checkStorageHealth();
@@ -478,7 +478,7 @@ class FileStorageServiceTest {
 
     @Test
     @DisplayName("checkStorageHealth should report DOWN when object storage is unavailable")
-    void checkStorageHealth_WhenStorageDown_ReportsDown() {
+    void checkStorageHealthWhenStorageDownReportsDown() {
         Mockito.when(objectStorageService.checkHealth())
                 .thenReturn(DependencyHealth.down("RustFS erişilemiyor"));
 

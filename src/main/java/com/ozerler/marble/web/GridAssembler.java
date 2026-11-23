@@ -18,7 +18,7 @@ public final class GridAssembler {
         if (response == null) {
             totalPages = 1;
         } else {
-            totalPages = response.getLast_page();
+            totalPages = response.getLastPage();
         }
         long total;
         if (response == null) {

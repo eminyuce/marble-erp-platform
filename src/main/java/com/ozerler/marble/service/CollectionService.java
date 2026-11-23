@@ -40,7 +40,8 @@ public class CollectionService {
     private final InvoiceRepository invoiceRepository;
     private final CariTransactionService cariTransactionService;
 
-    public record CheckFormData(String checkNo, LocalDate checkDate, LocalDate dueDate, String bankName) {}
+    public record CheckFormData(String checkNo, LocalDate checkDate, LocalDate dueDate, String bankName) {
+    }
 
     @Transactional
     public CollectionRecord recordCollection(Long customerId, Long invoiceId, CollectionMethod method,

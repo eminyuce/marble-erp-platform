@@ -199,6 +199,7 @@ public class UserController extends AbstractController {
                 form.setAddUserId(existing.getAddUserId());
                 form.setUpdateUserId(existing.getUpdateUserId());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
             populateUserForm(model, form, true, bindingResult, null, locale);
             return Constants.VIEW_USER_FORM;
@@ -229,6 +230,7 @@ public class UserController extends AbstractController {
                 form.setAddUserId(existing.getAddUserId());
                 form.setUpdateUserId(existing.getUpdateUserId());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
             populateUserForm(model, form, true, bindingResult, e.getMessage(), locale);
             return Constants.VIEW_USER_FORM;
@@ -359,6 +361,7 @@ public class UserController extends AbstractController {
                 try {
                     message = messageSource.getMessage(error, locale);
                 } catch (Exception ignored) {
+                    // best effort: fall back to the default below
                 }
                 if (message == null || message.isBlank()) {
                     message = error.getDefaultMessage();

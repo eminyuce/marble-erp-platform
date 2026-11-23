@@ -8,7 +8,7 @@ class RustfsPropertiesTest {
 
     @Test
     @DisplayName("blank access key or secret key fails fast and does not echo the secret")
-    void requireCredentials_BlankKeyFailsWithoutEchoingSecret() {
+    void requireCredentialsBlankKeyFailsWithoutEchoingSecret() {
         RustfsProperties properties = new RustfsProperties();
         properties.setAccessKey(" ");
         properties.setSecretKey("");

@@ -10,12 +10,12 @@ import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 class ArchitectureTest {
 
     @ArchTest
-    static final ArchRule controllersDoNotDependOnRepositories = ArchRuleDefinition.noClasses()
+    static final ArchRule CONTROLLERS_DO_NOT_DEPEND_ON_REPOSITORIES = ArchRuleDefinition.noClasses()
             .that().resideInAPackage("..controller..")
             .should().dependOnClassesThat().resideInAPackage("..repository..");
 
     @ArchTest
-    static final ArchRule servicesDoNotDependOnControllers = ArchRuleDefinition.noClasses()
+    static final ArchRule SERVICES_DO_NOT_DEPEND_ON_CONTROLLERS = ArchRuleDefinition.noClasses()
             .that().resideInAPackage("..service..")
             .should().dependOnClassesThat().resideInAPackage("..controller..");
 
@@ -24,7 +24,7 @@ class ArchitectureTest {
      * and stay available to request parameters. JPA entities themselves must not reach a controller.
      */
     @ArchTest
-    static final ArchRule controllersDoNotDependOnEntities = ArchRuleDefinition.noClasses()
+    static final ArchRule CONTROLLERS_DO_NOT_DEPEND_ON_ENTITIES = ArchRuleDefinition.noClasses()
             .that().resideInAPackage("..controller..")
             .should().dependOnClassesThat().resideInAPackage("com.ozerler.marble.model");
 }

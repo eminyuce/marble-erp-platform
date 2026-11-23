@@ -51,7 +51,7 @@ class ProcurementServiceTest {
 
     @Test
     @DisplayName("purchase orders require a business unit")
-    void createPurchaseOrder_MissingUnit_Throws() {
+    void createPurchaseOrderMissingUnitThrows() {
         Assertions.assertThatThrownBy(() -> procurementService.createPurchaseOrder(
                 "SIP-1", 1L, null, null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -60,7 +60,7 @@ class ProcurementServiceTest {
 
     @Test
     @DisplayName("site purchases require a project")
-    void createPurchaseOrder_SiteWithoutProject_Throws() {
+    void createPurchaseOrderSiteWithoutProjectThrows() {
         Assertions.assertThatThrownBy(() -> procurementService.createPurchaseOrder(
                 "SIP-1", 1L, null, BusinessUnit.SITE, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -69,7 +69,7 @@ class ProcurementServiceTest {
 
     @Test
     @DisplayName("confirming a purchase posts the total to the unit cost center")
-    void confirmOrder_PostsExpenseToBusinessUnit() {
+    void confirmOrderPostsExpenseToBusinessUnit() {
         Supplier supplier = Supplier.builder().id(1L).companyName("Tedarik").supplierType(SupplierType.CONSUMABLE).build();
         Project project = Project.builder().id(3L).name("Şantiye A").build();
         PurchaseOrder order = PurchaseOrder.builder()

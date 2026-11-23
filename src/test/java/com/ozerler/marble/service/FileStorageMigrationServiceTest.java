@@ -32,7 +32,7 @@ class FileStorageMigrationServiceTest {
     private ObjectStorageService objectStorageService;
 
     @TempDir
-    Path tempDir;
+    private Path tempDir;
 
     private ObjectStorageProperties properties;
     private FileStorageMigrationService migrationService;

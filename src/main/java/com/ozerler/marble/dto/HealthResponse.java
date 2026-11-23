@@ -15,9 +15,9 @@ import lombok.Value;
 public class HealthResponse {
 
     @JsonProperty("status")
-    String status;
+    private String status;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("dependencies")
-    Map<String, DependencyHealth> dependencies;
+    private Map<String, DependencyHealth> dependencies;
 }

@@ -47,7 +47,7 @@ class CutOrderDtoJsonTest {
 
     @Test
     @DisplayName("fromEntity maps COMPLETED to the Turkish status label")
-    void fromEntity_mapsTurkishStatusLabel() {
+    void fromEntityMapsTurkishStatusLabel() {
         CutOrderDto dto = CutOrderDto.fromEntity(
                 CutOrder.builder()
                         .id(1L)

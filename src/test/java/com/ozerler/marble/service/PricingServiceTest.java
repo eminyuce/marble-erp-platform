@@ -21,7 +21,7 @@ class PricingServiceTest {
 
     @Test
     @DisplayName("simulatePrice should calculate base price and margin correctly without discount")
-    void simulatePrice_StandardInputs_CalculatesAccurately() {
+    void simulatePriceStandardInputsCalculatesAccurately() {
         BigDecimal unitCost = new BigDecimal("1000.00");
         BigDecimal targetMarginPct = new BigDecimal("20.00"); // 1000 / (1 - 0.20) = 1250.00
         BigDecimal discountPct = BigDecimal.ZERO;
@@ -39,7 +39,7 @@ class PricingServiceTest {
 
     @Test
     @DisplayName("calculateSimulation should return immutable record with margin alert false when margin >= 22%")
-    void calculateSimulation_MarginAboveThreshold_NoAlert() {
+    void calculateSimulationMarginAboveThresholdNoAlert() {
         BigDecimal unitCost = new BigDecimal("1000.00");
         BigDecimal targetMarginPct = new BigDecimal("30.00"); // 1000 / (1 - 0.30) = 1428.57
         BigDecimal discountPct = BigDecimal.ZERO;
@@ -52,7 +52,7 @@ class PricingServiceTest {
 
     @Test
     @DisplayName("simulatePrice with null inputs should fallback safely to domain defaults")
-    void simulatePrice_NullInputs_UsesDomainDefaults() {
+    void simulatePriceNullInputsUsesDomainDefaults() {
         Map<String, Object> result = pricingService.simulatePrice(null, null, null);
 
         Assertions.assertThat(result.get("unitCost")).isEqualTo(Constants.DEFAULT_STANDARD_COST_PER_M2);

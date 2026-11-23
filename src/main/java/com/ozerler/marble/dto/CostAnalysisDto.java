@@ -13,21 +13,21 @@ import lombok.Value;
 @Value
 @Builder
 public class CostAnalysisDto {
-    BusinessUnit businessUnit;
-    String businessUnitLabel;
-    String expensePeriod;
-    String previousPeriod;
-    BigDecimal totalExpense;
-    BigDecimal previousExpense;
-    BigDecimal productionQuantity;
-    String productionUnit;
-    BigDecimal unitCost;
-    BigDecimal previousUnitCost;
-    boolean unallocatedCarryForward;
-    BigDecimal incomingBlockCost;
-    Map<ExpenseCategory, BigDecimal> expenseByCategory;
-    List<YieldRow> yields;
-    List<Line> lines;
+    private BusinessUnit businessUnit;
+    private String businessUnitLabel;
+    private String expensePeriod;
+    private String previousPeriod;
+    private BigDecimal totalExpense;
+    private BigDecimal previousExpense;
+    private BigDecimal productionQuantity;
+    private String productionUnit;
+    private BigDecimal unitCost;
+    private BigDecimal previousUnitCost;
+    private boolean unallocatedCarryForward;
+    private BigDecimal incomingBlockCost;
+    private Map<ExpenseCategory, BigDecimal> expenseByCategory;
+    private List<YieldRow> yields;
+    private List<Line> lines;
 
     public BigDecimal calculateUnitContribution(BigDecimal amount) {
         if (amount == null || productionQuantity == null || productionQuantity.compareTo(BigDecimal.ZERO) <= 0) {
@@ -46,24 +46,24 @@ public class CostAnalysisDto {
     @Value
     @Builder
     public static class YieldRow {
-        String processLabel;
-        BigDecimal inputQuantity;
-        String inputUnit;
-        BigDecimal outputQuantity;
-        String outputUnit;
-        BigDecimal wasteQuantity;
-        String wasteUnit;
-        BigDecimal yieldValue;
-        String yieldLabel;
+        private String processLabel;
+        private BigDecimal inputQuantity;
+        private String inputUnit;
+        private BigDecimal outputQuantity;
+        private String outputUnit;
+        private BigDecimal wasteQuantity;
+        private String wasteUnit;
+        private BigDecimal yieldValue;
+        private String yieldLabel;
     }
 
     @Value
     @Builder
     public static class Line {
-        Long id;
-        String categoryLabel;
-        String description;
-        BigDecimal amount;
-        String documentNo;
+        private Long id;
+        private String categoryLabel;
+        private String description;
+        private BigDecimal amount;
+        private String documentNo;
     }
 }

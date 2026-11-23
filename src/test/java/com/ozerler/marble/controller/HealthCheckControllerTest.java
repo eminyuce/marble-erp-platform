@@ -1,6 +1,5 @@
 package com.ozerler.marble.controller;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,7 +40,7 @@ class HealthCheckControllerTest {
 
     @Test
     @DisplayName("All dependencies UP returns HTTP 200 and overall UP")
-    void allDependenciesUp_returnsOk() throws Exception {
+    void allDependenciesUpReturnsOk() throws Exception {
         Mockito.when(systemHealthService.buildHealthResponse()).thenReturn(allUpHealthResponse());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/health"))
@@ -57,7 +56,7 @@ class HealthCheckControllerTest {
 
     @Test
     @DisplayName("Database DOWN returns HTTP 503 with database error")
-    void databaseDown_returnsServiceUnavailable() throws Exception {
+    void databaseDownReturnsServiceUnavailable() throws Exception {
         Map<String, DependencyHealth> dependencies = healthyDependencies();
         dependencies.put("database", DependencyHealth.down("Database connection failed"));
 
@@ -72,7 +71,7 @@ class HealthCheckControllerTest {
 
     @Test
     @DisplayName("External service DOWN returns HTTP 503 with error only for failed dependency")
-    void externalServiceDown_returnsServiceUnavailableWithTargetedError() throws Exception {
+    void externalServiceDownReturnsServiceUnavailableWithTargetedError() throws Exception {
         Map<String, DependencyHealth> dependencies = healthyDependencies();
         dependencies.put("quarryService", DependencyHealth.down("Unable to connect to Quarry Service"));
 
@@ -87,7 +86,7 @@ class HealthCheckControllerTest {
 
     @Test
     @DisplayName("RustFS DOWN returns HTTP 503 and overall DOWN")
-    void rustfsDown_returnsServiceUnavailable() throws Exception {
+    void rustfsDownReturnsServiceUnavailable() throws Exception {
         Map<String, DependencyHealth> dependencies = healthyDependencies();
         dependencies.put("rustfs", DependencyHealth.down("RustFS erişilemiyor"));
 
@@ -102,7 +101,7 @@ class HealthCheckControllerTest {
 
     @Test
     @DisplayName("Multiple dependencies DOWN include respective errors")
-    void multipleDependenciesDown_includeAllErrors() throws Exception {
+    void multipleDependenciesDownIncludeAllErrors() throws Exception {
         Map<String, DependencyHealth> dependencies = new LinkedHashMap<>();
         dependencies.put("database", DependencyHealth.up());
         dependencies.put("rustfs", DependencyHealth.up());
@@ -122,7 +121,7 @@ class HealthCheckControllerTest {
 
     @Test
     @DisplayName("Response JSON matches minimal health structure")
-    void responseJsonStructure_isMinimal() throws Exception {
+    void responseJsonStructureIsMinimal() throws Exception {
         Mockito.when(systemHealthService.buildHealthResponse()).thenReturn(allUpHealthResponse());
 
         String json = mockMvc.perform(MockMvcRequestBuilders.get("/health"))

@@ -361,11 +361,19 @@ public class WorkshopOperationService {
 
         QualityGrade grade = QualityGrade.A;
         if (qualityGradeStr != null) {
-            try { grade = QualityGrade.valueOf(qualityGradeStr); } catch (Exception ignored) {}
+            try {
+                grade = QualityGrade.valueOf(qualityGradeStr);
+            } catch (Exception ignored) {
+                // not a known constant: keep the default
+            }
         }
         SurfaceFinish surface = SurfaceFinish.POLISHED;
         if (surfaceFinishStr != null) {
-            try { surface = SurfaceFinish.valueOf(surfaceFinishStr); } catch (Exception ignored) {}
+            try {
+                surface = SurfaceFinish.valueOf(surfaceFinishStr);
+            } catch (Exception ignored) {
+                // not a known constant: keep the default
+            }
         }
         QualityGrade resolvedGrade = grade;
         SurfaceFinish resolvedSurface = surface;
@@ -374,7 +382,7 @@ public class WorkshopOperationService {
         Block resolvedBlock = sourceBlock;
         String resolvedStoneType = stoneType;
 
-        BigDecimal[] producedArea = { BigDecimal.ZERO };
+        BigDecimal[] producedArea = {BigDecimal.ZERO};
         RowDimensions.eachPositiveSizedRow(widths, lengths, thicknesses, pieceCounts, quantities, new BigDecimal("2.0"),
                 (index, width, length, thickness, count, quantity) -> {
             producedArea[0] = producedArea[0].add(quantity);
@@ -398,7 +406,11 @@ public class WorkshopOperationService {
             }
             SurfaceFinish rowSurface = resolvedSurface;
             if (rowSurfaceStr != null) {
-                try { rowSurface = SurfaceFinish.valueOf(rowSurfaceStr); } catch (Exception ignored) {}
+                try {
+                    rowSurface = SurfaceFinish.valueOf(rowSurfaceStr);
+                } catch (Exception ignored) {
+                    // not a known constant: keep the default
+                }
             }
 
             String rowEdge;

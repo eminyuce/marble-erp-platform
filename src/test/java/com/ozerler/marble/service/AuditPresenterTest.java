@@ -38,7 +38,7 @@ class AuditPresenterTest {
 
     @Test
     @DisplayName("formatUser formats known user as email (FullName)")
-    void formatUser_knownUser_returnsEmailWithFullName() {
+    void formatUserKnownUserReturnsEmailWithFullName() {
         Mockito.when(userRepository.findByEmail("xyz@email.com")).thenReturn(Optional.of(testUser));
 
         String formatted = auditPresenter.formatUser("xyz@email.com");
@@ -47,7 +47,7 @@ class AuditPresenterTest {
 
     @Test
     @DisplayName("formatUser formats system email with (Sistem)")
-    void formatUser_systemEmail_returnsWithSistemTag() {
+    void formatUserSystemEmailReturnsWithSistemTag() {
         Mockito.when(userRepository.findByEmail("system@ozerler.com")).thenReturn(Optional.empty());
 
         String formatted = auditPresenter.formatUser("system@ozerler.com");
@@ -56,7 +56,7 @@ class AuditPresenterTest {
 
     @Test
     @DisplayName("formatUser returns raw email when user not found")
-    void formatUser_unknownEmail_returnsRawEmail() {
+    void formatUserUnknownEmailReturnsRawEmail() {
         Mockito.when(userRepository.findByEmail("unknown@email.com")).thenReturn(Optional.empty());
 
         String formatted = auditPresenter.formatUser("unknown@email.com");
@@ -65,7 +65,7 @@ class AuditPresenterTest {
 
     @Test
     @DisplayName("formatUser returns dash when email is null or blank")
-    void formatUser_nullOrBlank_returnsDash() {
+    void formatUserNullOrBlankReturnsDash() {
         Assertions.assertThat(auditPresenter.formatUser(null)).isEqualTo("-");
         Assertions.assertThat(auditPresenter.formatUser("")).isEqualTo("-");
         Assertions.assertThat(auditPresenter.formatUser("   ")).isEqualTo("-");
@@ -73,7 +73,7 @@ class AuditPresenterTest {
 
     @Test
     @DisplayName("formatDateTime formats according to Turkish d.MM.yyyy HH:mm format")
-    void formatDateTime_formatsCorrectly() {
+    void formatDateTimeFormatsCorrectly() {
         LocalDateTime dt1 = LocalDateTime.of(2026, 7, 22, 20, 11);
         LocalDateTime dt2 = LocalDateTime.of(2026, 9, 3, 12, 57);
 
@@ -83,7 +83,7 @@ class AuditPresenterTest {
 
     @Test
     @DisplayName("formatDateTime returns dash when dateTime is null")
-    void formatDateTime_null_returnsDash() {
+    void formatDateTimeNullReturnsDash() {
         Assertions.assertThat(auditPresenter.formatDateTime(null)).isEqualTo("-");
     }
 }

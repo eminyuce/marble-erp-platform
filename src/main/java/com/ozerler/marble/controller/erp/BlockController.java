@@ -341,6 +341,7 @@ public class BlockController extends AbstractController {
                 List<FileStorageDto> attachedFiles = fileStorageService.getFileViewsForEntity("BLOCK", id);
                 model.addAttribute("attachedFiles", attachedFiles);
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
             model.addAttribute("isEdit", true);
             populateBlockForm(model, locale);

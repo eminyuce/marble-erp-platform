@@ -51,12 +51,14 @@ public class ProcurementService {
             try {
                 return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
-    public record ProcurementSummaryDto(long totalOrders, BigDecimal totalAmount, long pendingDeliveries, long completedDeliveries) {}
+    public record ProcurementSummaryDto(long totalOrders, BigDecimal totalAmount, long pendingDeliveries, long completedDeliveries) {
+    }
 
     @Transactional(readOnly = true)
     public ProcurementSummaryDto getProcurementSummary() {

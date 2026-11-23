@@ -58,7 +58,7 @@ class DashboardServiceTest {
 
     @Test
     @DisplayName("getDashboardKpis aggregates all metrics and converts block weight to tons")
-    void getDashboardKpis_CalculatesCorrectly() {
+    void getDashboardKpisCalculatesCorrectly() {
         Mockito.when(slabRepository.getTotalInventoryAreaM2()).thenReturn(new BigDecimal("1540.50"));
         Mockito.when(slabRepository.getTotalAreaByStatus(SlabStatus.AVAILABLE)).thenReturn(new BigDecimal("1200.00"));
         Mockito.when(slabRepository.getTotalAreaByStatus(SlabStatus.RESERVED)).thenReturn(new BigDecimal("340.50"));

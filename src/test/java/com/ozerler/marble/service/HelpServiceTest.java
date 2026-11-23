@@ -24,7 +24,7 @@ class HelpServiceTest {
 
     @Test
     @DisplayName("startup cache contains every classpath help HTML file")
-    void loadHelpPages_CachesAllClasspathFiles() {
+    void loadHelpPagesCachesAllClasspathFiles() {
         Assertions.assertThat(helpService.getHelpPage("projects")).isPresent();
         Assertions.assertThat(helpService.getHelpPage("users")).isPresent();
         Assertions.assertThat(helpService.getHelpPage("dashboard")).isPresent();
@@ -60,7 +60,7 @@ class HelpServiceTest {
 
     @Test
     @DisplayName("getHelpPage returns catalog content for a known key")
-    void getHelpPage_KnownKey() {
+    void getHelpPageKnownKey() {
         Optional<HelpPageDto> page = helpService.getHelpPage("change-password");
 
         Assertions.assertThat(page).isPresent();
@@ -72,7 +72,7 @@ class HelpServiceTest {
 
     @Test
     @DisplayName("getHelpPage rejects unknown or unsafe keys")
-    void getHelpPage_UnknownOrUnsafe() {
+    void getHelpPageUnknownOrUnsafe() {
         Assertions.assertThat(helpService.getHelpPage("missing-page")).isEmpty();
         Assertions.assertThat(helpService.getHelpPage("../etc/passwd")).isEmpty();
         Assertions.assertThat(helpService.getHelpPage("")).isEmpty();
@@ -81,7 +81,7 @@ class HelpServiceTest {
 
     @Test
     @DisplayName("resolvePageKey maps request paths including nested routes")
-    void resolvePageKey_MapsNestedRoutes() {
+    void resolvePageKeyMapsNestedRoutes() {
         Assertions.assertThat(helpService.resolvePageKey("/projects")).contains("projects");
         Assertions.assertThat(helpService.resolvePageKey("/projects/2")).contains("projects");
         Assertions.assertThat(helpService.resolvePageKey("/production/slabs")).contains("slabs");
@@ -118,7 +118,7 @@ class HelpServiceTest {
 
     @Test
     @DisplayName("recordFeedback stores a vote for a known page")
-    void recordFeedback_KnownPage() {
+    void recordFeedbackKnownPage() {
         HelpFeedbackResponse response = helpService.recordFeedback("users", true);
 
         Assertions.assertThat(response.isRecorded()).isTrue();
@@ -128,7 +128,7 @@ class HelpServiceTest {
 
     @Test
     @DisplayName("recordFeedback rejects an unknown page")
-    void recordFeedback_UnknownPage() {
+    void recordFeedbackUnknownPage() {
         Assertions.assertThatThrownBy(() -> helpService.recordFeedback("no-such-page", false))
                 .isInstanceOf(IllegalArgumentException.class);
     }

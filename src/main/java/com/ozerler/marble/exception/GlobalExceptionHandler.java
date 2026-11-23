@@ -135,6 +135,7 @@ public class GlobalExceptionHandler {
                 try {
                     message = messageSource.getMessage(fieldError, activeLocale);
                 } catch (Exception ignored) {
+                    // best effort: fall back to the default below
                 }
             }
             if (message == null || message.isBlank()) {
@@ -159,6 +160,7 @@ public class GlobalExceptionHandler {
             try {
                 return messageSource.getMessage(code, args, defaultMessage, activeLocale);
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         return MessageUtils.getMessage(code, activeLocale, args);

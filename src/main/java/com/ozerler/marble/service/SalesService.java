@@ -46,12 +46,14 @@ public class SalesService {
             try {
                 return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
-    public record SalesSummaryDto(long totalOrders, BigDecimal totalAmount, BigDecimal paidAmount, BigDecimal remainingBalance) {}
+    public record SalesSummaryDto(long totalOrders, BigDecimal totalAmount, BigDecimal paidAmount, BigDecimal remainingBalance) {
+    }
 
     @Transactional(readOnly = true)
     public SalesSummaryDto getSalesSummary() {

@@ -36,7 +36,7 @@ class DatabaseBackupServiceTest {
     private DatabaseBackupService backupService;
 
     @TempDir
-    Path tempDir;
+    private Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -53,7 +53,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("createBackupAsync creates GZIP archive and uploads to RustFS with backups/ prefix")
-    void createBackupAsync_createsAndUploadsArchive() throws Exception {
+    void createBackupAsyncCreatesAndUploadsArchive() throws Exception {
         CompletableFuture<String> future = backupService.createBackupAsync();
         String fileName = future.get();
 
@@ -76,7 +76,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("PostgreSQL backup is not uploaded when it would only list table names")
-    void createBackupAsync_doesNotUploadCommentShellForPostgres() throws Exception {
+    void createBackupAsyncDoesNotUploadCommentShellForPostgres() throws Exception {
         properties.getDatabase().setPgDumpPath("pg_dump-not-installed");
         backupService = new DatabaseBackupService(
                 storageService,
@@ -96,7 +96,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("listBackups returns sorted list with formatted size and presigned URL")
-    void listBackups_returnsFormattedList() throws Exception {
+    void listBackupsReturnsFormattedList() throws Exception {
         backupService.createBackupAsync().get();
 
         List<BackupItemDto> list = backupService.listBackups();
@@ -114,7 +114,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("generatePresignedDownloadUrl returns presigned URL for existing backup")
-    void generatePresignedDownloadUrl_returnsValidUrl() throws Exception {
+    void generatePresignedDownloadUrlReturnsValidUrl() throws Exception {
         String fileName = backupService.createBackupAsync().get();
         String url = backupService.generatePresignedDownloadUrl(fileName);
 
@@ -123,7 +123,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("restoreBackupAsync restores database from RustFS archive")
-    void restoreBackupAsync_restoresSuccessfully() throws Exception {
+    void restoreBackupAsyncRestoresSuccessfully() throws Exception {
         String fileName = backupService.createBackupAsync().get();
 
         CompletableFuture<Void> restoreFuture = backupService.restoreBackupAsync(fileName);
@@ -136,7 +136,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("cleanupOldBackupsScheduled deletes backups older than 10 days and keeps newer ones")
-    void cleanupOldBackupsScheduled_deletesOnlyExpired() throws Exception {
+    void cleanupOldBackupsScheduledDeletesOnlyExpired() throws Exception {
         // Create a recent backup
         String recentFile = backupService.createBackupAsync().get();
         String recentKey = "backups/" + recentFile;
@@ -162,7 +162,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("openDownload streams the stored gzip without buffering the whole archive first")
-    void openDownload_streamsStoredArchive() throws Exception {
+    void openDownloadStreamsStoredArchive() throws Exception {
         String fileName = backupService.createBackupAsync().get();
 
         DatabaseBackupService.BackupContent content = backupService.openDownload(fileName);
@@ -178,7 +178,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("download rejects a missing backup and an unsafe file name")
-    void openDownload_rejectsMissingAndUnsafeNames() {
+    void openDownloadRejectsMissingAndUnsafeNames() {
         Assertions.assertThatThrownBy(() -> backupService.openDownload("backup_missing.sql.gz"))
                 .isInstanceOf(StoredFileNotFoundException.class);
 
@@ -191,7 +191,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("interrupted download is completed without a storage error")
-    void writeBackup_treatsBrokenPipeAsInterrupted() throws Exception {
+    void writeBackupTreatsBrokenPipeAsInterrupted() throws Exception {
         String fileName = backupService.createBackupAsync().get();
         DatabaseBackupService.BackupContent content = new DatabaseBackupService.BackupContent(
                 fileName,
@@ -204,7 +204,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("storage read failure while streaming is reported as a storage error")
-    void writeBackup_reportsStorageFailure() throws Exception {
+    void writeBackupReportsStorageFailure() throws Exception {
         String fileName = backupService.createBackupAsync().get();
 
         Assertions.assertThatThrownBy(() -> backupService.writeBackup(failingStream(), new ByteArrayOutputStream(), fileName))
@@ -214,7 +214,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("public RustFS endpoint produces a presigned URL when the probe succeeds")
-    void listBackups_usesPresignedUrlWhenPublicEndpointIsReachable() throws Exception {
+    void listBackupsUsesPresignedUrlWhenPublicEndpointIsReachable() throws Exception {
         FixedUrlStorage storage = new FixedUrlStorage("https://files.example.com/erp-files/");
         DatabaseBackupService service = serviceWith(storage, "http://rustfs:9000", "https://files.example.com", endpoint -> true);
         String fileName = service.createBackupAsync().get();
@@ -229,7 +229,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("an internal Docker hostname is never handed to the browser")
-    void listBackups_discardsPresignedUrlThatPointsAtDockerDns() throws Exception {
+    void listBackupsDiscardsPresignedUrlThatPointsAtDockerDns() throws Exception {
         FixedUrlStorage storage = new FixedUrlStorage("http://rustfs:9000/erp-files/");
         DatabaseBackupService service = serviceWith(storage, "http://rustfs:9000", "https://files.example.com", endpoint -> true);
         String fileName = service.createBackupAsync().get();
@@ -244,7 +244,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("unreachable or loopback-only RustFS falls back to the authenticated download path")
-    void listBackups_fallsBackWhenBrowserCannotReachRustFs() throws Exception {
+    void listBackupsFallsBackWhenBrowserCannotReachRustFs() throws Exception {
         FixedUrlStorage storage = new FixedUrlStorage("http://localhost:9000/erp-files/");
         DatabaseBackupService unreachable = serviceWith(
                 storage, "http://rustfs:9000", "http://localhost:9000", endpoint -> false);
@@ -257,7 +257,9 @@ class DatabaseBackupServiceTest {
                 storage,
                 "http://rustfs:9000",
                 "http://localhost:9000",
-                endpoint -> { throw new AssertionError("loopback must not be probed for a remote browser"); });
+                endpoint -> {
+                    throw new AssertionError("loopback must not be probed for a remote browser");
+                });
 
         Assertions.assertThat(remoteBrowser.browserPresignedUrl(fileName, "erp.example.com")).isEmpty();
         Assertions.assertThat(remoteBrowser.listBackups("erp.example.com").get(0).getDownloadUrl())
@@ -266,7 +268,7 @@ class DatabaseBackupServiceTest {
 
     @Test
     @DisplayName("non-positive presign TTL does not issue a download URL")
-    void browserPresignedUrl_skippedWhenTtlIsNotPositive() throws Exception {
+    void browserPresignedUrlSkippedWhenTtlIsNotPositive() throws Exception {
         FixedUrlStorage storage = new FixedUrlStorage("https://files.example.com/erp-files/");
         BackupProperties props = copyProperties();
         props.getRustfs().setPresignedUrlDurationMinutes(0);

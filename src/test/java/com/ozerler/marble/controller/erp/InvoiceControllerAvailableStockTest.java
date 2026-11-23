@@ -38,7 +38,7 @@ class InvoiceControllerAvailableStockTest {
 
     @Test
     @DisplayName("sized stock is filtered by the already loaded stock location business unit")
-    void getAvailableStock_FiltersSizedItemsByLoadedLocation() {
+    void getAvailableStockFiltersSizedItemsByLoadedLocation() {
         StockItem factoryItem = sizedItem("EB-FAB", BusinessUnit.FACTORY);
         StockItem workshopItem = sizedItem("EB-ATL", BusinessUnit.WORKSHOP);
         StockItem unlocatedItem = StockItem.builder()

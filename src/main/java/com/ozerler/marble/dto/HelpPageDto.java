@@ -25,17 +25,17 @@ import lombok.Value;
 public class HelpPageDto {
 
     @JsonProperty("pageKey")
-    String pageKey;
+    private String pageKey;
 
     @JsonProperty("title")
-    String title;
+    private String title;
 
     @JsonProperty("body")
-    String body;
+    private String body;
 
     @JsonProperty("format")
-    String format;
+    private String format;
 
     @JsonProperty("lastUpdated")
-    LocalDate lastUpdated;
+    private LocalDate lastUpdated;
 }

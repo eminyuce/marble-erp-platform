@@ -261,7 +261,7 @@ public class QuarryInventoryService {
 
     @Transactional(readOnly = true)
     public List<StockItem> getConsumableStockItems() {
-        return stockItemRepository.findByStockLocation_LocationTypeAndStatus(
+        return stockItemRepository.findByStockLocationLocationTypeAndStatus(
                 StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE, "AVAILABLE");
     }
 
@@ -333,7 +333,7 @@ public class QuarryInventoryService {
         }
 
         // Duplicate kontrolü (Madde 2): Ocak stoğunda aynı isimde veya aynı kodda kayıt var mı?
-        boolean descExists = stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(
+        boolean descExists = stockItemRepository.existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(
                 BusinessUnit.QUARRY, trimmedDesc);
         if (descExists) {
             throw new IllegalArgumentException(String.format(
@@ -452,7 +452,7 @@ public class QuarryInventoryService {
 
     @Transactional(readOnly = true)
     public List<StockItem> getAllQuarryStockCards(QuarryCategory category) {
-        List<StockItem> list = stockItemRepository.findByStockLocation_BusinessUnitAndStatus(BusinessUnit.QUARRY, "AVAILABLE");
+        List<StockItem> list = stockItemRepository.findByStockLocationBusinessUnitAndStatus(BusinessUnit.QUARRY, "AVAILABLE");
         if (category == null) {
             return list;
         }

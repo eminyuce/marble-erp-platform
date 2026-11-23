@@ -68,14 +68,14 @@ class PalletShipmentServiceTest {
 
     @Test
     @DisplayName("Müşteri veya şantiye olmadan palet oluşturulursa hata fırlatmalı")
-    void createPallet_ThrowsWhenNoCustomerAndNoProject() {
+    void createPalletThrowsWhenNoCustomerAndNoProject() {
         Assertions.assertThatThrownBy(() -> palletShipmentService.createPallet(null, null, null, "A-1"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("Müşteri ile palet başarıyla oluşturulmalı")
-    void createPallet_Success() {
+    void createPalletSuccess() {
         Customer customer = Customer.builder().id(1L).companyName("Test Müşteri").build();
         Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         Mockito.when(palletRepository.save(ArgumentMatchers.any(Pallet.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -90,7 +90,7 @@ class PalletShipmentServiceTest {
 
     @Test
     @DisplayName("Palete lot eklenince palet durumu READY olmalı")
-    void addLot_Success() {
+    void addLotSuccess() {
         Pallet pallet = Pallet.builder().id(10L).status("PREPARING").build();
         MaterialLot lot = MaterialLot.builder().id(20L).lotCode("LOT-100").totalAreaM2(new BigDecimal("15.50")).build();
 
@@ -107,7 +107,7 @@ class PalletShipmentServiceTest {
 
     @Test
     @DisplayName("Sevk edilmiş palete lot eklenmeye çalışılırsa IllegalStateException fırlatmalı")
-    void addLot_ThrowsWhenPalletShipped() {
+    void addLotThrowsWhenPalletShipped() {
         Pallet pallet = Pallet.builder().id(10L).status("SHIPPED").build();
         Mockito.when(palletRepository.findById(10L)).thenReturn(Optional.of(pallet));
 
@@ -118,7 +118,7 @@ class PalletShipmentServiceTest {
 
     @Test
     @DisplayName("Sevkiyat oluşturulunca palet durumu SHIPPED olmalı")
-    void createShipment_Success() {
+    void createShipmentSuccess() {
         Pallet pallet = Pallet.builder().id(10L).status("READY").build();
         Customer customer = Customer.builder().id(1L).companyName("Hedef Müşteri").build();
         PalletItem item = PalletItem.builder().id(100L).pallet(pallet)
@@ -139,7 +139,7 @@ class PalletShipmentServiceTest {
 
     @Test
     @DisplayName("Pallet listesi çekilirken items'lar paletlere atanmalı")
-    void pallets_PopulatesItems() {
+    void palletsPopulatesItems() {
         Pallet p1 = Pallet.builder().id(1L).status("PREPARING").build();
         Pallet p2 = Pallet.builder().id(2L).status("SHIPPED").build();
         List<Pallet> palletList = new ArrayList<>(List.of(p1, p2));
@@ -162,7 +162,7 @@ class PalletShipmentServiceTest {
 
     @Test
     @DisplayName("shippablePallets sadece sevk edilmemiş paletleri dönmeli")
-    void shippablePallets_FiltersOutShipped() {
+    void shippablePalletsFiltersOutShipped() {
         Pallet p1 = Pallet.builder().id(1L).status("READY").build();
         Pallet p2 = Pallet.builder().id(2L).status("SHIPPED").build();
         Mockito.when(palletRepository.findAllWithLocationAndSlabs()).thenReturn(List.of(p1, p2));
@@ -175,7 +175,7 @@ class PalletShipmentServiceTest {
 
     @Test
     @DisplayName("Palet kapatılabilmeli ve tekrar açılabilmeli")
-    void closeAndReopenPallet_Success() {
+    void closeAndReopenPalletSuccess() {
         Pallet pallet = Pallet.builder().id(5L).status("READY").build();
         Mockito.when(palletRepository.findById(5L)).thenReturn(Optional.of(pallet));
 
@@ -188,7 +188,7 @@ class PalletShipmentServiceTest {
 
     @Test
     @DisplayName("Paletten adet bazlı satış yapılınca asıl stoktan ve palet kaleminden düşülmeli")
-    void sellFromPallet_Success() {
+    void sellFromPalletSuccess() {
         Customer customer = Customer.builder().id(1L).companyName("Alıcı Ltd.").build();
         Pallet pallet = Pallet.builder().id(10L).palletCode("PAL-001").status("READY").customer(customer).build();
         StockItem stockItem = StockItem.builder().id(100L).pieceCount(50).quantity(new BigDecimal("20.00")).status("AVAILABLE").build();

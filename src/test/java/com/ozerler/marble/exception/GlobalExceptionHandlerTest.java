@@ -27,7 +27,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     @DisplayName("ResourceNotFoundException returns 404 with the exception message and no field errors")
-    void handleResourceNotFound_ReturnsNotFound() {
+    void handleResourceNotFoundReturnsNotFound() {
         ResourceNotFoundException ex = new ResourceNotFoundException("Blok", 42L);
 
         ResponseEntity<ProblemDetail> response = handler.handleResourceNotFound(ex, request);
@@ -44,7 +44,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     @DisplayName("MethodArgumentNotValidException returns 400 with a field-to-message map")
-    void handleValidation_ReturnsBadRequestWithFieldErrors() {
+    void handleValidationReturnsBadRequestWithFieldErrors() {
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(new Object(), "request");
         bindingResult.addError(new FieldError("request", "email", "Geçerli bir e-posta adresi giriniz"));
         bindingResult.addError(new FieldError("request", "username", "Missing required field: username"));
@@ -65,7 +65,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     @DisplayName("AccessDeniedException returns 403 without leaking authorization details")
-    void handleAccessDenied_ReturnsForbidden() {
+    void handleAccessDeniedReturnsForbidden() {
         AccessDeniedException ex = new AccessDeniedException("User is not ADMIN");
 
         ResponseEntity<ProblemDetail> response = handler.handleAccessDenied(ex, request);
@@ -81,7 +81,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     @DisplayName("Unhandled Exception returns 500 with a generic message and no stack trace in the body")
-    void handleUnexpected_HidesInternalDetails() {
+    void handleUnexpectedHidesInternalDetails() {
         Exception ex = new IllegalStateException("secret database url leaked");
 
         ResponseEntity<ProblemDetail> response = handler.handleUnexpected(ex, request);
@@ -98,7 +98,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     @DisplayName("ResourceNotFoundException message constructor preserves the given text")
-    void resourceNotFound_MessageConstructor() {
+    void resourceNotFoundMessageConstructor() {
         ResourceNotFoundException ex = new ResourceNotFoundException("Plaka bulunamadı: S-100");
         Assertions.assertThat(ex.getMessage()).isEqualTo("Plaka bulunamadı: S-100");
     }

@@ -74,6 +74,7 @@ public class ReportService {
             try {
                 return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
@@ -111,11 +112,11 @@ public class ReportService {
     }
 
     public static class ReportData {
-        public String key;
-        public String title;
-        public String description;
-        public String[] headers;
-        public List<String[]> rows = new ArrayList<>();
+        private String key;
+        private String title;
+        private String description;
+        private String[] headers;
+        private List<String[]> rows = new ArrayList<>();
 
         public String getKey() {
             return key;

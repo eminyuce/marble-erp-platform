@@ -53,12 +53,14 @@ public class ProductionService {
             try {
                 return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
-    public record ProductionSummaryDto(long totalOrders, long activeOrders, long completedOrders, BigDecimal totalSlabAreaM2) {}
+    public record ProductionSummaryDto(long totalOrders, long activeOrders, long completedOrders, BigDecimal totalSlabAreaM2) {
+    }
 
     @Transactional(readOnly = true)
     public ProductionSummaryDto getProductionSummary() {
@@ -151,7 +153,8 @@ public class ProductionService {
                 scrapReason, scrapWeightKg, scrapNotes));
     }
 
-    public record SlabSummaryDto(long totalSlabs, BigDecimal totalAreaM2, BigDecimal avgCostPerM2, long reservedCount) {}
+    public record SlabSummaryDto(long totalSlabs, BigDecimal totalAreaM2, BigDecimal avgCostPerM2, long reservedCount) {
+    }
 
     @Transactional(readOnly = true)
     public SlabSummaryDto getSlabSummary() {

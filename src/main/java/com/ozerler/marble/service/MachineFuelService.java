@@ -116,7 +116,8 @@ public class MachineFuelService {
         return fuelEntryRepository.findByEntryDateBetweenOrderByEntryDateDesc(ym.atDay(1), ym.plusMonths(1).atDay(1));
     }
 
-    public record MachineFuelReportItem(String machineName, BigDecimal totalLitres, BigDecimal totalAmount, long entryCount) {}
+    public record MachineFuelReportItem(String machineName, BigDecimal totalLitres, BigDecimal totalAmount, long entryCount) {
+    }
 
     @Transactional(readOnly = true)
     public List<MachineFuelReportItem> getMonthlyReport(String period) {

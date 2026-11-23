@@ -158,6 +158,7 @@ public final class StockYardResponses {
                 customerName = it.getCustomer().getCompanyName();
                 custId = it.getCustomer().getId();
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         map.put("customerName", customerName);
@@ -190,6 +191,7 @@ public final class StockYardResponses {
             try {
                 crateLoc = it.getStockLocation().getName();
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         map.put("crateNumber", crateLoc);

@@ -1,6 +1,5 @@
 package com.ozerler.marble.service;
 
-import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
@@ -54,7 +53,7 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Should successfully create a user with hashed password and assigned roles")
-    void createUser_success() {
+    void createUserSuccess() {
         UserCreateRequest request = UserCreateRequest.builder()
                 .username("new_operator")
                 .email("operator@ozerler.com")
@@ -98,7 +97,7 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Should throw exception when username already exists")
-    void createUser_duplicateUsername() {
+    void createUserDuplicateUsername() {
         UserCreateRequest request = UserCreateRequest.builder()
                 .username("existing_user")
                 .email("user@ozerler.com")
@@ -118,7 +117,7 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Should soft delete user and disable account")
-    void softDeleteUser_success() {
+    void softDeleteUserSuccess() {
         User user = User.builder()
                 .id(5L)
                 .username("test_user")
@@ -137,7 +136,7 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Empty role selection lists all users")
-    void getUsersPaged_emptyRoles_doesNotFilterByRole() {
+    void getUsersPagedEmptyRolesDoesNotFilterByRole() {
         Mockito.when(userRepository.searchActiveUsers(Mockito.isNull(), Mockito.isNull(), Mockito.isNull(), Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
@@ -151,7 +150,7 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Blank role tokens are treated as no role filter")
-    void getUsersPaged_blankRoles_doesNotFilterByRole() {
+    void getUsersPagedBlankRolesDoesNotFilterByRole() {
         Mockito.when(userRepository.searchActiveUsers(Mockito.isNull(), Mockito.isNull(), Mockito.isNull(), Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
@@ -163,7 +162,7 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Selected roles filter users who have any of those roles")
-    void getUsersPaged_multipleRoles_matchesAnySelectedRole() {
+    void getUsersPagedMultipleRolesMatchesAnySelectedRole() {
         User adminUser = User.builder()
                 .id(1L)
                 .username("admin")
@@ -188,7 +187,7 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Comma-separated role tokens are split before querying")
-    void getUsersPaged_commaSeparatedRoles_areNormalized() {
+    void getUsersPagedCommaSeparatedRolesAreNormalized() {
         Mockito.when(userRepository.searchActiveUsersByAnyRole(
                 Mockito.isNull(), Mockito.eq(List.of("ROLE_ADMIN", "ROLE_USER")), Mockito.eq(true), Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));

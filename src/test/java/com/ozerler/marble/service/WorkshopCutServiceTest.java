@@ -1,6 +1,5 @@
 package com.ozerler.marble.service;
 
-import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -59,7 +58,7 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("createCutOrder throws IllegalArgumentException when piecesCount <= 0")
-    void createCutOrder_ZeroPieces_ThrowsException() {
+    void createCutOrderZeroPiecesThrowsException() {
         Assertions.assertThatThrownBy(() -> workshopCutService.createCutOrder(
                 1L, 1L, 1L, "BridgeSaw-01", "Ahmet",
                 0, new BigDecimal("60"), new BigDecimal("120"),
@@ -70,7 +69,7 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("createCutOrder throws IllegalArgumentException when target dimensions are invalid")
-    void createCutOrder_InvalidDimensions_ThrowsException() {
+    void createCutOrderInvalidDimensionsThrowsException() {
         Assertions.assertThatThrownBy(() -> workshopCutService.createCutOrder(
                 1L, 1L, 1L, "BridgeSaw-01", "Ahmet",
                 5, BigDecimal.ZERO, new BigDecimal("120"),
@@ -81,7 +80,7 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("getCutOrderById throws NullPointerException when ID is null")
-    void getCutOrderById_NullId_ThrowsException() {
+    void getCutOrderByIdNullIdThrowsException() {
         Assertions.assertThatThrownBy(() -> workshopCutService.getCutOrderById(null))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("ID");
@@ -89,7 +88,7 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("getCutOrdersPaged maps database item aggregates instead of loading child collections")
-    void getCutOrdersPaged_UsesDatabaseAggregates() {
+    void getCutOrdersPagedUsesDatabaseAggregates() {
         CutOrder order = CutOrder.builder()
                 .id(9L)
                 .cutOrderNo("CO-2026-009")
@@ -130,7 +129,7 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("getCutOrderWithDetails returns the cut order")
-    void getCutOrderWithDetails_ReturnsOrder() {
+    void getCutOrderWithDetailsReturnsOrder() {
         CutOrder order = CutOrder.builder().id(3L).cutOrderNo("CO-2026-003").status("COMPLETED").build();
         Mockito.when(cutOrderRepository.findWithDetailsById(3L)).thenReturn(Optional.of(order));
 
@@ -142,7 +141,7 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("getCutOrderWithDetails throws when the cut order is missing")
-    void getCutOrderWithDetails_MissingOrder_Throws() {
+    void getCutOrderWithDetailsMissingOrderThrows() {
         Mockito.when(cutOrderRepository.findWithDetailsById(99L)).thenReturn(Optional.empty());
 
         Assertions.assertThatThrownBy(() -> workshopCutService.getCutOrderWithDetails(99L))
@@ -151,7 +150,7 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("updateCutOrder updates header fields and existing item metadata")
-    void updateCutOrder_UpdatesHeaderAndItems() {
+    void updateCutOrderUpdatesHeaderAndItems() {
         Project existingProject = Project.builder().id(1L).name("Eski").build();
         Project newProject = Project.builder().id(2L).name("Villa").build();
         CutOrder order = CutOrder.builder()
@@ -190,7 +189,7 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("updateCutOrder clears the project and skips item writes when metadata is blank")
-    void updateCutOrder_ClearsProjectWithoutTouchingItems() {
+    void updateCutOrderClearsProjectWithoutTouchingItems() {
         CutOrder order = CutOrder.builder()
                 .id(8L)
                 .cutOrderNo("CUT-2026-008")
@@ -213,7 +212,7 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("updateCutOrder throws when the cut order is missing")
-    void updateCutOrder_MissingOrder_Throws() {
+    void updateCutOrderMissingOrderThrows() {
         Mockito.when(cutOrderRepository.findById(99L)).thenReturn(Optional.empty());
 
         Assertions.assertThatThrownBy(() -> workshopCutService.updateCutOrder(

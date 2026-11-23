@@ -42,12 +42,14 @@ public class ProjectSiteService {
             try {
                 return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
     }
 
-    public record ProjectSummaryDto(long totalProjects, long activeProjects, long completedProjects, BigDecimal totalContractValue) {}
+    public record ProjectSummaryDto(long totalProjects, long activeProjects, long completedProjects, BigDecimal totalContractValue) {
+    }
 
     @Transactional(readOnly = true)
     public ProjectSummaryDto getProjectSummary() {
@@ -79,6 +81,7 @@ public class ProjectSiteService {
             try {
                 pStatus = ProjectStatus.valueOf(status.trim().toUpperCase());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         final ProjectStatus finalStatus = pStatus;

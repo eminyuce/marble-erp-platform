@@ -10,7 +10,7 @@ class UserRoleTest {
 
     @Test
     @DisplayName("labelFor returns Turkish labels for known role authorities")
-    void labelFor_knownRoles_returnsTurkishLabels() {
+    void labelForKnownRolesReturnsTurkishLabels() {
         Assertions.assertThat(UserRole.labelFor("ROLE_ADMIN")).isEqualTo("Sistem Yöneticisi");
         Assertions.assertThat(UserRole.labelFor("ROLE_EXECUTIVE")).isEqualTo("Üst Yönetim");
         Assertions.assertThat(UserRole.labelFor("ROLE_FACTORY_MANAGER")).isEqualTo("Fabrika Müdürü");
@@ -26,7 +26,7 @@ class UserRoleTest {
 
     @Test
     @DisplayName("labelFor accepts enum names and falls back for unknown roles")
-    void labelFor_enumNameAndUnknown() {
+    void labelForEnumNameAndUnknown() {
         Assertions.assertThat(UserRole.labelFor("ADMIN")).isEqualTo("Sistem Yöneticisi");
         Assertions.assertThat(UserRole.labelFor("ROLE_CUSTOM")).isEqualTo("CUSTOM");
         Assertions.assertThat(UserRole.labelFor("")).isEmpty();
@@ -35,7 +35,7 @@ class UserRoleTest {
 
     @Test
     @DisplayName("labelMap includes every application role")
-    void labelMap_containsAllRoles() {
+    void labelMapContainsAllRoles() {
         Map<String, String> labels = UserRole.labelMap();
 
         Assertions.assertThat(labels).hasSize(UserRole.values().length);

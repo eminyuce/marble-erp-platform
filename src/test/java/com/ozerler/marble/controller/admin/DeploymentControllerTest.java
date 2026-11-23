@@ -40,7 +40,7 @@ class DeploymentControllerTest {
 
     @Test
     @DisplayName("GET /admin/deployment renders the live deploy page")
-    void page_RendersTemplate() {
+    void pageRendersTemplate() {
         Mockito.when(deploymentService.currentStatus()).thenReturn(sampleStatus());
 
         ExtendedModelMap model = new ExtendedModelMap();
@@ -53,7 +53,7 @@ class DeploymentControllerTest {
 
     @Test
     @DisplayName("GET /admin/deployment/status returns current JSON status")
-    void status_ReturnsJson() throws Exception {
+    void statusReturnsJson() throws Exception {
         Mockito.when(deploymentService.currentStatus()).thenReturn(sampleStatus());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/deployment/status"))
@@ -64,7 +64,7 @@ class DeploymentControllerTest {
 
     @Test
     @DisplayName("GET /admin/deployment/log returns log chunk JSON")
-    void log_ReturnsChunk() throws Exception {
+    void logReturnsChunk() throws Exception {
         Mockito.when(deploymentService.readLog(0)).thenReturn(DeploymentLogDto.builder()
                 .offset(0)
                 .nextOffset(5)
@@ -80,7 +80,7 @@ class DeploymentControllerTest {
 
     @Test
     @DisplayName("POST /admin/deployment/start returns 202 when accepted")
-    void start_Accepted() throws Exception {
+    void startAccepted() throws Exception {
         Mockito.when(deploymentService.startDeploy()).thenReturn(DeploymentStartResult.builder()
                 .accepted(true)
                 .state(DeploymentState.RUNNING)
@@ -94,7 +94,7 @@ class DeploymentControllerTest {
 
     @Test
     @DisplayName("POST /admin/deployment/start returns 409 when a deploy is already running")
-    void start_ConflictWhenRunning() throws Exception {
+    void startConflictWhenRunning() throws Exception {
         Mockito.when(deploymentService.startDeploy()).thenReturn(DeploymentStartResult.builder()
                 .accepted(false)
                 .state(DeploymentState.RUNNING)

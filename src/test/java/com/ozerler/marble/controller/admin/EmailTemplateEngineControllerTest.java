@@ -1,6 +1,5 @@
 package com.ozerler.marble.controller.admin;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
