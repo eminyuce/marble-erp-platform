@@ -15,6 +15,12 @@
         this.deleteId = id;
         this.deleteName = name;
         this.deleteModalOpen = true;
+    },
+    applyUnit(value) {
+        const url = new URL(window.location.href);
+        if (value) url.searchParams.set('unit', value); else url.searchParams.delete('unit');
+        url.searchParams.set('page', '1');
+        window.location.assign(url.toString());
     }
 }">
 
@@ -31,17 +37,19 @@
             <i data-lucide="plus"></i>
             <span>Yeni masraf merkezi</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Merkez kodu veya adı', 'search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Merkez kodu veya adı', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
-            <select id="cost-center-unit-filter" class="erp-toolbar-filter" aria-label="İş birimi">
-                <option value="">Tüm birimler</option>
-                <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"></option>
+            <select id="cost-center-unit-filter" class="erp-toolbar-filter" aria-label="İş birimi"
+                    @change="applyUnit($event.target.value)">
+                <option value="" th:selected="${filters.unit == ''}">Tüm birimler</option>
+                <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"
+                        th:selected="${filters.unit == unit.name()}"></option>
             </select>
             <div th:replace="~{fragments/list-chrome :: exportDropdown('cost-centers-table', 'masraf_merkezleri')}"></div>
         </div>
     </div>
 
-    <div th:replace="~{fragments/list-chrome :: gridShell('cost-centers-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
     <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
          style="display: none;">
@@ -62,80 +70,6 @@
 
 <th:block layout:fragment="scripts">
     <script th:src="@{/js/definitions-page.js(v=${assetVersion})}"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            window.definitionTable = new Tabulator("#cost-centers-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
-                ajaxURL: "/admin/definitions/cost-centers/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "search-input", function () {
-                        const unit = document.getElementById("cost-center-unit-filter")?.value || "";
-                        return unit ? "&unit=" + encodeURIComponent(unit) : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("cost-centers-table", response);
-                },
-                placeholder: "Masraf merkezi kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Merkez Kodu",
-                        field: "code",
-                        width: 130,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            return `<span class="font-mono font-bold text-slate-900">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {title: "Masraf Merkezi Adı", field: "name", minWidth: 180, formatter: (cell) => gridText(cell.getValue())},
-                    {
-                        title: "İş Birimi",
-                        field: "businessUnitLabel",
-                        width: 130,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return businessUnitBadge(row.businessUnit, row.businessUnitLabel);
-                        }
-                    },
-                    {
-                        title: "Aylık Bütçe",
-                        field: "monthlyBudget",
-                        width: 140,
-                        formatter: function (cell) {
-                            return `<span class="font-mono font-bold">${gridMoney(cell.getValue())}</span>`;
-                        }
-                    },
-                    {title: "Açıklama", field: "description", minWidth: 180, formatter: (cell) => gridText(cell.getValue())},
-                    {
-                        title: "İşlemler",
-                        width: 120,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const id = cell.getRow().getData().id;
-                            return gridActionsHtml([
-                                {icon: "edit-3", label: "Düzenle", href: "/admin/definitions/cost-centers/" + id + "/edit"},
-                                {icon: "trash-2", label: "Sil", onclick: "confirmDefinitionDelete(" + id + ")", danger: true}
-                            ]);
-                        }
-                    }
-                ]
-            });
-            attachTabulatorPagingAnimation(window.definitionTable);
-            bindGridSearch(window.definitionTable, "search-input");
-            bindGridSelectFilter(window.definitionTable, "cost-center-unit-filter");
-            window.definitionTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-    </script>
 </th:block>
 </body>
 </html>

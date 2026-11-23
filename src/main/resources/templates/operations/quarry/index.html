@@ -14,9 +14,19 @@
         selectedBlockCode: '',
         currentEstTonnage: '',
         actualTonnageInput: '',
+        go(values) {
+            const url = new URL(window.location.href);
+            Object.keys(values).forEach((key) => {
+                const value = values[key];
+                if (value) url.searchParams.set(key, value);
+                else url.searchParams.delete(key);
+            });
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        },
         setStatusFilter(s) {
             this.statusFilter = s;
-            if (typeof reloadQuarryBlocksGrid === 'function') reloadQuarryBlocksGrid();
+            this.go({ status: s });
         },
         openActualTonnageModal(id, code, est, act) {
             this.selectedBlockId = id;
@@ -24,12 +34,8 @@
             this.currentEstTonnage = est;
             this.actualTonnageInput = act ? act : '';
             this.actualTonnageModal = true;
-        },
-        gridExtraQuery() {
-            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
         }
-     }"
-     x-init="window.quarryPageState = $data">
+     }">
 
     <!-- Header Section -->
     <div class="erp-list-header">
@@ -128,14 +134,14 @@
                 <span>Sevkiyat Raporu</span>
             </a>
         </div>
-        <div th:replace="~{fragments/list-chrome :: search('Blok no, ocak, taş türü veya kademe...', 'quarry-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Blok no, ocak, taş türü veya kademe...', 'quarry-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('quarry-blocks-table', 'ocak-bloklari')}"></div>
         </div>
     </div>
 
     <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('quarry-blocks-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
     <!-- Kantar Tartımı (Gerçek Tonaj) Modal -->
     <div x-show="actualTonnageModal" x-cloak
@@ -189,140 +195,5 @@
     </div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        let quarryBlocksTable;
-        document.addEventListener("DOMContentLoaded", () => {
-            quarryBlocksTable = new Tabulator("#quarry-blocks-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50, 100],
-                ajaxURL: "/operations/quarry/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "quarry-search-input", function () {
-                        return window.quarryPageState ? window.quarryPageState.gridExtraQuery() : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("quarry-blocks-table", response);
-                },
-                placeholder: "Kriterlere uygun blok kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Blok No",
-                        field: "blockCode",
-                        width: 160,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<a href="/blocks/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline flex items-center gap-1.5">
-                                <i data-lucide="mountain" class="w-3.5 h-3.5 text-amber-600 inline"></i>
-                                <span>${gridText(cell.getValue())}</span>
-                            </a>`;
-                        }
-                    },
-                    {
-                        title: "Ocak & Lokasyon",
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<div>
-                                <strong class="text-slate-900">${gridText(row.quarryName)}</strong>
-                                <div class="text-[11px] text-slate-500">${gridText(row.quarryLocation)}</div>
-                            </div>`;
-                        },
-                        minWidth: 160
-                    },
-                    {
-                        title: "Taş Türü",
-                        field: "stoneType",
-                        width: 130,
-                        formatter: function (cell) {
-                            return `<span class="font-semibold text-slate-800">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Ölçüler",
-                        field: "dimensions",
-                        width: 130,
-                        formatter: function (cell) {
-                            return `<span class="font-mono text-xs text-slate-600">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Tahmini Tonaj",
-                        field: "approximateTonnage",
-                        width: 130,
-                        formatter: function (cell) {
-                            return `<strong class="font-mono text-amber-700">${gridText(cell.getValue())} ton</strong>`;
-                        }
-                    },
-                    {
-                        title: "Gerçek Tonaj",
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            if (row.actualTonnage) {
-                                return `<strong class="font-mono text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">${row.actualTonnage} ton</strong>`;
-                            }
-                            return `<button type="button" onclick="window.quarryPageState.openActualTonnageModal(${row.id}, '${row.blockCode}', '${row.approximateTonnage}', '')"
-                                        class="px-2 py-0.5 rounded text-[11px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition">
-                                        + Kantar Gir
-                                    </button>`;
-                        },
-                        width: 130
-                    },
-                    {
-                        title: "Durum",
-                        field: "statusLabel",
-                        width: 130,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            let cls = "bg-amber-100 text-amber-800";
-                            if (row.status === "READY_FOR_DISPATCH") cls = "bg-blue-100 text-blue-800";
-                            else if (row.status === "IN_TRANSIT") cls = "bg-indigo-100 text-indigo-800";
-                            else if (row.status === "AT_FACTORY") cls = "bg-emerald-100 text-emerald-800";
-                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${cls}">● ${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "İşlemler",
-                        width: 150,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<div class="flex items-center gap-1.5">
-                                <a href="/operations/quarry/${row.id}/dispatch" title="Fabrikaya veya Müşteriye Sevk Et"
-                                   class="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition inline-flex items-center gap-1">
-                                    <i data-lucide="truck" class="w-3.5 h-3.5"></i>
-                                    <span>Sevk Et</span>
-                                </a>
-                                <a href="/blocks/${row.id}" title="Detay"
-                                   class="p-1 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition">
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
-                                </a>
-                            </div>`;
-                        }
-                    }
-                ]
-            });
-
-            attachTabulatorPagingAnimation(quarryBlocksTable);
-            bindGridSearch(quarryBlocksTable, "quarry-search-input");
-            quarryBlocksTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-
-        function reloadQuarryBlocksGrid() {
-            if (quarryBlocksTable) quarryBlocksTable.setData();
-        }
-        window.reloadQuarryBlocksGrid = reloadQuarryBlocksGrid;
-    </script>
-</th:block>
 </body>
 </html>

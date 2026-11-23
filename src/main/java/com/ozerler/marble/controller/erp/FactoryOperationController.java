@@ -7,6 +7,11 @@ import com.ozerler.marble.repository.*;
 import com.ozerler.marble.service.FactoryInventoryService;
 import com.ozerler.marble.service.FactoryStockService;
 import com.ozerler.marble.service.OperationWorkOrderService;
+import com.ozerler.marble.web.FactoryOrderGrid;
+import com.ozerler.marble.web.FactorySizedGrid;
+import com.ozerler.marble.web.FactorySlabGrid;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.OperationFactoryBlockGrid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -57,7 +62,7 @@ public class FactoryOperationController extends AbstractController {
     @GetMapping("/blocks")
     public String blockYard(@RequestParam(value = "customerId", required = false) Long customerId,
                             @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
-                            Model model) {
+                            @ModelAttribute ListQuery query, Model model) {
 
         List<Block> blocks = factoryStockService.getFactoryUncutBlocks(customerId, generalStockOnly);
         List<Block> incomingBlocks = factoryStockService.getIncomingBlocksInTransit();
@@ -93,6 +98,9 @@ public class FactoryOperationController extends AbstractController {
         model.addAttribute("totalWeightTon", totalWeightTon);
         model.addAttribute("totalCostValue", totalCostValue);
         model.addAttribute("totalSaleValue", totalSaleValue);
+        model.addAttribute("grid", OperationFactoryBlockGrid.view(
+                factoryStockService.getFactoryUncutBlocksPaged(customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("activeSection", "factory");
         model.addAttribute("activeSubSection", "blocks");
 
@@ -190,12 +198,10 @@ public class FactoryOperationController extends AbstractController {
     public String slabYard(@RequestParam(value = "status", required = false) SlabStatus status,
                            @RequestParam(value = "customerId", required = false) Long customerId,
                            @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
-                           @RequestParam(value = "search", required = false) String search,
-                           @RequestParam(value = "page", defaultValue = "0") int page,
-                           @RequestParam(value = "size", defaultValue = "20") int size,
-                           Model model) {
+                           @ModelAttribute ListQuery query, Model model) {
 
-        Page<Slab> slabsPage = factoryStockService.getFactorySlabsPaged(status, customerId, generalStockOnly, search, page, size);
+        Page<Slab> slabsPage = factoryStockService.getFactorySlabsPaged(
+                status, customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         List<Customer> customers = customerRepository.findAll();
         BigDecimal customerSlabArea = customerId != null ? factoryStockService.getCustomerSlabAreaTotal(customerId) : BigDecimal.ZERO;
 
@@ -205,8 +211,10 @@ public class FactoryOperationController extends AbstractController {
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("generalStockOnly", generalStockOnly);
-        model.addAttribute("search", search);
+        model.addAttribute("search", query.getSearch());
         model.addAttribute("customerSlabArea", customerSlabArea);
+        model.addAttribute("grid", FactorySlabGrid.view(
+                slabsPage, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("activeSection", "factory");
         model.addAttribute("activeSubSection", "slabs");
 
@@ -319,12 +327,10 @@ public class FactoryOperationController extends AbstractController {
     @GetMapping("/sized")
     public String sizedYard(@RequestParam(value = "customerId", required = false) Long customerId,
                             @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
-                            @RequestParam(value = "search", required = false) String search,
-                            @RequestParam(value = "page", defaultValue = "0") int page,
-                            @RequestParam(value = "size", defaultValue = "20") int size,
-                            Model model) {
+                            @ModelAttribute ListQuery query, Model model) {
 
-        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(customerId, generalStockOnly, search, page, size);
+        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(
+                customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         List<Customer> customers = customerRepository.findAll();
 
         model.addAttribute("items", itemsPage.getContent());
@@ -332,7 +338,9 @@ public class FactoryOperationController extends AbstractController {
         model.addAttribute("customers", customers);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("generalStockOnly", generalStockOnly);
-        model.addAttribute("search", search);
+        model.addAttribute("search", query.getSearch());
+        model.addAttribute("grid", FactorySizedGrid.view(
+                itemsPage, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("activeSection", "factory");
         model.addAttribute("activeSubSection", "sized");
 
@@ -476,13 +484,14 @@ public class FactoryOperationController extends AbstractController {
     // --- 4. FABRİKA SİPARİŞLER / İŞ EMİRLERİ ---
     @GetMapping("/orders")
     public String factoryOrders(@RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
-                                @RequestParam(value = "page", defaultValue = "0") int page,
-                                @RequestParam(value = "size", defaultValue = "20") int size,
-                                Model model) {
+                                @ModelAttribute ListQuery query, Model model) {
 
-        Page<OperationWorkOrder> ordersPage = workOrderService.searchOrders(BusinessUnit.FACTORY, status, null, null, null, null, page, size);
+        Page<OperationWorkOrder> ordersPage = workOrderService.searchOrders(
+                BusinessUnit.FACTORY, status, null, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         model.addAttribute("orders", ordersPage.getContent());
         model.addAttribute("page", ordersPage);
+        model.addAttribute("grid", FactoryOrderGrid.view(
+                ordersPage, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("selectedStatus", status);
         model.addAttribute("activeSection", "factory");
         model.addAttribute("activeSubSection", "orders");

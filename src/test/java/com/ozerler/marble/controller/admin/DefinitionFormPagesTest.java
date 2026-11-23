@@ -67,6 +67,20 @@ class DefinitionFormPagesTest {
                     .doesNotContain("x-show=\"modalOpen\"")
                     .doesNotContain("breadcrumbTrail")
                     .contains("/create")
+                    .contains("fragments/data-grid :: shell");
+            String grid = page.substring(page.lastIndexOf('/') + 1).replace(".html", "");
+            String gridClass = switch (grid) {
+                case "machines" -> "MachineGrid.java";
+                case "stock-locations" -> "StockLocationGrid.java";
+                case "quarries" -> "QuarryGrid.java";
+                case "customers" -> "CustomerGrid.java";
+                case "suppliers" -> "SupplierGrid.java";
+                case "cost-centers" -> "CostCenterGrid.java";
+                default -> throw new IllegalStateException(grid);
+            };
+            String gridSource = Files.readString(Path.of("src/main/java/com/ozerler/marble/web/" + gridClass));
+            assertThat(gridSource)
+                    .as("%s rows must still link to the edit page", page)
                     .contains("/edit");
         }
         assertThat(Path.of("src/main/resources/templates/admin/definitions/index.html")).doesNotExist();

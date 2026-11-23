@@ -21,6 +21,8 @@ import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.QuarryRepository;
 import com.ozerler.marble.service.BlockCostCalculationService;
 import com.ozerler.marble.service.ExpenseService;
+import com.ozerler.marble.web.ExpenseGrid;
+import com.ozerler.marble.web.ListQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -53,13 +55,20 @@ public class ExpensePurchaseController extends AbstractController {
     private final BlockCostCalculationService blockCostCalculationService;
     private final MessageSource messageSource;
 
+    public String index(BusinessUnit unit, Long quarryId, String period, Model model) {
+        return index(unit, quarryId, period, null, new ListQuery(), model);
+    }
+
     @GetMapping
     public String index(@RequestParam(value = "unit", required = false) BusinessUnit unit,
                         @RequestParam(value = "quarryId", required = false) Long quarryId,
                         @RequestParam(value = "period", required = false) String period,
-                        Model model) {
+                        @RequestParam(value = "expenseType", required = false) ExpenseType expenseType,
+                        @ModelAttribute ListQuery query, Model model) {
         String currentPeriod = period != null && !period.isBlank() ? period : YearMonth.now().toString();
         ExpenseSummaryDto summary = expenseService.getExpenseSummary(currentPeriod);
+        TabulatorResponse<ExpenseDto> expenses = expenseService.getExpensesPaged(
+                query.pageNumber(), query.pageSize(), query.getSearch(), query.sortKey(), query.sortDirection(), unit, currentPeriod, expenseType, null, quarryId, null);
 
         model.addAttribute("summary", summary);
         model.addAttribute("selectedUnit", unit);
@@ -70,6 +79,12 @@ public class ExpensePurchaseController extends AbstractController {
         model.addAttribute("projects", projectRepository.findAll());
         model.addAttribute("expenseTypes", ExpenseType.values());
         model.addAttribute("selectedQuarryId", quarryId);
+        model.addAttribute("selectedExpenseType", expenseType == null ? "" : expenseType.name());
+        model.addAttribute("grid", ExpenseGrid.view(expenses, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        if (expenses != null && expenses.getMeta() != null) {
+            model.addAttribute("filteredAmount", expenses.getMeta().get("totalAmount"));
+            model.addAttribute("filteredCount", expenses.getTotal());
+        }
 
         if (unit == BusinessUnit.QUARRY && quarryId != null) {
             QuarryCostBreakdownDto breakdown = blockCostCalculationService.quarryBreakdown(quarryId, currentPeriod);

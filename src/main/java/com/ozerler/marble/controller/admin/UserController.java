@@ -8,8 +8,12 @@ import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
 import com.ozerler.marble.service.UserService;
+import com.ozerler.marble.web.GridRequests;
+import com.ozerler.marble.web.UserGrid;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -36,11 +40,38 @@ public class UserController extends AbstractController {
     private final UserService userService;
     private final MessageSource messageSource;
 
-    @GetMapping
+    @Getter
+    @Setter
+    public static class UserPageQuery {
+        private Integer page;
+        private Integer size;
+        private String search;
+        private String sort;
+        private String dir;
+        private String sortField;
+        private String sortDir;
+        private String role;
+        private List<String> roles;
+        private Boolean enabled;
+    }
+
     public String usersPage(Model model) {
+        return usersPage(new UserPageQuery(), model);
+    }
+
+    @GetMapping
+    public String usersPage(@ModelAttribute UserPageQuery query, Model model) {
+        int pageNo = GridRequests.page(query.getPage());
+        int pageSize = GridRequests.size(query.getSize());
+        String sortKey = GridRequests.sort(query.getSort(), query.getSortField());
+        String sortDirection = GridRequests.direction(query.getDir(), query.getSortDir());
         model.addAttribute("filterRoles", UserRole.values());
         model.addAttribute("roleLabelMap", UserRole.labelMap());
         model.addAttribute("summary", userService.getUserSummary());
+        model.addAttribute("grid", UserGrid.view(
+                userService.getUsersPaged(pageNo, pageSize, query.getSearch(), sortKey, sortDirection,
+                        combineRoleFilters(query.getRoles(), query.getRole()), query.getEnabled()),
+                pageNo, pageSize, sortKey, sortDirection));
         return "admin/users/index";
     }
 

@@ -6,7 +6,47 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page" data-users-filters
-     x-data="{ selectedRoles: [], enabled: '', density: 'compact', rolesInfoOpen: false }"
+     th:data-enabled="${filters.enabled}"
+     x-data="{
+        enabled: '',
+        density: 'compact',
+        rolesInfoOpen: false,
+        deleteId: null,
+        init() {
+            this.enabled = this.$el.dataset.enabled || '';
+        },
+        setEnabled(value) {
+            const url = new URL(window.location.href);
+            if (value) url.searchParams.set('enabled', value); else url.searchParams.delete('enabled');
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        },
+        toggleRole(role, checked) {
+            const url = new URL(window.location.href);
+            const selected = url.searchParams.getAll('roles').filter(item => item !== role);
+            url.searchParams.delete('roles');
+            selected.forEach(item => url.searchParams.append('roles', item));
+            if (checked) url.searchParams.append('roles', role);
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        },
+        confirmDelete(id, name) {
+            this.deleteId = id;
+            const nameEl = document.getElementById('delete-user-name');
+            if (nameEl) nameEl.textContent = name || ('#' + id);
+            const dialog = document.getElementById('delete-user-dialog');
+            if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
+        },
+        submitDelete() {
+            if (!this.deleteId) return;
+            const csrfToken = document.querySelector('meta[name=_csrf]')?.getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name=_csrf_header]')?.getAttribute('content');
+            const headers = {};
+            if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+            fetch('/admin/users/' + this.deleteId + '/delete', { method: 'POST', headers: headers })
+                .then(res => { if (res.ok) window.location.reload(); });
+        }
+     }"
      :class="{ 'is-compact': density === 'compact' }">
 
     <div class="erp-list-header">
@@ -24,7 +64,7 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
                 :class="enabled === '' ? 'erp-summary-card--active' : ''"
-                @click="enabled = ''; $nextTick(() => reloadUsersGrid())">
+                @click="setEnabled('')">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Kullanıcı</div>
             <div class="text-lg font-black text-slate-900 mt-1">
                 <span th:text="${summary.totalUsers}">0</span> hesap
@@ -33,7 +73,7 @@
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
                 :class="enabled === 'true' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
-                @click="enabled = 'true'; $nextTick(() => reloadUsersGrid())">
+                @click="setEnabled('true')">
             <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
                 <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Aktif Hesaplar
             </div>
@@ -44,7 +84,7 @@
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
                 :class="enabled === 'false' ? 'erp-summary-card--active ring-2 ring-rose-500' : ''"
-                @click="enabled = 'false'; $nextTick(() => reloadUsersGrid())">
+                @click="setEnabled('false')">
             <div class="text-[11px] uppercase tracking-wide text-rose-600 font-semibold flex items-center gap-1">
                 <i data-lucide="user-x" class="w-3.5 h-3.5"></i> Askıdaki Hesaplar
             </div>
@@ -66,11 +106,10 @@
             <i data-lucide="plus"></i>
             <span>Yeni kullanıcı tanımla</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Ad, soyad, e-posta veya kullanıcı adı', 'search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Ad, soyad, e-posta veya kullanıcı adı', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('users-table', 'kullanicilar')}"></div>
         </div>
-        <input type="hidden" id="filter-enabled" x-model="enabled">
 
         <div class="erp-quick" aria-label="Rol veya duruma göre daraltın">
             <div class="erp-quick-row">
@@ -82,20 +121,21 @@
                            data-role-filter
                            th:value="${filterRole.authority}"
                            th:attr="aria-label=${filterRole.label}"
-                           @change="onRoleFilterChange($event.target.value, $event.target.checked)">
+                           th:checked="${#lists.contains(filters.roles, filterRole.authority)}"
+                           @change="toggleRole($event.target.value, $event.target.checked)">
                     <span th:text="${filterRole.label}">Rol</span>
                 </label>
             </div>
             <div class="erp-quick-row">
                 <span class="erp-quick-label">Durum</span>
                 <button type="button" class="erp-quick-chip" :class="{ 'is-active': enabled === '' }"
-                        @click="enabled = ''; $nextTick(() => reloadUsersGrid())">Tümü
+                        @click="setEnabled('')">Tümü
                 </button>
                 <button type="button" class="erp-quick-chip" :class="{ 'is-active': enabled === 'true' }"
-                        @click="enabled = 'true'; $nextTick(() => reloadUsersGrid())">Aktif
+                        @click="setEnabled('true')">Aktif
                 </button>
                 <button type="button" class="erp-quick-chip" :class="{ 'is-active': enabled === 'false' }"
-                        @click="enabled = 'false'; $nextTick(() => reloadUsersGrid())">Askıda
+                        @click="setEnabled('false')">Askıda
                 </button>
             </div>
         </div>
@@ -117,7 +157,7 @@
         </fieldset>
     </div>
 
-    <div th:replace="~{fragments/list-chrome :: gridShell('users-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
     <section id="roles-info" class="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <button type="button"
@@ -163,8 +203,8 @@
             </div>
             <p class="erp-dialog-lead text-slate-600 mt-2">Bu kullanıcıyı silmek (arşivlemek) istediğinizden emin misiniz? Oturum açma yetkisi kalkar.</p>
             <div class="erp-dialog-actions">
-                <button value="cancel" type="button" class="erp-btn-secondary">Vazgeç</button>
-                <button type="button" id="confirm-delete-user" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                <button value="cancel" type="button" class="erp-btn-secondary" @click="$el.closest('dialog').close()">Vazgeç</button>
+                <button type="button" id="confirm-delete-user" @click="submitDelete()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                     <span>Evet, Kullanıcıyı Sil</span>
                 </button>
@@ -173,11 +213,6 @@
     </dialog>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script th:inline="javascript">
-        window.USER_ROLE_LABELS = /*[[${roleLabelMap}]]*/ {};
-    </script>
-    <script th:src="@{/js/users-grid.js(v=${assetVersion})}"></script>
-</th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>

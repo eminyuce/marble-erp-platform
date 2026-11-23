@@ -6,7 +6,7 @@
     <title>Raporlar | Özerler Mermer ERP</title>
 </head>
 <body>
-<div layout:fragment="content" class="erp-list-page" th:attr="x-data='{ selectedReport: \'' + (${defaultSelectedReport} != null ? ${defaultSelectedReport} : 'QUARRY_BLOCKS') + '\' }'">
+<div layout:fragment="content" class="erp-list-page">
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
@@ -32,131 +32,59 @@
     </aside>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-        <button type="button" th:each="entry : ${reports}"
-                @click="selectedReport = $el.dataset.reportKey; $nextTick(() => window.loadReportPreview && window.loadReportPreview($el.dataset.reportKey))"
-                th:attr="data-report-key=${entry.key}"
-                :class="selectedReport === $el.dataset.reportKey
-                    ? 'ring-2 ring-[#2b6cb0] border-[#2b6cb0] bg-sky-50'
-                    : 'bg-white border-slate-200 hover:border-slate-300'"
-                class="p-4 rounded-2xl border text-left transition cursor-pointer shadow-sm">
-            <div class="flex items-start justify-between gap-2 mb-2">
-                <h3 class="text-sm font-bold text-slate-800" th:text="${entry.value.title}">Rapor</h3>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0"
-                      th:text="${entry.value.rows.size()} + ' kayıt'">0 kayıt</span>
-            </div>
-            <p class="text-xs text-slate-500 leading-snug" th:text="${entry.value.description}">Açıklama</p>
+        <div th:each="entry : ${reports}"
+             class="p-4 rounded-2xl border text-left transition shadow-sm"
+             th:classappend="${entry.key == defaultSelectedReport} ? 'ring-2 ring-[#2b6cb0] border-[#2b6cb0] bg-sky-50' : 'bg-white border-slate-200'">
+            <a th:href="${reportLinks[entry.key]}" class="block">
+                <div class="flex items-start justify-between gap-2 mb-2">
+                    <h3 class="text-sm font-bold text-slate-800" th:text="${entry.value.title}">Rapor</h3>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0"
+                          th:text="${entry.value.rows.size()} + ' kayıt'">0 kayıt</span>
+                </div>
+                <p class="text-xs text-slate-500 leading-snug" th:text="${entry.value.description}">Açıklama</p>
+            </a>
             <div class="mt-3 flex items-center gap-2">
                 <a th:href="@{/reports/export/{type}(type=${entry.key}, format='excel')}"
-                   class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold rounded-lg inline-flex items-center gap-1"
-                   onclick="event.stopPropagation()">
+                   class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold rounded-lg inline-flex items-center gap-1">
                     <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
                     Excel
                 </a>
                 <a th:href="@{/reports/export/{type}(type=${entry.key}, format='csv')}"
-                   class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-200 inline-flex items-center gap-1"
-                   onclick="event.stopPropagation()">
+                   class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-200 inline-flex items-center gap-1">
                     <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                     CSV
                 </a>
             </div>
-        </button>
+        </div>
     </div>
 
-    <div th:each="entry : ${reports}"
-         th:attr="x-show=|selectedReport === '${entry.key}'|"
-         x-cloak
-         class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
-
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4" th:if="${selectedReport != null}">
         <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-4 border-b border-slate-100">
             <div>
-                <h3 class="text-lg font-bold text-slate-900" th:text="${entry.value.title}">Rapor Başlığı</h3>
-                <p class="text-xs text-slate-500 mt-1" th:text="${entry.value.description}">Açıklama</p>
+                <h3 class="text-lg font-bold text-slate-900" th:text="${selectedReport.title}">Rapor Başlığı</h3>
+                <p class="text-xs text-slate-500 mt-1" th:text="${selectedReport.description}">Açıklama</p>
                 <p class="text-xs text-slate-500 mt-1">
-                    Önizleme: <span class="font-bold text-slate-800" th:text="${entry.value.rows.size()}">0</span> kayıt
+                    Önizleme: <span class="font-bold text-slate-800" th:text="${selectedReport.rows.size()}">0</span> kayıt
                 </p>
             </div>
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
-                <a th:href="@{/reports/export/{type}(type=${entry.key}, format='excel')}"
+                <a th:href="@{/reports/export/{type}(type=${defaultSelectedReport}, format='excel')}"
                    class="min-h-11 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-sm transition inline-flex items-center justify-center gap-2">
                     <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                     <span>Excel (.xlsx) indir</span>
                 </a>
-                <a th:href="@{/reports/export/{type}(type=${entry.key}, format='csv')}"
+                <a th:href="@{/reports/export/{type}(type=${defaultSelectedReport}, format='csv')}"
                    class="min-h-11 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition inline-flex items-center justify-center gap-2">
                     <i data-lucide="file-text" class="w-4 h-4"></i>
                     <span>CSV (.csv) indir</span>
                 </a>
             </div>
         </div>
-
-        <div class="erp-report-cards">
-            <div th:if="${#lists.isEmpty(entry.value.rows)}" class="p-8 text-center text-slate-400 text-sm">
-                Bu raporda henüz kayıt yok. Veri oluşunca tablo ve indirme dosyası dolacaktır.
-            </div>
-            <article th:each="row, stat : ${entry.value.rows}" class="erp-report-card">
-                <header class="erp-report-card-index" th:text="'#' + ${stat.count}">#1</header>
-                <div th:each="col, colStat : ${row}" class="erp-report-card-row">
-                    <span class="erp-report-card-label" th:text="${entry.value.headers[colStat.index]}">Başlık</span>
-                    <span class="erp-report-card-value" th:text="${col}">Değer</span>
-                </div>
-            </article>
-        </div>
     </div>
 
-    <div th:replace="~{fragments/list-chrome :: gridShell('reports-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script th:inline="javascript">
-        window.REPORT_PREVIEWS = /*[[${reports}]]*/ {};
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            function previewRows(report) {
-                return (report && Array.isArray(report.rows) ? report.rows : []).map((cells) => ({cells: cells || []}));
-            }
-
-            function previewColumns(report) {
-                const columns = [erpResponsiveCollapseColumn(), erpIndexColumn()];
-                (report && Array.isArray(report.headers) ? report.headers : []).forEach((header, index) => {
-                    columns.push({
-                        title: header,
-                        minWidth: 120,
-                        headerSort: false,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return gridText(row.cells ? row.cells[index] : "");
-                        }
-                    });
-                });
-                return columns;
-            }
-
-            const initialKey = document.querySelector("[data-report-key]")?.dataset.reportKey;
-            const initialReport = initialKey ? (window.REPORT_PREVIEWS || {})[initialKey] : null;
-
-            window.reportsTable = new Tabulator("#reports-table", {
-                ...erpGridDefaults(),
-                data: previewRows(initialReport),
-                columns: previewColumns(initialReport || {headers: []}),
-                pagination: true,
-                paginationMode: "local",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
-                placeholder: "Bu raporda henüz kayıt yok."
-            });
-            attachTabulatorPagingAnimation(window.reportsTable);
-
-            window.loadReportPreview = function (key) {
-                const report = (window.REPORT_PREVIEWS || {})[key];
-                if (!window.reportsTable || !report) {
-                    return;
-                }
-                window.reportsTable.setColumns(previewColumns(report));
-                window.reportsTable.replaceData(previewRows(report));
-            };
-        });
-    </script>
-</th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>

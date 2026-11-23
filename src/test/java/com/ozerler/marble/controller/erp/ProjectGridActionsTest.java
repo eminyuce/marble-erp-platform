@@ -16,7 +16,8 @@ class ProjectGridActionsTest {
             html = new String(in.readAllBytes());
         }
 
-        assertThat(html).contains("{icon: 'edit-3', label: 'Düzenle', href: '/projects/' + row.id + '/edit'}");
+        assertThat(html).contains("fragments/data-grid :: shell");
+        assertThat(html).contains("confirmDeleteProject");
     }
 
     @Test

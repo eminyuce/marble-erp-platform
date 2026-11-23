@@ -5,7 +5,11 @@ import com.ozerler.marble.dto.ApplicationLogDto;
 import com.ozerler.marble.dto.ApplicationLogKpiDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.service.ApplicationLogService;
+import com.ozerler.marble.web.ApplicationLogGrid;
+import com.ozerler.marble.web.GridRequests;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,12 +41,46 @@ public class ApplicationLogAdminController extends AbstractController {
 
     private final ApplicationLogService applicationLogService;
 
-    @GetMapping
+    @Getter
+    @Setter
+    public static class LogPageQuery {
+        private Integer page;
+        private Integer size;
+        private String search;
+        private String sort;
+        private String dir;
+        private String sortField;
+        private String sortDir;
+        private String level;
+        private String levels;
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        private LocalDate startDate;
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        private LocalDate endDate;
+    }
+
     public String logsPage(Model model) {
+        return logsPage(new LogPageQuery(), model);
+    }
+
+    @GetMapping
+    public String logsPage(@ModelAttribute LogPageQuery query, Model model) {
+        int pageNo = GridRequests.page(query.getPage());
+        int pageSize = GridRequests.size(query.getSize());
+        String sortKey = GridRequests.sort(query.getSort(), query.getSortField());
+        String sortDirection = GridRequests.direction(query.getDir(), query.getSortDir());
+        List<String> selectedLevels = new ArrayList<>();
+        if (query.getLevels() != null && !query.getLevels().isBlank()) {
+            selectedLevels.add(query.getLevels());
+        }
         ApplicationLogKpiDto kpis = applicationLogService.getKpiMetrics();
         model.addAttribute("kpis", kpis);
         model.addAttribute("availableLevels", AVAILABLE_LEVELS);
         model.addAttribute("currentSection", "settings");
+        model.addAttribute("grid", ApplicationLogGrid.view(
+                applicationLogService.getLogs(pageNo, pageSize, query.getSearch(), sortKey, sortDirection,
+                        combineLevelFilters(selectedLevels, query.getLevel()), query.getStartDate(), query.getEndDate()),
+                pageNo, pageSize, sortKey, sortDirection));
         return "admin/settings/logs";
     }
 

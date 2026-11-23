@@ -1,0 +1,71 @@
+package com.ozerler.marble.web;
+
+import com.ozerler.marble.dto.ProductionOrderDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.enums.OperationStatus;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Fabrika kesim iş emirleri. Sort keys match {@code GridPages.PRODUCTION_ORDER_SORTS}.
+ */
+public final class ProductionOrderGrid {
+
+    private ProductionOrderGrid() {
+    }
+
+    public static DataGridView view(TabulatorResponse<ProductionOrderDto> response, int page, int size,
+                                    String sort, String direction) {
+        List<GridRow> rows = new ArrayList<>();
+        if (response != null && response.getData() != null) {
+            for (ProductionOrderDto order : response.getData()) {
+                rows.add(row(order));
+            }
+        }
+        return GridAssembler.from(response, page, size, sort, direction, "production-table", 4, columns(), rows);
+    }
+
+    public static GridRow row(ProductionOrderDto order) {
+        String id = order.getId() == null ? "" : order.getId().toString();
+        String viewUrl = "/production/orders/" + id;
+        String editUrl = viewUrl + "/edit";
+        String hours = GridTexts.quantity(order.getDurationHours());
+        String energy = GridTexts.quantity(order.getElectricityKwh());
+        String duration = hours.isBlank() ? "" : hours + " sa";
+        String consumption = energy.isBlank() ? "" : energy + " kWh";
+        String slabs = order.getSlabCount() + " Plaka";
+        return GridRow.of(viewUrl, editUrl, null, order.getOrderNo(), List.of(
+                GridCell.badge(order.getStatusLabel()),
+                GridCell.chip(order.getId()),
+                GridCell.link(order.getOrderNo(), viewUrl),
+                GridCell.link(GridWindow.clean(order.getMachineName()), viewUrl),
+                GridCell.link(GridWindow.clean(order.getBlockCode()), null, GridWindow.clean(order.getStoneType()), null),
+                GridCell.link(duration, null, consumption, null),
+                GridCell.link(slabs, null, GridWindow.withUnit(order.getTotalSlabAreaM2(), "m²"), null),
+                GridCell.text(GridWindow.clean(order.getOperatorName()))
+        ));
+    }
+
+    private static List<GridColumn> columns() {
+        return List.of(
+                GridColumn.filtered("status", "Durum", true, 150, "status", statuses()),
+                GridColumn.text("id", "Id", true, 110),
+                GridColumn.text("orderNo", "İş Emri No", true, 170),
+                GridColumn.text("machineName", "Makine / Hat", true, 170),
+                GridColumn.text("", "Kaynak Blok", false, 160),
+                GridColumn.text("", "Süre / Tüketim", false, 160),
+                GridColumn.text("", "Çıkan Plakalar", false, 150),
+                GridColumn.text("operatorName", "Operatör", true, 150)
+        );
+    }
+
+    private static List<GridColumn.FilterChoice> statuses() {
+        List<GridColumn.FilterChoice> choices = new ArrayList<>();
+        choices.add(new GridColumn.FilterChoice("", "Tümü"));
+        for (OperationStatus status : OperationStatus.values()) {
+            choices.add(new GridColumn.FilterChoice(status.name(), status.getLabel()));
+        }
+        return choices;
+    }
+}

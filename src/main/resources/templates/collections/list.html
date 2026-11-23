@@ -9,15 +9,21 @@
      th:data-initial-method="${selectedMethod}"
      x-data="{
         methodFilter: $el.dataset.initialMethod || '',
+        go(values) {
+            const url = new URL(window.location.href);
+            Object.keys(values).forEach((key) => {
+                const value = values[key];
+                if (value) url.searchParams.set(key, value);
+                else url.searchParams.delete(key);
+            });
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        },
         setMethodFilter(m) {
             this.methodFilter = m;
-            if (typeof reloadCollectionsGrid === 'function') reloadCollectionsGrid();
-        },
-        gridExtraQuery() {
-            return this.methodFilter ? '&method=' + encodeURIComponent(this.methodFilter) : '';
+            this.go({ method: m });
         }
-     }"
-     x-init="window.collectionsPageState = $data">
+     }">
 
     <!-- Header Section -->
     <div class="erp-list-header">
@@ -115,135 +121,15 @@
                 <span>Çek Portföyü</span>
             </a>
         </div>
-        <div th:replace="~{fragments/list-chrome :: search('Makbuz no, müşteri veya banka...', 'collection-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Makbuz no, müşteri veya banka...', 'collection-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('collections-table', 'tahsilatlar')}"></div>
         </div>
     </div>
 
     <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('collections-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        let collectionsTable;
-        document.addEventListener("DOMContentLoaded", () => {
-            collectionsTable = new Tabulator("#collections-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50, 100],
-                ajaxURL: "/collections/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "collection-search-input", function () {
-                        return window.collectionsPageState ? window.collectionsPageState.gridExtraQuery() : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("collections-table", response);
-                },
-                placeholder: "Kriterlere uygun tahsilat kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Makbuz / Belge No",
-                        field: "collectionNo",
-                        width: 170,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            return `<span class="font-mono font-bold text-teal-800 flex items-center gap-1.5">
-                                <i data-lucide="receipt" class="w-3.5 h-3.5 text-teal-600 inline"></i>
-                                <span>${gridText(cell.getValue())}</span>
-                            </span>`;
-                        }
-                    },
-                    {
-                        title: "Tarih",
-                        field: "collectionDate",
-                        width: 120,
-                        formatter: function (cell) {
-                            return `<span class="text-slate-600 font-medium">${gridDate(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Müşteri / Cari",
-                        field: "customerName",
-                        minWidth: 200,
-                        formatter: function (cell) {
-                            return `<strong class="text-slate-900">${gridText(cell.getValue())}</strong>`;
-                        }
-                    },
-                    {
-                        title: "Yöntem",
-                        field: "methodLabel",
-                        width: 130,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            let cls = "bg-slate-100 text-slate-800";
-                            if (row.method === "CASH") cls = "bg-emerald-100 text-emerald-800";
-                            else if (row.method === "BANK_TRANSFER") cls = "bg-blue-100 text-blue-800";
-                            else if (row.method === "CREDIT_CARD") cls = "bg-amber-100 text-amber-800";
-                            else if (row.method === "CHECK") cls = "bg-purple-100 text-purple-800";
-                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${cls}">
-                                ${gridText(cell.getValue())}
-                            </span>`;
-                        }
-                    },
-                    {
-                        title: "Banka / Kasa",
-                        field: "bankName",
-                        width: 150,
-                        formatter: function (cell) {
-                            return `<span class="text-slate-600">${gridText(cell.getValue()) || '—'}</span>`;
-                        }
-                    },
-                    {
-                        title: "İlişkili Fatura",
-                        field: "invoiceNo",
-                        width: 140,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            if (row.invoiceId) {
-                                return `<a href="/invoices/${row.invoiceId}" class="font-mono font-bold text-blue-600 hover:underline">${gridText(row.invoiceNo)}</a>`;
-                            }
-                            return `<span class="text-slate-400">—</span>`;
-                        }
-                    },
-                    {
-                        title: "Tahsilat Tutarı",
-                        field: "amount",
-                        width: 160,
-                        formatter: function (cell) {
-                            return `<strong class="font-mono text-emerald-700 text-sm">${gridMoney(cell.getValue())}</strong>`;
-                        }
-                    },
-                    {
-                        title: "Açıklama",
-                        field: "notes",
-                        minWidth: 150,
-                        formatter: function (cell) {
-                            return `<span class="text-slate-500 text-xs">${gridText(cell.getValue()) || '—'}</span>`;
-                        }
-                    }
-                ]
-            });
-
-            attachTabulatorPagingAnimation(collectionsTable);
-            bindGridSearch(collectionsTable, "collection-search-input");
-            collectionsTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-
-        function reloadCollectionsGrid() {
-            if (collectionsTable) collectionsTable.setData();
-        }
-        window.reloadCollectionsGrid = reloadCollectionsGrid;
-    </script>
-</th:block>
 </body>
 </html>

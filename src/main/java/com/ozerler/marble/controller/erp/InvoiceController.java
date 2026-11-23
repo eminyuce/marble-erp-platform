@@ -7,6 +7,8 @@ import com.ozerler.marble.model.enums.InvoiceStatus;
 import com.ozerler.marble.model.enums.InvoiceType;
 import com.ozerler.marble.repository.*;
 import com.ozerler.marble.service.InvoiceService;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.InvoiceGrid;
 import com.ozerler.marble.service.QuarryInventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,11 +55,14 @@ public class InvoiceController extends AbstractController {
                         @RequestParam(value = "department", required = false) BusinessUnit department,
                         @RequestParam(value = "status", required = false) InvoiceStatus status,
                         @RequestParam(value = "customerId", required = false) Long customerId,
-                        Model model) {
+                        @ModelAttribute ListQuery query, Model model) {
 
         BigDecimal monthlyPurchase = invoiceService.getMonthlyTotal(InvoiceType.PURCHASE);
         BigDecimal monthlySales = invoiceService.getMonthlyTotal(InvoiceType.SALES);
 
+        model.addAttribute("grid", InvoiceGrid.view(
+                invoiceService.searchInvoices(invoiceType, department, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("selectedType", invoiceType != null ? invoiceType.name() : "");
         model.addAttribute("selectedDepartment", department != null ? department.name() : "");
         model.addAttribute("selectedStatus", status != null ? status.name() : "");

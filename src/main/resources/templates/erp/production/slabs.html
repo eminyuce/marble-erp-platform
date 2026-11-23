@@ -7,20 +7,13 @@
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
      x-data="{
-        statusFilter: '',
-        qualityFilter: '',
-        setStatusFilter(st) {
-            this.statusFilter = st;
-            if (typeof reloadSlabsGrid === 'function') reloadSlabsGrid();
-        },
-        gridExtraQuery() {
-            let q = '';
-            if (this.statusFilter) q += '&status=' + encodeURIComponent(this.statusFilter);
-            if (this.qualityFilter) q += '&quality=' + encodeURIComponent(this.qualityFilter);
-            return q;
+        setParam(name, value) {
+            const url = new URL(window.location.href);
+            if (value) url.searchParams.set(name, value); else url.searchParams.delete(name);
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
         }
-     }"
-     x-init="window.slabsPageState = $data">
+     }">
 
     <!-- Header Section -->
     <div class="erp-list-header">
@@ -40,16 +33,16 @@
     <!-- KPI Summary Cards (Blocks Standard) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === '' ? 'erp-summary-card--active' : ''"
-                @click="setStatusFilter('')">
+                th:classappend="${selectedStatus == ''} ? 'erp-summary-card--active' : ''"
+                @click="setParam('status', '')">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Plaka Metrajı</div>
             <div class="text-lg font-black text-slate-900 mt-1 font-mono"
                  th:text="${summary.totalAreaM2 != null ? #numbers.formatDecimal(summary.totalAreaM2, 1, 'POINT', 1, 'COMMA') + ' m²' : '0 m²'}">0 m²</div>
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === 'AVAILABLE' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
-                @click="setStatusFilter('AVAILABLE')">
+                th:classappend="${selectedStatus == 'AVAILABLE'} ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setParam('status', 'AVAILABLE')">
             <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
                 <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Stoktaki Plakalar
             </div>
@@ -59,8 +52,8 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === 'RESERVED' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
-                @click="setStatusFilter('RESERVED')">
+                th:classappend="${selectedStatus == 'RESERVED'} ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setParam('status', 'RESERVED')">
             <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
                 <i data-lucide="lock" class="w-3.5 h-3.5"></i> Rezerve Plakalar
             </div>
@@ -79,17 +72,17 @@
     <!-- Operational Filter Chips -->
     <div class="erp-yard-filters">
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('')">Tüm Plakalar</button>
+                th:classappend="${selectedStatus == ''} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', '')">Tüm Plakalar</button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'AVAILABLE' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('AVAILABLE')">
+                th:classappend="${selectedStatus == 'AVAILABLE'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', 'AVAILABLE')">
             <i data-lucide="layers" class="w-3.5 h-3.5 inline mr-1"></i>
             Stokta Mevcut
         </button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'RESERVED' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('RESERVED')">
+                th:classappend="${selectedStatus == 'RESERVED'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', 'RESERVED')">
             <i data-lucide="lock" class="w-3.5 h-3.5 inline mr-1"></i>
             Rezerve
         </button>
@@ -101,7 +94,7 @@
             <i data-lucide="arrow-left"></i>
             <span>Fabrika İş Emirleri</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Plaka kodu, blok kodu veya taş cinsi...', 'slab-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Plaka kodu, blok kodu veya taş cinsi...', 'slab-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <a th:href="@{/production/create}" class="erp-btn-secondary">
                 <i data-lucide="plus"></i>
@@ -112,145 +105,9 @@
     </div>
 
     <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('slabs-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        let slabsTable;
-        document.addEventListener("DOMContentLoaded", () => {
-            slabsTable = new Tabulator("#slabs-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50, 100],
-                ajaxURL: "/production/api/slabs",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "slab-search-input", function () {
-                        return window.slabsPageState ? window.slabsPageState.gridExtraQuery() : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("slabs-table", response);
-                },
-                placeholder: "Kriterlere uygun plaka kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Plaka Kodu",
-                        field: "slabCode",
-                        minWidth: 140,
-                        width: 170,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<a href="/production/slabs/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
-                        }
-                    },
-                    {
-                        title: "Ebatlar (cm)",
-                        minWidth: 150,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `${gridText(row.thicknessCm)} cm • ${gridText(row.widthCm)}x${gridText(row.lengthCm)} cm`;
-                        }
-                    },
-                    {
-                        title: "Net Alan",
-                        field: "surfaceAreaM2",
-                        width: 120,
-                        formatter: function (cell) {
-                            return `<strong>${gridArea(cell.getValue())}</strong>`;
-                        }
-                    },
-                    {
-                        title: "Yüzey",
-                        field: "surfaceFinish",
-                        minWidth: 140,
-                        width: 170,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 font-medium">${gridText(row.surfaceFinishLabel || cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Kalite",
-                        field: "qualityGrade",
-                        width: 120,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            const val = row.qualityGrade;
-                            const colors = {
-                                'EXTRA': 'bg-purple-100 text-purple-800',
-                                'A': 'bg-emerald-100 text-emerald-800',
-                                'B': 'bg-blue-100 text-blue-800',
-                                'C': 'bg-amber-100 text-amber-800',
-                                'MOLOZ': 'bg-rose-100 text-rose-800'
-                            };
-                            return `<span class="px-2 py-0.5 rounded text-xs font-bold ${colors[val] || 'bg-slate-100 text-slate-700'}">${gridText(row.qualityGradeLabel || val)}</span>`;
-                        }
-                    },
-                    {
-                        title: "Birim Maliyet (m²)",
-                        field: "costPerM2",
-                        width: 150,
-                        formatter: function (cell) {
-                            return `<strong class="text-slate-800">${gridMoney(cell.getValue())}</strong>`;
-                        }
-                    },
-                    {
-                        title: "Durum",
-                        field: "status",
-                        minWidth: 140,
-                        width: 170,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return erpStatusBadge(row.status, row.statusLabel);
-                        }
-                    },
-                    {
-                        title: "İşlemler",
-                        width: 120,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return gridActionsHtml([
-                                {icon: 'eye', label: 'Detay', href: '/production/slabs/' + row.id},
-                                {icon: 'edit-3', label: 'Düzenle', href: '/production/slabs/' + row.id + '/edit'},
-                                {
-                                    icon: 'qr-code',
-                                    label: 'Pasaport',
-                                    href: '/passport/' + row.slabCode,
-                                    target: '_blank'
-                                },
-                                {
-                                    icon: 'printer',
-                                    label: 'Barkod Yazdır',
-                                    href: '/production/slabs/' + row.id + '/label',
-                                    target: '_blank'
-                                }
-                            ]);
-                        }
-                    }
-                ]
-            });
-
-            attachTabulatorPagingAnimation(slabsTable);
-            bindGridSearch(slabsTable, "slab-search-input");
-            slabsTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-
-        function reloadSlabsGrid() {
-            if (slabsTable) slabsTable.setData();
-        }
-        window.reloadSlabsGrid = reloadSlabsGrid;
-    </script>
-</th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>

@@ -7,6 +7,7 @@
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
      th:data-customer-filter="${selectedCustomerId != null ? selectedCustomerId : ''}"
+     th:data-status-filter="${filters.status}"
      x-data="{
         statusFilter: '',
         customerFilter: '',
@@ -15,11 +16,17 @@
         deleteName: '',
         setStatusFilter(st) {
             this.statusFilter = st;
-            if (typeof reloadProjectsGrid === 'function') reloadProjectsGrid();
+            const url = new URL(window.location.href);
+            if (st) url.searchParams.set('status', st); else url.searchParams.delete('status');
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
         },
         setCustomerFilter(cid) {
             this.customerFilter = cid;
-            if (typeof reloadProjectsGrid === 'function') reloadProjectsGrid();
+            const url = new URL(window.location.href);
+            if (cid) url.searchParams.set('customerId', cid); else url.searchParams.delete('customerId');
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
         },
         confirmDeleteProject(id, name) {
             this.deleteId = id;
@@ -33,7 +40,7 @@
             return q;
         }
      }"
-     x-init="customerFilter = $el.dataset.customerFilter || ''; window.projectsPageState = $data">
+     x-init="statusFilter = $el.dataset.statusFilter || ''; customerFilter = $el.dataset.customerFilter || ''; window.projectsPageState = $data">
 
     <!-- Header Section -->
     <div class="erp-list-header">
@@ -81,8 +88,8 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === 'IN_PROGRESS' ? 'erp-summary-card--active ring-2 ring-cyan-500' : ''"
-                @click="setStatusFilter('IN_PROGRESS')">
+                :class="statusFilter === 'ACTIVE' ? 'erp-summary-card--active ring-2 ring-cyan-500' : ''"
+                @click="setStatusFilter('ACTIVE')">
             <div class="text-[11px] uppercase tracking-wide text-cyan-600 font-semibold flex items-center gap-1">
                 <i data-lucide="hard-hat" class="w-3.5 h-3.5"></i> Devam Eden Montaj
             </div>
@@ -116,8 +123,8 @@
                     :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
                     @click="setStatusFilter('')">Tüm Şantiyeler</button>
             <button type="button" class="erp-yard-chip"
-                    :class="statusFilter === 'IN_PROGRESS' ? 'erp-yard-chip--active' : ''"
-                    @click="setStatusFilter('IN_PROGRESS')">
+                    :class="statusFilter === 'ACTIVE' ? 'erp-yard-chip--active' : ''"
+                    @click="setStatusFilter('ACTIVE')">
                 <i data-lucide="play" class="w-3.5 h-3.5 inline mr-1"></i>
                 Devam Edenler
             </button>
@@ -136,7 +143,7 @@
                 <span>Firma / Cari:</span>
             </label>
             <select x-model="customerFilter"
-                    @change="if (typeof reloadProjectsGrid === 'function') reloadProjectsGrid()"
+                    @change="setCustomerFilter($event.target.value)"
                     class="text-xs font-semibold px-3 py-1.5 border border-slate-300 rounded-xl bg-white text-slate-800 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
                 <option value="">Tüm Firmalar / Cariler</option>
                 <option th:each="c : ${customers}" th:value="${c.id}"
@@ -156,14 +163,13 @@
             <i data-lucide="plus"></i>
             <span>Yeni Şantiye</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Şantiye kodu, adı veya müşteri...', 'project-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Şantiye kodu, adı veya müşteri...', 'project-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('projects-table', 'projeler')}"></div>
         </div>
     </div>
 
-    <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('projects-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
     <!-- Delete Confirmation Modal -->
     <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
@@ -183,140 +189,6 @@
     </div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        let projectsTable;
-        document.addEventListener("DOMContentLoaded", () => {
-            projectsTable = new Tabulator("#projects-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50, 100],
-                ajaxURL: "/projects/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "project-search-input", function () {
-                        return window.projectsPageState ? window.projectsPageState.gridExtraQuery() : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("projects-table", response);
-                },
-                placeholder: "Kriterlere uygun şantiye kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Şantiye Kodu",
-                        field: "projectCode",
-                        width: 160,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<a href="/projects/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
-                        }
-                    },
-                    {
-                        title: "Şantiye Adı",
-                        field: "name",
-                        minWidth: 220,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            let customerHtml = `<div class="text-xs text-slate-500">${gridText(row.customerName)}</div>`;
-                            if (row.customerId) {
-                                customerHtml = `<div class="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                                    <a href="/admin/definitions/customers/${row.customerId}/transactions" class="text-indigo-600 hover:text-indigo-800 hover:underline font-semibold" title="Cari Hesap Ekstresi &amp; Hareketleri">
-                                        <i data-lucide="user" class="w-3 h-3 inline"></i> ${gridText(row.customerName)}
-                                    </a>
-                                    <button type="button" onclick="window.projectsPageState.setCustomerFilter('${row.customerId}')" class="text-[10px] text-cyan-600 hover:text-cyan-800 hover:underline cursor-pointer" title="Sadece bu firmanın projelerini filtrele">
-                                        (Filtrele)
-                                    </button>
-                                </div>`;
-                            }
-                            return `<div>
-                        <a href="/projects/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${gridText(row.name)}</a>
-                        ${customerHtml}
-                    </div>`;
-                        }
-                    },
-                    {
-                        title: "Sözleşme Bedeli",
-                        field: "contractValue",
-                        width: 150,
-                        formatter: function (cell) {
-                            return `<strong>${gridMoney(cell.getValue())}</strong>`;
-                        }
-                    },
-                    {
-                        title: "Gerçekleşen Maliyet",
-                        field: "actualCost",
-                        width: 160,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            const isOver = row.costVariance > 0;
-                            return `<div>
-                        <span class="font-bold ${isOver ? 'text-rose-700' : 'text-slate-800'}">${gridMoney(cell.getValue())}</span>
-                        <div class="text-xs text-slate-500">Tahmini: ${gridMoney(row.estimatedCost)}</div>
-                    </div>`;
-                        }
-                    },
-                    {
-                        title: "Montaj İlerlemesi",
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            const planned = row.totalPlannedAreaM2 || 0;
-                            const installed = row.totalInstalledAreaM2 || 0;
-                            const pct = planned > 0 ? ((installed / planned) * 100).toFixed(1) : 0;
-                            return `<div>
-                        <div class="flex justify-between text-xs font-semibold mb-1">
-                            <span>${installed} / ${planned} m²</span>
-                            <span>%${pct}</span>
-                        </div>
-                        <div class="w-full bg-slate-100 rounded-full h-1.5">
-                            <div class="bg-emerald-600 h-1.5 rounded-full" style="width: ${pct}%"></div>
-                        </div>
-                    </div>`;
-                        }
-                    },
-                    {
-                        title: "Durum",
-                        field: "statusLabel",
-                        width: 120,
-                        formatter: function (cell) {
-                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">● ${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "İşlemler",
-                        width: 120,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            const safeName = (row.name || '').replace(/'/g, "\\'");
-                            return gridActionsHtml([
-                                {icon: 'eye', label: 'Detay', href: '/projects/' + row.id},
-                                {icon: 'edit-3', label: 'Düzenle', href: '/projects/' + row.id + '/edit'},
-                                {icon: 'trash-2', label: 'Sil', onclick: "window.projectsPageState && window.projectsPageState.confirmDeleteProject(" + row.id + ", '" + safeName + "')", danger: true}
-                            ]);
-                        }
-                    }
-                ]
-            });
-
-            attachTabulatorPagingAnimation(projectsTable);
-            bindGridSearch(projectsTable, "project-search-input");
-            projectsTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-
-        function reloadProjectsGrid() {
-            if (projectsTable) projectsTable.setData();
-        }
-        window.reloadProjectsGrid = reloadProjectsGrid;
-    </script>
-</th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>

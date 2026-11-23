@@ -6,9 +6,31 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
-     x-data="expensesPage()"
-     x-init="init()">
-    <script th:src="@{/js/expenses-grid.js(v=${assetVersion})}"></script>
+     x-data="{
+        deleteId: null,
+        setParam(name, value) {
+            const url = new URL(window.location.href);
+            if (value) url.searchParams.set(name, value); else url.searchParams.delete(name);
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        },
+        confirmDelete(id, name) {
+            this.deleteId = id;
+            const doc = document.getElementById('delete-expense-doc');
+            if (doc) doc.textContent = name ? ('Belge No: ' + name) : ('Kayıt ID: #' + id);
+            const dialog = document.getElementById('delete-expense-dialog');
+            if (dialog && dialog.showModal) dialog.showModal();
+        },
+        async submitDelete() {
+            if (!this.deleteId) return;
+            const token = document.querySelector('meta[name=&quot;_csrf&quot;]')?.getAttribute('content');
+            const header = document.querySelector('meta[name=&quot;_csrf_header&quot;]')?.getAttribute('content');
+            const headers = {};
+            if (token && header) headers[header] = token;
+            const response = await fetch('/expenses/api/' + this.deleteId + '/delete', { method: 'POST', headers: headers });
+            if (response.ok) window.location.reload();
+        }
+     }">
 
     <div class="erp-list-header">
         <div class="erp-list-header-main">
@@ -39,16 +61,16 @@
     <!-- KPI Summary Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3" th:if="${summary != null}">
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="activeTab === '' ? 'erp-summary-card--active ring-2 ring-[#2b6cb0]' : ''"
-                @click="setUnitFilter('')">
+                th:classappend="${selectedUnit == null} ? 'erp-summary-card--active ring-2 ring-[#2b6cb0]' : ''"
+                @click="setParam('unit', '')">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Bu Ay Toplam Gider</div>
             <div class="text-lg font-black text-slate-900 mt-1 font-mono"
                  th:text="${summary.totalExpensesThisMonth != null ? #numbers.formatDecimal(summary.totalExpensesThisMonth, 1, 'POINT', 2, 'COMMA') + ' TL' : '0,00 TL'}">0,00 TL</div>
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="activeTab === 'QUARRY' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
-                @click="setUnitFilter('QUARRY')">
+                th:classappend="${selectedUnit != null and selectedUnit.name() == 'QUARRY'} ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setParam('unit', 'QUARRY')">
             <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
                 <i data-lucide="mountain" class="w-3.5 h-3.5"></i> Ocak Giderleri
             </div>
@@ -57,8 +79,8 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="activeTab === 'FACTORY' ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
-                @click="setUnitFilter('FACTORY')">
+                th:classappend="${selectedUnit != null and selectedUnit.name() == 'FACTORY'} ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
+                @click="setParam('unit', 'FACTORY')">
             <div class="text-[11px] uppercase tracking-wide text-blue-600 font-semibold flex items-center gap-1">
                 <i data-lucide="factory" class="w-3.5 h-3.5"></i> Fabrika Giderleri
             </div>
@@ -67,8 +89,8 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="activeTab === 'WORKSHOP' ? 'erp-summary-card--active ring-2 ring-rose-500' : ''"
-                @click="setUnitFilter('WORKSHOP')">
+                th:classappend="${selectedUnit != null and selectedUnit.name() == 'WORKSHOP'} ? 'erp-summary-card--active ring-2 ring-rose-500' : ''"
+                @click="setParam('unit', 'WORKSHOP')">
             <div class="text-[11px] uppercase tracking-wide text-rose-600 font-semibold flex items-center gap-1">
                 <i data-lucide="scissors" class="w-3.5 h-3.5"></i> Atölye Giderleri
             </div>
@@ -77,8 +99,8 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="activeTab === 'SITE' ? 'erp-summary-card--active ring-2 ring-cyan-500' : ''"
-                @click="setUnitFilter('SITE')">
+                th:classappend="${selectedUnit != null and selectedUnit.name() == 'SITE'} ? 'erp-summary-card--active ring-2 ring-cyan-500' : ''"
+                @click="setParam('unit', 'SITE')">
             <div class="text-[11px] uppercase tracking-wide text-cyan-600 font-semibold flex items-center gap-1">
                 <i data-lucide="building-2" class="w-3.5 h-3.5"></i> Şantiye Giderleri
             </div>
@@ -90,34 +112,36 @@
     <!-- Unit Filter Chips -->
     <div class="erp-yard-filters">
         <button type="button" class="erp-yard-chip"
-                :class="activeTab === '' ? 'erp-yard-chip--active' : ''"
-                @click="setUnitFilter('')">Tümü</button>
+                th:classappend="${selectedUnit == null} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('unit', '')">Tümü</button>
         <button type="button" class="erp-yard-chip"
-                :class="activeTab === 'QUARRY' ? 'erp-yard-chip--active' : ''"
-                @click="setUnitFilter('QUARRY')">
+                th:classappend="${selectedUnit != null and selectedUnit.name() == 'QUARRY'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('unit', 'QUARRY')">
             <i data-lucide="mountain" class="w-3.5 h-3.5 inline mr-1"></i>Ocak
         </button>
         <button type="button" class="erp-yard-chip"
-                :class="activeTab === 'FACTORY' ? 'erp-yard-chip--active' : ''"
-                @click="setUnitFilter('FACTORY')">
+                th:classappend="${selectedUnit != null and selectedUnit.name() == 'FACTORY'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('unit', 'FACTORY')">
             <i data-lucide="factory" class="w-3.5 h-3.5 inline mr-1"></i>Fabrika
         </button>
         <button type="button" class="erp-yard-chip"
-                :class="activeTab === 'WORKSHOP' ? 'erp-yard-chip--active' : ''"
-                @click="setUnitFilter('WORKSHOP')">
+                th:classappend="${selectedUnit != null and selectedUnit.name() == 'WORKSHOP'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('unit', 'WORKSHOP')">
             <i data-lucide="scissors" class="w-3.5 h-3.5 inline mr-1"></i>Atölye
         </button>
         <button type="button" class="erp-yard-chip"
-                :class="activeTab === 'SITE' ? 'erp-yard-chip--active' : ''"
-                @click="setUnitFilter('SITE')">
+                th:classappend="${selectedUnit != null and selectedUnit.name() == 'SITE'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('unit', 'SITE')">
             <i data-lucide="building-2" class="w-3.5 h-3.5 inline mr-1"></i>Şantiye
         </button>
     </div>
 
     <!-- Dynamic Totals Bar -->
-    <div id="expenses-grid-totals" class="flex flex-wrap gap-4 text-sm text-slate-600 hidden bg-slate-50 p-3 rounded-lg border border-slate-200">
-        <span><strong>Filtrelenen Toplam Tutar:</strong> <span id="expenses-total-amount" class="font-mono font-bold text-slate-900">—</span></span>
-        <span><strong>Toplam Kayıt:</strong> <span id="expenses-total-count" class="font-bold text-slate-900">—</span></span>
+    <div id="expenses-grid-totals" class="flex flex-wrap gap-4 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200" th:if="${filteredCount != null}">
+        <span><strong>Filtrelenen Toplam Tutar:</strong>
+            <span id="expenses-total-amount" class="font-mono font-bold text-slate-900"
+                  th:text="${filteredAmount != null ? #numbers.formatDecimal(filteredAmount, 1, 'POINT', 2, 'COMMA') + ' TL' : '—'}">—</span></span>
+        <span><strong>Toplam Kayıt:</strong> <span id="expenses-total-count" class="font-bold text-slate-900" th:text="${filteredCount}">—</span></span>
     </div>
 
     <!-- Toolbar -->
@@ -127,19 +151,20 @@
             <span>Yeni Gider Kaydı</span>
         </a>
 
-        <div th:replace="~{fragments/list-chrome :: search('Belge no, açıklama, masraf merkezi...', 'search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Belge no, açıklama, masraf merkezi...', 'search-input')}"></div>
 
         <div class="erp-toolbar-actions">
             <div class="erp-toolbar-date">
                 <label for="expenses-period-filter">Dönem:</label>
-                <input type="month" id="expenses-period-filter" th:value="${period}">
+                <input type="month" id="expenses-period-filter" th:value="${period}"
+                       onchange="const url = new URL(window.location.href); url.searchParams.set('period', this.value); url.searchParams.set('page', '1'); window.location.assign(url.toString());">
             </div>
             <div th:replace="~{fragments/list-chrome :: exportDropdown('expenses-table', 'giderler')}"></div>
         </div>
     </div>
 
     <!-- Tabulator Grid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('expenses-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
     <!-- Delete Expense Dialog (Destructive confirmation only) -->
     <dialog id="delete-expense-dialog" class="erp-dialog-panel">
@@ -157,7 +182,7 @@
             <p class="erp-dialog-lead text-slate-600 mt-2">Bu gider kaydını sistemden silmek istediğinize emin misiniz? Dönemi kapatılmış giderler silinemez.</p>
             <div class="erp-dialog-actions">
                 <button value="cancel" type="button" class="erp-btn-secondary" onclick="document.getElementById('delete-expense-dialog').close()">Vazgeç</button>
-                <button type="button" id="confirm-delete-expense" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                <button type="button" id="confirm-delete-expense" @click="submitDelete()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                     <span>Evet, Gideri Sil</span>
                 </button>

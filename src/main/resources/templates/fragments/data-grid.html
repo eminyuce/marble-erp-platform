@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="shell(grid)" class="erp-data-grid" x-data="erpDataGrid($el)" x-init="init()"
+     th:id="${grid.tableId}"
+     th:attr="data-page=${grid.number},data-pages=${grid.totalPages},data-frozen=${grid.frozenCount}">
+    <div class="erp-data-grid__viewport">
+        <table class="erp-data-grid__table">
+            <thead>
+            <tr>
+                <th th:class="${'erp-data-grid__op' + (grid.frozenCount > 0 ? ' is-frozen' : '') + (grid.frozenCount == 1 ? ' is-frozen-last' : '')}">İşlem</th>
+                <th th:each="column, stat : ${grid.columns}"
+                    th:class="${(stat.count < grid.frozenCount ? 'is-frozen' : '') + (stat.count == grid.frozenCount - 1 ? ' is-frozen-last' : '')}"
+                    th:style="${'min-width:' + column.minWidth + 'px'}">
+                    <span class="erp-data-grid__head">
+                        <a th:if="${column.sortable}" th:href="${gridLinks.sort(column.key)}" class="erp-data-grid__sort">
+                            <span th:text="${column.label}">Kolon</span>
+                            <span class="erp-data-grid__sort-mark" th:text="${gridLinks.indicator(column.key)}">↕</span>
+                        </a>
+                        <span th:unless="${column.sortable}" th:text="${column.label}">Kolon</span>
+                        <details th:if="${column.filtered}" class="erp-data-grid__filter">
+                            <summary aria-label="Filtre">▾</summary>
+                            <div class="erp-data-grid__filter-menu">
+                                <a th:each="choice : ${column.filters}"
+                                   th:href="${gridLinks.with(column.filterParam, choice.value)}"
+                                   th:text="${choice.label}">Tümü</a>
+                            </div>
+                        </details>
+                    </span>
+                </th>
+            </tr>
+            </thead>
+            <tbody @click="selectRow($event)">
+            <tr th:if="${grid.rows.isEmpty()}">
+                <td class="erp-data-grid__empty" th:attr="colspan=${grid.columns.size() + 1}">Kayıt bulunamadı.</td>
+            </tr>
+            <tr th:each="row : ${grid.rows}">
+                <td th:class="${'erp-data-grid__op' + (grid.frozenCount > 0 ? ' is-frozen' : '') + (grid.frozenCount == 1 ? ' is-frozen-last' : '')}">
+                    <a th:if="${row.viewable}" th:href="${row.viewUrl}" class="erp-data-grid__view" title="Görüntüle" aria-label="Görüntüle">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+                    </a>
+                    <a th:if="${row.editable}" th:href="${row.editUrl}" class="erp-data-grid__view" title="Düzenle" aria-label="Düzenle">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 7l4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+                    </a>
+                    <button th:if="${row.deletable}" type="button" class="erp-data-grid__view"
+                            th:attr="data-delete-id=${row.deleteId},data-delete-name=${row.deleteName}"
+                            onclick="erpGridDelete(this)" title="Sil" aria-label="Sil">×</button>
+                </td>
+                <td th:each="cell, stat : ${row.cells}"
+                    th:class="${(stat.count < grid.frozenCount ? 'is-frozen' : '') + (stat.count == grid.frozenCount - 1 ? ' is-frozen-last' : '')}">
+                    <span th:if="${cell.empty}" class="erp-data-grid__dash">–</span>
+                    <span th:if="${!cell.empty and cell.badge}" class="erp-data-grid__badge" th:text="${cell.text}" th:title="${cell.text}">Onaylı</span>
+                    <span th:if="${!cell.empty and cell.chip}" class="erp-data-grid__chip" th:text="${cell.text}" th:title="${cell.text}">#1</span>
+                    <span th:if="${!cell.empty and !cell.badge and !cell.chip}" class="erp-data-grid__clip">
+                        <a th:if="${cell.linked}" th:href="${cell.href}" class="erp-data-grid__link" th:text="${cell.text}" th:title="${cell.text}">Değer</a>
+                        <span th:unless="${cell.linked}" class="erp-data-grid__text" th:text="${cell.text}" th:title="${cell.text}">Değer</span>
+                        <a th:if="${cell.subLinked}" th:href="${cell.subHref}" class="erp-data-grid__sub" th:text="${cell.subtext}" th:title="${cell.subtext}">Alt</a>
+                        <span th:if="${cell.hasSubtext and !cell.subLinked}" class="erp-data-grid__sub" th:text="${cell.subtext}" th:title="${cell.subtext}">Alt</span>
+                    </span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <footer class="erp-data-grid__footer">
+        <div class="erp-data-grid__total">Toplam <strong th:text="${grid.total}">0</strong></div>
+        <label class="erp-data-grid__size">
+            <select @change="setSize($event)">
+                <option value="20" th:selected="${grid.size == 20}">20/sayfa</option>
+                <option value="50" th:selected="${grid.size == 50}">50/sayfa</option>
+                <option value="100" th:selected="${grid.size == 100}">100/sayfa</option>
+            </select>
+        </label>
+        <nav class="erp-data-grid__pages" aria-label="Sayfalar">
+            <a th:href="${gridLinks.page(grid.number - 1)}" th:classappend="${grid.first} ? ' is-disabled'" aria-label="Önceki">&lt;</a>
+            <th:block th:each="marker : ${grid.markers}">
+                <span th:if="${marker.ellipsis}" class="erp-data-grid__ellipsis">…</span>
+                <a th:unless="${marker.ellipsis}"
+                   th:href="${gridLinks.page(marker.number)}"
+                   th:text="${marker.number}"
+                   th:classappend="${marker.current} ? ' is-current'">1</a>
+            </th:block>
+            <a th:href="${gridLinks.page(grid.number + 1)}" th:classappend="${grid.last} ? ' is-disabled'" aria-label="Sonraki">&gt;</a>
+        </nav>
+        <form class="erp-data-grid__go" @submit.prevent="go()">
+            <label>Git
+                <input type="number" min="1" th:max="${grid.totalPages}" x-model="goPage" @keydown.enter.prevent="go()">
+            </label>
+            <button type="submit">Git</button>
+        </form>
+    </footer>
+</div>
+</body>
+</html>

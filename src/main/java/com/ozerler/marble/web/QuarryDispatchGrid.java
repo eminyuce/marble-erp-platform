@@ -1,0 +1,79 @@
+package com.ozerler.marble.web;
+
+import com.ozerler.marble.model.Invoice;
+import com.ozerler.marble.model.StockMovement;
+import jakarta.persistence.Persistence;
+import org.springframework.data.domain.Page;
+
+import java.util.List;
+
+/**
+ * Ocak sevkiyat raporu. The movement query has no search or status filter. Invoice is not fetched.
+ */
+public final class QuarryDispatchGrid {
+
+    private QuarryDispatchGrid() {
+    }
+
+    public static DataGridView view(Page<StockMovement> page, int number, int size, String sort, String direction) {
+        return OperationGridSupport.pageOf(page, number, size, sort, direction,
+                "quarry-dispatches-table", columns(), QuarryDispatchGrid::row);
+    }
+
+    static GridRow row(StockMovement movement) {
+        String product = productName(movement);
+        String blockUrl = movement.getBlock() == null ? null : "/blocks/" + movement.getBlock().getId();
+        String target = movement.getTargetDestination() != null
+                ? movement.getTargetDestination().getDisplayName()
+                : movement.getTargetDepartment() == null ? "Fabrika" : movement.getTargetDepartment().getDisplayName();
+        String customer = movement.getCustomer() == null ? "" : movement.getCustomer().getCompanyName();
+        return GridRow.of(blockUrl, null, null, null, List.of(
+                GridCell.chip(movement.getId()),
+                blockUrl == null ? GridCell.text(product) : GridCell.link(product, blockUrl),
+                GridCell.text(OperationGridSupport.day(movement.getMovementDate())),
+                GridCell.text(measure(movement)),
+                GridCell.badge("Ocak"),
+                GridCell.badge(target),
+                GridCell.text(customer),
+                invoice(movement),
+                GridCell.text(movement.getNotes())
+        ));
+    }
+
+    private static List<GridColumn> columns() {
+        return List.of(
+                GridColumn.text("id", "Id", false, 110),
+                GridColumn.text("productName", "Ürün / Blok", false, 160),
+                GridColumn.text("movementDate", "Tarih", false, 160),
+                GridColumn.text("tonnage", "Tonaj / Miktar", false, 150),
+                GridColumn.text("source", "Kaynak", false, 110),
+                GridColumn.text("targetDestination", "Hedef", false, 140),
+                GridColumn.text("customerName", "Müşteri", false, 180),
+                GridColumn.text("invoiceNo", "Fatura", false, 140),
+                GridColumn.text("notes", "Açıklama", false, 200)
+        );
+    }
+
+    private static GridCell invoice(StockMovement movement) {
+        if (!Persistence.getPersistenceUtil().isLoaded(movement, "invoice") || movement.getInvoice() == null) {
+            return GridCell.text("");
+        }
+        Invoice invoice = movement.getInvoice();
+        return GridCell.link(invoice.getInvoiceNumber(), "/invoices/" + invoice.getId());
+    }
+
+    private static String productName(StockMovement movement) {
+        if (movement.getBlock() != null && movement.getBlock().getBlockCode() != null) {
+            return movement.getBlock().getBlockCode();
+        }
+        return OperationGridSupport.named(movement.getItemDescription(), "Mermer Blok");
+    }
+
+    private static String measure(StockMovement movement) {
+        if (movement.getTonnage() != null) {
+            return OperationGridSupport.amount(movement.getTonnage(), "ton");
+        }
+        String unit = movement.getQuantityUnit() == null ? "ton" : movement.getQuantityUnit();
+        return OperationGridSupport.amount(movement.getQuantity(), unit);
+    }
+}

@@ -6,6 +6,7 @@ import com.ozerler.marble.dto.EmailPreviewDto;
 import com.ozerler.marble.exception.ResourceNotFoundException;
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.repository.EmailTemplateRepository;
+import com.ozerler.marble.util.GridPages;
 import com.ozerler.marble.util.Ints;
 import com.ozerler.marble.util.Strings;
 import jakarta.mail.internet.MimeMessage;
@@ -17,6 +18,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,8 +72,50 @@ public class EmailService {
     }
 
     @Transactional(readOnly = true)
+    public long countTemplates() {
+        return templateRepository.count();
+    }
+
+    @Transactional(readOnly = true)
     public long countActiveTemplates() {
         return templateRepository.countByIsActiveTrue();
+    }
+
+    @Transactional(readOnly = true)
+    public Set<String> templateCategories() {
+        Set<String> categories = new TreeSet<>();
+        List<String> stored = templateRepository.findDistinctCategories();
+        if (stored == null) {
+            return categories;
+        }
+        for (String category : stored) {
+            categories.add(StringUtils.defaultIfBlank(category, "Genel"));
+        }
+        return categories;
+    }
+
+    /**
+     * One page of templates. {@code ACTIVE} keeps the index card that shows only live templates.
+     */
+    @Transactional(readOnly = true)
+    public Page<EmailTemplate> getTemplatesPaged(int page, int size, String category, String search) {
+        String requested = StringUtils.trimToNull(category);
+        String categoryFilter = requested;
+        Boolean activeOnly = null;
+        if (requested != null && "ALL".equalsIgnoreCase(requested)) {
+            categoryFilter = null;
+        } else if (requested != null && "ACTIVE".equalsIgnoreCase(requested)) {
+            categoryFilter = null;
+            activeOnly = Boolean.TRUE;
+        }
+        int pageIndex = Math.max(0, page - 1);
+        int pageSize = size > 0 ? size : 20;
+        Sort order = Sort.by(Sort.Order.asc("category"), Sort.Order.asc("templateName"));
+        return templateRepository.searchTemplates(
+                categoryFilter,
+                activeOnly,
+                GridPages.normalizeSearch(search),
+                PageRequest.of(pageIndex, pageSize, order));
     }
 
     @Cacheable(value = "emailTemplates", key = "#key.trim().toUpperCase()")

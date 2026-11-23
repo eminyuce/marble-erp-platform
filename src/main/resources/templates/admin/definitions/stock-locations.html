@@ -15,6 +15,12 @@
         this.deleteId = id;
         this.deleteName = name;
         this.deleteModalOpen = true;
+    },
+    applyUnit(value) {
+        const url = new URL(window.location.href);
+        if (value) url.searchParams.set('unit', value); else url.searchParams.delete('unit');
+        url.searchParams.set('page', '1');
+        window.location.assign(url.toString());
     }
 }">
 
@@ -31,17 +37,19 @@
             <i data-lucide="plus"></i>
             <span>Yeni saha / depo</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Saha kodu veya adı', 'search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Saha kodu veya adı', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
-            <select id="location-unit-filter" class="erp-toolbar-filter" aria-label="İş birimi">
-                <option value="">Tüm birimler</option>
-                <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"></option>
+            <select id="location-unit-filter" class="erp-toolbar-filter" aria-label="İş birimi"
+                    @change="applyUnit($event.target.value)">
+                <option value="" th:selected="${filters.unit == ''}">Tüm birimler</option>
+                <option th:each="unit : ${businessUnits}" th:value="${unit.name()}" th:text="${unit.label}"
+                        th:selected="${filters.unit == unit.name()}"></option>
             </select>
             <div th:replace="~{fragments/list-chrome :: exportDropdown('stock-locations-table', 'stok_sahalari')}"></div>
         </div>
     </div>
 
-    <div th:replace="~{fragments/list-chrome :: gridShell('stock-locations-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
     <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
          style="display: none;">
@@ -62,85 +70,6 @@
 
 <th:block layout:fragment="scripts">
     <script th:src="@{/js/definitions-page.js(v=${assetVersion})}"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            window.definitionTable = new Tabulator("#stock-locations-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
-                ajaxURL: "/admin/definitions/stock-locations/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "search-input", function () {
-                        const unit = document.getElementById("location-unit-filter")?.value || "";
-                        return unit ? "&unit=" + encodeURIComponent(unit) : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("stock-locations-table", response);
-                },
-                placeholder: "Stok sahası kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Kod",
-                        field: "code",
-                        width: 150,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            return `<span class="font-mono font-bold text-slate-900">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {title: "Saha / Depo Adı", field: "name", minWidth: 200, formatter: (cell) => gridText(cell.getValue())},
-                    {
-                        title: "İş Birimi",
-                        field: "businessUnitLabel",
-                        width: 130,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return businessUnitBadge(row.businessUnit, row.businessUnitLabel);
-                        }
-                    },
-                    {title: "Lokasyon Tipi", field: "locationTypeLabel", minWidth: 160, formatter: (cell) => gridText(cell.getValue())},
-                    {
-                        title: "Durum",
-                        field: "active",
-                        width: 110,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            const active = cell.getValue();
-                            return `<button type="button" onclick="toggleDefinitionActive('/admin/definitions/stock-locations/${row.id}/toggle')"
-                                class="px-2.5 py-1 rounded-full text-[10px] font-bold ${active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
-                                ${active ? "● Aktif" : "○ Pasif"}
-                            </button>`;
-                        }
-                    },
-                    {
-                        title: "İşlemler",
-                        width: 120,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const id = cell.getRow().getData().id;
-                            return gridActionsHtml([
-                                {icon: "edit-3", label: "Düzenle", href: "/admin/definitions/stock-locations/" + id + "/edit"},
-                                {icon: "trash-2", label: "Sil", onclick: "confirmDefinitionDelete(" + id + ")", danger: true}
-                            ]);
-                        }
-                    }
-                ]
-            });
-            attachTabulatorPagingAnimation(window.definitionTable);
-            bindGridSearch(window.definitionTable, "search-input");
-            bindGridSelectFilter(window.definitionTable, "location-unit-filter");
-            window.definitionTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-    </script>
 </th:block>
 </body>
 </html>

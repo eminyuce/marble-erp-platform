@@ -10,6 +10,7 @@ import com.ozerler.marble.model.enums.CollectionMethod;
 import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.InvoiceRepository;
 import com.ozerler.marble.service.CollectionService;
+import com.ozerler.marble.web.ListQuery;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,10 +56,11 @@ class CollectionControllerTest {
     void index_DefaultsToEmptyMethodWhenNull() {
         when(collectionService.getMonthlyTotal()).thenReturn(BigDecimal.valueOf(10000));
         when(collectionService.getApproachingChecksCount()).thenReturn(3L);
+        when(collectionService.searchCollections(null, null, null, null, null, 0, 20)).thenReturn(Page.empty());
         when(customerRepository.findAll()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
-        String view = controller.index(null, null, model);
+        String view = controller.index(null, null, new ListQuery(), model);
 
         assertThat(view).isEqualTo("collections/list");
         assertThat(model.getAttribute("selectedMethod")).isEqualTo("");
@@ -71,10 +73,11 @@ class CollectionControllerTest {
     void index_SetsSelectedMethodWhenProvided() {
         when(collectionService.getMonthlyTotal()).thenReturn(BigDecimal.valueOf(10000));
         when(collectionService.getApproachingChecksCount()).thenReturn(3L);
+        when(collectionService.searchCollections(CollectionMethod.CASH, null, null, null, null, 0, 20)).thenReturn(Page.empty());
         when(customerRepository.findAll()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
-        String view = controller.index(CollectionMethod.CASH, null, model);
+        String view = controller.index(CollectionMethod.CASH, null, new ListQuery(), model);
 
         assertThat(view).isEqualTo("collections/list");
         assertThat(model.getAttribute("selectedMethod")).isEqualTo("CASH");

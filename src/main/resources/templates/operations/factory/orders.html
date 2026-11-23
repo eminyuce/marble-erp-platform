@@ -9,17 +9,21 @@
      th:data-initial-status="${selectedStatus != null ? selectedStatus.name() : ''}"
      x-data="{
         statusFilter: $el.dataset.initialStatus || '',
+        go(values) {
+            const url = new URL(window.location.href);
+            Object.keys(values).forEach((key) => {
+                const value = values[key];
+                if (value) url.searchParams.set(key, value);
+                else url.searchParams.delete(key);
+            });
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        },
         setStatusFilter(st) {
             this.statusFilter = st;
-            if (typeof reloadFactoryOrdersGrid === 'function') reloadFactoryOrdersGrid();
-        },
-        gridExtraQuery() {
-            let q = '&department=FACTORY';
-            if (this.statusFilter) q += '&status=' + encodeURIComponent(this.statusFilter);
-            return q;
+            this.go({ status: st });
         }
-     }"
-     x-init="window.factoryOrdersPageState = $data">
+     }">
 
     <!-- Header & Breadcrumb -->
     <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -158,140 +162,16 @@
             <i data-lucide="plus"></i>
             <span>Yeni Fabrika İş Emri</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('İş emri no, müşteri, taş veya sorumlu...', 'factory-orders-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('İş emri no, müşteri, taş veya sorumlu...', 'factory-orders-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('factory-orders-table', 'fabrika-is-emirleri')}"></div>
         </div>
     </div>
 
     <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('factory-orders-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        let factoryOrdersTable;
-        document.addEventListener("DOMContentLoaded", () => {
-            factoryOrdersTable = new Tabulator("#factory-orders-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [10, 25, 50, 100],
-                ajaxURL: "/work-orders/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "factory-orders-search-input", function () {
-                        return window.factoryOrdersPageState ? window.factoryOrdersPageState.gridExtraQuery() : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("factory-orders-table", response);
-                },
-                placeholder: "Fabrikaya ait aktif iş emri bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "İş Emri No",
-                        field: "orderNo",
-                        width: 150,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<a href="/work-orders/${row.id}" class="font-mono font-bold text-blue-600 hover:text-blue-800 underline">${gridText(cell.getValue())}</a>`;
-                        }
-                    },
-                    {
-                        title: "Müşteri",
-                        field: "customerName",
-                        minWidth: 160,
-                        formatter: function (cell) {
-                            return `<span class="font-bold text-slate-900">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Taş Türü",
-                        field: "stoneType",
-                        width: 140,
-                        formatter: function (cell) {
-                            return `<span class="font-semibold text-slate-800">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Miktar",
-                        field: "quantity",
-                        width: 120,
-                        headerHozAlign: "right",
-                        hozAlign: "right",
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            const val = cell.getValue();
-                            const num = Number(val || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                            return `<span class="font-black text-slate-900">${num} ${gridText(row.unit || 'm²')}</span>`;
-                        }
-                    },
-                    {
-                        title: "Sipariş Tarihi",
-                        field: "orderDate",
-                        width: 110,
-                        formatter: function (cell) {
-                            return `<span class="text-slate-500 whitespace-nowrap">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Termin Tarihi",
-                        field: "targetDeliveryDate",
-                        width: 110,
-                        formatter: function (cell) {
-                            return `<span class="font-semibold text-slate-700 whitespace-nowrap">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Durum",
-                        field: "status",
-                        width: 130,
-                        formatter: function (cell) {
-                            const val = cell.getValue();
-                            const row = cell.getRow().getData();
-                            let badgeClass = "bg-amber-100 text-amber-800";
-                            if (val === 'IN_PRODUCTION') badgeClass = "bg-blue-100 text-blue-800";
-                            else if (val === 'COMPLETED') badgeClass = "bg-emerald-100 text-emerald-800";
-                            else if (val === 'DISPATCHED') badgeClass = "bg-purple-100 text-purple-800";
-                            return `<span class="px-2.5 py-1 text-[11px] font-bold rounded-full ${badgeClass}">${gridText(row.statusLabel || val)}</span>`;
-                        }
-                    },
-                    {
-                        title: "İşlem",
-                        width: 90,
-                        headerSort: false,
-                        responsive: 0,
-                        headerHozAlign: "center",
-                        hozAlign: "center",
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<a href="/work-orders/${row.id}" class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition inline-flex items-center gap-1 font-bold text-xs">
-                                <span>Detay</span>
-                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                            </a>`;
-                        }
-                    }
-                ]
-            });
-
-            attachTabulatorPagingAnimation(factoryOrdersTable);
-            bindGridSearch(factoryOrdersTable, "factory-orders-search-input");
-            factoryOrdersTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-
-        function reloadFactoryOrdersGrid() {
-            if (factoryOrdersTable) factoryOrdersTable.setData();
-        }
-        window.reloadFactoryOrdersGrid = reloadFactoryOrdersGrid;
-    </script>
-</th:block>
 </body>
 </html>

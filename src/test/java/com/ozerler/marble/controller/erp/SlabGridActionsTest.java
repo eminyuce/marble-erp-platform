@@ -16,11 +16,19 @@ class SlabGridActionsTest {
             html = new String(in.readAllBytes());
         }
 
-        assertThat(html).contains("{icon: 'edit-3', label: 'Düzenle', href: '/production/slabs/' + row.id + '/edit'}");
-        assertThat(html).contains("{icon: 'eye', label: 'Detay', href: '/production/slabs/' + row.id}");
-        assertThat(html).contains("erpStatusBadge(row.status, row.statusLabel)");
-        assertThat(html).contains("row.surfaceFinishLabel");
-        assertThat(html).contains("row.qualityGradeLabel");
+        assertThat(html).contains("fragments/data-grid :: shell");
+        com.ozerler.marble.dto.SlabDto slab = com.ozerler.marble.dto.SlabDto.builder()
+                .id(9L)
+                .slabCode("SL-9")
+                .statusLabel("Onaylı")
+                .surfaceFinishLabel("Cilalı")
+                .qualityGradeLabel("A")
+                .build();
+        com.ozerler.marble.web.GridRow row = com.ozerler.marble.web.SlabGrid.row(slab);
+        assertThat(row.getViewUrl()).isEqualTo("/production/slabs/9");
+        assertThat(row.getEditUrl()).isEqualTo("/production/slabs/9/edit");
+        assertThat(row.getCells()).anyMatch(cell -> "Cilalı".equals(cell.getText()));
+        assertThat(row.getCells()).anyMatch(cell -> "A".equals(cell.getText()));
     }
 
     @Test

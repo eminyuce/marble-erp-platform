@@ -11,12 +11,16 @@ import com.ozerler.marble.model.enums.CollectionMethod;
 import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.InvoiceRepository;
 import com.ozerler.marble.service.CollectionService;
+import com.ozerler.marble.web.CheckGrid;
+import com.ozerler.marble.web.CollectionGrid;
+import com.ozerler.marble.web.ListQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,11 +47,14 @@ public class CollectionController extends AbstractController {
     @GetMapping
     public String index(@RequestParam(value = "method", required = false) CollectionMethod method,
                         @RequestParam(value = "customerId", required = false) Long customerId,
-                        Model model) {
+                        @ModelAttribute ListQuery query, Model model) {
 
         BigDecimal monthlyTotal = collectionService.getMonthlyTotal();
         long approachingChecksCount = collectionService.getApproachingChecksCount();
 
+        model.addAttribute("grid", CollectionGrid.view(
+                collectionService.searchCollections(method, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("selectedMethod", method != null ? method.name() : "");
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("customers", customerRepository.findAll());
@@ -145,12 +152,10 @@ public class CollectionController extends AbstractController {
     public String checksTracker(@RequestParam(value = "unit", required = false) BusinessUnit unit,
                                 @RequestParam(value = "status", required = false) CheckStatus status,
                                 @RequestParam(value = "customerId", required = false) Long customerId,
-                                @RequestParam(value = "search", required = false) String search,
-                                @RequestParam(value = "page", defaultValue = "0") int page,
-                                @RequestParam(value = "size", defaultValue = "20") int size,
-                                Model model) {
+                                @ModelAttribute ListQuery query, Model model) {
 
-        Page<CheckRecord> checkPage = collectionService.searchChecks(unit, status, customerId, null, null, search, page, size);
+        Page<CheckRecord> checkPage = collectionService.searchChecks(
+                unit, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         List<CheckRecord> approaching = collectionService.getApproachingChecks(unit);
         List<CheckRecord> overdue = collectionService.getOverdueChecks(unit);
 
@@ -164,6 +169,8 @@ public class CollectionController extends AbstractController {
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("customers", customerRepository.findAll());
         model.addAttribute("checkStatuses", CheckStatus.values());
+        model.addAttribute("grid", CheckGrid.view(
+                checkPage, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("activeNav", "collections");
 
         return "collections/checks";

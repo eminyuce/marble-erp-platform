@@ -28,6 +28,30 @@
     </ol>
 </nav>
 
+<form th:fragment="searchSubmit(placeholder, inputId)" class="erp-search-form" role="search"
+      onsubmit="return erpSubmitSearch(event);">
+    <div class="erp-search-field">
+        <span class="erp-search-icon" aria-hidden="true">
+            <i data-lucide="search"></i>
+        </span>
+        <label class="sr-only" th:for="${inputId}">Ara</label>
+        <input type="search"
+               name="search"
+               class="erp-search-input"
+               th:id="${inputId}"
+               th:placeholder="${placeholder}"
+               th:value="${filters.search}"
+               autocomplete="off"
+               spellcheck="false">
+        <div class="erp-search-actions">
+            <button type="submit" class="erp-btn-primary erp-search-btn" title="Ara" aria-label="Ara">
+                <i data-lucide="search" aria-hidden="true"></i>
+                <span class="sr-only">Arama</span>
+            </button>
+        </div>
+    </div>
+</form>
+
 <form th:fragment="search(placeholder, inputId)" class="erp-search-form" role="search" onsubmit="return false;">
     <div class="erp-search-field">
         <span class="erp-search-icon" aria-hidden="true">

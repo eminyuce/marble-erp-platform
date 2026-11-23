@@ -32,7 +32,7 @@
             <i data-lucide="factory"></i>
             <span>Fabrika iş emirleri</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('İş emri no, blok kodu veya sorumlu', 'factory-accept-search')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('İş emri no, blok kodu veya sorumlu', 'factory-accept-search')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('factory-accept-table', 'fabrika_blok_kabulleri')}"></div>
         </div>
@@ -79,69 +79,9 @@
         </form>
     </div>
 
-    <div th:replace="~{fragments/list-chrome :: gridShell('factory-accept-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script th:inline="javascript">
-        const factoryAcceptRows = /*[[${workOrders}]]*/ [];
-        document.addEventListener("DOMContentLoaded", () => {
-            const acceptTable = new Tabulator("#factory-accept-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "local",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
-                data: factoryAcceptRows || [],
-                placeholder: "Blok kabul kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "İş Emri No",
-                        field: "orderNo",
-                        minWidth: 150,
-                        responsive: 0,
-                        formatter: (cell) => `<span class="font-mono font-bold">${gridText(cell.getValue())}</span>`
-                    },
-                    {title: "Blok", field: "blockCode", minWidth: 130, formatter: (cell) => gridText(cell.getValue())},
-                    {title: "Taş cinsi", field: "stoneType", minWidth: 130, formatter: (cell) => gridText(cell.getValue())},
-                    {title: "Makine", field: "machineName", minWidth: 140, formatter: (cell) => gridText(cell.getValue())},
-                    {title: "Sorumlu", field: "responsibleName", minWidth: 140, formatter: (cell) => gridText(cell.getValue())},
-                    {title: "Tarih", field: "acceptedAt", minWidth: 120, formatter: (cell) => gridText(cell.getValue())},
-                    {
-                        title: "Durum",
-                        field: "statusLabel",
-                        minWidth: 140,
-                        formatter: (cell) => {
-                            const row = cell.getRow().getData();
-                            return erpStatusBadge(row.status, row.statusLabel);
-                        }
-                    }
-                ]
-            });
-            const searchInput = document.getElementById("factory-accept-search");
-            if (searchInput) {
-                searchInput.addEventListener("input", function () {
-                    const query = searchInput.value.trim().toLocaleLowerCase("tr-TR");
-                    if (!query) {
-                        acceptTable.clearFilter();
-                        return;
-                    }
-                    acceptTable.setFilter(function (data) {
-                        return [data.orderNo, data.blockCode, data.stoneType, data.machineName, data.responsibleName, data.statusLabel]
-                            .filter(Boolean)
-                            .join(" ")
-                            .toLocaleLowerCase("tr-TR")
-                            .includes(query);
-                    });
-                });
-            }
-            acceptTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-    </script>
-</th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>

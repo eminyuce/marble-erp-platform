@@ -8,15 +8,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 class WorkshopGridActionsTest {
 
     @Test
-    @DisplayName("Workshop grid camelizes API rows so Tabulator can read cutOrderNo")
+    @DisplayName("Workshop grid keeps the cut-order detail and edit links")
     void gridCamelizesApiRows() throws Exception {
         String html = readWorkshopIndex();
+        com.ozerler.marble.dto.CutOrderDto order = com.ozerler.marble.dto.CutOrderDto.builder()
+                .id(5L)
+                .cutOrderNo("IE-5")
+                .projectName("Ada")
+                .statusLabel("Onaylı")
+                .itemCount(2)
+                .build();
 
-        assertThat(html).contains("erpGridAjaxResponse(");
-        assertThat(html).contains("field: \"cutOrderNo\"");
-        assertThat(html).contains("field: \"projectName\"");
-        assertThat(html).contains("row.itemCount");
-        assertThat(html).contains("row.totalAreaM2");
+        assertThat(html).contains("fragments/data-grid :: shell");
+        com.ozerler.marble.web.GridRow row = com.ozerler.marble.web.WorkshopGrid.row(order);
+        assertThat(row.getViewUrl()).isEqualTo("/workshop/5");
+        assertThat(row.getEditUrl()).isEqualTo("/workshop/5/edit");
+        assertThat(row.getCells()).anyMatch(cell -> "IE-5".equals(cell.getText()));
+        assertThat(row.getCells()).anyMatch(cell -> "Ada".equals(cell.getText()));
     }
 
     @Test
@@ -24,8 +32,7 @@ class WorkshopGridActionsTest {
     void operationsColumnIncludesEditLink() throws Exception {
         String html = readWorkshopIndex();
 
-        assertThat(html).contains("{icon: 'edit-3', label: 'Düzenle', href: '/workshop/' + row.id + '/edit'}");
-        assertThat(html).contains("erpStatusBadge(row.status, row.statusLabel)");
+        assertThat(html).contains("fragments/data-grid :: shell");
         assertThat(html).contains("th:href=\"@{/workshop/receipts}\"");
         assertThat(html).contains("Malzeme kabulü");
         assertThat(html).doesNotContain("th:action=\"@{/workshop/receipts}\"");

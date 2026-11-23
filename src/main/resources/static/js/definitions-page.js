@@ -45,8 +45,10 @@ function csrfHeaders() {
 function toggleDefinitionActive(url) {
     fetch(url, {method: "POST", headers: csrfHeaders()}).then(function (res) {
         if (res.ok || res.redirected) {
-            if (window.definitionTable) {
+            if (window.definitionTable && typeof window.definitionTable.replaceData === "function") {
                 window.definitionTable.replaceData();
+            } else {
+                window.location.reload();
             }
         }
     });

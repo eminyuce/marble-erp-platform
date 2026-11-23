@@ -11,22 +11,25 @@
      x-data="{
         deptFilter: $el.dataset.initialDept || '',
         statusFilter: $el.dataset.initialStatus || '',
+        go(values) {
+            const url = new URL(window.location.href);
+            Object.keys(values).forEach((key) => {
+                const value = values[key];
+                if (value) url.searchParams.set(key, value);
+                else url.searchParams.delete(key);
+            });
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        },
         setDeptFilter(d) {
             this.deptFilter = d;
-            if (typeof reloadOrdersGrid === 'function') reloadOrdersGrid();
+            this.go({ department: d });
         },
         setStatusFilter(s) {
             this.statusFilter = s;
-            if (typeof reloadOrdersGrid === 'function') reloadOrdersGrid();
-        },
-        gridExtraQuery() {
-            let q = '';
-            if (this.deptFilter) q += '&department=' + encodeURIComponent(this.deptFilter);
-            if (this.statusFilter) q += '&status=' + encodeURIComponent(this.statusFilter);
-            return q;
+            this.go({ status: s });
         }
-     }"
-     x-init="window.ordersPageState = $data">
+     }">
 
     <!-- Header Section -->
     <div class="erp-list-header">
@@ -117,144 +120,15 @@
             <i data-lucide="plus"></i>
             <span>Yeni İş Emri Oluştur</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('İş emri no, müşteri, taş veya sorumlu...', 'order-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('İş emri no, müşteri, taş veya sorumlu...', 'order-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('workorders-table', 'is-emirleri')}"></div>
         </div>
     </div>
 
     <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('workorders-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        let ordersTable;
-        document.addEventListener("DOMContentLoaded", () => {
-            ordersTable = new Tabulator("#workorders-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50, 100],
-                ajaxURL: "/work-orders/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "order-search-input", function () {
-                        return window.ordersPageState ? window.ordersPageState.gridExtraQuery() : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("workorders-table", response);
-                },
-                placeholder: "Kriterlere uygun iş emri kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "İş Emri No",
-                        field: "orderNo",
-                        width: 170,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<a href="/work-orders/${row.id}" class="font-mono font-bold text-indigo-700 hover:text-indigo-900 underline flex items-center gap-1.5">
-                                <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-indigo-600 inline"></i>
-                                <span>${gridText(cell.getValue())}</span>
-                            </a>`;
-                        }
-                    },
-                    {
-                        title: "Departman",
-                        field: "departmentLabel",
-                        width: 120,
-                        formatter: function (cell) {
-                            return `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
-                                ${gridText(cell.getValue())}
-                            </span>`;
-                        }
-                    },
-                    {
-                        title: "Müşteri",
-                        field: "customerName",
-                        minWidth: 180,
-                        formatter: function (cell) {
-                            return `<strong class="text-slate-900">${gridText(cell.getValue())}</strong>`;
-                        }
-                    },
-                    {
-                        title: "Taş Türü",
-                        field: "stoneType",
-                        width: 140,
-                        formatter: function (cell) {
-                            return `<span class="font-medium text-slate-700">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Miktar",
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<strong class="font-mono text-slate-900">${gridText(row.quantity)} ${gridText(row.unit)}</strong>`;
-                        },
-                        width: 130
-                    },
-                    {
-                        title: "Termin Tarihi",
-                        field: "targetDeliveryDate",
-                        width: 120,
-                        formatter: function (cell) {
-                            return `<span class="text-slate-600">${gridText(cell.getValue()) || '—'}</span>`;
-                        }
-                    },
-                    {
-                        title: "Sorumlu",
-                        field: "responsiblePerson",
-                        width: 140,
-                        formatter: function (cell) {
-                            return `<span class="text-slate-600 text-xs">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Durum",
-                        field: "statusLabel",
-                        width: 140,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            let cls = "bg-slate-100 text-slate-800";
-                            if (row.status === "IN_PRODUCTION") cls = "bg-blue-100 text-blue-800";
-                            else if (row.status === "READY_FOR_SHIPMENT") cls = "bg-amber-100 text-amber-800";
-                            else if (row.status === "COMPLETED") cls = "bg-emerald-100 text-emerald-800";
-                            else if (row.status === "CANCELLED") cls = "bg-rose-100 text-rose-800";
-                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${cls}">● ${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "İşlemler",
-                        width: 100,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return gridActionsHtml([
-                                {icon: 'eye', label: 'Detay', href: '/work-orders/' + row.id}
-                            ]);
-                        }
-                    }
-                ]
-            });
-
-            attachTabulatorPagingAnimation(ordersTable);
-            bindGridSearch(ordersTable, "order-search-input");
-            ordersTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-
-        function reloadOrdersGrid() {
-            if (ordersTable) ordersTable.setData();
-        }
-        window.reloadOrdersGrid = reloadOrdersGrid;
-    </script>
-</th:block>
 </body>
 </html>

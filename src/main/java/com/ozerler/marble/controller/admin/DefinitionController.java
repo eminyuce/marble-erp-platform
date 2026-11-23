@@ -11,7 +11,16 @@ import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.service.MasterDataService;
+import com.ozerler.marble.web.CostCenterGrid;
+import com.ozerler.marble.web.GridRequests;
+import com.ozerler.marble.web.CustomerGrid;
+import com.ozerler.marble.web.MachineGrid;
+import com.ozerler.marble.web.QuarryGrid;
+import com.ozerler.marble.web.StockLocationGrid;
+import com.ozerler.marble.web.SupplierGrid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -30,6 +39,34 @@ public class DefinitionController extends AbstractController {
 
     private final MasterDataService masterDataService;
 
+    @Getter
+    @Setter
+    public static class DefinitionPageQuery {
+        private Integer page;
+        private Integer size;
+        private String search;
+        private String sort;
+        private String dir;
+        private String sortField;
+        private String sortDir;
+
+        int pageNo() {
+            return GridRequests.page(page);
+        }
+
+        int pageSize() {
+            return GridRequests.size(size);
+        }
+
+        String sortKey() {
+            return GridRequests.sort(sort, sortField);
+        }
+
+        String sortDirection() {
+            return GridRequests.direction(dir, sortDir);
+        }
+    }
+
     @GetMapping
     public String index() {
         return "redirect:/admin/definitions/machines";
@@ -40,10 +77,16 @@ public class DefinitionController extends AbstractController {
     // =========================================================================
 
     @GetMapping("/machines")
-    public String listMachines(Model model) {
+    public String listMachines(@ModelAttribute DefinitionPageQuery query,
+                               @RequestParam(value = "unit", required = false) BusinessUnit unit,
+                               Model model) {
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("machineTypes", java.util.Arrays.stream(MachineType.values()).filter(t -> !t.isElectric()).toList());
         model.addAttribute("currentSection", "definitions-machines");
+        model.addAttribute("grid", MachineGrid.view(
+                masterDataService.getMachinesPaged(query.pageNo(), query.pageSize(), query.getSearch(), unit,
+                        query.sortKey(), query.sortDirection()),
+                query.pageNo(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "admin/definitions/machines";
     }
 
@@ -118,10 +161,16 @@ public class DefinitionController extends AbstractController {
     // =========================================================================
 
     @GetMapping("/stock-locations")
-    public String listStockLocations(Model model) {
+    public String listStockLocations(@ModelAttribute DefinitionPageQuery query,
+                                     @RequestParam(value = "unit", required = false) BusinessUnit unit,
+                                     Model model) {
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("locationTypes", StockLocationType.values());
         model.addAttribute("currentSection", "definitions-locations");
+        model.addAttribute("grid", StockLocationGrid.view(
+                masterDataService.getStockLocationsPaged(query.pageNo(), query.pageSize(), query.getSearch(), unit,
+                        query.sortKey(), query.sortDirection()),
+                query.pageNo(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "admin/definitions/stock-locations";
     }
 
@@ -197,8 +246,12 @@ public class DefinitionController extends AbstractController {
     // =========================================================================
 
     @GetMapping("/quarries")
-    public String listQuarries(Model model) {
+    public String listQuarries(@ModelAttribute DefinitionPageQuery query, Model model) {
         model.addAttribute("currentSection", "definitions-quarries");
+        model.addAttribute("grid", QuarryGrid.view(
+                masterDataService.getQuarriesPaged(query.pageNo(), query.pageSize(), query.getSearch(),
+                        query.sortKey(), query.sortDirection()),
+                query.pageNo(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "admin/definitions/quarries";
     }
 
@@ -260,11 +313,18 @@ public class DefinitionController extends AbstractController {
     // =========================================================================
 
     @GetMapping("/customers")
-    public String listCustomers(@RequestParam(value = "unit", required = false) BusinessUnit unit, Model model) {
+    public String listCustomers(@ModelAttribute DefinitionPageQuery query,
+                                @RequestParam(value = "type", required = false) CustomerType type,
+                                @RequestParam(value = "unit", required = false) BusinessUnit unit,
+                                Model model) {
         model.addAttribute("customerTypes", CustomerType.values());
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("selectedUnit", unit != null ? unit.name() : "");
         model.addAttribute("currentSection", "definitions-customers");
+        model.addAttribute("grid", CustomerGrid.view(
+                masterDataService.getCustomersPaged(query.pageNo(), query.pageSize(), query.getSearch(), type, unit,
+                        query.sortKey(), query.sortDirection()),
+                query.pageNo(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "admin/definitions/customers";
     }
 
@@ -339,10 +399,17 @@ public class DefinitionController extends AbstractController {
     // =========================================================================
 
     @GetMapping("/suppliers")
-    public String listSuppliers(Model model) {
+    public String listSuppliers(@ModelAttribute DefinitionPageQuery query,
+                                @RequestParam(value = "type", required = false) SupplierType type,
+                                @RequestParam(value = "unit", required = false) BusinessUnit unit,
+                                Model model) {
         model.addAttribute("supplierTypes", SupplierType.values());
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("currentSection", "definitions-suppliers");
+        model.addAttribute("grid", SupplierGrid.view(
+                masterDataService.getSuppliersPaged(query.pageNo(), query.pageSize(), query.getSearch(), type, unit,
+                        query.sortKey(), query.sortDirection()),
+                query.pageNo(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "admin/definitions/suppliers";
     }
 
@@ -406,9 +473,15 @@ public class DefinitionController extends AbstractController {
     // =========================================================================
 
     @GetMapping("/cost-centers")
-    public String listCostCenters(Model model) {
+    public String listCostCenters(@ModelAttribute DefinitionPageQuery query,
+                                  @RequestParam(value = "unit", required = false) BusinessUnit unit,
+                                  Model model) {
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("currentSection", "definitions-cost-centers");
+        model.addAttribute("grid", CostCenterGrid.view(
+                masterDataService.getCostCentersPaged(query.pageNo(), query.pageSize(), query.getSearch(), unit,
+                        query.sortKey(), query.sortDirection()),
+                query.pageNo(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "admin/definitions/cost-centers";
     }
 

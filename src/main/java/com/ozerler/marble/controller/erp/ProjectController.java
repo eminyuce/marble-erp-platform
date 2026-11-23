@@ -11,6 +11,8 @@ import com.ozerler.marble.model.enums.SurfaceFinish;
 import com.ozerler.marble.service.ConstructionSiteService;
 import com.ozerler.marble.service.CostAnalysisService;
 import com.ozerler.marble.service.ProjectSiteService;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.ProjectGrid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -48,10 +50,16 @@ public class ProjectController {
     }
 
     @GetMapping
-    public String projectsIndex(@RequestParam(value = "customerId", required = false) Long customerId, Model model) {
+    public String projectsIndex(@RequestParam(value = "page", required = false) Integer page,
+                                @RequestParam(value = "status", required = false) String status,
+                                @RequestParam(value = "customerId", required = false) Long customerId,
+                                @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", projectSiteService.getProjectSummary());
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
+        model.addAttribute("grid", ProjectGrid.view(
+                projectSiteService.getProjectsPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, customerId, query.sortKey(), query.sortDirection()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         if (customerId != null) {
             customerRepository.findById(customerId).ifPresent(c -> model.addAttribute("selectedCustomerName", c.getCompanyName()));
         }
