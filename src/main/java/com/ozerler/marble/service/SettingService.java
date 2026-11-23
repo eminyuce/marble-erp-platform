@@ -74,7 +74,7 @@ public class SettingService {
             setting.setDescription(description);
         }
         settingRepository.save(setting);
-        log.info("System setting saved: {} = {}", key, key.toLowerCase().contains("password") ? "******" : value);
+        log.info("System setting saved: {} = {}", key, SettingValueMask.display(key, value));
     }
 
     @CacheEvict(value = "settings", allEntries = true)
