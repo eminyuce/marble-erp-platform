@@ -1,3 +1,5 @@
+name: marble-erp-platform
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -132,12 +134,16 @@ services:
 volumes:
   postgres_data:
     driver: local
+    name: docker_postgres_data
   uploads_data:
     driver: local
+    name: docker_uploads_data
   media_data:
     driver: local
+    name: docker_media_data
   rustfs_data:
     driver: local
+    name: docker_rustfs_data
 
 networks:
   marble-network:
