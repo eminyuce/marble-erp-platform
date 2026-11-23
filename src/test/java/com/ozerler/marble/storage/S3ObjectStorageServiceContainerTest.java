@@ -59,7 +59,7 @@ class S3ObjectStorageServiceContainerTest {
         properties.getRustfs().setRegion("us-east-1");
 
         try (S3Client s3Client = s3Client(endpoint);
-             S3Presigner presigner = s3Presigner(endpoint)) {
+                S3Presigner presigner = s3Presigner(endpoint)) {
             S3ObjectStorageService storage = new S3ObjectStorageService(
                     s3Client, presigner, properties, new PresignedUrlProperties());
             storage.ensureBucketExists();
@@ -96,7 +96,7 @@ class S3ObjectStorageServiceContainerTest {
         expiry.setDocumentExpiryMinutes(5);
 
         try (S3Client s3Client = s3Client(internalEndpoint);
-             S3Presigner presigner = s3Presigner(publicEndpoint)) {
+                S3Presigner presigner = s3Presigner(publicEndpoint)) {
             S3ObjectStorageService storage = new S3ObjectStorageService(s3Client, presigner, properties, expiry);
 
             String imageUrl = storage.presignedImageUrl("images/block/1/photo.jpg");

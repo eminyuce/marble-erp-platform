@@ -84,7 +84,7 @@ final class PostgresDataDump {
     private static List<String> tableNames(Connection connection) throws SQLException {
         List<String> tables = new ArrayList<>();
         try (Statement statement = connection.createStatement();
-             ResultSet rows = statement.executeQuery(TABLE_SQL)) {
+                ResultSet rows = statement.executeQuery(TABLE_SQL)) {
             while (rows.next()) {
                 tables.add(rows.getString(1));
             }
@@ -159,7 +159,7 @@ final class PostgresDataDump {
     private static void writeSequences(Connection connection, Writer writer) throws SQLException, IOException {
         List<String> sequences = new ArrayList<>();
         try (Statement statement = connection.createStatement();
-             ResultSet rows = statement.executeQuery(SEQUENCE_SQL)) {
+                ResultSet rows = statement.executeQuery(SEQUENCE_SQL)) {
             while (rows.next()) {
                 sequences.add(rows.getString(1));
             }
@@ -167,7 +167,7 @@ final class PostgresDataDump {
         for (String name : sequences) {
             String query = "SELECT last_value, is_called FROM public." + quoteIdentifier(name);
             try (Statement statement = connection.createStatement();
-                 ResultSet rows = statement.executeQuery(query)) {
+                    ResultSet rows = statement.executeQuery(query)) {
                 if (!rows.next()) {
                     continue;
                 }

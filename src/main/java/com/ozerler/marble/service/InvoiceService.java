@@ -492,7 +492,7 @@ public class InvoiceService {
                     }
                     if (currentQty.compareTo(totalNeeded) < 0
                             && totalNeeded.subtract(currentQty).compareTo(new BigDecimal("0.01")) > 0) {
-                            throw new IllegalArgumentException(String.format(
+                        throw new IllegalArgumentException(String.format(
                                     "Yetersiz stok. Mevcut stok: %s %s (İstenen Satış: %s, Fire: %s).",
                                     currentQty.stripTrailingZeros().toPlainString(),
                                     Objects.requireNonNullElse(st.getUnit(), "adet"),

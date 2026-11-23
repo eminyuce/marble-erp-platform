@@ -23,9 +23,9 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, Lo
     List<StockMovement> findBySlabIdOrderByMovementDateDesc(Long slabId);
 
     @Query("SELECT m FROM StockMovement m "
-           + "WHERE m.sourceDepartment = :sourceDept "
-           + "AND m.movementDate >= :since "
-           + "ORDER BY m.movementDate DESC")
+            + "WHERE m.sourceDepartment = :sourceDept "
+            + "AND m.movementDate >= :since "
+            + "ORDER BY m.movementDate DESC")
     List<StockMovement> findRecentBySourceDepartment(@Param("sourceDept") BusinessUnit sourceDept,
                                                      @Param("since") LocalDateTime since);
 }

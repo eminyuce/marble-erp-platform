@@ -385,92 +385,92 @@ public class WorkshopOperationService {
         BigDecimal[] producedArea = {BigDecimal.ZERO};
         RowDimensions.eachPositiveSizedRow(widths, lengths, thicknesses, pieceCounts, quantities, new BigDecimal("2.0"),
                 (index, width, length, thickness, count, quantity) -> {
-            producedArea[0] = producedArea[0].add(quantity);
+                producedArea[0] = producedArea[0].add(quantity);
 
-            String desc;
-            if (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank()) {
-                desc = descriptions.get(index).trim();
-            } else {
-                if (defaultDescription != null && !defaultDescription.isBlank()) {
-                    desc = defaultDescription;
+                String desc;
+                if (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank()) {
+                    desc = descriptions.get(index).trim();
                 } else {
-                    desc = "Atölye Ebatlı " + thickness + "x" + width + "x" + length;
+                    if (defaultDescription != null && !defaultDescription.isBlank()) {
+                        desc = defaultDescription;
+                    } else {
+                        desc = "Atölye Ebatlı " + thickness + "x" + width + "x" + length;
+                    }
                 }
-            }
 
-            String rowSurfaceStr;
-            if (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank()) {
-                rowSurfaceStr = rowSurfaceFinishes.get(index).trim();
-            } else {
-                rowSurfaceStr = surfaceFinishStr;
-            }
-            SurfaceFinish rowSurface = resolvedSurface;
-            if (rowSurfaceStr != null) {
-                try {
-                    rowSurface = SurfaceFinish.valueOf(rowSurfaceStr);
-                } catch (Exception ignored) {
+                String rowSurfaceStr;
+                if (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank()) {
+                    rowSurfaceStr = rowSurfaceFinishes.get(index).trim();
+                } else {
+                    rowSurfaceStr = surfaceFinishStr;
+                }
+                SurfaceFinish rowSurface = resolvedSurface;
+                if (rowSurfaceStr != null) {
+                    try {
+                        rowSurface = SurfaceFinish.valueOf(rowSurfaceStr);
+                    } catch (Exception ignored) {
                     // not a known constant: keep the default
+                    }
                 }
-            }
 
-            String rowEdge;
-            if (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank()) {
-                rowEdge = rowEdgeFinishes.get(index).trim();
-            } else {
-                if (edgeFinish != null) {
-                    rowEdge = edgeFinish;
+                String rowEdge;
+                if (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank()) {
+                    rowEdge = rowEdgeFinishes.get(index).trim();
                 } else {
-                    rowEdge = "DUZ";
+                    if (edgeFinish != null) {
+                        rowEdge = edgeFinish;
+                    } else {
+                        rowEdge = "DUZ";
+                    }
                 }
-            }
 
-            String itemCode = UniqueCodes.yearly("ATL-EBT", stockItemRepository::existsByItemCode);
+                String itemCode = UniqueCodes.yearly("ATL-EBT", stockItemRepository::existsByItemCode);
 
-            String combinedNotes = notes;
-            if (resolvedSlab != null) {
-                String slabInfo = "[Kaynak Plaka: " + resolvedSlab.getSlabCode() + "]";
-                if (combinedNotes != null && !combinedNotes.isBlank()) {
-                    combinedNotes = combinedNotes + " " + slabInfo;
-                } else {
-                    combinedNotes = slabInfo;
+                String combinedNotes = notes;
+                if (resolvedSlab != null) {
+                    String slabInfo = "[Kaynak Plaka: " + resolvedSlab.getSlabCode() + "]";
+                    if (combinedNotes != null && !combinedNotes.isBlank()) {
+                        combinedNotes = combinedNotes + " " + slabInfo;
+                    } else {
+                        combinedNotes = slabInfo;
+                    }
+                } else if (resolvedSourceItem != null) {
+                    String srcInfo = "[Yeniden Ebatlama - Kaynak Ürün: " + resolvedSourceItem.getItemCode() + "]";
+                    if (combinedNotes != null && !combinedNotes.isBlank()) {
+                        combinedNotes = combinedNotes + " " + srcInfo;
+                    } else {
+                        combinedNotes = srcInfo;
+                    }
                 }
-            } else if (resolvedSourceItem != null) {
-                String srcInfo = "[Yeniden Ebatlama - Kaynak Ürün: " + resolvedSourceItem.getItemCode() + "]";
-                if (combinedNotes != null && !combinedNotes.isBlank()) {
-                    combinedNotes = combinedNotes + " " + srcInfo;
-                } else {
-                    combinedNotes = srcInfo;
-                }
-            }
 
-            StockItem item = StockItem.builder()
-                    .itemCode(itemCode)
-                    .productType(StockProductType.SIZED)
-                    .sourceBlock(resolvedBlock)
-                    .stoneType(resolvedStoneType)
-                    .description(desc)
-                    .thicknessCm(thickness)
-                    .widthCm(width)
-                    .lengthCm(length)
-                    .quantity(quantity.setScale(2, RoundingMode.HALF_UP))
-                    .unit("m2")
-                    .pieceCount(count)
-                    .actualProducedQuantity(quantity.setScale(2, RoundingMode.HALF_UP))
-                    .customer(customer)
-                    .project(project)
-                    .stockLocation(workshopLoc)
-                    .qualityGrade(resolvedGrade)
-                    .surfaceFinish(rowSurface)
-                    .edgeFinish(rowEdge)
-                    .status("AVAILABLE")
-                    .productionDate(LocalDate.now())
-                    .notes(combinedNotes)
-                    .build();
+                StockItem item = StockItem.builder()
+                        .itemCode(itemCode)
+                        .productType(StockProductType.SIZED)
+                        .sourceBlock(resolvedBlock)
+                        .stoneType(resolvedStoneType)
+                        .description(desc)
+                        .thicknessCm(thickness)
+                        .widthCm(width)
+                        .lengthCm(length)
+                        .quantity(quantity.setScale(2, RoundingMode.HALF_UP))
+                        .unit("m2")
+                        .pieceCount(count)
+                        .actualProducedQuantity(quantity.setScale(2, RoundingMode.HALF_UP))
+                        .customer(customer)
+                        .project(project)
+                        .stockLocation(workshopLoc)
+                        .qualityGrade(resolvedGrade)
+                        .surfaceFinish(rowSurface)
+                        .edgeFinish(rowEdge)
+                        .status("AVAILABLE")
+                        .productionDate(LocalDate.now())
+                        .notes(combinedNotes)
+                        .build();
 
-            StockItem saved = stockItemRepository.save(item);
-            stockMovementService.recordWorkshopSizedProduction(saved, resolvedSlab, resolvedSourceItem, customer);
-            created.add(saved);
-        });
+                StockItem saved = stockItemRepository.save(item);
+                stockMovementService.recordWorkshopSizedProduction(saved, resolvedSlab, resolvedSourceItem, customer);
+                created.add(saved);
+            });
         BigDecimal totalProducedM2 = producedArea[0];
 
         // Kaynak hammadde düşümü

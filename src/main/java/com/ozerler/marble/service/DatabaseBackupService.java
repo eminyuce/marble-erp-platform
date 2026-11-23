@@ -378,13 +378,13 @@ public class DatabaseBackupService {
 
             // 1. RustFS'ten dosyayı indir
             try (InputStream in = objectStorageService.download(s3Key);
-                 OutputStream out = Files.newOutputStream(tempCompressed)) {
+                    OutputStream out = Files.newOutputStream(tempCompressed)) {
                 in.transferTo(out);
             }
 
             // 2. GZIP aç
             try (GZIPInputStream gzis = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(tempCompressed)));
-                 OutputStream fos = new BufferedOutputStream(Files.newOutputStream(tempSql))) {
+                    OutputStream fos = new BufferedOutputStream(Files.newOutputStream(tempSql))) {
                 gzis.transferTo(fos);
             }
 
@@ -586,8 +586,8 @@ public class DatabaseBackupService {
 
             long bytes;
             try (InputStream stdout = process.getInputStream();
-                 OutputStream fos = Files.newOutputStream(tempFile);
-                 GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(fos))) {
+                    OutputStream fos = Files.newOutputStream(tempFile);
+                    GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(fos))) {
                 bytes = stdout.transferTo(gzip);
             }
             int exitCode = process.waitFor();
@@ -625,8 +625,8 @@ public class DatabaseBackupService {
             connection.setAutoCommit(false);
             connection.setReadOnly(true);
             try (OutputStream fos = Files.newOutputStream(tempFile);
-                 GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(fos));
-                 Writer writer = new OutputStreamWriter(gzip, StandardCharsets.UTF_8)) {
+                    GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(fos));
+                    Writer writer = new OutputStreamWriter(gzip, StandardCharsets.UTF_8)) {
                 long rows = new PostgresDataDump().write(connection, writer, dbInfo.database());
                 log.info("PostgreSQL veri yedeği yazıldı: {} satır, dosya {}", rows, fileName);
             } finally {
@@ -641,8 +641,8 @@ public class DatabaseBackupService {
     private void generateFallbackDump(Path targetGzFile, DbConnectionInfo dbInfo) throws IOException {
         log.info("Fallback SQL dump üretiliyor: {}", targetGzFile);
         try (OutputStream fos = Files.newOutputStream(targetGzFile);
-             GZIPOutputStream gzos = new GZIPOutputStream(new BufferedOutputStream(fos));
-             PrintWriter writer = new PrintWriter(new OutputStreamWriter(gzos, StandardCharsets.UTF_8))) {
+                GZIPOutputStream gzos = new GZIPOutputStream(new BufferedOutputStream(fos));
+                PrintWriter writer = new PrintWriter(new OutputStreamWriter(gzos, StandardCharsets.UTF_8))) {
 
             writer.println("-- ========================================================");
             writer.println("-- Özerler Mermer ERP Database Backup");
@@ -660,7 +660,7 @@ public class DatabaseBackupService {
 
             if (dataSource != null) {
                 try (Connection conn = dataSource.getConnection();
-                     Statement stmt = conn.createStatement()) {
+                        Statement stmt = conn.createStatement()) {
                     ResultSet rs = stmt.executeQuery("SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
                     writer.println("-- Tablo Listesi:");
                     while (rs.next()) {

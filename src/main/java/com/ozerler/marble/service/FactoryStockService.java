@@ -694,33 +694,33 @@ public class FactoryStockService {
 
         RowDimensions.eachPositiveSizedRow(widths, lengths, thicknesses, pieceCounts, quantities, new BigDecimal("2.0"),
                 (index, width, length, thickness, count, quantity) -> {
-            String desc;
-            if (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank()) {
-                desc = descriptions.get(index).trim();
-            } else {
-                if (defaultDescription != null && !defaultDescription.isBlank()) {
-                    desc = defaultDescription;
+                String desc;
+                if (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank()) {
+                    desc = descriptions.get(index).trim();
                 } else {
-                    desc = "Ebatlı Mermer " + thickness + "x" + width + "x" + length;
+                    if (defaultDescription != null && !defaultDescription.isBlank()) {
+                        desc = defaultDescription;
+                    } else {
+                        desc = "Ebatlı Mermer " + thickness + "x" + width + "x" + length;
+                    }
                 }
-            }
 
-            String rowSurface;
-            if (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank()) {
-                rowSurface = rowSurfaceFinishes.get(index).trim();
-            } else {
-                rowSurface = surfaceFinishStr;
-            }
-            String rowEdge;
-            if (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank()) {
-                rowEdge = rowEdgeFinishes.get(index).trim();
-            } else {
-                rowEdge = edgeFinish;
-            }
+                String rowSurface;
+                if (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank()) {
+                    rowSurface = rowSurfaceFinishes.get(index).trim();
+                } else {
+                    rowSurface = surfaceFinishStr;
+                }
+                String rowEdge;
+                if (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank()) {
+                    rowEdge = rowEdgeFinishes.get(index).trim();
+                } else {
+                    rowEdge = edgeFinish;
+                }
 
-            StockItem item = createSizedItem(blockId, slabId, desc, thickness, width, length, quantity, count, quantity, customerId, qualityGradeStr, rowSurface, rowEdge, notes);
-            created.add(item);
-        });
+                StockItem item = createSizedItem(blockId, slabId, desc, thickness, width, length, quantity, count, quantity, customerId, qualityGradeStr, rowSurface, rowEdge, notes);
+                created.add(item);
+            });
         return created;
     }
 

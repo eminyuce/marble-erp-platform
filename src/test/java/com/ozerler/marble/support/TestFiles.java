@@ -49,7 +49,7 @@ public final class TestFiles {
 
     public static byte[] docx() {
         try (XWPFDocument document = new XWPFDocument();
-             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             document.createParagraph().createRun().setText("ocak notu");
             document.write(out);
             return out.toByteArray();
@@ -60,7 +60,7 @@ public final class TestFiles {
 
     public static byte[] xlsx() {
         try (XSSFWorkbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             workbook.createSheet("density").createRow(0).createCell(0).setCellValue("sample");
             workbook.write(out);
             return out.toByteArray();
@@ -71,7 +71,7 @@ public final class TestFiles {
 
     public static byte[] plainZip() {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-             ZipOutputStream zip = new ZipOutputStream(out)) {
+                ZipOutputStream zip = new ZipOutputStream(out)) {
             zip.putNextEntry(new ZipEntry("notes.txt"));
             zip.write("not an office document".getBytes(StandardCharsets.UTF_8));
             zip.closeEntry();

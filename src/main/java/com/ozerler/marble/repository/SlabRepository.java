@@ -66,17 +66,17 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
 
     @EntityGraph(attributePaths = {"block", "block.quarry", "customer", "productionOrder", "pallet"})
     @Query("SELECT s FROM Slab s "
-           + "LEFT JOIN s.customer c "
-           + "LEFT JOIN s.block b "
-           + "WHERE (:status IS NULL OR s.status = :status) "
-           + "AND (:customerId IS NULL OR c.id = :customerId) "
-           + "AND (:generalStockOnly = false OR c IS NULL) "
-           + "AND (:search IS NULL OR :search = '' "
-           + "OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-           + "OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-           + "OR LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-           + "OR LOWER(COALESCE(c.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-           + "ORDER BY s.id DESC")
+            + "LEFT JOIN s.customer c "
+            + "LEFT JOIN s.block b "
+            + "WHERE (:status IS NULL OR s.status = :status) "
+            + "AND (:customerId IS NULL OR c.id = :customerId) "
+            + "AND (:generalStockOnly = false OR c IS NULL) "
+            + "AND (:search IS NULL OR :search = '' "
+            + "OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(COALESCE(c.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
+            + "ORDER BY s.id DESC")
     Page<Slab> searchSlabsWithCustomer(@Param("status") SlabStatus status,
                                        @Param("customerId") Long customerId,
                                        @Param("generalStockOnly") boolean generalStockOnly,

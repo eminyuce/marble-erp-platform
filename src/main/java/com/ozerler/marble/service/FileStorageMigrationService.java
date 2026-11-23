@@ -96,7 +96,7 @@ public class FileStorageMigrationService {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             long size = Files.size(source);
             try (InputStream raw = Files.newInputStream(source);
-                 DigestInputStream digestStream = new DigestInputStream(raw, digest)) {
+                    DigestInputStream digestStream = new DigestInputStream(raw, digest)) {
                 String mime = storedOrDetectedMime(record, source);
                 objectStorageService.upload(objectKey, digestStream, size, mime);
             }

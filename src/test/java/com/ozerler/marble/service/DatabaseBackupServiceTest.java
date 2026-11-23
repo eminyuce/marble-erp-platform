@@ -64,7 +64,7 @@ class DatabaseBackupServiceTest {
 
         // Verify content is a valid GZIP stream
         try (InputStream raw = storageService.download(s3Key);
-             GZIPInputStream gzis = new GZIPInputStream(raw)) {
+                GZIPInputStream gzis = new GZIPInputStream(raw)) {
             byte[] bytes = gzis.readAllBytes();
             String content = new String(bytes);
             Assertions.assertThat(content).contains("Özerler Mermer ERP Database Backup");

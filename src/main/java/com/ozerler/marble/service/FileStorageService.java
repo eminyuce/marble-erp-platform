@@ -336,7 +336,7 @@ public class FileStorageService {
                 }
             } else {
                 try (InputStream raw = file.getInputStream();
-                     DigestInputStream digestStream = new DigestInputStream(raw, digest)) {
+                        DigestInputStream digestStream = new DigestInputStream(raw, digest)) {
                     objectStorageService.upload(objectKey, digestStream, validated.fileSize(), validated.mimeType());
                 }
             }

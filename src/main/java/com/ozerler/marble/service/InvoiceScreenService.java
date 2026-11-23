@@ -273,18 +273,18 @@ public class InvoiceScreenService {
                     && (Boolean.TRUE.equals(includeZero) || (fuelTank.getQuantity() != null && fuelTank.getQuantity().compareTo(BigDecimal.ZERO) > 0))
                     && (s.isEmpty() || "mazot".contains(s) || "dizel".contains(s) || fuelTank.getItemCode().toLowerCase().contains(s))) {
                 Map<String, Object> m = new HashMap<>();
-                        m.put("category", "MAZOT");
-                        m.put("categoryLabel", "Mazot");
-                        m.put("id", fuelTank.getId());
-                        m.put("code", fuelTank.getItemCode());
-                        m.put("name", "Ocak Mazot Stoğu (Dizel)");
-                        m.put("stoneType", "Akaryakıt");
-                        m.put("dimensions", "Ana Depo Tankı");
-                        m.put("quantity", scaleQuantity(fuelTank.getQuantity()));
-                        m.put("unit", "litre");
-                        m.put("unitPrice", Objects.requireNonNullElse(fuelTank.getUnitPrice(), BigDecimal.ZERO));
-                        m.put("directExpense", false);
-                        result.add(m);
+                m.put("category", "MAZOT");
+                m.put("categoryLabel", "Mazot");
+                m.put("id", fuelTank.getId());
+                m.put("code", fuelTank.getItemCode());
+                m.put("name", "Ocak Mazot Stoğu (Dizel)");
+                m.put("stoneType", "Akaryakıt");
+                m.put("dimensions", "Ana Depo Tankı");
+                m.put("quantity", scaleQuantity(fuelTank.getQuantity()));
+                m.put("unit", "litre");
+                m.put("unitPrice", Objects.requireNonNullElse(fuelTank.getUnitPrice(), BigDecimal.ZERO));
+                m.put("directExpense", false);
+                result.add(m);
             }
         }
 
@@ -345,30 +345,30 @@ public class InvoiceScreenService {
         // 4. Plakalar (Fabrika & Atölye)
         if ((department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP)
                 && (stockType == null || stockType.isBlank() || "SLAB".equalsIgnoreCase(stockType))) {
-                List<Slab> slabs = formLookup.slabsByStatusEntities(SlabStatus.AVAILABLE).stream()
+            List<Slab> slabs = formLookup.slabsByStatusEntities(SlabStatus.AVAILABLE).stream()
                         .filter(sl -> s.isEmpty() || sl.getSlabCode().toLowerCase().contains(s))
                         .limit(MAX_ROWS)
                         .toList();
-                for (Slab sl : slabs) {
-                    Map<String, Object> m = new HashMap<>();
-                    m.put("category", "SLAB");
-                    m.put("categoryLabel", "Plaka");
-                    m.put("id", sl.getId());
-                    m.put("code", sl.getSlabCode());
-                    m.put("name", "Plaka: " + sl.getSlabCode());
-                    m.put("stoneType", "Plaka");
-                    m.put("dimensions", sl.getWidthCm() + "x" + sl.getLengthCm() + "x" + sl.getThicknessCm() + " cm");
-                    m.put("quantity", scaleQuantity(Objects.requireNonNullElse(sl.getSurfaceAreaM2(), BigDecimal.ONE)));
-                    m.put("unit", "m2");
-                    m.put("widthCm", sl.getWidthCm());
-                    result.add(m);
-                }
+            for (Slab sl : slabs) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("category", "SLAB");
+                m.put("categoryLabel", "Plaka");
+                m.put("id", sl.getId());
+                m.put("code", sl.getSlabCode());
+                m.put("name", "Plaka: " + sl.getSlabCode());
+                m.put("stoneType", "Plaka");
+                m.put("dimensions", sl.getWidthCm() + "x" + sl.getLengthCm() + "x" + sl.getThicknessCm() + " cm");
+                m.put("quantity", scaleQuantity(Objects.requireNonNullElse(sl.getSurfaceAreaM2(), BigDecimal.ONE)));
+                m.put("unit", "m2");
+                m.put("widthCm", sl.getWidthCm());
+                result.add(m);
+            }
         }
 
         // 5. Ebatlı Ürün Stoğu
         if ((department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP)
                 && (stockType == null || stockType.isBlank() || "SIZED".equalsIgnoreCase(stockType))) {
-                List<StockItem> stockItems = formLookup.positiveStockEntities().stream()
+            List<StockItem> stockItems = formLookup.positiveStockEntities().stream()
                         .filter(st -> {
                             if (department != null && st.getStockLocation() != null) {
                                 return department.equals(st.getStockLocation().getBusinessUnit());
@@ -378,32 +378,32 @@ public class InvoiceScreenService {
                         .filter(st -> s.isEmpty() || (st.getProductCode() != null && st.getProductCode().toLowerCase().contains(s)) || (st.getStoneType() != null && st.getStoneType().toLowerCase().contains(s)))
                         .limit(MAX_ROWS)
                         .toList();
-                for (StockItem st : stockItems) {
-                    Map<String, Object> m = new HashMap<>();
-                    m.put("category", "SIZED");
-                    m.put("categoryLabel", "Ebatlı Stok");
-                    m.put("id", st.getId());
-                    Object productCode;
-                    if (st.getProductCode() != null) {
-                        productCode = st.getProductCode();
-                    } else {
-                        productCode = st.getItemCode();
-                    }
-                    m.put("code", productCode);
-                    String productCodeValue;
-                    if (st.getProductCode() != null) {
-                        productCodeValue = st.getProductCode();
-                    } else {
-                        productCodeValue = st.getItemCode();
-                    }
-                    m.put("name", productCodeValue + " — " + Objects.requireNonNullElse(st.getStoneType(), "Ebatlı Mermer"));
-                    m.put("stoneType", Objects.requireNonNullElse(st.getStoneType(), "—"));
-                    m.put("dimensions", Objects.requireNonNullElse(st.getWidthCm(), "") + "x" + Objects.requireNonNullElse(st.getLengthCm(), "") + "x" + Objects.requireNonNullElse(st.getThicknessCm(), "") + " cm");
-                    m.put("quantity", scaleQuantity(st.getQuantity()));
-                    m.put("unit", Objects.requireNonNullElse(st.getUnit(), "m2"));
-                    m.put("widthCm", st.getWidthCm());
-                    result.add(m);
+            for (StockItem st : stockItems) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("category", "SIZED");
+                m.put("categoryLabel", "Ebatlı Stok");
+                m.put("id", st.getId());
+                Object productCode;
+                if (st.getProductCode() != null) {
+                    productCode = st.getProductCode();
+                } else {
+                    productCode = st.getItemCode();
                 }
+                m.put("code", productCode);
+                String productCodeValue;
+                if (st.getProductCode() != null) {
+                    productCodeValue = st.getProductCode();
+                } else {
+                    productCodeValue = st.getItemCode();
+                }
+                m.put("name", productCodeValue + " — " + Objects.requireNonNullElse(st.getStoneType(), "Ebatlı Mermer"));
+                m.put("stoneType", Objects.requireNonNullElse(st.getStoneType(), "—"));
+                m.put("dimensions", Objects.requireNonNullElse(st.getWidthCm(), "") + "x" + Objects.requireNonNullElse(st.getLengthCm(), "") + "x" + Objects.requireNonNullElse(st.getThicknessCm(), "") + " cm");
+                m.put("quantity", scaleQuantity(st.getQuantity()));
+                m.put("unit", Objects.requireNonNullElse(st.getUnit(), "m2"));
+                m.put("widthCm", st.getWidthCm());
+                result.add(m);
+            }
         }
 
         return result;

@@ -23,29 +23,29 @@ public interface OperationWorkOrderRepository extends JpaRepository<OperationWor
     boolean existsByOrderNo(String orderNo);
 
     @Query("SELECT DISTINCT o FROM OperationWorkOrder o "
-           + "LEFT JOIN FETCH o.customer "
-           + "LEFT JOIN FETCH o.sourceStockItem "
-           + "LEFT JOIN FETCH o.sourceSlab "
-           + "LEFT JOIN FETCH o.sourceBlock "
-           + "WHERE o.id = :id")
+            + "LEFT JOIN FETCH o.customer "
+            + "LEFT JOIN FETCH o.sourceStockItem "
+            + "LEFT JOIN FETCH o.sourceSlab "
+            + "LEFT JOIN FETCH o.sourceBlock "
+            + "WHERE o.id = :id")
     Optional<OperationWorkOrder> findByIdWithDetails(@Param("id") Long id);
 
     @Query("SELECT o FROM OperationWorkOrder o "
-           + "LEFT JOIN FETCH o.customer "
-           + "LEFT JOIN FETCH o.sourceStockItem "
-           + "LEFT JOIN FETCH o.sourceSlab "
-           + "LEFT JOIN FETCH o.sourceBlock "
-           + "WHERE (:department IS NULL OR o.department = :department) "
-           + "AND (:status IS NULL OR o.status = :status) "
-           + "AND (:customerId IS NULL OR o.customer.id = :customerId) "
-           + "AND (:startDate IS NULL OR o.orderDate >= :startDate) "
-           + "AND (:endDate IS NULL OR o.orderDate <= :endDate) "
-           + "AND (:search IS NULL OR :search = '' "
-           + "OR LOWER(o.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-           + "OR LOWER(COALESCE(o.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-           + "OR LOWER(COALESCE(o.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-           + "OR LOWER(COALESCE(o.responsiblePerson, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-           + "ORDER BY o.orderDate DESC, o.id DESC")
+            + "LEFT JOIN FETCH o.customer "
+            + "LEFT JOIN FETCH o.sourceStockItem "
+            + "LEFT JOIN FETCH o.sourceSlab "
+            + "LEFT JOIN FETCH o.sourceBlock "
+            + "WHERE (:department IS NULL OR o.department = :department) "
+            + "AND (:status IS NULL OR o.status = :status) "
+            + "AND (:customerId IS NULL OR o.customer.id = :customerId) "
+            + "AND (:startDate IS NULL OR o.orderDate >= :startDate) "
+            + "AND (:endDate IS NULL OR o.orderDate <= :endDate) "
+            + "AND (:search IS NULL OR :search = '' "
+            + "OR LOWER(o.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(COALESCE(o.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(COALESCE(o.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(COALESCE(o.responsiblePerson, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
+            + "ORDER BY o.orderDate DESC, o.id DESC")
     Page<OperationWorkOrder> searchOrders(@Param("department") BusinessUnit department,
                                          @Param("status") OperationWorkOrderStatus status,
                                          @Param("customerId") Long customerId,

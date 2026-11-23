@@ -27,7 +27,7 @@ public interface MachineFuelEntryRepository extends JpaRepository<MachineFuelEnt
     BigDecimal sumAmountBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
     @Query("SELECT e.machine.name, COALESCE(SUM(e.litres), 0), COALESCE(SUM(e.totalAmount), 0), COUNT(e) "
-           + "FROM MachineFuelEntry e WHERE e.entryDate >= :start AND e.entryDate < :end GROUP BY e.machine.name ORDER BY SUM(e.litres) DESC")
+            + "FROM MachineFuelEntry e WHERE e.entryDate >= :start AND e.entryDate < :end GROUP BY e.machine.name ORDER BY SUM(e.litres) DESC")
     List<Object[]> sumFuelByMachineBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
     boolean existsByMachineId(Long machineId);
