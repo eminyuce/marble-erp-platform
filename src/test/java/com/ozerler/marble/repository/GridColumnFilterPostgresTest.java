@@ -67,7 +67,7 @@ class GridColumnFilterPostgresTest {
         entityManager.flush();
 
         Map<String, String> aliases = GridPages.BLOCK_SORTS;
-        GridColumnFilters filters = newFilters("blockCode", GridFilterOperator.CONTAINS, "BLK%W");
+        GridColumnFilters filters = newFilters("blockCode", GridFilterOperator.CONTAINS, "FLT%W");
         try (GridColumnFilterContext ignored = GridColumnFilterContext.open(aliases, filters)) {
             Page<Block> page = blockRepository.searchBlocksWithStockFilter(
                     null, null, null, "ALL", PageRequest.of(0, 20));
@@ -113,6 +113,7 @@ class GridColumnFilterPostgresTest {
         return Block.builder().quarry(quarry).blockCode(code).extractionDate(LocalDate.of(2026, 11, 2))
                 .widthCm(100).lengthCm(200).heightCm(150).volumeM3(new BigDecimal("3.000"))
                 .theoreticalWeightKg(new BigDecimal("8000.00")).actualWeightKg(new BigDecimal("7900.00"))
+                .weightDeviationPct(new BigDecimal("-1.25"))
                 .stoneType(stone).build();
     }
 
