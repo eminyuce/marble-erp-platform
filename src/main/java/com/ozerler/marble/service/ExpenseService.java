@@ -211,7 +211,7 @@ public class ExpenseService {
 
         assertPeriodOpen(tx.getBusinessUnit(), tx.getExpensePeriod());
 
-        BusinessUnit unit = draft.businessUnit() != null ? draft.businessUnit() : (tx.getBusinessUnit() != null ? tx.getBusinessUnit() : BusinessUnit.FACTORY);
+        BusinessUnit unit = draft.businessUnit() != null ? draft.businessUnit() : tx.getBusinessUnit() != null ? tx.getBusinessUnit() : BusinessUnit.FACTORY;
 
         CostCenter center;
         if (draft.centerId() != null) {

@@ -44,7 +44,6 @@ frontend/.npm
 ### Secrets & Backups ###
 .env
 .env.*
-!.env.example
 backups/
 *.dump
 *.sql.gz

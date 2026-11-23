@@ -13,8 +13,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import org.springframework.format.annotation.DateTimeFormat;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -136,7 +134,7 @@ public class OperationWorkOrderController extends AbstractController {
                 List.of(BlockStatus.AT_FACTORY, BlockStatus.FACTORY_STOCK, BlockStatus.PRODUCED, BlockStatus.QUARRY, BlockStatus.EXTRACTED, BlockStatus.MARKED)
         );
         if (selectedBlock != null && !availableBlocks.contains(selectedBlock)) {
-            availableBlocks = new java.util.ArrayList<>(availableBlocks);
+            availableBlocks = new ArrayList<>(availableBlocks);
             availableBlocks.add(0, selectedBlock);
         }
 
@@ -216,11 +214,11 @@ public class OperationWorkOrderController extends AbstractController {
                     BigDecimal t = (dimThicknesses != null && i < dimThicknesses.size()) ? dimThicknesses.get(i) : new BigDecimal("2.0");
                     int pcs = (dimPieceCounts != null && i < dimPieceCounts.size() && dimPieceCounts.get(i) != null) ? dimPieceCounts.get(i) : 1;
                     String sOp = (dimSurfaceOps != null && i < dimSurfaceOps.size() && dimSurfaceOps.get(i) != null && !dimSurfaceOps.get(i).isBlank())
-                            ? dimSurfaceOps.get(i).trim() : (surfaceOperation != null ? surfaceOperation : "Cilalı");
+                            ? dimSurfaceOps.get(i).trim() : surfaceOperation != null ? surfaceOperation : "Cilalı";
                     String sUnit = (dimSurfaceUnits != null && i < dimSurfaceUnits.size() && dimSurfaceUnits.get(i) != null && !dimSurfaceUnits.get(i).isBlank())
                             ? dimSurfaceUnits.get(i).trim() : "m2";
                     String eOp = (dimEdgeOps != null && i < dimEdgeOps.size() && dimEdgeOps.get(i) != null && !dimEdgeOps.get(i).isBlank())
-                            ? dimEdgeOps.get(i).trim() : (edgeOperation != null ? edgeOperation : "Pah");
+                            ? dimEdgeOps.get(i).trim() : edgeOperation != null ? edgeOperation : "Pah";
                     String eUnit = (dimEdgeUnits != null && i < dimEdgeUnits.size() && dimEdgeUnits.get(i) != null && !dimEdgeUnits.get(i).isBlank())
                             ? dimEdgeUnits.get(i).trim() : "m.t.";
                     String dNote = (dimNotes != null && i < dimNotes.size() && dimNotes.get(i) != null) ? dimNotes.get(i).trim() : "";
@@ -252,7 +250,7 @@ public class OperationWorkOrderController extends AbstractController {
                     items.add(item);
 
                     breakdownBuilder.append(String.format("%d. %s x %s x %s cm — %d Adet (%s m² | %s m.t.) [Yüzey: %s (%s), Kenar: %s (%s)]%s\n",
-                            (i + 1), w, l, t, pcs, rowM2, rowMt, sOp, sUnit, eOp, eUnit, dNote.isEmpty() ? "" : " {" + dNote + "}"));
+                            i + 1, w, l, t, pcs, rowM2, rowMt, sOp, sUnit, eOp, eUnit, dNote.isEmpty() ? "" : " {" + dNote + "}"));
                 }
                 breakdownBuilder.append(String.format("-------------------------------------------\nTOPLAM: %d Adet | %s m² | %s m.t.\n", totalPieces, sumM2, sumMt));
 
@@ -269,10 +267,10 @@ public class OperationWorkOrderController extends AbstractController {
 
             String topSurface = (surfaceOperation != null && !surfaceOperation.isBlank())
                     ? surfaceOperation
-                    : (!items.isEmpty() && items.get(0).getSurfaceOperation() != null ? items.get(0).getSurfaceOperation() : "Cilalı");
+                    : !items.isEmpty() && items.get(0).getSurfaceOperation() != null ? items.get(0).getSurfaceOperation() : "Cilalı";
             String topEdge = (edgeOperation != null && !edgeOperation.isBlank())
                     ? edgeOperation
-                    : (!items.isEmpty() && items.get(0).getEdgeOperation() != null ? items.get(0).getEdgeOperation() : "Pah");
+                    : !items.isEmpty() && items.get(0).getEdgeOperation() != null ? items.get(0).getEdgeOperation() : "Pah";
 
             String finalNotes = notes != null ? notes.trim() : "";
             if (breakdownBuilder.length() > 0) {

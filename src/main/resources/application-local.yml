@@ -26,7 +26,15 @@ spring:
 
 server:
   port: 8080
-  forward-headers-strategy: framework
+  request:
+    header:
+      forwarded:
+        strategy: framework
+  servlet:
+    session:
+      cookie:
+        # The local profile uses HTTP and an H2 file database.
+        secure: ${SESSION_COOKIE_SECURE:false}
 
 app:
   cors:

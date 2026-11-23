@@ -281,31 +281,16 @@ GOOD_EOF
     elif [ "\$code" -eq 0 ]; then
         pg_running=\$(docker inspect -f '{{.State.Running}}' marble-erp-postgres 2>/dev/null || echo false)
         rustfs_running=\$(docker inspect -f '{{.State.Running}}' marble-rustfs 2>/dev/null || echo false)
-        if [ -f "\$STACK/.env" ]; then
-            echo "\$ docker compose -f docker-compose.prod.yml pull app"
-            docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" pull app || code=1
-            if [ "\$code" -eq 0 ]; then
-                if [ "\$pg_running" = "true" ] && [ "\$rustfs_running" = "true" ]; then
-                    echo "\$ docker compose -f docker-compose.prod.yml up -d --no-deps app"
-                    docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || code=1
-                else
-                    echo "\$ docker compose -f docker-compose.prod.yml up -d --no-recreate"
-                    docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" up -d --no-recreate || code=1
-                    docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || code=1
-                fi
-            fi
-        else
-            echo "\$ docker compose -f docker-compose.prod.yml pull app"
-            docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" pull app || code=1
-            if [ "\$code" -eq 0 ]; then
-                if [ "\$pg_running" = "true" ] && [ "\$rustfs_running" = "true" ]; then
-                    echo "\$ docker compose -f docker-compose.prod.yml up -d --no-deps app"
-                    docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || code=1
-                else
-                    echo "\$ docker compose -f docker-compose.prod.yml up -d --no-recreate"
-                    docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-recreate || code=1
-                    docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || code=1
-                fi
+        echo "\$ docker compose -f docker-compose.prod.yml pull app"
+        docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" pull app || code=1
+        if [ "\$code" -eq 0 ]; then
+            if [ "\$pg_running" = "true" ] && [ "\$rustfs_running" = "true" ]; then
+                echo "\$ docker compose -f docker-compose.prod.yml up -d --no-deps app"
+                docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || code=1
+            else
+                echo "\$ docker compose -f docker-compose.prod.yml up -d --no-recreate"
+                docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-recreate || code=1
+                docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || code=1
             fi
         fi
     fi
@@ -315,11 +300,7 @@ GOOD_EOF
             if docker image inspect "\${IMAGE_REPO}:rollback-previous" >/dev/null 2>&1; then
                 echo "[WARN] Yeni sürüm sağlık kontrolünü geçemedi. Otomatik geri alma (rollback) başlatılıyor..."
                 docker tag "\${IMAGE_REPO}:rollback-previous" "\$APP_IMAGE"
-                if [ -f "\$STACK/.env" ]; then
-                    docker compose --project-directory "\$STACK" --env-file "\$STACK/.env" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || true
-                else
-                    docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || true
-                fi
+                docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" up -d --no-deps app || true
                 if wait_for_app_health; then
                     echo "[OK] Otomatik geri alma tamamlandı; önceki sağlıklı sürüm yayında."
                 else
@@ -408,9 +389,6 @@ echo
 
 cd "$REPO_ROOT"
 compose_args=(-f "$(compose_file)")
-if [ -f "${REPO_ROOT}/.env" ]; then
-    compose_args=(--env-file "${REPO_ROOT}/.env" "${compose_args[@]}")
-fi
 
 echo "\$ docker compose -f docker-compose.prod.yml pull app"
 docker compose "${compose_args[@]}" pull app

@@ -119,8 +119,8 @@ public class RustFsBrowserAccess {
         }
         String normalized = stripBrackets(host).toLowerCase(Locale.ROOT);
         return "localhost".equals(normalized)
-                || "127.0.0.1".equals(normalized)
-                || "::1".equals(normalized)
+                || "127.0.0.1".equals(normalized) // NOPMD AvoidUsingHardCodedIP loopback literal
+                || "::1".equals(normalized) // NOPMD AvoidUsingHardCodedIP loopback literal
                 || normalized.startsWith("127.");
     }
 

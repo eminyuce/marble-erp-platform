@@ -77,7 +77,7 @@ public class FactoryOperationController extends AbstractController {
                         return b.getSalePrice();
                     }
                     if (b.getUnitMarketValuePerTon() != null && b.getUnitMarketValuePerTon().compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal ton = b.getActualTonnage() != null ? b.getActualTonnage() : (b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO);
+                        BigDecimal ton = b.getActualTonnage() != null ? b.getActualTonnage() : b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO;
                         return b.getUnitMarketValuePerTon().multiply(ton);
                     }
                     return b.getTotalCost() != null ? b.getTotalCost() : BigDecimal.ZERO;
@@ -118,9 +118,9 @@ public class FactoryOperationController extends AbstractController {
             map.put("id", b.getId());
             map.put("blockCode", b.getBlockCode());
             map.put("stoneType", b.getStoneType() != null ? b.getStoneType() : "—");
-            map.put("quarryName", b.getQuarry() != null ? b.getQuarry().getName() : (b.getQuarryName() != null ? b.getQuarryName() : "Merkez Ocak"));
-            map.put("arrivalDate", b.getArrivalDate() != null ? b.getArrivalDate().format(dateFmt) : (b.getCreatedDate() != null ? b.getCreatedDate().format(dateFmt) : "—"));
-            map.put("estimatedTonnage", b.getEstimatedTonnage() != null ? b.getEstimatedTonnage() : (b.getApproximateTonnage() != null ? b.getApproximateTonnage() : null));
+            map.put("quarryName", b.getQuarry() != null ? b.getQuarry().getName() : b.getQuarryName() != null ? b.getQuarryName() : "Merkez Ocak");
+            map.put("arrivalDate", b.getArrivalDate() != null ? b.getArrivalDate().format(dateFmt) : b.getCreatedDate() != null ? b.getCreatedDate().format(dateFmt) : "—");
+            map.put("estimatedTonnage", b.getEstimatedTonnage() != null ? b.getEstimatedTonnage() : b.getApproximateTonnage() != null ? b.getApproximateTonnage() : null);
             map.put("actualTonnage", b.getActualTonnage());
             map.put("dimensions", b.getDimensions() != null ? b.getDimensions() : "—");
             map.put("customerName", b.getAssignedCustomer() != null ? b.getAssignedCustomer().getCompanyName() : null);
@@ -132,7 +132,7 @@ public class FactoryOperationController extends AbstractController {
             BigDecimal cost = b.getTotalCost() != null ? b.getTotalCost() : BigDecimal.ZERO;
             BigDecimal saleOrMarket = b.getSalePrice();
             if ((saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) && b.getUnitMarketValuePerTon() != null) {
-                BigDecimal ton = b.getActualTonnage() != null ? b.getActualTonnage() : (b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO);
+                BigDecimal ton = b.getActualTonnage() != null ? b.getActualTonnage() : b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO;
                 saleOrMarket = b.getUnitMarketValuePerTon().multiply(ton).setScale(2, RoundingMode.HALF_UP);
             }
             if (saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) {
@@ -388,7 +388,7 @@ public class FactoryOperationController extends AbstractController {
             map.put("customerName", customerName);
             map.put("customerId", custId);
             map.put("isGeneralStock", it.getCustomer() == null);
-            map.put("productionDate", it.getProductionDate() != null ? it.getProductionDate().format(dateFmt) : (it.getCreatedDate() != null ? it.getCreatedDate().format(dateFmt) : "—"));
+            map.put("productionDate", it.getProductionDate() != null ? it.getProductionDate().format(dateFmt) : it.getCreatedDate() != null ? it.getCreatedDate().format(dateFmt) : "—");
             map.put("status", it.getStatus() != null ? it.getStatus() : "AVAILABLE");
             map.put("statusLabel", "Hazır / Stokta");
             map.put("notes", it.getNotes() != null ? it.getNotes() : "");
@@ -537,7 +537,7 @@ public class FactoryOperationController extends AbstractController {
                                       RedirectAttributes redirectAttributes) {
         try {
             StockItem updated = factoryInventoryService.addFuelStock(litres, netUnitPrice, null,
-                    notes != null ? notes : (invoiceNo != null ? "Fatura: " + invoiceNo : "Doğrudan Depo Girişi"));
+                    notes != null ? notes : invoiceNo != null ? "Fatura: " + invoiceNo : "Doğrudan Depo Girişi");
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s litre mazot fabrika deposuna eklendi. Güncel stok: %s litre.", litres, updated.getQuantity()));
         } catch (Exception e) {

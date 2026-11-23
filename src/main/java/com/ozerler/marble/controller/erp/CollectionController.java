@@ -4,7 +4,6 @@ import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.CheckRecord;
 import com.ozerler.marble.model.CollectionRecord;
-import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.Invoice;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;

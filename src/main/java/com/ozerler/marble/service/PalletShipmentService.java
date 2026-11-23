@@ -139,7 +139,7 @@ public class PalletShipmentService {
             calculatedArea = widthCm.multiply(lengthCm).divide(new BigDecimal("10000"), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(qty));
         }
         if (calculatedArea == null || calculatedArea.compareTo(BigDecimal.ZERO) <= 0) {
-            calculatedArea = lot != null ? lot.getTotalAreaM2() : (slab != null ? slab.getSurfaceAreaM2() : BigDecimal.ZERO);
+            calculatedArea = lot != null ? lot.getTotalAreaM2() : slab != null ? slab.getSurfaceAreaM2() : BigDecimal.ZERO;
         }
 
         PalletItem item = palletItemRepository.save(PalletItem.builder()

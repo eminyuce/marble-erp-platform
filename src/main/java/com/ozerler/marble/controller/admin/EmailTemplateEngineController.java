@@ -117,7 +117,7 @@ public class EmailTemplateEngineController {
                     .name(t.getTemplateName())
                     .category(StringUtils.defaultIfBlank(t.getCategory(), "Genel"))
                     .subject(t.getSubject())
-                    .description(StringUtils.defaultString(t.getDescription(), "—"))
+                    .description(t.getDescription() == null ? "—" : t.getDescription())
                     .active(Boolean.TRUE.equals(t.getIsActive()))
                     .placeholderCount(count)
                     .editUrl("/admin/email-templates/" + t.getId() + "/edit")

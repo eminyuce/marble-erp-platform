@@ -205,16 +205,16 @@ class DeploymentServiceTest {
     }
 
     @Test
-    @DisplayName("Dockerfile and .dockerignore bundle compose files, .env.example, scripts, and docker-compose v2 plugin")
+    @DisplayName("Dockerfile and .dockerignore bundle compose files, scripts, and docker-compose v2 plugin")
     void dockerfileAndDockerignore_BundleStackAndComposePlugin() throws Exception {
         String dockerfile = Files.readString(Path.of("Dockerfile"), StandardCharsets.UTF_8);
         String dockerignore = Files.readString(Path.of(".dockerignore"), StandardCharsets.UTF_8);
 
-        assertThat(dockerignore).contains("!.env.example");
+        assertThat(dockerignore).doesNotContain("!.env.example");
         assertThat(dockerfile).contains("/usr/local/lib/docker/cli-plugins/docker-compose");
         assertThat(dockerfile).contains("COPY docker-compose.prod.yml /stack/docker-compose.prod.yml");
         assertThat(dockerfile).contains("COPY docker/docker-compose.yml /stack/docker-compose.yml");
-        assertThat(dockerfile).contains("COPY .env.example /stack/.env.example");
+        assertThat(dockerfile).doesNotContain(".env.example");
         assertThat(dockerfile).contains("ENTRYPOINT [\"/usr/local/bin/docker-entrypoint.sh\"]");
     }
 

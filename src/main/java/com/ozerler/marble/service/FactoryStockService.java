@@ -80,10 +80,10 @@ public class FactoryStockService {
         Block block = blockRepository.findById(blockId)
                 .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
 
-        boolean isAtFactory = (block.getStatus() == BlockStatus.AT_FACTORY || block.getStatus() == BlockStatus.FACTORY_STOCK
-                || (block.getCurrentLocation() != null && block.getCurrentLocation().getLocationType() == StockLocationType.FACTORY_BLOCK_YARD));
-        boolean isAlreadyCutOrSold = (block.getStatus() == BlockStatus.IN_PROCESS || block.getStatus() == BlockStatus.SAWING
-                || block.getStatus() == BlockStatus.SOLD || block.getStatus() == BlockStatus.SCRAPPED);
+        boolean isAtFactory = block.getStatus() == BlockStatus.AT_FACTORY || block.getStatus() == BlockStatus.FACTORY_STOCK
+                || (block.getCurrentLocation() != null && block.getCurrentLocation().getLocationType() == StockLocationType.FACTORY_BLOCK_YARD);
+        boolean isAlreadyCutOrSold = block.getStatus() == BlockStatus.IN_PROCESS || block.getStatus() == BlockStatus.SAWING
+                || block.getStatus() == BlockStatus.SOLD || block.getStatus() == BlockStatus.SCRAPPED;
         if (!isAtFactory || isAlreadyCutOrSold) {
             throw new IllegalStateException("Yalnızca fabrikada bulunan ve henüz kesilmemiş bloklar kesime alınabilir.");
         }
@@ -135,7 +135,7 @@ public class FactoryStockService {
                 .orderNo(orderNo)
                 .block(block)
                 .machineName("ST / Katrak")
-                .processType(com.ozerler.marble.model.enums.ProcessType.ST)
+                .processType(ProcessType.ST)
                 .startTime(java.time.LocalDateTime.now())
                 .status("COMPLETED")
                 .operatorName("Operatör")
@@ -179,7 +179,7 @@ public class FactoryStockService {
                 .orderNo(orderNo)
                 .block(block)
                 .machineName("ST / Katrak")
-                .processType(com.ozerler.marble.model.enums.ProcessType.ST)
+                .processType(ProcessType.ST)
                 .startTime(java.time.LocalDateTime.now())
                 .status("COMPLETED")
                 .operatorName("Operatör")
@@ -192,7 +192,7 @@ public class FactoryStockService {
             BigDecimal w = widths.get(i);
             if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) continue;
             BigDecimal l = (lengths != null && i < lengths.size() && lengths.get(i) != null) ? lengths.get(i) : w;
-            BigDecimal t = (thicknesses != null && i < thicknesses.size() && thicknesses.get(i) != null) ? thicknesses.get(i) : (commonThicknessCm != null ? commonThicknessCm : new BigDecimal("2.00"));
+            BigDecimal t = (thicknesses != null && i < thicknesses.size() && thicknesses.get(i) != null) ? thicknesses.get(i) : commonThicknessCm != null ? commonThicknessCm : new BigDecimal("2.00");
             int count = (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null) ? pieceCounts.get(i) : 1;
             BigDecimal area = w.multiply(l).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
 
@@ -318,7 +318,7 @@ public class FactoryStockService {
                 .itemCode(code)
                 .productType(StockProductType.SIZED)
                 .sourceBlock(block)
-                .stoneType(block != null ? block.getStoneType() : (slab != null && slab.getBlock() != null ? slab.getBlock().getStoneType() : "Mermer"))
+                .stoneType(block != null ? block.getStoneType() : slab != null && slab.getBlock() != null ? slab.getBlock().getStoneType() : "Mermer")
                 .description(description != null && !description.isBlank() ? description : "Ebatlı Mermer " + thick + "x" + w + "x" + l)
                 .thicknessCm(thick)
                 .widthCm(w)
@@ -375,7 +375,7 @@ public class FactoryStockService {
                     : w.multiply(l).multiply(BigDecimal.valueOf(count)).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
             String desc = (descriptions != null && i < descriptions.size() && descriptions.get(i) != null && !descriptions.get(i).isBlank())
                     ? descriptions.get(i).trim()
-                    : (defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Ebatlı Mermer " + t + "x" + w + "x" + l));
+                    : defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Ebatlı Mermer " + t + "x" + w + "x" + l);
 
             String rowSurface = (rowSurfaceFinishes != null && i < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(i) != null && !rowSurfaceFinishes.get(i).isBlank())
                     ? rowSurfaceFinishes.get(i).trim() : surfaceFinishStr;

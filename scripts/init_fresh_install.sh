@@ -30,13 +30,10 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 if [ -f "${REPO_ROOT}/docker/docker-compose.yml" ]; then
     cp -n "${REPO_ROOT}/docker/docker-compose.yml" "${INSTALL_DIR}/docker-compose.yml"
 fi
-if [ -f "${REPO_ROOT}/.env.example" ] && [ ! -f "${INSTALL_DIR}/.env" ]; then
-    cp "${REPO_ROOT}/.env.example" "${INSTALL_DIR}/.env"
-    echo "[INFO] Created ${INSTALL_DIR}/.env from template. Update passwords before starting."
-fi
-
 echo "[OK] Fresh installation directory prepared at: ${INSTALL_DIR}"
 echo "Next steps for a new customer installation:"
-echo "  1. Edit ${INSTALL_DIR}/.env and set strong credentials for DB_PASSWORD and RUSTFS_SECRET_KEY."
-echo "  2. Run: cd ${INSTALL_DIR} && docker compose pull && docker compose up -d"
-echo "  3. Verify readiness: curl -fsS http://127.0.0.1:81/health/"
+echo "  1. No .env file is required. Defaults are in the Spring profile and the compose file."
+echo "  2. Before the first start, export real secrets if the built-in placeholders are not acceptable:"
+echo "       export DB_PASSWORD=... RUSTFS_ACCESS_KEY=... RUSTFS_SECRET_KEY=... CORS_ALLOWED_ORIGIN=..."
+echo "  3. Run: cd ${INSTALL_DIR} && docker compose pull && docker compose up -d"
+echo "  4. Verify readiness: curl -fsS http://127.0.0.1:81/health/"

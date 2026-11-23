@@ -100,7 +100,7 @@ public class StockMovementService {
                                             TargetDestination targetDest, Customer customer, Invoice invoice, String notes) {
         BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage() : block.getApproximateTonnage();
         BusinessUnit targetDept = targetDest == TargetDestination.FACTORY ? BusinessUnit.FACTORY
-                : (targetDest == TargetDestination.WORKSHOP ? BusinessUnit.WORKSHOP : BusinessUnit.QUARRY);
+                : targetDest == TargetDestination.WORKSHOP ? BusinessUnit.WORKSHOP : BusinessUnit.QUARRY;
 
         return recordMovement(
                 targetDest == TargetDestination.CUSTOMER ? StockMovementType.OUTGOING : StockMovementType.TRANSFER,

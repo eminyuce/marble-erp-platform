@@ -81,24 +81,20 @@ sudo chown -R $USER:$USER /opt/marble-erp
 git clone https://github.com/eminyuce/marble-erp-platform.git /opt/marble-erp
 cd /opt/marble-erp
 
-# Create production environment variables file
-cat << 'EOF' > /opt/marble-erp/.env
-DB_NAME=marble_erp
-DB_USERNAME=marbleuser
-DB_PASSWORD=YOUR_STRONG_DB_PASSWORD_HERE
-APP_PORT=8080
-CORS_ALLOWED_ORIGIN=https://erp.ozerlermermer.com
-SERVER_PORT=8080
-SPRING_PROFILES_ACTIVE=prod
-EOF
+# No .env file. Export overrides, then start. The prod profile already defaults the session cookie to Secure.
+export DB_PASSWORD='YOUR_STRONG_DB_PASSWORD_HERE'
+export RUSTFS_ACCESS_KEY='YOUR_RUSTFS_ACCESS_KEY'
+export RUSTFS_SECRET_KEY='YOUR_RUSTFS_SECRET_KEY'
+export CORS_ALLOWED_ORIGIN='https://erp.ozerlermermer.com'
+export SPRING_PROFILES_ACTIVE=prod
 ```
 > [!WARNING]
-> Replace `YOUR_STRONG_DB_PASSWORD_HERE` with a secure generated password.
+> Replace the placeholder secrets before the first production start. Compose picks up exported variables through `${VAR:-default}` and does not read a `.env` file.
 
 ### Step 3.3: Build & Launch Containers
 ```bash
 # Build multi-stage image (compiles Tailwind CSS & Spring Boot JAR) and start services
-docker compose -f docker/docker-compose.yml --env-file .env up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 
 # Verify container statuses
 docker compose -f docker/docker-compose.yml ps

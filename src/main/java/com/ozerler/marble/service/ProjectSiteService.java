@@ -129,7 +129,7 @@ public class ProjectSiteService {
                 .projectCode(projectCode.trim())
                 .name(name.trim())
                 .customer(customer)
-                .customerName(customerName != null ? customerName.trim() : (customer != null ? customer.getCompanyName() : ""))
+                .customerName(customerName != null ? customerName.trim() : customer != null ? customer.getCompanyName() : "")
                 .contractValue(contractValue != null ? contractValue : BigDecimal.ZERO)
                 .estimatedCost(estimatedCost != null ? estimatedCost : BigDecimal.ZERO)
                 .actualCost(BigDecimal.ZERO)

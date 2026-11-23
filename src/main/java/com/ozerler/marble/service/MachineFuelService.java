@@ -189,8 +189,8 @@ public class MachineFuelService {
 
         List<com.ozerler.marble.dto.MachineFuelDto> pageData = dtos.subList(fromIndex, toIndex);
 
-        BigDecimal totalLitres = dtos.stream().map(dto -> dto.getLitres()).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        BigDecimal totalAmount = dtos.stream().map(dto -> dto.getTotalAmount()).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal totalLitres = dtos.stream().map(dto -> dto.getLitres()).filter(value -> value != null).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal totalAmount = dtos.stream().map(dto -> dto.getTotalAmount()).filter(value -> value != null).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         java.util.Map<String, Object> meta = java.util.Map.of(
                 "totalLitres", totalLitres,

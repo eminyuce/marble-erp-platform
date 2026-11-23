@@ -86,7 +86,7 @@ public class QuarryInventoryController extends AbstractController {
                                RedirectAttributes redirectAttributes) {
         try {
             StockItem updated = quarryInventoryService.addFuelStock(litres, netUnitPrice, null,
-                    notes != null ? notes : (invoiceNo != null ? "Fatura: " + invoiceNo : "Doğrudan Depo Girişi"));
+                    notes != null ? notes : invoiceNo != null ? "Fatura: " + invoiceNo : "Doğrudan Depo Girişi");
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s litre mazot depoya eklendi. Güncel stok: %s litre.", litres, updated.getQuantity()));
         } catch (Exception e) {

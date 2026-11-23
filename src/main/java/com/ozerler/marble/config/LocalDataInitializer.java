@@ -478,7 +478,7 @@ public class LocalDataInitializer implements CommandLineRunner {
         Customer c2 = customerRepository.findByCustomerCode("MST-002").orElse(null);
         StockLocation yard = stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PALLET_STOCK_YARD).orElse(null);
 
-        MaterialLot lot1 = materialLotRepository.save(MaterialLot.builder()
+        materialLotRepository.save(MaterialLot.builder()
                 .lotCode("LOT-2026-001")
                 .productForm(ProductForm.SLAB)
                 .stoneType("Muğla Beyaz")

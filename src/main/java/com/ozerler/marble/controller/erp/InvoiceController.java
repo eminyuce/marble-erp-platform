@@ -45,7 +45,7 @@ public class InvoiceController extends AbstractController {
     private final StockItemRepository stockItemRepository;
     private final SlabRepository slabRepository;
     private final ProjectRepository projectRepository;
-    private final com.ozerler.marble.service.QuarryInventoryService quarryInventoryService;
+    private final QuarryInventoryService quarryInventoryService;
     private final com.ozerler.marble.service.ProcurementService procurementService;
 
     @GetMapping
@@ -95,8 +95,8 @@ public class InvoiceController extends AbstractController {
             map.put("invoiceTypeLabel", inv.getInvoiceType() != null ? inv.getInvoiceType().getDisplayName() : "Satış");
             String party = inv.getTargetDepartment() != null
                     ? "Dahili: " + inv.getTargetDepartment().getDisplayName()
-                    : (inv.getCustomer() != null ? inv.getCustomer().getCompanyName()
-                    : (inv.getSupplier() != null ? inv.getSupplier().getCompanyName() : inv.getPartyName()));
+                    : inv.getCustomer() != null ? inv.getCustomer().getCompanyName()
+                    : inv.getSupplier() != null ? inv.getSupplier().getCompanyName() : inv.getPartyName();
             map.put("partyName", party != null ? party : "—");
             map.put("department", inv.getDepartment() != null ? inv.getDepartment().name() : "");
             map.put("departmentLabel", inv.getDepartment() != null ? inv.getDepartment().getDisplayName() : "Genel");
@@ -125,7 +125,7 @@ public class InvoiceController extends AbstractController {
 
         if (purchaseOrderId != null) {
             try {
-                com.ozerler.marble.model.PurchaseOrder po = procurementService.getOrderById(purchaseOrderId);
+                PurchaseOrder po = procurementService.getOrderById(purchaseOrderId);
                 if (po != null) {
                     type = InvoiceType.PURCHASE;
                     if (po.getBusinessUnit() != null) {
@@ -319,27 +319,29 @@ public class InvoiceController extends AbstractController {
                 m.put("dimensions", (b.getWidthCm() != null ? b.getWidthCm() : 0) + "x" + (b.getLengthCm() != null ? b.getLengthCm() : 0) + "x" + (b.getHeightCm() != null ? b.getHeightCm() : 0) + " cm");
                 BigDecimal ton = b.getActualTonnage() != null && b.getActualTonnage().compareTo(BigDecimal.ZERO) > 0
                         ? b.getActualTonnage()
-                        : (b.getEstimatedTonnage() != null ? b.getEstimatedTonnage() : BigDecimal.ONE);
+                        : b.getEstimatedTonnage() != null ? b.getEstimatedTonnage() : BigDecimal.ONE;
                 m.put("quantity", scaleQuantity(ton));
                 m.put("unit", "ton");
                 m.put("widthCm", b.getWidthCm());
                 boolean isMarked = b.getAssignedCustomer() != null;
-                boolean isMarkedForCustomer = customerId != null && isMarked && b.getAssignedCustomer().getId().equals(customerId);
+                boolean isMarkedForCustomer = isMarked && customerId != null
+                        && customerId.equals(b.getAssignedCustomer().getId());
                 m.put("isMarked", isMarked);
                 m.put("isMarkedForCustomer", isMarkedForCustomer);
                 m.put("assignedCustomerName", b.getAssignedCustomer() != null ? b.getAssignedCustomer().getCompanyName() : null);
-                m.put("unitPrice", b.getSalePrice() != null ? b.getSalePrice() : (b.getUnitMarketValuePerTon() != null ? b.getUnitMarketValuePerTon() : BigDecimal.ZERO));
+                m.put("unitPrice", b.getSalePrice() != null ? b.getSalePrice() : b.getUnitMarketValuePerTon() != null ? b.getUnitMarketValuePerTon() : BigDecimal.ZERO);
                 result.add(m);
             }
         }
 
         // 2. Mazot Deposu (Ocak Mazot Stoğu - Madde 3 & 8)
-        if (department == null || department == BusinessUnit.QUARRY) {
-            if (stockType == null || stockType.isBlank() || "FUEL".equalsIgnoreCase(stockType) || "MAZOT".equalsIgnoreCase(stockType)) {
-                StockItem fuelTank = quarryInventoryService.getOrCreateFuelTankStockItem();
-                if (fuelTank != null && (Boolean.TRUE.equals(includeZero) || (fuelTank.getQuantity() != null && fuelTank.getQuantity().compareTo(BigDecimal.ZERO) > 0))) {
-                    if (s.isEmpty() || "mazot".contains(s) || "dizel".contains(s) || fuelTank.getItemCode().toLowerCase().contains(s)) {
-                        Map<String, Object> m = new HashMap<>();
+        if ((department == null || department == BusinessUnit.QUARRY)
+                && (stockType == null || stockType.isBlank() || "FUEL".equalsIgnoreCase(stockType) || "MAZOT".equalsIgnoreCase(stockType))) {
+            StockItem fuelTank = quarryInventoryService.getOrCreateFuelTankStockItem();
+            if (fuelTank != null
+                    && (Boolean.TRUE.equals(includeZero) || (fuelTank.getQuantity() != null && fuelTank.getQuantity().compareTo(BigDecimal.ZERO) > 0))
+                    && (s.isEmpty() || "mazot".contains(s) || "dizel".contains(s) || fuelTank.getItemCode().toLowerCase().contains(s))) {
+                Map<String, Object> m = new HashMap<>();
                         m.put("category", "MAZOT");
                         m.put("categoryLabel", "Mazot");
                         m.put("id", fuelTank.getId());
@@ -352,8 +354,6 @@ public class InvoiceController extends AbstractController {
                         m.put("unitPrice", fuelTank.getUnitPrice() != null ? fuelTank.getUnitPrice() : BigDecimal.ZERO);
                         m.put("directExpense", false);
                         result.add(m);
-                    }
-                }
             }
         }
 
@@ -370,7 +370,7 @@ public class InvoiceController extends AbstractController {
 
                     if (stockType != null && !stockType.isBlank()) {
                         boolean match = stockType.equalsIgnoreCase(catCode)
-                                || ("CONSUMABLE".equalsIgnoreCase(stockType) && (ci.getQuarryCategory() == null || ci.getQuarryCategory() == com.ozerler.marble.model.enums.QuarryCategory.SARF_MALZEME));
+                                || ("CONSUMABLE".equalsIgnoreCase(stockType) && (ci.getQuarryCategory() == null || ci.getQuarryCategory() == QuarryCategory.SARF_MALZEME));
                         if (!match) {
                             continue;
                         }
@@ -396,8 +396,8 @@ public class InvoiceController extends AbstractController {
         }
 
         // 4. Plakalar (Fabrika & Atölye)
-        if (department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP) {
-            if (stockType == null || stockType.isBlank() || "SLAB".equalsIgnoreCase(stockType)) {
+        if ((department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP)
+                && (stockType == null || stockType.isBlank() || "SLAB".equalsIgnoreCase(stockType))) {
                 List<Slab> slabs = slabRepository.findByStatus(SlabStatus.AVAILABLE).stream()
                         .filter(sl -> s.isEmpty() || sl.getSlabCode().toLowerCase().contains(s))
                         .limit(500)
@@ -416,12 +416,11 @@ public class InvoiceController extends AbstractController {
                     m.put("widthCm", sl.getWidthCm());
                     result.add(m);
                 }
-            }
         }
 
         // 5. Ebatlı Ürün Stoğu
-        if (department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP) {
-            if (stockType == null || stockType.isBlank() || "SIZED".equalsIgnoreCase(stockType)) {
+        if ((department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP)
+                && (stockType == null || stockType.isBlank() || "SIZED".equalsIgnoreCase(stockType))) {
                 List<StockItem> stockItems = stockItemRepository.findPositiveQuantityWithLocation().stream()
                         .filter(st -> {
                             if (department != null && st.getStockLocation() != null) {
@@ -446,7 +445,6 @@ public class InvoiceController extends AbstractController {
                     m.put("widthCm", st.getWidthCm());
                     result.add(m);
                 }
-            }
         }
 
         return result;

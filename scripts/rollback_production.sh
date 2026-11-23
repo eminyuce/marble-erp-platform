@@ -54,10 +54,6 @@ fi
 
 DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME:-guvenulu}"
 APP_TAG="${APP_TAG:-latest}"
-if [ -f "${STACK_DIR}/.env" ]; then
-    # shellcheck disable=SC1090
-    set -a && . "${STACK_DIR}/.env" && set +a
-fi
 
 IMAGE_REPO="${DOCKERHUB_USERNAME}/marble-erp-platform"
 ACTIVE_TAG="${IMAGE_REPO}:${APP_TAG}"
@@ -85,9 +81,6 @@ fi
 docker tag "$TARGET_IMAGE" "$ACTIVE_TAG"
 
 compose_args=(--project-directory "$STACK_DIR" -f "$COMPOSE_FILE")
-if [ -f "${STACK_DIR}/.env" ]; then
-    compose_args=(--project-directory "$STACK_DIR" --env-file "${STACK_DIR}/.env" -f "$COMPOSE_FILE")
-fi
 
 echo "[INFO] Recreating ONLY the marble-erp application container (--no-deps app)..."
 docker compose "${compose_args[@]}" up -d --no-deps app

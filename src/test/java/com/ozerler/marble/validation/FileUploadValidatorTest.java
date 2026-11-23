@@ -102,7 +102,7 @@ class FileUploadValidatorTest {
     @DisplayName("Tika detects markdown and the stored type stays text/markdown")
     void markdownDetectionUsesTika() {
         byte[] content = "# Ocak notu".getBytes();
-        assertThat(FileUploadValidator.detectMimeType("jeoloji.md", content)).isEqualTo("text/x-web-markdown");
+        assertThat(FileUploadValidator.detectMimeType("jeoloji.md", content)).isEqualTo("text/markdown");
 
         MockMultipartFile file = new MockMultipartFile("file", "jeoloji.md", "application/octet-stream", content);
         assertThat(validator.validate(file).mimeType()).isEqualTo("text/markdown");

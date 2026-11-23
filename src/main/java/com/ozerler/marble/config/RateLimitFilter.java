@@ -89,7 +89,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         String clientIp = ClientIps.from(request);
-        if ("127.0.0.1".equals(clientIp) || "::1".equals(clientIp) || "0:0:0:0:0:0:0:1".equals(clientIp)) {
+        // Loopback is exempt. The literals are the addresses the servlet container reports.
+        if ("127.0.0.1".equals(clientIp) || "::1".equals(clientIp) || "0:0:0:0:0:0:0:1".equals(clientIp)) { // NOPMD AvoidUsingHardCodedIP
             filterChain.doFilter(request, response);
             return;
         }
@@ -152,21 +153,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String method = request.getMethod();
 
         // Login endpoint'leri — en sıkı limit
-        if (path.contains("/login") || path.contains("/adminlogin")) {
-            if ("POST".equalsIgnoreCase(method)) {
-                return Tier.LOGIN;
-            }
+        if ("POST".equalsIgnoreCase(method)
+                && (path.contains("/login") || path.contains("/adminlogin"))) {
+            return Tier.LOGIN;
         }
 
         // Form gönderim endpoint'leri — orta seviye limit
-        if ("POST".equalsIgnoreCase(method)) {
-            if (path.contains("/create")
-                    || path.contains("/contact")
-                    || path.contains("/save")
-                    || path.contains("/register")
-                    || path.contains("/change-password")) {
-                return Tier.FORM;
-            }
+        if ("POST".equalsIgnoreCase(method)
+                && (path.contains("/create")
+                || path.contains("/contact")
+                || path.contains("/save")
+                || path.contains("/register")
+                || path.contains("/change-password"))) {
+            return Tier.FORM;
         }
 
         return Tier.GENERAL;

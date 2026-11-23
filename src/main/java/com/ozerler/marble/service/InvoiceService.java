@@ -274,7 +274,7 @@ public class InvoiceService {
         if (item.isRunningMeter()) {
             BigDecimal w = item.getWidthCm() != null && item.getWidthCm().compareTo(BigDecimal.ZERO) > 0
                     ? item.getWidthCm()
-                    : (st != null ? st.getWidthCm() : null);
+                    : st != null ? st.getWidthCm() : null;
             if (w != null && w.compareTo(BigDecimal.ZERO) > 0 && item.getQuantity() != null) {
                 return item.getQuantity().multiply(w).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
             }
@@ -324,10 +324,8 @@ public class InvoiceService {
                     BigDecimal currentQty = st.getQuantity() != null
                             ? st.getQuantity().setScale(2, RoundingMode.HALF_UP)
                             : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-                    if (currentQty.compareTo(totalNeeded) < 0) {
-                        if (totalNeeded.subtract(currentQty).compareTo(new BigDecimal("0.01")) <= 0) {
-                            // negligible precision difference
-                        } else {
+                    if (currentQty.compareTo(totalNeeded) < 0
+                            && totalNeeded.subtract(currentQty).compareTo(new BigDecimal("0.01")) > 0) {
                             throw new IllegalArgumentException(String.format(
                                     "Yetersiz stok. Mevcut stok: %s %s (İstenen Satış: %s, Fire: %s).",
                                     currentQty.stripTrailingZeros().toPlainString(),
@@ -335,7 +333,6 @@ public class InvoiceService {
                                     deduction.stripTrailingZeros().toPlainString(),
                                     wasteQty.stripTrailingZeros().toPlainString()
                             ));
-                        }
                     }
                 }
             }
@@ -528,7 +525,7 @@ public class InvoiceService {
 
                             BigDecimal unitCost = (st.getUnitPrice() != null && st.getUnitPrice().compareTo(BigDecimal.ZERO) > 0)
                                     ? st.getUnitPrice()
-                                    : (item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO);
+                                    : item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO;
                             BigDecimal wasteCost = wasteQty.multiply(unitCost).setScale(2, RoundingMode.HALF_UP);
                             if (wasteCost.compareTo(BigDecimal.ZERO) > 0) {
                                 CostCenter wasteCc = (project != null)
@@ -961,7 +958,7 @@ public class InvoiceService {
         // Lazy collections & associations initialization within transactional boundary
         // to prevent LazyInitializationException in Thymeleaf views (open-in-view: false)
         if (invoice.getItems() != null) {
-            invoice.getItems().size();
+            log.trace("Initialized {} invoice items", invoice.getItems().size());
             for (InvoiceItem item : invoice.getItems()) {
                 if (item.getBlock() != null) {
                     item.getBlock().getBlockCode();
@@ -975,7 +972,7 @@ public class InvoiceService {
             }
         }
         if (invoice.getCollections() != null) {
-            invoice.getCollections().size();
+            log.trace("Initialized {} invoice collections", invoice.getCollections().size());
         }
         if (invoice.getCustomer() != null) {
             invoice.getCustomer().getCompanyName();
