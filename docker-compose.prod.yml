@@ -135,7 +135,7 @@ services:
       DB_PORT: "5432"
       DB_NAME: ${DB_NAME:-marble_erp}
       DB_USERNAME: ${DB_USERNAME:-marbleuser}
-      SPRING_DATASOURCE_PASSWORD_FILE: /run/secrets/db_password
+      DB_PASSWORD_FILE: /run/secrets/db_password
       REMEMBER_ME_KEY_FILE: /run/secrets/remember_me_key
       RUSTFS_ACCESS_KEY_FILE: /run/secrets/rustfs_access_key
       RUSTFS_SECRET_KEY_FILE: /run/secrets/rustfs_secret_key

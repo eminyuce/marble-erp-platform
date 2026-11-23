@@ -25,8 +25,14 @@ for name in $names; do
         exit 1
     fi
     mode="$(stat -c %a "$file")"
-    if [ "$mode" != "600" ]; then
-        echo "Secret file $name must be mode 600." >&2
+    owner="$(stat -c %u "$file")"
+    group="$(stat -c %g "$file")"
+    if [ "$mode" != "400" ]; then
+        echo "Secret file $name must be mode 400 so only the app user can read it." >&2
+        exit 1
+    fi
+    if [ "$owner" != "${APP_UID:-1001}" ] || [ "$group" != "${APP_GID:-1001}" ]; then
+        echo "Secret file $name must be owned by ${APP_UID:-1001}:${APP_GID:-1001}." >&2
         exit 1
     fi
     if [ ! -s "$file" ]; then

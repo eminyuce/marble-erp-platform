@@ -34,12 +34,22 @@ fi
 
 mkdir -p "$SECRETS_DIR"
 chmod 700 "$SECRETS_DIR"
+# The app image runs as UID 1001. Root (the Postgres entrypoint) can still read these files.
+APP_UID="${APP_UID:-1001}"
+APP_GID="${APP_GID:-1001}"
+
+own_secret() {
+    target="$1"
+    chown "$APP_UID:$APP_GID" "$target"
+    chmod 400 "$target"
+}
 
 write_secret() {
     name="$1"
     min_length="$2"
     target="$SECRETS_DIR/$name.txt"
     if [ -f "$target" ] && [ "$REGENERATE" -eq 0 ]; then
+        own_secret "$target"
         return 0
     fi
     value="$(openssl rand -base64 48 | tr -d '\n' | cut -c1-48)"
@@ -49,7 +59,7 @@ write_secret() {
     fi
     umask 077
     printf '%s\n' "$value" > "$target"
-    chmod 600 "$target"
+    own_secret "$target"
 }
 
 write_secret db_password 24
@@ -57,7 +67,7 @@ write_secret remember_me_key 32
 write_secret rustfs_access_key 16
 write_secret rustfs_secret_key 24
 
-echo "Secret files are in $SECRETS_DIR (mode 600). Values were not printed." >&2
+echo "Secret files are in $SECRETS_DIR (owner ${APP_UID}:${APP_GID}, mode 400). Values were not printed." >&2
 if [ "$REGENERATE" -eq 1 ]; then
     echo "Regenerated files do not change an existing Postgres password until you ALTER ROLE with the same value." >&2
 fi

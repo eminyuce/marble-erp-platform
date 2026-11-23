@@ -193,7 +193,8 @@ ensure_secret() {
     sudo_cmd mkdir -p "$SECRETS_DIR"
     sudo_cmd chmod 700 "$SECRETS_DIR"
     if sudo_cmd test -s "$file"; then
-        sudo_cmd chmod 600 "$file"
+        sudo_cmd chown "${APP_UID:-1001}:${APP_GID:-1001}" "$file"
+        sudo_cmd chmod 400 "$file"
         return 0
     fi
     local value="$provided"
@@ -204,7 +205,8 @@ ensure_secret() {
         die "Missing ${file}. Run scripts/setup-secrets.sh or pass ${legacy_key}."
     fi
     printf '%s\n' "$value" | sudo_cmd tee "$file" >/dev/null
-    sudo_cmd chmod 600 "$file"
+    sudo_cmd chown "${APP_UID:-1001}:${APP_GID:-1001}" "$file"
+    sudo_cmd chmod 400 "$file"
 }
 
 read_secret() {

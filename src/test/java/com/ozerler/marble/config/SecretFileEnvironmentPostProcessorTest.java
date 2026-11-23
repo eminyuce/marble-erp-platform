@@ -3,12 +3,19 @@ package com.ozerler.marble.config;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.io.ClassPathResource;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,6 +54,26 @@ class SecretFileEnvironmentPostProcessorTest {
         assertThatThrownBy(() -> SecretFileEnvironmentPostProcessor.readSecret("DB_PASSWORD_FILE", file))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("readable");
+    }
+
+    @Test
+    @DisplayName("the prod profile resolves spring.datasource.password from DB_PASSWORD_FILE")
+    void prodProfileResolvesDatasourcePasswordFromFile() throws IOException {
+        Path file = directory.resolve("db_password.txt");
+        Files.writeString(file, "correct-horse\n", StandardCharsets.UTF_8);
+        ConfigurableEnvironment environment = new StandardEnvironment() {
+            @Override
+            public Map<String, Object> getSystemEnvironment() {
+                return Map.of("DB_PASSWORD_FILE", file.toString());
+            }
+        };
+        new SecretFileEnvironmentPostProcessor().postProcessEnvironment(environment, new SpringApplication());
+        new YamlPropertySourceLoader()
+                .load("application-prod", new ClassPathResource("application-prod.yml"))
+                .forEach(source -> environment.getPropertySources().addLast(source));
+
+        assertThat(environment.getProperty("DB_PASSWORD")).isEqualTo("correct-horse");
+        assertThat(environment.getProperty("spring.datasource.password")).isEqualTo("correct-horse");
     }
 
     @Test
