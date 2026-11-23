@@ -28,13 +28,19 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final RateLimitFilter rateLimitFilter;
     private final String sessionCookieName;
+    private final String rememberMeKey;
 
     public SecurityConfig(CustomUserDetailsService customUserDetailsService,
                           RateLimitFilter rateLimitFilter,
-                          @Value("${server.servlet.session.cookie.name:SESSION}") String sessionCookieName) {
+                          @Value("${server.servlet.session.cookie.name:SESSION}") String sessionCookieName,
+                          @Value("${app.security.remember-me-key}") String rememberMeKey) {
         this.customUserDetailsService = customUserDetailsService;
         this.rateLimitFilter = rateLimitFilter;
         this.sessionCookieName = sessionCookieName;
+        if (rememberMeKey == null || rememberMeKey.isBlank()) {
+            throw new IllegalStateException("app.security.remember-me-key is required");
+        }
+        this.rememberMeKey = rememberMeKey;
     }
 
     @Bean
@@ -62,7 +68,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers("/actuator/**", "/health/**", "/health")
+                        .ignoringRequestMatchers("/actuator/health", "/actuator/health/**", "/health/**", "/health")
                 )
                 .authorizeHttpRequests(auth -> auth
                         // Static assets & public endpoints
@@ -81,8 +87,10 @@ public class SecurityConfig {
                                 "/passport/**",
                                 "/health/**",
                                 "/health",
-                                "/actuator/**"
+                                "/actuator/health",
+                                "/actuator/health/**"
                         ).permitAll()
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
                         // System health dashboard accessible to all authenticated users
                         .requestMatchers(
                                 "/admin/dashboard/systemhealth/**",
@@ -125,7 +133,7 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .rememberMe(remember -> remember
-                        .key("ozerler-marble-erp-remember-me-key")
+                        .key(rememberMeKey)
                         .tokenValiditySeconds(86400 * 14) // 14 days
                         .userDetailsService(customUserDetailsService)
                 )

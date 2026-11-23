@@ -99,14 +99,17 @@ class SecurityConfigTest {
         mockMvc.perform(get("/health/"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.database.status").value("UP"))
+                .andExpect(jsonPath("$.dependencies").doesNotExist())
                 .andExpect(jsonPath("$.response").doesNotExist())
                 .andExpect(jsonPath("$.serviceStatus").doesNotExist());
 
         mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.diskSpace.status").value("UP"));
+                .andExpect(jsonPath("$.dependencies").doesNotExist());
+
+        mockMvc.perform(get("/actuator/metrics"))
+                .andExpect(status().is3xxRedirection());
     }
 
     @Test
