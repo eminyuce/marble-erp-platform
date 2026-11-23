@@ -18,6 +18,7 @@ public class HealthCheckController {
     public ResponseEntity<HealthResponse> getHealth() {
         HealthResponse health = systemHealthService.buildHealthResponse();
         HttpStatus httpStatus = "UP".equals(health.getStatus()) ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE;
-        return ResponseEntity.status(httpStatus).body(health);
+        HealthResponse published = HealthResponse.builder().status(health.getStatus()).build();
+        return ResponseEntity.status(httpStatus).body(published);
     }
 }

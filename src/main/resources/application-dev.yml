@@ -16,7 +16,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -63,11 +63,11 @@ rustfs:
 
 rate-limiting:
   login:
-    max-requests: 1000
+    max-requests: 30
     window-seconds: 60
   form:
-    max-requests: 2000
+    max-requests: 60
     window-seconds: 60
   general:
-    max-requests: 10000
+    max-requests: 120
     window-seconds: 60

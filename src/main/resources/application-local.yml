@@ -8,7 +8,9 @@ spring:
     password: ""
     driver-class-name: org.h2.Driver
   jpa:
+    open-in-view: false
     hibernate:
+      # H2 file profile does not run the PostgreSQL Flyway scripts.
       ddl-auto: update
     show-sql: false
     properties:

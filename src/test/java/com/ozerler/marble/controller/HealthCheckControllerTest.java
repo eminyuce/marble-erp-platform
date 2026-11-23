@@ -46,13 +46,7 @@ class HealthCheckControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.database.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.rustfs.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.quarryService.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.factoryService.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.costAccounting.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.diskSpace.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.database.error").doesNotExist())
+                .andExpect(jsonPath("$.dependencies").doesNotExist())
                 .andExpect(jsonPath("$.response").doesNotExist())
                 .andExpect(jsonPath("$.serviceStatus").doesNotExist())
                 .andExpect(jsonPath("$.port").doesNotExist())
@@ -71,10 +65,7 @@ class HealthCheckControllerTest {
         mockMvc.perform(get("/health/"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies.database.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies.database.error").value("Database connection failed"))
-                .andExpect(jsonPath("$.dependencies.quarryService.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.quarryService.error").doesNotExist());
+                .andExpect(jsonPath("$.dependencies").doesNotExist());
     }
 
     @Test
@@ -89,12 +80,7 @@ class HealthCheckControllerTest {
         mockMvc.perform(get("/health"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies.quarryService.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies.quarryService.error").value("Unable to connect to Quarry Service"))
-                .andExpect(jsonPath("$.dependencies.factoryService.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.factoryService.error").doesNotExist())
-                .andExpect(jsonPath("$.dependencies.costAccounting.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.costAccounting.error").doesNotExist());
+                .andExpect(jsonPath("$.dependencies").doesNotExist());
     }
 
     @Test
@@ -109,9 +95,7 @@ class HealthCheckControllerTest {
         mockMvc.perform(get("/health"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies.rustfs.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies.rustfs.error").value("RustFS erişilemiyor"))
-                .andExpect(jsonPath("$.dependencies.database.status").value("UP"));
+                .andExpect(jsonPath("$.dependencies").doesNotExist());
     }
 
     @Test
@@ -131,11 +115,7 @@ class HealthCheckControllerTest {
         mockMvc.perform(get("/health"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies.quarryService.error").value("Unable to connect to Quarry Service"))
-                .andExpect(jsonPath("$.dependencies.costAccounting.error").value("Connection timeout"))
-                .andExpect(jsonPath("$.dependencies.database.error").doesNotExist())
-                .andExpect(jsonPath("$.dependencies.factoryService.error").doesNotExist())
-                .andExpect(jsonPath("$.dependencies.diskSpace.error").doesNotExist());
+                .andExpect(jsonPath("$.dependencies").doesNotExist());
     }
 
     @Test
@@ -152,10 +132,7 @@ class HealthCheckControllerTest {
         var tree = objectMapper.readTree(json);
         org.assertj.core.api.Assertions.assertThat(tree.fieldNames())
                 .toIterable()
-                .containsExactly("status", "dependencies");
-        org.assertj.core.api.Assertions.assertThat(tree.get("dependencies").fieldNames())
-                .toIterable()
-                .containsExactly("database", "rustfs", "quarryService", "factoryService", "costAccounting", "diskSpace");
+                .containsExactly("status");
     }
 
     private HealthResponse allUpHealthResponse() {
