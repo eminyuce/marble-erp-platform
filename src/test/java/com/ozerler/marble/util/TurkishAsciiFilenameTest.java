@@ -16,11 +16,14 @@ class TurkishAsciiFilenameTest {
     @Test
     @DisplayName("Turkish letters are transliterated to ASCII without leftover diacritics")
     void transliteratesTurkishLetters() {
-        Assertions.assertThat(TurkishAsciiFilename.toAsciiTurkishFilename("kullanıcılar.csv")).isEqualTo("kullanicilar.csv");
-        Assertions.assertThat(TurkishAsciiFilename.toAsciiTurkishFilename("şantiye_projeleri")).isEqualTo("santiye_projeleri");
+        Assertions.assertThat(TurkishAsciiFilename.toAsciiTurkishFilename("kullanıcılar.csv"))
+                .isEqualTo("kullanicilar.csv");
+        Assertions.assertThat(TurkishAsciiFilename.toAsciiTurkishFilename("şantiye_projeleri"))
+                .isEqualTo("santiye_projeleri");
         Assertions.assertThat(TurkishAsciiFilename.toAsciiTurkishFilename("ocak_blokları")).isEqualTo("ocak_bloklari");
         Assertions.assertThat(TurkishAsciiFilename.toAsciiTurkishFilename("plaka_stoğu")).isEqualTo("plaka_stogu");
-        Assertions.assertThat(TurkishAsciiFilename.toAsciiTurkishFilename("üretim_emirleri")).isEqualTo("uretim_emirleri");
+        Assertions.assertThat(TurkishAsciiFilename.toAsciiTurkishFilename("üretim_emirleri"))
+                .isEqualTo("uretim_emirleri");
         Assertions.assertThat(TurkishAsciiFilename.toAsciiTurkishFilename("İmalat")).isEqualTo("imalat");
     }
 

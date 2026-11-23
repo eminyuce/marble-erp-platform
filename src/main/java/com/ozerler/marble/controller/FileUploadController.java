@@ -57,7 +57,11 @@ public class FileUploadController extends AbstractController {
         status.setErrorCode(Constants.NO_ERR);
 
         try {
-            log.info("Uploading file {} for entityType={} entityId={}", file.getOriginalFilename(), entityType, entityId);
+            log.info(
+                    "Uploading file {} for entityType={} entityId={}",
+                    file.getOriginalFilename(),
+                    entityType,
+                    entityId);
             FileStorageDto dto = fileStorageService.storeFileView(file, entityType, entityId);
 
             HttpHeaders responseHeaders = new HttpHeaders();
@@ -101,7 +105,8 @@ public class FileUploadController extends AbstractController {
             }
 
             HttpHeaders responseHeaders = new HttpHeaders();
-            ResponseEntity<List<FileStorageDto>> resp = new ResponseEntity<>(uploadedList, responseHeaders, HttpStatus.OK);
+            ResponseEntity<List<FileStorageDto>> resp =
+                    new ResponseEntity<>(uploadedList, responseHeaders, HttpStatus.OK);
 
             ber.setResponse(resp);
             serviceStatus.setHttpStatus(HttpStatus.OK);
@@ -114,7 +119,13 @@ public class FileUploadController extends AbstractController {
             serviceStatus.setHttpStatus(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             log.error("Multi-file upload failed", e);
-            ber = buildFatalResponse(ber, serviceStatus, status, "uploadMultipleFiles: " + e.getMessage(), Constants.ERR_FATAL);
+            ber =
+                    buildFatalResponse(
+                            ber,
+                            serviceStatus,
+                            status,
+                            "uploadMultipleFiles: " + e.getMessage(),
+                            Constants.ERR_FATAL);
         }
 
         return ber;

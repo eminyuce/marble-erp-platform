@@ -13,7 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ozerler.marble.model.ApplicationLog;
 
 @Repository
-public interface ApplicationLogRepository extends JpaRepository<ApplicationLog, Long>, JpaSpecificationExecutor<ApplicationLog> {
+public interface ApplicationLogRepository
+        extends JpaRepository<ApplicationLog, Long>, JpaSpecificationExecutor<ApplicationLog> {
 
     long countByLevel(String level);
 

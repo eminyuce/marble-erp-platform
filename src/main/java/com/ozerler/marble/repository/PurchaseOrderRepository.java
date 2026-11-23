@@ -25,7 +25,9 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     @EntityGraph(attributePaths = {"supplier", "project", "items", "costCenter"})
     Optional<PurchaseOrder> findWithDetailsById(@Param("id") Long id);
 
-    @Query("SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier WHERE LOWER(po.poNumber) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @Query(
+            "SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier WHERE LOWER(po.poNumber) LIKE LOWER(CONCAT('%', "
+                    + ":query, '%'))")
     List<PurchaseOrder> searchByPoNumber(@Param("query") String query, Pageable pageable);
 
     boolean existsBySupplierId(Long supplierId);

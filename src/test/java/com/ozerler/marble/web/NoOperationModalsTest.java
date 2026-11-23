@@ -48,7 +48,10 @@ class NoOperationModalsTest {
     @DisplayName("email preview and block photos are dedicated pages")
     void dedicatedPagesExistForFormerModals() throws Exception {
         String settings = Files.readString(TEMPLATES.resolve("admin/settings/index.html"), StandardCharsets.UTF_8);
-        String preview = Files.readString(TEMPLATES.resolve("admin/settings/template-preview.html"), StandardCharsets.UTF_8);
+        String preview =
+                Files.readString(
+                        TEMPLATES.resolve("admin/settings/template-preview.html"),
+                        StandardCharsets.UTF_8);
         String detail = Files.readString(TEMPLATES.resolve("erp/blocks/detail.html"), StandardCharsets.UTF_8);
         String photos = Files.readString(TEMPLATES.resolve("erp/blocks/photos.html"), StandardCharsets.UTF_8);
         String usersIndex = Files.readString(TEMPLATES.resolve("admin/users/index.html"), StandardCharsets.UTF_8);

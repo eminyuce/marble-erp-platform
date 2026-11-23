@@ -44,9 +44,20 @@ public class SalesController {
         model.addAttribute("statuses", SalesOrderStatus.values());
         model.addAttribute("summary", salesService.getSalesSummary());
         model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
-        model.addAttribute("grid", SalesGrid.view(
-                salesService.getSalesOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute(
+                "grid",
+                SalesGrid.view(
+                        salesService.getSalesOrdersPaged(
+                                query.pageNumber(),
+                                query.pageSize(),
+                                query.getSearch(),
+                                status,
+                                query.sortKey(),
+                                query.sortDirection()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         return "erp/sales/index";
     }
 
@@ -71,13 +82,16 @@ public class SalesController {
 
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     @PostMapping("/create")
-    public String createOrder(@RequestParam("orderNo") String orderNo,
-                              @RequestParam("customerId") Long customerId,
-                              @RequestParam(value = "deliveryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
-                              @RequestParam(value = "notes", required = false) String notes,
-                              Locale locale,
-                              Model model,
-                              RedirectAttributes redirectAttributes) {
+    public String createOrder(
+            @RequestParam("orderNo") String orderNo,
+            @RequestParam("customerId") Long customerId,
+            @RequestParam(value = "deliveryDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate deliveryDate,
+            @RequestParam(value = "notes", required = false) String notes,
+            Locale locale,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         try {
             String createdNo = salesService.createOrderNo(orderNo, customerId, deliveryDate, notes);
             redirectAttributes.addFlashAttribute("successMessage",

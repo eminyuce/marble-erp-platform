@@ -54,12 +54,36 @@ class SecurityConfigTest {
                 .build();
 
         if (userRepository.findByEmail("admin@eimece.test").isEmpty()) {
-            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                    .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_ADMIN").description("Yönetici").build()));
-            Role userRole = roleRepository.findByName("ROLE_USER")
-                    .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_USER").description("Kullanıcı").build()));
-            Role execRole = roleRepository.findByName("ROLE_EXECUTIVE")
-                    .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_EXECUTIVE").description("Üst Yönetici").build()));
+            Role adminRole =
+                    roleRepository
+                            .findByName("ROLE_ADMIN")
+                            .orElseGet(
+                                    () ->
+                                            roleRepository.save(
+                                                    Role.builder()
+                                                            .name("ROLE_ADMIN")
+                                                            .description("Yönetici")
+                                                            .build()));
+            Role userRole =
+                    roleRepository
+                            .findByName("ROLE_USER")
+                            .orElseGet(
+                                    () ->
+                                            roleRepository.save(
+                                                    Role.builder()
+                                                            .name("ROLE_USER")
+                                                            .description("Kullanıcı")
+                                                            .build()));
+            Role execRole =
+                    roleRepository
+                            .findByName("ROLE_EXECUTIVE")
+                            .orElseGet(
+                                    () ->
+                                            roleRepository.save(
+                                                    Role.builder()
+                                                            .name("ROLE_EXECUTIVE")
+                                                            .description("Üst Yönetici")
+                                                            .build()));
 
             User admin = User.builder()
                     .username("admin_eimece")
@@ -112,12 +136,16 @@ class SecurityConfigTest {
     @Test
     @DisplayName("Pre-seeded admin admin@eimece.test should authenticate successfully with password B2u5c8JB")
     void adminUserEimeceAuthentication() throws Exception {
-        mockMvc.perform(SecurityMockMvcRequestBuilders.formLogin("/account/adminlogin/")
-                        .user("username", "admin@eimece.test")
-                        .password("password", "B2u5c8JB"))
+        mockMvc.perform(
+                        SecurityMockMvcRequestBuilders.formLogin("/account/adminlogin/")
+                                .user("username", "admin@eimece.test")
+                                .password("password", "B2u5c8JB"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
                 .andExpect(MockMvcResultMatchers.redirectedUrl("/admin/dashboard"))
-                .andExpect(SecurityMockMvcResultMatchers.authenticated().withUsername("admin@eimece.test").withRoles("ADMIN", "USER", "EXECUTIVE"));
+                .andExpect(
+                        SecurityMockMvcResultMatchers.authenticated()
+                                .withUsername("admin@eimece.test")
+                                .withRoles("ADMIN", "USER", "EXECUTIVE"));
     }
 
     @Test
@@ -166,7 +194,10 @@ class SecurityConfigTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard/systemhealth/"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("admin/system-health"))
-                .andExpect(MockMvcResultMatchers.model().attributeExists("overallStatus", "uptime", "components", "rawJson"));
+                .andExpect(
+                        MockMvcResultMatchers.model()
+                                .attributeExists(
+                                        "overallStatus", "uptime", "components", "rawJson"));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard/systemhealth"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -205,26 +236,59 @@ class SecurityConfigTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("erp/reports/index"));
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/reports/export/QUARRY_BLOCKS").param("format", "csv"))
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/reports/export/QUARRY_BLOCKS")
+                                .param("format", "csv"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.header().string("Content-Type", Matchers.containsString("text/csv")))
-                .andExpect(MockMvcResultMatchers.header().string("Content-Disposition",
-                        Matchers.matchesPattern(".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}\\.csv\".*")))
-                .andExpect(MockMvcResultMatchers.header().string("Content-Disposition", Matchers.not(Matchers.containsString(":"))));
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string("Content-Type", Matchers.containsString("text/csv")))
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string(
+                                        "Content-Disposition",
+                                        Matchers.matchesPattern(
+                                                ".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}"
+                                                        + "\\.csv\".*")))
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string(
+                                        "Content-Disposition",
+                                        Matchers.not(Matchers.containsString(":"))));
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/reports/export/QUARRY_BLOCKS").param("format", "excel"))
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/reports/export/QUARRY_BLOCKS")
+                                .param("format", "excel"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.header().string("Content-Type", Matchers.containsString("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")))
-                .andExpect(MockMvcResultMatchers.header().string("Content-Disposition",
-                        Matchers.matchesPattern(".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}\\.xlsx\".*")))
-                .andExpect(MockMvcResultMatchers.header().string("Content-Disposition", Matchers.not(Matchers.containsString(":"))));
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string(
+                                        "Content-Type",
+                                        Matchers.containsString(
+                                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")))
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string(
+                                        "Content-Disposition",
+                                        Matchers.matchesPattern(
+                                                ".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}"
+                                                        + "\\.xlsx\".*")))
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string(
+                                        "Content-Disposition",
+                                        Matchers.not(Matchers.containsString(":"))));
     }
 
     @Test
     @WithMockUser(username = "admin@eimece.test", roles = {"ADMIN"})
     @DisplayName("A POST with a bad CSRF token is forbidden instead of method not allowed")
     void wrongCsrfReturnsForbidden() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.post("/projects/create").with(SecurityMockMvcRequestPostProcessors.csrf().useInvalidToken()))
+        mockMvc.perform(
+                        MockMvcRequestBuilders.post("/projects/create")
+                                .with(
+                                        SecurityMockMvcRequestPostProcessors.csrf()
+                                                .useInvalidToken()))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
@@ -243,8 +307,14 @@ class SecurityConfigTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard/systemhealth/"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("admin/system-health"))
-                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("adminTopbarSystemHealth")))
-                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("admin-topbar-health")))
-                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("/admin/dashboard/systemhealth/")));
+                .andExpect(
+                        MockMvcResultMatchers.content()
+                                .string(Matchers.containsString("adminTopbarSystemHealth")))
+                .andExpect(
+                        MockMvcResultMatchers.content()
+                                .string(Matchers.containsString("admin-topbar-health")))
+                .andExpect(
+                        MockMvcResultMatchers.content()
+                                .string(Matchers.containsString("/admin/dashboard/systemhealth/")));
     }
 }

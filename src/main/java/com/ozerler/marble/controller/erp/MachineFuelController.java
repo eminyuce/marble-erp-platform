@@ -69,9 +69,24 @@ public class MachineFuelController extends AbstractController {
         model.addAttribute("fuelEntries", machineFuelService.listViewsByPeriod(currentPeriod));
         model.addAttribute("monthlyReport", machineFuelService.getMonthlyReport(currentPeriod));
         model.addAttribute("machines", machineFuelService.quarryAndFactoryMachineViews());
-        TabulatorResponse<MachineFuelDto> fuel = machineFuelService.getFuelPaged(
-                query.pageNumber(), query.pageSize(), query.getSearch(), currentPeriod, unit, machineId, sortKey, query.sortDirection());
-        model.addAttribute("grid", FuelGrid.view(fuel, query.pageNumber(), query.pageSize(), sortKey, query.sortDirection()));
+        TabulatorResponse<MachineFuelDto> fuel =
+                machineFuelService.getFuelPaged(
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.getSearch(),
+                        currentPeriod,
+                        unit,
+                        machineId,
+                        sortKey,
+                        query.sortDirection());
+        model.addAttribute(
+                "grid",
+                FuelGrid.view(
+                        fuel,
+                        query.pageNumber(),
+                        query.pageSize(),
+                        sortKey,
+                        query.sortDirection()));
 
         FuelPeriodSummary summary = machineFuelService.periodSummary(currentPeriod);
         model.addAttribute("summaryTotalLitres", summary.totalLitres());
@@ -105,20 +120,32 @@ public class MachineFuelController extends AbstractController {
 
     @PostMapping("/create")
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
-    public String createFuelEntry(@RequestParam("machineId") Long machineId,
-                                  @RequestParam(value = "entryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
-                                  @RequestParam("litres") BigDecimal litres,
-                                  @RequestParam("pricePerLitre") BigDecimal pricePerLitre,
-                                  @RequestParam(value = "workingHoursOrKm", required = false) BigDecimal workingHoursOrKm,
-                                  @RequestParam(value = "receiptNo", required = false) String receiptNo,
-                                  @RequestParam(value = "issuedBy", required = false) String issuedBy,
-                                  @RequestParam(value = "receivedBy", required = false) String receivedBy,
-                                  @RequestParam(value = "notes", required = false) String notes,
-                                  Locale locale,
-                                  RedirectAttributes redirectAttributes) {
+    public String createFuelEntry(
+            @RequestParam("machineId") Long machineId,
+            @RequestParam(value = "entryDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate entryDate,
+            @RequestParam("litres") BigDecimal litres,
+            @RequestParam("pricePerLitre") BigDecimal pricePerLitre,
+            @RequestParam(value = "workingHoursOrKm", required = false) BigDecimal workingHoursOrKm,
+            @RequestParam(value = "receiptNo", required = false) String receiptNo,
+            @RequestParam(value = "issuedBy", required = false) String issuedBy,
+            @RequestParam(value = "receivedBy", required = false) String receivedBy,
+            @RequestParam(value = "notes", required = false) String notes,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
         try {
-            MachineFuelEntryView entry = machineFuelService.recordFuelView(
-                    machineId, entryDate, litres, pricePerLitre, workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes);
+            MachineFuelEntryView entry =
+                    machineFuelService.recordFuelView(
+                            machineId,
+                            entryDate,
+                            litres,
+                            pricePerLitre,
+                            workingHoursOrKm,
+                            receiptNo,
+                            issuedBy,
+                            receivedBy,
+                            notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Mazot dolum kaydı başarıyla oluşturuldu: " + entry.getMachine().getName() + " (" + litres + " L)");
             return "redirect:/machines/fuel";

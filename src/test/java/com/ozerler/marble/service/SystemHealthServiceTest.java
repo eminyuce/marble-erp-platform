@@ -42,7 +42,9 @@ class SystemHealthServiceTest {
         Mockito.when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.up());
         Mockito.when(objectStorageService.getBucketName()).thenReturn("erp-files");
 
-        systemHealthService = new SystemHealthService(dataSource, environment, Optional.empty(), null, objectStorageService);
+        systemHealthService =
+                new SystemHealthService(
+                        dataSource, environment, Optional.empty(), null, objectStorageService);
 
         Map<String, Object> metrics = systemHealthService.collectHealthMetrics();
 
@@ -69,7 +71,9 @@ class SystemHealthServiceTest {
         Mockito.when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.down("RustFS erişilemiyor"));
         Mockito.when(objectStorageService.getBucketName()).thenReturn("erp-files");
 
-        systemHealthService = new SystemHealthService(dataSource, environment, Optional.empty(), null, objectStorageService);
+        systemHealthService =
+                new SystemHealthService(
+                        dataSource, environment, Optional.empty(), null, objectStorageService);
 
         Map<String, Object> metrics = systemHealthService.collectHealthMetrics();
 
@@ -93,12 +97,21 @@ class SystemHealthServiceTest {
         Mockito.when(statement.execute(ArgumentMatchers.anyString())).thenReturn(true);
         Mockito.when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.up());
 
-        systemHealthService = new SystemHealthService(dataSource, environment, Optional.empty(), null, objectStorageService);
+        systemHealthService =
+                new SystemHealthService(
+                        dataSource, environment, Optional.empty(), null, objectStorageService);
 
         var health = systemHealthService.buildHealthResponse();
 
         Assertions.assertThat(health.getStatus()).isEqualTo("UP");
-        Assertions.assertThat(health.getDependencies()).containsKeys("database", "rustfs", "quarryService", "factoryService", "costAccounting", "diskSpace");
+        Assertions.assertThat(health.getDependencies())
+                .containsKeys(
+                        "database",
+                        "rustfs",
+                        "quarryService",
+                        "factoryService",
+                        "costAccounting",
+                        "diskSpace");
         Assertions.assertThat(health.getDependencies().get("database").getStatus()).isEqualTo("UP");
         Assertions.assertThat(health.getDependencies().get("database").getError()).isNull();
         Assertions.assertThat(health.getDependencies().get("rustfs").getStatus()).isEqualTo("UP");
@@ -118,7 +131,9 @@ class SystemHealthServiceTest {
         Mockito.when(statement.execute(ArgumentMatchers.anyString())).thenReturn(true);
         Mockito.when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.down("RustFS erişilemiyor"));
 
-        systemHealthService = new SystemHealthService(dataSource, environment, Optional.empty(), null, objectStorageService);
+        systemHealthService =
+                new SystemHealthService(
+                        dataSource, environment, Optional.empty(), null, objectStorageService);
 
         var health = systemHealthService.buildHealthResponse();
 
@@ -134,13 +149,16 @@ class SystemHealthServiceTest {
         Mockito.when(dataSource.getConnection()).thenThrow(new RuntimeException("Connection refused"));
         Mockito.when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.up());
 
-        systemHealthService = new SystemHealthService(dataSource, environment, Optional.empty(), null, objectStorageService);
+        systemHealthService =
+                new SystemHealthService(
+                        dataSource, environment, Optional.empty(), null, objectStorageService);
 
         var health = systemHealthService.buildHealthResponse();
 
         Assertions.assertThat(health.getStatus()).isEqualTo("DOWN");
         Assertions.assertThat(health.getDependencies().get("database").getStatus()).isEqualTo("DOWN");
-        Assertions.assertThat(health.getDependencies().get("database").getError()).isEqualTo("Database connection failed");
+        Assertions.assertThat(health.getDependencies().get("database").getError())
+                .isEqualTo("Database connection failed");
         Assertions.assertThat(health.getDependencies().get("rustfs").getStatus()).isEqualTo("UP");
         Assertions.assertThat(health.getDependencies().get("quarryService").getStatus()).isEqualTo("UP");
         Assertions.assertThat(health.getDependencies().get("quarryService").getError()).isNull();

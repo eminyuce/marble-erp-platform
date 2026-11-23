@@ -290,8 +290,13 @@ public class FactoryProductionService {
 
     @Transactional(readOnly = true)
     public FactoryOperation getOperation(Long id) {
-        return operationRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.factory.operation.not_found", id)));
+        return operationRepository
+                .findById(id)
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        MessageUtils.getMessage(
+                                                "error.factory.operation.not_found", id)));
     }
 
     @Transactional
@@ -333,8 +338,15 @@ public class FactoryProductionService {
 
     @Transactional
     public FactoryOperation startAssignedOperation(Long operationId, String operatorName) {
-        FactoryOperation operation = operationRepository.findById(operationId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.factory.operation.not_found", operationId)));
+        FactoryOperation operation =
+                operationRepository
+                        .findById(operationId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.factory.operation.not_found",
+                                                        operationId)));
         operation.setStatus(OperationStatus.IN_PROGRESS);
         operation.setStartedAt(LocalDateTime.now());
         if (operatorName != null && !operatorName.isBlank()) {
@@ -346,10 +358,22 @@ public class FactoryProductionService {
     }
 
     @Transactional
-    public FactoryOperation finishAssignedOperation(Long operationId, BigDecimal input, BigDecimal output,
-                                                    BigDecimal waste, QuantityUnit wasteUnit, ChamferStatus chamferStatus) {
-        FactoryOperation operation = operationRepository.findById(operationId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.factory.operation.not_found", operationId)));
+    public FactoryOperation finishAssignedOperation(
+            Long operationId,
+            BigDecimal input,
+            BigDecimal output,
+            BigDecimal waste,
+            QuantityUnit wasteUnit,
+            ChamferStatus chamferStatus) {
+        FactoryOperation operation =
+                operationRepository
+                        .findById(operationId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.factory.operation.not_found",
+                                                        operationId)));
         if (operation.getProcessType().usesSamePhysicalUnit()) {
             OperationYield.validateSameUnitBalance(input, output, waste);
         } else {
@@ -381,8 +405,14 @@ public class FactoryProductionService {
     public ProductionOrder updateProductionOrder(Long id, String machineName, String operatorName,
                                                  BigDecimal durationHours, BigDecimal electricityKwh,
                                                  BigDecimal bladeWearMm, String notes) {
-        ProductionOrder order = productionOrderRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.production.order.not_found", id)));
+        ProductionOrder order =
+                productionOrderRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.production.order.not_found", id)));
         if (machineName != null && !machineName.isBlank()) {
             order.setMachineName(machineName);
         }
@@ -469,8 +499,12 @@ public class FactoryProductionService {
         return FactoryProcessRouting.allowedSurfaceTypes(lastCompletedCuttingType(workOrderId));
     }
 
-    private ProductionOrder saveLegacyProductionOrder(Block block, FactoryWorkOrder workOrder, FactoryOperation operation,
-                                                      CuttingRequest request, Machine machine) {
+    private ProductionOrder saveLegacyProductionOrder(
+            Block block,
+            FactoryWorkOrder workOrder,
+            FactoryOperation operation,
+            CuttingRequest request,
+            Machine machine) {
         String orderNo;
         if (request.orderNo() != null && !request.orderNo().isBlank()) {
             orderNo = request.orderNo();
@@ -566,9 +600,45 @@ public class FactoryProductionService {
 
         List<Slab> slabs = new ArrayList<>();
         long sequence = System.nanoTime() % SEQUENCE_MODULUS;
-        sequence = addGrade(slabs, order, block, extra, QualityGrade.EXTRA, thickness, width, length, singleArea, base, sequence);
-        sequence = addGrade(slabs, order, block, countA, QualityGrade.A, thickness, width, length, singleArea, base, sequence);
-        sequence = addGrade(slabs, order, block, countB, QualityGrade.B, thickness, width, length, singleArea, base, sequence);
+        sequence =
+                addGrade(
+                        slabs,
+                        order,
+                        block,
+                        extra,
+                        QualityGrade.EXTRA,
+                        thickness,
+                        width,
+                        length,
+                        singleArea,
+                        base,
+                        sequence);
+        sequence =
+                addGrade(
+                        slabs,
+                        order,
+                        block,
+                        countA,
+                        QualityGrade.A,
+                        thickness,
+                        width,
+                        length,
+                        singleArea,
+                        base,
+                        sequence);
+        sequence =
+                addGrade(
+                        slabs,
+                        order,
+                        block,
+                        countB,
+                        QualityGrade.B,
+                        thickness,
+                        width,
+                        length,
+                        singleArea,
+                        base,
+                        sequence);
         addGrade(slabs, order, block, countC, QualityGrade.C, thickness, width, length, singleArea, base, sequence);
         if (!slabs.isEmpty()) {
             slabRepository.saveAll(slabs);
@@ -602,25 +672,29 @@ public class FactoryProductionService {
     private void createLots(List<Slab> slabs, FactoryOperation operation, Block block, ProductForm form) {
         StockLocation slabYard = location(StockLocationType.SLAB_STOCK_YARD);
         for (Slab slab : slabs) {
-            materialLotRepository.save(MaterialLot.builder()
-                    .lotCode(slab.getSlabCode())
-                    .productForm(form)
-                    .sourceFactoryOperation(operation)
-                    .sourceBlock(block)
-                    .slab(slab)
-                    .stoneType(block.getStoneType())
-                    .qualityGrade(slab.getQualityGrade())
-                    .surfaceFinish(slab.getSurfaceFinish())
-                    .thicknessCm(slab.getThicknessCm())
-                    .widthCm(slab.getWidthCm())
-                    .lengthCm(slab.getLengthCm())
-                    .quantity(1)
-                    .totalAreaM2(slab.getSurfaceAreaM2())
-                    .stockLocation(slabYard)
-                    .status(MaterialLotStatus.AVAILABLE)
-                    .unitCost(slab.getCostPerM2())
-                    .totalCost(slab.getCostPerM2().multiply(slab.getSurfaceAreaM2()).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP))
-                    .build());
+            materialLotRepository.save(
+                    MaterialLot.builder()
+                            .lotCode(slab.getSlabCode())
+                            .productForm(form)
+                            .sourceFactoryOperation(operation)
+                            .sourceBlock(block)
+                            .slab(slab)
+                            .stoneType(block.getStoneType())
+                            .qualityGrade(slab.getQualityGrade())
+                            .surfaceFinish(slab.getSurfaceFinish())
+                            .thicknessCm(slab.getThicknessCm())
+                            .widthCm(slab.getWidthCm())
+                            .lengthCm(slab.getLengthCm())
+                            .quantity(1)
+                            .totalAreaM2(slab.getSurfaceAreaM2())
+                            .stockLocation(slabYard)
+                            .status(MaterialLotStatus.AVAILABLE)
+                            .unitCost(slab.getCostPerM2())
+                            .totalCost(
+                                    slab.getCostPerM2()
+                                            .multiply(slab.getSurfaceAreaM2())
+                                            .setScale(Constants.COST_SCALE, RoundingMode.HALF_UP))
+                            .build());
         }
     }
 
@@ -641,29 +715,56 @@ public class FactoryProductionService {
         } else {
             description = request.scrapReason().getDescription();
         }
-        scrapLogRepository.save(ScrapLog.builder()
-                .scrapCode(UniqueCodes.yearly("SCRAP", SCRAP_CODE_RANGE, scrapLogRepository::existsByScrapCode))
-                .productionOrder(order)
-                .block(block)
-                .reasonCode(request.scrapReason())
-                .scrapWeightKg(request.scrapWeightKg())
-                .scrapAreaM2(BigDecimal.ZERO)
-                .costImpact(direct.multiply(Constants.SCRAP_COST_IMPACT_RATE).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP))
-                .description(description)
-                .loggedBy(request.operatorName())
-                .build());
+        scrapLogRepository.save(
+                ScrapLog.builder()
+                        .scrapCode(
+                                UniqueCodes.yearly(
+                                        "SCRAP",
+                                        SCRAP_CODE_RANGE,
+                                        scrapLogRepository::existsByScrapCode))
+                        .productionOrder(order)
+                        .block(block)
+                        .reasonCode(request.scrapReason())
+                        .scrapWeightKg(request.scrapWeightKg())
+                        .scrapAreaM2(BigDecimal.ZERO)
+                        .costImpact(
+                                direct.multiply(Constants.SCRAP_COST_IMPACT_RATE)
+                                        .setScale(Constants.COST_SCALE, RoundingMode.HALF_UP))
+                        .description(description)
+                        .loggedBy(request.operatorName())
+                        .build());
     }
 
     private void recordCuttingExpense(BigDecimal amount, FactoryOperation operation, Block block) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
-        costCenterRepository.findByCode("CC-002").ifPresent(center -> expenseService.recordExpense(
-                new ExpenseService.ExpenseDraft(center.getId(), ExpenseType.ELECTRICITY, null, BusinessUnit.FACTORY,
-                        amount, "TRY", null, LocalDate.now(), LocalDate.now(),
-                        YearMonth.now().toString(), YearMonth.now().toString(),
-                        block, null, null, null, operation.getMachine(), operation, null, operation.getProcessType().name(),
-                        operation.getProcessType().getLabel())));
+        costCenterRepository
+                .findByCode("CC-002")
+                .ifPresent(
+                        center ->
+                                expenseService.recordExpense(
+                                        new ExpenseService.ExpenseDraft(
+                                                center.getId(),
+                                                ExpenseType.ELECTRICITY,
+                                                null,
+                                                BusinessUnit.FACTORY,
+                                                amount,
+                                                "TRY",
+                                                null,
+                                                LocalDate.now(),
+                                                LocalDate.now(),
+                                                YearMonth.now().toString(),
+                                                YearMonth.now().toString(),
+                                                block,
+                                                null,
+                                                null,
+                                                null,
+                                                operation.getMachine(),
+                                                operation,
+                                                null,
+                                                operation.getProcessType().name(),
+                                                operation.getProcessType().getLabel())));
     }
 
     private BigDecimal derivedOutputArea(CuttingRequest request) {
@@ -774,7 +875,11 @@ public class FactoryProductionService {
 
     private String nextSlabCode(long sequenceHint) {
         return UniqueCodes.allocate(
-                () -> String.format("SLB-%d-%d", Year.now().getValue(), Math.abs(sequenceHint + System.nanoTime() % 1000)),
+                () ->
+                        String.format(
+                                "SLB-%d-%d",
+                                Year.now().getValue(),
+                                Math.abs(sequenceHint + System.nanoTime() % 1000)),
                 slabRepository::existsBySlabCode);
     }
 
@@ -786,8 +891,12 @@ public class FactoryProductionService {
     }
 
     private Machine machine(Long id) {
-        return machineRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.machine.not_found", id)));
+        return machineRepository
+                .findById(id)
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        MessageUtils.getMessage("error.machine.not_found", id)));
     }
 
     private StockLocation location(StockLocationType type) {
@@ -830,80 +939,97 @@ public class FactoryProductionService {
      */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> surfaceOperationRows() {
-        return surfaceOperations().stream().map(op -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", op.getId());
-            Object orderNo;
-            if (op.getWorkOrder() != null) {
-                orderNo = op.getWorkOrder().getOrderNo();
-            } else {
-                orderNo = "-";
-            }
-            map.put("orderNo", orderNo);
-            Long id;
-            if (op.getWorkOrder() != null) {
-                id = op.getWorkOrder().getId();
-            } else {
-                id = null;
-            }
-            map.put("workOrderId", id);
-            Object blockCode;
-            if (op.getWorkOrder() != null && op.getWorkOrder().getBlock() != null) {
-                blockCode = op.getWorkOrder().getBlock().getBlockCode();
-            } else {
-                blockCode = "-";
-            }
-            map.put("blockCode", blockCode);
-            Object value;
-            if (op.getProcessType() != null) {
-                value = op.getProcessType().name();
-            } else {
-                value = "";
-            }
-            map.put("processType", value);
-            Object label;
-            if (op.getProcessType() != null) {
-                label = op.getProcessType().getLabel();
-            } else {
-                label = "-";
-            }
-            map.put("processTypeLabel", label);
-            Object name;
-            if (op.getMachine() != null) {
-                name = op.getMachine().getName();
-            } else {
-                name = "-";
-            }
-            map.put("machineName", name);
-            map.put("operatorName", Objects.requireNonNullElse(op.getOperatorName(), "-"));
-            Object valueValue;
-            if (op.getFinishedAt() != null) {
-                valueValue = op.getFinishedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
-            } else {
-                valueValue = "-";
-            }
-            map.put("finishedAt", valueValue);
-            map.put("inputQuantity", op.getInputQuantity());
-            map.put("outputQuantity", op.getOutputQuantity());
-            map.put("wasteQuantity", op.getWasteQuantity());
-            Object valueValue2;
-            if (op.getInputQuantity() != null && op.getInputQuantity().compareTo(BigDecimal.ZERO) > 0 && op.getWasteQuantity() != null) {
-                valueValue2 = op.getWasteQuantity().multiply(BigDecimal.valueOf(100)).divide(op.getInputQuantity(), 1, RoundingMode.HALF_UP);
-            } else {
-                valueValue2 = BigDecimal.ZERO;
-            }
-            map.put("wastePercent", valueValue2);
-            Object labelValue;
-            if (op.getChamferStatus() != null) {
-                labelValue = op.getChamferStatus().getLabel();
-            } else {
-                labelValue = "-";
-            }
-            map.put("chamferStatus", labelValue);
-            map.put("totalCost", op.getTotalOperationCost());
-            map.put("notes", Objects.requireNonNullElse(op.getNotes(), ""));
-            return map;
-        }).toList();
+        return surfaceOperations().stream()
+                .map(
+                        op -> {
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("id", op.getId());
+                            Object orderNo;
+                            if (op.getWorkOrder() != null) {
+                                orderNo = op.getWorkOrder().getOrderNo();
+                            } else {
+                                orderNo = "-";
+                            }
+                            map.put("orderNo", orderNo);
+                            Long id;
+                            if (op.getWorkOrder() != null) {
+                                id = op.getWorkOrder().getId();
+                            } else {
+                                id = null;
+                            }
+                            map.put("workOrderId", id);
+                            Object blockCode;
+                            if (op.getWorkOrder() != null && op.getWorkOrder().getBlock() != null) {
+                                blockCode = op.getWorkOrder().getBlock().getBlockCode();
+                            } else {
+                                blockCode = "-";
+                            }
+                            map.put("blockCode", blockCode);
+                            Object value;
+                            if (op.getProcessType() != null) {
+                                value = op.getProcessType().name();
+                            } else {
+                                value = "";
+                            }
+                            map.put("processType", value);
+                            Object label;
+                            if (op.getProcessType() != null) {
+                                label = op.getProcessType().getLabel();
+                            } else {
+                                label = "-";
+                            }
+                            map.put("processTypeLabel", label);
+                            Object name;
+                            if (op.getMachine() != null) {
+                                name = op.getMachine().getName();
+                            } else {
+                                name = "-";
+                            }
+                            map.put("machineName", name);
+                            map.put(
+                                    "operatorName",
+                                    Objects.requireNonNullElse(op.getOperatorName(), "-"));
+                            Object valueValue;
+                            if (op.getFinishedAt() != null) {
+                                valueValue =
+                                        op.getFinishedAt()
+                                                .format(
+                                                        DateTimeFormatter.ofPattern(
+                                                                "dd.MM.yyyy HH:mm"));
+                            } else {
+                                valueValue = "-";
+                            }
+                            map.put("finishedAt", valueValue);
+                            map.put("inputQuantity", op.getInputQuantity());
+                            map.put("outputQuantity", op.getOutputQuantity());
+                            map.put("wasteQuantity", op.getWasteQuantity());
+                            Object valueValue2;
+                            if (op.getInputQuantity() != null
+                                    && op.getInputQuantity().compareTo(BigDecimal.ZERO) > 0
+                                    && op.getWasteQuantity() != null) {
+                                valueValue2 =
+                                        op.getWasteQuantity()
+                                                .multiply(BigDecimal.valueOf(100))
+                                                .divide(
+                                                        op.getInputQuantity(),
+                                                        1,
+                                                        RoundingMode.HALF_UP);
+                            } else {
+                                valueValue2 = BigDecimal.ZERO;
+                            }
+                            map.put("wastePercent", valueValue2);
+                            Object labelValue;
+                            if (op.getChamferStatus() != null) {
+                                labelValue = op.getChamferStatus().getLabel();
+                            } else {
+                                labelValue = "-";
+                            }
+                            map.put("chamferStatus", labelValue);
+                            map.put("totalCost", op.getTotalOperationCost());
+                            map.put("notes", Objects.requireNonNullElse(op.getNotes(), ""));
+                            return map;
+                        })
+                .toList();
     }
 
     /**

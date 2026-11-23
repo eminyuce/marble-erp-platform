@@ -177,7 +177,8 @@ public class ExpenseService {
     public CostPeriodClose closePeriod(BusinessUnit unit, String period, String notes) {
         String normalized = ExpensePeriods.normalize(period);
         if (costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(unit, normalized)) {
-            throw new IllegalArgumentException(MessageUtils.getMessage("error.expense.period.already_closed", normalized));
+            throw new IllegalArgumentException(
+                    MessageUtils.getMessage("error.expense.period.already_closed", normalized));
         }
         CostPeriodClose close = CostPeriodClose.builder()
                 .businessUnit(unit)
@@ -274,8 +275,14 @@ public class ExpenseService {
 
     @Transactional(readOnly = true)
     public ExpenseDto getExpenseDto(Long id) {
-        CostTransaction tx = costTransactionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.expense.not_found", id)));
+        CostTransaction tx =
+                costTransactionRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.expense.not_found", id)));
         boolean closed = isPeriodClosed(tx.getBusinessUnit(), tx.getExpensePeriod());
         return ExpenseDto.fromEntity(tx, closed);
     }
@@ -290,8 +297,14 @@ public class ExpenseService {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.cost.negative_amount"));
         }
 
-        CostTransaction tx = costTransactionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.expense.not_found", id)));
+        CostTransaction tx =
+                costTransactionRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.expense.not_found", id)));
 
         assertPeriodOpen(tx.getBusinessUnit(), tx.getExpensePeriod());
 
@@ -362,8 +375,14 @@ public class ExpenseService {
 
     @Transactional
     public void deleteExpense(Long id) {
-        CostTransaction tx = costTransactionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.expense.not_found", id)));
+        CostTransaction tx =
+                costTransactionRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.expense.not_found", id)));
         assertPeriodOpen(tx.getBusinessUnit(), tx.getExpensePeriod());
         costTransactionRepository.delete(tx);
     }

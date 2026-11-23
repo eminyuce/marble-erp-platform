@@ -27,7 +27,10 @@ public final class SiteProfitAndLoss {
         BigDecimal totalCost = sum(
                 installedMaterialCost, laborCost, taxCost, consumableCost, transportationCost, otherCost);
         BigDecimal revenue = zeroIfNull(realizedRevenue);
-        return new Result(totalCost, revenue, revenue.subtract(totalCost).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP));
+        return new Result(
+                totalCost,
+                revenue,
+                revenue.subtract(totalCost).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP));
     }
 
     private static BigDecimal sum(BigDecimal... amounts) {

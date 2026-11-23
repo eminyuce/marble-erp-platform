@@ -161,7 +161,8 @@ public class FileStorageMigrationService {
             filename = record.getFileName();
         }
         try (InputStream in = Files.newInputStream(source)) {
-            return FileUploadValidator.detectMimeType(filename, in.readNBytes(FileUploadValidator.MEDIA_TYPE_PREFIX_BYTES));
+            return FileUploadValidator.detectMimeType(
+                    filename, in.readNBytes(FileUploadValidator.MEDIA_TYPE_PREFIX_BYTES));
         }
     }
 

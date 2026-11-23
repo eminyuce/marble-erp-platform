@@ -65,15 +65,18 @@ public class CariTransactionController extends AbstractController {
 
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/admin/definitions/customers/{customerId}/transactions")
-    public String addTransaction(@PathVariable("customerId") Long customerId,
-                                 @RequestParam(value = "transactionDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transactionDate,
-                                 @RequestParam("transactionType") CariTransactionType transactionType,
-                                 @RequestParam(value = "documentNo", required = false) String documentNo,
-                                 @RequestParam(value = "direction", defaultValue = "DEBIT") String direction,
-                                 @RequestParam("amount") BigDecimal amount,
-                                 @RequestParam(value = "description", required = false) String description,
-                                 @RequestParam(value = "notes", required = false) String notes,
-                                 RedirectAttributes redirectAttributes) {
+    public String addTransaction(
+            @PathVariable("customerId") Long customerId,
+            @RequestParam(value = "transactionDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate transactionDate,
+            @RequestParam("transactionType") CariTransactionType transactionType,
+            @RequestParam(value = "documentNo", required = false) String documentNo,
+            @RequestParam(value = "direction", defaultValue = "DEBIT") String direction,
+            @RequestParam("amount") BigDecimal amount,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "notes", required = false) String notes,
+            RedirectAttributes redirectAttributes) {
         try {
             CariAmounts amounts = CariAmounts.of(direction, amount);
 
@@ -88,7 +91,13 @@ public class CariTransactionController extends AbstractController {
                     transactionType, documentNo, description, amounts.debit(), amounts.credit(), notes
             );
 
-            redirectAttributes.addFlashAttribute("successMessage", "Cari hareket başarıyla kaydedildi (" + transactionType.getLabel() + ": " + amount + " TL)");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Cari hareket başarıyla kaydedildi ("
+                            + transactionType.getLabel()
+                            + ": "
+                            + amount
+                            + " TL)");
         } catch (Exception e) {
             log.error("Cari hareket eklenemedi", e);
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
@@ -98,16 +107,19 @@ public class CariTransactionController extends AbstractController {
 
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/admin/definitions/customers/{customerId}/transactions/{transactionId}/edit")
-    public String editTransaction(@PathVariable("customerId") Long customerId,
-                                  @PathVariable("transactionId") Long transactionId,
-                                  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam(required = false, name = "transactionDate") LocalDate transactionDate,
-                                  @RequestParam(name = "transactionType") CariTransactionType transactionType,
-                                  @RequestParam(required = false, name = "documentNo") String documentNo,
-                                  @RequestParam(name = "direction", defaultValue = "DEBIT") String direction,
-                                  @RequestParam(name = "amount") BigDecimal amount,
-                                  @RequestParam(required = false, name = "description") String description,
-                                  @RequestParam(required = false, name = "notes") String notes,
-                                  RedirectAttributes redirectAttributes) {
+    public String editTransaction(
+            @PathVariable("customerId") Long customerId,
+            @PathVariable("transactionId") Long transactionId,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    @RequestParam(required = false, name = "transactionDate")
+                    LocalDate transactionDate,
+            @RequestParam(name = "transactionType") CariTransactionType transactionType,
+            @RequestParam(required = false, name = "documentNo") String documentNo,
+            @RequestParam(name = "direction", defaultValue = "DEBIT") String direction,
+            @RequestParam(name = "amount") BigDecimal amount,
+            @RequestParam(required = false, name = "description") String description,
+            @RequestParam(required = false, name = "notes") String notes,
+            RedirectAttributes redirectAttributes) {
         try {
             CariAmounts amounts = CariAmounts.of(direction, amount);
 

@@ -167,9 +167,15 @@ class EmailServiceTest {
                 .build();
 
         Mockito.when(templateRepository.findById(2L)).thenReturn(Optional.of(template));
-        Mockito.when(templateRepository.save(ArgumentMatchers.any(EmailTemplate.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(templateRepository.save(ArgumentMatchers.any(EmailTemplate.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        EmailTemplate updated = emailService.updateTemplate(2L, "Yeni Şifreniz: {{temporaryPassword}}", "<p>Geçici şifreniz: {{temporaryPassword}}</p>", true);
+        EmailTemplate updated =
+                emailService.updateTemplate(
+                        2L,
+                        "Yeni Şifreniz: {{temporaryPassword}}",
+                        "<p>Geçici şifreniz: {{temporaryPassword}}</p>",
+                        true);
 
         Assertions.assertThat(updated.getSubject()).isEqualTo("Yeni Şifreniz: {{temporaryPassword}}");
         Assertions.assertThat(updated.getBodyHtml()).isEqualTo("<p>Geçici şifreniz: {{temporaryPassword}}</p>");

@@ -136,7 +136,8 @@ public class CostAnalysisService {
         BigDecimal tons = producedTons(current);
         BigDecimal previousTons = producedTons(previous);
         QuarryPeriodCost.QuarryPeriodCostResult result = QuarryPeriodCost.calculate(current, expense, tons);
-        QuarryPeriodCost.QuarryPeriodCostResult previousResult = QuarryPeriodCost.calculate(previous, previousExpense, previousTons);
+        QuarryPeriodCost.QuarryPeriodCostResult previousResult =
+                QuarryPeriodCost.calculate(previous, previousExpense, previousTons);
         return base(BusinessUnit.QUARRY, current, previous, expense, previousExpense,
                 tons, "ton", result.costPerTon(), previousResult.costPerTon(), result.unallocatedCarryForward())
                 .expenseByCategory(categoryTotals(BusinessUnit.QUARRY, current))
@@ -146,7 +147,8 @@ public class CostAnalysisService {
 
     private CostAnalysisDto factoryAnalysis(String current, String previous) {
         BigDecimal factoryExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, current));
-        BigDecimal previousFactoryExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, previous));
+        BigDecimal previousFactoryExpense =
+                zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, previous));
         BigDecimal incomingBlockCost = incomingFactoryBlockCost(current);
         BigDecimal previousIncoming = incomingFactoryBlockCost(previous);
         BigDecimal expense = factoryExpense.add(incomingBlockCost);
@@ -161,8 +163,18 @@ public class CostAnalysisService {
         } else {
             unitCost = null;
         }
-        return base(BusinessUnit.FACTORY, current, previous, expense, previousExpense,
-                outputM2, "m²", unitCost, null, outputM2.compareTo(BigDecimal.ZERO) == 0 && expense.compareTo(BigDecimal.ZERO) > 0)
+        return base(
+                        BusinessUnit.FACTORY,
+                        current,
+                        previous,
+                        expense,
+                        previousExpense,
+                        outputM2,
+                        "m²",
+                        unitCost,
+                        null,
+                        outputM2.compareTo(BigDecimal.ZERO) == 0
+                                && expense.compareTo(BigDecimal.ZERO) > 0)
                 .incomingBlockCost(incomingBlockCost)
                 .yields(yields)
                 .expenseByCategory(categoryTotals(BusinessUnit.FACTORY, current))
@@ -180,7 +192,8 @@ public class CostAnalysisService {
 
     private CostAnalysisDto workshopAnalysis(String current, String previous) {
         BigDecimal expense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, current));
-        BigDecimal previousExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, previous));
+        BigDecimal previousExpense =
+                zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, previous));
         BigDecimal outputM2 = zero(workshopOperationRepository.sumOutputAreaM2ByStatus(OperationStatus.COMPLETED));
         BigDecimal unitCost;
         if (outputM2.compareTo(BigDecimal.ZERO) > 0) {
@@ -188,8 +201,18 @@ public class CostAnalysisService {
         } else {
             unitCost = null;
         }
-        return base(BusinessUnit.WORKSHOP, current, previous, expense, previousExpense,
-                outputM2, "m²", unitCost, null, outputM2.compareTo(BigDecimal.ZERO) == 0 && expense.compareTo(BigDecimal.ZERO) > 0)
+        return base(
+                        BusinessUnit.WORKSHOP,
+                        current,
+                        previous,
+                        expense,
+                        previousExpense,
+                        outputM2,
+                        "m²",
+                        unitCost,
+                        null,
+                        outputM2.compareTo(BigDecimal.ZERO) == 0
+                                && expense.compareTo(BigDecimal.ZERO) > 0)
                 .expenseByCategory(categoryTotals(BusinessUnit.WORKSHOP, current))
                 .lines(lines(BusinessUnit.WORKSHOP, current))
                 .build();

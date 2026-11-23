@@ -71,14 +71,20 @@ public class QuarryOperationService {
             code = UniqueCodes.yearly("BLK", blockRepository::existsByBlockCode);
         }
 
-        StockLocation prodYard = stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD)
-                .orElseGet(() -> stockLocationRepository.save(StockLocation.builder()
-                        .code("OCAK-URETIM")
-                        .name("Üretim Sahası")
-                        .businessUnit(BusinessUnit.QUARRY)
-                        .locationType(StockLocationType.PRODUCTION_YARD)
-                        .active(true)
-                        .build()));
+        StockLocation prodYard =
+                stockLocationRepository
+                        .findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD)
+                        .orElseGet(
+                                () ->
+                                        stockLocationRepository.save(
+                                                StockLocation.builder()
+                                                        .code("OCAK-URETIM")
+                                                        .name("Üretim Sahası")
+                                                        .businessUnit(BusinessUnit.QUARRY)
+                                                        .locationType(
+                                                                StockLocationType.PRODUCTION_YARD)
+                                                        .active(true)
+                                                        .build()));
 
         BigDecimal est = estimatedTonnage;
         BigDecimal act = actualTonnage;
@@ -165,7 +171,12 @@ public class QuarryOperationService {
     }
 
     @Transactional
-    public Block dispatchBlock(Long blockId, TargetDestination targetDestination, Long customerId, Long invoiceId, String notes) {
+    public Block dispatchBlock(
+            Long blockId,
+            TargetDestination targetDestination,
+            Long customerId,
+            Long invoiceId,
+            String notes) {
         Block block = blockRepository.findById(blockId)
                 .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
 
@@ -251,7 +262,22 @@ public class QuarryOperationService {
                                    BigDecimal estimatedTonnage, BigDecimal actualTonnage,
                                    String stoneType, String colorTone, QualityGrade qualityGrade,
                                    int crackLevel, String quarrySection, String notes) {
-        return blockMapper.toDto(createQuarryBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm, estimatedTonnage, actualTonnage, stoneType, colorTone, qualityGrade, crackLevel, quarrySection, notes));
+        return blockMapper.toDto(
+                createQuarryBlock(
+                        quarryId,
+                        blockCode,
+                        extractionDate,
+                        widthCm,
+                        lengthCm,
+                        heightCm,
+                        estimatedTonnage,
+                        actualTonnage,
+                        stoneType,
+                        colorTone,
+                        qualityGrade,
+                        crackLevel,
+                        quarrySection,
+                        notes));
     }
 
     /**
@@ -277,7 +303,12 @@ public class QuarryOperationService {
      * @return the view
      */
     @Transactional
-    public BlockView dispatchBlockView(Long blockId, TargetDestination targetDestination, Long customerId, Long invoiceId, String notes) {
+    public BlockView dispatchBlockView(
+            Long blockId,
+            TargetDestination targetDestination,
+            Long customerId,
+            Long invoiceId,
+            String notes) {
         return blockMapper.toDto(dispatchBlock(blockId, targetDestination, customerId, invoiceId, notes));
     }
 
@@ -287,7 +318,8 @@ public class QuarryOperationService {
      * @return grid rows
      */
     @Transactional(readOnly = true)
-    public TabulatorResponse<Map<String, Object>> quarryBlockRows(String search, BlockStatus status, int page, int size) {
+    public TabulatorResponse<Map<String, Object>> quarryBlockRows(
+            String search, BlockStatus status, int page, int size) {
         int pageIndex = Math.max(0, page - 1);
         Page<Block> blockPage = searchQuarryBlocks(search, status, pageIndex, size);
 

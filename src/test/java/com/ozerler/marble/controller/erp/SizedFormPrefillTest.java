@@ -61,7 +61,10 @@ class SizedFormPrefillTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(SecurityMockMvcConfigurers.springSecurity()).build();
+        mockMvc =
+                MockMvcBuilders.webAppContextSetup(context)
+                        .apply(SecurityMockMvcConfigurers.springSecurity())
+                        .build();
         Quarry quarry = quarryRepository.save(Quarry.builder()
                 .code("Q-SIZED")
                 .name("E2E Ocak")
@@ -108,11 +111,19 @@ class SizedFormPrefillTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("workshop sized form renders the prefilled slab without a lazy session")
     void workshopSizedFormRendersPrefill() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/operations/workshop/sized/new").param("slabId", slab.getId().toString()))
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/operations/workshop/sized/new")
+                                .param("slabId", slab.getId().toString()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("SLB-SIZED")))
-                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("Burdur Bej")))
-                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("E2E Mermer")));
+                .andExpect(
+                        MockMvcResultMatchers.content()
+                                .string(Matchers.containsString("SLB-SIZED")))
+                .andExpect(
+                        MockMvcResultMatchers.content()
+                                .string(Matchers.containsString("Burdur Bej")))
+                .andExpect(
+                        MockMvcResultMatchers.content()
+                                .string(Matchers.containsString("E2E Mermer")));
     }
 
     @Test

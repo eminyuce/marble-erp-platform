@@ -48,11 +48,22 @@ class FactoryProductionServiceRoutingTest {
                 ArgumentMatchers.eq(3L), ArgumentMatchers.any(), ArgumentMatchers.eq(OperationStatus.COMPLETED)))
                 .thenReturn(Optional.of(FactoryOperation.builder().processType(FactoryProcessType.ST_CUTTING).build()));
 
-        Assertions.assertThatThrownBy(() -> service.recordSurfaceOperation(3L, FactoryProcessType.SLAB_POLISHING, null, "Op",
-                BigDecimal.TEN, BigDecimal.TEN, BigDecimal.ZERO, null, null))
+        Assertions.assertThatThrownBy(
+                        () ->
+                                service.recordSurfaceOperation(
+                                        3L,
+                                        FactoryProcessType.SLAB_POLISHING,
+                                        null,
+                                        "Op",
+                                        BigDecimal.TEN,
+                                        BigDecimal.TEN,
+                                        BigDecimal.ZERO,
+                                        null,
+                                        null))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        Mockito.when(operationRepository.save(ArgumentMatchers.any(FactoryOperation.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(operationRepository.save(ArgumentMatchers.any(FactoryOperation.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
         FactoryOperation saved = service.recordSurfaceOperation(3L, FactoryProcessType.STRIP_POLISHING, null, "Op",
                 BigDecimal.TEN, BigDecimal.TEN, BigDecimal.ZERO, null, null);
         Assertions.assertThat(saved.getProcessType()).isEqualTo(FactoryProcessType.STRIP_POLISHING);
@@ -64,17 +75,42 @@ class FactoryProductionServiceRoutingTest {
     void gangsawnRouting() {
         FactoryWorkOrder workOrder = FactoryWorkOrder.builder().id(4L).build();
         Mockito.when(workOrderRepository.findById(4L)).thenReturn(Optional.of(workOrder));
-        Mockito.when(operationRepository.findTopByWorkOrderIdAndProcessTypeInAndStatusOrderByIdDesc(
-                ArgumentMatchers.eq(4L), ArgumentMatchers.any(), ArgumentMatchers.eq(OperationStatus.COMPLETED)))
-                .thenReturn(Optional.of(FactoryOperation.builder().processType(FactoryProcessType.GANGSAW_CUTTING).build()));
+        Mockito.when(
+                        operationRepository
+                                .findTopByWorkOrderIdAndProcessTypeInAndStatusOrderByIdDesc(
+                                        ArgumentMatchers.eq(4L),
+                                        ArgumentMatchers.any(),
+                                        ArgumentMatchers.eq(OperationStatus.COMPLETED)))
+                .thenReturn(
+                        Optional.of(
+                                FactoryOperation.builder()
+                                        .processType(FactoryProcessType.GANGSAW_CUTTING)
+                                        .build()));
 
-        Assertions.assertThatThrownBy(() -> service.recordSurfaceOperation(4L, FactoryProcessType.STRIP_POLISHING, null, "Op",
-                BigDecimal.TEN, BigDecimal.TEN, BigDecimal.ZERO, null, null))
+        Assertions.assertThatThrownBy(
+                        () ->
+                                service.recordSurfaceOperation(
+                                        4L,
+                                        FactoryProcessType.STRIP_POLISHING,
+                                        null,
+                                        "Op",
+                                        BigDecimal.TEN,
+                                        BigDecimal.TEN,
+                                        BigDecimal.ZERO,
+                                        null,
+                                        null))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        Mockito.when(operationRepository.findTopByWorkOrderIdAndStatusOrderByIdDesc(4L, OperationStatus.COMPLETED))
-                .thenReturn(Optional.of(FactoryOperation.builder().processType(FactoryProcessType.GANGSAW_CUTTING).build()));
-        Mockito.when(operationRepository.save(ArgumentMatchers.any(FactoryOperation.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(
+                        operationRepository.findTopByWorkOrderIdAndStatusOrderByIdDesc(
+                                4L, OperationStatus.COMPLETED))
+                .thenReturn(
+                        Optional.of(
+                                FactoryOperation.builder()
+                                        .processType(FactoryProcessType.GANGSAW_CUTTING)
+                                        .build()));
+        Mockito.when(operationRepository.save(ArgumentMatchers.any(FactoryOperation.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
         FactoryOperation saved = service.recordSurfaceOperation(4L, FactoryProcessType.SLAB_POLISHING, null, "Op",
                 BigDecimal.TEN, BigDecimal.TEN, BigDecimal.ZERO, null, null);
         Assertions.assertThat(saved.getProcessType()).isEqualTo(FactoryProcessType.SLAB_POLISHING);
@@ -93,7 +129,8 @@ class FactoryProductionServiceRoutingTest {
                 .build();
 
         Mockito.when(operationRepository.findById(10L)).thenReturn(Optional.of(existing));
-        Mockito.when(operationRepository.save(ArgumentMatchers.any(FactoryOperation.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(operationRepository.save(ArgumentMatchers.any(FactoryOperation.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
         FactoryOperation updated = service.updateSurfaceOperation(10L, null, "New Op",
                 new BigDecimal("20.00"), new BigDecimal("18.00"), new BigDecimal("2.00"),

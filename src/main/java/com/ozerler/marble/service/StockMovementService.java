@@ -119,20 +119,32 @@ public class StockMovementService {
                 block,
                 null,
                 null,
-                "Blok Üretimi: " + block.getBlockCode() + " (" + Objects.requireNonNullElse(block.getStoneType(), "") + ")",
+                "Blok Üretimi: "
+                        + block.getBlockCode()
+                        + " ("
+                        + Objects.requireNonNullElse(block.getStoneType(), "")
+                        + ")",
                 BigDecimal.ONE,
                 "adet",
                 ton,
                 block.getAssignedCustomer(),
                 null,
                 null,
-                "Ocakta blok üretildi - Tahmini: " + block.getApproximateTonnage() + " ton, Gerçek: " + value
-        );
+                "Ocakta blok üretildi - Tahmini: "
+                        + block.getApproximateTonnage()
+                        + " ton, Gerçek: "
+                        + value);
     }
 
     @Transactional
-    public StockMovement recordBlockDispatch(Block block, StockLocation fromLoc, StockLocation toLoc,
-                                            TargetDestination targetDest, Customer customer, Invoice invoice, String notes) {
+    public StockMovement recordBlockDispatch(
+            Block block,
+            StockLocation fromLoc,
+            StockLocation toLoc,
+            TargetDestination targetDest,
+            Customer customer,
+            Invoice invoice,
+            String notes) {
         BigDecimal ton;
         if (block.getActualTonnage() != null) {
             ton = block.getActualTonnage();
@@ -312,7 +324,8 @@ public class StockMovementService {
     }
 
     @Transactional
-    public StockMovement recordWorkshopSizedProduction(StockItem item, Slab sourceSlab, StockItem sourceItem, Customer customer) {
+    public StockMovement recordWorkshopSizedProduction(
+            StockItem item, Slab sourceSlab, StockItem sourceItem, Customer customer) {
         String value;
         if (customer != null) {
             value = " (" + customer.getCompanyName() + ")";
@@ -341,7 +354,8 @@ public class StockMovementService {
     }
 
     @Transactional
-    public StockMovement recordWorkshopWaste(StockItem item, Project project, BigDecimal wasteQty, String unit, String reason) {
+    public StockMovement recordWorkshopWaste(
+            StockItem item, Project project, BigDecimal wasteQty, String unit, String reason) {
         BusinessUnit recordMovementValue;
         if (project != null) {
             recordMovementValue = BusinessUnit.SITE;
@@ -394,7 +408,13 @@ public class StockMovementService {
     }
 
     @Transactional
-    public StockMovement recordWorkOrderConsumption(OperationWorkOrder order, StockItem item, Slab slab, Block block, BigDecimal qty, String unit) {
+    public StockMovement recordWorkOrderConsumption(
+            OperationWorkOrder order,
+            StockItem item,
+            Slab slab,
+            Block block,
+            BigDecimal qty,
+            String unit) {
         BusinessUnit recordMovementValue;
         if (order.getDepartment() == BusinessUnit.WORKSHOP) {
             recordMovementValue = BusinessUnit.FACTORY;
@@ -430,15 +450,23 @@ public class StockMovementService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StockMovement> searchMovements(StockMovementType type, BusinessUnit sourceDept, BusinessUnit targetDept,
-                                              Long customerId, LocalDateTime fromDate, LocalDateTime toDate, int page, int size) {
+    public Page<StockMovement> searchMovements(
+            StockMovementType type,
+            BusinessUnit sourceDept,
+            BusinessUnit targetDept,
+            Long customerId,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            int page,
+            int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
         return searchMovements(type, sourceDept, targetDept, customerId, fromDate, toDate, pageable);
     }
 
     @Transactional(readOnly = true)
     public List<StockMovement> getRecentQuarryDispatches() {
-        return movementRepository.findRecentBySourceDepartment(BusinessUnit.QUARRY, LocalDateTime.now().minusDays(RECENT_DAYS));
+        return movementRepository.findRecentBySourceDepartment(
+                BusinessUnit.QUARRY, LocalDateTime.now().minusDays(RECENT_DAYS));
     }
 
     /**

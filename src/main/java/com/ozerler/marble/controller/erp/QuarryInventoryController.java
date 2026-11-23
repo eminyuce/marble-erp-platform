@@ -76,8 +76,11 @@ public class QuarryInventoryController extends AbstractController {
         try {
             MachineFuelEntryView entry = quarryInventoryService.dispenseFuelView(
                     machineId, litres, LocalDate.now(), workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    String.format("%s makinesine %s litre mazot verildi. Tutar (KDV hariç net): %s TL ocağın giderine yazıldı.",
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    String.format(
+                            "%s makinesine %s litre mazot verildi. Tutar (KDV hariç net): %s TL ocağın giderine "
+                                    + "yazıldı.",
                             entry.getMachine().getName(), litres, entry.getTotalAmount()));
         } catch (Exception e) {
             log.error("Mazot çıkış hatası: {}", e.getMessage(), e);
@@ -111,8 +114,11 @@ public class QuarryInventoryController extends AbstractController {
             }
             StockItemView updated = quarryInventoryService.addFuelStockView(litres, netUnitPrice, null,
                     addFuelStockView);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    String.format("%s litre mazot depoya eklendi. Güncel stok: %s litre.", litres, updated.getQuantity()));
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    String.format(
+                            "%s litre mazot depoya eklendi. Güncel stok: %s litre.",
+                            litres, updated.getQuantity()));
         } catch (Exception e) {
             log.error("Mazot dolum hatası: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

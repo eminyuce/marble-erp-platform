@@ -52,7 +52,10 @@ class FileUploadControllerTest {
                 .entityType("BLOCK")
                 .build();
 
-        Mockito.when(fileStorageService.storeFileView(Mockito.eq(file), Mockito.eq("BLOCK"), Mockito.isNull())).thenReturn(FileStorageDto.fromEntity(storage));
+        Mockito.when(
+                        fileStorageService.storeFileView(
+                                Mockito.eq(file), Mockito.eq("BLOCK"), Mockito.isNull()))
+                .thenReturn(FileStorageDto.fromEntity(storage));
 
         BackEndResponse response = fileUploadController.uploadFile(file, "BLOCK", null);
 
@@ -67,11 +70,29 @@ class FileUploadControllerTest {
         MockMultipartFile f1 = new MockMultipartFile("files", "img1.png", "image/png", "img1".getBytes());
         MockMultipartFile f2 = new MockMultipartFile("files", "doc1.pdf", "application/pdf", "pdf1".getBytes());
 
-        FileStorage s1 = FileStorage.builder().id(10L).fileName("s1.png").originalName("img1.png").mimeType("image/png").build();
-        FileStorage s2 = FileStorage.builder().id(11L).fileName("s2.pdf").originalName("doc1.pdf").mimeType("application/pdf").build();
+        FileStorage s1 =
+                FileStorage.builder()
+                        .id(10L)
+                        .fileName("s1.png")
+                        .originalName("img1.png")
+                        .mimeType("image/png")
+                        .build();
+        FileStorage s2 =
+                FileStorage.builder()
+                        .id(11L)
+                        .fileName("s2.pdf")
+                        .originalName("doc1.pdf")
+                        .mimeType("application/pdf")
+                        .build();
 
-        Mockito.when(fileStorageService.storeFileView(Mockito.eq(f1), Mockito.eq("BLOCK"), Mockito.eq(100L))).thenReturn(FileStorageDto.fromEntity(s1));
-        Mockito.when(fileStorageService.storeFileView(Mockito.eq(f2), Mockito.eq("BLOCK"), Mockito.eq(100L))).thenReturn(FileStorageDto.fromEntity(s2));
+        Mockito.when(
+                        fileStorageService.storeFileView(
+                                Mockito.eq(f1), Mockito.eq("BLOCK"), Mockito.eq(100L)))
+                .thenReturn(FileStorageDto.fromEntity(s1));
+        Mockito.when(
+                        fileStorageService.storeFileView(
+                                Mockito.eq(f2), Mockito.eq("BLOCK"), Mockito.eq(100L)))
+                .thenReturn(FileStorageDto.fromEntity(s2));
 
         BackEndResponse response = fileUploadController.uploadMultipleFiles(List.of(f1, f2), "BLOCK", 100L);
 

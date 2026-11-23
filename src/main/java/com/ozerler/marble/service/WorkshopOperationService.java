@@ -135,18 +135,27 @@ public class WorkshopOperationService {
                 unitCost = BigDecimal.ZERO;
             }
         }
-        MaterialLot lot = materialLotRepository.save(MaterialLot.builder()
-                .lotCode(UniqueCodes.yearly("WML", materialLotRepository::existsByLotCode))
-                .productForm(ProductForm.SLAB)
-                .stoneType(stoneType)
-                .quantity(quantityValue)
-                .totalAreaM2(Objects.requireNonNullElse(areaM2, BigDecimal.ZERO))
-                .chamferStatus(ChamferStatus.NOT_APPLICABLE)
-                .stockLocation(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.WORKSHOP_STOCK).orElse(null))
-                .status(MaterialLotStatus.AVAILABLE)
-                .unitCost(unitCost)
-                .totalCost(Objects.requireNonNullElse(purchaseCost, BigDecimal.ZERO))
-                .build());
+        MaterialLot lot =
+                materialLotRepository.save(
+                        MaterialLot.builder()
+                                .lotCode(
+                                        UniqueCodes.yearly(
+                                                "WML", materialLotRepository::existsByLotCode))
+                                .productForm(ProductForm.SLAB)
+                                .stoneType(stoneType)
+                                .quantity(quantityValue)
+                                .totalAreaM2(Objects.requireNonNullElse(areaM2, BigDecimal.ZERO))
+                                .chamferStatus(ChamferStatus.NOT_APPLICABLE)
+                                .stockLocation(
+                                        stockLocationRepository
+                                                .findByLocationTypeAndActiveTrue(
+                                                        StockLocationType.WORKSHOP_STOCK)
+                                                .orElse(null))
+                                .status(MaterialLotStatus.AVAILABLE)
+                                .unitCost(unitCost)
+                                .totalCost(
+                                        Objects.requireNonNullElse(purchaseCost, BigDecimal.ZERO))
+                                .build());
         LocalDate receivedAtValue;
         if (receivedAt != null) {
             receivedAtValue = receivedAt;
@@ -180,8 +189,14 @@ public class WorkshopOperationService {
                                              String operatorName, BigDecimal laborHours,
                                              BigDecimal inputAreaM2, BigDecimal outputAreaM2, BigDecimal wasteAreaM2,
                                              BigDecimal extraExpense, String notes) {
-        CutOrder order = cutOrderRepository.findById(cutOrderId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.cut_order.not_found", cutOrderId)));
+        CutOrder order =
+                cutOrderRepository
+                        .findById(cutOrderId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.cut_order.not_found", cutOrderId)));
         OperationYield.validateSameUnitBalance(inputAreaM2, outputAreaM2, wasteAreaM2);
         if (processType.requiresMachine() && machineId == null) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.workshop.machine.required"));
@@ -218,20 +233,45 @@ public class WorkshopOperationService {
             order.setMachineName(machine.getName());
         }
         if (extraExpense != null && extraExpense.compareTo(BigDecimal.ZERO) > 0) {
-            costCenterRepository.findByCode("CC-004").ifPresent(center -> expenseService.recordExpense(
-                    new ExpenseService.ExpenseDraft(center.getId(), ExpenseType.CONSUMABLES, null, BusinessUnit.WORKSHOP,
-                            extraExpense, "TRY", order.getCutOrderNo(), LocalDate.now(), LocalDate.now(),
-                            YearMonth.now().toString(), YearMonth.now().toString(),
-                            null, null, null, order.getProject(), machine, null, operation, processType.name(),
-                            processType.getLabel())));
+            costCenterRepository
+                    .findByCode("CC-004")
+                    .ifPresent(
+                            center ->
+                                    expenseService.recordExpense(
+                                            new ExpenseService.ExpenseDraft(
+                                                    center.getId(),
+                                                    ExpenseType.CONSUMABLES,
+                                                    null,
+                                                    BusinessUnit.WORKSHOP,
+                                                    extraExpense,
+                                                    "TRY",
+                                                    order.getCutOrderNo(),
+                                                    LocalDate.now(),
+                                                    LocalDate.now(),
+                                                    YearMonth.now().toString(),
+                                                    YearMonth.now().toString(),
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    order.getProject(),
+                                                    machine,
+                                                    null,
+                                                    operation,
+                                                    processType.name(),
+                                                    processType.getLabel())));
         }
         return operation;
     }
 
     @Transactional(readOnly = true)
     public BigDecimal orderCost(Long cutOrderId) {
-        cutOrderRepository.findById(cutOrderId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.cut_order.not_found", cutOrderId)));
+        cutOrderRepository
+                .findById(cutOrderId)
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        MessageUtils.getMessage(
+                                                "error.cut_order.not_found", cutOrderId)));
         BigDecimal material = cutItemRepository.findByCutOrderId(cutOrderId).stream()
                 .map(item -> {
                     if (item.getUnitCost() != null && item.getAreaM2() != null) {
@@ -248,7 +288,13 @@ public class WorkshopOperationService {
                     return BigDecimal.ZERO;
                 })
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        return WorkshopOrderCost.total(material, extra, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
+        return WorkshopOrderCost.total(
+                material,
+                extra,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO);
     }
 
     @Transactional(readOnly = true)
@@ -275,14 +321,26 @@ public class WorkshopOperationService {
 
     @Transactional
     public CutOrder assignPurposeAndMachine(Long cutOrderId, WorkshopWorkPurpose purpose, Long machineId) {
-        CutOrder order = cutOrderRepository.findById(cutOrderId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.cut_order.not_found", cutOrderId)));
+        CutOrder order =
+                cutOrderRepository
+                        .findById(cutOrderId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.cut_order.not_found", cutOrderId)));
         if (purpose != null) {
             order.setPurpose(purpose);
         }
         if (machineId != null) {
-            Machine machine = machineRepository.findById(machineId)
-                    .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.machine.not_found", machineId)));
+            Machine machine =
+                    machineRepository
+                            .findById(machineId)
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    MessageUtils.getMessage(
+                                                            "error.machine.not_found", machineId)));
             order.setMachine(machine);
             order.setMachineName(machine.getName());
         }
@@ -391,94 +449,116 @@ public class WorkshopOperationService {
         String resolvedStoneType = stoneType;
 
         BigDecimal[] producedArea = {BigDecimal.ZERO};
-        RowDimensions.eachPositiveSizedRow(widths, lengths, thicknesses, pieceCounts, quantities, new BigDecimal("2.0"),
+        RowDimensions.eachPositiveSizedRow(
+                widths,
+                lengths,
+                thicknesses,
+                pieceCounts,
+                quantities,
+                new BigDecimal("2.0"),
                 (index, width, length, thickness, count, quantity) -> {
-                producedArea[0] = producedArea[0].add(quantity);
+                    producedArea[0] = producedArea[0].add(quantity);
 
-                String desc;
-                if (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank()) {
-                    desc = descriptions.get(index).trim();
-                } else {
-                    if (defaultDescription != null && !defaultDescription.isBlank()) {
-                        desc = defaultDescription;
+                    String desc;
+                    if (descriptions != null
+                            && index < descriptions.size()
+                            && descriptions.get(index) != null
+                            && !descriptions.get(index).isBlank()) {
+                        desc = descriptions.get(index).trim();
                     } else {
-                        desc = "Atölye Ebatlı " + thickness + "x" + width + "x" + length;
+                        if (defaultDescription != null && !defaultDescription.isBlank()) {
+                            desc = defaultDescription;
+                        } else {
+                            desc = "Atölye Ebatlı " + thickness + "x" + width + "x" + length;
+                        }
                     }
-                }
 
-                String rowSurfaceStr;
-                if (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank()) {
-                    rowSurfaceStr = rowSurfaceFinishes.get(index).trim();
-                } else {
-                    rowSurfaceStr = surfaceFinishStr;
-                }
-                SurfaceFinish rowSurface = resolvedSurface;
-                if (rowSurfaceStr != null) {
-                    try {
-                        rowSurface = SurfaceFinish.valueOf(rowSurfaceStr);
-                    } catch (Exception ignored) {
-                    // not a known constant: keep the default
-                    }
-                }
-
-                String rowEdge;
-                if (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank()) {
-                    rowEdge = rowEdgeFinishes.get(index).trim();
-                } else {
-                    if (edgeFinish != null) {
-                        rowEdge = edgeFinish;
+                    String rowSurfaceStr;
+                    if (rowSurfaceFinishes != null
+                            && index < rowSurfaceFinishes.size()
+                            && rowSurfaceFinishes.get(index) != null
+                            && !rowSurfaceFinishes.get(index).isBlank()) {
+                        rowSurfaceStr = rowSurfaceFinishes.get(index).trim();
                     } else {
-                        rowEdge = "DUZ";
+                        rowSurfaceStr = surfaceFinishStr;
                     }
-                }
+                    SurfaceFinish rowSurface = resolvedSurface;
+                    if (rowSurfaceStr != null) {
+                        try {
+                            rowSurface = SurfaceFinish.valueOf(rowSurfaceStr);
+                        } catch (Exception ignored) {
+                            // not a known constant: keep the default
+                        }
+                    }
 
-                String itemCode = UniqueCodes.yearly("ATL-EBT", stockItemRepository::existsByItemCode);
-
-                String combinedNotes = notes;
-                if (resolvedSlab != null) {
-                    String slabInfo = "[Kaynak Plaka: " + resolvedSlab.getSlabCode() + "]";
-                    if (combinedNotes != null && !combinedNotes.isBlank()) {
-                        combinedNotes = combinedNotes + " " + slabInfo;
+                    String rowEdge;
+                    if (rowEdgeFinishes != null
+                            && index < rowEdgeFinishes.size()
+                            && rowEdgeFinishes.get(index) != null
+                            && !rowEdgeFinishes.get(index).isBlank()) {
+                        rowEdge = rowEdgeFinishes.get(index).trim();
                     } else {
-                        combinedNotes = slabInfo;
+                        if (edgeFinish != null) {
+                            rowEdge = edgeFinish;
+                        } else {
+                            rowEdge = "DUZ";
+                        }
                     }
-                } else if (resolvedSourceItem != null) {
-                    String srcInfo = "[Yeniden Ebatlama - Kaynak Ürün: " + resolvedSourceItem.getItemCode() + "]";
-                    if (combinedNotes != null && !combinedNotes.isBlank()) {
-                        combinedNotes = combinedNotes + " " + srcInfo;
-                    } else {
-                        combinedNotes = srcInfo;
+
+                    String itemCode =
+                            UniqueCodes.yearly("ATL-EBT", stockItemRepository::existsByItemCode);
+
+                    String combinedNotes = notes;
+                    if (resolvedSlab != null) {
+                        String slabInfo = "[Kaynak Plaka: " + resolvedSlab.getSlabCode() + "]";
+                        if (combinedNotes != null && !combinedNotes.isBlank()) {
+                            combinedNotes = combinedNotes + " " + slabInfo;
+                        } else {
+                            combinedNotes = slabInfo;
+                        }
+                    } else if (resolvedSourceItem != null) {
+                        String srcInfo =
+                                "[Yeniden Ebatlama - Kaynak Ürün: "
+                                        + resolvedSourceItem.getItemCode()
+                                        + "]";
+                        if (combinedNotes != null && !combinedNotes.isBlank()) {
+                            combinedNotes = combinedNotes + " " + srcInfo;
+                        } else {
+                            combinedNotes = srcInfo;
+                        }
                     }
-                }
 
-                StockItem item = StockItem.builder()
-                        .itemCode(itemCode)
-                        .productType(StockProductType.SIZED)
-                        .sourceBlock(resolvedBlock)
-                        .stoneType(resolvedStoneType)
-                        .description(desc)
-                        .thicknessCm(thickness)
-                        .widthCm(width)
-                        .lengthCm(length)
-                        .quantity(quantity.setScale(2, RoundingMode.HALF_UP))
-                        .unit("m2")
-                        .pieceCount(count)
-                        .actualProducedQuantity(quantity.setScale(2, RoundingMode.HALF_UP))
-                        .customer(customer)
-                        .project(project)
-                        .stockLocation(workshopLoc)
-                        .qualityGrade(resolvedGrade)
-                        .surfaceFinish(rowSurface)
-                        .edgeFinish(rowEdge)
-                        .status("AVAILABLE")
-                        .productionDate(LocalDate.now())
-                        .notes(combinedNotes)
-                        .build();
+                    StockItem item =
+                            StockItem.builder()
+                                    .itemCode(itemCode)
+                                    .productType(StockProductType.SIZED)
+                                    .sourceBlock(resolvedBlock)
+                                    .stoneType(resolvedStoneType)
+                                    .description(desc)
+                                    .thicknessCm(thickness)
+                                    .widthCm(width)
+                                    .lengthCm(length)
+                                    .quantity(quantity.setScale(2, RoundingMode.HALF_UP))
+                                    .unit("m2")
+                                    .pieceCount(count)
+                                    .actualProducedQuantity(
+                                            quantity.setScale(2, RoundingMode.HALF_UP))
+                                    .customer(customer)
+                                    .project(project)
+                                    .stockLocation(workshopLoc)
+                                    .qualityGrade(resolvedGrade)
+                                    .surfaceFinish(rowSurface)
+                                    .edgeFinish(rowEdge)
+                                    .status("AVAILABLE")
+                                    .productionDate(LocalDate.now())
+                                    .notes(combinedNotes)
+                                    .build();
 
-                StockItem saved = stockItemRepository.save(item);
-                stockMovementService.recordWorkshopSizedProduction(saved, resolvedSlab, resolvedSourceItem, customer);
-                created.add(saved);
-            });
+                    StockItem saved = stockItemRepository.save(item);
+                    stockMovementService.recordWorkshopSizedProduction(
+                            saved, resolvedSlab, resolvedSourceItem, customer);
+                    created.add(saved);
+                });
         BigDecimal totalProducedM2 = producedArea[0];
 
         // Kaynak hammadde düşümü
@@ -527,7 +607,12 @@ public class WorkshopOperationService {
             } else {
                 refItem = sourceStockItem;
             }
-            stockMovementService.recordWorkshopWaste(refItem, project, wasteQuantity, "m2", "Atölyede kesim firesi zayi olarak düşüldü");
+            stockMovementService.recordWorkshopWaste(
+                    refItem,
+                    project,
+                    wasteQuantity,
+                    "m2",
+                    "Atölyede kesim firesi zayi olarak düşüldü");
 
             if (project != null) {
                 CostCenter cc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE)
@@ -546,19 +631,24 @@ public class WorkshopOperationService {
                     } else {
                         itemCodeValue = "Hammadde";
                     }
-                    CostTransaction wasteTx = CostTransaction.builder()
-                            .costCenter(cc)
-                            .project(project)
-                            .constructionSite(project)
-                            .expenseType(ExpenseType.DIRECT_RAW)
-                            .amount(wasteCost)
-                            .businessUnit(BusinessUnit.SITE)
-                            .documentNo("ATL-FIRE-" + LocalDate.now())
-                            .invoiceDate(LocalDate.now())
-                            .entryDate(LocalDate.now())
-                            .expensePeriod(YearMonth.now().toString())
-                            .description("Atölye Kesim/Ebatlama Fire Maliyeti (" + wasteQuantity + " m²): " + itemCodeValue)
-                            .build();
+                    CostTransaction wasteTx =
+                            CostTransaction.builder()
+                                    .costCenter(cc)
+                                    .project(project)
+                                    .constructionSite(project)
+                                    .expenseType(ExpenseType.DIRECT_RAW)
+                                    .amount(wasteCost)
+                                    .businessUnit(BusinessUnit.SITE)
+                                    .documentNo("ATL-FIRE-" + LocalDate.now())
+                                    .invoiceDate(LocalDate.now())
+                                    .entryDate(LocalDate.now())
+                                    .expensePeriod(YearMonth.now().toString())
+                                    .description(
+                                            "Atölye Kesim/Ebatlama Fire Maliyeti ("
+                                                    + wasteQuantity
+                                                    + " m²): "
+                                                    + itemCodeValue)
+                                    .build();
                     costTransactionRepository.save(wasteTx);
                     BigDecimal totalCosts = costTransactionRepository.sumByProjectId(project.getId());
                     project.setActualCost(Objects.requireNonNullElse(totalCosts, BigDecimal.ZERO));
@@ -620,7 +710,30 @@ public class WorkshopOperationService {
             List<String> rowSurfaceFinishes,
             List<String> rowEdgeFinishes
     ) {
-        return produceWorkshopSizedItemsBatch(sourceType, slabId, sourceStockItemId, consumedQuantity, wasteQuantity, customerId, projectId, defaultDescription, qualityGradeStr, surfaceFinishStr, edgeFinish, notes, descriptions, thicknesses, widths, lengths, pieceCounts, quantities, rowSurfaceFinishes, rowEdgeFinishes).stream().map(stockItemMapper::toDto).toList();
+        return produceWorkshopSizedItemsBatch(
+                        sourceType,
+                        slabId,
+                        sourceStockItemId,
+                        consumedQuantity,
+                        wasteQuantity,
+                        customerId,
+                        projectId,
+                        defaultDescription,
+                        qualityGradeStr,
+                        surfaceFinishStr,
+                        edgeFinish,
+                        notes,
+                        descriptions,
+                        thicknesses,
+                        widths,
+                        lengths,
+                        pieceCounts,
+                        quantities,
+                        rowSurfaceFinishes,
+                        rowEdgeFinishes)
+                .stream()
+                .map(stockItemMapper::toDto)
+                .toList();
     }
 
     /**

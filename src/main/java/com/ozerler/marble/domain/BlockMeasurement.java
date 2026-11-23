@@ -29,7 +29,9 @@ public final class BlockMeasurement {
 
     public static BigDecimal approximateTonnage(BigDecimal volumeM3, BigDecimal specificGravityTonPerM3) {
         Objects.requireNonNull(volumeM3, MessageUtils.getMessage("error.block.volume.required"));
-        Objects.requireNonNull(specificGravityTonPerM3, MessageUtils.getMessage("error.quarry.specific_gravity.required"));
+        Objects.requireNonNull(
+                specificGravityTonPerM3,
+                MessageUtils.getMessage("error.quarry.specific_gravity.required"));
         if (volumeM3.compareTo(BigDecimal.ZERO) <= 0 || specificGravityTonPerM3.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.block.measurement.positive"));
         }

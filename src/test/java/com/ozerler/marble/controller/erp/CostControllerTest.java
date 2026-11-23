@@ -74,10 +74,22 @@ class CostControllerTest {
                 .expenseByCategory(Map.of())
                 .build();
 
-        Mockito.when(costAnalysisService.analyze(ArgumentMatchers.eq(BusinessUnit.QUARRY), ArgumentMatchers.any())).thenReturn(quarryDto);
-        Mockito.when(costAnalysisService.analyze(ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.any())).thenReturn(emptyDto);
-        Mockito.when(costAnalysisService.analyze(ArgumentMatchers.eq(BusinessUnit.WORKSHOP), ArgumentMatchers.any())).thenReturn(emptyDto);
-        Mockito.when(costAnalysisService.analyze(ArgumentMatchers.eq(BusinessUnit.SITE), ArgumentMatchers.any())).thenReturn(emptyDto);
+        Mockito.when(
+                        costAnalysisService.analyze(
+                                ArgumentMatchers.eq(BusinessUnit.QUARRY), ArgumentMatchers.any()))
+                .thenReturn(quarryDto);
+        Mockito.when(
+                        costAnalysisService.analyze(
+                                ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.any()))
+                .thenReturn(emptyDto);
+        Mockito.when(
+                        costAnalysisService.analyze(
+                                ArgumentMatchers.eq(BusinessUnit.WORKSHOP), ArgumentMatchers.any()))
+                .thenReturn(emptyDto);
+        Mockito.when(
+                        costAnalysisService.analyze(
+                                ArgumentMatchers.eq(BusinessUnit.SITE), ArgumentMatchers.any()))
+                .thenReturn(emptyDto);
 
         SiteProfitDto profitDto = SiteProfitDto.builder()
                 .projectId(1L)
@@ -117,7 +129,8 @@ class CostControllerTest {
 
         // Test safe zero/null handling on empty DTO
         Assertions.assertThat(emptyDto.calculateUnitContribution(new BigDecimal("40000.00"))).isNull();
-        Assertions.assertThat(emptyDto.calculateCategorySharePct(new BigDecimal("40000.00"))).isEqualTo(BigDecimal.ZERO);
+        Assertions.assertThat(emptyDto.calculateCategorySharePct(new BigDecimal("40000.00")))
+                .isEqualTo(BigDecimal.ZERO);
 
         // Test profit margin helper on DTO
         Assertions.assertThat(profitDto.getMarginPct()).isEqualTo(new BigDecimal("34.0"));

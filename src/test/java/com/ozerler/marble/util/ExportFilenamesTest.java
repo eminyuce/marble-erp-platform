@@ -112,6 +112,7 @@ class ExportFilenamesTest {
         LocalDateTime parsed = LocalDateTime.parse(
                 timestamp,
                 DateTimeFormatter.ofPattern(Constants.DATE_TIME_FORMAT_EXPORT_FILENAME));
-        Assertions.assertThat(parsed).isBetween(LocalDateTime.now().minusSeconds(2), LocalDateTime.now().plusSeconds(2));
+        Assertions.assertThat(parsed)
+                .isBetween(LocalDateTime.now().minusSeconds(2), LocalDateTime.now().plusSeconds(2));
     }
 }

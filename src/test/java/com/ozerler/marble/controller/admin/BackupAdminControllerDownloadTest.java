@@ -45,10 +45,17 @@ class BackupAdminControllerDownloadTest {
         String location = "https://files.example.com/erp-files/backups/backup_test.sql.gz"
                 + "?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=key%2F20261019%2Fus-east-1%2Fs3%2Faws4_request"
                 + "&X-Amz-Signature=abc";
-        Mockito.when(backupService.browserPresignedUrl(ArgumentMatchers.eq("backup_test.sql.gz"), ArgumentMatchers.eq("localhost")))
+        Mockito.when(
+                        backupService.browserPresignedUrl(
+                                ArgumentMatchers.eq("backup_test.sql.gz"),
+                                ArgumentMatchers.eq("localhost")))
                 .thenReturn(Optional.of(location));
 
-        var started = mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings/backups/download/backup_test.sql.gz")).andReturn();
+        var started =
+                mockMvc.perform(
+                                MockMvcRequestBuilders.get(
+                                        "/admin/settings/backups/download/backup_test.sql.gz"))
+                        .andReturn();
         MvcResult result;
         if (started.getRequest().isAsyncStarted()) {
             result = mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(started)).andReturn();
@@ -67,20 +74,33 @@ class BackupAdminControllerDownloadTest {
     @DisplayName("internal RustFS streams the backup through the application")
     void downloadStreamsWhenPresignedUrlIsUnavailable() throws Exception {
         byte[] payload = new byte[] {1, 2, 3, 4};
-        Mockito.when(backupService.browserPresignedUrl(ArgumentMatchers.eq("backup_test.sql.gz"), ArgumentMatchers.eq("localhost")))
+        Mockito.when(
+                        backupService.browserPresignedUrl(
+                                ArgumentMatchers.eq("backup_test.sql.gz"),
+                                ArgumentMatchers.eq("localhost")))
                 .thenReturn(Optional.empty());
         Mockito.when(backupService.openDownload("backup_test.sql.gz"))
                 .thenReturn(new DatabaseBackupService.BackupContent(
                         "backup_test.sql.gz", payload.length, "application/gzip", new ByteArrayInputStream(payload)));
-        Mockito.doAnswer(invocation -> {
-            try (InputStream input = invocation.getArgument(0)) {
-                OutputStream output = invocation.getArgument(1);
-                input.transferTo(output);
-            }
-            return null;
-        }).when(backupService).writeBackup(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.eq("backup_test.sql.gz"));
+        Mockito.doAnswer(
+                        invocation -> {
+                            try (InputStream input = invocation.getArgument(0)) {
+                                OutputStream output = invocation.getArgument(1);
+                                input.transferTo(output);
+                            }
+                            return null;
+                        })
+                .when(backupService)
+                .writeBackup(
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.eq("backup_test.sql.gz"));
 
-        var started = mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings/backups/download/backup_test.sql.gz")).andReturn();
+        var started =
+                mockMvc.perform(
+                                MockMvcRequestBuilders.get(
+                                        "/admin/settings/backups/download/backup_test.sql.gz"))
+                        .andReturn();
         MvcResult result;
         if (started.getRequest().isAsyncStarted()) {
             result = mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(started)).andReturn();
@@ -89,14 +109,18 @@ class BackupAdminControllerDownloadTest {
         }
 
         Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(200);
-        Assertions.assertThat(result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION)).contains("backup_test.sql.gz");
+        Assertions.assertThat(result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION))
+                .contains("backup_test.sql.gz");
         Assertions.assertThat(result.getResponse().getContentAsByteArray()).containsExactly(payload);
     }
 
     @Test
     @DisplayName("missing backup returns 404")
     void downloadMissingFile() throws Exception {
-        Mockito.when(backupService.browserPresignedUrl(ArgumentMatchers.eq("backup_missing.sql.gz"), ArgumentMatchers.eq("localhost")))
+        Mockito.when(
+                        backupService.browserPresignedUrl(
+                                ArgumentMatchers.eq("backup_missing.sql.gz"),
+                                ArgumentMatchers.eq("localhost")))
                 .thenThrow(new StoredFileNotFoundException("missing"));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings/backups/download/backup_missing.sql.gz"))
@@ -108,7 +132,10 @@ class BackupAdminControllerDownloadTest {
     @Test
     @DisplayName("storage outage returns 502 and does not expose the internal endpoint")
     void downloadStorageFailure() throws Exception {
-        Mockito.when(backupService.browserPresignedUrl(ArgumentMatchers.eq("backup_test.sql.gz"), ArgumentMatchers.eq("localhost")))
+        Mockito.when(
+                        backupService.browserPresignedUrl(
+                                ArgumentMatchers.eq("backup_test.sql.gz"),
+                                ArgumentMatchers.eq("localhost")))
                 .thenReturn(Optional.empty());
         Mockito.when(backupService.openDownload("backup_test.sql.gz"))
                 .thenThrow(new StorageException("Unable to download the requested file"));

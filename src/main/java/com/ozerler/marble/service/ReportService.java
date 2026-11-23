@@ -176,11 +176,25 @@ public class ReportService {
                     }
                     String theoTon = "0.00 t";
                     if (b.getTheoreticalWeightKg() != null) {
-                        theoTon = b.getTheoreticalWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString() + " t";
+                        theoTon =
+                                b.getTheoreticalWeightKg()
+                                                .divide(
+                                                        new BigDecimal("1000"),
+                                                        2,
+                                                        RoundingMode.HALF_UP)
+                                                .toString()
+                                        + " t";
                     }
                     String actualTon = "-";
                     if (b.getActualWeightKg() != null) {
-                        actualTon = b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString() + " t";
+                        actualTon =
+                                b.getActualWeightKg()
+                                                .divide(
+                                                        new BigDecimal("1000"),
+                                                        2,
+                                                        RoundingMode.HALF_UP)
+                                                .toString()
+                                        + " t";
                     }
                     String stoneType;
                     if (b.getStoneType() != null) {
@@ -243,10 +257,19 @@ public class ReportService {
                     if (b.getStatus() == BlockStatus.AT_FACTORY || b.getStatus() == BlockStatus.FACTORY_STOCK) {
                         String ton;
                         if (b.getActualWeightKg() != null) {
-                            ton = b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString();
+                            ton =
+                                    b.getActualWeightKg()
+                                            .divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP)
+                                            .toString();
                         } else {
                             if (b.getTheoreticalWeightKg() != null) {
-                                ton = b.getTheoreticalWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString();
+                                ton =
+                                        b.getTheoreticalWeightKg()
+                                                .divide(
+                                                        new BigDecimal("1000"),
+                                                        2,
+                                                        RoundingMode.HALF_UP)
+                                                .toString();
                             } else {
                                 ton = "0.00";
                             }
@@ -303,7 +326,13 @@ public class ReportService {
                     } else {
                         cust = "Genel Stok";
                     }
-                    String dims = Objects.requireNonNullElse(sl.getWidthCm(), 0) + "x" + Objects.requireNonNullElse(sl.getLengthCm(), 0) + " (" + Objects.requireNonNullElse(sl.getThicknessCm(), 2) + "cm)";
+                    String dims =
+                            Objects.requireNonNullElse(sl.getWidthCm(), 0)
+                                    + "x"
+                                    + Objects.requireNonNullElse(sl.getLengthCm(), 0)
+                                    + " ("
+                                    + Objects.requireNonNullElse(sl.getThicknessCm(), 2)
+                                    + "cm)";
                     String src;
                     if (sl.getBlock() != null) {
                         src = sl.getBlock().getBlockCode();
@@ -343,7 +372,13 @@ public class ReportService {
                     } else {
                         cust = "Genel Stok";
                     }
-                    String dims = Objects.requireNonNullElse(si.getWidthCm(), 0) + "x" + Objects.requireNonNullElse(si.getLengthCm(), 0) + " (" + Objects.requireNonNullElse(si.getThicknessCm(), 2) + "cm)";
+                    String dims =
+                            Objects.requireNonNullElse(si.getWidthCm(), 0)
+                                    + "x"
+                                    + Objects.requireNonNullElse(si.getLengthCm(), 0)
+                                    + " ("
+                                    + Objects.requireNonNullElse(si.getThicknessCm(), 2)
+                                    + "cm)";
                     String src;
                     if (si.getSourceBlock() != null) {
                         src = si.getSourceBlock().getBlockCode();
@@ -546,8 +581,12 @@ public class ReportService {
                     } else {
                         valueValue7 = "";
                     }
-                    String dims = valueValue7
-                            + Objects.requireNonNullElse(wo.getWidthCm(), 0) + "x" + Objects.requireNonNullElse(wo.getLengthCm(), 0) + " cm";
+                    String dims =
+                            valueValue7
+                                    + Objects.requireNonNullElse(wo.getWidthCm(), 0)
+                                    + "x"
+                                    + Objects.requireNonNullElse(wo.getLengthCm(), 0)
+                                    + " cm";
                     String valueValue8;
                     if (wo.getPlannedQuantity() != null) {
                         valueValue8 = wo.getPlannedQuantity().toString();
@@ -741,7 +780,9 @@ public class ReportService {
                 var centers = costAccountingService.getAllCostCenters();
                 for (var cc : centers) {
                     BigDecimal unitCost = new BigDecimal("1365.00");
-                    BigDecimal recPrice = unitCost.divide(BigDecimal.valueOf(TARGET_COST_RATIO), 2, RoundingMode.HALF_UP);
+                    BigDecimal recPrice =
+                            unitCost.divide(
+                                    BigDecimal.valueOf(TARGET_COST_RATIO), 2, RoundingMode.HALF_UP);
                     String valueValue17;
                     if (cc.getMonthlyBudget() != null) {
                         valueValue17 = cc.getMonthlyBudget().toString() + " ₺";
@@ -771,7 +812,11 @@ public class ReportService {
                 };
                 List<Slab> slabs = slabRepository.findAllWithBlock();
                 for (Slab sl : slabs) {
-                    String dims = Objects.requireNonNullElse(sl.getWidthCm(), 0) + "x" + Objects.requireNonNullElse(sl.getLengthCm(), 0) + " cm";
+                    String dims =
+                            Objects.requireNonNullElse(sl.getWidthCm(), 0)
+                                    + "x"
+                                    + Objects.requireNonNullElse(sl.getLengthCm(), 0)
+                                    + " cm";
                     String blockCodeValue;
                     if (sl.getBlock() != null) {
                         blockCodeValue = sl.getBlock().getBlockCode();

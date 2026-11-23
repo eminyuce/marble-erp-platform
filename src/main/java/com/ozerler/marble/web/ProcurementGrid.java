@@ -35,16 +35,28 @@ public final class ProcurementGrid {
         }
         String viewUrl = "/procurement/" + id;
         String invoiceUrl = "/invoices/new?type=PURCHASE&purchaseOrderId=" + id;
-        return GridRow.of(viewUrl, viewUrl, null, order.getPoNumber(), List.of(
-                GridCell.badge(order.getStatusLabel()),
-                GridCell.chip(order.getId()),
-                GridCell.link(order.getPoNumber(), viewUrl),
-                GridCell.link(GridWindow.clean(order.getSupplierName()), viewUrl, GridWindow.clean(order.getSupplierType()), null),
-                GridCell.link(GridWindow.clean(order.getProjectName()), null, GridWindow.clean(order.getBusinessUnitLabel()), null),
-                GridCell.text(GridTexts.date(order.getOrderDate())),
-                GridCell.text(GridTexts.money(order.getTotalAmount())),
-                GridCell.link("Faturalaştır", invoiceUrl)
-        ));
+        return GridRow.of(
+                viewUrl,
+                viewUrl,
+                null,
+                order.getPoNumber(),
+                List.of(
+                        GridCell.badge(order.getStatusLabel()),
+                        GridCell.chip(order.getId()),
+                        GridCell.link(order.getPoNumber(), viewUrl),
+                        GridCell.link(
+                                GridWindow.clean(order.getSupplierName()),
+                                viewUrl,
+                                GridWindow.clean(order.getSupplierType()),
+                                null),
+                        GridCell.link(
+                                GridWindow.clean(order.getProjectName()),
+                                null,
+                                GridWindow.clean(order.getBusinessUnitLabel()),
+                                null),
+                        GridCell.text(GridTexts.date(order.getOrderDate())),
+                        GridCell.text(GridTexts.money(order.getTotalAmount())),
+                        GridCell.link("Faturalaştır", invoiceUrl)));
     }
 
     private static List<GridColumn> columns() {

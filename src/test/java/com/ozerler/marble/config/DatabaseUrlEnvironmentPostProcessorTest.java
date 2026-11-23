@@ -13,7 +13,9 @@ class DatabaseUrlEnvironmentPostProcessorTest {
     @DisplayName("Normalizes Render postgres:// URI into Spring JDBC datasource properties")
     void normalizesRenderPostgresUri() {
         MockEnvironment environment = new MockEnvironment();
-        environment.setProperty("DATABASE_URL", "postgres://marbleuser:secretpass@dpg-abc1234-a.render.com:5432/marble_erp");
+        environment.setProperty(
+                "DATABASE_URL",
+                "postgres://marbleuser:secretpass@dpg-abc1234-a.render.com:5432/marble_erp");
 
         processor.postProcessEnvironment(environment, null);
 

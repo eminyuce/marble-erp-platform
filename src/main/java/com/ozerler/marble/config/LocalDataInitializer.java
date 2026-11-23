@@ -260,14 +260,50 @@ public class LocalDataInitializer implements CommandLineRunner {
 
     private void initCostCenters() {
         log.info("Seeding cost centers...");
-        List<CostCenter> costCenters = List.of(
-                CostCenter.builder().code("CC-001").name("Ocak & Çıkarma").monthlyBudget(new BigDecimal("500000.00")).description("Blok çıkarma masrafları").businessUnit(BusinessUnit.QUARRY).build(),
-                CostCenter.builder().code("CC-002").name("Fabrika Katrak & Dilimleme").monthlyBudget(new BigDecimal("450000.00")).description("Katrak lamaları, elektrik, kesim").businessUnit(BusinessUnit.FACTORY).build(),
-                CostCenter.builder().code("CC-003").name("Cila & Yüzey İşleme").monthlyBudget(new BigDecimal("350000.00")).description("Epoksi reçine, cila").businessUnit(BusinessUnit.FACTORY).build(),
-                CostCenter.builder().code("CC-004").name("Atölye & Ebatlama İmalatı").monthlyBudget(new BigDecimal("300000.00")).description("Köprü kesme diskleri, CNC").businessUnit(BusinessUnit.WORKSHOP).build(),
-                CostCenter.builder().code("CC-005").name("Şantiye & Montaj").monthlyBudget(new BigDecimal("600000.00")).description("Montaj işçilik puantajı").businessUnit(BusinessUnit.SITE).build(),
-                CostCenter.builder().code("CC-006").name("Lojistik & Nakliye").monthlyBudget(new BigDecimal("250000.00")).description("Ocak-fabrika-şantiye nakliye").businessUnit(null).build()
-        );
+        List<CostCenter> costCenters =
+                List.of(
+                        CostCenter.builder()
+                                .code("CC-001")
+                                .name("Ocak & Çıkarma")
+                                .monthlyBudget(new BigDecimal("500000.00"))
+                                .description("Blok çıkarma masrafları")
+                                .businessUnit(BusinessUnit.QUARRY)
+                                .build(),
+                        CostCenter.builder()
+                                .code("CC-002")
+                                .name("Fabrika Katrak & Dilimleme")
+                                .monthlyBudget(new BigDecimal("450000.00"))
+                                .description("Katrak lamaları, elektrik, kesim")
+                                .businessUnit(BusinessUnit.FACTORY)
+                                .build(),
+                        CostCenter.builder()
+                                .code("CC-003")
+                                .name("Cila & Yüzey İşleme")
+                                .monthlyBudget(new BigDecimal("350000.00"))
+                                .description("Epoksi reçine, cila")
+                                .businessUnit(BusinessUnit.FACTORY)
+                                .build(),
+                        CostCenter.builder()
+                                .code("CC-004")
+                                .name("Atölye & Ebatlama İmalatı")
+                                .monthlyBudget(new BigDecimal("300000.00"))
+                                .description("Köprü kesme diskleri, CNC")
+                                .businessUnit(BusinessUnit.WORKSHOP)
+                                .build(),
+                        CostCenter.builder()
+                                .code("CC-005")
+                                .name("Şantiye & Montaj")
+                                .monthlyBudget(new BigDecimal("600000.00"))
+                                .description("Montaj işçilik puantajı")
+                                .businessUnit(BusinessUnit.SITE)
+                                .build(),
+                        CostCenter.builder()
+                                .code("CC-006")
+                                .name("Lojistik & Nakliye")
+                                .monthlyBudget(new BigDecimal("250000.00"))
+                                .description("Ocak-fabrika-şantiye nakliye")
+                                .businessUnit(null)
+                                .build());
         costCenterRepository.saveAll(costCenters);
     }
 
@@ -546,7 +582,10 @@ public class LocalDataInitializer implements CommandLineRunner {
         log.info("Seeding pallets, lots, and shipments...");
         Customer c1 = customerRepository.findByCustomerCode("MST-001").orElse(null);
         Customer c2 = customerRepository.findByCustomerCode("MST-002").orElse(null);
-        StockLocation yard = stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PALLET_STOCK_YARD).orElse(null);
+        StockLocation yard =
+                stockLocationRepository
+                        .findByLocationTypeAndActiveTrue(StockLocationType.PALLET_STOCK_YARD)
+                        .orElse(null);
 
         materialLotRepository.save(MaterialLot.builder()
                 .lotCode("LOT-2026-001")
@@ -681,26 +720,120 @@ public class LocalDataInitializer implements CommandLineRunner {
 
     private void initOperationDefinitions() {
         log.info("Seeding surface and edge operation definitions...");
-        List<OperationDefinition> defs = List.of(
-                OperationDefinition.builder().category("SURFACE_OPERATION").code("HONLU").name("Honlu").displayOrder(1).active(true).build(),
-                OperationDefinition.builder().category("SURFACE_OPERATION").code("CILALI").name("Cilalı").displayOrder(2).active(true).build(),
-                OperationDefinition.builder().category("SURFACE_OPERATION").code("FIRCALI").name("Fırçalı").displayOrder(3).active(true).build(),
-                OperationDefinition.builder().category("SURFACE_OPERATION").code("KUMLAMA").name("Kumlama").displayOrder(4).active(true).build(),
-                OperationDefinition.builder().category("SURFACE_OPERATION").code("LEATHER").name("Leather / Patinato").displayOrder(5).active(true).build(),
-                OperationDefinition.builder().category("SURFACE_OPERATION").code("SURFACE_DIGER").name("Diğer").displayOrder(6).active(true).build(),
-
-                OperationDefinition.builder().category("EDGE_OPERATION").code("DUZ").name("Düz").displayOrder(1).active(true).build(),
-                OperationDefinition.builder().category("EDGE_OPERATION").code("PAH").name("Pah").displayOrder(2).active(true).build(),
-                OperationDefinition.builder().category("EDGE_OPERATION").code("PROFIL").name("Profil").displayOrder(3).active(true).build(),
-                OperationDefinition.builder().category("EDGE_OPERATION").code("YUVARLATMA").name("Yuvarlatma").displayOrder(4).active(true).build(),
-                OperationDefinition.builder().category("EDGE_OPERATION").code("EDGE_DIGER").name("Diğer").displayOrder(5).active(true).build(),
-
-                OperationDefinition.builder().category("UNIT").code("MT").name("m.t.").displayOrder(1).active(true).build(),
-                OperationDefinition.builder().category("UNIT").code("M2").name("m²").displayOrder(2).active(true).build(),
-                OperationDefinition.builder().category("UNIT").code("M3").name("m³").displayOrder(3).active(true).build(),
-                OperationDefinition.builder().category("UNIT").code("TON").name("ton").displayOrder(4).active(true).build(),
-                OperationDefinition.builder().category("UNIT").code("ADET").name("adet").displayOrder(5).active(true).build()
-        );
+        List<OperationDefinition> defs =
+                List.of(
+                        OperationDefinition.builder()
+                                .category("SURFACE_OPERATION")
+                                .code("HONLU")
+                                .name("Honlu")
+                                .displayOrder(1)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("SURFACE_OPERATION")
+                                .code("CILALI")
+                                .name("Cilalı")
+                                .displayOrder(2)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("SURFACE_OPERATION")
+                                .code("FIRCALI")
+                                .name("Fırçalı")
+                                .displayOrder(3)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("SURFACE_OPERATION")
+                                .code("KUMLAMA")
+                                .name("Kumlama")
+                                .displayOrder(4)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("SURFACE_OPERATION")
+                                .code("LEATHER")
+                                .name("Leather / Patinato")
+                                .displayOrder(5)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("SURFACE_OPERATION")
+                                .code("SURFACE_DIGER")
+                                .name("Diğer")
+                                .displayOrder(6)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("EDGE_OPERATION")
+                                .code("DUZ")
+                                .name("Düz")
+                                .displayOrder(1)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("EDGE_OPERATION")
+                                .code("PAH")
+                                .name("Pah")
+                                .displayOrder(2)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("EDGE_OPERATION")
+                                .code("PROFIL")
+                                .name("Profil")
+                                .displayOrder(3)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("EDGE_OPERATION")
+                                .code("YUVARLATMA")
+                                .name("Yuvarlatma")
+                                .displayOrder(4)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("EDGE_OPERATION")
+                                .code("EDGE_DIGER")
+                                .name("Diğer")
+                                .displayOrder(5)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("UNIT")
+                                .code("MT")
+                                .name("m.t.")
+                                .displayOrder(1)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("UNIT")
+                                .code("M2")
+                                .name("m²")
+                                .displayOrder(2)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("UNIT")
+                                .code("M3")
+                                .name("m³")
+                                .displayOrder(3)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("UNIT")
+                                .code("TON")
+                                .name("ton")
+                                .displayOrder(4)
+                                .active(true)
+                                .build(),
+                        OperationDefinition.builder()
+                                .category("UNIT")
+                                .code("ADET")
+                                .name("adet")
+                                .displayOrder(5)
+                                .active(true)
+                                .build());
         operationDefinitionRepository.saveAll(defs);
     }
 }

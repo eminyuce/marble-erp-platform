@@ -143,7 +143,10 @@ public class PalletItem extends AuditableEntity {
             return materialLot.getLotCode() + value;
         }
         if (stockItem != null) {
-            return stockItem.getItemCode() + " (" + Objects.requireNonNullElse(stockItem.getStoneType(), "Ebatlı") + ")";
+            return stockItem.getItemCode()
+                    + " ("
+                    + Objects.requireNonNullElse(stockItem.getStoneType(), "Ebatlı")
+                    + ")";
         }
         if (slab != null) {
             return slab.getSlabCode() + " (Plaka)";

@@ -60,7 +60,9 @@ class ProductionServiceTest {
     @DisplayName("getOrdersPaged maps database slab aggregates instead of loading child collections")
     void getOrdersPagedUsesDatabaseAggregates() {
         ProductionOrder order = sampleOrder(7L, "PO-2026-001");
-        Mockito.when(productionOrderRepository.searchOrders(ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class)))
+        Mockito.when(
+                        productionOrderRepository.searchOrders(
+                                ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(order)));
         Mockito.when(productionOrderRepository.aggregateSlabMetrics(List.of(7L)))
                 .thenReturn(List.of(aggregate(7L, 12L, new BigDecimal("48.5000"))));
@@ -80,29 +82,42 @@ class ProductionServiceTest {
     @Test
     @DisplayName("getOrdersPaged skips aggregate query when the page is empty")
     void getOrdersPagedEmptyPageSkipsAggregateQuery() {
-        Mockito.when(productionOrderRepository.searchOrders(ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class)))
+        Mockito.when(
+                        productionOrderRepository.searchOrders(
+                                ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         TabulatorResponse<ProductionOrderDto> response = productionService.getOrdersPaged(1, 10, null, null, null);
 
         Assertions.assertThat(response.getData()).isEmpty();
-        Mockito.verify(productionOrderRepository, Mockito.never()).aggregateSlabMetrics(ArgumentMatchers.anyCollection());
+        Mockito.verify(productionOrderRepository, Mockito.never())
+                .aggregateSlabMetrics(ArgumentMatchers.anyCollection());
     }
 
     @Test
     @DisplayName("getOrdersPaged retries with createdDate when the grid sort field is not persistable")
     void getOrdersPagedUnknownSortFieldFallsBackToCreatedDate() {
         ProductionOrder order = sampleOrder(7L, "PO-2026-001");
-        Mockito.when(productionOrderRepository.searchOrders(ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class)))
-                .thenAnswer(invocation -> {
-                    Pageable pageable = invocation.getArgument(1);
-                    boolean unknown = pageable.getSort().stream()
-                            .anyMatch(sortOrder -> "notAColumn".equals(sortOrder.getProperty()));
-                    if (unknown) {
-                        throw new InvalidDataAccessApiUsageException("No property 'notAColumn' found");
-                    }
-                    return new PageImpl<>(List.of(order));
-                });
+        Mockito.when(
+                        productionOrderRepository.searchOrders(
+                                ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Pageable pageable = invocation.getArgument(1);
+                            boolean unknown =
+                                    pageable.getSort().stream()
+                                            .anyMatch(
+                                                    sortOrder ->
+                                                            "notAColumn"
+                                                                    .equals(
+                                                                            sortOrder
+                                                                                    .getProperty()));
+                            if (unknown) {
+                                throw new InvalidDataAccessApiUsageException(
+                                        "No property 'notAColumn' found");
+                            }
+                            return new PageImpl<>(List.of(order));
+                        });
         Mockito.when(productionOrderRepository.aggregateSlabMetrics(List.of(7L)))
                 .thenReturn(List.of(aggregate(7L, 12L, new BigDecimal("48.5000"))));
 
@@ -172,7 +187,8 @@ class ProductionServiceTest {
                 .status(SlabStatus.AVAILABLE)
                 .build();
         Mockito.when(slabRepository.findById(4L)).thenReturn(Optional.of(existing));
-        Mockito.when(slabRepository.save(ArgumentMatchers.any(Slab.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(slabRepository.save(ArgumentMatchers.any(Slab.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Slab updated = productionService.updateSlab(
                 4L,

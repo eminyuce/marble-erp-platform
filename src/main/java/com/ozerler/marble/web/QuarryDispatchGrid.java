@@ -8,7 +8,8 @@ import com.ozerler.marble.dto.view.InvoiceRef;
 import com.ozerler.marble.dto.view.StockMovementView;
 
 /**
- * Ocak sevkiyat raporu. The movement query has no search or status filter. Invoice is not fetched; the service copies it only when it is already loaded.
+ * Ocak sevkiyat raporu. The movement query has no search or status filter. Invoice is not fetched;
+ * the service copies it only when it is already loaded.
  */
 public final class QuarryDispatchGrid {
 

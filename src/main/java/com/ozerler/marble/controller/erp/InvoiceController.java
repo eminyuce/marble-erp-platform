@@ -68,9 +68,23 @@ public class InvoiceController extends AbstractController {
         BigDecimal monthlyPurchase = invoiceService.getMonthlyTotal(InvoiceType.PURCHASE);
         BigDecimal monthlySales = invoiceService.getMonthlyTotal(InvoiceType.SALES);
 
-        model.addAttribute("grid", InvoiceGrid.view(
-                invoiceService.searchInvoiceRows(invoiceType, department, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute(
+                "grid",
+                InvoiceGrid.view(
+                        invoiceService.searchInvoiceRows(
+                                invoiceType,
+                                department,
+                                status,
+                                customerId,
+                                null,
+                                null,
+                                query.getSearch(),
+                                query.pageNumber() - 1,
+                                query.pageSize()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         Object valueValue;
         if (invoiceType != null) {
             valueValue = invoiceType.name();
@@ -176,34 +190,39 @@ public class InvoiceController extends AbstractController {
 
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping({"/new", "/create"})
-    public String createInvoice(@RequestParam(value = "invoiceNo", required = false) String invoiceNo,
-                                @RequestParam("invoiceDate") LocalDate invoiceDate,
-                                @RequestParam(value = "dueDate", required = false) LocalDate dueDate,
-                                @RequestParam("invoiceType") InvoiceType invoiceType,
-                                @RequestParam("department") BusinessUnit department,
-                                @RequestParam(value = "customerId", required = false) Long customerId,
-                                @RequestParam(value = "supplierId", required = false) Long supplierId,
-                                @RequestParam(value = "targetDepartment", required = false) BusinessUnit targetDepartment,
-                                @RequestParam(value = "projectId", required = false) Long projectId,
-                                @RequestParam(value = "taxRate", required = false) BigDecimal taxRate,
-                                @RequestParam(value = "directExpense", required = false, defaultValue = "false") Boolean directExpense,
-                                @RequestParam(value = "quarryCategory", required = false) QuarryCategory quarryCategory,
-                                @RequestParam(value = "status", required = false) InvoiceStatus status,
-                                @RequestParam(value = "partyName", required = false) String partyName,
-                                @RequestParam(value = "notes", required = false) String notes,
-                                @RequestParam(value = "itemProductName", required = false) List<String> productNames,
-                                @RequestParam(value = "itemDescription", required = false) List<String> descriptions,
-                                @RequestParam(value = "itemQuantity", required = false) List<BigDecimal> quantities,
-                                @RequestParam(value = "itemUnit", required = false) List<String> units,
-                                @RequestParam(value = "itemUnitPrice", required = false) List<BigDecimal> unitPrices,
-                                @RequestParam(value = "itemBlockId", required = false) List<Long> blockIds,
-                                @RequestParam(value = "itemSlabId", required = false) List<Long> slabIds,
-                                @RequestParam(value = "itemStockItemId", required = false) List<Long> stockItemIds,
-                                @RequestParam(value = "itemWidthCm", required = false) List<BigDecimal> widthCms,
-                                @RequestParam(value = "itemCalculatedM2", required = false) List<BigDecimal> calculatedM2s,
-                                @RequestParam(value = "itemWasteQuantity", required = false) List<BigDecimal> wasteQuantities,
-                                @RequestParam(value = "purchaseOrderId", required = false) Long purchaseOrderId,
-                                RedirectAttributes redirectAttributes) {
+    public String createInvoice(
+            @RequestParam(value = "invoiceNo", required = false) String invoiceNo,
+            @RequestParam("invoiceDate") LocalDate invoiceDate,
+            @RequestParam(value = "dueDate", required = false) LocalDate dueDate,
+            @RequestParam("invoiceType") InvoiceType invoiceType,
+            @RequestParam("department") BusinessUnit department,
+            @RequestParam(value = "customerId", required = false) Long customerId,
+            @RequestParam(value = "supplierId", required = false) Long supplierId,
+            @RequestParam(value = "targetDepartment", required = false)
+                    BusinessUnit targetDepartment,
+            @RequestParam(value = "projectId", required = false) Long projectId,
+            @RequestParam(value = "taxRate", required = false) BigDecimal taxRate,
+            @RequestParam(value = "directExpense", required = false, defaultValue = "false")
+                    Boolean directExpense,
+            @RequestParam(value = "quarryCategory", required = false) QuarryCategory quarryCategory,
+            @RequestParam(value = "status", required = false) InvoiceStatus status,
+            @RequestParam(value = "partyName", required = false) String partyName,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "itemProductName", required = false) List<String> productNames,
+            @RequestParam(value = "itemDescription", required = false) List<String> descriptions,
+            @RequestParam(value = "itemQuantity", required = false) List<BigDecimal> quantities,
+            @RequestParam(value = "itemUnit", required = false) List<String> units,
+            @RequestParam(value = "itemUnitPrice", required = false) List<BigDecimal> unitPrices,
+            @RequestParam(value = "itemBlockId", required = false) List<Long> blockIds,
+            @RequestParam(value = "itemSlabId", required = false) List<Long> slabIds,
+            @RequestParam(value = "itemStockItemId", required = false) List<Long> stockItemIds,
+            @RequestParam(value = "itemWidthCm", required = false) List<BigDecimal> widthCms,
+            @RequestParam(value = "itemCalculatedM2", required = false)
+                    List<BigDecimal> calculatedM2s,
+            @RequestParam(value = "itemWasteQuantity", required = false)
+                    List<BigDecimal> wasteQuantities,
+            @RequestParam(value = "purchaseOrderId", required = false) Long purchaseOrderId,
+            RedirectAttributes redirectAttributes) {
 
         try {
             List<InvoiceService.InvoiceItemForm> itemForms = new ArrayList<>();
@@ -274,7 +293,10 @@ public class InvoiceController extends AbstractController {
                         waste = BigDecimal.ZERO;
                     }
 
-                    itemForms.add(new InvoiceService.InvoiceItemForm(pName, desc, qty, unit, price, blkId, slbId, stkId, width, calcM2, waste));
+                    itemForms.add(
+                            new InvoiceService.InvoiceItemForm(
+                                    pName, desc, qty, unit, price, blkId, slbId, stkId, width,
+                                    calcM2, waste));
                 }
             }
 
@@ -305,7 +327,13 @@ public class InvoiceController extends AbstractController {
                 }
             }
 
-            redirectAttributes.addFlashAttribute("successMessage", "Fatura (" + invoice.getInvoiceNo() + ") başarıyla oluşturuldu. Toplam: " + invoice.getTotalAmount() + " TL");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Fatura ("
+                            + invoice.getInvoiceNo()
+                            + ") başarıyla oluşturuldu. Toplam: "
+                            + invoice.getTotalAmount()
+                            + " TL");
             return "redirect:/invoices/" + invoice.getId();
         } catch (Exception e) {
             log.error("Fatura oluşturulamadı", e);
@@ -330,9 +358,14 @@ public class InvoiceController extends AbstractController {
 
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/{id}/cancel")
-    public String cancelInvoice(@PathVariable("id") Long id,
-                                @RequestParam(value = "reason", required = false, defaultValue = "Kullanıcı talebiyle iptal edildi") String reason,
-                                RedirectAttributes redirectAttributes) {
+    public String cancelInvoice(
+            @PathVariable("id") Long id,
+            @RequestParam(
+                            value = "reason",
+                            required = false,
+                            defaultValue = "Kullanıcı talebiyle iptal edildi")
+                    String reason,
+            RedirectAttributes redirectAttributes) {
         try {
             InvoiceRef invoice = invoiceService.cancelInvoiceRef(id, reason);
             redirectAttributes.addFlashAttribute("successMessage",

@@ -34,7 +34,9 @@ public class AuthController {
             model.addAttribute("errorMessage", messageSource.getMessage("auth.adminlogin.error", null, locale));
         }
         if (logout != null) {
-            model.addAttribute("successMessage", messageSource.getMessage("auth.adminlogin.logout.success", null, locale));
+            model.addAttribute(
+                    "successMessage",
+                    messageSource.getMessage("auth.adminlogin.logout.success", null, locale));
         }
         addLoginMeta(model, request);
         model.addAttribute("isAdminPortal", true);

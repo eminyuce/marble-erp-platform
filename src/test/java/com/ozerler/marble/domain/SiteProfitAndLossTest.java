@@ -26,8 +26,15 @@ class SiteProfitAndLossTest {
     @Test
     @DisplayName("missing revenue yields a loss equal to total cost")
     void missingRevenueIsLoss() {
-        var result = SiteProfitAndLoss.calculate(
-                new BigDecimal("100"), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null);
+        var result =
+                SiteProfitAndLoss.calculate(
+                        new BigDecimal("100"),
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        null);
         Assertions.assertThat(result.netProfitOrLoss()).isEqualByComparingTo("-100.00");
     }
 }

@@ -61,7 +61,9 @@ public class QualityScrapAlertEmailModel implements BaseEmailModel {
                 .inspectorName("Müh. Serkan Varol")
                 .inspectionDate("07.10.2026 11:15")
                 .quarantineLocation("Kalite Kontrol Karantina Sahası K-2")
-                .actionRequired("Epoksi filesi çekilmeden veya blok sağlamlaştırılmadan nihai kesime ve sevkiyata izin verilmeyecektir.")
+                .actionRequired(
+                        "Epoksi filesi çekilmeden veya blok sağlamlaştırılmadan nihai kesime ve sevkiyata izin "
+                                + "verilmeyecektir.")
                 .companyName("Özerler Mermer A.Ş.")
                 .build();
     }

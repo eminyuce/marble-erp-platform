@@ -51,18 +51,30 @@ public final class ExpenseGrid {
         if (!amount.isBlank() && !currency.isBlank()) {
             amount = amount + " " + currency;
         }
-        return GridRow.of(viewUrl, editUrl, deleteId, expense.getDocumentNo(), List.of(
-                GridCell.chip(expense.getId()),
-                GridCell.link(GridWindow.clean(expense.getDocumentNo()), viewUrl, GridTexts.date(expense.getInvoiceDate()), null),
-                GridCell.link(GridWindow.clean(expense.getCostCenterName()), viewUrl, GridWindow.clean(expense.getCostCenterCode()), null),
-                GridCell.text(GridTexts.date(expense.getEntryDate())),
-                GridCell.text(GridWindow.clean(expense.getBusinessUnitLabel())),
-                GridCell.text(GridWindow.clean(expense.getTargetName())),
-                GridCell.text(GridWindow.clean(expense.getExpenseTypeLabel())),
-                GridCell.text(GridWindow.clean(expense.getExpensePeriod())),
-                GridCell.text(amount),
-                GridCell.text(GridWindow.clean(expense.getDescription()))
-        ));
+        return GridRow.of(
+                viewUrl,
+                editUrl,
+                deleteId,
+                expense.getDocumentNo(),
+                List.of(
+                        GridCell.chip(expense.getId()),
+                        GridCell.link(
+                                GridWindow.clean(expense.getDocumentNo()),
+                                viewUrl,
+                                GridTexts.date(expense.getInvoiceDate()),
+                                null),
+                        GridCell.link(
+                                GridWindow.clean(expense.getCostCenterName()),
+                                viewUrl,
+                                GridWindow.clean(expense.getCostCenterCode()),
+                                null),
+                        GridCell.text(GridTexts.date(expense.getEntryDate())),
+                        GridCell.text(GridWindow.clean(expense.getBusinessUnitLabel())),
+                        GridCell.text(GridWindow.clean(expense.getTargetName())),
+                        GridCell.text(GridWindow.clean(expense.getExpenseTypeLabel())),
+                        GridCell.text(GridWindow.clean(expense.getExpensePeriod())),
+                        GridCell.text(amount),
+                        GridCell.text(GridWindow.clean(expense.getDescription()))));
     }
 
     private static List<GridColumn> columns() {

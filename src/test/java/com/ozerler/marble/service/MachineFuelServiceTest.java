@@ -73,7 +73,9 @@ class MachineFuelServiceTest {
 
     @Test
     void getFuelPagedFiltersAndPaginatesCorrectly() {
-        Mockito.when(fuelEntryRepository.findByEntryDateBetweenOrderByEntryDateDesc(ArgumentMatchers.any(), ArgumentMatchers.any()))
+        Mockito.when(
+                        fuelEntryRepository.findByEntryDateBetweenOrderByEntryDateDesc(
+                                ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn(List.of(sampleEntry));
 
         TabulatorResponse<MachineFuelDto> response = machineFuelService.getFuelPaged(
@@ -92,7 +94,8 @@ class MachineFuelServiceTest {
     @Test
     void recordFuelSavesEntryAndLogsExpense() {
         Mockito.when(machineRepository.findById(1L)).thenReturn(Optional.of(quarryMachine));
-        Mockito.when(fuelEntryRepository.save(ArgumentMatchers.any(MachineFuelEntry.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(fuelEntryRepository.save(ArgumentMatchers.any(MachineFuelEntry.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
         MachineFuelEntry result = machineFuelService.recordFuel(
                 1L, LocalDate.of(2026, 9, 10), new BigDecimal("300"), new BigDecimal("42.00"),

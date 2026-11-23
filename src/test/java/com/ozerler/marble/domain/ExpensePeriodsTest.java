@@ -14,7 +14,11 @@ class ExpensePeriodsTest {
     @Test
     @DisplayName("electricity is costed to the previous month of the invoice date")
     void electricityGoesToPreviousMonth() {
-        Assertions.assertThat(ExpensePeriods.expensePeriod(ExpenseType.ELECTRICITY, LocalDate.of(2026, 9, 12), LocalDate.of(2026, 9, 12)))
+        Assertions.assertThat(
+                        ExpensePeriods.expensePeriod(
+                                ExpenseType.ELECTRICITY,
+                                LocalDate.of(2026, 9, 12),
+                                LocalDate.of(2026, 9, 12)))
                 .isEqualTo("2026-08");
         Assertions.assertThat(ExpensePeriods.postingPeriod(LocalDate.of(2026, 9, 12))).isEqualTo("2026-09");
     }

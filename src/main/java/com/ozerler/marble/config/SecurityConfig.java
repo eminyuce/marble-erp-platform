@@ -64,84 +64,105 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(Customizer.withDefaults())
+        http.cors(Customizer.withDefaults())
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .authenticationProvider(authenticationProvider())
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers("/actuator/health", "/actuator/health/**", "/health/**", "/health")
-                )
-                .authorizeHttpRequests(auth -> auth
-                        // Static assets & public endpoints
-                        .requestMatchers(
-                                "/css/**",
-                                "/js/**",
-                                "/vendor/**",
-                                "/fonts/**",
-                                "/images/**",
-                                "/favicon.ico",
-                                "/error",
-                                "/login",
-                                "/account/adminlogin/**",
-                                "/account/adminlogin",
-                                "/access-denied",
-                                "/passport/**",
-                                "/health/**",
-                                "/health",
-                                "/actuator/health",
-                                "/actuator/health/**"
-                        ).permitAll()
-                        .requestMatchers("/actuator/**").hasRole("ADMIN")
-                        // System health dashboard accessible to all authenticated users
-                        .requestMatchers(
-                                "/admin/dashboard/systemhealth/**",
-                                "/admin/dashboard/systemhealth"
-                        ).authenticated()
-                        // Customer & Supplier definitions accessible to operational roles (Cari Yönetimi)
-                        .requestMatchers(
-                                "/admin/definitions/customers/**",
-                                "/admin/definitions/customers",
-                                "/admin/definitions/suppliers/**",
-                                "/admin/definitions/suppliers",
-                                "/accounts/**",
-                                "/accounts"
-                        ).hasAnyRole("ADMIN", "EXECUTIVE", "SALES", "FINANCE", "QUARRY_CHIEF", "FACTORY_MANAGER", "WORKSHOP_CHIEF", "SITE_ENGINEER")
-                        // Admin area strictly restricted to ROLE_ADMIN & ROLE_EXECUTIVE
-                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "EXECUTIVE")
-                        // OpenAPI / Swagger UI — authenticated admins only; disabled in prod via springdoc
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).hasAnyRole("ADMIN", "EXECUTIVE")
-                        // All other operations require authentication
-                        .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                        .loginPage("/account/adminlogin/")
-                        .loginProcessingUrl("/account/adminlogin/")
-                        .defaultSuccessUrl("/admin/dashboard", true)
-                        .failureUrl("/account/adminlogin/?error=true")
-                        .usernameParameter("username")
-                        .passwordParameter("password")
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/account/adminlogin/?logout=true")
-                        .deleteCookies(sessionCookieName, LEGACY_CONTAINER_SESSION_COOKIE, REMEMBER_ME_COOKIE)
-                        .invalidateHttpSession(true)
-                        .permitAll()
-                )
-                .rememberMe(remember -> remember
-                        .key(rememberMeKey)
-                        .tokenValiditySeconds(REMEMBER_ME_SECONDS)
-                        .userDetailsService(customUserDetailsService)
-                )
-                .exceptionHandling(ex -> ex
-                        .accessDeniedPage("/access-denied")
-                );
+                .csrf(
+                        csrf ->
+                                csrf.csrfTokenRepository(
+                                                CookieCsrfTokenRepository.withHttpOnlyFalse())
+                                        .ignoringRequestMatchers(
+                                                "/actuator/health",
+                                                "/actuator/health/**",
+                                                "/health/**",
+                                                "/health"))
+                .authorizeHttpRequests(
+                        auth ->
+                                auth
+                                        // Static assets & public endpoints
+                                        .requestMatchers(
+                                                "/css/**",
+                                                "/js/**",
+                                                "/vendor/**",
+                                                "/fonts/**",
+                                                "/images/**",
+                                                "/favicon.ico",
+                                                "/error",
+                                                "/login",
+                                                "/account/adminlogin/**",
+                                                "/account/adminlogin",
+                                                "/access-denied",
+                                                "/passport/**",
+                                                "/health/**",
+                                                "/health",
+                                                "/actuator/health",
+                                                "/actuator/health/**")
+                                        .permitAll()
+                                        .requestMatchers("/actuator/**")
+                                        .hasRole("ADMIN")
+                                        // System health dashboard accessible to all authenticated
+                                        // users
+                                        .requestMatchers(
+                                                "/admin/dashboard/systemhealth/**",
+                                                "/admin/dashboard/systemhealth")
+                                        .authenticated()
+                                        // Customer & Supplier definitions accessible to operational
+                                        // roles (Cari Yönetimi)
+                                        .requestMatchers(
+                                                "/admin/definitions/customers/**",
+                                                "/admin/definitions/customers",
+                                                "/admin/definitions/suppliers/**",
+                                                "/admin/definitions/suppliers",
+                                                "/accounts/**",
+                                                "/accounts")
+                                        .hasAnyRole(
+                                                "ADMIN",
+                                                "EXECUTIVE",
+                                                "SALES",
+                                                "FINANCE",
+                                                "QUARRY_CHIEF",
+                                                "FACTORY_MANAGER",
+                                                "WORKSHOP_CHIEF",
+                                                "SITE_ENGINEER")
+                                        // Admin area strictly restricted to ROLE_ADMIN &
+                                        // ROLE_EXECUTIVE
+                                        .requestMatchers("/admin/**")
+                                        .hasAnyRole("ADMIN", "EXECUTIVE")
+                                        // OpenAPI / Swagger UI — authenticated admins only;
+                                        // disabled in prod via springdoc
+                                        .requestMatchers(
+                                                "/v3/api-docs/**",
+                                                "/swagger-ui/**",
+                                                "/swagger-ui.html")
+                                        .hasAnyRole("ADMIN", "EXECUTIVE")
+                                        // All other operations require authentication
+                                        .anyRequest()
+                                        .authenticated())
+                .formLogin(
+                        form ->
+                                form.loginPage("/account/adminlogin/")
+                                        .loginProcessingUrl("/account/adminlogin/")
+                                        .defaultSuccessUrl("/admin/dashboard", true)
+                                        .failureUrl("/account/adminlogin/?error=true")
+                                        .usernameParameter("username")
+                                        .passwordParameter("password")
+                                        .permitAll())
+                .logout(
+                        logout ->
+                                logout.logoutUrl("/logout")
+                                        .logoutSuccessUrl("/account/adminlogin/?logout=true")
+                                        .deleteCookies(
+                                                sessionCookieName,
+                                                LEGACY_CONTAINER_SESSION_COOKIE,
+                                                REMEMBER_ME_COOKIE)
+                                        .invalidateHttpSession(true)
+                                        .permitAll())
+                .rememberMe(
+                        remember ->
+                                remember.key(rememberMeKey)
+                                        .tokenValiditySeconds(REMEMBER_ME_SECONDS)
+                                        .userDetailsService(customUserDetailsService))
+                .exceptionHandling(ex -> ex.accessDeniedPage("/access-denied"));
 
         return http.build();
     }

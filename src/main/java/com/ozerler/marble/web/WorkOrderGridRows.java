@@ -124,6 +124,7 @@ final class WorkOrderGridRows {
     }
 
     static List<GridColumn.FilterChoice> statuses() {
-        return OperationGridSupport.choices(OperationWorkOrderStatus.values(), OperationWorkOrderStatus::getDisplayName);
+        return OperationGridSupport.choices(
+                OperationWorkOrderStatus.values(), OperationWorkOrderStatus::getDisplayName);
     }
 }

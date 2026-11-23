@@ -52,15 +52,26 @@ public final class CustomerGrid {
             editUrl = "/admin/definitions/customers/" + id + "/edit";
         }
         String unit = unitText(customer.getBusinessUnitLabel());
-        return GridRow.of(transactions, editUrl, customer.getId(), customer.getCompanyName(), List.of(
-                GridCell.chip(customer.getId()),
-                GridCell.link(customer.getCustomerCode(), transactions),
-                GridCell.link(customer.getCompanyName(), transactions, companyDetail(customer), companyDetailHref(customer)),
-                GridCell.badge(unit),
-                GridCell.badge(customer.getCustomerTypeLabel()),
-                contact(customer.getContactPerson(), customer.getPhone(), customer.getEmail()),
-                GridCell.text(balance(customer.getBalance()))
-        ));
+        return GridRow.of(
+                transactions,
+                editUrl,
+                customer.getId(),
+                customer.getCompanyName(),
+                List.of(
+                        GridCell.chip(customer.getId()),
+                        GridCell.link(customer.getCustomerCode(), transactions),
+                        GridCell.link(
+                                customer.getCompanyName(),
+                                transactions,
+                                companyDetail(customer),
+                                companyDetailHref(customer)),
+                        GridCell.badge(unit),
+                        GridCell.badge(customer.getCustomerTypeLabel()),
+                        contact(
+                                customer.getContactPerson(),
+                                customer.getPhone(),
+                                customer.getEmail()),
+                        GridCell.text(balance(customer.getBalance()))));
     }
 
     private static List<GridColumn> columns() {

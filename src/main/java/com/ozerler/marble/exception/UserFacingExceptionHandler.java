@@ -107,8 +107,12 @@ public class UserFacingExceptionHandler {
 
     private static boolean writesJson(HandlerMethod handlerMethod, HttpServletRequest request) {
         if (handlerMethod != null) {
-            boolean methodWritesBody = AnnotatedElementUtils.hasAnnotation(handlerMethod.getMethod(), ResponseBody.class);
-            boolean typeWritesBody = AnnotatedElementUtils.hasAnnotation(handlerMethod.getBeanType(), ResponseBody.class);
+            boolean methodWritesBody =
+                    AnnotatedElementUtils.hasAnnotation(
+                            handlerMethod.getMethod(), ResponseBody.class);
+            boolean typeWritesBody =
+                    AnnotatedElementUtils.hasAnnotation(
+                            handlerMethod.getBeanType(), ResponseBody.class);
             if (methodWritesBody || typeWritesBody) {
                 return true;
             }

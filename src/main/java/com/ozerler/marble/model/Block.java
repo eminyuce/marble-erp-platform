@@ -178,7 +178,9 @@ public class Block extends AuditableEntity {
             } else if (this.actualWeightKg != null && this.actualWeightKg.compareTo(BigDecimal.ZERO) > 0) {
                 this.actualTonnage = this.actualWeightKg.divide(BigDecimal.valueOf(1000), 2, RoundingMode.HALF_UP);
             }
-            this.weightDeviationPct = BlockMeasurement.weightDeviationPercent(this.actualWeightKg, this.theoreticalWeightKg);
+            this.weightDeviationPct =
+                    BlockMeasurement.weightDeviationPercent(
+                            this.actualWeightKg, this.theoreticalWeightKg);
         }
 
         BigDecimal ext;

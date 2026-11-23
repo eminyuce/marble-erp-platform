@@ -26,9 +26,15 @@ class OperationYieldTest {
                 .isEqualByComparingTo("92.0");
         Assertions.assertThat(OperationYield.squareMetersPerTon(new BigDecimal("48.5"), new BigDecimal("24.3")))
                 .isEqualByComparingTo("1.9959");
-        Assertions.assertThat(OperationYield.samePhysicalUnit(QuantityUnit.SQUARE_METER, QuantityUnit.SQUARE_METER, QuantityUnit.SQUARE_METER))
+        Assertions.assertThat(
+                        OperationYield.samePhysicalUnit(
+                                QuantityUnit.SQUARE_METER,
+                                QuantityUnit.SQUARE_METER,
+                                QuantityUnit.SQUARE_METER))
                 .isTrue();
-        Assertions.assertThat(OperationYield.samePhysicalUnit(QuantityUnit.TON, QuantityUnit.SQUARE_METER, QuantityUnit.KG))
+        Assertions.assertThat(
+                        OperationYield.samePhysicalUnit(
+                                QuantityUnit.TON, QuantityUnit.SQUARE_METER, QuantityUnit.KG))
                 .isFalse();
     }
 }

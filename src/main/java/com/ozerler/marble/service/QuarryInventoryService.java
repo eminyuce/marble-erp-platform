@@ -170,9 +170,11 @@ public class QuarryInventoryService {
         }
 
         if (currentStock.compareTo(litres) < 0) {
-            throw new IllegalArgumentException(String.format(
-                    "Yetersiz mazot stoğu! Mazot Deposunda mevcut: %s litre, talep edilen: %s litre. Stok eksiye düşürülemez.",
-                    currentStock, litres));
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Yetersiz mazot stoğu! Mazot Deposunda mevcut: %s litre, talep edilen: %s litre. Stok "
+                                    + "eksiye düşürülemez.",
+                            currentStock, litres));
         }
 
         Machine machine = machineRepository.findById(machineId)
@@ -232,18 +234,26 @@ public class QuarryInventoryService {
 
         // 5. Stok Hareketi (Tüketim Çıkışı)
         String movCode = UniqueCodes.yearly("MOV-MZ", stockMovementRepository::existsByMovementCode);
-        StockMovement movement = StockMovement.builder()
-                .movementCode(movCode)
-                .movementDate(LocalDateTime.now())
-                .movementType(StockMovementType.PRODUCTION_CONSUMPTION)
-                .sourceDepartment(BusinessUnit.QUARRY)
-                .fromLocation(tank.getStockLocation())
-                .stockItem(tank)
-                .itemDescription(machine.getName() + " Mazot İkmali")
-                .quantity(litres)
-                .quantityUnit("litre")
-                .notes("Makine: " + machine.getName() + " (" + machine.getCode() + ") — " + litres + " L mazot verildi.")
-                .build();
+        StockMovement movement =
+                StockMovement.builder()
+                        .movementCode(movCode)
+                        .movementDate(LocalDateTime.now())
+                        .movementType(StockMovementType.PRODUCTION_CONSUMPTION)
+                        .sourceDepartment(BusinessUnit.QUARRY)
+                        .fromLocation(tank.getStockLocation())
+                        .stockItem(tank)
+                        .itemDescription(machine.getName() + " Mazot İkmali")
+                        .quantity(litres)
+                        .quantityUnit("litre")
+                        .notes(
+                                "Makine: "
+                                        + machine.getName()
+                                        + " ("
+                                        + machine.getCode()
+                                        + ") — "
+                                        + litres
+                                        + " L mazot verildi.")
+                        .build();
         stockMovementRepository.save(movement);
 
         log.info("Makineye mazot verildi: {} - {} L. Kalan mazot stoğu: {} L. Gider: {} TL",
@@ -309,13 +319,30 @@ public class QuarryInventoryService {
                 .build();
         stockMovementRepository.save(movement);
 
-        log.info("Sarf malzeme stoğa alındı: {} (+{} {}). Yeni stok: {}", saved.getDescription(), quantity, saved.getUnit(), saved.getQuantity());
+        log.info(
+                "Sarf malzeme stoğa alındı: {} (+{} {}). Yeni stok: {}",
+                saved.getDescription(),
+                quantity,
+                saved.getUnit(),
+                saved.getQuantity());
         return saved;
     }
 
     @Transactional
-    public StockItem addConsumableStock(String description, BigDecimal quantity, String unit, BigDecimal netUnitPrice, String invoiceNo) {
-        return addConsumableStock(null, description, quantity, unit, netUnitPrice, null, "Alış faturası: " + Objects.requireNonNullElse(invoiceNo, ""));
+    public StockItem addConsumableStock(
+            String description,
+            BigDecimal quantity,
+            String unit,
+            BigDecimal netUnitPrice,
+            String invoiceNo) {
+        return addConsumableStock(
+                null,
+                description,
+                quantity,
+                unit,
+                netUnitPrice,
+                null,
+                "Alış faturası: " + Objects.requireNonNullElse(invoiceNo, ""));
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -343,13 +370,18 @@ public class QuarryInventoryService {
         boolean descExists = stockItemRepository.existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(
                 BusinessUnit.QUARRY, trimmedDesc);
         if (descExists) {
-            throw new IllegalArgumentException(String.format(
-                    "Bu ürün adıyla kayıtlı bir stok kartı zaten mevcut: '%s'. Mükerrer stok kartı oluşturulamaz.", trimmedDesc));
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Bu ürün adıyla kayıtlı bir stok kartı zaten mevcut: '%s'. Mükerrer stok kartı "
+                                    + "oluşturulamaz.",
+                            trimmedDesc));
         }
 
         if (trimmedCode != null && stockItemRepository.existsByItemCode(trimmedCode)) {
-            throw new IllegalArgumentException(String.format(
-                    "Bu kodla kayıtlı bir stok kartı zaten mevcut: '%s'. Mükerrer stok kartı oluşturulamaz.", trimmedCode));
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Bu kodla kayıtlı bir stok kartı zaten mevcut: '%s'. Mükerrer stok kartı oluşturulamaz.",
+                            trimmedCode));
         }
 
         StockLocation location;
@@ -358,7 +390,12 @@ public class QuarryInventoryService {
 
         switch (category) {
             case MAZOT -> {
-                location = getOrCreateLocation(FUEL_TANK_LOCATION_CODE, "Ocak Mazot Deposu", StockLocationType.QUARRY_FUEL_TANK, BusinessUnit.QUARRY);
+                location =
+                        getOrCreateLocation(
+                                FUEL_TANK_LOCATION_CODE,
+                                "Ocak Mazot Deposu",
+                                StockLocationType.QUARRY_FUEL_TANK,
+                                BusinessUnit.QUARRY);
                 productType = StockProductType.FUEL;
                 defaultPrefix = "MZ";
             }
@@ -459,7 +496,9 @@ public class QuarryInventoryService {
 
     @Transactional(readOnly = true)
     public List<StockItem> getAllQuarryStockCards(QuarryCategory category) {
-        List<StockItem> list = stockItemRepository.findByStockLocationBusinessUnitAndStatus(BusinessUnit.QUARRY, "AVAILABLE");
+        List<StockItem> list =
+                stockItemRepository.findByStockLocationBusinessUnitAndStatus(
+                        BusinessUnit.QUARRY, "AVAILABLE");
         if (category == null) {
             return list;
         }
@@ -492,24 +531,36 @@ public class QuarryInventoryService {
             } else {
                 code = "OCAK-SARF";
             }
-            expenseService.recordExpense(new ExpenseService.ExpenseDraft(
-                    quarryCenter.getId(),
-                    ExpenseType.CONSUMABLES,
-                    null,
-                    BusinessUnit.QUARRY,
-                    netCost,
-                    "TRY",
-                    "SRF-" + saved.getId(),
-                    LocalDate.now(),
-                    LocalDate.now(),
-                    YearMonth.now().toString(),
-                    YearMonth.now().toString(),
-                    null, null, null, null,
-                    machine,
-                    null, null,
-                    code,
-                    "Sarf Malzeme Kullanımı: " + item.getDescription() + " — " + quantity + " " + item.getUnit() + " (Net: " + netCost + " TL)"
-            ));
+            expenseService.recordExpense(
+                    new ExpenseService.ExpenseDraft(
+                            quarryCenter.getId(),
+                            ExpenseType.CONSUMABLES,
+                            null,
+                            BusinessUnit.QUARRY,
+                            netCost,
+                            "TRY",
+                            "SRF-" + saved.getId(),
+                            LocalDate.now(),
+                            LocalDate.now(),
+                            YearMonth.now().toString(),
+                            YearMonth.now().toString(),
+                            null,
+                            null,
+                            null,
+                            null,
+                            machine,
+                            null,
+                            null,
+                            code,
+                            "Sarf Malzeme Kullanımı: "
+                                    + item.getDescription()
+                                    + " — "
+                                    + quantity
+                                    + " "
+                                    + item.getUnit()
+                                    + " (Net: "
+                                    + netCost
+                                    + " TL)"));
         }
 
         // Stok Hareketi
@@ -582,7 +633,8 @@ public class QuarryInventoryService {
 
     @Transactional(readOnly = true)
     public List<StockMovement> getRecentQuarryMovements() {
-        return stockMovementRepository.findRecentBySourceDepartment(BusinessUnit.QUARRY, LocalDateTime.now().minusDays(RECENT_DAYS));
+        return stockMovementRepository.findRecentBySourceDepartment(
+                BusinessUnit.QUARRY, LocalDateTime.now().minusDays(RECENT_DAYS));
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -669,7 +721,16 @@ public class QuarryInventoryService {
     public StockItemView createStockCardView(QuarryCategory category, String description, String unit,
                                      BigDecimal initialQuantity, BigDecimal netUnitPrice,
                                      String itemCode, Boolean isExpense, String notes) {
-        return stockItemMapper.toDto(createStockCard(category, description, unit, initialQuantity, netUnitPrice, itemCode, isExpense, notes));
+        return stockItemMapper.toDto(
+                createStockCard(
+                        category,
+                        description,
+                        unit,
+                        initialQuantity,
+                        netUnitPrice,
+                        itemCode,
+                        isExpense,
+                        notes));
     }
 
     /**
@@ -688,7 +749,15 @@ public class QuarryInventoryService {
     public StockItemView createStockCardView(QuarryCategory category, String description, String unit,
                                      BigDecimal initialQuantity, BigDecimal netUnitPrice,
                                      String itemCode, String notes) {
-        return stockItemMapper.toDto(createStockCard(category, description, unit, initialQuantity, netUnitPrice, itemCode, notes));
+        return stockItemMapper.toDto(
+                createStockCard(
+                        category,
+                        description,
+                        unit,
+                        initialQuantity,
+                        netUnitPrice,
+                        itemCode,
+                        notes));
     }
 
     /**
@@ -752,6 +821,15 @@ public class QuarryInventoryService {
     public MachineFuelEntryView dispenseFuelView(Long machineId, BigDecimal litres, LocalDate entryDate,
                                          BigDecimal workingHoursOrKm, String receiptNo,
                                          String issuedBy, String receivedBy, String notes) {
-        return machineFuelMapper.toDto(dispenseFuel(machineId, litres, entryDate, workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes));
+        return machineFuelMapper.toDto(
+                dispenseFuel(
+                        machineId,
+                        litres,
+                        entryDate,
+                        workingHoursOrKm,
+                        receiptNo,
+                        issuedBy,
+                        receivedBy,
+                        notes));
     }
 }

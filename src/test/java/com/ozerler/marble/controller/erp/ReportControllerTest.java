@@ -52,7 +52,8 @@ class ReportControllerTest {
     @DisplayName("Excel export keeps report bytes unchanged and uses a timestamped Turkish filename")
     void excelExportKeepsBodyAndUsesConvention() throws IOException {
         byte[] excelBytes = new byte[]{0x50, 0x4B, 0x03, 0x04};
-        Mockito.when(reportService.generateExcelReport(ReportService.ReportType.COST_ACCOUNTING)).thenReturn(excelBytes);
+        Mockito.when(reportService.generateExcelReport(ReportService.ReportType.COST_ACCOUNTING))
+                .thenReturn(excelBytes);
 
         ResponseEntity<byte[]> response = reportController.exportReport("cost_accounting", "excel");
 

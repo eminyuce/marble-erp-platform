@@ -59,15 +59,33 @@ public class ProjectSiteService {
         return MessageUtils.getMessage(code, args);
     }
 
-    public record ProjectSummaryDto(long totalProjects, long activeProjects, long completedProjects, BigDecimal totalContractValue) {
+    public record ProjectSummaryDto(
+            long totalProjects,
+            long activeProjects,
+            long completedProjects,
+            BigDecimal totalContractValue) {
     }
 
     @Transactional(readOnly = true)
     public ProjectSummaryDto getProjectSummary() {
         List<Project> all = BoundedReads.all(projectRepository);
         long total = all.size();
-        long active = all.stream().filter(p -> p.getStatus() != null && "IN_PROGRESS".equalsIgnoreCase(p.getStatus().name())).count();
-        long completed = all.stream().filter(p -> p.getStatus() != null && "COMPLETED".equalsIgnoreCase(p.getStatus().name())).count();
+        long active =
+                all.stream()
+                        .filter(
+                                p ->
+                                        p.getStatus() != null
+                                                && "IN_PROGRESS"
+                                                        .equalsIgnoreCase(p.getStatus().name()))
+                        .count();
+        long completed =
+                all.stream()
+                        .filter(
+                                p ->
+                                        p.getStatus() != null
+                                                && "COMPLETED"
+                                                        .equalsIgnoreCase(p.getStatus().name()))
+                        .count();
         BigDecimal totalContract = all.stream()
                 .map(proj -> proj.getContractValue())
                 .filter(Objects::nonNull)
@@ -76,17 +94,26 @@ public class ProjectSiteService {
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String sortField, String sortDir) {
+    public TabulatorResponse<ProjectDto> getProjectsPaged(
+            int page, int size, String search, String sortField, String sortDir) {
         return getProjectsPaged(page, size, search, null, null, sortField, sortDir);
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String status, String sortField, String sortDir) {
+    public TabulatorResponse<ProjectDto> getProjectsPaged(
+            int page, int size, String search, String status, String sortField, String sortDir) {
         return getProjectsPaged(page, size, search, status, null, sortField, sortDir);
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<ProjectDto> getProjectsPaged(int page, int size, String search, String status, Long customerId, String sortField, String sortDir) {
+    public TabulatorResponse<ProjectDto> getProjectsPaged(
+            int page,
+            int size,
+            String search,
+            String status,
+            Long customerId,
+            String sortField,
+            String sortDir) {
         ProjectStatus pStatus = null;
         if (status != null && !status.isBlank()) {
             try {
@@ -96,8 +123,19 @@ public class ProjectSiteService {
             }
         }
         final ProjectStatus finalStatus = pStatus;
-        Page<Project> projectPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PROJECT_SORTS,
-                pageable -> projectRepository.searchProjectsFiltered(GridPages.normalizeSearch(search), finalStatus, customerId, pageable));
+        Page<Project> projectPage =
+                GridPages.execute(
+                        page,
+                        size,
+                        sortField,
+                        sortDir,
+                        GridPages.PROJECT_SORTS,
+                        pageable ->
+                                projectRepository.searchProjectsFiltered(
+                                        GridPages.normalizeSearch(search),
+                                        finalStatus,
+                                        customerId,
+                                        pageable));
         List<Project> projects = projectPage.getContent();
         List<ProjectDto> dtos = projects.stream()
                 .map(ProjectDto::fromEntity)
@@ -173,7 +211,16 @@ public class ProjectSiteService {
     public Project createProject(String projectCode, String name, String customerName,
                                  BigDecimal contractValue, BigDecimal estimatedCost,
                                  LocalDate startDate, LocalDate deliveryDate, String notes) {
-        return createProject(projectCode, name, customerName, null, contractValue, estimatedCost, startDate, deliveryDate, notes);
+        return createProject(
+                projectCode,
+                name,
+                customerName,
+                null,
+                contractValue,
+                estimatedCost,
+                startDate,
+                deliveryDate,
+                notes);
     }
 
     @Transactional
@@ -317,7 +364,12 @@ public class ProjectSiteService {
             effectiveInProduction = BigDecimal.ZERO;
         }
 
-        BigDecimal scrapFactor = BigDecimal.ONE.add(effectiveScrap.divide(Constants.PERCENT_DIVISOR, Constants.CALCULATION_SCALE, RoundingMode.HALF_UP));
+        BigDecimal scrapFactor =
+                BigDecimal.ONE.add(
+                        effectiveScrap.divide(
+                                Constants.PERCENT_DIVISOR,
+                                Constants.CALCULATION_SCALE,
+                                RoundingMode.HALF_UP));
         BigDecimal grossRequirement = effectivePlanned.multiply(scrapFactor);
         BigDecimal currentCoverage = effectiveStock.add(effectiveInProduction);
         BigDecimal shortfall = grossRequirement.subtract(currentCoverage);

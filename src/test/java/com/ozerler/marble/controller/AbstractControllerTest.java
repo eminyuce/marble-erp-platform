@@ -29,7 +29,8 @@ class AbstractControllerTest {
         Assertions.assertThat(result.getServiceStatus()).isNotNull();
         Assertions.assertThat(result.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
         Assertions.assertThat(result.getServiceStatus().getStatus().getErrorCode()).isEqualTo("3399");
-        Assertions.assertThat(result.getServiceStatus().getStatus().getMessage()).isEqualTo("A serious error occurred in testAction");
+        Assertions.assertThat(result.getServiceStatus().getStatus().getMessage())
+                .isEqualTo("A serious error occurred in testAction");
         Assertions.assertThat(result.getServiceStatus().getStatus().getErrors()).contains("Request failed");
     }
 
@@ -46,7 +47,9 @@ class AbstractControllerTest {
     @Test
     @DisplayName("Should build failure response with custom status")
     void shouldBuildFailureResponse() {
-        BackEndResponse result = controller.buildFailureResponse(null, null, null, "customAction", "4004", HttpStatus.NOT_FOUND);
+        BackEndResponse result =
+                controller.buildFailureResponse(
+                        null, null, null, "customAction", "4004", HttpStatus.NOT_FOUND);
 
         Assertions.assertThat(result.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(result.getServiceStatus().getStatus().getErrorCode()).isEqualTo("4004");

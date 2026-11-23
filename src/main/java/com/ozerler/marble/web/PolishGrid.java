@@ -22,7 +22,13 @@ public final class PolishGrid {
         if (operations != null) {
             for (FactoryOperationView operation : operations) {
                 OperationView view = OperationView.from(operation);
-                if (GridWindow.matches(search, view.orderNo, view.blockCode, view.operatorName, view.machineName, view.processLabel)) {
+                if (GridWindow.matches(
+                        search,
+                        view.orderNo,
+                        view.blockCode,
+                        view.operatorName,
+                        view.machineName,
+                        view.processLabel)) {
                     matched.add(view);
                 }
             }

@@ -45,7 +45,12 @@ public class MessageUtils {
             }
         }
         try {
-            ResourceBundle bundle = ResourceBundle.getBundle("messages", targetLocale, ResourceBundle.Control.getNoFallbackControl(ResourceBundle.Control.FORMAT_PROPERTIES));
+            ResourceBundle bundle =
+                    ResourceBundle.getBundle(
+                            "messages",
+                            targetLocale,
+                            ResourceBundle.Control.getNoFallbackControl(
+                                    ResourceBundle.Control.FORMAT_PROPERTIES));
             if (bundle.containsKey(code)) {
                 String pattern = bundle.getString(code);
                 if (args != null && args.length > 0) {

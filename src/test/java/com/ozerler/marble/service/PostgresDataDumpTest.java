@@ -15,7 +15,8 @@ class PostgresDataDumpTest {
     void quotesTextAndIdentifiers() {
         Assertions.assertThat(PostgresDataDump.quote("O'Brien")).isEqualTo("'O''Brien'");
         Assertions.assertThat(PostgresDataDump.quoteIdentifier("order")).isEqualTo("\"order\"");
-        Assertions.assertThat(PostgresDataDump.byteaLiteral(new byte[] {0x0a, (byte) 0xff})).isEqualTo("decode('0aff', 'hex')");
+        Assertions.assertThat(PostgresDataDump.byteaLiteral(new byte[] {0x0a, (byte) 0xff}))
+                .isEqualTo("decode('0aff', 'hex')");
     }
 
     @Test

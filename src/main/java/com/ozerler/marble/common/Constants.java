@@ -570,10 +570,10 @@ public final class Constants {
     /**
      * Advanced placeholder pattern matching {{{raw}}}, {{escaped}}, or ${key}.
      */
-    public static final Pattern PATTERN_ADVANCED_PLACEHOLDER = Pattern.compile(
-            "(\\{\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\}\\})|(\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\})|(\\$\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\})"
-    );
-
+    public static final Pattern PATTERN_ADVANCED_PLACEHOLDER =
+            Pattern.compile(
+                    "(\\{\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\}\\})|(\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\})|(\\$\\{\\s*"
+                            + "([a-zA-Z0-9_.-]+)\\s*\\})");
 
     // =========================================================================
     // 19. Asynchronous Logging Subsystem Defaults

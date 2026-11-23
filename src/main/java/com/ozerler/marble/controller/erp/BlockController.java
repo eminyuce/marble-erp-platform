@@ -99,9 +99,22 @@ public class BlockController extends AbstractController {
             valueValue2 = status.name();
         }
         model.addAttribute("selectedStatus", valueValue2);
-        model.addAttribute("grid", BlockGrid.view(
-                quarryBlockService.getBlocksPaged(query.pageNumber(), query.pageSize(), query.getSearch(), query.sortKey(), query.sortDirection(), locationType, status, stock),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute(
+                "grid",
+                BlockGrid.view(
+                        quarryBlockService.getBlocksPaged(
+                                query.pageNumber(),
+                                query.pageSize(),
+                                query.getSearch(),
+                                query.sortKey(),
+                                query.sortDirection(),
+                                locationType,
+                                status,
+                                stock),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         return "erp/blocks/index";
     }
 
@@ -117,7 +130,8 @@ public class BlockController extends AbstractController {
             @RequestParam(value = "status", required = false) BlockStatus status,
             @RequestParam(value = "stockFilter", required = false, defaultValue = "IN_STOCK") String stockFilter) {
 
-        return quarryBlockService.getBlocksPaged(page, size, search, sortField, sortDir, locationType, status, stockFilter);
+        return quarryBlockService.getBlocksPaged(
+                page, size, search, sortField, sortDir, locationType, status, stockFilter);
     }
 
     @GetMapping("/api/generate-code")
@@ -155,29 +169,33 @@ public class BlockController extends AbstractController {
 
     @PostMapping("/create")
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
-    public String createBlock(@RequestParam("quarryId") Long quarryId,
-                              @RequestParam("blockCode") String blockCode,
-                              @RequestParam(value = "locationType", required = false) StockLocationType locationType,
-                              @RequestParam(value = "extractionDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate extractionDate,
-                              @RequestParam("widthCm") int widthCm,
-                              @RequestParam("lengthCm") int lengthCm,
-                              @RequestParam("heightCm") int heightCm,
-                              @RequestParam(value = "actualWeightKg", required = false) BigDecimal actualWeightKg,
-                              @RequestParam(value = "stoneType", required = false) String stoneType,
-                              @RequestParam(value = "colorTone", required = false) String colorTone,
-                              @RequestParam("qualityGrade") QualityGrade qualityGrade,
-                              @RequestParam(value = "crackLevel", defaultValue = "0") int crackLevel,
-                              @RequestParam(value = "notes", required = false) String notes,
-                              @RequestParam(value = "photoUrls", required = false) String photoUrls,
-                              @RequestParam(value = "fileIds", required = false) List<Long> fileIds,
-                              @RequestParam("quarrySection") String quarrySection,
-                              Locale locale,
-                              Model model,
-                              RedirectAttributes redirectAttributes) {
+    public String createBlock(
+            @RequestParam("quarryId") Long quarryId,
+            @RequestParam("blockCode") String blockCode,
+            @RequestParam(value = "locationType", required = false) StockLocationType locationType,
+            @RequestParam(value = "extractionDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate extractionDate,
+            @RequestParam("widthCm") int widthCm,
+            @RequestParam("lengthCm") int lengthCm,
+            @RequestParam("heightCm") int heightCm,
+            @RequestParam(value = "actualWeightKg", required = false) BigDecimal actualWeightKg,
+            @RequestParam(value = "stoneType", required = false) String stoneType,
+            @RequestParam(value = "colorTone", required = false) String colorTone,
+            @RequestParam("qualityGrade") QualityGrade qualityGrade,
+            @RequestParam(value = "crackLevel", defaultValue = "0") int crackLevel,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "photoUrls", required = false) String photoUrls,
+            @RequestParam(value = "fileIds", required = false) List<Long> fileIds,
+            @RequestParam("quarrySection") String quarrySection,
+            Locale locale,
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         try {
             if (quarrySection == null || quarrySection.isBlank()) {
-                throw new IllegalArgumentException(messageSource.getMessage("error.block.section.required", null, locale));
+                throw new IllegalArgumentException(
+                        messageSource.getMessage("error.block.section.required", null, locale));
             }
             quarryBlockService.registerBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
                     actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, notes, photoUrls,
@@ -298,32 +316,52 @@ public class BlockController extends AbstractController {
 
     @PostMapping("/{id}/edit")
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
-    public String updateBlock(@PathVariable("id") Long id,
-                              @RequestParam(name = "quarryId") Long quarryId,
-                              @RequestParam(name = "blockCode") String blockCode,
-                              @RequestParam(required = false, name = "locationType") StockLocationType locationType,
-                              @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam(required = false, name = "extractionDate") LocalDate extractionDate,
-                              @RequestParam(name = "widthCm") int widthCm,
-                              @RequestParam(name = "lengthCm") int lengthCm,
-                              @RequestParam(name = "heightCm") int heightCm,
-                              @RequestParam(required = false, name = "actualWeightKg") BigDecimal actualWeightKg,
-                              @RequestParam(required = false, name = "stoneType") String stoneType,
-                              @RequestParam(required = false, name = "colorTone") String colorTone,
-                              @RequestParam(name = "qualityGrade") QualityGrade qualityGrade,
-                              @RequestParam(name = "crackLevel", defaultValue = "0") int crackLevel,
-                              @RequestParam(value = "unitMarketValuePerTon", required = false) BigDecimal unitMarketValuePerTon,
-                              @RequestParam(value = "notes", required = false) String notes,
-                              @RequestParam(value = "photoUrls", required = false) String photoUrls,
-                              @RequestParam(value = "fileIds", required = false) List<Long> fileIds,
-                              @RequestParam(value = "quarrySection", required = false) String quarrySection,
-                              Locale locale,
-                              Model model,
-                              RedirectAttributes redirectAttributes) {
+    public String updateBlock(
+            @PathVariable("id") Long id,
+            @RequestParam(name = "quarryId") Long quarryId,
+            @RequestParam(name = "blockCode") String blockCode,
+            @RequestParam(required = false, name = "locationType") StockLocationType locationType,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    @RequestParam(required = false, name = "extractionDate")
+                    LocalDate extractionDate,
+            @RequestParam(name = "widthCm") int widthCm,
+            @RequestParam(name = "lengthCm") int lengthCm,
+            @RequestParam(name = "heightCm") int heightCm,
+            @RequestParam(required = false, name = "actualWeightKg") BigDecimal actualWeightKg,
+            @RequestParam(required = false, name = "stoneType") String stoneType,
+            @RequestParam(required = false, name = "colorTone") String colorTone,
+            @RequestParam(name = "qualityGrade") QualityGrade qualityGrade,
+            @RequestParam(name = "crackLevel", defaultValue = "0") int crackLevel,
+            @RequestParam(value = "unitMarketValuePerTon", required = false)
+                    BigDecimal unitMarketValuePerTon,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "photoUrls", required = false) String photoUrls,
+            @RequestParam(value = "fileIds", required = false) List<Long> fileIds,
+            @RequestParam(value = "quarrySection", required = false) String quarrySection,
+            Locale locale,
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         try {
-            quarryBlockService.updateBlock(id, quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
-                    actualWeightKg, stoneType, colorTone, qualityGrade, crackLevel, unitMarketValuePerTon, notes, photoUrls,
-                    locationType, fileIds, quarrySection);
+            quarryBlockService.updateBlock(
+                    id,
+                    quarryId,
+                    blockCode,
+                    extractionDate,
+                    widthCm,
+                    lengthCm,
+                    heightCm,
+                    actualWeightKg,
+                    stoneType,
+                    colorTone,
+                    qualityGrade,
+                    crackLevel,
+                    unitMarketValuePerTon,
+                    notes,
+                    photoUrls,
+                    locationType,
+                    fileIds,
+                    quarrySection);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.block.update.success", null, locale));
             return "redirect:/blocks";
@@ -420,11 +458,13 @@ public class BlockController extends AbstractController {
 
     @PostMapping("/{id}/transfer-to-factory")
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
-    public String transferToFactoryForm(@PathVariable("id") Long id,
-                                        @RequestParam("transportCost") BigDecimal transportCost,
-                                        @RequestParam(value = "redirectTarget", required = false, defaultValue = "detail") String redirectTarget,
-                                        Locale locale,
-                                        RedirectAttributes redirectAttributes) {
+    public String transferToFactoryForm(
+            @PathVariable("id") Long id,
+            @RequestParam("transportCost") BigDecimal transportCost,
+            @RequestParam(value = "redirectTarget", required = false, defaultValue = "detail")
+                    String redirectTarget,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
         try {
             quarryBlockService.transferToFactory(id, transportCost);
             redirectAttributes.addFlashAttribute("successMessage",
@@ -509,7 +549,8 @@ public class BlockController extends AbstractController {
                                       RedirectAttributes redirectAttributes) {
         try {
             quarryBlockService.updateActualTonnage(id, actualTonnage);
-            redirectAttributes.addFlashAttribute("successMessage", "Kantar tartımı kaydedildi (Tartıldı / Sevke Hazır).");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage", "Kantar tartımı kaydedildi (Tartıldı / Sevke Hazır).");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -579,12 +620,14 @@ public class BlockController extends AbstractController {
 
     @PostMapping("/{id}/move")
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
-    public String moveToYard(@PathVariable("id") Long id,
-                             @RequestParam("targetType") StockLocationType targetType,
-                             @RequestParam(value = "description", required = false) String description,
-                             @RequestParam(value = "redirectTarget", required = false, defaultValue = "detail") String redirectTarget,
-                             Locale locale,
-                             RedirectAttributes redirectAttributes) {
+    public String moveToYard(
+            @PathVariable("id") Long id,
+            @RequestParam("targetType") StockLocationType targetType,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "redirectTarget", required = false, defaultValue = "detail")
+                    String redirectTarget,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
         try {
             quarryBlockService.moveToYard(id, targetType, description);
             redirectAttributes.addFlashAttribute("successMessage",
@@ -616,9 +659,10 @@ public class BlockController extends AbstractController {
 
     @PostMapping("/{id}/api/move")
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
-    public @ResponseBody BackEndResponse moveToYardApi(@PathVariable("id") Long id,
-                                                       @RequestParam("targetType") StockLocationType targetType,
-                                                       @RequestParam(value = "description", required = false) String description) {
+    public @ResponseBody BackEndResponse moveToYardApi(
+            @PathVariable("id") Long id,
+            @RequestParam("targetType") StockLocationType targetType,
+            @RequestParam(value = "description", required = false) String description) {
         BackEndResponse ber = new BackEndResponse();
         ServiceStatus serviceStatus = new ServiceStatus();
         Status status = new Status();
@@ -657,13 +701,16 @@ public class BlockController extends AbstractController {
 
     @PostMapping("/{id}/sell-to-customer")
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
-    public String sellToCustomer(@PathVariable("id") Long id,
-                                 @RequestParam("customerId") Long customerId,
-                                 @RequestParam("salePrice") BigDecimal salePrice,
-                                 @RequestParam(value = "saleDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate saleDate,
-                                 @RequestParam(value = "saleNotes", required = false) String saleNotes,
-                                 Locale locale,
-                                 RedirectAttributes redirectAttributes) {
+    public String sellToCustomer(
+            @PathVariable("id") Long id,
+            @RequestParam("customerId") Long customerId,
+            @RequestParam("salePrice") BigDecimal salePrice,
+            @RequestParam(value = "saleDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate saleDate,
+            @RequestParam(value = "saleNotes", required = false) String saleNotes,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
         try {
             quarryBlockService.sellBlockExternally(id, customerId, salePrice, saleDate, saleNotes);
             redirectAttributes.addFlashAttribute("successMessage",
@@ -678,14 +725,19 @@ public class BlockController extends AbstractController {
 
     @PostMapping("/{id}/mark")
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
-    public String markBlock(@PathVariable("id") Long id,
-                            @RequestParam("customerId") Long customerId,
-                            @RequestParam(value = "markedAt", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate markedAt,
-                            @RequestParam(value = "validUntil", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate validUntil,
-                            @RequestParam("offerPrice") BigDecimal offerPrice,
-                            @RequestParam(value = "currency", defaultValue = "TRY") String currency,
-                            Locale locale,
-                            RedirectAttributes redirectAttributes) {
+    public String markBlock(
+            @PathVariable("id") Long id,
+            @RequestParam("customerId") Long customerId,
+            @RequestParam(value = "markedAt", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate markedAt,
+            @RequestParam(value = "validUntil", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate validUntil,
+            @RequestParam("offerPrice") BigDecimal offerPrice,
+            @RequestParam(value = "currency", defaultValue = "TRY") String currency,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
         blockCustomerMarkService.markBlock(id, customerId, markedAt, validUntil, offerPrice, currency);
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.block.mark.success", null, locale));
@@ -700,7 +752,9 @@ public class BlockController extends AbstractController {
                                           @RequestParam(value = "offerPrice", required = false) BigDecimal offerPrice,
                                           @RequestParam(value = "currency", defaultValue = "TRY") String currency) {
         try {
-            Long markId = blockCustomerMarkService.markBlockId(id, customerId, LocalDate.now(), null, offerPrice, currency);
+            Long markId =
+                    blockCustomerMarkService.markBlockId(
+                            id, customerId, LocalDate.now(), null, offerPrice, currency);
             return ResponseEntity.ok(Map.of("success", true, "markId", markId));
         } catch (Exception e) {
             log.error("Failed to mark block {}", id, e);

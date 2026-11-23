@@ -58,11 +58,22 @@ public final class SupplierGrid {
                 GridColumn.text("id", "Id", true, GridWidth.PX_110),
                 GridColumn.text("supplierCode", "Tedarikçi Kodu", true, GridWidth.PX_150),
                 GridColumn.text("companyName", "Firma / Ünvan", true, GridWidth.PX_220),
-                GridColumn.filtered("businessUnitLabel", "İşletme Birimi", false, GridWidth.PX_150, "unit", unitChoices()),
-                GridColumn.filtered("supplierTypeLabel", "Tedarik Tipi", true, GridWidth.PX_150, "type", typeChoices()),
+                GridColumn.filtered(
+                        "businessUnitLabel",
+                        "İşletme Birimi",
+                        false,
+                        GridWidth.PX_150,
+                        "unit",
+                        unitChoices()),
+                GridColumn.filtered(
+                        "supplierTypeLabel",
+                        "Tedarik Tipi",
+                        true,
+                        GridWidth.PX_150,
+                        "type",
+                        typeChoices()),
                 GridColumn.text("contactPerson", "Yetkili / İletişim", true, GridWidth.PX_200),
-                GridColumn.text("", "Vergi Dairesi / No", false, GridWidth.PX_170)
-        );
+                GridColumn.text("", "Vergi Dairesi / No", false, GridWidth.PX_170));
     }
 
     private static GridCell company(String name, String address) {

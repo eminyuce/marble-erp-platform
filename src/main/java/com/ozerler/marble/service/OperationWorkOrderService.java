@@ -272,7 +272,11 @@ public class OperationWorkOrderService {
         return saved;
     }
 
-    private void recordHistory(OperationWorkOrder order, OperationWorkOrderStatus prev, OperationWorkOrderStatus next, String notes) {
+    private void recordHistory(
+            OperationWorkOrder order,
+            OperationWorkOrderStatus prev,
+            OperationWorkOrderStatus next,
+            String notes) {
         String user = SecurityUtils.getCurrentUserLogin().orElse("system");
         WorkOrderStatusHistory history = WorkOrderStatusHistory.builder()
                 .workOrder(order)
@@ -424,7 +428,10 @@ public class OperationWorkOrderService {
                     pcs = 1;
                 }
                 String sOp;
-                if (dimSurfaceOps != null && i < dimSurfaceOps.size() && dimSurfaceOps.get(i) != null && !dimSurfaceOps.get(i).isBlank()) {
+                if (dimSurfaceOps != null
+                        && i < dimSurfaceOps.size()
+                        && dimSurfaceOps.get(i) != null
+                        && !dimSurfaceOps.get(i).isBlank()) {
                     sOp = dimSurfaceOps.get(i).trim();
                 } else {
                     if (surfaceOperation != null) {
@@ -434,13 +441,19 @@ public class OperationWorkOrderService {
                     }
                 }
                 String sUnit;
-                if (dimSurfaceUnits != null && i < dimSurfaceUnits.size() && dimSurfaceUnits.get(i) != null && !dimSurfaceUnits.get(i).isBlank()) {
+                if (dimSurfaceUnits != null
+                        && i < dimSurfaceUnits.size()
+                        && dimSurfaceUnits.get(i) != null
+                        && !dimSurfaceUnits.get(i).isBlank()) {
                     sUnit = dimSurfaceUnits.get(i).trim();
                 } else {
                     sUnit = "m2";
                 }
                 String eOp;
-                if (dimEdgeOps != null && i < dimEdgeOps.size() && dimEdgeOps.get(i) != null && !dimEdgeOps.get(i).isBlank()) {
+                if (dimEdgeOps != null
+                        && i < dimEdgeOps.size()
+                        && dimEdgeOps.get(i) != null
+                        && !dimEdgeOps.get(i).isBlank()) {
                     eOp = dimEdgeOps.get(i).trim();
                 } else {
                     if (edgeOperation != null) {
@@ -450,7 +463,10 @@ public class OperationWorkOrderService {
                     }
                 }
                 String eUnit;
-                if (dimEdgeUnits != null && i < dimEdgeUnits.size() && dimEdgeUnits.get(i) != null && !dimEdgeUnits.get(i).isBlank()) {
+                if (dimEdgeUnits != null
+                        && i < dimEdgeUnits.size()
+                        && dimEdgeUnits.get(i) != null
+                        && !dimEdgeUnits.get(i).isBlank()) {
                     eUnit = dimEdgeUnits.get(i).trim();
                 } else {
                     eUnit = "m.t.";
@@ -462,8 +478,13 @@ public class OperationWorkOrderService {
                     dNote = "";
                 }
 
-                BigDecimal rowM2 = w.multiply(l).multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(CM2_PER_M2), 2, RoundingMode.HALF_UP);
-                BigDecimal rowMt = l.multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                BigDecimal rowM2 =
+                        w.multiply(l)
+                                .multiply(BigDecimal.valueOf(pcs))
+                                .divide(BigDecimal.valueOf(CM2_PER_M2), 2, RoundingMode.HALF_UP);
+                BigDecimal rowMt =
+                        l.multiply(BigDecimal.valueOf(pcs))
+                                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
                 sumM2 = sumM2.add(rowM2);
                 sumMt = sumMt.add(rowMt);
                 totalPieces += pcs;
@@ -500,10 +521,15 @@ public class OperationWorkOrderService {
                 } else {
                     value = " {" + dNote + "}";
                 }
-                breakdownBuilder.append(String.format("%d. %s x %s x %s cm — %d Adet (%s m² | %s m.t.) [Yüzey: %s (%s), Kenar: %s (%s)]%s\n",
-                        i + 1, w, l, t, pcs, rowM2, rowMt, sOp, sUnit, eOp, eUnit, value));
+                breakdownBuilder.append(
+                        String.format(
+                                "%d. %s x %s x %s cm — %d Adet (%s m² | %s m.t.) [Yüzey: %s (%s), Kenar: %s (%s)]%s\n",
+                                i + 1, w, l, t, pcs, rowM2, rowMt, sOp, sUnit, eOp, eUnit, value));
             }
-            breakdownBuilder.append(String.format("-------------------------------------------\nTOPLAM: %d Adet | %s m² | %s m.t.\n", totalPieces, sumM2, sumMt));
+            breakdownBuilder.append(
+                    String.format(
+                            "-------------------------------------------\nTOPLAM: %d Adet | %s m² | %s m.t.\n",
+                            totalPieces, sumM2, sumMt));
 
             if (effectiveQuantity == null || effectiveQuantity.compareTo(BigDecimal.ZERO) <= 0) {
                 if ("adet".equalsIgnoreCase(quantityUnit)) {
@@ -553,12 +579,29 @@ public class OperationWorkOrderService {
             finalNotes = breakdownBuilder.toString() + valueValue;
         }
 
-        WorkOrderCreateForm form = new WorkOrderCreateForm(
-                orderNo, customerId, orderDate, dueDate, department, responsiblePerson,
-                stoneType, colorQuality, effectiveThickness, effectiveWidth, effectiveLength, effectiveQuantity, quantityUnit,
-                topSurface, topEdge, sourceStockItemId, sourceSlabId, sourceBlockId,
-                usedQuantity, finalNotes, items
-        );
+        WorkOrderCreateForm form =
+                new WorkOrderCreateForm(
+                        orderNo,
+                        customerId,
+                        orderDate,
+                        dueDate,
+                        department,
+                        responsiblePerson,
+                        stoneType,
+                        colorQuality,
+                        effectiveThickness,
+                        effectiveWidth,
+                        effectiveLength,
+                        effectiveQuantity,
+                        quantityUnit,
+                        topSurface,
+                        topEdge,
+                        sourceStockItemId,
+                        sourceSlabId,
+                        sourceBlockId,
+                        usedQuantity,
+                        finalNotes,
+                        items);
 
         return workOrderMapper.toRef(createWorkOrder(form));
     }
@@ -582,9 +625,16 @@ public class OperationWorkOrderService {
      * @return grid rows
      */
     @Transactional(readOnly = true)
-    public TabulatorResponse<Map<String, Object>> orderRows(String search, BusinessUnit department, OperationWorkOrderStatus status, Long customerId, int page, int size) {
+    public TabulatorResponse<Map<String, Object>> orderRows(
+            String search,
+            BusinessUnit department,
+            OperationWorkOrderStatus status,
+            Long customerId,
+            int page,
+            int size) {
         int pageIndex = Math.max(0, page - 1);
-        Page<OperationWorkOrder> ordersPage = searchOrders(department, status, customerId, null, null, search, pageIndex, size);
+        Page<OperationWorkOrder> ordersPage =
+                searchOrders(department, status, customerId, null, null, search, pageIndex, size);
 
         List<Map<String, Object>> data = ordersPage.getContent().stream().map(ord -> {
             Map<String, Object> map = new HashMap<>();
@@ -674,6 +724,7 @@ public class OperationWorkOrderService {
     public Page<WorkOrderView> searchOrderRows(BusinessUnit dept, OperationWorkOrderStatus status,
                                                 Long customerId, LocalDate startDate, LocalDate endDate,
                                                 String search, int page, int size) {
-        return searchOrders(dept, status, customerId, startDate, endDate, search, page, size).map(workOrderMapper::toRow);
+        return searchOrders(dept, status, customerId, startDate, endDate, search, page, size)
+                .map(workOrderMapper::toRow);
     }
 }

@@ -55,7 +55,10 @@ class S3ObjectStorageServiceTest {
     @Test
     @DisplayName("checkHealth returns UP when bucket probe succeeds")
     void checkHealthWhenRustFsReachableReturnsUp() {
-        Mockito.when(s3Client.putObject(ArgumentMatchers.any(PutObjectRequest.class), ArgumentMatchers.any(RequestBody.class)))
+        Mockito.when(
+                        s3Client.putObject(
+                                ArgumentMatchers.any(PutObjectRequest.class),
+                                ArgumentMatchers.any(RequestBody.class)))
                 .thenReturn(PutObjectResponse.builder().build());
 
         var health = storage.checkHealth();
@@ -79,7 +82,10 @@ class S3ObjectStorageServiceTest {
     @Test
     @DisplayName("checkHealth returns DOWN when the write probe fails")
     void checkHealthWhenWriteProbeFailsReturnsDown() {
-        Mockito.when(s3Client.putObject(ArgumentMatchers.any(PutObjectRequest.class), ArgumentMatchers.any(RequestBody.class)))
+        Mockito.when(
+                        s3Client.putObject(
+                                ArgumentMatchers.any(PutObjectRequest.class),
+                                ArgumentMatchers.any(RequestBody.class)))
                 .thenThrow(new RuntimeException("Access Denied"));
 
         var health = storage.checkHealth();
@@ -212,7 +218,10 @@ class S3ObjectStorageServiceTest {
         PresignedGetObjectRequest presigned = Mockito.mock(PresignedGetObjectRequest.class);
         Mockito.when(presigned.url()).thenReturn(URI.create(
                 "http://files.example.com/erp-files/images/block/1/photo.jpg?X-Amz-Signature=hidden").toURL());
-        Mockito.when(s3Presigner.presignGetObject(ArgumentMatchers.any(GetObjectPresignRequest.class))).thenReturn(presigned);
+        Mockito.when(
+                        s3Presigner.presignGetObject(
+                                ArgumentMatchers.any(GetObjectPresignRequest.class)))
+                .thenReturn(presigned);
     }
 
     private GetObjectPresignRequest capturedPresignRequest() {

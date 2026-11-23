@@ -78,9 +78,17 @@ class MachineFuelControllerTest {
         entry.setMachine(machine);
         entry.setLitres(new BigDecimal("450"));
 
-        Mockito.when(machineFuelService.recordFuelView(
-                ArgumentMatchers.eq(1L), ArgumentMatchers.any(), ArgumentMatchers.eq(new BigDecimal("450")), ArgumentMatchers.eq(new BigDecimal("42.50")),
-                ArgumentMatchers.eq(new BigDecimal("1200.5")), ArgumentMatchers.eq("F-01"), ArgumentMatchers.eq("Ali"), ArgumentMatchers.eq("Veli"), ArgumentMatchers.eq("Test note")))
+        Mockito.when(
+                        machineFuelService.recordFuelView(
+                                ArgumentMatchers.eq(1L),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.eq(new BigDecimal("450")),
+                                ArgumentMatchers.eq(new BigDecimal("42.50")),
+                                ArgumentMatchers.eq(new BigDecimal("1200.5")),
+                                ArgumentMatchers.eq("F-01"),
+                                ArgumentMatchers.eq("Ali"),
+                                ArgumentMatchers.eq("Veli"),
+                                ArgumentMatchers.eq("Test note")))
                 .thenReturn(entry);
 
         RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();

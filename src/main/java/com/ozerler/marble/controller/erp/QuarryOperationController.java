@@ -59,9 +59,18 @@ public class QuarryOperationController extends AbstractController {
         model.addAttribute("status", valueValue);
         model.addAttribute("totalEstTon", formLookup.estimatedTonnage());
         model.addAttribute("totalActTon", formLookup.actualTonnage());
-        model.addAttribute("grid", OperationQuarryBlockGrid.view(
-                quarryOperationService.searchQuarryBlockViews(query.getSearch(), status, query.pageNumber() - 1, query.pageSize()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute(
+                "grid",
+                OperationQuarryBlockGrid.view(
+                        quarryOperationService.searchQuarryBlockViews(
+                                query.getSearch(),
+                                status,
+                                query.pageNumber() - 1,
+                                query.pageSize()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         model.addAttribute("activeSection", "quarry");
         return "operations/quarry/index";
     }
@@ -108,7 +117,13 @@ public class QuarryOperationController extends AbstractController {
                     estimatedTonnage, actualTonnage, stoneType, colorTone, qualityGrade,
                     crackLevel, quarrySection, notes
             );
-            redirectAttributes.addFlashAttribute("successMessage", "Blok (" + block.getBlockCode() + ") başarıyla kaydedildi. Tahmini: " + block.getEstimatedTonnage() + " ton.");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Blok ("
+                            + block.getBlockCode()
+                            + ") başarıyla kaydedildi. Tahmini: "
+                            + block.getEstimatedTonnage()
+                            + " ton.");
             return "redirect:/operations/quarry";
         } catch (Exception e) {
             log.error("Blok kaydedilemedi", e);
@@ -124,7 +139,15 @@ public class QuarryOperationController extends AbstractController {
                                       RedirectAttributes redirectAttributes) {
         try {
             BlockView block = quarryOperationService.updateActualTonnageView(id, actualTonnage);
-            redirectAttributes.addFlashAttribute("successMessage", "Blok (" + block.getBlockCode() + ") gerçek tonajı güncellendi: " + block.getActualTonnage() + " ton (Tahmini tonaj: " + block.getEstimatedTonnage() + " ton korundu).");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Blok ("
+                            + block.getBlockCode()
+                            + ") gerçek tonajı güncellendi: "
+                            + block.getActualTonnage()
+                            + " ton (Tahmini tonaj: "
+                            + block.getEstimatedTonnage()
+                            + " ton korundu).");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
@@ -152,8 +175,16 @@ public class QuarryOperationController extends AbstractController {
                                 @RequestParam(value = "notes", required = false) String notes,
                                 RedirectAttributes redirectAttributes) {
         try {
-            BlockView block = quarryOperationService.dispatchBlockView(id, targetDestination, customerId, invoiceId, notes);
-            redirectAttributes.addFlashAttribute("successMessage", "Blok (" + block.getBlockCode() + ") başarıyla " + targetDestination.getLabel() + " hedefine sevk edildi. Stok hareketi oluşturuldu.");
+            BlockView block =
+                    quarryOperationService.dispatchBlockView(
+                            id, targetDestination, customerId, invoiceId, notes);
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Blok ("
+                            + block.getBlockCode()
+                            + ") başarıyla "
+                            + targetDestination.getLabel()
+                            + " hedefine sevk edildi. Stok hareketi oluşturuldu.");
             return "redirect:/operations/quarry";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Sevk hatası: " + e.getMessage());

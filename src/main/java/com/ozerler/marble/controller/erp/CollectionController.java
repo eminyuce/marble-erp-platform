@@ -53,9 +53,21 @@ public class CollectionController extends AbstractController {
         BigDecimal monthlyTotal = collectionService.getMonthlyTotal();
         long approachingChecksCount = collectionService.getApproachingChecksCount();
 
-        model.addAttribute("grid", CollectionGrid.view(
-                collectionService.searchCollectionViews(method, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute(
+                "grid",
+                CollectionGrid.view(
+                        collectionService.searchCollectionViews(
+                                method,
+                                customerId,
+                                null,
+                                null,
+                                query.getSearch(),
+                                query.pageNumber() - 1,
+                                query.pageSize()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         Object valueValue;
         if (method != null) {
             valueValue = method.name();
@@ -128,7 +140,15 @@ public class CollectionController extends AbstractController {
                     customerId, invoiceId, method, amount, bankName, notes, checkData
             );
 
-            redirectAttributes.addFlashAttribute("successMessage", "Tahsilat (" + collection.getCollectionNo() + ") başarıyla kaydedildi: " + amount + " TL (" + method.getLabel() + ")");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Tahsilat ("
+                            + collection.getCollectionNo()
+                            + ") başarıyla kaydedildi: "
+                            + amount
+                            + " TL ("
+                            + method.getLabel()
+                            + ")");
             return "redirect:/collections";
         } catch (Exception e) {
             log.error("Tahsilat kaydedilemedi", e);
@@ -193,7 +213,9 @@ public class CollectionController extends AbstractController {
                                     RedirectAttributes redirectAttributes) {
         try {
             CheckRef check = collectionService.updateCheckStatusRef(id, status, notes);
-            redirectAttributes.addFlashAttribute("successMessage", "Çek (" + check.getCheckNo() + ") durumu güncellendi: " + status.getLabel());
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Çek (" + check.getCheckNo() + ") durumu güncellendi: " + status.getLabel());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }

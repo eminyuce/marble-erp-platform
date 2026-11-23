@@ -28,7 +28,13 @@ final class RowDimensions {
 
     @FunctionalInterface
     interface SizedPiece {
-        void accept(int index, BigDecimal width, BigDecimal length, BigDecimal thickness, int pieceCount, BigDecimal quantity);
+        void accept(
+                int index,
+                BigDecimal width,
+                BigDecimal length,
+                BigDecimal thickness,
+                int pieceCount,
+                BigDecimal quantity);
     }
 
     static void eachPositiveSizedRow(List<BigDecimal> widths, List<BigDecimal> lengths, List<BigDecimal> thicknesses,

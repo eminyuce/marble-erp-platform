@@ -96,7 +96,11 @@ class ExpensePurchaseControllerTest {
     @Test
     @DisplayName("deleteExpenseApi deletes expense and returns ok response")
     void deleteExpenseApiSuccess() {
-        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("erp.expense.delete.success"), ArgumentMatchers.any(), ArgumentMatchers.any(Locale.class)))
+        Mockito.when(
+                        messageSource.getMessage(
+                                ArgumentMatchers.eq("erp.expense.delete.success"),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(Locale.class)))
                 .thenReturn("Gider silindi");
 
         BackEndResponse response = controller.deleteExpenseApi(42L, Locale.getDefault());
@@ -156,7 +160,11 @@ class ExpensePurchaseControllerTest {
     @Test
     @DisplayName("recordExpense saves expense and redirects")
     void recordExpenseSuccess() {
-        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("erp.expense.record.success"), ArgumentMatchers.any(), ArgumentMatchers.any(Locale.class)))
+        Mockito.when(
+                        messageSource.getMessage(
+                                ArgumentMatchers.eq("erp.expense.record.success"),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(Locale.class)))
                 .thenReturn("Gider kaydedildi");
 
         RedirectAttributesModelMap ra =
@@ -170,14 +178,20 @@ class ExpensePurchaseControllerTest {
                 Locale.getDefault(), ra, model);
 
         Assertions.assertThat(view).isEqualTo("redirect:/expenses");
-        Mockito.verify(expenseService).recordForScreen(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any());
+        Mockito.verify(expenseService)
+                .recordForScreen(
+                        ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any());
         Assertions.assertThat(ra.getFlashAttributes()).containsKey("successMessage");
     }
 
     @Test
     @DisplayName("updateExpense updates expense and redirects")
     void updateExpenseSuccess() {
-        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("erp.expense.update.success"), ArgumentMatchers.any(), ArgumentMatchers.any(Locale.class)))
+        Mockito.when(
+                        messageSource.getMessage(
+                                ArgumentMatchers.eq("erp.expense.update.success"),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(Locale.class)))
                 .thenReturn("Gider güncellendi");
 
         RedirectAttributesModelMap ra =
@@ -191,7 +205,12 @@ class ExpensePurchaseControllerTest {
                 Locale.getDefault(), ra, model);
 
         Assertions.assertThat(view).isEqualTo("redirect:/expenses");
-        Mockito.verify(expenseService).updateForScreen(ArgumentMatchers.eq(10L), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any());
+        Mockito.verify(expenseService)
+                .updateForScreen(
+                        ArgumentMatchers.eq(10L),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any());
         Assertions.assertThat(ra.getFlashAttributes()).containsKey("successMessage");
     }
 }

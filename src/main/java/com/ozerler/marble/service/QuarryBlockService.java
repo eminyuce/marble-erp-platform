@@ -100,14 +100,27 @@ public class QuarryBlockService {
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<BlockDto> getBlocksPaged(int page, int size, String search, String sortField, String sortDir,
-                                                    StockLocationType locationType, BlockStatus status) {
+    public TabulatorResponse<BlockDto> getBlocksPaged(
+            int page,
+            int size,
+            String search,
+            String sortField,
+            String sortDir,
+            StockLocationType locationType,
+            BlockStatus status) {
         return getBlocksPaged(page, size, search, sortField, sortDir, locationType, status, "IN_STOCK");
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<BlockDto> getBlocksPaged(int page, int size, String search, String sortField, String sortDir,
-                                                    StockLocationType locationType, BlockStatus status, String stockFilter) {
+    public TabulatorResponse<BlockDto> getBlocksPaged(
+            int page,
+            int size,
+            String search,
+            String sortField,
+            String sortDir,
+            StockLocationType locationType,
+            BlockStatus status,
+            String stockFilter) {
         String effectiveFilter;
         if (stockFilter == null || stockFilter.isBlank()) {
             effectiveFilter = "IN_STOCK";
@@ -176,7 +189,9 @@ public class QuarryBlockService {
     private Map<String, Object> gridMetricsMetaWithStockFilter(String search, StockLocationType locationType,
                                                                BlockStatus status, String stockFilter,
                                                                Map<Long, BigDecimal> expensePerTonByQuarry) {
-        List<Object[]> rows = blockRepository.sumGridMetricsWithStockFilterByQuarry(search, locationType, status, stockFilter);
+        List<Object[]> rows =
+                blockRepository.sumGridMetricsWithStockFilterByQuarry(
+                        search, locationType, status, stockFilter);
         BigDecimal totalTonnage = BigDecimal.ZERO;
         BigDecimal totalSurfaceM2 = BigDecimal.ZERO;
         BigDecimal totalTransport = BigDecimal.ZERO;
@@ -305,7 +320,10 @@ public class QuarryBlockService {
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.quarry.not_found", quarryId)));
         assertBlockCodeAvailable(normalizedCode, null);
 
-        StockLocation targetLocation = requireLocation(Objects.requireNonNullElse(locationType, StockLocationType.PRODUCTION_YARD));
+        StockLocation targetLocation =
+                requireLocation(
+                        Objects.requireNonNullElse(
+                                locationType, StockLocationType.PRODUCTION_YARD));
         LocalDate extractionDateValue;
         if (extractionDate != null) {
             extractionDateValue = extractionDate;
@@ -443,7 +461,9 @@ public class QuarryBlockService {
         }
 
         // Move to specific area if changed in edit page
-        if (locationType != null && (block.getCurrentLocation() == null || block.getCurrentLocation().getLocationType() != locationType)) {
+        if (locationType != null
+                && (block.getCurrentLocation() == null
+                        || block.getCurrentLocation().getLocationType() != locationType)) {
             StockLocation oldLoc = block.getCurrentLocation();
             StockLocation newLoc = requireLocation(locationType);
             block.setCurrentLocation(newLoc);
@@ -700,7 +720,13 @@ public class QuarryBlockService {
 
     @CacheEvict(value = Constants.CACHE_QUARRIES, allEntries = true)
     @Transactional
-    public Quarry saveQuarry(Long id, String code, String name, String location, BigDecimal specificGravity, String licenseNo) {
+    public Quarry saveQuarry(
+            Long id,
+            String code,
+            String name,
+            String location,
+            BigDecimal specificGravity,
+            String licenseNo) {
         Objects.requireNonNull(code, getMessage("error.quarry.code.required"));
         Objects.requireNonNull(name, getMessage("error.quarry.name.required"));
         if (specificGravity == null || specificGravity.compareTo(BigDecimal.ZERO) <= 0) {
@@ -822,9 +848,18 @@ public class QuarryBlockService {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
-        CostCenter center = costCenterRepository.findByCode(Constants.COST_CENTER_FACTORY_TRANSPORT)
-                .or(() -> costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.FACTORY))
-                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.factory_transport.missing")));
+        CostCenter center =
+                costCenterRepository
+                        .findByCode(Constants.COST_CENTER_FACTORY_TRANSPORT)
+                        .or(
+                                () ->
+                                        costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(
+                                                BusinessUnit.FACTORY))
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                getMessage(
+                                                        "error.cost_center.factory_transport.missing")));
         String period = YearMonth.now().toString();
         expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 center.getId(), ExpenseType.TRANSPORTATION, null, BusinessUnit.FACTORY, amount,

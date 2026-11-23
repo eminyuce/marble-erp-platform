@@ -12,7 +12,9 @@ import com.ozerler.marble.model.enums.StockProductType;
 class StockItemRepositoryQueryTest {
 
     @Test
-    @DisplayName("searchItems uses @EntityGraph with customer, sourceBlock, and stockLocation to prevent lazy initialization issues")
+    @DisplayName(
+            "searchItems uses @EntityGraph with customer, sourceBlock, and stockLocation to prevent lazy "
+                    + "initialization issues")
     void searchItemsUsesEntityGraph() throws Exception {
         EntityGraph entityGraph = StockItemRepository.class
                 .getMethod("searchItems",
@@ -47,7 +49,8 @@ class StockItemRepositoryQueryTest {
     }
 
     @Test
-    @DisplayName("findPositiveQuantityWithLocation loads stockLocation so business unit can be read outside the session")
+    @DisplayName(
+            "findPositiveQuantityWithLocation loads stockLocation so business unit can be read outside the session")
     void findPositiveQuantityWithLocationFetchesStockLocation() throws Exception {
         EntityGraph entityGraph = StockItemRepository.class
                 .getMethod("findPositiveQuantityWithLocation")

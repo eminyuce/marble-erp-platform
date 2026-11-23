@@ -15,7 +15,9 @@ class ProductionGridActionsTest {
             script = new String(in.readAllBytes());
         }
 
-        Assertions.assertThat(script).contains("{icon: 'edit-3', label: 'Düzenle', href: '/production/orders/' + row.id + '/edit'}");
+        Assertions.assertThat(script)
+                .contains(
+                        "{icon: 'edit-3', label: 'Düzenle', href: '/production/orders/' + row.id + '/edit'}");
         Assertions.assertThat(script).contains("erpStatusBadge(row.status, row.statusLabel)");
     }
 

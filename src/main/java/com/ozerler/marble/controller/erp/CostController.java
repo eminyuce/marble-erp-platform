@@ -112,7 +112,10 @@ public class CostController {
 
         BigDecimal totalSiteMarginPct;
         if (totalSiteRevenue != null && totalSiteRevenue.compareTo(BigDecimal.ZERO) > 0 && totalSiteNet != null) {
-            totalSiteMarginPct = totalSiteNet.multiply(BigDecimal.valueOf(100)).divide(totalSiteRevenue, 1, RoundingMode.HALF_UP);
+            totalSiteMarginPct =
+                    totalSiteNet
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(totalSiteRevenue, 1, RoundingMode.HALF_UP);
         } else {
             totalSiteMarginPct = null;
         }
@@ -138,17 +141,20 @@ public class CostController {
 
     @PostMapping("/expenses")
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
-    public String recordExpense(@RequestParam("centerId") Long centerId,
-                                @RequestParam("expenseType") ExpenseType expenseType,
-                                @RequestParam("businessUnit") BusinessUnit businessUnit,
-                                @RequestParam("amount") BigDecimal amount,
-                                @RequestParam(value = "projectId", required = false) Long projectId,
-                                @RequestParam(value = "documentNo", required = false) String documentNo,
-                                @RequestParam(value = "invoiceDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate invoiceDate,
-                                @RequestParam(value = "expensePeriod", required = false) String expensePeriod,
-                                @RequestParam(value = "description", required = false) String description,
-                                Locale locale,
-                                RedirectAttributes redirectAttributes) {
+    public String recordExpense(
+            @RequestParam("centerId") Long centerId,
+            @RequestParam("expenseType") ExpenseType expenseType,
+            @RequestParam("businessUnit") BusinessUnit businessUnit,
+            @RequestParam("amount") BigDecimal amount,
+            @RequestParam(value = "projectId", required = false) Long projectId,
+            @RequestParam(value = "documentNo", required = false) String documentNo,
+            @RequestParam(value = "invoiceDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate invoiceDate,
+            @RequestParam(value = "expensePeriod", required = false) String expensePeriod,
+            @RequestParam(value = "description", required = false) String description,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
         try {
             expenseService.recordForScreen(new ExpenseService.ExpenseDraft(
                     centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,

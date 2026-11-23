@@ -60,15 +60,27 @@ public class SalesService {
         return MessageUtils.getMessage(code, args);
     }
 
-    public record SalesSummaryDto(long totalOrders, BigDecimal totalAmount, BigDecimal paidAmount, BigDecimal remainingBalance) {
+    public record SalesSummaryDto(
+            long totalOrders,
+            BigDecimal totalAmount,
+            BigDecimal paidAmount,
+            BigDecimal remainingBalance) {
     }
 
     @Transactional(readOnly = true)
     public SalesSummaryDto getSalesSummary() {
         List<SalesOrder> all = BoundedReads.all(salesOrderRepository);
         long total = all.size();
-        BigDecimal totalAmt = all.stream().map(order -> order.getTotalAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        BigDecimal paidAmt = all.stream().map(order -> order.getPaidAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal totalAmt =
+                all.stream()
+                        .map(order -> order.getTotalAmount())
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal paidAmt =
+                all.stream()
+                        .map(order -> order.getPaidAmount())
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal remaining = totalAmt.subtract(paidAmt);
         return new SalesSummaryDto(total, totalAmt, paidAmt, remaining);
     }
@@ -80,13 +92,21 @@ public class SalesService {
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<SalesOrderDto> getSalesOrdersPaged(int page, int size,
-                                                                String search, String status, String sortField, String sortDir) {
+    public TabulatorResponse<SalesOrderDto> getSalesOrdersPaged(
+            int page, int size, String search, String status, String sortField, String sortDir) {
         Page<SalesOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.SALES_ORDER_SORTS,
                 pageable -> salesOrderRepository.searchSalesOrders(GridPages.normalizeSearch(search), pageable));
         List<SalesOrder> orders = orderPage.getContent();
         if (status != null && !status.isBlank()) {
-            orders = orders.stream().filter(o -> o.getStatus() != null && o.getStatus().name().equalsIgnoreCase(status)).toList();
+            orders =
+                    orders.stream()
+                            .filter(
+                                    o ->
+                                            o.getStatus() != null
+                                                    && o.getStatus()
+                                                            .name()
+                                                            .equalsIgnoreCase(status))
+                            .toList();
         }
         List<SalesOrderDto> dtos = orders.stream()
                 .map(SalesOrderDto::fromEntity)

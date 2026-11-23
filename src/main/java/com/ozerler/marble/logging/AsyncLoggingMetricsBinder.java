@@ -31,15 +31,30 @@ public class AsyncLoggingMetricsBinder implements MeterBinder {
                 .tag(AsyncLoggingMetrics.TAG_APPENDER, "async")
                 .register(registry);
 
-        Gauge.builder(AsyncLoggingMetrics.BUFFER_UTILIZATION, HOLDER, ignored -> AsyncLoggingAppender.aggregateBufferUtilization())
+        Gauge.builder(
+                        AsyncLoggingMetrics.BUFFER_UTILIZATION,
+                        HOLDER,
+                        ignored -> AsyncLoggingAppender.aggregateBufferUtilization())
                 .description("Async logging buffer utilization (depth / capacity)")
                 .tag(AsyncLoggingMetrics.TAG_APPENDER, "async")
                 .register(registry);
 
-        bindDropped(registry, AsyncLoggingMetrics.REASON_LOW_PRIORITY, ignored -> AsyncLoggingAppender.totalDroppedLowPriority());
-        bindDropped(registry, AsyncLoggingMetrics.REASON_QUEUE_FULL, ignored -> AsyncLoggingAppender.totalDroppedQueueFull());
-        bindDropped(registry, AsyncLoggingMetrics.REASON_EVICTED, ignored -> AsyncLoggingAppender.totalDroppedEvicted());
-        bindDropped(registry, AsyncLoggingMetrics.REASON_SHUTDOWN, ignored -> AsyncLoggingAppender.totalDroppedShutdown());
+        bindDropped(
+                registry,
+                AsyncLoggingMetrics.REASON_LOW_PRIORITY,
+                ignored -> AsyncLoggingAppender.totalDroppedLowPriority());
+        bindDropped(
+                registry,
+                AsyncLoggingMetrics.REASON_QUEUE_FULL,
+                ignored -> AsyncLoggingAppender.totalDroppedQueueFull());
+        bindDropped(
+                registry,
+                AsyncLoggingMetrics.REASON_EVICTED,
+                ignored -> AsyncLoggingAppender.totalDroppedEvicted());
+        bindDropped(
+                registry,
+                AsyncLoggingMetrics.REASON_SHUTDOWN,
+                ignored -> AsyncLoggingAppender.totalDroppedShutdown());
     }
 
     private static void bindDropped(

@@ -142,7 +142,8 @@ public class Pallet extends AuditableEntity {
 
     @Transient
     public boolean isShippable() {
-        return !"SHIPPED".equalsIgnoreCase(status) && (getTotalQuantity() > 0 || getTotalAreaM2().compareTo(BigDecimal.ZERO) > 0);
+        return !"SHIPPED".equalsIgnoreCase(status)
+                && (getTotalQuantity() > 0 || getTotalAreaM2().compareTo(BigDecimal.ZERO) > 0);
     }
 
     @Transient

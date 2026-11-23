@@ -70,7 +70,12 @@ class ProcurementServiceTest {
     @Test
     @DisplayName("confirming a purchase posts the total to the unit cost center")
     void confirmOrderPostsExpenseToBusinessUnit() {
-        Supplier supplier = Supplier.builder().id(1L).companyName("Tedarik").supplierType(SupplierType.CONSUMABLE).build();
+        Supplier supplier =
+                Supplier.builder()
+                        .id(1L)
+                        .companyName("Tedarik")
+                        .supplierType(SupplierType.CONSUMABLE)
+                        .build();
         Project project = Project.builder().id(3L).name("Şantiye A").build();
         PurchaseOrder order = PurchaseOrder.builder()
                 .id(10L)
@@ -81,16 +86,24 @@ class ProcurementServiceTest {
                 .status(PurchaseOrderStatus.DRAFT)
                 .totalAmount(new BigDecimal("2500"))
                 .build();
-        CostCenter siteCenter = CostCenter.builder().id(5L).code("CC-005").name("Şantiyeler").businessUnit(BusinessUnit.SITE).build();
+        CostCenter siteCenter =
+                CostCenter.builder()
+                        .id(5L)
+                        .code("CC-005")
+                        .name("Şantiyeler")
+                        .businessUnit(BusinessUnit.SITE)
+                        .build();
 
         Mockito.when(purchaseOrderRepository.findWithDetailsById(10L)).thenReturn(Optional.of(order));
         Mockito.when(costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE))
                 .thenReturn(Optional.of(siteCenter));
-        Mockito.when(purchaseOrderRepository.save(ArgumentMatchers.any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(purchaseOrderRepository.save(ArgumentMatchers.any(PurchaseOrder.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         procurementService.updateStatus(10L, PurchaseOrderStatus.CONFIRMED);
 
-        ArgumentCaptor<ExpenseService.ExpenseDraft> expense = ArgumentCaptor.forClass(ExpenseService.ExpenseDraft.class);
+        ArgumentCaptor<ExpenseService.ExpenseDraft> expense =
+                ArgumentCaptor.forClass(ExpenseService.ExpenseDraft.class);
         Mockito.verify(expenseService).recordExpense(expense.capture());
         Assertions.assertThat(expense.getValue().businessUnit()).isEqualTo(BusinessUnit.SITE);
         Assertions.assertThat(expense.getValue().centerId()).isEqualTo(5L);

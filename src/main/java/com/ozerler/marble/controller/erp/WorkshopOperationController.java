@@ -69,8 +69,16 @@ public class WorkshopOperationController extends AbstractController {
     public String index(@RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
                         @ModelAttribute ListQuery query, Model model) {
 
-        Page<WorkOrderView> ordersPage = workOrderService.searchOrderRows(
-                BusinessUnit.WORKSHOP, status, null, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize());
+        Page<WorkOrderView> ordersPage =
+                workOrderService.searchOrderRows(
+                        BusinessUnit.WORKSHOP,
+                        status,
+                        null,
+                        null,
+                        null,
+                        query.getSearch(),
+                        query.pageNumber() - 1,
+                        query.pageSize());
         model.addAttribute("orders", ordersPage.getContent());
         model.addAttribute("page", ordersPage);
         model.addAttribute("grid", WorkshopOrderGrid.view(
@@ -93,10 +101,13 @@ public class WorkshopOperationController extends AbstractController {
 
     // --- 2. ATÖLYE PLAKA STOK SAHASI ---
     @GetMapping("/slabs")
-    public String workshopSlabs(@RequestParam(required = false, name = "status") SlabStatus status,
-                                @RequestParam(required = false, name = "customerId") Long customerId,
-                                @RequestParam(name = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
-                                @ModelAttribute ListQuery query, Model model) {
+    public String workshopSlabs(
+            @RequestParam(required = false, name = "status") SlabStatus status,
+            @RequestParam(required = false, name = "customerId") Long customerId,
+            @RequestParam(name = "generalStockOnly", defaultValue = "false")
+                    boolean generalStockOnly,
+            @ModelAttribute ListQuery query,
+            Model model) {
 
         Page<SlabView> slabsPage = StockYardResponses.slabPage(
                 factoryStockService, status, customerId, generalStockOnly, query);
@@ -137,13 +148,22 @@ public class WorkshopOperationController extends AbstractController {
 
     // --- 3. ATÖLYE EBATLI STOK SAHASI ---
     @GetMapping("/sized")
-    public String workshopSized(@RequestParam(value = "customerId", required = false) Long customerId,
-                                @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
-                                @RequestParam(value = "customerOnly", defaultValue = "false") boolean customerOnly,
-                                @ModelAttribute ListQuery query, Model model) {
+    public String workshopSized(
+            @RequestParam(value = "customerId", required = false) Long customerId,
+            @RequestParam(value = "generalStockOnly", defaultValue = "false")
+                    boolean generalStockOnly,
+            @RequestParam(value = "customerOnly", defaultValue = "false") boolean customerOnly,
+            @ModelAttribute ListQuery query,
+            Model model) {
 
-        Page<StockItemView> itemsPage = factoryStockService.getSizedStockItemViewsPaged(
-                customerId, generalStockOnly, customerOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
+        Page<StockItemView> itemsPage =
+                factoryStockService.getSizedStockItemViewsPaged(
+                        customerId,
+                        generalStockOnly,
+                        customerOnly,
+                        query.getSearch(),
+                        query.pageNumber() - 1,
+                        query.pageSize());
         var customers = formLookup.customers();
 
         BigDecimal totalStockM2 = itemsPage.getContent().stream()
@@ -199,7 +219,9 @@ public class WorkshopOperationController extends AbstractController {
         }
 
         var sourceSizedList = new ArrayList<>(formLookup.stockByTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
-        if (selectedSourceItem != null && sourceSizedList.stream().noneMatch(it -> it.getId().equals(selectedSourceItem.getId()))) {
+        if (selectedSourceItem != null
+                && sourceSizedList.stream()
+                        .noneMatch(it -> it.getId().equals(selectedSourceItem.getId()))) {
             sourceSizedList.add(0, selectedSourceItem);
         }
 
@@ -257,8 +279,13 @@ public class WorkshopOperationController extends AbstractController {
                         return BigDecimal.ZERO;
                     })
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Atölye ebatlama işlemi başarıyla tamamlandı. " + created.size() + " grup ürün (" + totalM2 + " m²) Atölye Ebatlı Stok Sahasına eklendi.");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Atölye ebatlama işlemi başarıyla tamamlandı. "
+                            + created.size()
+                            + " grup ürün ("
+                            + totalM2
+                            + " m²) Atölye Ebatlı Stok Sahasına eklendi.");
             return "redirect:/operations/workshop/sized";
         } catch (Exception e) {
             log.error("Atölye ebatlı ürün üretim hatası", e);

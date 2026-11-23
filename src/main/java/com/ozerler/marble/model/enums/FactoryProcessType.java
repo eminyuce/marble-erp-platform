@@ -7,7 +7,10 @@ public enum FactoryProcessType {
     GANGSAW_CUTTING("enum.factory_process_type.gangsaw_cutting", QuantityUnit.TON, QuantityUnit.SQUARE_METER),
     SLAB_POLISHING("enum.factory_process_type.slab_polishing", QuantityUnit.SQUARE_METER, QuantityUnit.SQUARE_METER),
     STRIP_POLISHING("enum.factory_process_type.strip_polishing", QuantityUnit.SQUARE_METER, QuantityUnit.SQUARE_METER),
-    BRIDGE_SAW_SIZING("enum.factory_process_type.bridge_saw_sizing", QuantityUnit.SQUARE_METER, QuantityUnit.SQUARE_METER),
+    BRIDGE_SAW_SIZING(
+            "enum.factory_process_type.bridge_saw_sizing",
+            QuantityUnit.SQUARE_METER,
+            QuantityUnit.SQUARE_METER),
     PALLETIZING("enum.factory_process_type.palletizing", QuantityUnit.SQUARE_METER, QuantityUnit.SQUARE_METER);
 
     private final String messageKey;

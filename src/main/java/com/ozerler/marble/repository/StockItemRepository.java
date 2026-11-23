@@ -48,9 +48,11 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     boolean existsByDescriptionIgnoreCase(String description);
 
-    Optional<StockItem> findByStockLocationBusinessUnitAndDescriptionIgnoreCase(BusinessUnit businessUnit, String description);
+    Optional<StockItem> findByStockLocationBusinessUnitAndDescriptionIgnoreCase(
+            BusinessUnit businessUnit, String description);
 
-    Optional<StockItem> findFirstByStockLocationLocationTypeAndProductType(StockLocationType locationType, StockProductType productType);
+    Optional<StockItem> findFirstByStockLocationLocationTypeAndProductType(
+            StockLocationType locationType, StockProductType productType);
 
     List<StockItem> findByProjectId(Long projectId);
 
@@ -124,9 +126,13 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
     @Query("SELECT COUNT(s) FROM StockItem s WHERE s.productType = :productType AND s.status = 'AVAILABLE'")
     long countAvailableByProductType(@Param("productType") StockProductType productType);
 
-    @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM StockItem s WHERE s.productType = :productType AND s.status = 'AVAILABLE'")
+    @Query(
+            "SELECT COALESCE(SUM(s.quantity), 0) FROM StockItem s WHERE s.productType = :productType AND s.status = "
+                    + "'AVAILABLE'")
     BigDecimal sumQuantityByProductType(@Param("productType") StockProductType productType);
 
-    @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM StockItem s WHERE s.customer.id = :customerId AND s.status = 'AVAILABLE'")
+    @Query(
+            "SELECT COALESCE(SUM(s.quantity), 0) FROM StockItem s WHERE s.customer.id = :customerId AND s.status = "
+                    + "'AVAILABLE'")
     BigDecimal sumQuantityByCustomer(@Param("customerId") Long customerId);
 }

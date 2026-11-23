@@ -13,7 +13,8 @@ class FactoryProcessRoutingTest {
     @Test
     @DisplayName("ST cutting allows only strip polishing")
     void stCuttingAllowsStripPolishing() {
-        FactoryProcessRouting.requireValidSurfaceRouting(FactoryProcessType.ST_CUTTING, FactoryProcessType.STRIP_POLISHING);
+        FactoryProcessRouting.requireValidSurfaceRouting(
+                FactoryProcessType.ST_CUTTING, FactoryProcessType.STRIP_POLISHING);
         Assertions.assertThat(FactoryProcessRouting.requiredPolishingFor(FactoryProcessType.ST_CUTTING))
                 .isEqualTo(FactoryProcessType.STRIP_POLISHING);
     }
@@ -33,7 +34,8 @@ class FactoryProcessRoutingTest {
     @Test
     @DisplayName("Gangsaw cutting allows only slab polishing")
     void gangsawnAllowsSlabPolishing() {
-        FactoryProcessRouting.requireValidSurfaceRouting(FactoryProcessType.GANGSAW_CUTTING, FactoryProcessType.SLAB_POLISHING);
+        FactoryProcessRouting.requireValidSurfaceRouting(
+                FactoryProcessType.GANGSAW_CUTTING, FactoryProcessType.SLAB_POLISHING);
         Assertions.assertThatThrownBy(() -> FactoryProcessRouting.requireValidSurfaceRouting(
                 FactoryProcessType.GANGSAW_CUTTING, FactoryProcessType.STRIP_POLISHING))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -43,8 +45,10 @@ class FactoryProcessRoutingTest {
     @Test
     @DisplayName("bridge saw is allowed after either cutting type")
     void bridgeSawIsAlwaysAllowed() {
-        FactoryProcessRouting.requireValidSurfaceRouting(FactoryProcessType.ST_CUTTING, FactoryProcessType.BRIDGE_SAW_SIZING);
-        FactoryProcessRouting.requireValidSurfaceRouting(FactoryProcessType.GANGSAW_CUTTING, FactoryProcessType.BRIDGE_SAW_SIZING);
+        FactoryProcessRouting.requireValidSurfaceRouting(
+                FactoryProcessType.ST_CUTTING, FactoryProcessType.BRIDGE_SAW_SIZING);
+        FactoryProcessRouting.requireValidSurfaceRouting(
+                FactoryProcessType.GANGSAW_CUTTING, FactoryProcessType.BRIDGE_SAW_SIZING);
         Assertions.assertThat(FactoryProcessRouting.allowedSurfaceTypes(FactoryProcessType.ST_CUTTING))
                 .contains(FactoryProcessType.STRIP_POLISHING, FactoryProcessType.BRIDGE_SAW_SIZING)
                 .doesNotContain(FactoryProcessType.SLAB_POLISHING);

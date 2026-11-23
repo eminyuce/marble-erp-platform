@@ -45,17 +45,21 @@ class HelpServiceTest {
         Assertions.assertThat(helpService.getHelpPage("machine-fuel")).isPresent();
         Assertions.assertThat(helpService.getHelpPage("system-health")).isPresent();
         Assertions.assertThat(helpService.getHelpPage("block-move")).isPresent();
-        Assertions.assertThat(helpService.getHelpPage("block-move").orElseThrow().getTitle()).isEqualTo("Blok Saha Taşıma");
+        Assertions.assertThat(helpService.getHelpPage("block-move").orElseThrow().getTitle())
+                .isEqualTo("Blok Saha Taşıma");
         Assertions.assertThat(helpService.getHelpPage("block-transfer")).isPresent();
-        Assertions.assertThat(helpService.getHelpPage("block-transfer").orElseThrow().getTitle()).isEqualTo("Fabrikaya Sevk");
+        Assertions.assertThat(helpService.getHelpPage("block-transfer").orElseThrow().getTitle())
+                .isEqualTo("Fabrikaya Sevk");
         Assertions.assertThat(helpService.getHelpPage("block-photos")).isPresent();
-        Assertions.assertThat(helpService.getHelpPage("block-photos").orElseThrow().getTitle()).isEqualTo("Ocak — Blok Fotoğrafları & Taş Pasaportu");
+        Assertions.assertThat(helpService.getHelpPage("block-photos").orElseThrow().getTitle())
+                .isEqualTo("Ocak — Blok Fotoğrafları & Taş Pasaportu");
         Assertions.assertThat(helpService.getHelpPage("block-sell")).isPresent();
         Assertions.assertThat(helpService.getHelpPage("tablet")).isPresent();
         Assertions.assertThat(helpService.getHelpPage("pallets")).isPresent();
         Assertions.assertThat(helpService.getHelpPage("polish")).isPresent();
         Assertions.assertThat(helpService.getHelpPage("email-preview")).isPresent();
-        Assertions.assertThat(helpService.getHelpPage("email-preview").orElseThrow().getTitle()).isEqualTo("E-posta Şablon Önizleme");
+        Assertions.assertThat(helpService.getHelpPage("email-preview").orElseThrow().getTitle())
+                .isEqualTo("E-posta Şablon Önizleme");
     }
 
     @Test
@@ -104,12 +108,15 @@ class HelpServiceTest {
         Assertions.assertThat(helpService.resolvePageKey("/blocks/12")).contains("blocks");
         Assertions.assertThat(helpService.resolvePageKey("/blocks/12/edit")).contains("blocks");
         Assertions.assertThat(helpService.resolvePageKey("/blocks/12/move")).contains("block-move");
-        Assertions.assertThat(helpService.resolvePageKey("/blocks/12/move?targetType=DISPATCH_YARD")).contains("block-move");
+        Assertions.assertThat(
+                        helpService.resolvePageKey("/blocks/12/move?targetType=DISPATCH_YARD"))
+                .contains("block-move");
         Assertions.assertThat(helpService.resolvePageKey("/blocks/12/transfer-to-factory")).contains("block-transfer");
         Assertions.assertThat(helpService.resolvePageKey("/blocks/12/sell")).contains("block-sell");
         Assertions.assertThat(helpService.resolvePageKey("/blocks/12/photos")).contains("block-photos");
         Assertions.assertThat(helpService.resolvePageKey("/blocks/12/photos/8")).contains("block-photos");
-        Assertions.assertThat(helpService.resolvePageKey("/admin/settings/templates/3/preview")).contains("email-preview");
+        Assertions.assertThat(helpService.resolvePageKey("/admin/settings/templates/3/preview"))
+                .contains("email-preview");
         Assertions.assertThat(helpService.resolvePageKey("/invoices")).contains("invoices");
         Assertions.assertThat(helpService.resolvePageKey("/invoices/10")).contains("invoices");
         Assertions.assertThat(helpService.resolvePageKey("/unknown")).isEmpty();

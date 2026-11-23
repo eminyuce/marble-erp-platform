@@ -50,16 +50,28 @@ public final class ProductionOrderGrid {
             consumption = energy + " kWh";
         }
         String slabs = order.getSlabCount() + " Plaka";
-        return GridRow.of(viewUrl, editUrl, null, order.getOrderNo(), List.of(
-                GridCell.badge(order.getStatusLabel()),
-                GridCell.chip(order.getId()),
-                GridCell.link(order.getOrderNo(), viewUrl),
-                GridCell.link(GridWindow.clean(order.getMachineName()), viewUrl),
-                GridCell.link(GridWindow.clean(order.getBlockCode()), null, GridWindow.clean(order.getStoneType()), null),
-                GridCell.link(duration, null, consumption, null),
-                GridCell.link(slabs, null, GridWindow.withUnit(order.getTotalSlabAreaM2(), "m²"), null),
-                GridCell.text(GridWindow.clean(order.getOperatorName()))
-        ));
+        return GridRow.of(
+                viewUrl,
+                editUrl,
+                null,
+                order.getOrderNo(),
+                List.of(
+                        GridCell.badge(order.getStatusLabel()),
+                        GridCell.chip(order.getId()),
+                        GridCell.link(order.getOrderNo(), viewUrl),
+                        GridCell.link(GridWindow.clean(order.getMachineName()), viewUrl),
+                        GridCell.link(
+                                GridWindow.clean(order.getBlockCode()),
+                                null,
+                                GridWindow.clean(order.getStoneType()),
+                                null),
+                        GridCell.link(duration, null, consumption, null),
+                        GridCell.link(
+                                slabs,
+                                null,
+                                GridWindow.withUnit(order.getTotalSlabAreaM2(), "m²"),
+                                null),
+                        GridCell.text(GridWindow.clean(order.getOperatorName()))));
     }
 
     private static List<GridColumn> columns() {

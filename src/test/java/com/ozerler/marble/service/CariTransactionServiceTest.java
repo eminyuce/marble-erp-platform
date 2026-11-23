@@ -97,7 +97,8 @@ class CariTransactionServiceTest {
         totals.add(new Object[]{new BigDecimal("5000.00"), new BigDecimal("3000.00")});
 
         Mockito.when(transactionRepository.getDebitCreditTotalsByCustomerId(1L)).thenReturn(totals);
-        Mockito.when(transactionRepository.findByCustomerIdOrderByTransactionDateAscIdAsc(1L)).thenReturn(List.of(new CariTransaction()));
+        Mockito.when(transactionRepository.findByCustomerIdOrderByTransactionDateAscIdAsc(1L))
+                .thenReturn(List.of(new CariTransaction()));
 
         CariSummaryDto summary = cariTransactionService.getCustomerSummary(1L);
 
@@ -111,7 +112,8 @@ class CariTransactionServiceTest {
     @DisplayName("createTransaction persists a new cari transaction")
     void testCreateTransaction() {
         Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(sampleCustomer));
-        Mockito.when(transactionRepository.save(ArgumentMatchers.any(CariTransaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(transactionRepository.save(ArgumentMatchers.any(CariTransaction.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
         CariTransaction saved = cariTransactionService.createTransaction(
                 1L, LocalDate.now(), CariTransactionType.BORC_DEKONTU,

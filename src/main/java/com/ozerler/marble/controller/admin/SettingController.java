@@ -92,9 +92,14 @@ public class SettingController extends AbstractController {
         if (toUpdate.containsKey(NoticeDismissDuration.SETTING_KEY)) {
             String duration = toUpdate.get(NoticeDismissDuration.SETTING_KEY);
             if (!NoticeDismissDuration.isAcceptable(duration)) {
-                redirectAttributes.addFlashAttribute("errorMessage",
-                        messageSource.getMessage("admin.settings.notice.duration.invalid",
-                                new Object[]{NoticeDismissDuration.MINIMUM_SECONDS, NoticeDismissDuration.MAXIMUM_SECONDS},
+                redirectAttributes.addFlashAttribute(
+                        "errorMessage",
+                        messageSource.getMessage(
+                                "admin.settings.notice.duration.invalid",
+                                new Object[] {
+                                    NoticeDismissDuration.MINIMUM_SECONDS,
+                                    NoticeDismissDuration.MAXIMUM_SECONDS
+                                },
                                 locale));
                 redirectAttributes.addFlashAttribute("invalidFields", List.of(NoticeDismissDuration.SETTING_KEY));
                 return "redirect:/admin/settings";
@@ -191,7 +196,8 @@ public class SettingController extends AbstractController {
             var previewOpt = emailService.previewTemplate(templateKey);
             if (previewOpt.isPresent()) {
                 HttpHeaders responseHeaders = new HttpHeaders();
-                ResponseEntity<EmailPreviewDto> resp = new ResponseEntity<>(previewOpt.get(), responseHeaders, HttpStatus.OK);
+                ResponseEntity<EmailPreviewDto> resp =
+                        new ResponseEntity<>(previewOpt.get(), responseHeaders, HttpStatus.OK);
                 ber.setResponse(resp);
                 serviceStatus.setHttpStatus(HttpStatus.OK);
                 status.setMessage("Preview template successful");

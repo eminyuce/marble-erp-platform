@@ -66,7 +66,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleStorageFailure(
             StorageException ex, HttpServletRequest request, Locale locale) {
         log.error("Object storage failure on {}", request.getRequestURI(), ex);
-        String genericInternalMsg = resolveMessage("error.file.storage_failed", null, Constants.ERROR_GENERIC_INTERNAL, locale);
+        String genericInternalMsg =
+                resolveMessage(
+                        "error.file.storage_failed",
+                        null,
+                        Constants.ERROR_GENERIC_INTERNAL,
+                        locale);
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, genericInternalMsg, request, null);
     }
 
@@ -87,7 +92,9 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex, HttpServletRequest request, Locale locale) {
         Map<String, String> fieldErrors = fieldErrors(ex, locale);
         log.warn("Validation failed on {}: {}", request.getRequestURI(), fieldErrors);
-        String validationFailedMsg = resolveMessage("error.validation.failed", null, Constants.ERROR_VALIDATION_FAILED, locale);
+        String validationFailedMsg =
+                resolveMessage(
+                        "error.validation.failed", null, Constants.ERROR_VALIDATION_FAILED, locale);
         return respond(HttpStatus.BAD_REQUEST, validationFailedMsg, request, fieldErrors);
     }
 
@@ -112,7 +119,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleUnexpected(Exception ex, HttpServletRequest request, Locale locale) {
         log.error("Unhandled exception on {}", request.getRequestURI(), ex);
-        String genericInternalMsg = resolveMessage("error.generic.internal", null, Constants.ERROR_GENERIC_INTERNAL, locale);
+        String genericInternalMsg =
+                resolveMessage(
+                        "error.generic.internal", null, Constants.ERROR_GENERIC_INTERNAL, locale);
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, genericInternalMsg, request, null);
     }
 

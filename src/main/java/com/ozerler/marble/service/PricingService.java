@@ -48,7 +48,8 @@ public class PricingService {
     /**
      * Strongly typed domain simulation method adhering to clean code immutability
      */
-    public PriceSimulationResult calculateSimulation(BigDecimal unitCost, BigDecimal targetMarginPct, BigDecimal discountPct) {
+    public PriceSimulationResult calculateSimulation(
+            BigDecimal unitCost, BigDecimal targetMarginPct, BigDecimal discountPct) {
         BigDecimal cost;
         if (unitCost != null) {
             cost = unitCost;
@@ -87,7 +88,11 @@ public class PricingService {
     }
 
     private BigDecimal calculateBasePrice(BigDecimal cost, BigDecimal targetMarginPct) {
-        BigDecimal marginFraction = targetMarginPct.divide(Constants.PERCENT_DIVISOR, Constants.CALCULATION_SCALE, RoundingMode.HALF_UP);
+        BigDecimal marginFraction =
+                targetMarginPct.divide(
+                        Constants.PERCENT_DIVISOR,
+                        Constants.CALCULATION_SCALE,
+                        RoundingMode.HALF_UP);
         BigDecimal divisor = BigDecimal.ONE.subtract(marginFraction);
         if (divisor.compareTo(BigDecimal.ZERO) <= 0) {
             return cost;
@@ -96,8 +101,14 @@ public class PricingService {
     }
 
     private BigDecimal calculateDiscountedPrice(BigDecimal basePrice, BigDecimal discountPct) {
-        BigDecimal discountFraction = discountPct.divide(Constants.PERCENT_DIVISOR, Constants.CALCULATION_SCALE, RoundingMode.HALF_UP);
-        return basePrice.multiply(BigDecimal.ONE.subtract(discountFraction)).setScale(Constants.CURRENCY_SCALE, RoundingMode.HALF_UP);
+        BigDecimal discountFraction =
+                discountPct.divide(
+                        Constants.PERCENT_DIVISOR,
+                        Constants.CALCULATION_SCALE,
+                        RoundingMode.HALF_UP);
+        return basePrice
+                .multiply(BigDecimal.ONE.subtract(discountFraction))
+                .setScale(Constants.CURRENCY_SCALE, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateResultingMargin(BigDecimal netPrice, BigDecimal grossProfit) {

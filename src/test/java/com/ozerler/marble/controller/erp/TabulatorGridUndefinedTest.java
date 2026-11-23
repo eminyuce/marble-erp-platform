@@ -126,8 +126,16 @@ class TabulatorGridUndefinedTest {
 
         Assertions.assertThat(getClass().getResource("/static/vendor/filepond/filepond.min.js")).isNotNull();
         Assertions.assertThat(getClass().getResource("/static/vendor/filepond/filepond.min.css")).isNotNull();
-        Assertions.assertThat(getClass().getResource("/static/vendor/filepond/filepond-plugin-image-preview.min.js")).isNotNull();
-        Assertions.assertThat(getClass().getResource("/static/vendor/filepond/filepond-plugin-image-preview.min.css")).isNotNull();
+        Assertions.assertThat(
+                        getClass()
+                                .getResource(
+                                        "/static/vendor/filepond/filepond-plugin-image-preview.min.js"))
+                .isNotNull();
+        Assertions.assertThat(
+                        getClass()
+                                .getResource(
+                                        "/static/vendor/filepond/filepond-plugin-image-preview.min.css"))
+                .isNotNull();
     }
 
     @Test

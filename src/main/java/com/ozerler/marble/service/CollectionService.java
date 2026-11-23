@@ -230,7 +230,9 @@ public class CollectionService {
     public CollectionRef recordCollectionRef(Long customerId, Long invoiceId, CollectionMethod method,
                                             BigDecimal amount, String bankName, String notes,
                                             CheckFormData checkData) {
-        return collectionMapper.toRef(recordCollection(customerId, invoiceId, method, amount, bankName, notes, checkData));
+        return collectionMapper.toRef(
+                recordCollection(
+                        customerId, invoiceId, method, amount, bankName, notes, checkData));
     }
 
     /**
@@ -252,9 +254,11 @@ public class CollectionService {
      * @return grid rows
      */
     @Transactional(readOnly = true)
-    public TabulatorResponse<Map<String, Object>> collectionRows(String search, CollectionMethod method, Long customerId, int page, int size) {
+    public TabulatorResponse<Map<String, Object>> collectionRows(
+            String search, CollectionMethod method, Long customerId, int page, int size) {
         int pageIndex = Math.max(0, page - 1);
-        Page<CollectionRecord> collectionPage = searchCollections(method, customerId, null, null, search, pageIndex, size);
+        Page<CollectionRecord> collectionPage =
+                searchCollections(method, customerId, null, null, search, pageIndex, size);
 
         List<Map<String, Object>> data = collectionPage.getContent().stream().map(c -> {
             Map<String, Object> map = new HashMap<>();
@@ -317,7 +321,13 @@ public class CollectionService {
      * @return grid rows
      */
     @Transactional(readOnly = true)
-    public TabulatorResponse<Map<String, Object>> checkRows(String search, BusinessUnit unit, CheckStatus status, Long customerId, int page, int size) {
+    public TabulatorResponse<Map<String, Object>> checkRows(
+            String search,
+            BusinessUnit unit,
+            CheckStatus status,
+            Long customerId,
+            int page,
+            int size) {
         int pageIndex = Math.max(0, page - 1);
         Page<CheckRecord> checkPage = searchChecks(unit, status, customerId, null, null, search, pageIndex, size);
 
@@ -393,7 +403,8 @@ public class CollectionService {
     public Page<CollectionRef> searchCollectionViews(CollectionMethod method, Long customerId,
                                                     LocalDate startDate, LocalDate endDate,
                                                     String search, int page, int size) {
-        return searchCollections(method, customerId, startDate, endDate, search, page, size).map(collectionMapper::toRef);
+        return searchCollections(method, customerId, startDate, endDate, search, page, size)
+                .map(collectionMapper::toRef);
     }
 
     /**
@@ -413,7 +424,8 @@ public class CollectionService {
     public Page<CheckRef> searchCheckViews(BusinessUnit unit, CheckStatus status, Long customerId,
                                           LocalDate startDate, LocalDate endDate,
                                           String search, int page, int size) {
-        return searchChecks(unit, status, customerId, startDate, endDate, search, page, size).map(collectionMapper::toRef);
+        return searchChecks(unit, status, customerId, startDate, endDate, search, page, size)
+                .map(collectionMapper::toRef);
     }
 
     /**

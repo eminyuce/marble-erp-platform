@@ -51,7 +51,8 @@ class CollectionControllerTest {
     void indexDefaultsToEmptyMethodWhenNull() {
         Mockito.when(collectionService.getMonthlyTotal()).thenReturn(BigDecimal.valueOf(10000));
         Mockito.when(collectionService.getApproachingChecksCount()).thenReturn(3L);
-        Mockito.when(collectionService.searchCollectionViews(null, null, null, null, null, 0, 20)).thenReturn(Page.empty());
+        Mockito.when(collectionService.searchCollectionViews(null, null, null, null, null, 0, 20))
+                .thenReturn(Page.empty());
         Mockito.when(formLookup.customers()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
@@ -68,7 +69,10 @@ class CollectionControllerTest {
     void indexSetsSelectedMethodWhenProvided() {
         Mockito.when(collectionService.getMonthlyTotal()).thenReturn(BigDecimal.valueOf(10000));
         Mockito.when(collectionService.getApproachingChecksCount()).thenReturn(3L);
-        Mockito.when(collectionService.searchCollectionViews(CollectionMethod.CASH, null, null, null, null, 0, 20)).thenReturn(Page.empty());
+        Mockito.when(
+                        collectionService.searchCollectionViews(
+                                CollectionMethod.CASH, null, null, null, null, 0, 20))
+                .thenReturn(Page.empty());
         Mockito.when(formLookup.customers()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
@@ -95,10 +99,25 @@ class CollectionControllerTest {
                 .build();
 
         Page<CollectionRecord> pageResult = new PageImpl<>(List.of(record));
-        Mockito.when(collectionService.searchCollections(ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.eq(0), ArgumentMatchers.eq(25)))
+        Mockito.when(
+                        collectionService.searchCollections(
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.eq(0),
+                                ArgumentMatchers.eq(25)))
                 .thenReturn(pageResult);
 
-        Mockito.when(collectionService.collectionRows(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())).thenCallRealMethod();
+        Mockito.when(
+                        collectionService.collectionRows(
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.anyInt(),
+                                ArgumentMatchers.anyInt()))
+                .thenCallRealMethod();
 
         TabulatorResponse<Map<String, Object>> response = controller.getCollectionsData(1, 25, null, null, null);
 
@@ -114,26 +133,58 @@ class CollectionControllerTest {
     @DisplayName("getCollectionsData forwards method filter enum to collection service")
     void getCollectionsDataForwardsMethodFilter() {
         Page<CollectionRecord> emptyPage = new PageImpl<>(List.of());
-        Mockito.when(collectionService.searchCollections(ArgumentMatchers.eq(CollectionMethod.BANK_TRANSFER), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.eq("test"), ArgumentMatchers.eq(0), ArgumentMatchers.eq(50)))
+        Mockito.when(
+                        collectionService.searchCollections(
+                                ArgumentMatchers.eq(CollectionMethod.BANK_TRANSFER),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.eq("test"),
+                                ArgumentMatchers.eq(0),
+                                ArgumentMatchers.eq(50)))
                 .thenReturn(emptyPage);
 
-        Mockito.when(collectionService.collectionRows(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())).thenCallRealMethod();
+        Mockito.when(
+                        collectionService.collectionRows(
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.anyInt(),
+                                ArgumentMatchers.anyInt()))
+                .thenCallRealMethod();
 
-        TabulatorResponse<Map<String, Object>> response = controller.getCollectionsData(1, 50, "test", CollectionMethod.BANK_TRANSFER, null);
+        TabulatorResponse<Map<String, Object>> response =
+                controller.getCollectionsData(1, 50, "test", CollectionMethod.BANK_TRANSFER, null);
 
         Assertions.assertThat(response).isNotNull();
         Assertions.assertThat(response.getData()).isEmpty();
-        Mockito.verify(collectionService).searchCollections(CollectionMethod.BANK_TRANSFER, null, null, null, "test", 0, 50);
+        Mockito.verify(collectionService)
+                .searchCollections(CollectionMethod.BANK_TRANSFER, null, null, null, "test", 0, 50);
     }
 
     @Test
     @DisplayName("getCollectionsData forwards customerId filter to collection service")
     void getCollectionsDataForwardsCustomerIdFilter() {
         Page<CollectionRecord> emptyPage = new PageImpl<>(List.of());
-        Mockito.when(collectionService.searchCollections(ArgumentMatchers.isNull(), ArgumentMatchers.eq(42L), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.eq(0), ArgumentMatchers.eq(25)))
+        Mockito.when(
+                        collectionService.searchCollections(
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.eq(42L),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.eq(0),
+                                ArgumentMatchers.eq(25)))
                 .thenReturn(emptyPage);
 
-        Mockito.when(collectionService.collectionRows(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())).thenCallRealMethod();
+        Mockito.when(
+                        collectionService.collectionRows(
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.anyInt(),
+                                ArgumentMatchers.anyInt()))
+                .thenCallRealMethod();
 
         TabulatorResponse<Map<String, Object>> response = controller.getCollectionsData(1, 25, null, null, 42L);
 
@@ -160,10 +211,27 @@ class CollectionControllerTest {
                 .build();
 
         Page<CheckRecord> pageResult = new PageImpl<>(List.of(check));
-        Mockito.when(collectionService.searchChecks(ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.eq(0), ArgumentMatchers.eq(25)))
+        Mockito.when(
+                        collectionService.searchChecks(
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.eq(0),
+                                ArgumentMatchers.eq(25)))
                 .thenReturn(pageResult);
 
-        Mockito.when(collectionService.checkRows(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())).thenCallRealMethod();
+        Mockito.when(
+                        collectionService.checkRows(
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.anyInt(),
+                                ArgumentMatchers.anyInt()))
+                .thenCallRealMethod();
 
         TabulatorResponse<Map<String, Object>> response = controller.getChecksData(1, 25, null, null, null, null);
 
@@ -179,12 +247,30 @@ class CollectionControllerTest {
     @DisplayName("getChecksData forwards status filter enum to collection service")
     void getChecksDataForwardsStatusFilter() {
         Page<CheckRecord> emptyPage = new PageImpl<>(List.of());
-        Mockito.when(collectionService.searchChecks(ArgumentMatchers.isNull(), ArgumentMatchers.eq(CheckStatus.COLLECTED), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.eq("vade"), ArgumentMatchers.eq(0), ArgumentMatchers.eq(25)))
+        Mockito.when(
+                        collectionService.searchChecks(
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.eq(CheckStatus.COLLECTED),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.eq("vade"),
+                                ArgumentMatchers.eq(0),
+                                ArgumentMatchers.eq(25)))
                 .thenReturn(emptyPage);
 
-        Mockito.when(collectionService.checkRows(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())).thenCallRealMethod();
+        Mockito.when(
+                        collectionService.checkRows(
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.anyInt(),
+                                ArgumentMatchers.anyInt()))
+                .thenCallRealMethod();
 
-        TabulatorResponse<Map<String, Object>> response = controller.getChecksData(1, 25, "vade", null, CheckStatus.COLLECTED, null);
+        TabulatorResponse<Map<String, Object>> response =
+                controller.getChecksData(1, 25, "vade", null, CheckStatus.COLLECTED, null);
 
         Assertions.assertThat(response).isNotNull();
         Assertions.assertThat(response.getData()).isEmpty();
@@ -197,7 +283,11 @@ class CollectionControllerTest {
         CheckRef updated = new CheckRef();
         updated.setId(50L);
         updated.setCheckNo("CHK-50");
-        Mockito.when(collectionService.updateCheckStatusRef(ArgumentMatchers.eq(50L), ArgumentMatchers.eq(CheckStatus.BOUNCED), ArgumentMatchers.eq("Karşılıksız")))
+        Mockito.when(
+                        collectionService.updateCheckStatusRef(
+                                ArgumentMatchers.eq(50L),
+                                ArgumentMatchers.eq(CheckStatus.BOUNCED),
+                                ArgumentMatchers.eq("Karşılıksız")))
                 .thenReturn(updated);
 
         RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();

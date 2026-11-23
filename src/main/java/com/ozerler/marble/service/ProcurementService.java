@@ -70,16 +70,43 @@ public class ProcurementService {
         return MessageUtils.getMessage(code, args);
     }
 
-    public record ProcurementSummaryDto(long totalOrders, BigDecimal totalAmount, long pendingDeliveries, long completedDeliveries) {
+    public record ProcurementSummaryDto(
+            long totalOrders,
+            BigDecimal totalAmount,
+            long pendingDeliveries,
+            long completedDeliveries) {
     }
 
     @Transactional(readOnly = true)
     public ProcurementSummaryDto getProcurementSummary() {
         List<PurchaseOrder> all = BoundedReads.all(purchaseOrderRepository);
         long total = all.size();
-        BigDecimal totalAmt = all.stream().map(order -> order.getTotalAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        long pending = all.stream().filter(p -> p.getStatus() != null && ("DRAFT".equalsIgnoreCase(p.getStatus().name()) || "SENT".equalsIgnoreCase(p.getStatus().name()) || "CONFIRMED".equalsIgnoreCase(p.getStatus().name()))).count();
-        long completed = all.stream().filter(p -> p.getStatus() != null && "DELIVERED".equalsIgnoreCase(p.getStatus().name())).count();
+        BigDecimal totalAmt =
+                all.stream()
+                        .map(order -> order.getTotalAmount())
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        long pending =
+                all.stream()
+                        .filter(
+                                p ->
+                                        p.getStatus() != null
+                                                && ("DRAFT".equalsIgnoreCase(p.getStatus().name())
+                                                        || "SENT"
+                                                                .equalsIgnoreCase(
+                                                                        p.getStatus().name())
+                                                        || "CONFIRMED"
+                                                                .equalsIgnoreCase(
+                                                                        p.getStatus().name())))
+                        .count();
+        long completed =
+                all.stream()
+                        .filter(
+                                p ->
+                                        p.getStatus() != null
+                                                && "DELIVERED"
+                                                        .equalsIgnoreCase(p.getStatus().name()))
+                        .count();
         return new ProcurementSummaryDto(total, totalAmt, pending, completed);
     }
 
@@ -90,13 +117,29 @@ public class ProcurementService {
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<PurchaseOrderDto> getPurchaseOrdersPaged(int page, int size,
-                                                                      String search, String status, String sortField, String sortDir) {
-        Page<PurchaseOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PURCHASE_ORDER_SORTS,
-                pageable -> purchaseOrderRepository.searchPurchaseOrders(GridPages.normalizeSearch(search), pageable));
+    public TabulatorResponse<PurchaseOrderDto> getPurchaseOrdersPaged(
+            int page, int size, String search, String status, String sortField, String sortDir) {
+        Page<PurchaseOrder> orderPage =
+                GridPages.execute(
+                        page,
+                        size,
+                        sortField,
+                        sortDir,
+                        GridPages.PURCHASE_ORDER_SORTS,
+                        pageable ->
+                                purchaseOrderRepository.searchPurchaseOrders(
+                                        GridPages.normalizeSearch(search), pageable));
         List<PurchaseOrder> orders = orderPage.getContent();
         if (status != null && !status.isBlank()) {
-            orders = orders.stream().filter(o -> o.getStatus() != null && o.getStatus().name().equalsIgnoreCase(status)).toList();
+            orders =
+                    orders.stream()
+                            .filter(
+                                    o ->
+                                            o.getStatus() != null
+                                                    && o.getStatus()
+                                                            .name()
+                                                            .equalsIgnoreCase(status))
+                            .toList();
         }
         List<PurchaseOrderDto> dtos = orders.stream()
                 .map(PurchaseOrderDto::fromEntity)
@@ -216,15 +259,28 @@ public class ProcurementService {
 
     private CostCenter resolveCostCenter(BusinessUnit unit, Long costCenterId) {
         if (costCenterId != null) {
-            CostCenter selected = costCenterRepository.findById(costCenterId)
-                    .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.not_found", costCenterId)));
+            CostCenter selected =
+                    costCenterRepository
+                            .findById(costCenterId)
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    getMessage(
+                                                            "error.cost_center.not_found",
+                                                            costCenterId)));
             if (selected.getBusinessUnit() != unit) {
                 throw new IllegalArgumentException(getMessage("error.cost_center.unit.mismatch", unit.getLabel()));
             }
             return selected;
         }
-        return costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
-                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.unit.missing", unit.getLabel())));
+        return costCenterRepository
+                .findFirstByBusinessUnitOrderByCodeAsc(unit)
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        getMessage(
+                                                "error.cost_center.unit.missing",
+                                                unit.getLabel())));
     }
 
     private void postPurchaseExpense(PurchaseOrder order) {
@@ -279,7 +335,15 @@ public class ProcurementService {
     public PurchaseOrderView createPurchaseOrderView(String poNumber, Long supplierId, Long projectId,
                                              BusinessUnit businessUnit, Long costCenterId,
                                              LocalDate expectedDelivery, String notes) {
-        return purchaseOrderMapper.toDto(createPurchaseOrder(poNumber, supplierId, projectId, businessUnit, costCenterId, expectedDelivery, notes));
+        return purchaseOrderMapper.toDto(
+                createPurchaseOrder(
+                        poNumber,
+                        supplierId,
+                        projectId,
+                        businessUnit,
+                        costCenterId,
+                        expectedDelivery,
+                        notes));
     }
 
     /**

@@ -198,16 +198,24 @@ public class GenealogyService {
 
     private void attachLotEvents(GenealogyNodeDto parent, MaterialLot lot, LotEventContext lotEvents) {
         for (PalletItem palletItem : lotEvents.palletItemsByLotId().getOrDefault(lot.getId(), List.of())) {
-            GenealogyNodeDto palletNode = GenealogyNodeDto.builder()
-                    .id("PAL-" + palletItem.getPallet().getId())
-                    .type("PALLET")
-                    .title(getMessage("genealogy.node.pallet.title", palletItem.getPallet().getPalletCode()))
-                    .subtitle(palletItem.getPallet().getStatusLabel())
-                    .details(getMessage("genealogy.node.pallet.details", palletItem.getQuantity(), palletItem.getAreaM2()))
-                    .status(palletItem.getPallet().getStatusLabel())
-                    .qrCode(palletItem.getPallet().getPalletCode())
-                    .children(new ArrayList<>())
-                    .build();
+            GenealogyNodeDto palletNode =
+                    GenealogyNodeDto.builder()
+                            .id("PAL-" + palletItem.getPallet().getId())
+                            .type("PALLET")
+                            .title(
+                                    getMessage(
+                                            "genealogy.node.pallet.title",
+                                            palletItem.getPallet().getPalletCode()))
+                            .subtitle(palletItem.getPallet().getStatusLabel())
+                            .details(
+                                    getMessage(
+                                            "genealogy.node.pallet.details",
+                                            palletItem.getQuantity(),
+                                            palletItem.getAreaM2()))
+                            .status(palletItem.getPallet().getStatusLabel())
+                            .qrCode(palletItem.getPallet().getPalletCode())
+                            .children(new ArrayList<>())
+                            .build();
             for (ShipmentItem shipmentItem : lotEvents.shipmentItemsByPalletId()
                     .getOrDefault(palletItem.getPallet().getId(), List.of())) {
                 palletNode.getChildren().add(GenealogyNodeDto.builder()

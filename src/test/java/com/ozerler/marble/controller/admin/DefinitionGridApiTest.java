@@ -48,7 +48,9 @@ class DefinitionGridApiTest {
     @WithMockUser(roles = "USER")
     @DisplayName("non-admin users cannot read definition grid APIs")
     void userCannotReadDefinitionApis() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/suppliers/api/data").accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/admin/definitions/suppliers/api/data")
+                                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 

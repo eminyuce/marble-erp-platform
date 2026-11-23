@@ -95,7 +95,9 @@ public class FormLookupService {
     }
 
     public List<PartyView> customersByCompanyName() {
-        return BoundedReads.all(customerRepository, Sort.by("companyName")).stream().map(customerMapper::toDto).toList();
+        return BoundedReads.all(customerRepository, Sort.by("companyName")).stream()
+                .map(customerMapper::toDto)
+                .toList();
     }
 
     public PartyView getCustomer(Long id) {
@@ -134,8 +136,15 @@ public class FormLookupService {
     }
 
     public QuarryOption getQuarry(Long id) {
-        return quarryRepository.findById(id)
-                .map(quarry -> new QuarryOption(quarry.getId(), quarry.getName(), quarry.getLocation(), quarry.getSpecificGravity()))
+        return quarryRepository
+                .findById(id)
+                .map(
+                        quarry ->
+                                new QuarryOption(
+                                        quarry.getId(),
+                                        quarry.getName(),
+                                        quarry.getLocation(),
+                                        quarry.getSpecificGravity()))
                 .orElseThrow(() -> new IllegalArgumentException("Ocak bulunamadı: " + id));
     }
 
@@ -217,7 +226,10 @@ public class FormLookupService {
     }
 
     public SlabView getSlabWithDetails(Long id) {
-        return slabMapper.toDto(slabRepository.findWithDetailsById(id).orElseThrow(() -> new SlabNotFoundException(id)));
+        return slabMapper.toDto(
+                slabRepository
+                        .findWithDetailsById(id)
+                        .orElseThrow(() -> new SlabNotFoundException(id)));
     }
 
     public List<StockItemView> stockItems() {
@@ -249,7 +261,9 @@ public class FormLookupService {
     }
 
     public List<StockItemView> stockByTypeAndStatus(StockProductType type, String status) {
-        return stockItemRepository.findByProductTypeAndStatus(type, status).stream().map(stockItemMapper::toDto).toList();
+        return stockItemRepository.findByProductTypeAndStatus(type, status).stream()
+                .map(stockItemMapper::toDto)
+                .toList();
     }
 
     public List<StockItemView> positiveStock() {
@@ -273,7 +287,10 @@ public class FormLookupService {
     }
 
     public InvoiceView getInvoiceWithCustomer(Long id) {
-        return invoiceView(invoiceRepository.findByIdWithCustomer(id).orElseThrow(() -> new InvoiceNotFoundException(id)));
+        return invoiceView(
+                invoiceRepository
+                        .findByIdWithCustomer(id)
+                        .orElseThrow(() -> new InvoiceNotFoundException(id)));
     }
 
     public InvoiceView findInvoiceWithCustomer(Long id) {

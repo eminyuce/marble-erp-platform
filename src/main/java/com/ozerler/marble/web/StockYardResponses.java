@@ -32,9 +32,14 @@ public final class StockYardResponses {
                 status, customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
     }
 
-    public static TabulatorResponse<Map<String, Object>> slabs(FactoryStockService factoryStockService, int page, int size,
-                                                        String search, SlabStatus status, Long customerId,
-                                                        boolean generalStockOnly) {
+    public static TabulatorResponse<Map<String, Object>> slabs(
+            FactoryStockService factoryStockService,
+            int page,
+            int size,
+            String search,
+            SlabStatus status,
+            Long customerId,
+            boolean generalStockOnly) {
         int pageIndex = Math.max(0, page - 1);
         Page<SlabView> slabsPage = factoryStockService.getFactorySlabViewsPaged(
                 status, customerId, generalStockOnly, search, pageIndex, size);
@@ -136,8 +141,8 @@ public final class StockYardResponses {
         return respond(itemsPage, item -> workshopSizedRow(item));
     }
 
-    private static TabulatorResponse<Map<String, Object>> respond(Page<StockItemView> itemsPage,
-                                                                  Function<StockItemView, Map<String, Object>> rowMapper) {
+    private static TabulatorResponse<Map<String, Object>> respond(
+            Page<StockItemView> itemsPage, Function<StockItemView, Map<String, Object>> rowMapper) {
         List<Map<String, Object>> data = itemsPage.getContent().stream()
                 .map(item -> rowMapper.apply(item))
                 .collect(Collectors.toList());

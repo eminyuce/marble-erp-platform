@@ -137,27 +137,51 @@ class UserServiceTest {
     @Test
     @DisplayName("Empty role selection lists all users")
     void getUsersPagedEmptyRolesDoesNotFilterByRole() {
-        Mockito.when(userRepository.searchActiveUsers(Mockito.isNull(), Mockito.isNull(), Mockito.isNull(), Mockito.any(Pageable.class)))
+        Mockito.when(
+                        userRepository.searchActiveUsers(
+                                Mockito.isNull(),
+                                Mockito.isNull(),
+                                Mockito.isNull(),
+                                Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         TabulatorResponse<UserDto> response = userService.getUsersPaged(
                 1, 10, null, null, null, List.of(), null);
 
         Assertions.assertThat(response.getData()).isEmpty();
-        Mockito.verify(userRepository).searchActiveUsers(Mockito.isNull(), Mockito.isNull(), Mockito.isNull(), Mockito.any(Pageable.class));
-        Mockito.verify(userRepository, Mockito.never()).searchActiveUsersByAnyRole(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(userRepository)
+                .searchActiveUsers(
+                        Mockito.isNull(),
+                        Mockito.isNull(),
+                        Mockito.isNull(),
+                        Mockito.any(Pageable.class));
+        Mockito.verify(userRepository, Mockito.never())
+                .searchActiveUsersByAnyRole(
+                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
     @DisplayName("Blank role tokens are treated as no role filter")
     void getUsersPagedBlankRolesDoesNotFilterByRole() {
-        Mockito.when(userRepository.searchActiveUsers(Mockito.isNull(), Mockito.isNull(), Mockito.isNull(), Mockito.any(Pageable.class)))
+        Mockito.when(
+                        userRepository.searchActiveUsers(
+                                Mockito.isNull(),
+                                Mockito.isNull(),
+                                Mockito.isNull(),
+                                Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         userService.getUsersPaged(1, 10, null, null, null, List.of("  ", ""), null);
 
-        Mockito.verify(userRepository).searchActiveUsers(Mockito.isNull(), Mockito.isNull(), Mockito.isNull(), Mockito.any(Pageable.class));
-        Mockito.verify(userRepository, Mockito.never()).searchActiveUsersByAnyRole(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(userRepository)
+                .searchActiveUsers(
+                        Mockito.isNull(),
+                        Mockito.isNull(),
+                        Mockito.isNull(),
+                        Mockito.any(Pageable.class));
+        Mockito.verify(userRepository, Mockito.never())
+                .searchActiveUsersByAnyRole(
+                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -171,8 +195,12 @@ class UserServiceTest {
                 .lastName("Yöneticisi")
                 .roles(Set.of(roleAdmin))
                 .build();
-        Mockito.when(userRepository.searchActiveUsersByAnyRole(
-                Mockito.isNull(), Mockito.eq(List.of("ROLE_ADMIN", "ROLE_SALES")), Mockito.isNull(), Mockito.any(Pageable.class)))
+        Mockito.when(
+                        userRepository.searchActiveUsersByAnyRole(
+                                Mockito.isNull(),
+                                Mockito.eq(List.of("ROLE_ADMIN", "ROLE_SALES")),
+                                Mockito.isNull(),
+                                Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(adminUser)));
 
         TabulatorResponse<UserDto> response = userService.getUsersPaged(
@@ -180,21 +208,34 @@ class UserServiceTest {
 
         Assertions.assertThat(response.getData()).hasSize(1);
         Assertions.assertThat(response.getData().getFirst().getUsername()).isEqualTo("admin");
-        Mockito.verify(userRepository).searchActiveUsersByAnyRole(
-                Mockito.isNull(), Mockito.eq(List.of("ROLE_ADMIN", "ROLE_SALES")), Mockito.isNull(), Mockito.any(Pageable.class));
-        Mockito.verify(userRepository, Mockito.never()).searchActiveUsers(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(userRepository)
+                .searchActiveUsersByAnyRole(
+                        Mockito.isNull(),
+                        Mockito.eq(List.of("ROLE_ADMIN", "ROLE_SALES")),
+                        Mockito.isNull(),
+                        Mockito.any(Pageable.class));
+        Mockito.verify(userRepository, Mockito.never())
+                .searchActiveUsers(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
     @DisplayName("Comma-separated role tokens are split before querying")
     void getUsersPagedCommaSeparatedRolesAreNormalized() {
-        Mockito.when(userRepository.searchActiveUsersByAnyRole(
-                Mockito.isNull(), Mockito.eq(List.of("ROLE_ADMIN", "ROLE_USER")), Mockito.eq(true), Mockito.any(Pageable.class)))
+        Mockito.when(
+                        userRepository.searchActiveUsersByAnyRole(
+                                Mockito.isNull(),
+                                Mockito.eq(List.of("ROLE_ADMIN", "ROLE_USER")),
+                                Mockito.eq(true),
+                                Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         userService.getUsersPaged(1, 10, null, null, null, List.of("ROLE_ADMIN, ROLE_USER"), true);
 
-        Mockito.verify(userRepository).searchActiveUsersByAnyRole(
-                Mockito.isNull(), Mockito.eq(List.of("ROLE_ADMIN", "ROLE_USER")), Mockito.eq(true), Mockito.any(Pageable.class));
+        Mockito.verify(userRepository)
+                .searchActiveUsersByAnyRole(
+                        Mockito.isNull(),
+                        Mockito.eq(List.of("ROLE_ADMIN", "ROLE_USER")),
+                        Mockito.eq(true),
+                        Mockito.any(Pageable.class));
     }
 }

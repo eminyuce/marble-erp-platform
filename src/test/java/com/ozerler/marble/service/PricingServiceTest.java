@@ -44,7 +44,8 @@ class PricingServiceTest {
         BigDecimal targetMarginPct = new BigDecimal("30.00"); // 1000 / (1 - 0.30) = 1428.57
         BigDecimal discountPct = BigDecimal.ZERO;
 
-        PricingService.PriceSimulationResult simulation = pricingService.calculateSimulation(unitCost, targetMarginPct, discountPct);
+        PricingService.PriceSimulationResult simulation =
+                pricingService.calculateSimulation(unitCost, targetMarginPct, discountPct);
 
         Assertions.assertThat(simulation.isMarginBelowMinimum()).isFalse();
         Assertions.assertThat(simulation.resultingMarginPct()).isGreaterThanOrEqualTo(new BigDecimal("22.0"));

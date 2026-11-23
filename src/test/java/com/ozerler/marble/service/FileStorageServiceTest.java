@@ -89,7 +89,12 @@ class FileStorageServiceTest {
         Assertions.assertThat(saved.getFilePath()).isEqualTo("/api/upload/view/1");
         Assertions.assertThat(saved.getChecksum()).isNotBlank();
         Assertions.assertThat(saved.isImage()).isTrue();
-        Mockito.verify(objectStorageService).upload(ArgumentMatchers.anyString(), ArgumentMatchers.any(InputStream.class), ArgumentMatchers.anyLong(), ArgumentMatchers.anyString());
+        Mockito.verify(objectStorageService)
+                .upload(
+                        ArgumentMatchers.anyString(),
+                        ArgumentMatchers.any(InputStream.class),
+                        ArgumentMatchers.anyLong(),
+                        ArgumentMatchers.anyString());
     }
 
     @Test
@@ -115,7 +120,12 @@ class FileStorageServiceTest {
 
         Assertions.assertThatThrownBy(() -> fileStorageService.storeFile(file, "BLOCK", 1L))
                 .isInstanceOf(FileValidationException.class);
-        Mockito.verify(objectStorageService, Mockito.never()).upload(ArgumentMatchers.anyString(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyString());
+        Mockito.verify(objectStorageService, Mockito.never())
+                .upload(
+                        ArgumentMatchers.anyString(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.anyLong(),
+                        ArgumentMatchers.anyString());
     }
 
     @Test
@@ -492,11 +502,18 @@ class FileStorageServiceTest {
 
     private void stubSuccessfulUpload() {
         Mockito.when(objectStorageService.getBucketName()).thenReturn("erp-files");
-        Mockito.doAnswer(invocation -> {
-            InputStream in = invocation.getArgument(1);
-            in.readAllBytes();
-            return null;
-        }).when(objectStorageService).upload(ArgumentMatchers.anyString(), ArgumentMatchers.any(InputStream.class), ArgumentMatchers.anyLong(), ArgumentMatchers.anyString());
+        Mockito.doAnswer(
+                        invocation -> {
+                            InputStream in = invocation.getArgument(1);
+                            in.readAllBytes();
+                            return null;
+                        })
+                .when(objectStorageService)
+                .upload(
+                        ArgumentMatchers.anyString(),
+                        ArgumentMatchers.any(InputStream.class),
+                        ArgumentMatchers.anyLong(),
+                        ArgumentMatchers.anyString());
         Mockito.when(fileStorageRepository.save(ArgumentMatchers.any(FileStorage.class))).thenAnswer(invocation -> {
             FileStorage fs = invocation.getArgument(0);
             if (fs.getId() == null) {

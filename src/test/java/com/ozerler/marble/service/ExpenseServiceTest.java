@@ -48,10 +48,20 @@ class ExpenseServiceTest {
     @Test
     @DisplayName("electricity without an explicit period is costed to the previous invoice month")
     void electricityDefaultsToPreviousMonth() {
-        CostCenter center = CostCenter.builder().id(1L).code("CC-Q").name("Ocak").businessUnit(BusinessUnit.QUARRY).build();
+        CostCenter center =
+                CostCenter.builder()
+                        .id(1L)
+                        .code("CC-Q")
+                        .name("Ocak")
+                        .businessUnit(BusinessUnit.QUARRY)
+                        .build();
         Mockito.when(costCenterRepository.findById(1L)).thenReturn(Optional.of(center));
-        Mockito.when(costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(BusinessUnit.QUARRY, "2026-08")).thenReturn(false);
-        Mockito.when(costTransactionRepository.save(ArgumentMatchers.any(CostTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(
+                        costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(
+                                BusinessUnit.QUARRY, "2026-08"))
+                .thenReturn(false);
+        Mockito.when(costTransactionRepository.save(ArgumentMatchers.any(CostTransaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 1L, ExpenseType.ELECTRICITY, null, BusinessUnit.QUARRY, new BigDecimal("1000"), "TRY",
@@ -67,10 +77,20 @@ class ExpenseServiceTest {
     @Test
     @DisplayName("explicit electricity period is stored as the costing month")
     void electricityUsesCallerPeriod() {
-        CostCenter center = CostCenter.builder().id(1L).code("CC-Q").name("Ocak").businessUnit(BusinessUnit.QUARRY).build();
+        CostCenter center =
+                CostCenter.builder()
+                        .id(1L)
+                        .code("CC-Q")
+                        .name("Ocak")
+                        .businessUnit(BusinessUnit.QUARRY)
+                        .build();
         Mockito.when(costCenterRepository.findById(1L)).thenReturn(Optional.of(center));
-        Mockito.when(costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(BusinessUnit.QUARRY, "2026-08")).thenReturn(false);
-        Mockito.when(costTransactionRepository.save(ArgumentMatchers.any(CostTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(
+                        costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(
+                                BusinessUnit.QUARRY, "2026-08"))
+                .thenReturn(false);
+        Mockito.when(costTransactionRepository.save(ArgumentMatchers.any(CostTransaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 1L, ExpenseType.ELECTRICITY, null, BusinessUnit.QUARRY, new BigDecimal("1000"), "TRY",
@@ -86,7 +106,13 @@ class ExpenseServiceTest {
     @Test
     @DisplayName("site expenses do not require a construction project")
     void siteExpenseWithoutProjectSucceeds() {
-        CostCenter center = CostCenter.builder().id(5L).code("CC-S").name("Şantiye").businessUnit(BusinessUnit.SITE).build();
+        CostCenter center =
+                CostCenter.builder()
+                        .id(5L)
+                        .code("CC-S")
+                        .name("Şantiye")
+                        .businessUnit(BusinessUnit.SITE)
+                        .build();
         Mockito.when(costCenterRepository.findById(5L)).thenReturn(Optional.of(center));
         Mockito.when(costTransactionRepository.save(ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -104,10 +130,14 @@ class ExpenseServiceTest {
     @Test
     @DisplayName("getExpenseSummary calculates unit totals and overall sum")
     void getExpenseSummaryReturnsCorrectTotals() {
-        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, "2026-09")).thenReturn(new BigDecimal("10000"));
-        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, "2026-09")).thenReturn(new BigDecimal("20000"));
-        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, "2026-09")).thenReturn(new BigDecimal("5000"));
-        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.SITE, "2026-09")).thenReturn(new BigDecimal("15000"));
+        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, "2026-09"))
+                .thenReturn(new BigDecimal("10000"));
+        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, "2026-09"))
+                .thenReturn(new BigDecimal("20000"));
+        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, "2026-09"))
+                .thenReturn(new BigDecimal("5000"));
+        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.SITE, "2026-09"))
+                .thenReturn(new BigDecimal("15000"));
         Mockito.when(costTransactionRepository.countByExpensePeriod("2026-09")).thenReturn(12L);
 
         ExpenseSummaryDto summary = expenseService.getExpenseSummary("2026-09");
@@ -131,13 +161,19 @@ class ExpenseServiceTest {
                 .expensePeriod("2026-09")
                 .build();
         Mockito.when(costTransactionRepository.findById(99L)).thenReturn(Optional.of(tx));
-        Mockito.when(costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(BusinessUnit.QUARRY, "2026-09")).thenReturn(false);
+        Mockito.when(
+                        costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(
+                                BusinessUnit.QUARRY, "2026-09"))
+                .thenReturn(false);
 
         expenseService.deleteExpense(99L);
         Mockito.verify(costTransactionRepository).delete(tx);
 
         // When period is closed
-        Mockito.when(costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(BusinessUnit.QUARRY, "2026-09")).thenReturn(true);
+        Mockito.when(
+                        costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(
+                                BusinessUnit.QUARRY, "2026-09"))
+                .thenReturn(true);
         Assertions.assertThatThrownBy(() -> expenseService.deleteExpense(99L))
                 .isInstanceOf(IllegalArgumentException.class);
     }

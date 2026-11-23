@@ -38,7 +38,8 @@ public class CariTransactionService {
 
     @Transactional(readOnly = true)
     public List<CariTransactionDto> getTransactionsForCustomer(Long customerId) {
-        List<CariTransaction> rawList = transactionRepository.findByCustomerIdOrderByTransactionDateAscIdAsc(customerId);
+        List<CariTransaction> rawList =
+                transactionRepository.findByCustomerIdOrderByTransactionDateAscIdAsc(customerId);
 
         BigDecimal runningBalance = BigDecimal.ZERO;
         List<CariTransactionDto> dtoList = new ArrayList<>();

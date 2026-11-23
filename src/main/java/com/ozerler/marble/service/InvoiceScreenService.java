@@ -47,7 +47,17 @@ public class InvoiceScreenService {
             Long customerId) {
 
         int pageIndex = Math.max(0, page - 1);
-        Page<Invoice> invoicePage = invoiceService.searchInvoices(invoiceType, department, status, customerId, null, null, search, pageIndex, size);
+        Page<Invoice> invoicePage =
+                invoiceService.searchInvoices(
+                        invoiceType,
+                        department,
+                        status,
+                        customerId,
+                        null,
+                        null,
+                        search,
+                        pageIndex,
+                        size);
 
         List<Map<String, Object>> data = invoicePage.getContent().stream().map(inv -> {
             Map<String, Object> map = new HashMap<>();
@@ -166,32 +176,53 @@ public class InvoiceScreenService {
 
         // 1. Bloklar (Ocak & Fabrika filtrelenebilir, müşteri rezervasyonları öncelikli)
         if (stockType == null || stockType.isBlank() || "BLOCK".equalsIgnoreCase(stockType)) {
-            List<Block> blocks = formLookup.blocksWithQuarryEntities().stream()
-                    .filter(b -> b.getStatus() != BlockStatus.SOLD && b.getStatus() != BlockStatus.IN_TRANSIT)
-                    .filter(b -> {
-                        if (department == BusinessUnit.QUARRY) {
-                            return b.isAtQuarry();
-                        } else if (department == BusinessUnit.FACTORY) {
-                            return b.isAtFactory();
-                        }
-                        return true;
-                    })
-                    .filter(b -> s.isEmpty() || b.getBlockCode().toLowerCase().contains(s) || (b.getStoneType() != null && b.getStoneType().toLowerCase().contains(s)))
-                    .sorted((b1, b2) -> {
-                        if (customerId != null) {
-                            boolean m1 = b1.getAssignedCustomer() != null && b1.getAssignedCustomer().getId().equals(customerId);
-                            boolean m2 = b2.getAssignedCustomer() != null && b2.getAssignedCustomer().getId().equals(customerId);
-                            if (m1 && !m2) {
-                                return -1;
-                            }
-                            if (!m1 && m2) {
-                                return 1;
-                            }
-                        }
-                        return b2.getId().compareTo(b1.getId());
-                    })
-                    .limit(MAX_ROWS)
-                    .toList();
+            List<Block> blocks =
+                    formLookup.blocksWithQuarryEntities().stream()
+                            .filter(
+                                    b ->
+                                            b.getStatus() != BlockStatus.SOLD
+                                                    && b.getStatus() != BlockStatus.IN_TRANSIT)
+                            .filter(
+                                    b -> {
+                                        if (department == BusinessUnit.QUARRY) {
+                                            return b.isAtQuarry();
+                                        } else if (department == BusinessUnit.FACTORY) {
+                                            return b.isAtFactory();
+                                        }
+                                        return true;
+                                    })
+                            .filter(
+                                    b ->
+                                            s.isEmpty()
+                                                    || b.getBlockCode().toLowerCase().contains(s)
+                                                    || (b.getStoneType() != null
+                                                            && b.getStoneType()
+                                                                    .toLowerCase()
+                                                                    .contains(s)))
+                            .sorted(
+                                    (b1, b2) -> {
+                                        if (customerId != null) {
+                                            boolean m1 =
+                                                    b1.getAssignedCustomer() != null
+                                                            && b1.getAssignedCustomer()
+                                                                    .getId()
+                                                                    .equals(customerId);
+                                            boolean m2 =
+                                                    b2.getAssignedCustomer() != null
+                                                            && b2.getAssignedCustomer()
+                                                                    .getId()
+                                                                    .equals(customerId);
+                                            if (m1 && !m2) {
+                                                return -1;
+                                            }
+                                            if (!m1 && m2) {
+                                                return 1;
+                                            }
+                                        }
+                                        return b2.getId().compareTo(b1.getId());
+                                    })
+                            .limit(MAX_ROWS)
+                            .toList();
             for (Block b : blocks) {
                 Map<String, Object> m = new HashMap<>();
                 m.put("category", "BLOCK");
@@ -267,11 +298,19 @@ public class InvoiceScreenService {
 
         // 2. Mazot Deposu (Ocak Mazot Stoğu - Madde 3 & 8)
         if ((department == null || department == BusinessUnit.QUARRY)
-                && (stockType == null || stockType.isBlank() || "FUEL".equalsIgnoreCase(stockType) || "MAZOT".equalsIgnoreCase(stockType))) {
+                && (stockType == null
+                        || stockType.isBlank()
+                        || "FUEL".equalsIgnoreCase(stockType)
+                        || "MAZOT".equalsIgnoreCase(stockType))) {
             StockItem fuelTank = quarryInventoryService.getOrCreateFuelTankStockItem();
             if (fuelTank != null
-                    && (Boolean.TRUE.equals(includeZero) || (fuelTank.getQuantity() != null && fuelTank.getQuantity().compareTo(BigDecimal.ZERO) > 0))
-                    && (s.isEmpty() || "mazot".contains(s) || "dizel".contains(s) || fuelTank.getItemCode().toLowerCase().contains(s))) {
+                    && (Boolean.TRUE.equals(includeZero)
+                            || (fuelTank.getQuantity() != null
+                                    && fuelTank.getQuantity().compareTo(BigDecimal.ZERO) > 0))
+                    && (s.isEmpty()
+                            || "mazot".contains(s)
+                            || "dizel".contains(s)
+                            || fuelTank.getItemCode().toLowerCase().contains(s))) {
                 Map<String, Object> m = new HashMap<>();
                 m.put("category", "MAZOT");
                 m.put("categoryLabel", "Mazot");
@@ -292,10 +331,13 @@ public class InvoiceScreenService {
         if (department == null || department == BusinessUnit.QUARRY) {
             List<StockItem> allQuarryCards = quarryInventoryService.getAllQuarryStockCards(null);
             for (StockItem ci : allQuarryCards) {
-                if (ci.getItemCode().equals(QuarryInventoryService.FUEL_TANK_ITEM_CODE) || ci.getItemCode().equals("O-MZ-TANK")) {
+                if (ci.getItemCode().equals(QuarryInventoryService.FUEL_TANK_ITEM_CODE)
+                        || ci.getItemCode().equals("O-MZ-TANK")) {
                     continue;
                 }
-                if (Boolean.TRUE.equals(includeZero) || (ci.getQuantity() != null && ci.getQuantity().compareTo(BigDecimal.ZERO) > 0)) {
+                if (Boolean.TRUE.equals(includeZero)
+                        || (ci.getQuantity() != null
+                                && ci.getQuantity().compareTo(BigDecimal.ZERO) > 0)) {
                     String catCode;
                     if (ci.getQuarryCategory() != null) {
                         catCode = ci.getQuarryCategory().name();
@@ -310,14 +352,22 @@ public class InvoiceScreenService {
                     }
 
                     if (stockType != null && !stockType.isBlank()) {
-                        boolean match = stockType.equalsIgnoreCase(catCode)
-                                || ("CONSUMABLE".equalsIgnoreCase(stockType) && (ci.getQuarryCategory() == null || ci.getQuarryCategory() == QuarryCategory.SARF_MALZEME));
+                        boolean match =
+                                stockType.equalsIgnoreCase(catCode)
+                                        || ("CONSUMABLE".equalsIgnoreCase(stockType)
+                                                && (ci.getQuarryCategory() == null
+                                                        || ci.getQuarryCategory()
+                                                                == QuarryCategory.SARF_MALZEME));
                         if (!match) {
                             continue;
                         }
                     }
 
-                    if (s.isEmpty() || (ci.getDescription() != null && ci.getDescription().toLowerCase().contains(s)) || (ci.getItemCode() != null && ci.getItemCode().toLowerCase().contains(s))) {
+                    if (s.isEmpty()
+                            || (ci.getDescription() != null
+                                    && ci.getDescription().toLowerCase().contains(s))
+                            || (ci.getItemCode() != null
+                                    && ci.getItemCode().toLowerCase().contains(s))) {
                         Map<String, Object> m = new HashMap<>();
                         m.put("category", catCode);
                         m.put("categoryLabel", catLabel);
@@ -368,16 +418,29 @@ public class InvoiceScreenService {
         // 5. Ebatlı Ürün Stoğu
         if ((department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP)
                 && (stockType == null || stockType.isBlank() || "SIZED".equalsIgnoreCase(stockType))) {
-            List<StockItem> stockItems = formLookup.positiveStockEntities().stream()
-                        .filter(st -> {
-                            if (department != null && st.getStockLocation() != null) {
-                                return department.equals(st.getStockLocation().getBusinessUnit());
-                            }
-                            return true;
-                        })
-                        .filter(st -> s.isEmpty() || (st.getProductCode() != null && st.getProductCode().toLowerCase().contains(s)) || (st.getStoneType() != null && st.getStoneType().toLowerCase().contains(s)))
-                        .limit(MAX_ROWS)
-                        .toList();
+            List<StockItem> stockItems =
+                    formLookup.positiveStockEntities().stream()
+                            .filter(
+                                    st -> {
+                                        if (department != null && st.getStockLocation() != null) {
+                                            return department.equals(
+                                                    st.getStockLocation().getBusinessUnit());
+                                        }
+                                        return true;
+                                    })
+                            .filter(
+                                    st ->
+                                            s.isEmpty()
+                                                    || (st.getProductCode() != null
+                                                            && st.getProductCode()
+                                                                    .toLowerCase()
+                                                                    .contains(s))
+                                                    || (st.getStoneType() != null
+                                                            && st.getStoneType()
+                                                                    .toLowerCase()
+                                                                    .contains(s)))
+                            .limit(MAX_ROWS)
+                            .toList();
             for (StockItem st : stockItems) {
                 Map<String, Object> m = new HashMap<>();
                 m.put("category", "SIZED");
@@ -396,9 +459,20 @@ public class InvoiceScreenService {
                 } else {
                     productCodeValue = st.getItemCode();
                 }
-                m.put("name", productCodeValue + " — " + Objects.requireNonNullElse(st.getStoneType(), "Ebatlı Mermer"));
+                m.put(
+                        "name",
+                        productCodeValue
+                                + " — "
+                                + Objects.requireNonNullElse(st.getStoneType(), "Ebatlı Mermer"));
                 m.put("stoneType", Objects.requireNonNullElse(st.getStoneType(), "—"));
-                m.put("dimensions", Objects.requireNonNullElse(st.getWidthCm(), "") + "x" + Objects.requireNonNullElse(st.getLengthCm(), "") + "x" + Objects.requireNonNullElse(st.getThicknessCm(), "") + " cm");
+                m.put(
+                        "dimensions",
+                        Objects.requireNonNullElse(st.getWidthCm(), "")
+                                + "x"
+                                + Objects.requireNonNullElse(st.getLengthCm(), "")
+                                + "x"
+                                + Objects.requireNonNullElse(st.getThicknessCm(), "")
+                                + " cm");
                 m.put("quantity", scaleQuantity(st.getQuantity()));
                 m.put("unit", Objects.requireNonNullElse(st.getUnit(), "m2"));
                 m.put("widthCm", st.getWidthCm());

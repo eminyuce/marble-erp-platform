@@ -52,7 +52,11 @@ class BlockControllerTest {
     void shouldReturnSuccessBackEndResponseOnDeleteBlockApi() {
         Long blockId = 100L;
         Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
-        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("erp.block.delete.success"), ArgumentMatchers.any(), ArgumentMatchers.any()))
+        Mockito.when(
+                        messageSource.getMessage(
+                                ArgumentMatchers.eq("erp.block.delete.success"),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any()))
                 .thenReturn("BLK-100 kodlu blok silindi.");
 
         BackEndResponse response = blockController.deleteBlockApi(blockId, Locale.forLanguageTag("tr"));
@@ -61,7 +65,8 @@ class BlockControllerTest {
         Assertions.assertThat(response).isNotNull();
         Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("BLK-100 kodlu blok silindi.");
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage())
+                .isEqualTo("BLK-100 kodlu blok silindi.");
     }
 
     @Test
@@ -91,7 +96,8 @@ class BlockControllerTest {
         Assertions.assertThat(response).isNotNull();
         Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Transfer to factory successful");
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage())
+                .isEqualTo("Transfer to factory successful");
     }
 
     @Test
@@ -99,7 +105,9 @@ class BlockControllerTest {
     void shouldReturnFatalBackEndResponseOnTransferError() {
         Long blockId = 100L;
         BigDecimal transportCost = new BigDecimal("1500.00");
-        Mockito.doThrow(new RuntimeException("Database error")).when(quarryBlockService).transferToFactory(blockId, transportCost);
+        Mockito.doThrow(new RuntimeException("Database error"))
+                .when(quarryBlockService)
+                .transferToFactory(blockId, transportCost);
 
         BackEndResponse response = blockController.transferToFactoryApi(blockId, transportCost);
 
@@ -160,7 +168,8 @@ class BlockControllerTest {
         Assertions.assertThat(response).isNotNull();
         Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Move to yard successful");
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage())
+                .isEqualTo("Move to yard successful");
     }
 
     @Test
@@ -198,7 +207,9 @@ class BlockControllerTest {
     void shouldRedirectToBlockDetailOnDeleteBlockFormError() {
         Long blockId = 100L;
         Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
-        Mockito.doThrow(new IllegalStateException("Kullanımda olan blok silinemez")).when(quarryBlockService).deleteBlock(blockId);
+        Mockito.doThrow(new IllegalStateException("Kullanımda olan blok silinemez"))
+                .when(quarryBlockService)
+                .deleteBlock(blockId);
         RedirectAttributes redirectAttributes =
                 new RedirectAttributesModelMap();
 
@@ -475,7 +486,10 @@ class BlockControllerTest {
         Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
                 BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
         Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
-                .thenReturn(List.of(FileStorageDto.fromEntity(sampleImage(7L)), FileStorageDto.fromEntity(sampleImage(8L))));
+                .thenReturn(
+                        List.of(
+                                FileStorageDto.fromEntity(sampleImage(7L)),
+                                FileStorageDto.fromEntity(sampleImage(8L))));
         RedirectAttributes redirectAttributes =
                 new RedirectAttributesModelMap();
 
@@ -511,7 +525,10 @@ class BlockControllerTest {
         Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
                 BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
         Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
-                .thenReturn(List.of(FileStorageDto.fromEntity(sampleImage(7L)), FileStorageDto.fromEntity(sampleImage(8L))));
+                .thenReturn(
+                        List.of(
+                                FileStorageDto.fromEntity(sampleImage(7L)),
+                                FileStorageDto.fromEntity(sampleImage(8L))));
         ExtendedModelMap model = new ExtendedModelMap();
         RedirectAttributes redirectAttributes =
                 new RedirectAttributesModelMap();

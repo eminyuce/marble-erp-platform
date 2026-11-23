@@ -163,9 +163,11 @@ public class FactoryInventoryService {
         }
 
         if (currentStock.compareTo(litres) < 0) {
-            throw new IllegalArgumentException(String.format(
-                    "Yetersiz mazot stoğu! Fabrika Mazot Deposunda mevcut: %s litre, talep edilen: %s litre. Stok eksiye düşürülemez.",
-                    currentStock, litres));
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Yetersiz mazot stoğu! Fabrika Mazot Deposunda mevcut: %s litre, talep edilen: %s litre. "
+                                    + "Stok eksiye düşürülemez.",
+                            currentStock, litres));
         }
 
         Machine machine = machineRepository.findById(machineId)
@@ -294,7 +296,8 @@ public class FactoryInventoryService {
         boolean descExists = stockItemRepository.existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(
                 BusinessUnit.FACTORY, trimmedDesc);
         if (descExists) {
-            throw new IllegalArgumentException("Bu ürün adıyla kayıtlı bir fabrika stok kartı zaten mevcut: " + trimmedDesc);
+            throw new IllegalArgumentException(
+                    "Bu ürün adıyla kayıtlı bir fabrika stok kartı zaten mevcut: " + trimmedDesc);
         }
         if (trimmedCode != null && stockItemRepository.existsByItemCode(trimmedCode)) {
             throw new IllegalArgumentException("Bu kodla kayıtlı bir stok kartı zaten mevcut: " + trimmedCode);
@@ -418,24 +421,36 @@ public class FactoryInventoryService {
             } else {
                 code = "FAB-SARF";
             }
-            expenseService.recordExpense(new ExpenseService.ExpenseDraft(
-                    factoryCenter.getId(),
-                    ExpenseType.CONSUMABLES,
-                    null,
-                    BusinessUnit.FACTORY,
-                    netCost,
-                    "TRY",
-                    "FB-SRF-" + saved.getId(),
-                    LocalDate.now(),
-                    LocalDate.now(),
-                    YearMonth.now().toString(),
-                    YearMonth.now().toString(),
-                    null, null, null, null,
-                    machine,
-                    null, null,
-                    code,
-                    "Fabrika Sarf Malzeme Kullanımı: " + item.getDescription() + " — " + quantity + " " + item.getUnit() + " (Net: " + netCost + " TL)"
-            ));
+            expenseService.recordExpense(
+                    new ExpenseService.ExpenseDraft(
+                            factoryCenter.getId(),
+                            ExpenseType.CONSUMABLES,
+                            null,
+                            BusinessUnit.FACTORY,
+                            netCost,
+                            "TRY",
+                            "FB-SRF-" + saved.getId(),
+                            LocalDate.now(),
+                            LocalDate.now(),
+                            YearMonth.now().toString(),
+                            YearMonth.now().toString(),
+                            null,
+                            null,
+                            null,
+                            null,
+                            machine,
+                            null,
+                            null,
+                            code,
+                            "Fabrika Sarf Malzeme Kullanımı: "
+                                    + item.getDescription()
+                                    + " — "
+                                    + quantity
+                                    + " "
+                                    + item.getUnit()
+                                    + " (Net: "
+                                    + netCost
+                                    + " TL)"));
         }
 
         String movCode = UniqueCodes.yearly("MOV-FB-SRF", stockMovementRepository::existsByMovementCode);
@@ -532,7 +547,8 @@ public class FactoryInventoryService {
     @Transactional
     public StockItemView createStockCardView(String description, String unit, BigDecimal initialQuantity,
                                      BigDecimal netUnitPrice, String itemCode, String notes) {
-        return stockItemMapper.toDto(createStockCard(description, unit, initialQuantity, netUnitPrice, itemCode, notes));
+        return stockItemMapper.toDto(
+                createStockCard(description, unit, initialQuantity, netUnitPrice, itemCode, notes));
     }
 
     /**
@@ -582,6 +598,15 @@ public class FactoryInventoryService {
     public MachineFuelEntryView dispenseFuelView(Long machineId, BigDecimal litres, LocalDate entryDate,
                                          BigDecimal workingHoursOrKm, String receiptNo,
                                          String issuedBy, String receivedBy, String notes) {
-        return machineFuelMapper.toDto(dispenseFuel(machineId, litres, entryDate, workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes));
+        return machineFuelMapper.toDto(
+                dispenseFuel(
+                        machineId,
+                        litres,
+                        entryDate,
+                        workingHoursOrKm,
+                        receiptNo,
+                        issuedBy,
+                        receivedBy,
+                        notes));
     }
 }

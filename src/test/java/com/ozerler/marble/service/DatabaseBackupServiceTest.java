@@ -208,7 +208,10 @@ class DatabaseBackupServiceTest {
     void writeBackupReportsStorageFailure() throws Exception {
         String fileName = backupService.createBackupAsync().get();
 
-        Assertions.assertThatThrownBy(() -> backupService.writeBackup(failingStream(), new ByteArrayOutputStream(), fileName))
+        Assertions.assertThatThrownBy(
+                        () ->
+                                backupService.writeBackup(
+                                        failingStream(), new ByteArrayOutputStream(), fileName))
                 .isInstanceOf(StorageException.class)
                 .hasMessageContaining("Yedek indirilemedi");
     }

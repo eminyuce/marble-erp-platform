@@ -96,7 +96,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         String clientIp = ClientIps.from(request);
         // Loopback is exempt. The literals are the addresses the servlet container reports.
-        if ("127.0.0.1".equals(clientIp) || "::1".equals(clientIp) || "0:0:0:0:0:0:0:1".equals(clientIp)) { // NOPMD AvoidUsingHardCodedIP
+        if ("127.0.0.1".equals(clientIp) // NOPMD AvoidUsingHardCodedIP
+                || "::1".equals(clientIp) // NOPMD AvoidUsingHardCodedIP
+                || "0:0:0:0:0:0:0:1".equals(clientIp)) { // NOPMD AvoidUsingHardCodedIP
             filterChain.doFilter(request, response);
             return;
         }

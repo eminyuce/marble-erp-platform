@@ -17,7 +17,9 @@ class BlockMeasurementTest {
                 BigDecimal.valueOf(175L * 285 * 180)
                         .divide(BlockMeasurement.CUBIC_CENTIMETERS_PER_CUBIC_METER, 3, RoundingMode.HALF_UP));
         BigDecimal tons = BlockMeasurement.approximateTonnage(volume, new BigDecimal("2.70"));
-        Assertions.assertThat(tons).isEqualByComparingTo(volume.multiply(new BigDecimal("2.70")).setScale(3, RoundingMode.HALF_UP));
+        Assertions.assertThat(tons)
+                .isEqualByComparingTo(
+                        volume.multiply(new BigDecimal("2.70")).setScale(3, RoundingMode.HALF_UP));
         Assertions.assertThat(BlockMeasurement.theoreticalWeightKg(tons))
                 .isEqualByComparingTo(tons.multiply(new BigDecimal("1000")).setScale(2));
     }

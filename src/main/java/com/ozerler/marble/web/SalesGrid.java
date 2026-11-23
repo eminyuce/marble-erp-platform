@@ -34,15 +34,23 @@ public final class SalesGrid {
             id = order.getId().toString();
         }
         String viewUrl = "/sales/" + id;
-        return GridRow.of(viewUrl, viewUrl, null, order.getOrderNo(), List.of(
-                GridCell.badge(order.getStatusLabel()),
-                GridCell.chip(order.getId()),
-                GridCell.link(order.getOrderNo(), viewUrl),
-                GridCell.link(GridWindow.clean(order.getCustomerName()), viewUrl, GridWindow.clean(order.getCustomerType()), null),
-                GridCell.text(GridTexts.date(order.getOrderDate())),
-                GridCell.text(GridTexts.money(order.getTotalAmount())),
-                GridCell.text(GridTexts.money(order.getPaidAmount()))
-        ));
+        return GridRow.of(
+                viewUrl,
+                viewUrl,
+                null,
+                order.getOrderNo(),
+                List.of(
+                        GridCell.badge(order.getStatusLabel()),
+                        GridCell.chip(order.getId()),
+                        GridCell.link(order.getOrderNo(), viewUrl),
+                        GridCell.link(
+                                GridWindow.clean(order.getCustomerName()),
+                                viewUrl,
+                                GridWindow.clean(order.getCustomerType()),
+                                null),
+                        GridCell.text(GridTexts.date(order.getOrderDate())),
+                        GridCell.text(GridTexts.money(order.getTotalAmount())),
+                        GridCell.text(GridTexts.money(order.getPaidAmount()))));
     }
 
     private static List<GridColumn> columns() {

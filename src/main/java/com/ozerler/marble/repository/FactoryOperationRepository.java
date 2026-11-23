@@ -23,7 +23,8 @@ public interface FactoryOperationRepository extends JpaRepository<FactoryOperati
     Optional<FactoryOperation> findTopByWorkOrderIdAndProcessTypeInAndStatusOrderByIdDesc(
             Long workOrderId, Collection<FactoryProcessType> processTypes, OperationStatus status);
 
-    List<FactoryOperation> findByProcessTypeAndStatusOrderByIdDesc(FactoryProcessType processType, OperationStatus status);
+    List<FactoryOperation> findByProcessTypeAndStatusOrderByIdDesc(
+            FactoryProcessType processType, OperationStatus status);
 
     @EntityGraph(attributePaths = {"workOrder", "workOrder.block", "machine"})
     List<FactoryOperation> findByProcessTypeInOrderByIdDesc(Collection<FactoryProcessType> processTypes);

@@ -98,7 +98,10 @@ public class ProjectDto {
         BigDecimal variance = p.getActualCost().subtract(p.getEstimatedCost());
         BigDecimal varPct;
         if (p.getEstimatedCost().compareTo(BigDecimal.ZERO) > 0) {
-            varPct = variance.divide(p.getEstimatedCost(), 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")).setScale(1, RoundingMode.HALF_UP);
+            varPct =
+                    variance.divide(p.getEstimatedCost(), 4, RoundingMode.HALF_UP)
+                            .multiply(new BigDecimal("100"))
+                            .setScale(1, RoundingMode.HALF_UP);
         } else {
             varPct = BigDecimal.ZERO;
         }

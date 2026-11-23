@@ -56,9 +56,22 @@ public class OperationWorkOrderController extends AbstractController {
                         @RequestParam(value = "customerId", required = false) Long customerId,
                         @ModelAttribute ListQuery query, Model model) {
 
-        model.addAttribute("grid", WorkOrderGrid.view(
-                workOrderService.searchOrderRows(department, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute(
+                "grid",
+                WorkOrderGrid.view(
+                        workOrderService.searchOrderRows(
+                                department,
+                                status,
+                                customerId,
+                                null,
+                                null,
+                                query.getSearch(),
+                                query.pageNumber() - 1,
+                                query.pageSize()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         Object valueValue;
         if (department != null) {
             valueValue = department.name();
@@ -137,9 +150,19 @@ public class OperationWorkOrderController extends AbstractController {
         var selectedStockItem = formLookup.findStockItem(stockItemId);
         var selectedBlock = formLookup.findBlock(blockId);
 
-        var availableBlocks = new ArrayList<>(formLookup.blocksInStatus(
-                List.of(BlockStatus.AT_FACTORY, BlockStatus.FACTORY_STOCK, BlockStatus.PRODUCED, BlockStatus.QUARRY, BlockStatus.EXTRACTED, BlockStatus.MARKED)));
-        if (selectedBlock != null && availableBlocks.stream().noneMatch(block -> block.getId().equals(selectedBlock.getId()))) {
+        var availableBlocks =
+                new ArrayList<>(
+                        formLookup.blocksInStatus(
+                                List.of(
+                                        BlockStatus.AT_FACTORY,
+                                        BlockStatus.FACTORY_STOCK,
+                                        BlockStatus.PRODUCED,
+                                        BlockStatus.QUARRY,
+                                        BlockStatus.EXTRACTED,
+                                        BlockStatus.MARKED)));
+        if (selectedBlock != null
+                && availableBlocks.stream()
+                        .noneMatch(block -> block.getId().equals(selectedBlock.getId()))) {
             availableBlocks.add(0, selectedBlock);
         }
 
@@ -204,13 +227,44 @@ public class OperationWorkOrderController extends AbstractController {
             LocalDate orderDate = parseDateSafely(orderDateStr, LocalDate.now());
             LocalDate dueDate = parseDateSafely(dueDateStr, LocalDate.now().plusDays(DEFAULT_DUE_DAYS));
 
-            WorkOrderRequest request = new WorkOrderRequest(orderNo, customerId, orderDate, dueDate, department,
-                    responsiblePerson, stoneType, colorQuality, thicknessCm, widthCm, lengthCm, quantity, quantityUnit,
-                    surfaceOperation, edgeOperation, sourceStockItemId, sourceSlabId, sourceBlockId, usedQuantity, notes,
-                    new WorkOrderRequest.Dimensions(dimWidths, dimLengths, dimThicknesses, dimPieceCounts, dimSurfaceOps,
-                            dimSurfaceUnits, dimEdgeOps, dimEdgeUnits, dimNotes));
+            WorkOrderRequest request =
+                    new WorkOrderRequest(
+                            orderNo,
+                            customerId,
+                            orderDate,
+                            dueDate,
+                            department,
+                            responsiblePerson,
+                            stoneType,
+                            colorQuality,
+                            thicknessCm,
+                            widthCm,
+                            lengthCm,
+                            quantity,
+                            quantityUnit,
+                            surfaceOperation,
+                            edgeOperation,
+                            sourceStockItemId,
+                            sourceSlabId,
+                            sourceBlockId,
+                            usedQuantity,
+                            notes,
+                            new WorkOrderRequest.Dimensions(
+                                    dimWidths,
+                                    dimLengths,
+                                    dimThicknesses,
+                                    dimPieceCounts,
+                                    dimSurfaceOps,
+                                    dimSurfaceUnits,
+                                    dimEdgeOps,
+                                    dimEdgeUnits,
+                                    dimNotes));
             OrderRef order = workOrderService.createWorkOrder(request);
-            redirectAttributes.addFlashAttribute("successMessage", "İş Emri (" + order.getOrderNo() + ") başarıyla oluşturuldu. Stok bağlantısı ve tüketim hareketi kaydedildi.");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "İş Emri ("
+                            + order.getOrderNo()
+                            + ") başarıyla oluşturuldu. Stok bağlantısı ve tüketim hareketi kaydedildi.");
             return "redirect:/work-orders/" + order.getId();
         } catch (Exception e) {
             log.error("İş emri oluşturulamadı", e);
@@ -235,7 +289,12 @@ public class OperationWorkOrderController extends AbstractController {
                                RedirectAttributes redirectAttributes) {
         try {
             OrderRef order = workOrderService.updateStatusRef(id, status, notes);
-            redirectAttributes.addFlashAttribute("successMessage", "İş Emri (" + order.getOrderNo() + ") durumu güncellendi: " + status.getLabel());
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "İş Emri ("
+                            + order.getOrderNo()
+                            + ") durumu güncellendi: "
+                            + status.getLabel());
         } catch (Exception e) {
             log.error("İş emri durumu güncellenemedi: id={}, status={}", id, status, e);
             redirectAttributes.addFlashAttribute("errorMessage", "Durum güncellenirken hata: " + e.getMessage());

@@ -81,7 +81,9 @@ public class EmailTemplateEngineController {
     @GetMapping
     public String index(@ModelAttribute ListQuery query, Model model,
                         @RequestParam(value = "category", required = false) String category) {
-        Page<EmailTemplateDto> result = emailService.getTemplateViewsPaged(query.pageNumber(), query.pageSize(), category, query.getSearch());
+        Page<EmailTemplateDto> result =
+                emailService.getTemplateViewsPaged(
+                        query.pageNumber(), query.pageSize(), category, query.getSearch());
         Set<String> categories = emailService.templateCategories();
 
         String host = settingService.getSetting("smtp.host", settingService.getSetting("mail.smtp.host", ""));
@@ -181,8 +183,13 @@ public class EmailTemplateEngineController {
                     templateKey, templateName, category, description,
                     subject, bodyHtml, placeholders, isActive
             );
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "'" + created.getTemplateName() + "' (" + created.getTemplateKey() + ") şablonu başarıyla oluşturuldu.");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "'"
+                            + created.getTemplateName()
+                            + "' ("
+                            + created.getTemplateKey()
+                            + ") şablonu başarıyla oluşturuldu.");
             return "redirect:/admin/email-templates/" + created.getId();
         } catch (IllegalArgumentException e) {
             model.addAttribute("isEdit", false);
@@ -271,7 +278,8 @@ public class EmailTemplateEngineController {
                         .build());
 
         List<EmailPlaceholderSample> samples = emailService.placeholderSamples(template);
-        Optional<EmailTemplateCatalog.TemplateMeta> catalogMeta = EmailTemplateCatalog.getByKey(template.getTemplateKey());
+        Optional<EmailTemplateCatalog.TemplateMeta> catalogMeta =
+                EmailTemplateCatalog.getByKey(template.getTemplateKey());
         List<EmailTemplateDto> allTemplates = emailService.getAllTemplateViews();
 
         String fromName = settingService.getSetting("smtp.from_name", "Özerler Mermer ERP");
@@ -307,11 +315,18 @@ public class EmailTemplateEngineController {
         try {
             boolean dispatched = emailService.sendTestEmail(testEmail.trim(), template.getTemplateKey());
             if (dispatched) {
-                redirectAttributes.addFlashAttribute("successMessage",
-                        "'" + template.getTemplateName() + "' şablonu ile '" + testEmail.trim() + "' adresine test e-postası başarıyla gönderildi.");
+                redirectAttributes.addFlashAttribute(
+                        "successMessage",
+                        "'"
+                                + template.getTemplateName()
+                                + "' şablonu ile '"
+                                + testEmail.trim()
+                                + "' adresine test e-postası başarıyla gönderildi.");
             } else {
-                redirectAttributes.addFlashAttribute("errorMessage",
-                        "E-posta gönderilemedi! Lütfen Sistem Ayarları altındaki SMTP sunucu ve kimlik doğrulama ayarlarını kontrol ediniz.");
+                redirectAttributes.addFlashAttribute(
+                        "errorMessage",
+                        "E-posta gönderilemedi! Lütfen Sistem Ayarları altındaki SMTP sunucu ve kimlik doğrulama "
+                                + "ayarlarını kontrol ediniz.");
             }
         } catch (Exception ex) {
             log.error("Test email dispatch failure: {}", ex.getMessage(), ex);
@@ -330,8 +345,12 @@ public class EmailTemplateEngineController {
         EmailTemplateDto template = emailService.getTemplate(id);
         // Protect seeded catalog templates from accidental removal
         if (EmailTemplateCatalog.getByKey(template.getTemplateKey()).isPresent()) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    "'" + template.getTemplateKey() + "' temel kurumsal ERP şablonudur ve sistem bütünlüğü için silinemez. Dilerseniz pasife alabilirsiniz.");
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "'"
+                            + template.getTemplateKey()
+                            + "' temel kurumsal ERP şablonudur ve sistem bütünlüğü için silinemez. Dilerseniz pasife "
+                            + "alabilirsiniz.");
             return "redirect:/admin/email-templates/" + id;
         }
 

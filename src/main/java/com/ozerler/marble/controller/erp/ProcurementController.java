@@ -48,9 +48,20 @@ public class ProcurementController {
         model.addAttribute("statuses", PurchaseOrderStatus.values());
         model.addAttribute("summary", procurementService.getProcurementSummary());
         model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
-        model.addAttribute("grid", ProcurementGrid.view(
-                procurementService.getPurchaseOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute(
+                "grid",
+                ProcurementGrid.view(
+                        procurementService.getPurchaseOrdersPaged(
+                                query.pageNumber(),
+                                query.pageSize(),
+                                query.getSearch(),
+                                status,
+                                query.sortKey(),
+                                query.sortDirection()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         return "erp/procurement/index";
     }
 
@@ -81,21 +92,28 @@ public class ProcurementController {
 
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/create")
-    public String createOrder(@RequestParam("poNumber") String poNumber,
-                              @RequestParam("supplierId") Long supplierId,
-                              @RequestParam("businessUnit") BusinessUnit businessUnit,
-                              @RequestParam(value = "costCenterId", required = false) Long costCenterId,
-                              @RequestParam(value = "projectId", required = false) Long projectId,
-                              @RequestParam(value = "expectedDelivery", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expectedDelivery,
-                              @RequestParam(value = "notes", required = false) String notes,
-                              Model model,
-                              RedirectAttributes redirectAttributes,
-                              Locale locale) {
+    public String createOrder(
+            @RequestParam("poNumber") String poNumber,
+            @RequestParam("supplierId") Long supplierId,
+            @RequestParam("businessUnit") BusinessUnit businessUnit,
+            @RequestParam(value = "costCenterId", required = false) Long costCenterId,
+            @RequestParam(value = "projectId", required = false) Long projectId,
+            @RequestParam(value = "expectedDelivery", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate expectedDelivery,
+            @RequestParam(value = "notes", required = false) String notes,
+            Model model,
+            RedirectAttributes redirectAttributes,
+            Locale locale) {
         try {
             PurchaseOrderView order = procurementService.createPurchaseOrderView(
                     poNumber, supplierId, projectId, businessUnit, costCenterId, expectedDelivery, notes);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    messageSource.getMessage("erp.procurement.create.success", new Object[]{order.getPoNumber()}, locale));
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    messageSource.getMessage(
+                            "erp.procurement.create.success",
+                            new Object[] {order.getPoNumber()},
+                            locale));
             return "redirect:/procurement";
         } catch (Exception e) {
             model.addAttribute("errorMessage",

@@ -74,8 +74,19 @@ public class ExpensePurchaseController extends AbstractController {
             currentPeriod = YearMonth.now().toString();
         }
         ExpenseSummaryDto summary = expenseService.getExpenseSummary(currentPeriod);
-        TabulatorResponse<ExpenseDto> expenses = expenseService.getExpensesPaged(
-                query.pageNumber(), query.pageSize(), query.getSearch(), query.sortKey(), query.sortDirection(), unit, currentPeriod, expenseType, null, quarryId, null);
+        TabulatorResponse<ExpenseDto> expenses =
+                expenseService.getExpensesPaged(
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.getSearch(),
+                        query.sortKey(),
+                        query.sortDirection(),
+                        unit,
+                        currentPeriod,
+                        expenseType,
+                        null,
+                        quarryId,
+                        null);
 
         model.addAttribute("summary", summary);
         model.addAttribute("selectedUnit", unit);
@@ -93,7 +104,14 @@ public class ExpensePurchaseController extends AbstractController {
             valueValue = expenseType.name();
         }
         model.addAttribute("selectedExpenseType", valueValue);
-        model.addAttribute("grid", ExpenseGrid.view(expenses, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute(
+                "grid",
+                ExpenseGrid.view(
+                        expenses,
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         if (expenses != null && expenses.getMeta() != null) {
             model.addAttribute("filteredAmount", expenses.getMeta().get("totalAmount"));
             model.addAttribute("filteredCount", expenses.getTotal());
@@ -160,11 +178,14 @@ public class ExpensePurchaseController extends AbstractController {
             @RequestParam(value = "centerId", required = false) Long centerId,
             @RequestParam("expenseType") ExpenseType expenseType,
             @RequestParam("amount") BigDecimal amount,
-            @RequestParam("entryDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
+            @RequestParam("entryDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate entryDate,
             @RequestParam(value = "quarryId", required = false) Long quarryId,
             @RequestParam(value = "projectId", required = false) Long projectId,
             @RequestParam(value = "documentNo", required = false) String documentNo,
-            @RequestParam(value = "invoiceDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate invoiceDate,
+            @RequestParam(value = "invoiceDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate invoiceDate,
             @RequestParam(value = "expensePeriod", required = false) String expensePeriod,
             @RequestParam(value = "description", required = false) String description,
             Locale locale) {
@@ -182,11 +203,14 @@ public class ExpensePurchaseController extends AbstractController {
             @RequestParam(name = "centerId", required = false) Long centerId,
             @RequestParam(name = "expenseType") ExpenseType expenseType,
             @RequestParam(name = "amount") BigDecimal amount,
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam(name = "entryDate") LocalDate entryDate,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam(name = "entryDate")
+                    LocalDate entryDate,
             @RequestParam(name = "quarryId", required = false) Long quarryId,
             @RequestParam(name = "projectId", required = false) Long projectId,
             @RequestParam(name = "documentNo", required = false) String documentNo,
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam(name = "invoiceDate", required = false) LocalDate invoiceDate,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    @RequestParam(name = "invoiceDate", required = false)
+                    LocalDate invoiceDate,
             @RequestParam(name = "expensePeriod", required = false) String expensePeriod,
             @RequestParam(name = "description", required = false) String description,
             Locale locale) {
@@ -247,20 +271,24 @@ public class ExpensePurchaseController extends AbstractController {
 
     @PostMapping(path = {"", "/create"})
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
-    public String recordExpense(@RequestParam(value = "businessUnit") BusinessUnit businessUnit,
-                                @RequestParam(required = false, value = "centerId") Long centerId,
-                                @RequestParam(value = "expenseType") ExpenseType expenseType,
-                                @RequestParam(value = "amount") BigDecimal amount,
-                                @RequestParam(value = "entryDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
-                                @RequestParam(required = false, value = "quarryId") Long quarryId,
-                                @RequestParam(required = false, value = "projectId") Long projectId,
-                                @RequestParam(required = false, value = "documentNo") String documentNo,
-                                @RequestParam(required = false, value = "invoiceDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate invoiceDate,
-                                @RequestParam(required = false, value = "expensePeriod") String expensePeriod,
-                                @RequestParam(required = false, value = "description") String description,
-                                Locale locale,
-                                RedirectAttributes redirectAttributes,
-                                Model model) {
+    public String recordExpense(
+            @RequestParam(value = "businessUnit") BusinessUnit businessUnit,
+            @RequestParam(required = false, value = "centerId") Long centerId,
+            @RequestParam(value = "expenseType") ExpenseType expenseType,
+            @RequestParam(value = "amount") BigDecimal amount,
+            @RequestParam(value = "entryDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate entryDate,
+            @RequestParam(required = false, value = "quarryId") Long quarryId,
+            @RequestParam(required = false, value = "projectId") Long projectId,
+            @RequestParam(required = false, value = "documentNo") String documentNo,
+            @RequestParam(required = false, value = "invoiceDate")
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate invoiceDate,
+            @RequestParam(required = false, value = "expensePeriod") String expensePeriod,
+            @RequestParam(required = false, value = "description") String description,
+            Locale locale,
+            RedirectAttributes redirectAttributes,
+            Model model) {
         try {
             var write = expenseWrite(
                     businessUnit, centerId, expenseType, amount, entryDate, quarryId, projectId,
@@ -280,21 +308,26 @@ public class ExpensePurchaseController extends AbstractController {
 
     @PostMapping("/{id}/edit")
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
-    public String updateExpense(@PathVariable(name = "id") Long id,
-                                @RequestParam(name = "businessUnit", required = true) BusinessUnit businessUnit,
-                                @RequestParam(required = false, name = "centerId") Long centerId,
-                                @RequestParam(name = "expenseType", required = true) ExpenseType expenseType,
-                                @RequestParam(name = "amount", required = true) BigDecimal amount,
-                                @RequestParam(name = "entryDate", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
-                                @RequestParam(required = false, name = "quarryId") Long quarryId,
-                                @RequestParam(required = false, name = "projectId") Long projectId,
-                                @RequestParam(required = false, name = "documentNo") String documentNo,
-                                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam(required = false, name = "invoiceDate") LocalDate invoiceDate,
-                                @RequestParam(required = false, name = "expensePeriod") String expensePeriod,
-                                @RequestParam(required = false, name = "description") String description,
-                                Locale locale,
-                                RedirectAttributes redirectAttributes,
-                                Model model) {
+    public String updateExpense(
+            @PathVariable(name = "id") Long id,
+            @RequestParam(name = "businessUnit", required = true) BusinessUnit businessUnit,
+            @RequestParam(required = false, name = "centerId") Long centerId,
+            @RequestParam(name = "expenseType", required = true) ExpenseType expenseType,
+            @RequestParam(name = "amount", required = true) BigDecimal amount,
+            @RequestParam(name = "entryDate", required = true)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate entryDate,
+            @RequestParam(required = false, name = "quarryId") Long quarryId,
+            @RequestParam(required = false, name = "projectId") Long projectId,
+            @RequestParam(required = false, name = "documentNo") String documentNo,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    @RequestParam(required = false, name = "invoiceDate")
+                    LocalDate invoiceDate,
+            @RequestParam(required = false, name = "expensePeriod") String expensePeriod,
+            @RequestParam(required = false, name = "description") String description,
+            Locale locale,
+            RedirectAttributes redirectAttributes,
+            Model model) {
         try {
             var write = expenseWrite(
                     businessUnit, centerId, expenseType, amount, entryDate, quarryId, projectId,
@@ -356,9 +389,26 @@ public class ExpensePurchaseController extends AbstractController {
             period = ExpensePeriods.expensePeriod(write.expenseType(), write.invoiceDate(), write.entryDate());
         }
         return new ExpenseService.ExpenseDraft(
-                effectiveCenterId, write.expenseType(), null, write.businessUnit(), write.amount(), Constants.CURRENCY_TRY,
-                write.documentNo(), write.invoiceDate(), write.entryDate(), period, YearMonth.now().toString(),
-                null, null, null, null, null, null, null, null, write.description());
+                effectiveCenterId,
+                write.expenseType(),
+                null,
+                write.businessUnit(),
+                write.amount(),
+                Constants.CURRENCY_TRY,
+                write.documentNo(),
+                write.invoiceDate(),
+                write.entryDate(),
+                period,
+                YearMonth.now().toString(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                write.description());
     }
 
     private BackEndResponse writeExpenseApi(ExpenseApiAction action, Long id, ExpenseWrite write, Locale locale) {
@@ -386,7 +436,8 @@ public class ExpensePurchaseController extends AbstractController {
         }
     }
 
-    private static BackEndResponse expenseApiOk(BackEndResponse ber, ServiceStatus serviceStatus, Status status, String message) {
+    private static BackEndResponse expenseApiOk(
+            BackEndResponse ber, ServiceStatus serviceStatus, Status status, String message) {
         serviceStatus.setHttpStatus(HttpStatus.OK);
         status.setMessage(message);
         serviceStatus.setStatus(status);

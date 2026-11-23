@@ -160,9 +160,12 @@ class OperationWorkOrderLineItemsTest {
                 .build();
 
         Mockito.when(workOrderRepository.findByIdWithDetails(10L)).thenReturn(Optional.of(existing));
-        Mockito.when(workOrderRepository.save(ArgumentMatchers.any(OperationWorkOrder.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(workOrderRepository.save(ArgumentMatchers.any(OperationWorkOrder.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        OperationWorkOrder updated = workOrderService.updateStatus(10L, OperationWorkOrderStatus.APPROVED, "Müşteri onayladı");
+        OperationWorkOrder updated =
+                workOrderService.updateStatus(
+                        10L, OperationWorkOrderStatus.APPROVED, "Müşteri onayladı");
 
         Assertions.assertThat(updated.getStatus()).isEqualTo(OperationWorkOrderStatus.APPROVED);
         Mockito.verify(historyRepository).save(ArgumentMatchers.any());

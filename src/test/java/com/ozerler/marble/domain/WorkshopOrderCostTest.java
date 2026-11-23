@@ -26,8 +26,15 @@ class WorkshopOrderCostTest {
     void nullAndNegative() {
         Assertions.assertThat(WorkshopOrderCost.total(null, null, null, null, null, null))
                 .isEqualByComparingTo("0.00");
-        Assertions.assertThatThrownBy(() -> WorkshopOrderCost.total(new BigDecimal("-1"), BigDecimal.ZERO, BigDecimal.ZERO,
-                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO))
+        Assertions.assertThatThrownBy(
+                        () ->
+                                WorkshopOrderCost.total(
+                                        new BigDecimal("-1"),
+                                        BigDecimal.ZERO,
+                                        BigDecimal.ZERO,
+                                        BigDecimal.ZERO,
+                                        BigDecimal.ZERO,
+                                        BigDecimal.ZERO))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

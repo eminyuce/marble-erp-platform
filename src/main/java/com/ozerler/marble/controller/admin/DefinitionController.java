@@ -399,7 +399,10 @@ public class DefinitionController extends AbstractController {
     }
 
     @PostMapping("/customers/save")
-    public String saveCustomer(@ModelAttribute CustomerForm customer, Model model, RedirectAttributes redirectAttributes) {
+    public String saveCustomer(
+            @ModelAttribute CustomerForm customer,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         try {
             masterDataService.saveCustomerForm(customer);
             addSuccessFlash(redirectAttributes, "Müşteri (" + customer.getCompanyName() + ") başarıyla kaydedildi.");
@@ -477,7 +480,10 @@ public class DefinitionController extends AbstractController {
     }
 
     @PostMapping("/suppliers/save")
-    public String saveSupplier(@ModelAttribute SupplierForm supplier, Model model, RedirectAttributes redirectAttributes) {
+    public String saveSupplier(
+            @ModelAttribute SupplierForm supplier,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         try {
             masterDataService.saveSupplierForm(supplier);
             addSuccessFlash(redirectAttributes, "Tedarikçi (" + supplier.getCompanyName() + ") başarıyla kaydedildi.");

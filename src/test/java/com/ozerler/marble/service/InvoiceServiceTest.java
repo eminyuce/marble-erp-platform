@@ -131,9 +131,19 @@ class InvoiceServiceTest {
 
         Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<InvoiceService.InvoiceItemForm> items = List.of(
-                new InvoiceService.InvoiceItemForm("Matkap Ucu", "Ocak", new BigDecimal("15"), "adet", new BigDecimal("50.00"), null, null, 20L, null, null)
-        );
+        List<InvoiceService.InvoiceItemForm> items =
+                List.of(
+                        new InvoiceService.InvoiceItemForm(
+                                "Matkap Ucu",
+                                "Ocak",
+                                new BigDecimal("15"),
+                                "adet",
+                                new BigDecimal("50.00"),
+                                null,
+                                null,
+                                20L,
+                                null,
+                                null));
 
         Assertions.assertThatThrownBy(() -> invoiceService.createInvoice(
                 "FAT-001", LocalDate.now(), null, InvoiceType.SALES, BusinessUnit.QUARRY,
@@ -157,9 +167,19 @@ class InvoiceServiceTest {
 
         Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<InvoiceService.InvoiceItemForm> items = List.of(
-                new InvoiceService.InvoiceItemForm("Blok BLK-100", "Sevk", BigDecimal.ONE, "ton", new BigDecimal("1000.00"), 5L, null, null, null, null)
-        );
+        List<InvoiceService.InvoiceItemForm> items =
+                List.of(
+                        new InvoiceService.InvoiceItemForm(
+                                "Blok BLK-100",
+                                "Sevk",
+                                BigDecimal.ONE,
+                                "ton",
+                                new BigDecimal("1000.00"),
+                                5L,
+                                null,
+                                null,
+                                null,
+                                null));
 
         Invoice inv = invoiceService.createInvoice(
                 "FAT-002", LocalDate.now(), null, InvoiceType.SALES, BusinessUnit.QUARRY,
@@ -177,15 +197,30 @@ class InvoiceServiceTest {
 
         Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<InvoiceService.InvoiceItemForm> items = List.of(
-                new InvoiceService.InvoiceItemForm("Mazot (Dizel)", "Depo Dolumu", new BigDecimal("5000"), "litre", new BigDecimal("42.00"), null, null, null, null, null)
-        );
+        List<InvoiceService.InvoiceItemForm> items =
+                List.of(
+                        new InvoiceService.InvoiceItemForm(
+                                "Mazot (Dizel)",
+                                "Depo Dolumu",
+                                new BigDecimal("5000"),
+                                "litre",
+                                new BigDecimal("42.00"),
+                                null,
+                                null,
+                                null,
+                                null,
+                                null));
 
         Invoice inv = invoiceService.createInvoice(
                 "ALF-001", LocalDate.now(), null, InvoiceType.PURCHASE, BusinessUnit.QUARRY,
                 null, null, null, null, new BigDecimal("20"), false, "Tedarikçi Petrol", "Yakıt Alımı", items);
 
-        Mockito.verify(quarryInventoryService).addFuelStock(Mockito.eq(new BigDecimal("5000.00")), Mockito.eq(new BigDecimal("42.00")), ArgumentMatchers.any(), ArgumentMatchers.any());
+        Mockito.verify(quarryInventoryService)
+                .addFuelStock(
+                        Mockito.eq(new BigDecimal("5000.00")),
+                        Mockito.eq(new BigDecimal("42.00")),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any());
         Mockito.verify(costTransactionRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
@@ -204,9 +239,19 @@ class InvoiceServiceTest {
         Mockito.when(costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.QUARRY))
                 .thenReturn(Optional.of(quarryCenter));
 
-        List<InvoiceService.InvoiceItemForm> items = List.of(
-                new InvoiceService.InvoiceItemForm("Elektrik Faturası", "Mart 2026", BigDecimal.ONE, "adet", new BigDecimal("25000.00"), null, null, null, null, null)
-        );
+        List<InvoiceService.InvoiceItemForm> items =
+                List.of(
+                        new InvoiceService.InvoiceItemForm(
+                                "Elektrik Faturası",
+                                "Mart 2026",
+                                BigDecimal.ONE,
+                                "adet",
+                                new BigDecimal("25000.00"),
+                                null,
+                                null,
+                                null,
+                                null,
+                                null));
 
         Invoice inv = invoiceService.createInvoice(
                 "ALF-002", LocalDate.now(), null, InvoiceType.PURCHASE, BusinessUnit.QUARRY,
@@ -217,7 +262,12 @@ class InvoiceServiceTest {
                 tx.getAmount().compareTo(new BigDecimal("25000.00")) == 0
                 && tx.getBusinessUnit() == BusinessUnit.QUARRY
         ));
-        Mockito.verify(quarryInventoryService, Mockito.never()).addFuelStock(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any());
+        Mockito.verify(quarryInventoryService, Mockito.never())
+                .addFuelStock(
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any(),
+                        ArgumentMatchers.any());
     }
 
     @Test
@@ -233,9 +283,19 @@ class InvoiceServiceTest {
 
         Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<InvoiceService.InvoiceItemForm> items = List.of(
-                new InvoiceService.InvoiceItemForm("Matkap Ucu", "Ocak", new BigDecimal("5"), "adet", new BigDecimal("50.00"), null, null, 20L, null, null)
-        );
+        List<InvoiceService.InvoiceItemForm> items =
+                List.of(
+                        new InvoiceService.InvoiceItemForm(
+                                "Matkap Ucu",
+                                "Ocak",
+                                new BigDecimal("5"),
+                                "adet",
+                                new BigDecimal("50.00"),
+                                null,
+                                null,
+                                20L,
+                                null,
+                                null));
 
         Invoice inv = invoiceService.createInvoice(
                 "FAT-DRF-001", LocalDate.now(), null, InvoiceType.SALES, BusinessUnit.QUARRY,
@@ -342,9 +402,19 @@ class InvoiceServiceTest {
     void createInvoicePurchaseWithQuarryCategoryPersistsCategory() {
         Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<InvoiceService.InvoiceItemForm> items = List.of(
-                new InvoiceService.InvoiceItemForm("Ocak Elektrik Faturası", "Ocak", new BigDecimal("1"), "adet", new BigDecimal("15000.00"), null, null, null, null, null)
-        );
+        List<InvoiceService.InvoiceItemForm> items =
+                List.of(
+                        new InvoiceService.InvoiceItemForm(
+                                "Ocak Elektrik Faturası",
+                                "Ocak",
+                                new BigDecimal("1"),
+                                "adet",
+                                new BigDecimal("15000.00"),
+                                null,
+                                null,
+                                null,
+                                null,
+                                null));
 
         Invoice inv = invoiceService.createInvoice(
                 "FAT-ELK-001", LocalDate.now(), null, InvoiceType.PURCHASE, BusinessUnit.QUARRY,
@@ -532,7 +602,10 @@ class InvoiceServiceTest {
 
         Mockito.when(projectRepository.findById(50L)).thenReturn(Optional.of(project));
         Mockito.when(stockItemRepository.findById(500L)).thenReturn(Optional.of(item));
-        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.SITE_STOCK)).thenReturn(Optional.of(siteYard));
+        Mockito.when(
+                        stockLocationRepository.findByLocationTypeAndActiveTrue(
+                                StockLocationType.SITE_STOCK))
+                .thenReturn(Optional.of(siteYard));
         Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> {
             Invoice invObj = inv.getArgument(0);
             if (invObj.getId() == null) {

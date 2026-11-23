@@ -56,7 +56,11 @@ class ApplicationLogServiceTest {
                 .build();
 
         Page<ApplicationLog> mockPage = new PageImpl<>(List.of(logEntity));
-        Mockito.when(applicationLogRepository.findAll(ArgumentMatchers.any(Specification.class), ArgumentMatchers.any(Pageable.class))).thenReturn(mockPage);
+        Mockito.when(
+                        applicationLogRepository.findAll(
+                                ArgumentMatchers.any(Specification.class),
+                                ArgumentMatchers.any(Pageable.class)))
+                .thenReturn(mockPage);
 
         TabulatorResponse<ApplicationLogDto> response = applicationLogService.getLogs(
                 1, 50, "hata", "timestamp", "desc", List.of("ERROR"),
@@ -108,7 +112,10 @@ class ApplicationLogServiceTest {
     @DisplayName("getKpiMetrics counts every stored row and the last 24 hours separately")
     void shouldAggregateKpis() {
         Mockito.when(applicationLogRepository.count()).thenReturn(400L);
-        Mockito.when(applicationLogRepository.countByTimestampAfter(ArgumentMatchers.any(LocalDateTime.class))).thenReturn(150L);
+        Mockito.when(
+                        applicationLogRepository.countByTimestampAfter(
+                                ArgumentMatchers.any(LocalDateTime.class)))
+                .thenReturn(150L);
         Mockito.when(applicationLogRepository.countByLevel(ArgumentMatchers.any(String.class)))
                 .thenAnswer(inv -> switch ((String) inv.getArgument(0)) {
                     case "ERROR" -> 28L;
@@ -116,16 +123,20 @@ class ApplicationLogServiceTest {
                     case "INFO" -> 300L;
                     default -> 0L;
                 });
-        Mockito.when(applicationLogRepository.countByLevelAndTimestampAfter(ArgumentMatchers.any(String.class), ArgumentMatchers.any(LocalDateTime.class)))
-                .thenAnswer(inv -> {
-                    String lvl = inv.getArgument(0);
-                    return switch (lvl) {
-                        case "ERROR" -> 5L;
-                        case "WARN" -> 12L;
-                        case "INFO" -> 133L;
-                        default -> 0L;
-                    };
-                });
+        Mockito.when(
+                        applicationLogRepository.countByLevelAndTimestampAfter(
+                                ArgumentMatchers.any(String.class),
+                                ArgumentMatchers.any(LocalDateTime.class)))
+                .thenAnswer(
+                        inv -> {
+                            String lvl = inv.getArgument(0);
+                            return switch (lvl) {
+                                case "ERROR" -> 5L;
+                                case "WARN" -> 12L;
+                                case "INFO" -> 133L;
+                                default -> 0L;
+                            };
+                        });
 
         ApplicationLogKpiDto kpis = applicationLogService.getKpiMetrics();
 
@@ -142,7 +153,10 @@ class ApplicationLogServiceTest {
     @Test
     @DisplayName("cleanupOldLogs should delete logs older than retention days")
     void shouldCleanupOldLogs() {
-        Mockito.when(applicationLogRepository.deleteLogsOlderThan(ArgumentMatchers.any(LocalDateTime.class))).thenReturn(42);
+        Mockito.when(
+                        applicationLogRepository.deleteLogsOlderThan(
+                                ArgumentMatchers.any(LocalDateTime.class)))
+                .thenReturn(42);
 
         int deleted = applicationLogService.cleanupOldLogs(30);
 
@@ -153,7 +167,10 @@ class ApplicationLogServiceTest {
     @Test
     @DisplayName("scheduledRetentionCleanup should invoke cleanupOldLogs with default retention days")
     void shouldRunScheduledRetentionCleanup() {
-        Mockito.when(applicationLogRepository.deleteLogsOlderThan(ArgumentMatchers.any(LocalDateTime.class))).thenReturn(15);
+        Mockito.when(
+                        applicationLogRepository.deleteLogsOlderThan(
+                                ArgumentMatchers.any(LocalDateTime.class)))
+                .thenReturn(15);
 
         applicationLogService.scheduledRetentionCleanup();
 

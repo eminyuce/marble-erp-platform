@@ -79,10 +79,22 @@ public class ApplicationLogAdminController extends AbstractController {
         model.addAttribute("kpis", kpis);
         model.addAttribute("availableLevels", AVAILABLE_LEVELS);
         model.addAttribute("currentSection", "settings");
-        model.addAttribute("grid", ApplicationLogGrid.view(
-                applicationLogService.getLogs(pageNo, pageSize, query.getSearch(), sortKey, sortDirection,
-                        combineLevelFilters(selectedLevels, query.getLevel()), query.getStartDate(), query.getEndDate()),
-                pageNo, pageSize, sortKey, sortDirection));
+        model.addAttribute(
+                "grid",
+                ApplicationLogGrid.view(
+                        applicationLogService.getLogs(
+                                pageNo,
+                                pageSize,
+                                query.getSearch(),
+                                sortKey,
+                                sortDirection,
+                                combineLevelFilters(selectedLevels, query.getLevel()),
+                                query.getStartDate(),
+                                query.getEndDate()),
+                        pageNo,
+                        pageSize,
+                        sortKey,
+                        sortDirection));
         return "admin/settings/logs";
     }
 
@@ -96,8 +108,12 @@ public class ApplicationLogAdminController extends AbstractController {
             @RequestParam(value = "sortDir", required = false) String sortDir,
             @RequestParam(value = "level", required = false) String level,
             @RequestParam(value = "levels", required = false) List<String> levels,
-            @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam(value = "startDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate startDate,
+            @RequestParam(value = "endDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate endDate) {
 
         List<String> combinedLevels = combineLevelFilters(levels, level);
 

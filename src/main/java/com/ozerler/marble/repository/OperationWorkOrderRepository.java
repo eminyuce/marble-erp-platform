@@ -58,7 +58,10 @@ public interface OperationWorkOrderRepository extends JpaRepository<OperationWor
 
     long countByStatusIn(List<OperationWorkOrderStatus> statuses);
 
-    @Query("SELECT COUNT(o) FROM OperationWorkOrder o WHERE o.status = :status AND (:department IS NULL OR o.department = :department)")
-    long countByStatusAndDepartment(@Param("status") OperationWorkOrderStatus status,
-                                   @Param("department") BusinessUnit department);
+    @Query(
+            "SELECT COUNT(o) FROM OperationWorkOrder o WHERE o.status = :status AND (:department IS NULL OR "
+                    + "o.department = :department)")
+    long countByStatusAndDepartment(
+            @Param("status") OperationWorkOrderStatus status,
+            @Param("department") BusinessUnit department);
 }

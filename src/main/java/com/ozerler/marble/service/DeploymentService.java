@@ -58,7 +58,9 @@ public class DeploymentService {
         if (!commandAvailable) {
             blockingReasons.add("Yayın yardımcısı henüz yok. İmajın içinde marble-erp-inapp-deploy olmalı.");
         } else if (!sudoReady) {
-            blockingReasons.add("Yayın yardımcısı çalıştırılamadı. Konteynerde sudo kapalı olmalı, sunucuda şifresiz sudo gerekir.");
+            blockingReasons.add(
+                    "Yayın yardımcısı çalıştırılamadı. Konteynerde sudo kapalı olmalı, sunucuda şifresiz sudo "
+                            + "gerekir.");
         }
         if (fileStatus.state() == DeploymentState.RUNNING) {
             blockingReasons.add("Bir yayın işlemi zaten sürüyor.");
@@ -357,7 +359,9 @@ public class DeploymentService {
 
     private static DeploymentState resolvePublicState(boolean enabled, boolean linuxHost, boolean commandAvailable,
                                                       boolean sudoReady, DeploymentState fileState) {
-        if (fileState == DeploymentState.RUNNING || fileState == DeploymentState.SUCCESS || fileState == DeploymentState.FAILED) {
+        if (fileState == DeploymentState.RUNNING
+                || fileState == DeploymentState.SUCCESS
+                || fileState == DeploymentState.FAILED) {
             return fileState;
         }
         if (!enabled || !linuxHost || !commandAvailable || !sudoReady) {

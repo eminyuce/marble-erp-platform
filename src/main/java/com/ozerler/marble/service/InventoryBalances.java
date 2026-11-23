@@ -121,9 +121,13 @@ final class InventoryBalances {
         return stockItemRepository.save(item);
     }
 
-    static StockWithdrawal withdrawConsumable(StockItemRepository stockItemRepository, MachineRepository machineRepository,
-                                              Long stockItemId, BigDecimal quantity, Long machineId,
-                                              String insufficientStockMessage) {
+    static StockWithdrawal withdrawConsumable(
+            StockItemRepository stockItemRepository,
+            MachineRepository machineRepository,
+            Long stockItemId,
+            BigDecimal quantity,
+            Long machineId,
+            String insufficientStockMessage) {
         Objects.requireNonNull(stockItemId, "Sarf malzeme seçilmelidir.");
         Objects.requireNonNull(quantity, "Kullanılan miktar girilmelidir.");
         if (quantity.compareTo(BigDecimal.ZERO) <= 0) {

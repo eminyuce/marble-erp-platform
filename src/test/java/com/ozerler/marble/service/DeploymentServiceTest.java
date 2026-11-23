@@ -145,7 +145,8 @@ class DeploymentServiceTest {
 
         DeploymentLogDto first = deploymentService.readLog(0);
         Assertions.assertThat(first.getChunk()).isEqualTo("hello\nworld\n");
-        Assertions.assertThat(first.getNextOffset()).isEqualTo("hello\nworld\n".getBytes(StandardCharsets.UTF_8).length);
+        Assertions.assertThat(first.getNextOffset())
+                .isEqualTo("hello\nworld\n".getBytes(StandardCharsets.UTF_8).length);
 
         DeploymentLogDto second = deploymentService.readLog(first.getNextOffset());
         Assertions.assertThat(second.getChunk()).isEmpty();
@@ -190,7 +191,8 @@ class DeploymentServiceTest {
     }
 
     @Test
-    @DisplayName("deploy_from_app.sh performs app-only update with --no-deps app, deep health check, and automatic rollback")
+    @DisplayName(
+            "deploy_from_app.sh performs app-only update with --no-deps app, deep health check, and automatic rollback")
     void deployFromAppScriptUsesAppOnlyUpdateAndAutomaticRollback() throws Exception {
         String script = Files.readString(Path.of("scripts/deploy_from_app.sh"), StandardCharsets.UTF_8);
 
@@ -233,7 +235,9 @@ class DeploymentServiceTest {
     @DisplayName("Production compose, CI/CD pipelines, and operational scripts enforce zero-data-loss rules")
     void productionInfrastructureEnforcesZeroDataLossRules() throws Exception {
         String prodCompose = Files.readString(Path.of("docker-compose.prod.yml"), StandardCharsets.UTF_8);
-        String githubWorkflow = Files.readString(Path.of(".github/workflows/docker-publish.yml"), StandardCharsets.UTF_8);
+        String githubWorkflow =
+                Files.readString(
+                        Path.of(".github/workflows/docker-publish.yml"), StandardCharsets.UTF_8);
         String gitlabCi = Files.readString(Path.of(".gitlab-ci.yml"), StandardCharsets.UTF_8);
         String backupScript = Files.readString(Path.of("scripts/backup_production.sh"), StandardCharsets.UTF_8);
         String rollbackScript = Files.readString(Path.of("scripts/rollback_production.sh"), StandardCharsets.UTF_8);

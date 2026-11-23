@@ -54,8 +54,14 @@ public class BlockCustomerMarkService {
         markRepository.findFirstByBlockIdAndStatus(blockId, BlockMarkStatus.ACTIVE).ifPresent(existing -> {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.block.mark.already_active"));
         });
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.customer.not_found", customerId)));
+        Customer customer =
+                customerRepository
+                        .findById(customerId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.customer.not_found", customerId)));
         LocalDate markedAtValue;
         if (markedAt != null) {
             markedAtValue = markedAt;
@@ -84,19 +90,30 @@ public class BlockCustomerMarkService {
 
     @Transactional
     public SalesOrder convertMarkToSale(Long markId) {
-        BlockCustomerMark mark = markRepository.findById(markId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.block.mark.not_found", markId)));
+        BlockCustomerMark mark =
+                markRepository
+                        .findById(markId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.block.mark.not_found", markId)));
         if (mark.getStatus() != BlockMarkStatus.ACTIVE) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.block.mark.not_active"));
         }
         Block block = mark.getBlock();
-        SalesOrder order = SalesOrder.builder()
-                .orderNo(String.format("SO-%d-%d", Year.now().getValue(), System.currentTimeMillis() % ORDER_SUFFIX_MODULUS))
-                .customer(mark.getCustomer())
-                .orderDate(LocalDate.now())
-                .status(SalesOrderStatus.CONFIRMED)
-                .notes("Ocak blok satışı: " + block.getBlockCode())
-                .build();
+        SalesOrder order =
+                SalesOrder.builder()
+                        .orderNo(
+                                String.format(
+                                        "SO-%d-%d",
+                                        Year.now().getValue(),
+                                        System.currentTimeMillis() % ORDER_SUFFIX_MODULUS))
+                        .customer(mark.getCustomer())
+                        .orderDate(LocalDate.now())
+                        .status(SalesOrderStatus.CONFIRMED)
+                        .notes("Ocak blok satışı: " + block.getBlockCode())
+                        .build();
         SalesOrderItem item = SalesOrderItem.builder()
                 .salesOrder(order)
                 .block(block)

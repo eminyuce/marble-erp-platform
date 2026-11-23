@@ -15,7 +15,8 @@ public final class QuarryPeriodCost {
     private QuarryPeriodCost() {
     }
 
-    public static QuarryPeriodCostResult calculate(String expensePeriod, BigDecimal periodExpense, BigDecimal producedTons) {
+    public static QuarryPeriodCostResult calculate(
+            String expensePeriod, BigDecimal periodExpense, BigDecimal producedTons) {
         Objects.requireNonNull(expensePeriod, MessageUtils.getMessage("error.expense.period.required"));
         BigDecimal expense;
         if (periodExpense != null) {

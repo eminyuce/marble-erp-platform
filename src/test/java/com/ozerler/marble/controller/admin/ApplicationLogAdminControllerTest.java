@@ -48,7 +48,8 @@ class ApplicationLogAdminControllerTest {
 
         Assertions.assertThat(view).isEqualTo("admin/settings/logs");
         Assertions.assertThat(model.getAttribute("kpis")).isEqualTo(kpis);
-        Assertions.assertThat(model.getAttribute("availableLevels")).isEqualTo(List.of("ERROR", "WARN", "INFO", "DEBUG"));
+        Assertions.assertThat(model.getAttribute("availableLevels"))
+                .isEqualTo(List.of("ERROR", "WARN", "INFO", "DEBUG"));
         Assertions.assertThat(model.getAttribute("currentSection")).isEqualTo("settings");
     }
 
@@ -56,7 +57,16 @@ class ApplicationLogAdminControllerTest {
     @DisplayName("getLogsData should return TabulatorResponse from service")
     void shouldReturnLogsData() {
         TabulatorResponse<ApplicationLogDto> expected = TabulatorResponse.of(List.of(), 1, 0);
-        Mockito.when(applicationLogService.getLogs(ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
+        Mockito.when(
+                        applicationLogService.getLogs(
+                                ArgumentMatchers.anyInt(),
+                                ArgumentMatchers.anyInt(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any()))
                 .thenReturn(expected);
 
         TabulatorResponse<ApplicationLogDto> response = controller.getLogsData(
@@ -65,10 +75,16 @@ class ApplicationLogAdminControllerTest {
         );
 
         Assertions.assertThat(response).isSameAs(expected);
-        Mockito.verify(applicationLogService).getLogs(
-                ArgumentMatchers.eq(1), ArgumentMatchers.eq(50), ArgumentMatchers.eq("test"), ArgumentMatchers.eq("timestamp"), ArgumentMatchers.eq("desc"),
-                ArgumentMatchers.eq(List.of("ERROR", "WARN")), ArgumentMatchers.eq(LocalDate.of(2026, 9, 1)), ArgumentMatchers.eq(LocalDate.of(2026, 9, 30))
-        );
+        Mockito.verify(applicationLogService)
+                .getLogs(
+                        ArgumentMatchers.eq(1),
+                        ArgumentMatchers.eq(50),
+                        ArgumentMatchers.eq("test"),
+                        ArgumentMatchers.eq("timestamp"),
+                        ArgumentMatchers.eq("desc"),
+                        ArgumentMatchers.eq(List.of("ERROR", "WARN")),
+                        ArgumentMatchers.eq(LocalDate.of(2026, 9, 1)),
+                        ArgumentMatchers.eq(LocalDate.of(2026, 9, 30)));
     }
 
     @Test
@@ -123,7 +139,8 @@ class ApplicationLogAdminControllerTest {
         Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(response.getBody()).containsEntry("success", true);
         Assertions.assertThat(response.getBody()).containsEntry("deletedCount", 75);
-        Assertions.assertThat(response.getBody()).containsEntry("message", "Tüm log kayıtları başarıyla temizlendi (75 adet).");
+        Assertions.assertThat(response.getBody())
+                .containsEntry("message", "Tüm log kayıtları başarıyla temizlendi (75 adet).");
         Assertions.assertThat(response.getBody()).containsEntry("kpis", kpis);
         Mockito.verify(applicationLogService).cleanupOldLogs(0);
     }

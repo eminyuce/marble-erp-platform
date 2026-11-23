@@ -91,9 +91,19 @@ public class FactoryOperationController extends AbstractController {
         model.addAttribute("totalWeightTon", figures.weightTon());
         model.addAttribute("totalCostValue", figures.costValue());
         model.addAttribute("totalSaleValue", figures.saleValue());
-        model.addAttribute("grid", OperationFactoryBlockGrid.view(
-                factoryStockService.getFactoryUncutBlockViewsPaged(customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute(
+                "grid",
+                OperationFactoryBlockGrid.view(
+                        factoryStockService.getFactoryUncutBlockViewsPaged(
+                                customerId,
+                                generalStockOnly,
+                                query.getSearch(),
+                                query.pageNumber() - 1,
+                                query.pageSize()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         model.addAttribute("activeSection", "factory");
         model.addAttribute("activeSubSection", "blocks");
 
@@ -118,7 +128,8 @@ public class FactoryOperationController extends AbstractController {
                                         @RequestParam(value = "customerId", required = false) Long customerId,
                                         RedirectAttributes redirectAttributes) {
         try {
-            redirectAttributes.addFlashAttribute("successMessage", factoryStockService.assignCustomerMessage(id, customerId));
+            redirectAttributes.addFlashAttribute(
+                    "successMessage", factoryStockService.assignCustomerMessage(id, customerId));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
@@ -131,7 +142,8 @@ public class FactoryOperationController extends AbstractController {
                                          @RequestParam(value = "notes", required = false) String notes,
                                          RedirectAttributes redirectAttributes) {
         try {
-            redirectAttributes.addFlashAttribute("successMessage", factoryStockService.dispatchCuttingMessage(id, notes));
+            redirectAttributes.addFlashAttribute(
+                    "successMessage", factoryStockService.dispatchCuttingMessage(id, notes));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
@@ -234,12 +246,32 @@ public class FactoryOperationController extends AbstractController {
                             return BigDecimal.ZERO;
                         })
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
-                redirectAttributes.addFlashAttribute("successMessage", slabs.size() + " adet plaka (" + totalM2 + " m²) başarıyla Plaka Stok Sahasına eklendi.");
+                redirectAttributes.addFlashAttribute(
+                        "successMessage",
+                        slabs.size()
+                                + " adet plaka ("
+                                + totalM2
+                                + " m²) başarıyla Plaka Stok Sahasına eklendi.");
                 return "redirect:/operations/factory/slabs";
             }
 
-            SlabView slab = factoryStockService.createSlabDirectView(blockId, Objects.requireNonNullElse(thicknessCm, new BigDecimal("2.00")), widthCm, lengthCm, qualityGrade, surfaceFinish, customerId, notes);
-            redirectAttributes.addFlashAttribute("successMessage", "Plaka (" + slab.getSlabCode() + ") başarıyla Plaka Stok Sahasına eklendi: " + slab.getSurfaceAreaM2() + " m²");
+            SlabView slab =
+                    factoryStockService.createSlabDirectView(
+                            blockId,
+                            Objects.requireNonNullElse(thicknessCm, new BigDecimal("2.00")),
+                            widthCm,
+                            lengthCm,
+                            qualityGrade,
+                            surfaceFinish,
+                            customerId,
+                            notes);
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Plaka ("
+                            + slab.getSlabCode()
+                            + ") başarıyla Plaka Stok Sahasına eklendi: "
+                            + slab.getSurfaceAreaM2()
+                            + " m²");
             return "redirect:/operations/factory/slabs";
         } catch (Exception e) {
             log.error("Plaka kaydedilemedi", e);
@@ -261,7 +293,9 @@ public class FactoryOperationController extends AbstractController {
             } else {
                 custName = "Genel Stok";
             }
-            redirectAttributes.addFlashAttribute("successMessage", "Plaka (" + slab.getSlabCode() + ") müşterisi güncellendi: " + custName);
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Plaka (" + slab.getSlabCode() + ") müşterisi güncellendi: " + custName);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
@@ -302,7 +336,9 @@ public class FactoryOperationController extends AbstractController {
             @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly) {
 
         int pageIndex = Math.max(0, page - 1);
-        Page<StockItemView> itemsPage = factoryStockService.getSizedStockItemViewsPaged(customerId, generalStockOnly, search, pageIndex, size);
+        Page<StockItemView> itemsPage =
+                factoryStockService.getSizedStockItemViewsPaged(
+                        customerId, generalStockOnly, search, pageIndex, size);
         return StockYardResponses.factorySized(itemsPage);
     }
 
@@ -320,29 +356,33 @@ public class FactoryOperationController extends AbstractController {
 
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping({"/sized/new", "/sized/create"})
-    public String createSizedItem(@RequestParam(value = "blockId", required = false) Long blockId,
-                                  @RequestParam(value = "slabId", required = false) Long slabId,
-                                  @RequestParam(value = "description", required = false) String description,
-                                  @RequestParam(value = "thicknessCm", required = false) BigDecimal thicknessCm,
-                                  @RequestParam(value = "widthCm", required = false) BigDecimal widthCm,
-                                  @RequestParam(value = "lengthCm", required = false) BigDecimal lengthCm,
-                                  @RequestParam(value = "quantity", required = false) BigDecimal quantity,
-                                  @RequestParam(value = "pieceCount", defaultValue = "1") int pieceCount,
-                                  @RequestParam(value = "actualProducedQuantity", required = false) BigDecimal actualProducedQuantity,
-                                  @RequestParam(value = "customerId", required = false) Long customerId,
-                                  @RequestParam(value = "qualityGrade", required = false) String qualityGrade,
-                                  @RequestParam(value = "surfaceFinish", required = false) String surfaceFinish,
-                                  @RequestParam(value = "edgeFinish", required = false) String edgeFinish,
-                                  @RequestParam(value = "notes", required = false) String notes,
-                                  @RequestParam(value = "rowDescription", required = false) List<String> rowDescriptions,
-                                  @RequestParam(value = "rowThicknessCm", required = false) List<BigDecimal> rowThicknesses,
-                                  @RequestParam(value = "rowWidthCm", required = false) List<BigDecimal> rowWidths,
-                                  @RequestParam(value = "rowLengthCm", required = false) List<BigDecimal> rowLengths,
-                                  @RequestParam(value = "rowPieceCount", required = false) List<Integer> rowPieceCounts,
-                                  @RequestParam(value = "rowQuantity", required = false) List<BigDecimal> rowQuantities,
-                                  @RequestParam(value = "rowSurfaceFinish", required = false) List<String> rowSurfaceFinishes,
-                                  @RequestParam(value = "rowEdgeFinish", required = false) List<String> rowEdgeFinishes,
-                                  RedirectAttributes redirectAttributes) {
+    public String createSizedItem(
+            @RequestParam(value = "blockId", required = false) Long blockId,
+            @RequestParam(value = "slabId", required = false) Long slabId,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "thicknessCm", required = false) BigDecimal thicknessCm,
+            @RequestParam(value = "widthCm", required = false) BigDecimal widthCm,
+            @RequestParam(value = "lengthCm", required = false) BigDecimal lengthCm,
+            @RequestParam(value = "quantity", required = false) BigDecimal quantity,
+            @RequestParam(value = "pieceCount", defaultValue = "1") int pieceCount,
+            @RequestParam(value = "actualProducedQuantity", required = false)
+                    BigDecimal actualProducedQuantity,
+            @RequestParam(value = "customerId", required = false) Long customerId,
+            @RequestParam(value = "qualityGrade", required = false) String qualityGrade,
+            @RequestParam(value = "surfaceFinish", required = false) String surfaceFinish,
+            @RequestParam(value = "edgeFinish", required = false) String edgeFinish,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "rowDescription", required = false) List<String> rowDescriptions,
+            @RequestParam(value = "rowThicknessCm", required = false)
+                    List<BigDecimal> rowThicknesses,
+            @RequestParam(value = "rowWidthCm", required = false) List<BigDecimal> rowWidths,
+            @RequestParam(value = "rowLengthCm", required = false) List<BigDecimal> rowLengths,
+            @RequestParam(value = "rowPieceCount", required = false) List<Integer> rowPieceCounts,
+            @RequestParam(value = "rowQuantity", required = false) List<BigDecimal> rowQuantities,
+            @RequestParam(value = "rowSurfaceFinish", required = false)
+                    List<String> rowSurfaceFinishes,
+            @RequestParam(value = "rowEdgeFinish", required = false) List<String> rowEdgeFinishes,
+            RedirectAttributes redirectAttributes) {
         try {
             if (rowWidths != null && !rowWidths.isEmpty()) {
                 List<StockItemView> items = factoryStockService.createSizedItemsBatchViews(
@@ -356,7 +396,12 @@ public class FactoryOperationController extends AbstractController {
                     }
                     return BigDecimal.ZERO;
                 }).reduce(BigDecimal.ZERO, BigDecimal::add);
-                redirectAttributes.addFlashAttribute("successMessage", items.size() + " grup ebatlı ürün (" + totalM2 + " m²) başarıyla Ebatlı Stok Sahasına eklendi.");
+                redirectAttributes.addFlashAttribute(
+                        "successMessage",
+                        items.size()
+                                + " grup ebatlı ürün ("
+                                + totalM2
+                                + " m²) başarıyla Ebatlı Stok Sahasına eklendi.");
                 return "redirect:/operations/factory/sized";
             }
 
@@ -364,7 +409,9 @@ public class FactoryOperationController extends AbstractController {
                     blockId, slabId, description, thicknessCm, widthCm, lengthCm, quantity, pieceCount,
                     actualProducedQuantity, customerId, qualityGrade, surfaceFinish, edgeFinish, notes
             );
-            redirectAttributes.addFlashAttribute("successMessage", "Ebatlı ürün (" + item.getItemCode() + ") Ebatlı Stok Sahasına eklendi.");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Ebatlı ürün (" + item.getItemCode() + ") Ebatlı Stok Sahasına eklendi.");
             return "redirect:/operations/factory/sized";
         } catch (Exception e) {
             log.error("Ebatlı ürün kaydedilemedi", e);
@@ -386,7 +433,9 @@ public class FactoryOperationController extends AbstractController {
             } else {
                 custName = "Genel Stok";
             }
-            redirectAttributes.addFlashAttribute("successMessage", "Ebatlı ürün (" + item.getItemCode() + ") müşterisi güncellendi: " + custName);
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Ebatlı ürün (" + item.getItemCode() + ") müşterisi güncellendi: " + custName);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
@@ -398,8 +447,16 @@ public class FactoryOperationController extends AbstractController {
     public String factoryOrders(@RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
                                 @ModelAttribute ListQuery query, Model model) {
 
-        Page<WorkOrderView> ordersPage = workOrderService.searchOrderRows(
-                BusinessUnit.FACTORY, status, null, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize());
+        Page<WorkOrderView> ordersPage =
+                workOrderService.searchOrderRows(
+                        BusinessUnit.FACTORY,
+                        status,
+                        null,
+                        null,
+                        null,
+                        query.getSearch(),
+                        query.pageNumber() - 1,
+                        query.pageSize());
         model.addAttribute("orders", ordersPage.getContent());
         model.addAttribute("page", ordersPage);
         model.addAttribute("grid", FactoryOrderGrid.view(
@@ -435,19 +492,22 @@ public class FactoryOperationController extends AbstractController {
 
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/fuel/dispense")
-    public String dispenseFactoryFuel(@RequestParam("machineId") Long machineId,
-                                      @RequestParam("litres") BigDecimal litres,
-                                      @RequestParam(value = "workingHoursOrKm", required = false) BigDecimal workingHoursOrKm,
-                                      @RequestParam(value = "receiptNo", required = false) String receiptNo,
-                                      @RequestParam(value = "issuedBy", required = false) String issuedBy,
-                                      @RequestParam(value = "receivedBy", required = false) String receivedBy,
-                                      @RequestParam(value = "notes", required = false) String notes,
-                                      RedirectAttributes redirectAttributes) {
+    public String dispenseFactoryFuel(
+            @RequestParam("machineId") Long machineId,
+            @RequestParam("litres") BigDecimal litres,
+            @RequestParam(value = "workingHoursOrKm", required = false) BigDecimal workingHoursOrKm,
+            @RequestParam(value = "receiptNo", required = false) String receiptNo,
+            @RequestParam(value = "issuedBy", required = false) String issuedBy,
+            @RequestParam(value = "receivedBy", required = false) String receivedBy,
+            @RequestParam(value = "notes", required = false) String notes,
+            RedirectAttributes redirectAttributes) {
         try {
             MachineFuelEntryView entry = factoryInventoryService.dispenseFuelView(
                     machineId, litres, LocalDate.now(), workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    String.format("%s aracına %s litre mazot verildi. Tutar (KDV hariç net): %s TL fabrika giderine yazıldı.",
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    String.format(
+                            "%s aracına %s litre mazot verildi. Tutar (KDV hariç net): %s TL fabrika giderine yazıldı.",
                             entry.getMachine().getName(), litres, entry.getTotalAmount()));
         } catch (Exception e) {
             log.error("Fabrika mazot çıkış hatası: {}", e.getMessage(), e);
@@ -476,8 +536,11 @@ public class FactoryOperationController extends AbstractController {
             }
             StockItemView updated = factoryInventoryService.addFuelStockView(litres, netUnitPrice, null,
                     addFuelStockView);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    String.format("%s litre mazot fabrika deposuna eklendi. Güncel stok: %s litre.", litres, updated.getQuantity()));
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    String.format(
+                            "%s litre mazot fabrika deposuna eklendi. Güncel stok: %s litre.",
+                            litres, updated.getQuantity()));
         } catch (Exception e) {
             log.error("Fabrika mazot dolum hatası: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -513,9 +576,15 @@ public class FactoryOperationController extends AbstractController {
                                            RedirectAttributes redirectAttributes) {
         try {
             StockItemView item = factoryInventoryService.consumeConsumableView(stockItemId, quantity, machineId, notes);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    String.format("%s malzemesinden %s %s kullanıldı ve fabrikanın giderine yazıldı. Kalan stok: %s %s.",
-                            item.getDescription(), quantity, item.getUnit(), item.getQuantity(), item.getUnit()));
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    String.format(
+                            "%s malzemesinden %s %s kullanıldı ve fabrikanın giderine yazıldı. Kalan stok: %s %s.",
+                            item.getDescription(),
+                            quantity,
+                            item.getUnit(),
+                            item.getQuantity(),
+                            item.getUnit()));
         } catch (Exception e) {
             log.error("Fabrika sarf malzeme tüketim hatası: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -525,13 +594,14 @@ public class FactoryOperationController extends AbstractController {
 
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/consumables/add")
-    public String addFactoryConsumableStock(@RequestParam(value = "itemCode", required = false) String itemCode,
-                                            @RequestParam("description") String description,
-                                            @RequestParam("quantity") BigDecimal quantity,
-                                            @RequestParam(value = "unit", defaultValue = "adet") String unit,
-                                            @RequestParam(value = "netUnitPrice", required = false) BigDecimal netUnitPrice,
-                                            @RequestParam(value = "notes", required = false) String notes,
-                                            RedirectAttributes redirectAttributes) {
+    public String addFactoryConsumableStock(
+            @RequestParam(value = "itemCode", required = false) String itemCode,
+            @RequestParam("description") String description,
+            @RequestParam("quantity") BigDecimal quantity,
+            @RequestParam(value = "unit", defaultValue = "adet") String unit,
+            @RequestParam(value = "netUnitPrice", required = false) BigDecimal netUnitPrice,
+            @RequestParam(value = "notes", required = false) String notes,
+            RedirectAttributes redirectAttributes) {
         try {
             StockItemView item = factoryInventoryService.createStockCardView(
                     description, unit, quantity, netUnitPrice, itemCode, notes);
@@ -547,13 +617,14 @@ public class FactoryOperationController extends AbstractController {
 
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/stock-cards/new")
-    public String createFactoryStockCard(@RequestParam("description") String description,
-                                         @RequestParam(value = "unit", defaultValue = "adet") String unit,
-                                         @RequestParam(value = "initialQuantity", required = false) BigDecimal initialQuantity,
-                                         @RequestParam(value = "netUnitPrice", required = false) BigDecimal netUnitPrice,
-                                         @RequestParam(value = "itemCode", required = false) String itemCode,
-                                         @RequestParam(value = "notes", required = false) String notes,
-                                         RedirectAttributes redirectAttributes) {
+    public String createFactoryStockCard(
+            @RequestParam("description") String description,
+            @RequestParam(value = "unit", defaultValue = "adet") String unit,
+            @RequestParam(value = "initialQuantity", required = false) BigDecimal initialQuantity,
+            @RequestParam(value = "netUnitPrice", required = false) BigDecimal netUnitPrice,
+            @RequestParam(value = "itemCode", required = false) String itemCode,
+            @RequestParam(value = "notes", required = false) String notes,
+            RedirectAttributes redirectAttributes) {
         try {
             StockItemView item = factoryInventoryService.createStockCardView(
                     description, unit, initialQuantity, netUnitPrice, itemCode, notes);

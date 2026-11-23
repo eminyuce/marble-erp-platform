@@ -18,26 +18,30 @@ import com.ozerler.marble.model.enums.CheckStatus;
 @Repository
 public interface CheckRecordRepository extends JpaRepository<CheckRecord, Long> {
 
-    @Query("SELECT ch FROM CheckRecord ch "
-            + "LEFT JOIN FETCH ch.customer "
-            + "LEFT JOIN FETCH ch.collection "
-            + "WHERE (:unit IS NULL OR ch.businessUnit = :unit OR (ch.businessUnit IS NULL AND ch.customer.businessUnit = :unit)) "
-            + "AND (:status IS NULL OR ch.status = :status) "
-            + "AND (:customerId IS NULL OR ch.customer.id = :customerId) "
-            + "AND (:startDate IS NULL OR ch.dueDate >= :startDate) "
-            + "AND (:endDate IS NULL OR ch.dueDate <= :endDate) "
-            + "AND (:search IS NULL OR :search = '' "
-            + "OR LOWER(ch.checkNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-            + "OR LOWER(COALESCE(ch.bankName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-            + "OR LOWER(COALESCE(ch.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-            + "ORDER BY ch.dueDate ASC, ch.id DESC")
-    Page<CheckRecord> searchChecks(@Param("unit") BusinessUnit unit,
-                                   @Param("status") CheckStatus status,
-                                   @Param("customerId") Long customerId,
-                                   @Param("startDate") LocalDate startDate,
-                                   @Param("endDate") LocalDate endDate,
-                                   @Param("search") String search,
-                                   Pageable pageable);
+    @Query(
+            "SELECT ch FROM CheckRecord ch "
+                    + "LEFT JOIN FETCH ch.customer "
+                    + "LEFT JOIN FETCH ch.collection "
+                    + "WHERE (:unit IS NULL OR ch.businessUnit = :unit OR (ch.businessUnit IS NULL AND "
+                    + "ch.customer.businessUnit = :unit)) "
+                    + "AND (:status IS NULL OR ch.status = :status) "
+                    + "AND (:customerId IS NULL OR ch.customer.id = :customerId) "
+                    + "AND (:startDate IS NULL OR ch.dueDate >= :startDate) "
+                    + "AND (:endDate IS NULL OR ch.dueDate <= :endDate) "
+                    + "AND (:search IS NULL OR :search = '' "
+                    + "OR LOWER(ch.checkNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                    + "OR LOWER(COALESCE(ch.bankName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                    + "OR LOWER(COALESCE(ch.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
+                    + "string), '%'))) "
+                    + "ORDER BY ch.dueDate ASC, ch.id DESC")
+    Page<CheckRecord> searchChecks(
+            @Param("unit") BusinessUnit unit,
+            @Param("status") CheckStatus status,
+            @Param("customerId") Long customerId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("search") String search,
+            Pageable pageable);
 
     default Page<CheckRecord> searchChecks(CheckStatus status,
                                            Long customerId,
@@ -56,15 +60,18 @@ public interface CheckRecordRepository extends JpaRepository<CheckRecord, Long> 
     List<CheckRecord> findApproachingChecks(@Param("today") LocalDate today,
                                            @Param("untilDate") LocalDate untilDate);
 
-    @Query("SELECT ch FROM CheckRecord ch "
-            + "LEFT JOIN FETCH ch.customer "
-            + "WHERE ch.status = 'PORTFOLIO' "
-            + "AND (:unit IS NULL OR ch.businessUnit = :unit OR (ch.businessUnit IS NULL AND ch.customer.businessUnit = :unit)) "
-            + "AND ch.dueDate >= :today AND ch.dueDate <= :untilDate "
-            + "ORDER BY ch.dueDate ASC")
-    List<CheckRecord> findApproachingChecksByUnit(@Param("today") LocalDate today,
-                                                 @Param("untilDate") LocalDate untilDate,
-                                                 @Param("unit") BusinessUnit unit);
+    @Query(
+            "SELECT ch FROM CheckRecord ch "
+                    + "LEFT JOIN FETCH ch.customer "
+                    + "WHERE ch.status = 'PORTFOLIO' "
+                    + "AND (:unit IS NULL OR ch.businessUnit = :unit OR (ch.businessUnit IS NULL AND "
+                    + "ch.customer.businessUnit = :unit)) "
+                    + "AND ch.dueDate >= :today AND ch.dueDate <= :untilDate "
+                    + "ORDER BY ch.dueDate ASC")
+    List<CheckRecord> findApproachingChecksByUnit(
+            @Param("today") LocalDate today,
+            @Param("untilDate") LocalDate untilDate,
+            @Param("unit") BusinessUnit unit);
 
     @Query("SELECT ch FROM CheckRecord ch "
             + "LEFT JOIN FETCH ch.customer "
@@ -73,14 +80,16 @@ public interface CheckRecordRepository extends JpaRepository<CheckRecord, Long> 
             + "ORDER BY ch.dueDate ASC")
     List<CheckRecord> findOverdueChecks(@Param("today") LocalDate today);
 
-    @Query("SELECT ch FROM CheckRecord ch "
-            + "LEFT JOIN FETCH ch.customer "
-            + "WHERE ch.status = 'PORTFOLIO' "
-            + "AND (:unit IS NULL OR ch.businessUnit = :unit OR (ch.businessUnit IS NULL AND ch.customer.businessUnit = :unit)) "
-            + "AND ch.dueDate < :today "
-            + "ORDER BY ch.dueDate ASC")
-    List<CheckRecord> findOverdueChecksByUnit(@Param("today") LocalDate today,
-                                             @Param("unit") BusinessUnit unit);
+    @Query(
+            "SELECT ch FROM CheckRecord ch "
+                    + "LEFT JOIN FETCH ch.customer "
+                    + "WHERE ch.status = 'PORTFOLIO' "
+                    + "AND (:unit IS NULL OR ch.businessUnit = :unit OR (ch.businessUnit IS NULL AND "
+                    + "ch.customer.businessUnit = :unit)) "
+                    + "AND ch.dueDate < :today "
+                    + "ORDER BY ch.dueDate ASC")
+    List<CheckRecord> findOverdueChecksByUnit(
+            @Param("today") LocalDate today, @Param("unit") BusinessUnit unit);
 
     @Query("SELECT COUNT(ch) FROM CheckRecord ch "
             + "WHERE ch.status = 'PORTFOLIO' "

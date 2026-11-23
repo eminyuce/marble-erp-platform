@@ -17,7 +17,8 @@ class FactoryProductionServiceTest {
         Assertions.assertThat(FactoryProcessType.ST_CUTTING.usesSamePhysicalUnit()).isFalse();
         Assertions.assertThat(FactoryProcessType.GANGSAW_CUTTING.usesSamePhysicalUnit()).isFalse();
         Assertions.assertThat(FactoryProcessType.ST_CUTTING.getDefaultInputUnit()).isEqualTo(QuantityUnit.TON);
-        Assertions.assertThat(FactoryProcessType.GANGSAW_CUTTING.getDefaultOutputUnit()).isEqualTo(QuantityUnit.SQUARE_METER);
+        Assertions.assertThat(FactoryProcessType.GANGSAW_CUTTING.getDefaultOutputUnit())
+                .isEqualTo(QuantityUnit.SQUARE_METER);
         Assertions.assertThat(FactoryProcessType.SLAB_POLISHING.usesSamePhysicalUnit()).isTrue();
         Assertions.assertThat(FactoryProcessType.ST_CUTTING.toLegacyProcessType().getLabel()).isEqualTo("ST");
         Assertions.assertThat(FactoryProcessType.GANGSAW_CUTTING.toLegacyProcessType().getLabel()).isEqualTo("Katrak");

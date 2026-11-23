@@ -83,7 +83,8 @@ public class BackupAdminController {
     }
 
     @GetMapping("/download/{fileName:.+}")
-    public ResponseEntity<StreamingResponseBody> downloadBackup(@PathVariable String fileName, HttpServletRequest request) {
+    public ResponseEntity<StreamingResponseBody> downloadBackup(
+            @PathVariable String fileName, HttpServletRequest request) {
         Optional<String> presigned = backupService.browserPresignedUrl(fileName, request.getServerName());
         if (presigned.isPresent()) {
             return ResponseEntity.status(HttpStatus.FOUND)

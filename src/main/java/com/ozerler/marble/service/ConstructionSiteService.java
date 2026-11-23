@@ -73,7 +73,9 @@ public class ConstructionSiteService {
     public void deleteProject(Long id) {
         Project project = projectSiteService.getProjectById(id);
         if (invoiceRepository != null && invoiceRepository.existsByProjectId(id)) {
-            throw new IllegalStateException("Bu şantiyeye bağlı fatura kayıtları bulunmaktadır. İlişkili verilerin korunması için şantiye silinemez.");
+            throw new IllegalStateException(
+                    "Bu şantiyeye bağlı fatura kayıtları bulunmaktadır. İlişkili verilerin korunması için şantiye "
+                            + "silinemez.");
         }
 
         installationRepository.deleteAll(installationRepository.findByProjectIdOrderByInstalledOnDesc(id));
@@ -107,8 +109,15 @@ public class ConstructionSiteService {
         project.setProjectCode(projectCode.trim());
         project.setName(name.trim());
         if (customerId != null) {
-            Customer customer = customerRepository.findById(customerId)
-                    .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.customer.not_found", customerId)));
+            Customer customer =
+                    customerRepository
+                            .findById(customerId)
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    MessageUtils.getMessage(
+                                                            "error.customer.not_found",
+                                                            customerId)));
             project.setCustomer(customer);
             project.setCustomerName(customer.getCompanyName());
         } else if (customerName != null) {
@@ -128,13 +137,26 @@ public class ConstructionSiteService {
     }
 
     @Transactional
-    public ConstructionSiteStonePlan addStonePlan(Long projectId, Long locationId, String stoneType,
-                                                  SurfaceFinish surfaceFinish, BigDecimal widthCm, BigDecimal lengthCm,
-                                                  BigDecimal plannedAreaM2, BigDecimal scrapPercent, SupplyRoute supplyRoute,
-                                                  String notes) {
+    public ConstructionSiteStonePlan addStonePlan(
+            Long projectId,
+            Long locationId,
+            String stoneType,
+            SurfaceFinish surfaceFinish,
+            BigDecimal widthCm,
+            BigDecimal lengthCm,
+            BigDecimal plannedAreaM2,
+            BigDecimal scrapPercent,
+            SupplyRoute supplyRoute,
+            String notes) {
         Project project = projectSiteService.getProjectById(projectId);
-        ProjectLocation location = projectLocationRepository.findById(locationId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.location.not_found", locationId)));
+        ProjectLocation location =
+                projectLocationRepository
+                        .findById(locationId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.location.not_found", locationId)));
         BigDecimal planned;
         if (plannedAreaM2 != null) {
             planned = plannedAreaM2;
@@ -147,7 +169,9 @@ public class ConstructionSiteService {
         } else {
             scrap = BigDecimal.ZERO;
         }
-        BigDecimal required = projectSiteService.calculateProductionRequirement(planned, scrap, BigDecimal.ZERO, BigDecimal.ZERO);
+        BigDecimal required =
+                projectSiteService.calculateProductionRequirement(
+                        planned, scrap, BigDecimal.ZERO, BigDecimal.ZERO);
         return stonePlanRepository.save(ConstructionSiteStonePlan.builder()
                 .project(project)
                 .location(location)
@@ -165,10 +189,22 @@ public class ConstructionSiteService {
 
     @Transactional
     public SiteSupplyAllocation allocateReservation(Long planId, Long slabId, BigDecimal areaM2) {
-        ConstructionSiteStonePlan plan = stonePlanRepository.findById(planId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.site.plan.not_found", planId)));
-        Slab slab = slabRepository.findById(slabId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.slab.not_found", slabId)));
+        ConstructionSiteStonePlan plan =
+                stonePlanRepository
+                        .findById(planId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.site.plan.not_found", planId)));
+        Slab slab =
+                slabRepository
+                        .findById(slabId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.slab.not_found", slabId)));
         List<StockReservation> active = stockReservationRepository.findByStatus("ACTIVE").stream()
                 .filter(reservation -> reservation.getSlab() != null && slabId.equals(reservation.getSlab().getId()))
                 .toList();
@@ -201,8 +237,14 @@ public class ConstructionSiteService {
                                                BigDecimal installedAreaM2, BigDecimal wasteAreaM2,
                                                LocalDate installedOn, String crewName, String notes) {
         Project project = projectSiteService.getProjectById(projectId);
-        ProjectLocation location = projectLocationRepository.findById(locationId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.location.not_found", locationId)));
+        ProjectLocation location =
+                projectLocationRepository
+                        .findById(locationId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.location.not_found", locationId)));
         Objects.requireNonNull(installedAreaM2, MessageUtils.getMessage("error.site.install.area.required"));
         MaterialLot lot;
         if (materialLotId != null) {

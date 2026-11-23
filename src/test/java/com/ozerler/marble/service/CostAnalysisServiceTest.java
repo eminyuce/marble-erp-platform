@@ -48,14 +48,26 @@ class CostAnalysisServiceTest {
     @Test
     @DisplayName("factory m2 cost includes incoming quarry block extraction cost")
     void factoryAnalysisIncludesIncomingBlockCost() {
-        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.eq("2026-09")))
+        Mockito.when(
+                        costTransactionRepository.sumByUnitAndPeriod(
+                                ArgumentMatchers.eq(BusinessUnit.FACTORY),
+                                ArgumentMatchers.eq("2026-09")))
                 .thenReturn(new BigDecimal("1000"));
-        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.eq("2026-08")))
+        Mockito.when(
+                        costTransactionRepository.sumByUnitAndPeriod(
+                                ArgumentMatchers.eq(BusinessUnit.FACTORY),
+                                ArgumentMatchers.eq("2026-08")))
                 .thenReturn(BigDecimal.ZERO);
         Mockito.when(factoryOperationRepository.aggregateQuantitiesByProcessType()).thenReturn(List.of());
-        Mockito.when(costTransactionRepository.sumByCategoryForUnitAndPeriod(ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.eq("2026-09")))
+        Mockito.when(
+                        costTransactionRepository.sumByCategoryForUnitAndPeriod(
+                                ArgumentMatchers.eq(BusinessUnit.FACTORY),
+                                ArgumentMatchers.eq("2026-09")))
                 .thenReturn(List.of());
-        Mockito.when(costTransactionRepository.findByBusinessUnitAndExpensePeriod(ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.eq("2026-09")))
+        Mockito.when(
+                        costTransactionRepository.findByBusinessUnitAndExpensePeriod(
+                                ArgumentMatchers.eq(BusinessUnit.FACTORY),
+                                ArgumentMatchers.eq("2026-09")))
                 .thenReturn(List.of());
         Mockito.when(blockRepository.sumExtractionCostMovedTo(ArgumentMatchers.eq(StockLocationType.FACTORY_BLOCK_YARD),
                 ArgumentMatchers.any(LocalDateTime.class), ArgumentMatchers.any(LocalDateTime.class)))

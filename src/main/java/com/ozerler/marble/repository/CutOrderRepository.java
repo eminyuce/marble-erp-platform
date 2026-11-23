@@ -38,7 +38,9 @@ public interface CutOrderRepository extends JpaRepository<CutOrder, Long> {
             + "LOWER(c.project.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<CutOrder> searchCutOrders(@Param("search") String search, Pageable pageable);
 
-    @Query("SELECT c FROM CutOrder c LEFT JOIN FETCH c.project WHERE LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @Query(
+            "SELECT c FROM CutOrder c LEFT JOIN FETCH c.project WHERE LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', "
+                    + ":query, '%'))")
     List<CutOrder> searchByCutOrderNo(@Param("query") String query, Pageable pageable);
 
     @Query("SELECT c.id AS parentId, COUNT(i.id) AS itemCount, COALESCE(SUM(i.areaM2), 0) AS totalArea "

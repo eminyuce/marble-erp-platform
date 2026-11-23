@@ -38,7 +38,8 @@ class BackEndResponseTest {
         Assertions.assertThat(ber.getServiceStatus().getStatus().getMessage()).isEqualTo("All good");
         Assertions.assertThat(ber.getServiceStatus().getStatus().getErrorCode()).isEqualTo("0");
         Assertions.assertThat(ber.getServiceStatus().getStatus().hasErrors()).isTrue();
-        Assertions.assertThat(ber.getServiceStatus().getStatus().getErrors()).containsExactly("detail error", "error2", "error3");
+        Assertions.assertThat(ber.getServiceStatus().getStatus().getErrors())
+                .containsExactly("detail error", "error2", "error3");
         Assertions.assertThat(ber.toString()).contains("BackEndResponse");
         Assertions.assertThat(ber.hashCode()).isNotZero();
 

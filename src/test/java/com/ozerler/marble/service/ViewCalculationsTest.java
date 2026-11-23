@@ -47,12 +47,24 @@ class ViewCalculationsTest {
         MachineFuelEntryRepository repository = Mockito.mock(MachineFuelEntryRepository.class);
         Machine first = Machine.builder().id(1L).name("A").build();
         Machine second = Machine.builder().id(2L).name("B").build();
-        Mockito.when(repository.findByEntryDateBetweenOrderByEntryDateDesc(
-                        LocalDate.of(2026, 9, 1), LocalDate.of(2026, 10, 1)))
-                .thenReturn(List.of(
-                        MachineFuelEntry.builder().machine(first).litres(new BigDecimal("10")).totalAmount(new BigDecimal("400")).build(),
-                        MachineFuelEntry.builder().machine(first).litres(new BigDecimal("5")).build(),
-                        MachineFuelEntry.builder().machine(second).totalAmount(new BigDecimal("20")).build()));
+        Mockito.when(
+                        repository.findByEntryDateBetweenOrderByEntryDateDesc(
+                                LocalDate.of(2026, 9, 1), LocalDate.of(2026, 10, 1)))
+                .thenReturn(
+                        List.of(
+                                MachineFuelEntry.builder()
+                                        .machine(first)
+                                        .litres(new BigDecimal("10"))
+                                        .totalAmount(new BigDecimal("400"))
+                                        .build(),
+                                MachineFuelEntry.builder()
+                                        .machine(first)
+                                        .litres(new BigDecimal("5"))
+                                        .build(),
+                                MachineFuelEntry.builder()
+                                        .machine(second)
+                                        .totalAmount(new BigDecimal("20"))
+                                        .build()));
         MachineFuelService service = new MachineFuelService(repository, null, null, null, null, null);
 
         FuelPeriodSummary summary = service.periodSummary("2026-09");

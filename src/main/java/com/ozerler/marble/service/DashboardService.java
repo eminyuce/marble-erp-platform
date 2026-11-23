@@ -101,13 +101,17 @@ public class DashboardService {
         LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
         LocalDate monthEnd = LocalDate.now().plusMonths(1).withDayOfMonth(1).minusDays(1);
 
-        BigDecimal monthlyPurchases = invoiceRepository.sumAmountByTypeThisMonth(InvoiceType.PURCHASE, monthStart, monthEnd);
+        BigDecimal monthlyPurchases =
+                invoiceRepository.sumAmountByTypeThisMonth(
+                        InvoiceType.PURCHASE, monthStart, monthEnd);
         BigDecimal monthlySales = invoiceRepository.sumAmountByTypeThisMonth(InvoiceType.SALES, monthStart, monthEnd);
         BigDecimal monthlyCollections = collectionRepository.sumAmountByMethodAndDateRange(null, monthStart, monthEnd);
 
         LocalDate today = LocalDate.now();
         long approachingChecksCount = checkRepository.countApproachingChecks(today, today.plusDays(CHECK_WARNING_DAYS));
-        BigDecimal approachingChecksTotal = checkRepository.sumApproachingChecksAmount(today, today.plusDays(CHECK_WARNING_DAYS));
+        BigDecimal approachingChecksTotal =
+                checkRepository.sumApproachingChecksAmount(
+                        today, today.plusDays(CHECK_WARNING_DAYS));
 
         return DashboardKpiDto.builder()
                 .totalSlabArea(totalSlabArea)

@@ -237,7 +237,8 @@ public final class HtmlErrors {
     }
 
     private static boolean isUsableMessage(String serverMessage) {
-        return Strings.isPresent(serverMessage) && !Constants.ERROR_NO_MESSAGE_AVAILABLE.equalsIgnoreCase(serverMessage.trim());
+        return Strings.isPresent(serverMessage)
+                && !Constants.ERROR_NO_MESSAGE_AVAILABLE.equalsIgnoreCase(serverMessage.trim());
     }
 
     private static String stringValue(Map<String, ?> attributes, String key) {

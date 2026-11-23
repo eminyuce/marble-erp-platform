@@ -48,7 +48,8 @@ public class AppErrorController implements ErrorController {
     public String errorHtml(HttpServletRequest request, HttpServletResponse response, Model model) {
         HttpStatus status = statusOf(request);
         response.setStatus(status.value());
-        Map<String, Object> attributes = errorAttributes.getErrorAttributes(new ServletWebRequest(request), HTML_OPTIONS);
+        Map<String, Object> attributes =
+                errorAttributes.getErrorAttributes(new ServletWebRequest(request), HTML_OPTIONS);
         Throwable error = errorAttributes.getError(new ServletWebRequest(request));
         ErrorPageDetails page = HtmlErrors.page(status.value(), status.getReasonPhrase(), attributes, request, error);
         model.addAttribute("errorPage", page);
@@ -58,7 +59,8 @@ public class AppErrorController implements ErrorController {
     @RequestMapping
     public ResponseEntity<ErrorResponse> errorJson(HttpServletRequest request) {
         HttpStatus status = statusOf(request);
-        Map<String, Object> attributes = errorAttributes.getErrorAttributes(new ServletWebRequest(request), JSON_OPTIONS);
+        Map<String, Object> attributes =
+                errorAttributes.getErrorAttributes(new ServletWebRequest(request), JSON_OPTIONS);
         String path = HtmlErrors.pathOf(request, stringValue(attributes.get("path")));
         String message = HtmlErrors.messageFor(status.value(), stringValue(attributes.get("message")));
         return ResponseEntity.status(status).body(ErrorResponse.of(status, message, path));

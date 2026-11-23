@@ -112,7 +112,8 @@ class MasterDataServiceTest {
     @DisplayName("machine codes are uppercased with Locale.ROOT so Turkish i stays I")
     void saveMachineNormalizesCodeWithRootLocale() {
         Mockito.when(machineRepository.findByCode("MAK-I1")).thenReturn(Optional.empty());
-        Mockito.when(machineRepository.save(ArgumentMatchers.any(Machine.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(machineRepository.save(ArgumentMatchers.any(Machine.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Machine saved = masterDataService.saveMachine(Machine.builder()
                 .code("mak-i1")
@@ -217,7 +218,11 @@ class MasterDataServiceTest {
                 .companyName("Kaya Elmas")
                 .supplierType(SupplierType.CONSUMABLE)
                 .build();
-        Mockito.when(supplierRepository.search(ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.any(Pageable.class)))
+        Mockito.when(
+                        supplierRepository.search(
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(supplier), PageRequest.of(0, 25), 1));
 
         TabulatorResponse<SupplierDto> response =

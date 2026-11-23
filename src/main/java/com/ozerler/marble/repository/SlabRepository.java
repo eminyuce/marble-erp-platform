@@ -83,6 +83,8 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
                                        @Param("search") String search,
                                        Pageable pageable);
 
-    @Query("SELECT COALESCE(SUM(s.surfaceAreaM2), 0) FROM Slab s WHERE s.customer.id = :customerId AND s.status IN ('AVAILABLE', 'RESERVED')")
+    @Query(
+            "SELECT COALESCE(SUM(s.surfaceAreaM2), 0) FROM Slab s WHERE s.customer.id = :customerId AND s.status IN "
+                    + "('AVAILABLE', 'RESERVED')")
     BigDecimal getTotalAreaByCustomer(@Param("customerId") Long customerId);
 }

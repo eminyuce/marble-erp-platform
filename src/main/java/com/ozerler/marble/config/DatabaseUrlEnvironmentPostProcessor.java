@@ -62,7 +62,9 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
                     }
                 }
 
-                environment.getPropertySources().addFirst(new MapPropertySource("renderDatabaseUrlProperties", properties));
+                environment
+                        .getPropertySources()
+                        .addFirst(new MapPropertySource("renderDatabaseUrlProperties", properties));
             } catch (Exception ignored) {
                 // If parsing fails, fall back to standard Spring datasource configuration
             }

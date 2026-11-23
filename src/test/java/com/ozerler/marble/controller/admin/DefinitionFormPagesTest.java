@@ -128,7 +128,9 @@ class DefinitionFormPagesTest {
     @WithMockUser(roles = "USER")
     @DisplayName("non-admin users cannot open definition form pages")
     void userCannotOpenDefinitionForms() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/machines/create")).andExpect(MockMvcResultMatchers.status().isForbidden());
-        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/machines/1/edit")).andExpect(MockMvcResultMatchers.status().isForbidden());
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/machines/create"))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/machines/1/edit"))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 }

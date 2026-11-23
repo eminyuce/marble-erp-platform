@@ -108,7 +108,12 @@ class GlobalSearchServiceTest {
         Mockito.verify(cutOrderRepository).searchByCutOrderNo(Mockito.eq("blok"), Mockito.any(Pageable.class));
         Mockito.verify(salesOrderRepository).searchByOrderNo(Mockito.eq("blok"), Mockito.any(Pageable.class));
         Mockito.verify(purchaseOrderRepository).searchByPoNumber(Mockito.eq("blok"), Mockito.any(Pageable.class));
-        Mockito.verify(userRepository).searchActiveUsers(Mockito.eq("blok"), Mockito.isNull(), Mockito.isNull(), Mockito.any(Pageable.class));
+        Mockito.verify(userRepository)
+                .searchActiveUsers(
+                        Mockito.eq("blok"),
+                        Mockito.isNull(),
+                        Mockito.isNull(),
+                        Mockito.any(Pageable.class));
         Mockito.verify(customerRepository).searchByCodeOrName(Mockito.eq("blok"), Mockito.any(Pageable.class));
         Mockito.verify(supplierRepository).searchByCodeOrName(Mockito.eq("blok"), Mockito.any(Pageable.class));
         Mockito.verify(costCenterRepository).searchByCodeOrName(Mockito.eq("blok"), Mockito.any(Pageable.class));
@@ -136,7 +141,10 @@ class GlobalSearchServiceTest {
         Mockito.when(cutOrderRepository.searchByCutOrderNo(Mockito.any(), Mockito.any())).thenReturn(List.of());
         Mockito.when(salesOrderRepository.searchByOrderNo(Mockito.any(), Mockito.any())).thenReturn(List.of());
         Mockito.when(purchaseOrderRepository.searchByPoNumber(Mockito.any(), Mockito.any())).thenReturn(List.of());
-        Mockito.when(userRepository.searchActiveUsers(Mockito.any(), Mockito.isNull(), Mockito.isNull(), Mockito.any())).thenReturn(Page.empty());
+        Mockito.when(
+                        userRepository.searchActiveUsers(
+                                Mockito.any(), Mockito.isNull(), Mockito.isNull(), Mockito.any()))
+                .thenReturn(Page.empty());
         Mockito.when(customerRepository.searchByCodeOrName(Mockito.any(), Mockito.any())).thenReturn(List.of());
         Mockito.when(supplierRepository.searchByCodeOrName(Mockito.any(), Mockito.any())).thenReturn(List.of());
         Mockito.when(costCenterRepository.searchByCodeOrName(Mockito.any(), Mockito.any())).thenReturn(List.of());

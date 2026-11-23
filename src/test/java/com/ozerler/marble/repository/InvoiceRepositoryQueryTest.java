@@ -15,7 +15,9 @@ import com.ozerler.marble.model.enums.InvoiceType;
 class InvoiceRepositoryQueryTest {
 
     @Test
-    @DisplayName("findByIdWithDetails uses @Query with LEFT JOIN FETCH for customer, supplier, project, items, and related inventory references")
+    @DisplayName(
+            "findByIdWithDetails uses @Query with LEFT JOIN FETCH for customer, supplier, project, items, and related "
+                    + "inventory references")
     void findByIdWithDetailsUsesExplicitLeftJoinFetch() throws Exception {
         Query query = InvoiceRepository.class
                 .getMethod("findByIdWithDetails", Long.class)
@@ -34,7 +36,9 @@ class InvoiceRepositoryQueryTest {
     }
 
     @Test
-    @DisplayName("findAllWithCustomer fetches the customer so collection forms can read companyName after the session closes")
+    @DisplayName(
+            "findAllWithCustomer fetches the customer so collection forms can read companyName after the session "
+                    + "closes")
     void findAllWithCustomerFetchesCustomer() throws Exception {
         Query query = InvoiceRepository.class
                 .getMethod("findAllWithCustomer")
@@ -57,7 +61,9 @@ class InvoiceRepositoryQueryTest {
     }
 
     @Test
-    @DisplayName("searchInvoices fetches customer, supplier, and project so list grid serialization does not fail outside session")
+    @DisplayName(
+            "searchInvoices fetches customer, supplier, and project so list grid serialization does not fail outside "
+                    + "session")
     void searchInvoicesFetchesCustomerSupplierAndProject() throws Exception {
         Query query = InvoiceRepository.class
                 .getMethod("searchInvoices",

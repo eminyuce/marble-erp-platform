@@ -89,14 +89,25 @@ class ViewMappersTest {
     @Test
     @DisplayName("block marks and movements copy the customer and both locations")
     void blockMarkAndMovement() {
-        BlockCustomerMark mark = BlockCustomerMark.builder().id(1L).customer(customer()).markedAt(LocalDate.of(2026, 1, 1))
-                .offerPrice(new BigDecimal("12.50")).currency("USD").status(BlockMarkStatus.ACTIVE).build();
+        BlockCustomerMark mark =
+                BlockCustomerMark.builder()
+                        .id(1L)
+                        .customer(customer())
+                        .markedAt(LocalDate.of(2026, 1, 1))
+                        .offerPrice(new BigDecimal("12.50"))
+                        .currency("USD")
+                        .status(BlockMarkStatus.ACTIVE)
+                        .build();
         BlockMarkView markView = blockMapper.toMark(mark);
         Assertions.assertThat(markView.getCustomer().getCompanyName()).isEqualTo("Atlas");
         Assertions.assertThat(markView.getOfferPrice()).isEqualByComparingTo("12.50");
         Assertions.assertThat(markView.getStatus()).isEqualTo(BlockMarkStatus.ACTIVE);
 
-        StockLocation from = StockLocation.builder().name("Üretim").locationType(StockLocationType.PRODUCTION_YARD).build();
+        StockLocation from =
+                StockLocation.builder()
+                        .name("Üretim")
+                        .locationType(StockLocationType.PRODUCTION_YARD)
+                        .build();
         StockLocation to = StockLocation.builder().name("Sevk").locationType(StockLocationType.DISPATCH_YARD).build();
         BlockMovementView movement = blockMapper.toMovement(BlockLocationMovement.builder()
                 .id(2L).fromLocation(from).toLocation(to).description("taşındı").build());

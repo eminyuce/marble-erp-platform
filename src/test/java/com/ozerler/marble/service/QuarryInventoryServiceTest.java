@@ -101,7 +101,8 @@ class QuarryInventoryServiceTest {
                 .thenReturn(Optional.of(fuelLocation));
         Mockito.when(stockItemRepository.findByItemCode(QuarryInventoryService.FUEL_TANK_ITEM_CODE))
                 .thenReturn(Optional.of(tank));
-        Mockito.when(stockItemRepository.save(ArgumentMatchers.any(StockItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(stockItemRepository.save(ArgumentMatchers.any(StockItem.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
         StockItem updated = inventoryService.addFuelStock(new BigDecimal("2000"), new BigDecimal("43.00"), "FAT-001");
 
@@ -142,7 +143,8 @@ class QuarryInventoryServiceTest {
         Mockito.when(stockItemRepository.findByItemCode(QuarryInventoryService.FUEL_TANK_ITEM_CODE))
                 .thenReturn(Optional.of(tank));
         Mockito.when(machineRepository.findById(5L)).thenReturn(Optional.of(machine));
-        Mockito.when(fuelEntryRepository.save(ArgumentMatchers.any(MachineFuelEntry.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(fuelEntryRepository.save(ArgumentMatchers.any(MachineFuelEntry.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
         Mockito.when(costCenterRepository.findByCode("CC-001")).thenReturn(Optional.of(quarryCostCenter));
 
         MachineFuelEntry entry = inventoryService.dispenseFuel(
@@ -172,7 +174,17 @@ class QuarryInventoryServiceTest {
         Mockito.when(stockItemRepository.findByItemCode(QuarryInventoryService.FUEL_TANK_ITEM_CODE))
                 .thenReturn(Optional.of(tank));
 
-        Assertions.assertThatThrownBy(() -> inventoryService.dispenseFuel(5L, new BigDecimal("500"), LocalDate.now(), null, null, null, null, null))
+        Assertions.assertThatThrownBy(
+                        () ->
+                                inventoryService.dispenseFuel(
+                                        5L,
+                                        new BigDecimal("500"),
+                                        LocalDate.now(),
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Yetersiz mazot stoğu");
     }
@@ -211,14 +223,27 @@ class QuarryInventoryServiceTest {
     @Test
     @DisplayName("createStockCard creates card under category and initializes opening stock")
     void createStockCardSuccess() {
-        Mockito.when(stockItemRepository.existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Yağ Filtresi"))
+        Mockito.when(
+                        stockItemRepository
+                                .existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(
+                                        BusinessUnit.QUARRY, "Yağ Filtresi"))
                 .thenReturn(false);
-        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE))
+        Mockito.when(
+                        stockLocationRepository.findByLocationTypeAndActiveTrue(
+                                StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE))
                 .thenReturn(Optional.of(consumablesLocation));
-        Mockito.when(stockItemRepository.save(ArgumentMatchers.any(StockItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(stockItemRepository.save(ArgumentMatchers.any(StockItem.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        StockItem item = inventoryService.createStockCard(
-                QuarryCategory.SARF_MALZEME, "Yağ Filtresi", "adet", new BigDecimal("10"), new BigDecimal("120.00"), null, "Açılış");
+        StockItem item =
+                inventoryService.createStockCard(
+                        QuarryCategory.SARF_MALZEME,
+                        "Yağ Filtresi",
+                        "adet",
+                        new BigDecimal("10"),
+                        new BigDecimal("120.00"),
+                        null,
+                        "Açılış");
 
         Assertions.assertThat(item.getQuarryCategory()).isEqualTo(QuarryCategory.SARF_MALZEME);
         Assertions.assertThat(item.getDescription()).isEqualTo("Yağ Filtresi");
@@ -230,7 +255,10 @@ class QuarryInventoryServiceTest {
     @Test
     @DisplayName("createStockCard throws exception when duplicate product name exists in Quarry")
     void createStockCardDuplicateNameThrowsException() {
-        Mockito.when(stockItemRepository.existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Motorin"))
+        Mockito.when(
+                        stockItemRepository
+                                .existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(
+                                        BusinessUnit.QUARRY, "Motorin"))
                 .thenReturn(true);
 
         Assertions.assertThatThrownBy(() -> inventoryService.createStockCard(
@@ -242,14 +270,28 @@ class QuarryInventoryServiceTest {
     @Test
     @DisplayName("createStockCard with direct expense marks directExpense true")
     void createStockCardWithDirectExpenseSetsDirectExpenseTrue() {
-        Mockito.when(stockItemRepository.existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Danışmanlık Hizmeti"))
+        Mockito.when(
+                        stockItemRepository
+                                .existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(
+                                        BusinessUnit.QUARRY, "Danışmanlık Hizmeti"))
                 .thenReturn(false);
-        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE))
+        Mockito.when(
+                        stockLocationRepository.findByLocationTypeAndActiveTrue(
+                                StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE))
                 .thenReturn(Optional.of(consumablesLocation));
-        Mockito.when(stockItemRepository.save(ArgumentMatchers.any(StockItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(stockItemRepository.save(ArgumentMatchers.any(StockItem.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        StockItem item = inventoryService.createStockCard(
-                QuarryCategory.DIGER, "Danışmanlık Hizmeti", "adet", BigDecimal.ZERO, new BigDecimal("500.00"), null, true, null);
+        StockItem item =
+                inventoryService.createStockCard(
+                        QuarryCategory.DIGER,
+                        "Danışmanlık Hizmeti",
+                        "adet",
+                        BigDecimal.ZERO,
+                        new BigDecimal("500.00"),
+                        null,
+                        true,
+                        null);
 
         Assertions.assertThat(item.getDirectExpense()).isTrue();
         Assertions.assertThat(item.getQuarryCategory()).isEqualTo(QuarryCategory.DIGER);
@@ -258,14 +300,26 @@ class QuarryInventoryServiceTest {
     @Test
     @DisplayName("createStockCard with MAZOT forces unit to litre")
     void createStockCardMazotEnforcesLitreUnit() {
-        Mockito.when(stockItemRepository.existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Kışlık Motorin"))
+        Mockito.when(
+                        stockItemRepository
+                                .existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(
+                                        BusinessUnit.QUARRY, "Kışlık Motorin"))
                 .thenReturn(false);
         Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.QUARRY_FUEL_TANK))
                 .thenReturn(Optional.of(fuelLocation));
-        Mockito.when(stockItemRepository.save(ArgumentMatchers.any(StockItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(stockItemRepository.save(ArgumentMatchers.any(StockItem.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        StockItem item = inventoryService.createStockCard(
-                QuarryCategory.MAZOT, "Kışlık Motorin", "varil", BigDecimal.ZERO, new BigDecimal("44.00"), null, false, null);
+        StockItem item =
+                inventoryService.createStockCard(
+                        QuarryCategory.MAZOT,
+                        "Kışlık Motorin",
+                        "varil",
+                        BigDecimal.ZERO,
+                        new BigDecimal("44.00"),
+                        null,
+                        false,
+                        null);
 
         Assertions.assertThat(item.getUnit()).isEqualTo("litre");
         Assertions.assertThat(item.getDirectExpense()).isFalse();
@@ -274,14 +328,28 @@ class QuarryInventoryServiceTest {
     @Test
     @DisplayName("createStockCard with ELEKTRIK defaults directExpense to true")
     void createStockCardElektrikDefaultsToDirectExpense() {
-        Mockito.when(stockItemRepository.existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(BusinessUnit.QUARRY, "Trafo Elektrik Bedeli"))
+        Mockito.when(
+                        stockItemRepository
+                                .existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(
+                                        BusinessUnit.QUARRY, "Trafo Elektrik Bedeli"))
                 .thenReturn(false);
-        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE))
+        Mockito.when(
+                        stockLocationRepository.findByLocationTypeAndActiveTrue(
+                                StockLocationType.QUARRY_CONSUMABLES_WAREHOUSE))
                 .thenReturn(Optional.of(consumablesLocation));
-        Mockito.when(stockItemRepository.save(ArgumentMatchers.any(StockItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(stockItemRepository.save(ArgumentMatchers.any(StockItem.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        StockItem item = inventoryService.createStockCard(
-                QuarryCategory.ELEKTRIK, "Trafo Elektrik Bedeli", "kWh", BigDecimal.ZERO, new BigDecimal("4.50"), null, false, null);
+        StockItem item =
+                inventoryService.createStockCard(
+                        QuarryCategory.ELEKTRIK,
+                        "Trafo Elektrik Bedeli",
+                        "kWh",
+                        BigDecimal.ZERO,
+                        new BigDecimal("4.50"),
+                        null,
+                        false,
+                        null);
 
         Assertions.assertThat(item.getDirectExpense()).isTrue();
     }

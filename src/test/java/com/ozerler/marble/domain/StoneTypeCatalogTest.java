@@ -11,10 +11,30 @@ class StoneTypeCatalogTest {
     void getAllContainsStandardMarbleTypes() {
         var all = StoneTypeCatalog.getAll();
         Assertions.assertThat(all).isNotEmpty();
-        Assertions.assertThat(all).anyMatch(s -> s.code().equals("BEJ") && s.specificGravity().compareTo(new BigDecimal("2.71")) == 0);
-        Assertions.assertThat(all).anyMatch(s -> s.code().equals("TRAVERTEN") && s.specificGravity().compareTo(new BigDecimal("2.45")) == 0);
-        Assertions.assertThat(all).anyMatch(s -> s.code().equals("BEYAZ") && s.specificGravity().compareTo(new BigDecimal("2.70")) == 0);
-        Assertions.assertThat(all).anyMatch(s -> s.code().equals("GRI") && s.specificGravity().compareTo(new BigDecimal("2.75")) == 0);
+        Assertions.assertThat(all)
+                .anyMatch(
+                        s ->
+                                s.code().equals("BEJ")
+                                        && s.specificGravity().compareTo(new BigDecimal("2.71"))
+                                                == 0);
+        Assertions.assertThat(all)
+                .anyMatch(
+                        s ->
+                                s.code().equals("TRAVERTEN")
+                                        && s.specificGravity().compareTo(new BigDecimal("2.45"))
+                                                == 0);
+        Assertions.assertThat(all)
+                .anyMatch(
+                        s ->
+                                s.code().equals("BEYAZ")
+                                        && s.specificGravity().compareTo(new BigDecimal("2.70"))
+                                                == 0);
+        Assertions.assertThat(all)
+                .anyMatch(
+                        s ->
+                                s.code().equals("GRI")
+                                        && s.specificGravity().compareTo(new BigDecimal("2.75"))
+                                                == 0);
     }
 
     @Test

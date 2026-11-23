@@ -66,9 +66,11 @@ class DashboardServiceTest {
         Mockito.when(blockRepository.getTotalFactoryStockWeightKg()).thenReturn(36000.0);
         Mockito.when(projectRepository.countByStatus(ProjectStatus.ACTIVE)).thenReturn(4L);
         Mockito.when(scrapLogRepository.getTotalScrapCostImpact()).thenReturn(new BigDecimal("28500.00"));
-        Mockito.when(scrapLogRepository.getScrapSummaryByReason()).thenReturn(List.<Object[]>of(new Object[]{"FR_01", 3L, new BigDecimal("12.5")}));
+        Mockito.when(scrapLogRepository.getScrapSummaryByReason())
+                .thenReturn(List.<Object[]>of(new Object[] {"FR_01", 3L, new BigDecimal("12.5")}));
         Mockito.when(userRepository.countByDeletedFalse()).thenReturn(12L);
-        Mockito.when(costTransactionRepository.getCostDistributionByCenter()).thenReturn(List.<Object[]>of(new Object[]{"KATRAK", new BigDecimal("45000")}));
+        Mockito.when(costTransactionRepository.getCostDistributionByCenter())
+                .thenReturn(List.<Object[]>of(new Object[] {"KATRAK", new BigDecimal("45000")}));
 
         DashboardKpiDto result = dashboardService.getDashboardKpis();
 

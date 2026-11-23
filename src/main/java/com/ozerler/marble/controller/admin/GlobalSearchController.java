@@ -40,7 +40,8 @@ public class GlobalSearchController extends AbstractController {
             GlobalSearchResponse searchResponse = globalSearchService.search(query);
 
             HttpHeaders responseHeaders = new HttpHeaders();
-            ResponseEntity<GlobalSearchResponse> resp = new ResponseEntity<>(searchResponse, responseHeaders, HttpStatus.OK);
+            ResponseEntity<GlobalSearchResponse> resp =
+                    new ResponseEntity<>(searchResponse, responseHeaders, HttpStatus.OK);
 
             ber.setResponse(resp);
             serviceStatus.setHttpStatus(HttpStatus.OK);

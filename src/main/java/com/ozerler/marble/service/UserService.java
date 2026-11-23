@@ -70,7 +70,19 @@ public class UserService {
         long total = all.size();
         long active = all.stream().filter(user -> user.isEnabled()).count();
         long suspended = total - active;
-        long admins = all.stream().filter(u -> u.getRoles() != null && u.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equalsIgnoreCase(r.getName()))).count();
+        long admins =
+                all.stream()
+                        .filter(
+                                u ->
+                                        u.getRoles() != null
+                                                && u.getRoles().stream()
+                                                        .anyMatch(
+                                                                r ->
+                                                                        "ROLE_ADMIN"
+                                                                                .equalsIgnoreCase(
+                                                                                        r
+                                                                                                .getName())))
+                        .count();
         return new UserSummaryDto(total, active, suspended, admins);
     }
 
@@ -79,13 +91,21 @@ public class UserService {
                                                     Collection<String> roleNames, Boolean enabled) {
         String normalizedSearch = GridPages.normalizeSearch(search);
         List<String> selectedRoles = normalizeRoleNames(roleNames);
-        Page<User> userPage = GridPages.execute(page, size, sortField, sortDir, GridPages.USER_SORTS,
-                pageable -> {
-                    if (selectedRoles.isEmpty()) {
-                        return userRepository.searchActiveUsers(normalizedSearch, null, enabled, pageable);
-                    }
-                    return userRepository.searchActiveUsersByAnyRole(normalizedSearch, selectedRoles, enabled, pageable);
-                });
+        Page<User> userPage =
+                GridPages.execute(
+                        page,
+                        size,
+                        sortField,
+                        sortDir,
+                        GridPages.USER_SORTS,
+                        pageable -> {
+                            if (selectedRoles.isEmpty()) {
+                                return userRepository.searchActiveUsers(
+                                        normalizedSearch, null, enabled, pageable);
+                            }
+                            return userRepository.searchActiveUsersByAnyRole(
+                                    normalizedSearch, selectedRoles, enabled, pageable);
+                        });
         List<UserDto> dtos = userPage.getContent().stream()
                 .map(UserDto::fromEntity)
                 .collect(Collectors.toList());
@@ -186,8 +206,15 @@ public class UserService {
 
     @Transactional
     public void resetPassword(PasswordResetRequest request) {
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.user.not_found", request.getUserId())));
+        User user =
+                userRepository
+                        .findById(request.getUserId())
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                getMessage(
+                                                        "error.user.not_found",
+                                                        request.getUserId())));
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 

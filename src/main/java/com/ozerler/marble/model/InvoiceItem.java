@@ -121,7 +121,18 @@ public class InvoiceItem extends AuditableEntity {
         return switch (u.toLowerCase(Locale.ROOT)) {
             case "m2", "m²", "square_meter", "sqm" -> "m²";
             case "m3", "m³", "cubic_meter", "cbm" -> "m³";
-            case "m.t.", "mt", "m.t", "m.tül", "m.tul", "metretül", "metretul", "metre tül", "metre tul", "lineer metre", "lineer" -> "m.t.";
+            case "m.t.",
+                    "mt",
+                    "m.t",
+                    "m.tül",
+                    "m.tul",
+                    "metretül",
+                    "metretul",
+                    "metre tül",
+                    "metre tul",
+                    "lineer metre",
+                    "lineer" ->
+                    "m.t.";
             case "ton", "tons", "t" -> "ton";
             case "adet", "piece", "pieces", "pcs", "ad" -> "adet";
             case "litre", "liter", "lt", "l" -> "litre";
@@ -138,7 +149,9 @@ public class InvoiceItem extends AuditableEntity {
         }
 
         BigDecimal w = this.widthCm;
-        if ((w == null || w.compareTo(BigDecimal.ZERO) <= 0) && this.stockItem != null && this.stockItem.getWidthCm() != null) {
+        if ((w == null || w.compareTo(BigDecimal.ZERO) <= 0)
+                && this.stockItem != null
+                && this.stockItem.getWidthCm() != null) {
             w = this.stockItem.getWidthCm();
             this.widthCm = w;
         }

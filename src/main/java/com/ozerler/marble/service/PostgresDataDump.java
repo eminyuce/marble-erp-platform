@@ -219,7 +219,10 @@ final class PostgresDataDump {
         if (value instanceof BigDecimal decimal) {
             return decimal.toPlainString();
         }
-        if (sqlType == Types.TINYINT || sqlType == Types.SMALLINT || sqlType == Types.INTEGER || sqlType == Types.BIGINT) {
+        if (sqlType == Types.TINYINT
+                || sqlType == Types.SMALLINT
+                || sqlType == Types.INTEGER
+                || sqlType == Types.BIGINT) {
             return Long.toString(rows.getLong(column));
         }
         if (sqlType == Types.FLOAT || sqlType == Types.REAL || sqlType == Types.DOUBLE) {

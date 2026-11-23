@@ -63,7 +63,9 @@ class BackupAdminControllerTest {
     @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     @DisplayName("ROLE_ADMIN can trigger backup")
     void adminCanTriggerBackup() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.post("/admin/settings/backups/trigger").with(SecurityMockMvcRequestPostProcessors.csrf()))
+        mockMvc.perform(
+                        MockMvcRequestBuilders.post("/admin/settings/backups/trigger")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.success").value(true));
     }
@@ -87,7 +89,9 @@ class BackupAdminControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings/backups/api/list"))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/admin/settings/backups/trigger").with(SecurityMockMvcRequestPostProcessors.csrf()))
+        mockMvc.perform(
+                        MockMvcRequestBuilders.post("/admin/settings/backups/trigger")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings/backups/download/backup_missing.sql.gz"))
@@ -101,7 +105,11 @@ class BackupAdminControllerTest {
         awaitIdle();
         String fileName = backupService.createBackupAsync().get(60, TimeUnit.SECONDS);
 
-        MvcResult started = mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings/backups/download/" + fileName)).andReturn();
+        MvcResult started =
+                mockMvc.perform(
+                                MockMvcRequestBuilders.get(
+                                        "/admin/settings/backups/download/" + fileName))
+                        .andReturn();
         MvcResult result;
         if (started.getRequest().isAsyncStarted()) {
             result = mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(started)).andReturn();
@@ -110,7 +118,9 @@ class BackupAdminControllerTest {
         }
 
         Assertions.assertThat(result.getResponse().getStatus())
-                .withFailMessage("status=%s body=%s", result.getResponse().getStatus(), result.getResponse().getContentAsString())
+                .withFailMessage(
+                        "status=%s body=%s",
+                        result.getResponse().getStatus(), result.getResponse().getContentAsString())
                 .isEqualTo(200);
         Assertions.assertThat(result.getResponse().getContentType()).contains("application/gzip");
         Assertions.assertThat(result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION)).contains(fileName);

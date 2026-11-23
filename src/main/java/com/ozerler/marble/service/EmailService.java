@@ -569,9 +569,16 @@ public class EmailService {
             return sendTemplatedEmail(testEmail, templateKey.trim(), sampleVars);
         } else {
             String defaultSubject = getMessage("admin.settings.email.test.subject");
-            String defaultHtml = "<h2 style='color:#0284c7;'>" + getMessage("admin.settings.email.test.heading") + "</h2>"
-                    + "<p>" + getMessage("admin.settings.email.test.body") + "</p>"
-                    + "<p style='color:#64748b; font-size:12px;'>" + getMessage("admin.settings.email.test.timestamp", LocalDateTime.now()) + "</p>";
+            String defaultHtml =
+                    "<h2 style='color:#0284c7;'>"
+                            + getMessage("admin.settings.email.test.heading")
+                            + "</h2>"
+                            + "<p>"
+                            + getMessage("admin.settings.email.test.body")
+                            + "</p>"
+                            + "<p style='color:#64748b; font-size:12px;'>"
+                            + getMessage("admin.settings.email.test.timestamp", LocalDateTime.now())
+                            + "</p>";
             return sendEmail(testEmail, defaultSubject, defaultHtml);
         }
     }
@@ -582,12 +589,26 @@ public class EmailService {
      */
     public JavaMailSender buildDynamicMailSender() {
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
-        String host = settingService.getSetting("smtp.host", settingService.getSetting("mail.smtp.host", "smtp.office365.com"));
-        int port = Ints.parseOrDefault(settingService.getSetting("smtp.port", settingService.getSetting("mail.smtp.port", "587")), DEFAULT_SMTP_PORT);
-        String username = settingService.getSetting("smtp.username", settingService.getSetting("mail.smtp.username", ""));
-        String password = settingService.getSetting("smtp.password", settingService.getSetting("mail.smtp.password", ""));
+        String host =
+                settingService.getSetting(
+                        "smtp.host",
+                        settingService.getSetting("mail.smtp.host", "smtp.office365.com"));
+        int port =
+                Ints.parseOrDefault(
+                        settingService.getSetting(
+                                "smtp.port", settingService.getSetting("mail.smtp.port", "587")),
+                        DEFAULT_SMTP_PORT);
+        String username =
+                settingService.getSetting(
+                        "smtp.username", settingService.getSetting("mail.smtp.username", ""));
+        String password =
+                settingService.getSetting(
+                        "smtp.password", settingService.getSetting("mail.smtp.password", ""));
         String auth = settingService.getSetting("smtp.auth", settingService.getSetting("mail.smtp.auth", "true"));
-        String starttls = settingService.getSetting("smtp.starttls.enable", settingService.getSetting("mail.smtp.starttls", "true"));
+        String starttls =
+                settingService.getSetting(
+                        "smtp.starttls.enable",
+                        settingService.getSetting("mail.smtp.starttls", "true"));
 
         sender.setHost(host);
         sender.setPort(port);
@@ -609,7 +630,10 @@ public class EmailService {
      * Sends an HTML email with dynamic SMTP settings. Gracefully logs network/auth timeouts.
      */
     public boolean sendEmail(String to, String subject, String bodyHtml) {
-        String from = settingService.getSetting("smtp.from_address", settingService.getSetting("mail.smtp.from", "info@ozerlermermer.com"));
+        String from =
+                settingService.getSetting(
+                        "smtp.from_address",
+                        settingService.getSetting("mail.smtp.from", "info@ozerlermermer.com"));
         String senderName = settingService.getSetting("smtp.from_name", getMessage("system.health.app_name"));
 
         log.info("Sending email to: '{}', Subject: '{}'", to, subject);
@@ -617,7 +641,11 @@ public class EmailService {
         try {
             JavaMailSender dynamicSender = buildDynamicMailSender();
             MimeMessage message = dynamicSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, StandardCharsets.UTF_8.name());
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(
+                            message,
+                            MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                            StandardCharsets.UTF_8.name());
 
             helper.setFrom(from, senderName);
             helper.setTo(to);
@@ -713,9 +741,25 @@ public class EmailService {
      */
     @CacheEvict(value = "emailTemplates", allEntries = true)
     @Transactional
-    public EmailTemplateDto createTemplateView(String templateKey, String templateName, String category, String description,
-                                         String subject, String bodyHtml, String placeholders, boolean isActive) {
-        return emailTemplateMapper.toDto(createTemplate(templateKey, templateName, category, description, subject, bodyHtml, placeholders, isActive));
+    public EmailTemplateDto createTemplateView(
+            String templateKey,
+            String templateName,
+            String category,
+            String description,
+            String subject,
+            String bodyHtml,
+            String placeholders,
+            boolean isActive) {
+        return emailTemplateMapper.toDto(
+                createTemplate(
+                        templateKey,
+                        templateName,
+                        category,
+                        description,
+                        subject,
+                        bodyHtml,
+                        placeholders,
+                        isActive));
     }
 
     /**

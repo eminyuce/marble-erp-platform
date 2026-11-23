@@ -68,7 +68,12 @@ public class PalletShipmentService {
     private final StockMovementRepository stockMovementRepository;
 
     @Transactional
-    public Pallet createPallet(String palletCode, Long customerId, Long projectId, String warehouseLocation, BusinessUnit department) {
+    public Pallet createPallet(
+            String palletCode,
+            Long customerId,
+            Long projectId,
+            String warehouseLocation,
+            BusinessUnit department) {
         if (customerId == null && projectId == null) {
             throw new IllegalArgumentException("Müşteri veya şantiye seçilmelidir");
         }
@@ -84,8 +89,10 @@ public class PalletShipmentService {
         } else {
             project = null;
         }
-        StockLocation yard = stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PALLET_STOCK_YARD)
-                .orElse(null);
+        StockLocation yard =
+                stockLocationRepository
+                        .findByLocationTypeAndActiveTrue(StockLocationType.PALLET_STOCK_YARD)
+                        .orElse(null);
         String palletCodeValue;
         if (palletCode != null && !palletCode.isBlank()) {
             palletCodeValue = palletCode;
@@ -125,8 +132,14 @@ public class PalletShipmentService {
     public PalletItem addItem(Long palletId, Long materialLotId, Long stockItemId, Long slabId,
                               String productName, BigDecimal widthCm, BigDecimal lengthCm, BigDecimal thicknessCm,
                               Integer quantity, BigDecimal areaM2) {
-        Pallet pallet = palletRepository.findById(palletId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
+        Pallet pallet =
+                palletRepository
+                        .findById(palletId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.pallet.not_found", palletId)));
         if ("SHIPPED".equalsIgnoreCase(pallet.getStatus())) {
             throw new IllegalStateException("Sevk edilmiş palete yeni ürün eklenemez.");
         }
@@ -181,7 +194,11 @@ public class PalletShipmentService {
                 thicknessCm = stockItem.getThicknessCm();
             }
             if (productName == null || productName.isBlank()) {
-                productName = stockItem.getItemCode() + " (" + Objects.requireNonNullElse(stockItem.getStoneType(), "Ebatlı") + ")";
+                productName =
+                        stockItem.getItemCode()
+                                + " ("
+                                + Objects.requireNonNullElse(stockItem.getStoneType(), "Ebatlı")
+                                + ")";
             }
         } else if (slab != null) {
             if (widthCm == null) {
@@ -205,8 +222,13 @@ public class PalletShipmentService {
             qty = 1;
         }
         BigDecimal calculatedArea = areaM2;
-        if ((calculatedArea == null || calculatedArea.compareTo(BigDecimal.ZERO) <= 0) && widthCm != null && lengthCm != null) {
-            calculatedArea = widthCm.multiply(lengthCm).divide(new BigDecimal("10000"), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(qty));
+        if ((calculatedArea == null || calculatedArea.compareTo(BigDecimal.ZERO) <= 0)
+                && widthCm != null
+                && lengthCm != null) {
+            calculatedArea =
+                    widthCm.multiply(lengthCm)
+                            .divide(new BigDecimal("10000"), 4, RoundingMode.HALF_UP)
+                            .multiply(BigDecimal.valueOf(qty));
         }
         if (calculatedArea == null || calculatedArea.compareTo(BigDecimal.ZERO) <= 0) {
             if (lot != null) {
@@ -243,8 +265,14 @@ public class PalletShipmentService {
         if (customerId == null && projectId == null) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.shipment.target.required"));
         }
-        Pallet pallet = palletRepository.findById(palletId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
+        Pallet pallet =
+                palletRepository
+                        .findById(palletId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.pallet.not_found", palletId)));
         Customer customer;
         if (customerId != null) {
             customer = customerRepository.findById(customerId).orElse(null);
@@ -356,9 +384,21 @@ public class PalletShipmentService {
     }
 
     @Transactional
-    public void sellFromPallet(Long palletId, Long palletItemId, int piecesToSell, Long customerId, BigDecimal unitPrice, String notes) {
-        Pallet pallet = palletRepository.findById(palletId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
+    public void sellFromPallet(
+            Long palletId,
+            Long palletItemId,
+            int piecesToSell,
+            Long customerId,
+            BigDecimal unitPrice,
+            String notes) {
+        Pallet pallet =
+                palletRepository
+                        .findById(palletId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.pallet.not_found", palletId)));
         if ("SHIPPED".equalsIgnoreCase(pallet.getStatus())) {
             throw new IllegalStateException("Sevk edilmiş paletten satış yapılamaz.");
         }
@@ -380,7 +420,12 @@ public class PalletShipmentService {
             currentItemQty = 1;
         }
         if (piecesToSell > currentItemQty) {
-            throw new IllegalArgumentException("Palette yalnızca " + currentItemQty + " adet ürün bulunmaktadır. " + piecesToSell + " adet satılamaz.");
+            throw new IllegalArgumentException(
+                    "Palette yalnızca "
+                            + currentItemQty
+                            + " adet ürün bulunmaktadır. "
+                            + piecesToSell
+                            + " adet satılamaz.");
         }
 
         // 1. Satılan alanı (m2) hesapla
@@ -465,20 +510,35 @@ public class PalletShipmentService {
             } else {
                 value = "";
             }
-            stockMovementRepository.save(StockMovement.builder()
-                    .movementCode(movCode)
-                    .movementDate(LocalDateTime.now())
-                    .movementType(StockMovementType.OUTGOING)
-                    .sourceDepartment(Objects.requireNonNullElse(pallet.getDepartment(), BusinessUnit.FACTORY))
-                    .fromLocation(pallet.getCurrentLocation())
-                    .customer(customer)
-                    .stockItem(item.getStockItem())
-                    .slab(item.getSlab())
-                    .itemDescription("Paletten Parçalı Satış: " + pallet.getPalletCode() + " — " + item.getDisplayName() + " (" + piecesToSell + " adet)")
-                    .quantity(quantity)
-                    .quantityUnit(quantityUnit)
-                    .notes("Palet: " + pallet.getPalletCode() + ", Satılan Adet: " + piecesToSell + value)
-                    .build());
+            stockMovementRepository.save(
+                    StockMovement.builder()
+                            .movementCode(movCode)
+                            .movementDate(LocalDateTime.now())
+                            .movementType(StockMovementType.OUTGOING)
+                            .sourceDepartment(
+                                    Objects.requireNonNullElse(
+                                            pallet.getDepartment(), BusinessUnit.FACTORY))
+                            .fromLocation(pallet.getCurrentLocation())
+                            .customer(customer)
+                            .stockItem(item.getStockItem())
+                            .slab(item.getSlab())
+                            .itemDescription(
+                                    "Paletten Parçalı Satış: "
+                                            + pallet.getPalletCode()
+                                            + " — "
+                                            + item.getDisplayName()
+                                            + " ("
+                                            + piecesToSell
+                                            + " adet)")
+                            .quantity(quantity)
+                            .quantityUnit(quantityUnit)
+                            .notes(
+                                    "Palet: "
+                                            + pallet.getPalletCode()
+                                            + ", Satılan Adet: "
+                                            + piecesToSell
+                                            + value)
+                            .build());
         }
 
         // 5. Palet kalemini güncelle veya tamamen bittiyse sil
@@ -511,8 +571,14 @@ public class PalletShipmentService {
 
     @Transactional
     public void closePallet(Long palletId) {
-        Pallet pallet = palletRepository.findById(palletId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
+        Pallet pallet =
+                palletRepository
+                        .findById(palletId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.pallet.not_found", palletId)));
         pallet.setStatus("CLOSED");
         palletRepository.save(pallet);
         recordPalletMovement(pallet, pallet.getCurrentLocation(), pallet.getCurrentLocation(), "Palet kapatıldı");
@@ -520,11 +586,21 @@ public class PalletShipmentService {
 
     @Transactional
     public void reopenPallet(Long palletId) {
-        Pallet pallet = palletRepository.findById(palletId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
+        Pallet pallet =
+                palletRepository
+                        .findById(palletId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.pallet.not_found", palletId)));
         pallet.setStatus("READY");
         palletRepository.save(pallet);
-        recordPalletMovement(pallet, pallet.getCurrentLocation(), pallet.getCurrentLocation(), "Palet tekrar kullanıma ve düzenlemeye açıldı");
+        recordPalletMovement(
+                pallet,
+                pallet.getCurrentLocation(),
+                pallet.getCurrentLocation(),
+                "Palet tekrar kullanıma ve düzenlemeye açıldı");
     }
 
     /**

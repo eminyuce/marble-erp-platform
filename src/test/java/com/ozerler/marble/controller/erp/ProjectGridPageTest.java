@@ -92,7 +92,11 @@ class ProjectGridPageTest {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/projects").param("size", "10"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.model().attribute("grid", Matchers.hasProperty("size", Matchers.is(20))))
-                .andExpect(MockMvcResultMatchers.model().attribute("grid", Matchers.hasProperty("total", Matchers.is(0L))));
+                .andExpect(
+                        MockMvcResultMatchers.model()
+                                .attribute("grid", Matchers.hasProperty("size", Matchers.is(20))))
+                .andExpect(
+                        MockMvcResultMatchers.model()
+                                .attribute("grid", Matchers.hasProperty("total", Matchers.is(0L))));
     }
 }

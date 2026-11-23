@@ -201,7 +201,8 @@ public class MasterDataService {
         if (location.getId() != null) {
             StockLocation stored = getStockLocationById(location.getId());
             if (CORE_STOCK_LOCATION_CODES.contains(stored.getCode()) && !stored.getCode().equals(cleanCode)) {
-                throw new IllegalStateException("Temel ERP operasyon sahasının kodu değiştirilemez: " + stored.getCode());
+                throw new IllegalStateException(
+                        "Temel ERP operasyon sahasının kodu değiştirilemez: " + stored.getCode());
             }
         }
 
@@ -280,7 +281,8 @@ public class MasterDataService {
     public void deleteQuarry(Long id) {
         Quarry quarry = getQuarryById(id);
         if (blockRepository.existsByQuarryId(id)) {
-            throw new IllegalStateException("Bu ocağa ait blok kayıtları bulunmaktadır. İlişkili veriler korunmalıdır.");
+            throw new IllegalStateException(
+                    "Bu ocağa ait blok kayıtları bulunmaktadır. İlişkili veriler korunmalıdır.");
         }
         quarryRepository.delete(quarry);
         log.info("Quarry deleted successfully. ID: {}, Code: {}", id, quarry.getCode());
@@ -384,7 +386,8 @@ public class MasterDataService {
                 || blockCustomerMarkRepository.existsByCustomerId(id)
                 || blockRepository.existsBySoldCustomerId(id)
                 || invoiceRepository.existsByCustomerId(id)) {
-            throw new IllegalStateException("Bu müşteriye ait satış, fatura, işaret veya satılan blok kayıtları mevcuttur. Müşteri silinemez.");
+            throw new IllegalStateException(
+                    "Bu müşteriye ait satış, fatura, işaret veya satılan blok kayıtları mevcuttur. Müşteri silinemez.");
         }
         customerRepository.delete(customer);
         log.info("Customer deleted successfully. ID: {}, Code: {}", id, customer.getCustomerCode());
@@ -447,7 +450,8 @@ public class MasterDataService {
     public void deleteSupplier(Long id) {
         Supplier supplier = getSupplierById(id);
         if (purchaseOrderRepository.existsBySupplierId(id)) {
-            throw new IllegalStateException("Bu tedarikçiye ait satın alma siparişleri mevcuttur. Tedarikçi silinemez.");
+            throw new IllegalStateException(
+                    "Bu tedarikçiye ait satın alma siparişleri mevcuttur. Tedarikçi silinemez.");
         }
         supplierRepository.delete(supplier);
         log.info("Supplier deleted successfully. ID: {}, Code: {}", id, supplier.getSupplierCode());

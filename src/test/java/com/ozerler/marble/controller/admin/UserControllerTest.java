@@ -42,7 +42,8 @@ class UserControllerTest {
         Mockito.verify(userService).toggleUserStatus(userId);
         Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Toggle status successful");
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage())
+                .isEqualTo("Toggle status successful");
     }
 
     @Test
@@ -98,31 +99,60 @@ class UserControllerTest {
     @DisplayName("getUsersData forwards selected roles for OR filtering")
     void getUsersDataForwardsRoleFilters() {
         TabulatorResponse<UserDto> expected = TabulatorResponse.of(List.of(), 1, 0);
-        Mockito.when(userService.getUsersPaged(ArgumentMatchers.eq(1), ArgumentMatchers.eq(25), ArgumentMatchers.eq(""), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(),
-                ArgumentMatchers.eq(List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")), ArgumentMatchers.eq(true)))
+        Mockito.when(
+                        userService.getUsersPaged(
+                                ArgumentMatchers.eq(1),
+                                ArgumentMatchers.eq(25),
+                                ArgumentMatchers.eq(""),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.eq(
+                                        List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")),
+                                ArgumentMatchers.eq(true)))
                 .thenReturn(expected);
 
         TabulatorResponse<UserDto> response = userController.getUsersData(
                 1, 25, "", null, null, "ROLE_USER", List.of("ROLE_ADMIN", "ROLE_SALES"), true);
 
         Assertions.assertThat(response).isSameAs(expected);
-        Mockito.verify(userService).getUsersPaged(ArgumentMatchers.eq(1), ArgumentMatchers.eq(25), ArgumentMatchers.eq(""), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(),
-                ArgumentMatchers.eq(List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")), ArgumentMatchers.eq(true));
+        Mockito.verify(userService)
+                .getUsersPaged(
+                        ArgumentMatchers.eq(1),
+                        ArgumentMatchers.eq(25),
+                        ArgumentMatchers.eq(""),
+                        ArgumentMatchers.isNull(),
+                        ArgumentMatchers.isNull(),
+                        ArgumentMatchers.eq(List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")),
+                        ArgumentMatchers.eq(true));
     }
 
     @Test
     @DisplayName("getUsersData with no roles still requests the unfiltered page")
     void getUsersDataWithoutRolesPassesEmptyList() {
         TabulatorResponse<UserDto> expected = TabulatorResponse.of(List.of(), 1, 0);
-        Mockito.when(userService.getUsersPaged(ArgumentMatchers.eq(1), ArgumentMatchers.eq(10), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(),
-                ArgumentMatchers.eq(List.of()), ArgumentMatchers.isNull()))
+        Mockito.when(
+                        userService.getUsersPaged(
+                                ArgumentMatchers.eq(1),
+                                ArgumentMatchers.eq(10),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.eq(List.of()),
+                                ArgumentMatchers.isNull()))
                 .thenReturn(expected);
 
         TabulatorResponse<UserDto> response = userController.getUsersData(
                 1, 10, null, null, null, null, null, null);
 
         Assertions.assertThat(response).isSameAs(expected);
-        Mockito.verify(userService).getUsersPaged(ArgumentMatchers.eq(1), ArgumentMatchers.eq(10), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(),
-                ArgumentMatchers.eq(List.of()), ArgumentMatchers.isNull());
+        Mockito.verify(userService)
+                .getUsersPaged(
+                        ArgumentMatchers.eq(1),
+                        ArgumentMatchers.eq(10),
+                        ArgumentMatchers.isNull(),
+                        ArgumentMatchers.isNull(),
+                        ArgumentMatchers.isNull(),
+                        ArgumentMatchers.eq(List.of()),
+                        ArgumentMatchers.isNull());
     }
 }

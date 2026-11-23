@@ -78,7 +78,8 @@ class PalletShipmentServiceTest {
     void createPalletSuccess() {
         Customer customer = Customer.builder().id(1L).companyName("Test Müşteri").build();
         Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        Mockito.when(palletRepository.save(ArgumentMatchers.any(Pallet.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(palletRepository.save(ArgumentMatchers.any(Pallet.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Pallet pallet = palletShipmentService.createPallet("PAL-001", 1L, null, "Saha 1");
 
@@ -96,7 +97,8 @@ class PalletShipmentServiceTest {
 
         Mockito.when(palletRepository.findById(10L)).thenReturn(Optional.of(pallet));
         Mockito.when(materialLotRepository.findById(20L)).thenReturn(Optional.of(lot));
-        Mockito.when(palletItemRepository.save(ArgumentMatchers.any(PalletItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(palletItemRepository.save(ArgumentMatchers.any(PalletItem.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         PalletItem item = palletShipmentService.addLot(10L, 20L, 2, new BigDecimal("15.50"));
 
@@ -126,10 +128,13 @@ class PalletShipmentServiceTest {
 
         Mockito.when(palletRepository.findById(10L)).thenReturn(Optional.of(pallet));
         Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        Mockito.when(shipmentRepository.save(ArgumentMatchers.any(Shipment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(shipmentRepository.save(ArgumentMatchers.any(Shipment.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
         Mockito.when(palletItemRepository.findByPalletId(10L)).thenReturn(List.of(item));
 
-        Shipment shipment = palletShipmentService.createShipment(10L, 1L, null, "IRS-999", "03 AA 001", "Ahmet", BigDecimal.valueOf(500));
+        Shipment shipment =
+                palletShipmentService.createShipment(
+                        10L, 1L, null, "IRS-999", "03 AA 001", "Ahmet", BigDecimal.valueOf(500));
 
         Assertions.assertThat(shipment).isNotNull();
         Assertions.assertThat(pallet.getStatus()).isEqualTo("SHIPPED");
@@ -191,7 +196,13 @@ class PalletShipmentServiceTest {
     void sellFromPalletSuccess() {
         Customer customer = Customer.builder().id(1L).companyName("Alıcı Ltd.").build();
         Pallet pallet = Pallet.builder().id(10L).palletCode("PAL-001").status("READY").customer(customer).build();
-        StockItem stockItem = StockItem.builder().id(100L).pieceCount(50).quantity(new BigDecimal("20.00")).status("AVAILABLE").build();
+        StockItem stockItem =
+                StockItem.builder()
+                        .id(100L)
+                        .pieceCount(50)
+                        .quantity(new BigDecimal("20.00"))
+                        .status("AVAILABLE")
+                        .build();
 
         PalletItem item = PalletItem.builder()
                 .id(200L)

@@ -53,14 +53,23 @@ class RenderedNotesEscapeTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(SecurityMockMvcConfigurers.springSecurity()).build();
+        mockMvc =
+                MockMvcBuilders.webAppContextSetup(context)
+                        .apply(SecurityMockMvcConfigurers.springSecurity())
+                        .build();
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("production detail escapes a script stored in the order notes")
     void productionNotesAreEscaped() throws Exception {
-        Quarry quarry = quarryRepository.save(Quarry.builder().code("Q-NOTE").name("Not Ocağı").location("Burdur").build());
+        Quarry quarry =
+                quarryRepository.save(
+                        Quarry.builder()
+                                .code("Q-NOTE")
+                                .name("Not Ocağı")
+                                .location("Burdur")
+                                .build());
         Block block = blockRepository.save(Block.builder()
                 .quarry(quarry)
                 .blockCode("BLK-NOTE")

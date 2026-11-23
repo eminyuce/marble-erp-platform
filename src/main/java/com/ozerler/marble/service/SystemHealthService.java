@@ -196,17 +196,102 @@ public class SystemHealthService {
         } else {
             dbLatencyMsValue2 = 1;
         }
-        components.add(Map.of("name", getMessage("system.health.comp.db.name"), "status", dbStatus, "latency", dbLatencyMsValue2 + " ms", "desc", getMessage("system.health.comp.db.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.rustfs.name"), "status", rustFsStatus, "latency", rustFsLatencyMs + " ms", "desc", rustFsDesc));
-        components.add(Map.of("name", getMessage("system.health.comp.quarry.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.quarry.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.gangsaw.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.gangsaw.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.workshop.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.workshop.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.site.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.site.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.cost.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.cost.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.email.name"), "status", "UP", "latency", "UP", "desc", getMessage("system.health.comp.email.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.actuator.name"), "status", "UP", "latency", "/health/", "desc", getMessage("system.health.comp.actuator.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.db.name"),
+                        "status",
+                        dbStatus,
+                        "latency",
+                        dbLatencyMsValue2 + " ms",
+                        "desc",
+                        getMessage("system.health.comp.db.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.rustfs.name"),
+                        "status",
+                        rustFsStatus,
+                        "latency",
+                        rustFsLatencyMs + " ms",
+                        "desc",
+                        rustFsDesc));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.quarry.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "<1 ms",
+                        "desc",
+                        getMessage("system.health.comp.quarry.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.gangsaw.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "<1 ms",
+                        "desc",
+                        getMessage("system.health.comp.gangsaw.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.workshop.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "<1 ms",
+                        "desc",
+                        getMessage("system.health.comp.workshop.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.site.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "<1 ms",
+                        "desc",
+                        getMessage("system.health.comp.site.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.cost.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "<1 ms",
+                        "desc",
+                        getMessage("system.health.comp.cost.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.email.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "UP",
+                        "desc",
+                        getMessage("system.health.comp.email.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.actuator.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "/health/",
+                        "desc",
+                        getMessage("system.health.comp.actuator.desc")));
 
-        int upComponentCount = (int) components.stream().filter(component -> "UP".equals(component.get("status"))).count();
+        int upComponentCount =
+                (int)
+                        components.stream()
+                                .filter(component -> "UP".equals(component.get("status")))
+                                .count();
         metrics.put("components", components);
         metrics.put("componentCount", components.size());
         metrics.put("upComponentCount", upComponentCount);
@@ -228,8 +313,28 @@ public class SystemHealthService {
         rustFsJson.put("pingMs", rustFsLatencyMs);
         rustFsJson.put("error", Objects.requireNonNullElse(rustFsHealth.getError(), "None"));
         compMap.put("rustfs", rustFsJson);
-        compMap.put("diskSpace", Map.of("status", "UP", "totalGb", totalDiskGb, "usableGb", usableDiskGb, "usedPercent", diskPercent + "%"));
-        compMap.put("jvmMemory", Map.of("usedMb", usedMemMb, "totalMb", totalMemMb, "maxMb", maxMemMb, "percent", memPercent + "%"));
+        compMap.put(
+                "diskSpace",
+                Map.of(
+                        "status",
+                        "UP",
+                        "totalGb",
+                        totalDiskGb,
+                        "usableGb",
+                        usableDiskGb,
+                        "usedPercent",
+                        diskPercent + "%"));
+        compMap.put(
+                "jvmMemory",
+                Map.of(
+                        "usedMb",
+                        usedMemMb,
+                        "totalMb",
+                        totalMemMb,
+                        "maxMb",
+                        maxMemMb,
+                        "percent",
+                        memPercent + "%"));
         compMap.put("threads", Map.of("active", Thread.activeCount(), "processors", runtime.availableProcessors()));
         compMap.put("quarryService", Map.of("status", "UP"));
         compMap.put("factoryService", Map.of("status", "UP"));

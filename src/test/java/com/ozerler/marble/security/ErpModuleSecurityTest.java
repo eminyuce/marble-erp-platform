@@ -38,27 +38,44 @@ class ErpModuleSecurityTest {
     void authenticatedGetIsAllowed() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/blocks")).andExpect(MockMvcResultMatchers.status().isOk());
         mockMvc.perform(MockMvcRequestBuilders.get("/production")).andExpect(MockMvcResultMatchers.status().isOk());
-        mockMvc.perform(MockMvcRequestBuilders.get("/production/accept")).andExpect(MockMvcResultMatchers.status().isOk());
-        mockMvc.perform(MockMvcRequestBuilders.get("/production/polish")).andExpect(MockMvcResultMatchers.status().isOk());
-        mockMvc.perform(MockMvcRequestBuilders.get("/production/pallets")).andExpect(MockMvcResultMatchers.status().is3xxRedirection()).andExpect(MockMvcResultMatchers.redirectedUrl("/operations/factory/sized"));
-        mockMvc.perform(MockMvcRequestBuilders.get("/production/tablet")).andExpect(MockMvcResultMatchers.status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/production/accept"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/production/polish"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/production/pallets"))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/operations/factory/sized"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/production/tablet"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
         mockMvc.perform(MockMvcRequestBuilders.get("/workshop")).andExpect(MockMvcResultMatchers.status().isOk());
-        mockMvc.perform(MockMvcRequestBuilders.get("/workshop/receipts")).andExpect(MockMvcResultMatchers.status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/workshop/receipts"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
         mockMvc.perform(MockMvcRequestBuilders.get("/projects")).andExpect(MockMvcResultMatchers.status().isOk());
         mockMvc.perform(MockMvcRequestBuilders.get("/costs")).andExpect(MockMvcResultMatchers.status().isOk());
-        mockMvc.perform(MockMvcRequestBuilders.get("/quarry")).andExpect(MockMvcResultMatchers.status().is3xxRedirection()).andExpect(MockMvcResultMatchers.redirectedUrl("/blocks"));
-        mockMvc.perform(MockMvcRequestBuilders.get("/factory")).andExpect(MockMvcResultMatchers.status().is3xxRedirection()).andExpect(MockMvcResultMatchers.redirectedUrl("/production"));
-        mockMvc.perform(MockMvcRequestBuilders.get("/sites")).andExpect(MockMvcResultMatchers.status().is3xxRedirection()).andExpect(MockMvcResultMatchers.redirectedUrl("/projects"));
-        mockMvc.perform(MockMvcRequestBuilders.get("/cost-analysis")).andExpect(MockMvcResultMatchers.status().is3xxRedirection()).andExpect(MockMvcResultMatchers.redirectedUrl("/costs"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/quarry"))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/blocks"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/factory"))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/production"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/sites"))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/projects"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/cost-analysis"))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/costs"));
     }
 
     @Test
     @WithMockUser(roles = "USER")
     @DisplayName("non-admin users cannot open master data definitions")
     void userCannotOpenDefinitions() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions")).andExpect(MockMvcResultMatchers.status().isForbidden());
-        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/machines")).andExpect(MockMvcResultMatchers.status().isForbidden());
-        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/machines/create")).andExpect(MockMvcResultMatchers.status().isForbidden());
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions"))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/machines"))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/machines/create"))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
     @Test
@@ -68,7 +85,8 @@ class ErpModuleSecurityTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
                 .andExpect(MockMvcResultMatchers.redirectedUrl("/admin/definitions/machines"));
-        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/machines")).andExpect(MockMvcResultMatchers.status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/definitions/machines"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
@@ -106,9 +124,11 @@ class ErpModuleSecurityTest {
     @WithMockUser(roles = "QUARRY_CHIEF")
     @DisplayName("quarry chief cannot open factory tablet planning writes")
     void quarryChiefCannotPlanFactory() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.post("/production/tablet/plan").with(SecurityMockMvcRequestPostProcessors.csrf())
-                        .param("workOrderId", "1")
-                        .param("processType", "GANGSAW_CUTTING"))
+        mockMvc.perform(
+                        MockMvcRequestBuilders.post("/production/tablet/plan")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .param("workOrderId", "1")
+                                .param("processType", "GANGSAW_CUTTING"))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 }

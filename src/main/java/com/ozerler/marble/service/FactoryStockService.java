@@ -84,9 +84,12 @@ public class FactoryStockService {
         Block block = blockRepository.findById(blockId)
                 .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
         if (block.getStatus() != BlockStatus.IN_TRANSIT && block.getStatus() != BlockStatus.DISPATCHED) {
-            throw new IllegalStateException("Yalnızca sevk edilmiş (Yolda) bloklar fabrikanın stoğuna kabul edilebilir.");
+            throw new IllegalStateException(
+                    "Yalnızca sevk edilmiş (Yolda) bloklar fabrikanın stoğuna kabul edilebilir.");
         }
-        StockLocation factoryYard = StockLocations.require(stockLocationRepository, StockLocationType.FACTORY_BLOCK_YARD);
+        StockLocation factoryYard =
+                StockLocations.require(
+                        stockLocationRepository, StockLocationType.FACTORY_BLOCK_YARD);
         StockLocation oldLoc = block.getCurrentLocation();
         block.setCurrentLocation(factoryYard);
         block.setStatus(BlockStatus.AT_FACTORY);
@@ -97,7 +100,8 @@ public class FactoryStockService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Block> getFactoryUncutBlocksPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+    public Page<Block> getFactoryUncutBlocksPaged(
+            Long customerId, boolean generalStockOnly, String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
         return blockRepository.searchFactoryUncutBlocks(customerId, generalStockOnly, search, pageable);
     }
@@ -122,12 +126,20 @@ public class FactoryStockService {
         Block block = blockRepository.findById(blockId)
                 .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
 
-        boolean isAtFactory = block.getStatus() == BlockStatus.AT_FACTORY || block.getStatus() == BlockStatus.FACTORY_STOCK
-                || (block.getCurrentLocation() != null && block.getCurrentLocation().getLocationType() == StockLocationType.FACTORY_BLOCK_YARD);
-        boolean isAlreadyCutOrSold = block.getStatus() == BlockStatus.IN_PROCESS || block.getStatus() == BlockStatus.SAWING
-                || block.getStatus() == BlockStatus.SOLD || block.getStatus() == BlockStatus.SCRAPPED;
+        boolean isAtFactory =
+                block.getStatus() == BlockStatus.AT_FACTORY
+                        || block.getStatus() == BlockStatus.FACTORY_STOCK
+                        || (block.getCurrentLocation() != null
+                                && block.getCurrentLocation().getLocationType()
+                                        == StockLocationType.FACTORY_BLOCK_YARD);
+        boolean isAlreadyCutOrSold =
+                block.getStatus() == BlockStatus.IN_PROCESS
+                        || block.getStatus() == BlockStatus.SAWING
+                        || block.getStatus() == BlockStatus.SOLD
+                        || block.getStatus() == BlockStatus.SCRAPPED;
         if (!isAtFactory || isAlreadyCutOrSold) {
-            throw new IllegalStateException("Yalnızca fabrikada bulunan ve henüz kesilmemiş bloklar kesime alınabilir.");
+            throw new IllegalStateException(
+                    "Yalnızca fabrikada bulunan ve henüz kesilmemiş bloklar kesime alınabilir.");
         }
 
         block.setStatus(BlockStatus.IN_PROCESS);
@@ -172,7 +184,9 @@ public class FactoryStockService {
     @Transactional(readOnly = true)
     public TabulatorResponse<Map<String, Object>> factoryBlockRows(int page, int size, String search,
                                                                    Long customerId, boolean generalStockOnly) {
-        Page<Block> blocksPage = getFactoryUncutBlocksPaged(customerId, generalStockOnly, search, Math.max(0, page - 1), size);
+        Page<Block> blocksPage =
+                getFactoryUncutBlocksPaged(
+                        customerId, generalStockOnly, search, Math.max(0, page - 1), size);
         DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         List<Map<String, Object>> data = blocksPage.getContent().stream().map(block -> blockRow(block, dateFmt))
                 .collect(Collectors.toList());
@@ -207,7 +221,8 @@ public class FactoryStockService {
         if (block.getSalePrice() != null && block.getSalePrice().compareTo(BigDecimal.ZERO) > 0) {
             return block.getSalePrice();
         }
-        if (block.getUnitMarketValuePerTon() != null && block.getUnitMarketValuePerTon().compareTo(BigDecimal.ZERO) > 0) {
+        if (block.getUnitMarketValuePerTon() != null
+                && block.getUnitMarketValuePerTon().compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal ton;
             if (block.getActualTonnage() != null) {
                 ton = block.getActualTonnage();
@@ -283,7 +298,8 @@ public class FactoryStockService {
             cost = BigDecimal.ZERO;
         }
         BigDecimal saleOrMarket = block.getSalePrice();
-        if ((saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) && block.getUnitMarketValuePerTon() != null) {
+        if ((saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0)
+                && block.getUnitMarketValuePerTon() != null) {
             BigDecimal ton;
             if (block.getActualTonnage() != null) {
                 ton = block.getActualTonnage();
@@ -307,7 +323,13 @@ public class FactoryStockService {
     // --- 2. FABRİKA PLAKA STOK SAHASI ---
 
     @Transactional(readOnly = true)
-    public Page<Slab> getFactorySlabsPaged(SlabStatus status, Long customerId, boolean generalStockOnly, String search, int page, int size) {
+    public Page<Slab> getFactorySlabsPaged(
+            SlabStatus status,
+            Long customerId,
+            boolean generalStockOnly,
+            String search,
+            int page,
+            int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
         return slabRepository.searchSlabsWithCustomer(status, customerId, generalStockOnly, search, pageable);
     }
@@ -496,9 +518,23 @@ public class FactoryStockService {
     // --- 3. FABRİKA EBATLI STOK SAHASI ---
 
     @Transactional(readOnly = true)
-    public Page<StockItem> getSizedStockItemsPaged(Long customerId, boolean generalStockOnly, boolean customerOnly, String search, int page, int size) {
+    public Page<StockItem> getSizedStockItemsPaged(
+            Long customerId,
+            boolean generalStockOnly,
+            boolean customerOnly,
+            String search,
+            int page,
+            int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        Page<StockItem> items = stockItemRepository.searchItemsDetailed(StockProductType.SIZED, null, customerId, generalStockOnly, customerOnly, search, pageable);
+        Page<StockItem> items =
+                stockItemRepository.searchItemsDetailed(
+                        StockProductType.SIZED,
+                        null,
+                        customerId,
+                        generalStockOnly,
+                        customerOnly,
+                        search,
+                        pageable);
         if (items.hasContent()) {
             items.getContent().forEach(it -> {
                 if (it.getSourceBlock() != null) {
@@ -516,7 +552,8 @@ public class FactoryStockService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StockItem> getSizedStockItemsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+    public Page<StockItem> getSizedStockItemsPaged(
+            Long customerId, boolean generalStockOnly, String search, int page, int size) {
         return getSizedStockItemsPaged(customerId, generalStockOnly, false, search, page, size);
     }
 
@@ -530,10 +567,21 @@ public class FactoryStockService {
     }
 
     @Transactional
-    public StockItem createSizedItem(Long blockId, Long slabId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
-                                     BigDecimal lengthCm, BigDecimal quantity, int pieceCount,
-                                     BigDecimal actualProducedQuantity, Long customerId, String qualityGradeStr,
-                                     String surfaceFinishStr, String edgeFinish, String notes) {
+    public StockItem createSizedItem(
+            Long blockId,
+            Long slabId,
+            String description,
+            BigDecimal thicknessCm,
+            BigDecimal widthCm,
+            BigDecimal lengthCm,
+            BigDecimal quantity,
+            int pieceCount,
+            BigDecimal actualProducedQuantity,
+            Long customerId,
+            String qualityGradeStr,
+            String surfaceFinishStr,
+            String edgeFinish,
+            String notes) {
 
         Block block;
         if (blockId != null) {
@@ -560,14 +608,20 @@ public class FactoryStockService {
             customer = slab.getCustomer();
         }
 
-        StockLocation sizedLoc = stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.SIZED_STOCK_YARD)
-                .orElseGet(() -> stockLocationRepository.save(StockLocation.builder()
-                        .code("FAB-EBATLI")
-                        .name("Fabrika Ebatlı Stok Sahası")
-                        .businessUnit(BusinessUnit.FACTORY)
-                        .locationType(StockLocationType.SIZED_STOCK_YARD)
-                        .active(true)
-                        .build()));
+        StockLocation sizedLoc =
+                stockLocationRepository
+                        .findByLocationTypeAndActiveTrue(StockLocationType.SIZED_STOCK_YARD)
+                        .orElseGet(
+                                () ->
+                                        stockLocationRepository.save(
+                                                StockLocation.builder()
+                                                        .code("FAB-EBATLI")
+                                                        .name("Fabrika Ebatlı Stok Sahası")
+                                                        .businessUnit(BusinessUnit.FACTORY)
+                                                        .locationType(
+                                                                StockLocationType.SIZED_STOCK_YARD)
+                                                        .active(true)
+                                                        .build()));
 
         String code = UniqueCodes.yearly("EBT", stockItemRepository::existsByItemCode);
 
@@ -593,7 +647,10 @@ public class FactoryStockService {
         if (quantity != null) {
             qty = quantity.setScale(2, RoundingMode.HALF_UP);
         } else {
-            qty = w.multiply(l).multiply(BigDecimal.valueOf(pieceCount)).divide(BigDecimal.valueOf(CM2_PER_M2), 2, RoundingMode.HALF_UP);
+            qty =
+                    w.multiply(l)
+                            .multiply(BigDecimal.valueOf(pieceCount))
+                            .divide(BigDecimal.valueOf(CM2_PER_M2), 2, RoundingMode.HALF_UP);
         }
 
         QualityGrade grade = QualityGrade.A;
@@ -698,35 +755,65 @@ public class FactoryStockService {
             return created;
         }
 
-        RowDimensions.eachPositiveSizedRow(widths, lengths, thicknesses, pieceCounts, quantities, new BigDecimal("2.0"),
+        RowDimensions.eachPositiveSizedRow(
+                widths,
+                lengths,
+                thicknesses,
+                pieceCounts,
+                quantities,
+                new BigDecimal("2.0"),
                 (index, width, length, thickness, count, quantity) -> {
-                String desc;
-                if (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank()) {
-                    desc = descriptions.get(index).trim();
-                } else {
-                    if (defaultDescription != null && !defaultDescription.isBlank()) {
-                        desc = defaultDescription;
+                    String desc;
+                    if (descriptions != null
+                            && index < descriptions.size()
+                            && descriptions.get(index) != null
+                            && !descriptions.get(index).isBlank()) {
+                        desc = descriptions.get(index).trim();
                     } else {
-                        desc = "Ebatlı Mermer " + thickness + "x" + width + "x" + length;
+                        if (defaultDescription != null && !defaultDescription.isBlank()) {
+                            desc = defaultDescription;
+                        } else {
+                            desc = "Ebatlı Mermer " + thickness + "x" + width + "x" + length;
+                        }
                     }
-                }
 
-                String rowSurface;
-                if (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank()) {
-                    rowSurface = rowSurfaceFinishes.get(index).trim();
-                } else {
-                    rowSurface = surfaceFinishStr;
-                }
-                String rowEdge;
-                if (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank()) {
-                    rowEdge = rowEdgeFinishes.get(index).trim();
-                } else {
-                    rowEdge = edgeFinish;
-                }
+                    String rowSurface;
+                    if (rowSurfaceFinishes != null
+                            && index < rowSurfaceFinishes.size()
+                            && rowSurfaceFinishes.get(index) != null
+                            && !rowSurfaceFinishes.get(index).isBlank()) {
+                        rowSurface = rowSurfaceFinishes.get(index).trim();
+                    } else {
+                        rowSurface = surfaceFinishStr;
+                    }
+                    String rowEdge;
+                    if (rowEdgeFinishes != null
+                            && index < rowEdgeFinishes.size()
+                            && rowEdgeFinishes.get(index) != null
+                            && !rowEdgeFinishes.get(index).isBlank()) {
+                        rowEdge = rowEdgeFinishes.get(index).trim();
+                    } else {
+                        rowEdge = edgeFinish;
+                    }
 
-                StockItem item = createSizedItem(blockId, slabId, desc, thickness, width, length, quantity, count, quantity, customerId, qualityGradeStr, rowSurface, rowEdge, notes);
-                created.add(item);
-            });
+                    StockItem item =
+                            createSizedItem(
+                                    blockId,
+                                    slabId,
+                                    desc,
+                                    thickness,
+                                    width,
+                                    length,
+                                    quantity,
+                                    count,
+                                    quantity,
+                                    customerId,
+                                    qualityGradeStr,
+                                    rowSurface,
+                                    rowEdge,
+                                    notes);
+                    created.add(item);
+                });
         return created;
     }
 
@@ -761,7 +848,16 @@ public class FactoryStockService {
     @Transactional
     public SlabView createSlabDirectView(Long blockId, BigDecimal thicknessCm, BigDecimal widthCm, BigDecimal lengthCm,
                                 QualityGrade qualityGrade, SurfaceFinish surfaceFinish, Long customerId, String notes) {
-        return slabMapper.toDto(createSlabDirect(blockId, thicknessCm, widthCm, lengthCm, qualityGrade, surfaceFinish, customerId, notes));
+        return slabMapper.toDto(
+                createSlabDirect(
+                        blockId,
+                        thicknessCm,
+                        widthCm,
+                        lengthCm,
+                        qualityGrade,
+                        surfaceFinish,
+                        customerId,
+                        notes));
     }
 
     /**
@@ -795,11 +891,35 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public StockItemView createSizedItemView(Long blockId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
-                                     BigDecimal lengthCm, BigDecimal quantity, int pieceCount,
-                                     BigDecimal actualProducedQuantity, Long customerId, String qualityGradeStr,
-                                     String surfaceFinishStr, String edgeFinish, String notes) {
-        return stockItemMapper.toDto(createSizedItem(blockId, description, thicknessCm, widthCm, lengthCm, quantity, pieceCount, actualProducedQuantity, customerId, qualityGradeStr, surfaceFinishStr, edgeFinish, notes));
+    public StockItemView createSizedItemView(
+            Long blockId,
+            String description,
+            BigDecimal thicknessCm,
+            BigDecimal widthCm,
+            BigDecimal lengthCm,
+            BigDecimal quantity,
+            int pieceCount,
+            BigDecimal actualProducedQuantity,
+            Long customerId,
+            String qualityGradeStr,
+            String surfaceFinishStr,
+            String edgeFinish,
+            String notes) {
+        return stockItemMapper.toDto(
+                createSizedItem(
+                        blockId,
+                        description,
+                        thicknessCm,
+                        widthCm,
+                        lengthCm,
+                        quantity,
+                        pieceCount,
+                        actualProducedQuantity,
+                        customerId,
+                        qualityGradeStr,
+                        surfaceFinishStr,
+                        edgeFinish,
+                        notes));
     }
 
     /**
@@ -822,11 +942,37 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public StockItemView createSizedItemView(Long blockId, Long slabId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
-                                     BigDecimal lengthCm, BigDecimal quantity, int pieceCount,
-                                     BigDecimal actualProducedQuantity, Long customerId, String qualityGradeStr,
-                                     String surfaceFinishStr, String edgeFinish, String notes) {
-        return stockItemMapper.toDto(createSizedItem(blockId, slabId, description, thicknessCm, widthCm, lengthCm, quantity, pieceCount, actualProducedQuantity, customerId, qualityGradeStr, surfaceFinishStr, edgeFinish, notes));
+    public StockItemView createSizedItemView(
+            Long blockId,
+            Long slabId,
+            String description,
+            BigDecimal thicknessCm,
+            BigDecimal widthCm,
+            BigDecimal lengthCm,
+            BigDecimal quantity,
+            int pieceCount,
+            BigDecimal actualProducedQuantity,
+            Long customerId,
+            String qualityGradeStr,
+            String surfaceFinishStr,
+            String edgeFinish,
+            String notes) {
+        return stockItemMapper.toDto(
+                createSizedItem(
+                        blockId,
+                        slabId,
+                        description,
+                        thicknessCm,
+                        widthCm,
+                        lengthCm,
+                        quantity,
+                        pieceCount,
+                        actualProducedQuantity,
+                        customerId,
+                        qualityGradeStr,
+                        surfaceFinishStr,
+                        edgeFinish,
+                        notes));
     }
 
     /**
@@ -862,7 +1008,20 @@ public class FactoryStockService {
                                        Long customerId, String notes,
                                        List<BigDecimal> thicknesses, List<BigDecimal> widths,
                                        List<BigDecimal> lengths, List<Integer> pieceCounts) {
-        return createSlabsBatch(blockId, commonThicknessCm, qualityGrade, surfaceFinish, customerId, notes, thicknesses, widths, lengths, pieceCounts).stream().map(slabMapper::toDto).toList();
+        return createSlabsBatch(
+                        blockId,
+                        commonThicknessCm,
+                        qualityGrade,
+                        surfaceFinish,
+                        customerId,
+                        notes,
+                        thicknesses,
+                        widths,
+                        lengths,
+                        pieceCounts)
+                .stream()
+                .map(slabMapper::toDto)
+                .toList();
     }
 
     /**
@@ -890,7 +1049,23 @@ public class FactoryStockService {
                                                  List<String> descriptions, List<BigDecimal> thicknesses,
                                                  List<BigDecimal> widths, List<BigDecimal> lengths,
                                                  List<Integer> pieceCounts, List<BigDecimal> quantities) {
-        return createSizedItemsBatch(blockId, customerId, defaultDescription, qualityGradeStr, surfaceFinishStr, edgeFinish, notes, descriptions, thicknesses, widths, lengths, pieceCounts, quantities).stream().map(stockItemMapper::toDto).toList();
+        return createSizedItemsBatch(
+                        blockId,
+                        customerId,
+                        defaultDescription,
+                        qualityGradeStr,
+                        surfaceFinishStr,
+                        edgeFinish,
+                        notes,
+                        descriptions,
+                        thicknesses,
+                        widths,
+                        lengths,
+                        pieceCounts,
+                        quantities)
+                .stream()
+                .map(stockItemMapper::toDto)
+                .toList();
     }
 
     /**
@@ -915,14 +1090,43 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public List<StockItemView> createSizedItemsBatchViews(Long blockId, Long slabId, Long customerId, String defaultDescription,
-                                                 String qualityGradeStr, String surfaceFinishStr, String edgeFinish,
-                                                 String notes,
-                                                 List<String> descriptions, List<BigDecimal> thicknesses,
-                                                 List<BigDecimal> widths, List<BigDecimal> lengths,
-                                                 List<Integer> pieceCounts, List<BigDecimal> quantities,
-                                                 List<String> rowSurfaceFinishes, List<String> rowEdgeFinishes) {
-        return createSizedItemsBatch(blockId, slabId, customerId, defaultDescription, qualityGradeStr, surfaceFinishStr, edgeFinish, notes, descriptions, thicknesses, widths, lengths, pieceCounts, quantities, rowSurfaceFinishes, rowEdgeFinishes).stream().map(stockItemMapper::toDto).toList();
+    public List<StockItemView> createSizedItemsBatchViews(
+            Long blockId,
+            Long slabId,
+            Long customerId,
+            String defaultDescription,
+            String qualityGradeStr,
+            String surfaceFinishStr,
+            String edgeFinish,
+            String notes,
+            List<String> descriptions,
+            List<BigDecimal> thicknesses,
+            List<BigDecimal> widths,
+            List<BigDecimal> lengths,
+            List<Integer> pieceCounts,
+            List<BigDecimal> quantities,
+            List<String> rowSurfaceFinishes,
+            List<String> rowEdgeFinishes) {
+        return createSizedItemsBatch(
+                        blockId,
+                        slabId,
+                        customerId,
+                        defaultDescription,
+                        qualityGradeStr,
+                        surfaceFinishStr,
+                        edgeFinish,
+                        notes,
+                        descriptions,
+                        thicknesses,
+                        widths,
+                        lengths,
+                        pieceCounts,
+                        quantities,
+                        rowSurfaceFinishes,
+                        rowEdgeFinishes)
+                .stream()
+                .map(stockItemMapper::toDto)
+                .toList();
     }
 
     /**
@@ -937,7 +1141,13 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<SlabView> getFactorySlabViewsPaged(SlabStatus status, Long customerId, boolean generalStockOnly, String search, int page, int size) {
+    public Page<SlabView> getFactorySlabViewsPaged(
+            SlabStatus status,
+            Long customerId,
+            boolean generalStockOnly,
+            String search,
+            int page,
+            int size) {
         return getFactorySlabsPaged(status, customerId, generalStockOnly, search, page, size).map(slabMapper::toDto);
     }
 
@@ -953,8 +1163,16 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<StockItemView> getSizedStockItemViewsPaged(Long customerId, boolean generalStockOnly, boolean customerOnly, String search, int page, int size) {
-        return getSizedStockItemsPaged(customerId, generalStockOnly, customerOnly, search, page, size).map(stockItemMapper::toDto);
+    public Page<StockItemView> getSizedStockItemViewsPaged(
+            Long customerId,
+            boolean generalStockOnly,
+            boolean customerOnly,
+            String search,
+            int page,
+            int size) {
+        return getSizedStockItemsPaged(
+                        customerId, generalStockOnly, customerOnly, search, page, size)
+                .map(stockItemMapper::toDto);
     }
 
     /**
@@ -968,7 +1186,8 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<StockItemView> getSizedStockItemViewsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+    public Page<StockItemView> getSizedStockItemViewsPaged(
+            Long customerId, boolean generalStockOnly, String search, int page, int size) {
         return getSizedStockItemsPaged(customerId, generalStockOnly, search, page, size).map(stockItemMapper::toDto);
     }
 
@@ -1005,7 +1224,8 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<BlockView> getFactoryUncutBlockViewsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+    public Page<BlockView> getFactoryUncutBlockViewsPaged(
+            Long customerId, boolean generalStockOnly, String search, int page, int size) {
         return getFactoryUncutBlocksPaged(customerId, generalStockOnly, search, page, size).map(blockViews::toView);
     }
 }

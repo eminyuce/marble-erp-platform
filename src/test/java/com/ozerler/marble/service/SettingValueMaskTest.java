@@ -13,6 +13,7 @@ class SettingValueMaskTest {
         Assertions.assertThat(SettingValueMask.display("api.secret", "abc")).isEqualTo("******");
         Assertions.assertThat(SettingValueMask.display("session.token", "abc")).isEqualTo("******");
         Assertions.assertThat(SettingValueMask.display("app.security.key", "abc")).isEqualTo("******");
-        Assertions.assertThat(SettingValueMask.display("mail.smtp.host", "smtp.example.com")).isEqualTo("smtp.example.com");
+        Assertions.assertThat(SettingValueMask.display("mail.smtp.host", "smtp.example.com"))
+                .isEqualTo("smtp.example.com");
     }
 }

@@ -383,7 +383,9 @@ public class DatabaseBackupService {
             }
 
             // 2. GZIP aç
-            try (GZIPInputStream gzis = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(tempCompressed)));
+            try (GZIPInputStream gzis =
+                            new GZIPInputStream(
+                                    new BufferedInputStream(Files.newInputStream(tempCompressed)));
                     OutputStream fos = new BufferedOutputStream(Files.newOutputStream(tempSql))) {
                 gzis.transferTo(fos);
             }
@@ -427,7 +429,9 @@ public class DatabaseBackupService {
                 } catch (IOException ioException) {
                     log.warn("psql aracı çalıştırılamadı ({}).", ioException.getMessage());
                     if (!properties.getDatabase().isAllowFallbackDump()) {
-                        throw new RuntimeException("Sistemde 'psql' aracı bulunamadı: " + ioException.getMessage(), ioException);
+                        throw new RuntimeException(
+                                "Sistemde 'psql' aracı bulunamadı: " + ioException.getMessage(),
+                                ioException);
                     }
                     restored = true;
                 }
@@ -484,7 +488,9 @@ public class DatabaseBackupService {
             s3Client.putBucketLifecycleConfiguration(req);
             log.info("RustFS bucket={} için {} günlük Lifecycle politikası uygulandı.", bucket, days);
         } catch (Exception e) {
-            log.warn("RustFS Lifecycle politikası tanımlanamadı (Spring @Scheduled devrede kalacak): {}", e.getMessage());
+            log.warn(
+                    "RustFS Lifecycle politikası tanımlanamadı (Spring @Scheduled devrede kalacak): {}",
+                    e.getMessage());
         }
     }
 
@@ -614,7 +620,8 @@ public class DatabaseBackupService {
         }
     }
 
-    private boolean dumpWithJdbc(Path tempFile, DbConnectionInfo dbInfo, String fileName) throws IOException, SQLException {
+    private boolean dumpWithJdbc(Path tempFile, DbConnectionInfo dbInfo, String fileName)
+            throws IOException, SQLException {
         if (dataSource == null) {
             log.warn("PostgreSQL veri yedeği için DataSource yok.");
             return false;
@@ -661,7 +668,9 @@ public class DatabaseBackupService {
             if (dataSource != null) {
                 try (Connection conn = dataSource.getConnection();
                         Statement stmt = conn.createStatement()) {
-                    ResultSet rs = stmt.executeQuery("SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
+                    ResultSet rs =
+                            stmt.executeQuery(
+                                    "SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
                     writer.println("-- Tablo Listesi:");
                     while (rs.next()) {
                         writer.println("-- Table: " + rs.getString(1));
@@ -795,7 +804,13 @@ public class DatabaseBackupService {
         return String.format(Locale.US, "%.1f %cB", bytes / Math.pow(BYTES_PER_UNIT, exp), pre);
     }
 
-    private record DbConnectionInfo(String host, int port, String database, String username, String password, boolean isH2) {
+    private record DbConnectionInfo(
+            String host,
+            int port,
+            String database,
+            String username,
+            String password,
+            boolean isH2) {
     }
 
     public record BackupContent(String fileName, long sizeBytes, String contentType, InputStream body) {

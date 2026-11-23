@@ -49,76 +49,136 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     long countByStatusIn(List<BlockStatus> statuses);
 
     @EntityGraph(attributePaths = {"quarry", "currentLocation", "soldCustomer"})
-    @Query(value = "SELECT DISTINCT b FROM Block b "
-            + "LEFT JOIN b.currentLocation loc "
-            + "LEFT JOIN b.soldCustomer soldCust "
-            + "LEFT JOIN b.quarry q WHERE "
-            + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
-            + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
-            + "(:status IS NULL OR b.status = :status) AND "
-            + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)",
-            countQuery = "SELECT COUNT(DISTINCT b) FROM Block b "
-                    + "LEFT JOIN b.currentLocation loc "
-                    + "LEFT JOIN b.soldCustomer soldCust "
-                    + "LEFT JOIN b.quarry q WHERE "
-                    + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
-                    + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
-                    + "(:status IS NULL OR b.status = :status) AND "
-                    + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)")
-    Page<Block> searchBlocks(@Param("search") String search,
-                             @Param("locationType") StockLocationType locationType,
-                             @Param("status") BlockStatus status,
-                             @Param("unsoldOnly") boolean unsoldOnly,
-                             Pageable pageable);
+    @Query(
+            value =
+                    "SELECT DISTINCT b FROM Block b "
+                            + "LEFT JOIN b.currentLocation loc "
+                            + "LEFT JOIN b.soldCustomer soldCust "
+                            + "LEFT JOIN b.quarry q WHERE "
+                            + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                            + "'%')) OR "
+                            + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                            + "OR "
+                            + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
+                            + "string), '%')) OR "
+                            + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                            + "'%'))) AND "
+                            + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
+                            + "(:status IS NULL OR b.status = :status) AND "
+                            + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)",
+            countQuery =
+                    "SELECT COUNT(DISTINCT b) FROM Block b "
+                            + "LEFT JOIN b.currentLocation loc "
+                            + "LEFT JOIN b.soldCustomer soldCust "
+                            + "LEFT JOIN b.quarry q WHERE "
+                            + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                            + "'%')) OR "
+                            + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                            + "OR "
+                            + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
+                            + "string), '%')) OR "
+                            + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                            + "'%'))) AND "
+                            + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
+                            + "(:status IS NULL OR b.status = :status) AND "
+                            + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)")
+    Page<Block> searchBlocks(
+            @Param("search") String search,
+            @Param("locationType") StockLocationType locationType,
+            @Param("status") BlockStatus status,
+            @Param("unsoldOnly") boolean unsoldOnly,
+            Pageable pageable);
 
     @EntityGraph(attributePaths = {"quarry", "currentLocation", "soldCustomer"})
-    @Query(value = "SELECT DISTINCT b FROM Block b "
-            + "LEFT JOIN b.currentLocation loc "
-            + "LEFT JOIN b.soldCustomer soldCust "
-            + "LEFT JOIN b.quarry q WHERE "
-            + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
-            + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
-            + "(:status IS NULL OR b.status = :status) AND "
-            + "(:stockFilter = 'ALL' OR "
-            + " (:stockFilter = 'SOLD' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.SOLD OR b.soldCustomer IS NOT NULL OR b.dispatchInvoiceId IS NOT NULL)) OR "
-            + " (:stockFilter = 'IN_TRANSIT' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)) OR "
-            + " (:stockFilter = 'MARKED' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.MARKED OR (b.assignedCustomer IS NOT NULL AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))) OR "
-            + " (:stockFilter = 'DISPATCHED' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)) OR "
-            + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))",
-            countQuery = "SELECT COUNT(DISTINCT b) FROM Block b "
-                    + "LEFT JOIN b.currentLocation loc "
-                    + "LEFT JOIN b.soldCustomer soldCust "
-                    + "LEFT JOIN b.quarry q WHERE "
-                    + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
-                    + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
-                    + "(:status IS NULL OR b.status = :status) AND "
-                    + "(:stockFilter = 'ALL' OR "
-                    + " (:stockFilter = 'SOLD' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.SOLD OR b.soldCustomer IS NOT NULL OR b.dispatchInvoiceId IS NOT NULL)) OR "
-                    + " (:stockFilter = 'IN_TRANSIT' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)) OR "
-                    + " (:stockFilter = 'MARKED' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.MARKED OR (b.assignedCustomer IS NOT NULL AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))) OR "
-                    + " (:stockFilter = 'DISPATCHED' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)) OR "
-                    + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))")
-    Page<Block> searchBlocksWithStockFilter(@Param("search") String search,
-                                            @Param("locationType") StockLocationType locationType,
-                                            @Param("status") BlockStatus status,
-                                            @Param("stockFilter") String stockFilter,
-                                            Pageable pageable);
+    @Query(
+            value =
+                    "SELECT DISTINCT b FROM Block b "
+                            + "LEFT JOIN b.currentLocation loc "
+                            + "LEFT JOIN b.soldCustomer soldCust "
+                            + "LEFT JOIN b.quarry q WHERE "
+                            + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                            + "'%')) OR "
+                            + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                            + "OR "
+                            + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
+                            + "string), '%')) OR "
+                            + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                            + "'%'))) AND "
+                            + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
+                            + "(:status IS NULL OR b.status = :status) AND "
+                            + "(:stockFilter = 'ALL' OR "
+                            + " (:stockFilter = 'SOLD' AND (b.status = "
+                            + "com.ozerler.marble.model.enums.BlockStatus.SOLD OR b.soldCustomer IS NOT NULL OR "
+                            + "b.dispatchInvoiceId IS NOT NULL)) OR "
+                            + " (:stockFilter = 'IN_TRANSIT' AND b.status IN "
+                            + "(com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)) OR "
+                            + " (:stockFilter = 'MARKED' AND (b.status = "
+                            + "com.ozerler.marble.model.enums.BlockStatus.MARKED OR (b.assignedCustomer IS NOT NULL "
+                            + "AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS "
+                            + "NULL AND b.dispatchInvoiceId IS NULL))) OR "
+                            + " (:stockFilter = 'DISPATCHED' AND b.status IN "
+                            + "(com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)) OR "
+                            + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND "
+                            + "b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.MARKED, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.QUARRY, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> "
+                            + "com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND "
+                            + "b.dispatchInvoiceId IS NULL))",
+            countQuery =
+                    "SELECT COUNT(DISTINCT b) FROM Block b "
+                            + "LEFT JOIN b.currentLocation loc "
+                            + "LEFT JOIN b.soldCustomer soldCust "
+                            + "LEFT JOIN b.quarry q WHERE "
+                            + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                            + "'%')) OR "
+                            + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                            + "OR "
+                            + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
+                            + "string), '%')) OR "
+                            + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                            + "'%'))) AND "
+                            + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
+                            + "(:status IS NULL OR b.status = :status) AND "
+                            + "(:stockFilter = 'ALL' OR "
+                            + " (:stockFilter = 'SOLD' AND (b.status = "
+                            + "com.ozerler.marble.model.enums.BlockStatus.SOLD OR b.soldCustomer IS NOT NULL OR "
+                            + "b.dispatchInvoiceId IS NOT NULL)) OR "
+                            + " (:stockFilter = 'IN_TRANSIT' AND b.status IN "
+                            + "(com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)) OR "
+                            + " (:stockFilter = 'MARKED' AND (b.status = "
+                            + "com.ozerler.marble.model.enums.BlockStatus.MARKED OR (b.assignedCustomer IS NOT NULL "
+                            + "AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS "
+                            + "NULL AND b.dispatchInvoiceId IS NULL))) OR "
+                            + " (:stockFilter = 'DISPATCHED' AND b.status IN "
+                            + "(com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)) OR "
+                            + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND "
+                            + "b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.MARKED, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.QUARRY, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> "
+                            + "com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND "
+                            + "b.dispatchInvoiceId IS NULL))")
+    Page<Block> searchBlocksWithStockFilter(
+            @Param("search") String search,
+            @Param("locationType") StockLocationType locationType,
+            @Param("status") BlockStatus status,
+            @Param("stockFilter") String stockFilter,
+            Pageable pageable);
 
     @Query("SELECT b FROM Block b WHERE LOWER(b.blockCode) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Block> searchByBlockCode(@Param("query") String query, Pageable pageable);
@@ -136,10 +196,12 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             StockLocationType locationType,
             BlockStatus status);
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg END), 0) "
-            + "FROM Block b WHERE b.extractionDate >= :start AND b.extractionDate < :end")
-    BigDecimal sumProductionWeightKgBetween(@Param("start") LocalDate start,
-                                                      @Param("end") LocalDate end);
+    @Query(
+            "SELECT COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg "
+                    + "END), 0) "
+                    + "FROM Block b WHERE b.extractionDate >= :start AND b.extractionDate < :end")
+    BigDecimal sumProductionWeightKgBetween(
+            @Param("start") LocalDate start, @Param("end") LocalDate end);
 
     boolean existsByQuarryId(Long quarryId);
 
@@ -180,163 +242,264 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                                                   @Param("start") LocalDateTime start,
                                                   @Param("end") LocalDateTime end);
 
-    @Query("SELECT b.quarry.id, "
-            + "COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg END), 0) / 1000.0, "
-            + "COALESCE(SUM((b.widthCm * b.lengthCm) / 10000.0), 0), "
-            + "COALESCE(SUM(b.transportCost), 0) "
-            + "FROM Block b "
-            + "LEFT JOIN b.currentLocation loc "
-            + "LEFT JOIN b.soldCustomer soldCust "
-            + "LEFT JOIN b.quarry q WHERE "
-            + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
-            + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
-            + "(:status IS NULL OR b.status = :status) AND "
-            + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD) "
-            + "GROUP BY b.quarry.id")
-    List<Object[]> sumGridMetricsByQuarry(@Param("search") String search,
-                                          @Param("locationType") StockLocationType locationType,
-                                          @Param("status") BlockStatus status,
-                                          @Param("unsoldOnly") boolean unsoldOnly);
+    @Query(
+            "SELECT b.quarry.id, "
+                    + "COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg "
+                    + "END), 0) / 1000.0, "
+                    + "COALESCE(SUM((b.widthCm * b.lengthCm) / 10000.0), 0), "
+                    + "COALESCE(SUM(b.transportCost), 0) "
+                    + "FROM Block b "
+                    + "LEFT JOIN b.currentLocation loc "
+                    + "LEFT JOIN b.soldCustomer soldCust "
+                    + "LEFT JOIN b.quarry q WHERE "
+                    + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                    + "'%')) OR "
+                    + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+                    + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
+                    + "(:status IS NULL OR b.status = :status) AND "
+                    + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD) "
+                    + "GROUP BY b.quarry.id")
+    List<Object[]> sumGridMetricsByQuarry(
+            @Param("search") String search,
+            @Param("locationType") StockLocationType locationType,
+            @Param("status") BlockStatus status,
+            @Param("unsoldOnly") boolean unsoldOnly);
 
-    @Query("SELECT b.quarry.id, "
-            + "COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg END), 0) / 1000.0, "
-            + "COALESCE(SUM((b.widthCm * b.lengthCm) / 10000.0), 0), "
-            + "COALESCE(SUM(b.transportCost), 0) "
-            + "FROM Block b "
-            + "LEFT JOIN b.currentLocation loc "
-            + "LEFT JOIN b.soldCustomer soldCust "
-            + "LEFT JOIN b.quarry q WHERE "
-            + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
-            + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
-            + "(:status IS NULL OR b.status = :status) AND "
-            + "(:stockFilter = 'ALL' OR "
-            + " (:stockFilter = 'SOLD' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.SOLD OR b.soldCustomer IS NOT NULL OR b.dispatchInvoiceId IS NOT NULL)) OR "
-            + " (:stockFilter = 'IN_TRANSIT' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)) OR "
-            + " (:stockFilter = 'MARKED' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.MARKED OR (b.assignedCustomer IS NOT NULL AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))) OR "
-            + " (:stockFilter = 'DISPATCHED' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)) OR "
-            + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL)) "
-            + "GROUP BY b.quarry.id")
-    List<Object[]> sumGridMetricsWithStockFilterByQuarry(@Param("search") String search,
-                                                         @Param("locationType") StockLocationType locationType,
-                                                         @Param("status") BlockStatus status,
-                                                         @Param("stockFilter") String stockFilter);
+    @Query(
+            "SELECT b.quarry.id, "
+                    + "COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg "
+                    + "END), 0) / 1000.0, "
+                    + "COALESCE(SUM((b.widthCm * b.lengthCm) / 10000.0), 0), "
+                    + "COALESCE(SUM(b.transportCost), 0) "
+                    + "FROM Block b "
+                    + "LEFT JOIN b.currentLocation loc "
+                    + "LEFT JOIN b.soldCustomer soldCust "
+                    + "LEFT JOIN b.quarry q WHERE "
+                    + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(soldCust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                    + "'%')) OR "
+                    + "LOWER(COALESCE(b.quarrySection, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+                    + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
+                    + "(:status IS NULL OR b.status = :status) AND "
+                    + "(:stockFilter = 'ALL' OR "
+                    + " (:stockFilter = 'SOLD' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.SOLD OR "
+                    + "b.soldCustomer IS NOT NULL OR b.dispatchInvoiceId IS NOT NULL)) OR "
+                    + " (:stockFilter = 'IN_TRANSIT' AND b.status IN "
+                    + "(com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)) OR "
+                    + " (:stockFilter = 'MARKED' AND (b.status = com.ozerler.marble.model.enums.BlockStatus.MARKED OR "
+                    + "(b.assignedCustomer IS NOT NULL AND b.status <> "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND "
+                    + "b.dispatchInvoiceId IS NULL))) OR "
+                    + " (:stockFilter = 'DISPATCHED' AND b.status IN "
+                    + "(com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)) OR "
+                    + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN "
+                    + "(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.MARKED, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.QUARRY, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND "
+                    + "b.dispatchInvoiceId IS NULL)) "
+                    + "GROUP BY b.quarry.id")
+    List<Object[]> sumGridMetricsWithStockFilterByQuarry(
+            @Param("search") String search,
+            @Param("locationType") StockLocationType locationType,
+            @Param("status") BlockStatus status,
+            @Param("stockFilter") String stockFilter);
 
-    @Query("SELECT b FROM Block b "
-            + "LEFT JOIN FETCH b.quarry "
-            + "LEFT JOIN FETCH b.assignedCustomer "
-            + "LEFT JOIN FETCH b.currentLocation "
-            + "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) "
-            + "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) "
-            + "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) "
-            + "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL "
-            + "ORDER BY b.arrivalDate DESC, b.id DESC")
+    @Query(
+            "SELECT b FROM Block b "
+                    + "LEFT JOIN FETCH b.quarry "
+                    + "LEFT JOIN FETCH b.assignedCustomer "
+                    + "LEFT JOIN FETCH b.currentLocation "
+                    + "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) "
+                    + "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = "
+                    + "com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) "
+                    + "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SAWING, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SOLD, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) "
+                    + "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL "
+                    + "ORDER BY b.arrivalDate DESC, b.id DESC")
     List<Block> findFactoryUncutBlocks();
 
-    @Query("SELECT b FROM Block b "
-            + "LEFT JOIN FETCH b.quarry "
-            + "LEFT JOIN FETCH b.assignedCustomer cust "
-            + "LEFT JOIN FETCH b.currentLocation "
-            + "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) "
-            + "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) "
-            + "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) "
-            + "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL "
-            + "AND (:customerId IS NULL OR cust.id = :customerId) "
-            + "AND (:generalStockOnly = false OR cust IS NULL) "
-            + "ORDER BY b.arrivalDate DESC, b.id DESC")
-    List<Block> findFactoryUncutBlocksFiltered(@Param("customerId") Long customerId,
-                                              @Param("generalStockOnly") boolean generalStockOnly);
+    @Query(
+            "SELECT b FROM Block b "
+                    + "LEFT JOIN FETCH b.quarry "
+                    + "LEFT JOIN FETCH b.assignedCustomer cust "
+                    + "LEFT JOIN FETCH b.currentLocation "
+                    + "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) "
+                    + "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = "
+                    + "com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) "
+                    + "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SAWING, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SOLD, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) "
+                    + "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL "
+                    + "AND (:customerId IS NULL OR cust.id = :customerId) "
+                    + "AND (:generalStockOnly = false OR cust IS NULL) "
+                    + "ORDER BY b.arrivalDate DESC, b.id DESC")
+    List<Block> findFactoryUncutBlocksFiltered(
+            @Param("customerId") Long customerId,
+            @Param("generalStockOnly") boolean generalStockOnly);
 
     @EntityGraph(attributePaths = {"quarry", "assignedCustomer", "currentLocation"})
-    @Query(value = "SELECT b FROM Block b "
-            + "LEFT JOIN b.quarry q "
-            + "LEFT JOIN b.assignedCustomer cust "
-            + "LEFT JOIN b.currentLocation loc "
-            + "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) "
-            + "       OR (loc IS NOT NULL AND loc.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) "
-            + "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) "
-            + "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL "
-            + "AND (:customerId IS NULL OR cust.id = :customerId) "
-            + "AND (:generalStockOnly = false OR cust IS NULL) "
-            + "AND (:search IS NULL OR :search = '' "
-            + "     OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-            + "     OR LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-            + "     OR LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-            + "     OR LOWER(COALESCE(cust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
-            countQuery = "SELECT COUNT(b) FROM Block b "
-            + "LEFT JOIN b.quarry q "
-            + "LEFT JOIN b.assignedCustomer cust "
-            + "LEFT JOIN b.currentLocation loc "
-            + "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) "
-            + "       OR (loc IS NOT NULL AND loc.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) "
-            + "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) "
-            + "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL "
-            + "AND (:customerId IS NULL OR cust.id = :customerId) "
-            + "AND (:generalStockOnly = false OR cust IS NULL) "
-            + "AND (:search IS NULL OR :search = '' "
-            + "     OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-            + "     OR LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-            + "     OR LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-            + "     OR LOWER(COALESCE(cust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
-    Page<Block> searchFactoryUncutBlocks(@Param("customerId") Long customerId,
-                                         @Param("generalStockOnly") boolean generalStockOnly,
-                                         @Param("search") String search,
-                                         Pageable pageable);
+    @Query(
+            value =
+                    "SELECT b FROM Block b "
+                            + "LEFT JOIN b.quarry q "
+                            + "LEFT JOIN b.assignedCustomer cust "
+                            + "LEFT JOIN b.currentLocation loc "
+                            + "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) "
+                            + "       OR (loc IS NOT NULL AND loc.locationType = "
+                            + "com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) "
+                            + "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.SAWING, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.SOLD, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) "
+                            + "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL "
+                            + "AND (:customerId IS NULL OR cust.id = :customerId) "
+                            + "AND (:generalStockOnly = false OR cust IS NULL) "
+                            + "AND (:search IS NULL OR :search = '' "
+                            + "     OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                            + "     OR LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
+                            + "string), '%')) "
+                            + "     OR LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                            + "'%')) "
+                            + "     OR LOWER(COALESCE(cust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
+                            + "string), '%')))",
+            countQuery =
+                    "SELECT COUNT(b) FROM Block b "
+                            + "LEFT JOIN b.quarry q "
+                            + "LEFT JOIN b.assignedCustomer cust "
+                            + "LEFT JOIN b.currentLocation loc "
+                            + "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) "
+                            + "       OR (loc IS NOT NULL AND loc.locationType = "
+                            + "com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) "
+                            + "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.SAWING, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.SOLD, "
+                            + "com.ozerler.marble.model.enums.BlockStatus.SCRAPPED) "
+                            + "AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL "
+                            + "AND (:customerId IS NULL OR cust.id = :customerId) "
+                            + "AND (:generalStockOnly = false OR cust IS NULL) "
+                            + "AND (:search IS NULL OR :search = '' "
+                            + "     OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                            + "     OR LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
+                            + "string), '%')) "
+                            + "     OR LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                            + "'%')) "
+                            + "     OR LOWER(COALESCE(cust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
+                            + "string), '%')))")
+    Page<Block> searchFactoryUncutBlocks(
+            @Param("customerId") Long customerId,
+            @Param("generalStockOnly") boolean generalStockOnly,
+            @Param("search") String search,
+            Pageable pageable);
 
-    @Query("SELECT COALESCE(SUM(b.estimatedTonnage), 0) FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
+    @Query(
+            "SELECT COALESCE(SUM(b.estimatedTonnage), 0) FROM Block b WHERE b.status != "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SOLD")
     BigDecimal sumTotalEstimatedTonnage();
 
-    @Query("SELECT COALESCE(SUM(b.actualTonnage), 0) FROM Block b WHERE b.actualTonnage IS NOT NULL AND b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
+    @Query(
+            "SELECT COALESCE(SUM(b.actualTonnage), 0) FROM Block b WHERE b.actualTonnage IS NOT NULL AND b.status != "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SOLD")
     BigDecimal sumTotalActualTonnage();
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN b.actualTonnage IS NOT NULL AND b.actualTonnage > 0 THEN b.actualTonnage ELSE COALESCE(b.estimatedTonnage, 0) END), 0) "
-            + "FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
+    @Query(
+            "SELECT COALESCE(SUM(CASE WHEN b.actualTonnage IS NOT NULL AND b.actualTonnage > 0 THEN b.actualTonnage "
+                    + "ELSE COALESCE(b.estimatedTonnage, 0) END), 0) "
+                    + "FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
     BigDecimal sumTotalEffectiveBlockTonnage();
 
     @Query("SELECT COUNT(b) FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
     long countTotalStockBlocks();
 
-    @Query("SELECT COUNT(b) FROM Block b "
-            + "WHERE b.currentLocation.locationType IN (com.ozerler.marble.model.enums.StockLocationType.PRODUCTION_YARD, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD) "
-            + "AND b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
+    @Query(
+            "SELECT COUNT(b) FROM Block b "
+                    + "WHERE b.currentLocation.locationType IN "
+                    + "(com.ozerler.marble.model.enums.StockLocationType.PRODUCTION_YARD, "
+                    + "com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD) "
+                    + "AND b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
     long countQuarryBlocks();
 
-    @Query("SELECT COUNT(b) FROM Block b "
-            + "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) "
-            + "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) "
-            + "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, com.ozerler.marble.model.enums.BlockStatus.SAWING, com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED)")
+    @Query(
+            "SELECT COUNT(b) FROM Block b "
+                    + "WHERE (b.status IN (com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) "
+                    + "       OR (b.currentLocation IS NOT NULL AND b.currentLocation.locationType = "
+                    + "com.ozerler.marble.model.enums.StockLocationType.FACTORY_BLOCK_YARD)) "
+                    + "AND b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.IN_PROCESS, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SAWING, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SOLD, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SCRAPPED)")
     long countFactoryUncutBlocks();
 
-    @Query("SELECT COUNT(b) FROM Block b WHERE b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)")
+    @Query(
+            "SELECT COUNT(b) FROM Block b WHERE b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.DISPATCHED)")
     long countInTransitBlocks();
 
-    @Query("SELECT COUNT(b) FROM Block b WHERE b.status = com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH")
+    @Query(
+            "SELECT COUNT(b) FROM Block b WHERE b.status = "
+                    + "com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH")
     long countReadyForDispatchBlocks();
 
-    @Query("SELECT COUNT(b) FROM Block b WHERE b.status = com.ozerler.marble.model.enums.BlockStatus.SOLD OR b.soldCustomer IS NOT NULL OR b.dispatchInvoiceId IS NOT NULL")
+    @Query(
+            "SELECT COUNT(b) FROM Block b WHERE b.status = com.ozerler.marble.model.enums.BlockStatus.SOLD OR "
+                    + "b.soldCustomer IS NOT NULL OR b.dispatchInvoiceId IS NOT NULL")
     long countSoldBlocks();
 
-    @Query("SELECT COUNT(b) FROM Block b WHERE b.status = com.ozerler.marble.model.enums.BlockStatus.MARKED OR (b.assignedCustomer IS NOT NULL AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL)")
+    @Query(
+            "SELECT COUNT(b) FROM Block b WHERE b.status = com.ozerler.marble.model.enums.BlockStatus.MARKED OR "
+                    + "(b.assignedCustomer IS NOT NULL AND b.status <> "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND "
+                    + "b.dispatchInvoiceId IS NULL)")
     long countMarkedBlocks();
 
-    @Query("SELECT COUNT(b) FROM Block b WHERE b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)")
+    @Query(
+            "SELECT COUNT(b) FROM Block b WHERE b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)")
     long countDispatchedToFactoryBlocks();
 
-    @Query("SELECT COUNT(b) FROM Block b WHERE b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL")
+    @Query(
+            "SELECT COUNT(b) FROM Block b WHERE b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.MARKED, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.QUARRY, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND "
+                    + "b.dispatchInvoiceId IS NULL")
     long countInStockBlocks();
 
-    @Query("SELECT COALESCE(SUM(b.totalCost), 0) FROM Block b WHERE b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED)")
+    @Query(
+            "SELECT COALESCE(SUM(b.totalCost), 0) FROM Block b WHERE b.status NOT IN "
+                    + "(com.ozerler.marble.model.enums.BlockStatus.SOLD, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SCRAPPED)")
     BigDecimal sumTotalCostInStock();
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN b.salePrice IS NOT NULL AND b.salePrice > 0 THEN b.salePrice "
-            + "WHEN b.unitMarketValuePerTon IS NOT NULL AND b.unitMarketValuePerTon > 0 THEN (b.unitMarketValuePerTon * COALESCE(b.actualTonnage, b.estimatedTonnage, 0)) "
-            + "ELSE b.totalCost END), 0) FROM Block b WHERE b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED)")
+    @Query(
+            "SELECT COALESCE(SUM(CASE WHEN b.salePrice IS NOT NULL AND b.salePrice > 0 THEN b.salePrice "
+                    + "WHEN b.unitMarketValuePerTon IS NOT NULL AND b.unitMarketValuePerTon > 0 THEN "
+                    + "(b.unitMarketValuePerTon * COALESCE(b.actualTonnage, b.estimatedTonnage, 0)) "
+                    + "ELSE b.totalCost END), 0) FROM Block b WHERE b.status NOT IN "
+                    + "(com.ozerler.marble.model.enums.BlockStatus.SOLD, "
+                    + "com.ozerler.marble.model.enums.BlockStatus.SCRAPPED)")
     BigDecimal sumTotalMarketValueInStock();
 }
