@@ -8,9 +8,6 @@ import com.ozerler.marble.dto.ExpenseDto;
 import com.ozerler.marble.dto.ExpenseSummaryDto;
 import com.ozerler.marble.dto.QuarryCostBreakdownDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.CostCenter;
-import com.ozerler.marble.model.Project;
-import com.ozerler.marble.model.Quarry;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.model.response.BackEndResponse;
@@ -245,9 +242,10 @@ public class ExpensePurchaseController extends AbstractController {
                                 RedirectAttributes redirectAttributes,
                                 Model model) {
         try {
-            expenseService.recordExpense(toDraft(expenseWrite(
+            var write = expenseWrite(
                     businessUnit, centerId, expenseType, amount, entryDate, quarryId, projectId,
-                    documentNo, invoiceDate, expensePeriod, description), locale));
+                    documentNo, invoiceDate, expensePeriod, description);
+            expenseService.recordForScreen(toDraft(write, locale), write.projectId(), write.quarryId());
 
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.expense.record.success", null, locale));
@@ -278,9 +276,10 @@ public class ExpensePurchaseController extends AbstractController {
                                 RedirectAttributes redirectAttributes,
                                 Model model) {
         try {
-            expenseService.updateExpense(id, toDraft(expenseWrite(
+            var write = expenseWrite(
                     businessUnit, centerId, expenseType, amount, entryDate, quarryId, projectId,
-                    documentNo, invoiceDate, expensePeriod, description), locale));
+                    documentNo, invoiceDate, expensePeriod, description);
+            expenseService.updateForScreen(id, toDraft(write, locale), write.projectId(), write.quarryId());
 
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.expense.update.success", null, locale));
@@ -307,18 +306,8 @@ public class ExpensePurchaseController extends AbstractController {
         if (centerId != null) {
             return centerId;
         }
-        return formLookup.firstCostCenter(unit)
-                .map(CostCenter::getId)
-                .orElseGet(() -> formLookup.anyCostCenter().map(CostCenter::getId).orElse(null));
-    }
-
-    private Project resolveProject(BusinessUnit unit, Long projectId, Locale locale) {
-        if (unit != BusinessUnit.SITE || projectId == null) {
-            return null;
-        }
-        return formLookup.project(projectId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        messageSource.getMessage("error.project.not_found", new Object[]{projectId}, locale)));
+        return formLookup.firstCostCenterId(unit)
+                .orElseGet(() -> formLookup.anyCostCenterId().orElse(null));
     }
 
     private enum ExpenseApiAction {
@@ -339,8 +328,6 @@ public class ExpensePurchaseController extends AbstractController {
     }
 
     private ExpenseService.ExpenseDraft toDraft(ExpenseWrite write, Locale locale) {
-        Project project = resolveProject(write.businessUnit(), write.projectId(), locale);
-        Quarry quarry = resolveQuarry(write.businessUnit(), write.quarryId(), locale);
         Long effectiveCenterId = resolveCenterId(write.businessUnit(), write.centerId());
         String period = write.expensePeriod() != null && !write.expensePeriod().isBlank()
                 ? ExpensePeriods.normalize(write.expensePeriod())
@@ -348,7 +335,7 @@ public class ExpensePurchaseController extends AbstractController {
         return new ExpenseService.ExpenseDraft(
                 effectiveCenterId, write.expenseType(), null, write.businessUnit(), write.amount(), Constants.CURRENCY_TRY,
                 write.documentNo(), write.invoiceDate(), write.entryDate(), period, YearMonth.now().toString(),
-                null, quarry, null, project, null, null, null, null, write.description());
+                null, null, null, null, null, null, null, null, write.description());
     }
 
     private BackEndResponse writeExpenseApi(ExpenseApiAction action, Long id, ExpenseWrite write, Locale locale) {
@@ -359,11 +346,11 @@ public class ExpensePurchaseController extends AbstractController {
         try {
             ExpenseService.ExpenseDraft draft = toDraft(write, locale);
             if (action == ExpenseApiAction.CREATE) {
-                expenseService.recordExpense(draft);
+                expenseService.recordForScreen(draft, write.projectId(), write.quarryId());
                 return expenseApiOk(ber, serviceStatus, status,
                         messageSource.getMessage("erp.expense.record.success", null, locale));
             }
-            expenseService.updateExpense(id, draft);
+            expenseService.updateForScreen(id, draft, write.projectId(), write.quarryId());
             return expenseApiOk(ber, serviceStatus, status,
                     messageSource.getMessage("erp.expense.update.success", null, locale));
         } catch (Exception e) {
@@ -385,12 +372,4 @@ public class ExpensePurchaseController extends AbstractController {
         return ber;
     }
 
-    private Quarry resolveQuarry(BusinessUnit unit, Long quarryId, Locale locale) {
-        if (unit != BusinessUnit.QUARRY || quarryId == null) {
-            return null;
-        }
-        return formLookup.quarry(quarryId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        messageSource.getMessage("error.quarry.not_found", new Object[]{quarryId}, locale)));
-    }
 }

@@ -64,7 +64,7 @@ class ProjectGridPageTest {
         when(projectSiteService.getProjectsPaged(2, 50, "ada", "ACTIVE", 9L, "name", "asc"))
                 .thenReturn(TabulatorResponse.of(List.of(project), 8, 336));
         when(formLookup.customersByCompanyName()).thenReturn(List.of());
-        when(formLookup.customer(9L)).thenReturn(Optional.empty());
+        when(formLookup.findCustomer(9L)).thenReturn(null);
 
         mockMvc.perform(get("/projects")
                         .param("page", "2")

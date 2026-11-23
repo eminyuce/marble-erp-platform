@@ -14,7 +14,12 @@ import com.ozerler.marble.dto.form.MachineForm;
 import com.ozerler.marble.dto.form.QuarryForm;
 import com.ozerler.marble.dto.form.StockLocationForm;
 import com.ozerler.marble.dto.form.SupplierForm;
-import com.ozerler.marble.mapper.ErpViewMapper;
+import com.ozerler.marble.mapper.CostCenterMapper;
+import com.ozerler.marble.mapper.CustomerMapper;
+import com.ozerler.marble.mapper.MachineMapper;
+import com.ozerler.marble.mapper.QuarryMapper;
+import com.ozerler.marble.mapper.StockLocationMapper;
+import com.ozerler.marble.mapper.SupplierMapper;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CustomerType;
@@ -66,7 +71,12 @@ public class MasterDataService {
     private final BlockCustomerMarkRepository blockCustomerMarkRepository;
     private final InvoiceRepository invoiceRepository;
     private final CollectionRecordRepository collectionRecordRepository;
-    private final ErpViewMapper viewMapper;
+    private final CustomerMapper customerMapper;
+    private final SupplierMapper supplierMapper;
+    private final MachineMapper machineMapper;
+    private final QuarryMapper quarryMapper;
+    private final StockLocationMapper stockLocationMapper;
+    private final CostCenterMapper costCenterMapper;
 
     // =========================================================================
     // MACHINES
@@ -467,78 +477,78 @@ public class MasterDataService {
     }
 
     public CustomerForm customerForm(Long id) {
-        return viewMapper.toForm(getCustomerById(id));
+        return customerMapper.toForm(getCustomerById(id));
     }
 
     @Transactional
     public Customer saveCustomerForm(CustomerForm form) {
         Customer customer = form.getId() == null ? new Customer() : getCustomerById(form.getId());
-        viewMapper.update(form, customer);
+        customerMapper.updateEntity(form, customer);
         return saveCustomer(customer);
     }
 
     public SupplierForm supplierForm(Long id) {
-        return viewMapper.toForm(getSupplierById(id));
+        return supplierMapper.toForm(getSupplierById(id));
     }
 
     @Transactional
     public Supplier saveSupplierForm(SupplierForm form) {
         Supplier supplier = form.getId() == null ? new Supplier() : getSupplierById(form.getId());
-        viewMapper.update(form, supplier);
+        supplierMapper.updateEntity(form, supplier);
         return saveSupplier(supplier);
     }
 
     public MachineForm machineForm(Long id) {
-        return viewMapper.toForm(getMachineById(id));
+        return machineMapper.toForm(getMachineById(id));
     }
 
     @Transactional
     public MachineForm toggleMachineForm(Long id) {
-        return viewMapper.toForm(toggleMachineActive(id));
+        return machineMapper.toForm(toggleMachineActive(id));
     }
 
     @Transactional
     public Machine saveMachineForm(MachineForm form) {
         Machine machine = form.getId() == null ? new Machine() : getMachineById(form.getId());
-        viewMapper.update(form, machine);
+        machineMapper.updateEntity(form, machine);
         return saveMachine(machine);
     }
 
     public QuarryForm quarryForm(Long id) {
-        return viewMapper.toForm(getQuarryById(id));
+        return quarryMapper.toForm(getQuarryById(id));
     }
 
     @Transactional
     public Quarry saveQuarryForm(QuarryForm form) {
         Quarry quarry = form.getId() == null ? new Quarry() : getQuarryById(form.getId());
-        viewMapper.update(form, quarry);
+        quarryMapper.updateEntity(form, quarry);
         return saveQuarry(quarry);
     }
 
     public StockLocationForm stockLocationForm(Long id) {
-        return viewMapper.toForm(getStockLocationById(id));
+        return stockLocationMapper.toForm(getStockLocationById(id));
     }
 
     @Transactional
     public StockLocationForm toggleStockLocationForm(Long id) {
-        return viewMapper.toForm(toggleStockLocationActive(id));
+        return stockLocationMapper.toForm(toggleStockLocationActive(id));
     }
 
     @Transactional
     public StockLocation saveStockLocationForm(StockLocationForm form) {
         StockLocation location = form.getId() == null ? new StockLocation() : getStockLocationById(form.getId());
-        viewMapper.update(form, location);
+        stockLocationMapper.updateEntity(form, location);
         return saveStockLocation(location);
     }
 
     public CostCenterForm costCenterForm(Long id) {
-        return viewMapper.toForm(getCostCenterById(id));
+        return costCenterMapper.toForm(getCostCenterById(id));
     }
 
     @Transactional
     public CostCenter saveCostCenterForm(CostCenterForm form) {
         CostCenter costCenter = form.getId() == null ? new CostCenter() : getCostCenterById(form.getId());
-        viewMapper.update(form, costCenter);
+        costCenterMapper.updateEntity(form, costCenter);
         return saveCostCenter(costCenter);
     }
 

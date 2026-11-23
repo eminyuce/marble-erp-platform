@@ -86,7 +86,7 @@ public class InvoiceScreenService {
 
         // 1. Bloklar (Ocak & Fabrika filtrelenebilir, müşteri rezervasyonları öncelikli)
         if (stockType == null || stockType.isBlank() || "BLOCK".equalsIgnoreCase(stockType)) {
-            List<Block> blocks = formLookup.blocksWithQuarry().stream()
+            List<Block> blocks = formLookup.blocksWithQuarryEntities().stream()
                     .filter(b -> b.getStatus() != BlockStatus.SOLD && b.getStatus() != BlockStatus.IN_TRANSIT)
                     .filter(b -> {
                         if (department == BusinessUnit.QUARRY) {
@@ -198,7 +198,7 @@ public class InvoiceScreenService {
         // 4. Plakalar (Fabrika & Atölye)
         if ((department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP)
                 && (stockType == null || stockType.isBlank() || "SLAB".equalsIgnoreCase(stockType))) {
-                List<Slab> slabs = formLookup.slabsByStatus(SlabStatus.AVAILABLE).stream()
+                List<Slab> slabs = formLookup.slabsByStatusEntities(SlabStatus.AVAILABLE).stream()
                         .filter(sl -> s.isEmpty() || sl.getSlabCode().toLowerCase().contains(s))
                         .limit(500)
                         .toList();
@@ -221,7 +221,7 @@ public class InvoiceScreenService {
         // 5. Ebatlı Ürün Stoğu
         if ((department == null || department == BusinessUnit.FACTORY || department == BusinessUnit.WORKSHOP)
                 && (stockType == null || stockType.isBlank() || "SIZED".equalsIgnoreCase(stockType))) {
-                List<StockItem> stockItems = formLookup.positiveStock().stream()
+                List<StockItem> stockItems = formLookup.positiveStockEntities().stream()
                         .filter(st -> {
                             if (department != null && st.getStockLocation() != null) {
                                 return department.equals(st.getStockLocation().getBusinessUnit());

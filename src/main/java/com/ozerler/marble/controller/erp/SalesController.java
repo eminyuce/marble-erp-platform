@@ -4,7 +4,6 @@ import com.ozerler.marble.common.Constants;
 
 import com.ozerler.marble.dto.SalesOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.SalesOrder;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
 import com.ozerler.marble.service.SalesService;
 import com.ozerler.marble.web.ListQuery;
@@ -72,9 +71,9 @@ public class SalesController {
                               Model model,
                               RedirectAttributes redirectAttributes) {
         try {
-            SalesOrder order = salesService.createSalesOrder(orderNo, customerId, deliveryDate, notes);
+            String createdNo = salesService.createOrderNo(orderNo, customerId, deliveryDate, notes);
             redirectAttributes.addFlashAttribute("successMessage",
-                    messageSource.getMessage("erp.sales.create.success", new Object[]{order.getOrderNo()}, locale));
+                    messageSource.getMessage("erp.sales.create.success", new Object[]{createdNo}, locale));
             return "redirect:/sales";
         } catch (Exception e) {
             model.addAttribute("errorMessage",
@@ -86,7 +85,7 @@ public class SalesController {
 
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
-        SalesOrder order = salesService.getOrderById(id);
+        var order = salesService.getOrder(id);
         populateSalesForm(model, locale);
         model.addAttribute("record", order);
         model.addAttribute("isEdit", true);
@@ -96,8 +95,7 @@ public class SalesController {
 
     @GetMapping("/{id}")
     public String orderDetail(@PathVariable("id") Long id, Model model) {
-        SalesOrder order = salesService.getOrderById(id);
-        model.addAttribute("order", order);
+        model.addAttribute("order", salesService.getOrder(id));
         return "erp/sales/detail";
     }
 

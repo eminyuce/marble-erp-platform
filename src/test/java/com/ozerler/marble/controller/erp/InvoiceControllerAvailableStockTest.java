@@ -47,7 +47,7 @@ class InvoiceControllerAvailableStockTest {
                 .stoneType("Traverten")
                 .build();
 
-        when(formLookup.positiveStock())
+        when(formLookup.positiveStockEntities())
                 .thenReturn(List.of(factoryItem, workshopItem, unlocatedItem));
 
         List<Map<String, Object>> result = screen.availableStock(

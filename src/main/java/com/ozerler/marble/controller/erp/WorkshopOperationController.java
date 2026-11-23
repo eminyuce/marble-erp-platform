@@ -189,17 +189,15 @@ public class WorkshopOperationController extends AbstractController {
             @RequestParam(value = "slabId", required = false) Long slabId,
             @RequestParam(value = "sourceStockItemId", required = false) Long sourceStockItemId,
             Model model) {
-        Slab selectedSlab = slabId != null ? formLookup.slabWithDetails(slabId).orElse(null) : null;
-        StockItem selectedSourceItem = sourceStockItemId != null
-                ? formLookup.stockItemWithCustomer(sourceStockItemId).orElse(null)
-                : null;
+        var selectedSlab = formLookup.findSlabWithDetails(slabId);
+        var selectedSourceItem = formLookup.findStockItemWithCustomer(sourceStockItemId);
 
-        List<Slab> slabsList = new java.util.ArrayList<>(formLookup.slabsInStatus(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
+        var slabsList = new java.util.ArrayList<>(formLookup.slabsInStatus(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
         if (selectedSlab != null && slabsList.stream().noneMatch(s -> s.getId().equals(selectedSlab.getId()))) {
             slabsList.add(0, selectedSlab);
         }
 
-        List<StockItem> sourceSizedList = new java.util.ArrayList<>(formLookup.stockByTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
+        var sourceSizedList = new java.util.ArrayList<>(formLookup.stockByTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
         if (selectedSourceItem != null && sourceSizedList.stream().noneMatch(it -> it.getId().equals(selectedSourceItem.getId()))) {
             sourceSizedList.add(0, selectedSourceItem);
         }

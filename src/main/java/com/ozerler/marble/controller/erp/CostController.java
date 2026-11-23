@@ -1,7 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
 import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.service.CostAccountingService;
@@ -140,16 +139,10 @@ public class CostController {
                                 Locale locale,
                                 RedirectAttributes redirectAttributes) {
         try {
-            Project project = null;
-            if (projectId != null) {
-                project = formLookup.project(projectId)
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                messageSource.getMessage("error.project.not_found", new Object[]{projectId}, locale)));
-            }
-            expenseService.recordExpense(new ExpenseService.ExpenseDraft(
+            expenseService.recordForScreen(new ExpenseService.ExpenseDraft(
                     centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
                     documentNo, invoiceDate, LocalDate.now(), expensePeriod, YearMonth.now().toString(),
-                    null, null, null, project, null, null, null, null, description));
+                    null, null, null, null, null, null, null, null, description), projectId, null);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.cost.expense.success", null, locale));
         } catch (Exception e) {

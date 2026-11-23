@@ -4,12 +4,28 @@ import com.ozerler.marble.dto.option.CostCenterOption;
 import com.ozerler.marble.dto.option.PartyOption;
 import com.ozerler.marble.dto.option.ProjectOption;
 import com.ozerler.marble.dto.option.QuarryOption;
+import com.ozerler.marble.dto.view.BlockView;
+import com.ozerler.marble.dto.view.InvoiceView;
+import com.ozerler.marble.dto.view.PartyView;
+import com.ozerler.marble.dto.view.ProjectView;
+import com.ozerler.marble.dto.view.SalesOrderView;
+import com.ozerler.marble.dto.view.SlabView;
+import com.ozerler.marble.dto.view.StockItemView;
+import com.ozerler.marble.exception.BlockNotFoundException;
+import com.ozerler.marble.exception.CustomerNotFoundException;
+import com.ozerler.marble.exception.InvoiceNotFoundException;
+import com.ozerler.marble.exception.ProjectNotFoundException;
+import com.ozerler.marble.exception.SlabNotFoundException;
+import com.ozerler.marble.mapper.BlockMapper;
+import com.ozerler.marble.mapper.CustomerMapper;
+import com.ozerler.marble.mapper.InvoiceMapper;
+import com.ozerler.marble.mapper.ProjectMapper;
+import com.ozerler.marble.mapper.SalesOrderMapper;
+import com.ozerler.marble.mapper.SlabMapper;
+import com.ozerler.marble.mapper.StockItemMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Customer;
-import com.ozerler.marble.model.Invoice;
-import com.ozerler.marble.model.Project;
-import com.ozerler.marble.model.Quarry;
 import com.ozerler.marble.model.SalesOrderItem;
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.StockItem;
@@ -37,8 +53,8 @@ import java.util.Optional;
 
 /**
  * Form and select data for ERP screens. Controllers ask this service instead of repositories.
- * Party, project, quarry, and cost-center lists are read models. Aggregates that the screen
- * edits (blocks, slabs, stock, invoices) stay entities because the template reads their graph.
+ * Lists and detail graphs are view DTOs. Derived labels are copied here after MapStruct
+ * transfers the stored fields. Controllers never receive entities from this service.
  */
 @Service
 @RequiredArgsConstructor
@@ -55,6 +71,13 @@ public class FormLookupService {
     private final StockItemRepository stockItemRepository;
     private final InvoiceRepository invoiceRepository;
     private final SalesOrderItemRepository salesOrderItemRepository;
+    private final BlockMapper blockMapper;
+    private final SlabMapper slabMapper;
+    private final StockItemMapper stockItemMapper;
+    private final InvoiceMapper invoiceMapper;
+    private final CustomerMapper customerMapper;
+    private final ProjectMapper projectMapper;
+    private final SalesOrderMapper salesOrderMapper;
 
     public List<PartyOption> customers() {
         return partyOptions(BoundedReads.all(customerRepository));
@@ -64,8 +87,13 @@ public class FormLookupService {
         return partyOptions(BoundedReads.all(customerRepository, Sort.by("companyName")));
     }
 
-    public Optional<Customer> customer(Long id) {
-        return customerRepository.findById(id);
+    public PartyView getCustomer(Long id) {
+        Customer customer = customerRepository.findById(id).orElseThrow(() -> new CustomerNotFoundException(id));
+        return customerMapper.toDto(customer);
+    }
+
+    public PartyView findCustomer(Long id) {
+        return id == null ? null : customerRepository.findById(id).map(customerMapper::toDto).orElse(null);
     }
 
     public List<PartyOption> suppliers() {
@@ -80,12 +108,13 @@ public class FormLookupService {
                 .toList();
     }
 
-    public Optional<Project> project(Long id) {
-        return projectRepository.findById(id);
+    public ProjectView getProject(Long id) {
+        return projectMapper.toDto(projectRepository.findById(id).orElseThrow(() -> new ProjectNotFoundException(id)));
     }
 
-    public List<Project> projectsForCustomer(Long customerId) {
-        return projectRepository.findByCustomerIdOrderByStartDateDesc(customerId);
+    public List<ProjectView> projectsForCustomer(Long customerId) {
+        return projectRepository.findByCustomerIdOrderByStartDateDesc(customerId).stream()
+                .map(projectMapper::toDto).toList();
     }
 
     public List<QuarryOption> quarries() {
@@ -95,8 +124,10 @@ public class FormLookupService {
                 .toList();
     }
 
-    public Optional<Quarry> quarry(Long id) {
-        return quarryRepository.findById(id);
+    public QuarryOption getQuarry(Long id) {
+        return quarryRepository.findById(id)
+                .map(quarry -> new QuarryOption(quarry.getId(), quarry.getName(), quarry.getLocation(), quarry.getSpecificGravity()))
+                .orElseThrow(() -> new IllegalArgumentException("Ocak bulunamadı: " + id));
     }
 
     public List<CostCenterOption> costCenters() {
@@ -111,24 +142,32 @@ public class FormLookupService {
                 .toList();
     }
 
-    public Optional<CostCenter> firstCostCenter(BusinessUnit unit) {
-        return costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit);
+    public Optional<Long> firstCostCenterId(BusinessUnit unit) {
+        return costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit).map(CostCenter::getId);
     }
 
-    public Optional<CostCenter> anyCostCenter() {
-        return BoundedReads.all(costCenterRepository).stream().findFirst();
+    public Optional<Long> anyCostCenterId() {
+        return BoundedReads.all(costCenterRepository).stream().findFirst().map(CostCenter::getId);
     }
 
-    public List<Block> blocksWithQuarry() {
+    public List<BlockView> blocksWithQuarry() {
+        return blockRepository.findAllWithQuarry().stream().map(this::blockView).toList();
+    }
+
+    public List<Block> blocksWithQuarryEntities() {
         return blockRepository.findAllWithQuarry();
     }
 
-    public Optional<Block> block(Long id) {
-        return blockRepository.findById(id);
+    public BlockView getBlock(Long id) {
+        return blockView(blockRepository.findById(id).orElseThrow(() -> new BlockNotFoundException(id)));
     }
 
-    public List<Block> blocksInStatus(List<BlockStatus> statuses) {
-        return blockRepository.findByStatusInOrderByBlockCodeAsc(statuses);
+    public BlockView findBlock(Long id) {
+        return id == null ? null : blockRepository.findById(id).map(this::blockView).orElse(null);
+    }
+
+    public List<BlockView> blocksInStatus(List<BlockStatus> statuses) {
+        return blockRepository.findByStatusInOrderByBlockCodeAsc(statuses).stream().map(this::blockView).toList();
     }
 
     public java.math.BigDecimal estimatedTonnage() {
@@ -139,60 +178,116 @@ public class FormLookupService {
         return blockRepository.sumTotalActualTonnage();
     }
 
-    public List<Slab> slabsByStatus(SlabStatus status) {
+    public List<SlabView> slabsByStatus(SlabStatus status) {
+        return slabRepository.findByStatus(status).stream().map(slabMapper::toDto).toList();
+    }
+
+    public List<Slab> slabsByStatusEntities(SlabStatus status) {
         return slabRepository.findByStatus(status);
     }
 
-    public List<Slab> slabsInStatus(List<SlabStatus> statuses) {
-        return slabRepository.findByStatusIn(statuses);
+    public List<SlabView> slabsInStatus(List<SlabStatus> statuses) {
+        return slabRepository.findByStatusIn(statuses).stream().map(slabMapper::toDto).toList();
     }
 
-    public Optional<Slab> slab(Long id) {
-        return slabRepository.findById(id);
+    public SlabView getSlab(Long id) {
+        return slabMapper.toDto(slabRepository.findById(id).orElseThrow(() -> new SlabNotFoundException(id)));
     }
 
-    public Optional<Slab> slabWithDetails(Long id) {
-        return slabRepository.findWithDetailsById(id);
+    public SlabView findSlab(Long id) {
+        return id == null ? null : slabRepository.findById(id).map(slabMapper::toDto).orElse(null);
     }
 
-    public List<StockItem> stockItems() {
-        return BoundedReads.all(stockItemRepository);
+    public SlabView findSlabWithDetails(Long id) {
+        return id == null ? null : slabRepository.findWithDetailsById(id).map(slabMapper::toDto).orElse(null);
     }
 
-    public Optional<StockItem> stockItem(Long id) {
-        return stockItemRepository.findById(id);
+    public SlabView getSlabWithDetails(Long id) {
+        return slabMapper.toDto(slabRepository.findWithDetailsById(id).orElseThrow(() -> new SlabNotFoundException(id)));
     }
 
-    public Optional<StockItem> stockItemWithCustomer(Long id) {
-        return stockItemRepository.findByIdWithCustomer(id);
+    public List<StockItemView> stockItems() {
+        return BoundedReads.all(stockItemRepository).stream().map(stockItemMapper::toDto).toList();
     }
 
-    public List<StockItem> stockByTypeAndStatus(StockProductType type, String status) {
-        return stockItemRepository.findByProductTypeAndStatus(type, status);
+    public StockItemView findStockItem(Long id) {
+        return id == null ? null : stockItemRepository.findById(id).map(stockItemMapper::toDto).orElse(null);
     }
 
-    public List<StockItem> positiveStock() {
+    public StockItemView findStockItemWithCustomer(Long id) {
+        return id == null ? null : stockItemRepository.findByIdWithCustomer(id).map(stockItemMapper::toDto).orElse(null);
+    }
+
+    public StockItemView getStockItem(Long id) {
+        return stockItemMapper.toDto(stockItemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Stok kartı bulunamadı: " + id)));
+    }
+
+    public StockItemView getStockItemWithCustomer(Long id) {
+        return stockItemMapper.toDto(stockItemRepository.findByIdWithCustomer(id)
+                .orElseThrow(() -> new IllegalArgumentException("Stok kartı bulunamadı: " + id)));
+    }
+
+    public List<StockItemView> stockByTypeAndStatus(StockProductType type, String status) {
+        return stockItemRepository.findByProductTypeAndStatus(type, status).stream().map(stockItemMapper::toDto).toList();
+    }
+
+    public List<StockItemView> positiveStock() {
+        return stockItemRepository.findPositiveQuantityWithLocation().stream().map(stockItemMapper::toDto).toList();
+    }
+
+    public List<StockItem> positiveStockEntities() {
         return stockItemRepository.findPositiveQuantityWithLocation();
     }
 
-    public List<StockItem> stockForProject(Long projectId) {
-        return stockItemRepository.findByProjectId(projectId);
+    public List<StockItemView> stockForProject(Long projectId) {
+        return stockItemRepository.findByProjectId(projectId).stream().map(stockItemMapper::toDto).toList();
     }
 
-    public List<Invoice> invoices() {
-        return BoundedReads.all(invoiceRepository);
+    public List<InvoiceView> invoices() {
+        return BoundedReads.all(invoiceRepository).stream().map(this::invoiceView).toList();
     }
 
-    public List<Invoice> invoicesWithCustomer() {
-        return invoiceRepository.findAllWithCustomer();
+    public List<InvoiceView> invoicesWithCustomer() {
+        return invoiceRepository.findAllWithCustomer().stream().map(this::invoiceView).toList();
     }
 
-    public Optional<Invoice> invoiceWithCustomer(Long id) {
-        return invoiceRepository.findByIdWithCustomer(id);
+    public InvoiceView getInvoiceWithCustomer(Long id) {
+        return invoiceView(invoiceRepository.findByIdWithCustomer(id).orElseThrow(() -> new InvoiceNotFoundException(id)));
     }
 
-    public Optional<SalesOrderItem> salesOrderItem(Long id) {
-        return salesOrderItemRepository.findByIdWithDetails(id);
+    public InvoiceView findInvoiceWithCustomer(Long id) {
+        return id == null ? null : invoiceRepository.findByIdWithCustomer(id).map(this::invoiceView).orElse(null);
+    }
+
+    public SalesOrderView.LineView getSalesOrderItem(Long id) {
+        SalesOrderItem item = salesOrderItemRepository.findByIdWithDetails(id)
+                .orElseThrow(() -> new IllegalArgumentException("Sipariş kalemi bulunamadı: " + id));
+        return salesOrderMapper.toLine(item);
+    }
+
+    public SalesOrderView.LineView findSalesOrderItem(Long id) {
+        return id == null ? null : salesOrderItemRepository.findByIdWithDetails(id).map(salesOrderMapper::toLine).orElse(null);
+    }
+
+    private BlockView blockView(Block block) {
+        BlockView view = blockMapper.toDto(block);
+        view.setDimensions(block.getDimensions());
+        view.setWeightTons(block.getWeightTons());
+        view.setCanonicalStatus(block.getCanonicalStatus());
+        view.setApproximateTonnage(block.getApproximateTonnage());
+        return view;
+    }
+
+    private InvoiceView invoiceView(com.ozerler.marble.model.Invoice invoice) {
+        InvoiceView view = invoiceMapper.toDto(invoice);
+        view.setInternalTransfer(invoice.isInternalTransfer());
+        if (view.getItems() != null && invoice.getItems() != null) {
+            for (int i = 0; i < view.getItems().size() && i < invoice.getItems().size(); i++) {
+                view.getItems().get(i).setUnitLabel(invoice.getItems().get(i).getUnitLabel());
+            }
+        }
+        return view;
     }
 
     private static List<PartyOption> partyOptions(List<Customer> customers) {

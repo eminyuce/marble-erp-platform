@@ -122,7 +122,7 @@ public class InvoiceController extends AbstractController {
         model.addAttribute("defaultType", type);
         model.addAttribute("defaultDepartment", department);
         if (blockId != null) {
-            formLookup.block(blockId).ifPresent(b -> model.addAttribute("prefillBlock", b));
+            model.addAttribute("prefillBlock", formLookup.findBlock(blockId));
         }
         model.addAttribute("customers", formLookup.customers());
         model.addAttribute("suppliers", formLookup.suppliers());
@@ -296,8 +296,7 @@ public class InvoiceController extends AbstractController {
 
     @GetMapping("/{id}")
     public String invoiceDetail(@PathVariable("id") Long id, Model model) {
-        Invoice invoice = invoiceService.getInvoiceById(id);
-        model.addAttribute("invoice", invoice);
+        model.addAttribute("invoice", invoiceService.getInvoice(id));
         model.addAttribute("activeNav", "invoices");
         return "invoices/detail";
     }

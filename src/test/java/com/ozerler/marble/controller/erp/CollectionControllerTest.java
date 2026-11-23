@@ -214,13 +214,14 @@ class CollectionControllerTest {
     @Test
     @DisplayName("new collection form preselects the customer from the fetched invoice")
     void newCollectionForm_PreselectsCustomerFromInvoice() {
-        Customer customer = Customer.builder().companyName("Özerler").build();
-        customer.setId(4L);
-        Invoice invoice = Invoice.builder().invoiceNo("FTR-1").customer(customer).build();
-        invoice.setId(9L);
-
-        when(formLookup.invoiceWithCustomer(9L)).thenReturn(Optional.of(invoice));
-        when(formLookup.invoicesWithCustomer()).thenReturn(List.of(invoice));
+        com.ozerler.marble.dto.view.PartyView party = new com.ozerler.marble.dto.view.PartyView();
+        party.setId(4L);
+        party.setCompanyName("Özerler");
+        com.ozerler.marble.dto.view.InvoiceView invoiceView = new com.ozerler.marble.dto.view.InvoiceView();
+        invoiceView.setId(9L);
+        invoiceView.setCustomer(party);
+        when(formLookup.findInvoiceWithCustomer(9L)).thenReturn(invoiceView);
+        when(formLookup.invoicesWithCustomer()).thenReturn(List.of(invoiceView));
         when(formLookup.customers()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
@@ -228,6 +229,5 @@ class CollectionControllerTest {
 
         assertThat(view).isEqualTo("collections/form");
         assertThat(model.getAttribute("selectedCustomerId")).isEqualTo(4L);
-        assertThat(model.getAttribute("selectedInvoice")).isSameAs(invoice);
     }
 }

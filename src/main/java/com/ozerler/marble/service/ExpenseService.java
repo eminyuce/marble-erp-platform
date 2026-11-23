@@ -11,6 +11,8 @@ import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.repository.CostPeriodCloseRepository;
 import com.ozerler.marble.repository.CostTransactionRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.QuarryRepository;
 import com.ozerler.marble.security.SecurityUtils;
 import com.ozerler.marble.util.MessageUtils;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,8 @@ public class ExpenseService {
     private final CostTransactionRepository costTransactionRepository;
     private final CostCenterRepository costCenterRepository;
     private final CostPeriodCloseRepository costPeriodCloseRepository;
+    private final ProjectRepository projectRepository;
+    private final QuarryRepository quarryRepository;
 
     @Transactional
     public CostTransaction recordExpense(ExpenseDraft draft) {
@@ -98,6 +102,34 @@ public class ExpenseService {
                 .description(draft.description())
                 .build();
         return costTransactionRepository.save(tx);
+    }
+
+    @Transactional
+    public CostTransaction recordForScreen(ExpenseDraft draft, Long projectId, Long quarryId) {
+        return recordExpense(link(draft, projectId, quarryId));
+    }
+
+    @Transactional
+    public CostTransaction updateForScreen(Long id, ExpenseDraft draft, Long projectId, Long quarryId) {
+        return updateExpense(id, link(draft, projectId, quarryId));
+    }
+
+    private ExpenseDraft link(ExpenseDraft draft, Long projectId, Long quarryId) {
+        BusinessUnit unit = draft.businessUnit();
+        var project = unit == BusinessUnit.SITE && projectId != null
+                ? projectRepository.findById(projectId).orElseThrow(() -> new IllegalArgumentException(
+                        MessageUtils.getMessage("error.project.not_found", projectId)))
+                : null;
+        var quarry = unit == BusinessUnit.QUARRY && quarryId != null
+                ? quarryRepository.findById(quarryId).orElseThrow(() -> new IllegalArgumentException(
+                        MessageUtils.getMessage("error.quarry.not_found", quarryId)))
+                : null;
+        return new ExpenseDraft(
+                draft.centerId(), draft.expenseType(), draft.expenseCategory(), draft.businessUnit(),
+                draft.amount(), draft.currency(), draft.documentNo(), draft.invoiceDate(), draft.entryDate(),
+                draft.expensePeriod(), draft.postingPeriod(), draft.block(), quarry, draft.slab(), project,
+                draft.machine(), draft.factoryOperation(), draft.workshopOperation(), draft.allocationKey(),
+                draft.description());
     }
 
     @Transactional

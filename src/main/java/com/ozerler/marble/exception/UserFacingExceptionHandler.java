@@ -33,6 +33,17 @@ public class UserFacingExceptionHandler {
 
     static final String ERROR_VIEW = "error/user-message";
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public Object handleNotFound(ResourceNotFoundException ex,
+                                 HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 HandlerMethod handlerMethod,
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
+        return handleIllegalArgument(new IllegalArgumentException(ex.getMessage()),
+                request, response, handlerMethod, model, redirectAttributes);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public Object handleIllegalArgument(IllegalArgumentException ex,
                                         HttpServletRequest request,

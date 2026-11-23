@@ -140,8 +140,7 @@ public class QuarryOperationController extends AbstractController {
 
     @GetMapping("/{id}/dispatch")
     public String dispatchForm(@PathVariable("id") Long id, Model model) {
-        Block block = formLookup.block(id)
-                .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + id));
+        var block = formLookup.getBlock(id);
 
         model.addAttribute("block", block);
         model.addAttribute("customers", formLookup.customers());

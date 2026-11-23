@@ -1,6 +1,9 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.dto.SalesOrderDto;
+import com.ozerler.marble.dto.view.SalesOrderView;
+import com.ozerler.marble.exception.SalesOrderNotFoundException;
+import com.ozerler.marble.mapper.SalesOrderMapper;
 import com.ozerler.marble.dto.option.PartyOption;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.*;
@@ -30,6 +33,7 @@ public class SalesService {
     private final SlabRepository slabRepository;
     private final BlockRepository blockRepository;
     private final org.springframework.context.MessageSource messageSource;
+    private final SalesOrderMapper salesOrderMapper;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
@@ -80,6 +84,20 @@ public class SalesService {
         return BoundedReads.all(customerRepository, org.springframework.data.domain.Sort.by("companyName")).stream()
                 .map(customer -> new PartyOption(customer.getId(), customer.getCompanyName()))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SalesOrderView getOrder(Long id) {
+        try {
+            return salesOrderMapper.toDto(getOrderById(id));
+        } catch (IllegalArgumentException ex) {
+            throw new SalesOrderNotFoundException(id);
+        }
+    }
+
+    @Transactional
+    public String createOrderNo(String orderNo, Long customerId, LocalDate deliveryDate, String notes) {
+        return createSalesOrder(orderNo, customerId, deliveryDate, notes).getOrderNo();
     }
 
     @Transactional(readOnly = true)

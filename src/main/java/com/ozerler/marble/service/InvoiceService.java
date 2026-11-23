@@ -2,7 +2,7 @@ package com.ozerler.marble.service;
 
 import com.ozerler.marble.dto.option.PartyOption;
 import com.ozerler.marble.dto.view.InvoiceRef;
-import com.ozerler.marble.mapper.ErpViewMapper;
+import com.ozerler.marble.mapper.InvoiceMapper;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.repository.*;
@@ -46,7 +46,7 @@ public class InvoiceService {
     private final FactoryInventoryService factoryInventoryService;
     private final BlockCustomerMarkRepository blockCustomerMarkRepository;
     private final CariTransactionService cariTransactionService;
-    private final ErpViewMapper viewMapper;
+    private final InvoiceMapper invoiceMapper;
 
     public record InvoiceItemForm(String productName, String description, BigDecimal quantity, String unit,
                                   BigDecimal unitPrice, Long blockId, Long slabId, Long stockItemId,
@@ -960,6 +960,24 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.view.InvoiceView getInvoice(Long id) {
+        com.ozerler.marble.model.Invoice invoice;
+        try {
+            invoice = getInvoiceById(id);
+        } catch (IllegalArgumentException ex) {
+            throw new com.ozerler.marble.exception.InvoiceNotFoundException(id);
+        }
+        com.ozerler.marble.dto.view.InvoiceView view = invoiceMapper.toDto(invoice);
+        view.setInternalTransfer(invoice.isInternalTransfer());
+        if (view.getItems() != null && invoice.getItems() != null) {
+            int count = Math.min(view.getItems().size(), invoice.getItems().size());
+            for (int i = 0; i < count; i++) {
+                view.getItems().get(i).setUnitLabel(invoice.getItems().get(i).getUnitLabel());
+            }
+        }
+        return view;
+    }
+
     public Invoice getInvoiceById(Long id) {
         Invoice invoice = invoiceRepository.findByIdWithDetails(id)
                 .or(() -> invoiceRepository.findById(id))
@@ -1026,18 +1044,18 @@ public class InvoiceService {
                                        String partyName, String notes,
                                        List<InvoiceItemForm> itemForms,
                                        QuarryCategory quarryCategory) {
-        return viewMapper.toRef(createInvoice(invoiceNo, invoiceDate, dueDate, invoiceType, department, customerId,
+        return invoiceMapper.toRef(createInvoice(invoiceNo, invoiceDate, dueDate, invoiceType, department, customerId,
                 supplierId, targetDepartment, projectId, taxRate, directExpense, status, partyName, notes, itemForms,
                 quarryCategory));
     }
 
     @Transactional
     public InvoiceRef finalizeInvoiceRef(Long invoiceId) {
-        return viewMapper.toRef(finalizeInvoice(invoiceId));
+        return invoiceMapper.toRef(finalizeInvoice(invoiceId));
     }
 
     @Transactional
     public InvoiceRef cancelInvoiceRef(Long invoiceId, String reason) {
-        return viewMapper.toRef(cancelInvoice(invoiceId, reason));
+        return invoiceMapper.toRef(cancelInvoice(invoiceId, reason));
     }
 }

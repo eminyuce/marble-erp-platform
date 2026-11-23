@@ -40,7 +40,9 @@ class ExpenseServiceTest {
 
     @BeforeEach
     void setUp() {
-        expenseService = new ExpenseService(costTransactionRepository, costCenterRepository, costPeriodCloseRepository);
+        expenseService = new ExpenseService(costTransactionRepository, costCenterRepository, costPeriodCloseRepository,
+                org.mockito.Mockito.mock(com.ozerler.marble.repository.ProjectRepository.class),
+                org.mockito.Mockito.mock(com.ozerler.marble.repository.QuarryRepository.class));
     }
 
     @Test

@@ -1,0 +1,54 @@
+package com.ozerler.marble.dto.view;
+
+import com.ozerler.marble.model.enums.SupplyRoute;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+public final class SiteViews {
+    private SiteViews() {
+    }
+
+    @Getter
+    @Setter
+    public static class LocationView {
+        private Long id;
+        private String locationName;
+        private String stoneSpec;
+        private String status;
+        private String statusLabel;
+        private BigDecimal installedAreaM2;
+        private BigDecimal plannedAreaM2;
+        private BigDecimal progressPercentage;
+
+        public BigDecimal getProgressPercentage() {
+            return progressPercentage;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class ConsumptionView {
+        private String itemName;
+        private BigDecimal quantity;
+        private String unit;
+        private BigDecimal unitCost;
+    }
+
+    @Getter
+    @Setter
+    public static class PlanView {
+        private String stoneType;
+        private BigDecimal plannedAreaM2;
+        private BigDecimal requiredAreaM2;
+        private SupplyRoute supplyRoute;
+        private LocationView location;
+    }
+
+    @Getter
+    @Setter
+    public static class InstallationView {
+        private LocationView location;
+    }
+}

@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.repository.*;
@@ -14,8 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -92,6 +97,99 @@ public class FactoryStockService {
         Block saved = blockRepository.save(block);
         stockMovementService.recordBlockCuttingStart(saved, notes);
         return saved;
+    }
+
+    public record BlockYardFigures(int count, BigDecimal weightTon, BigDecimal costValue, BigDecimal saleValue) {
+    }
+
+    @Transactional(readOnly = true)
+    public BlockYardFigures factoryBlockFigures(Long customerId, boolean generalStockOnly) {
+        List<Block> blocks = getFactoryUncutBlocks(customerId, generalStockOnly);
+        BigDecimal weight = BigDecimal.ZERO;
+        BigDecimal cost = BigDecimal.ZERO;
+        BigDecimal sale = BigDecimal.ZERO;
+        for (Block block : blocks) {
+            weight = weight.add(block.getActualTonnage() != null ? block.getActualTonnage()
+                    : block.getApproximateTonnage() != null ? block.getApproximateTonnage() : BigDecimal.ZERO);
+            BigDecimal lineCost = block.getTotalCost() != null ? block.getTotalCost() : BigDecimal.ZERO;
+            cost = cost.add(lineCost);
+            sale = sale.add(saleValue(block, lineCost));
+        }
+        return new BlockYardFigures(blocks.size(), weight, cost, sale);
+    }
+
+    @Transactional(readOnly = true)
+    public TabulatorResponse<Map<String, Object>> factoryBlockRows(int page, int size, String search,
+                                                                   Long customerId, boolean generalStockOnly) {
+        Page<Block> blocksPage = getFactoryUncutBlocksPaged(customerId, generalStockOnly, search, Math.max(0, page - 1), size);
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        List<Map<String, Object>> data = blocksPage.getContent().stream().map(block -> blockRow(block, dateFmt))
+                .collect(Collectors.toList());
+        return TabulatorResponse.of(data, blocksPage.getTotalPages(), blocksPage.getTotalElements());
+    }
+
+    @Transactional
+    public String assignCustomerMessage(Long blockId, Long customerId) {
+        Block block = assignCustomerToBlock(blockId, customerId);
+        String custName = block.getAssignedCustomer() != null ? block.getAssignedCustomer().getCompanyName() : "Genel Stok";
+        return "Blok (" + block.getBlockCode() + ") müşterisi güncellendi: " + custName;
+    }
+
+    @Transactional
+    public String dispatchCuttingMessage(Long blockId, String notes) {
+        Block block = dispatchBlockToCutting(blockId, notes);
+        return "Blok (" + block.getBlockCode() + ") kesime alındı. Kesilmemiş blok stokundan düşüldü.";
+    }
+
+    @Transactional
+    public String receiveAtFactoryMessage(Long blockId) {
+        Block block = receiveBlockAtFactory(blockId);
+        return "Blok (" + block.getBlockCode() + ") başarıyla fabrika stok sahasına kabul edildi.";
+    }
+
+    private static BigDecimal saleValue(Block block, BigDecimal cost) {
+        if (block.getSalePrice() != null && block.getSalePrice().compareTo(BigDecimal.ZERO) > 0) {
+            return block.getSalePrice();
+        }
+        if (block.getUnitMarketValuePerTon() != null && block.getUnitMarketValuePerTon().compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage()
+                    : block.getApproximateTonnage() != null ? block.getApproximateTonnage() : BigDecimal.ZERO;
+            return block.getUnitMarketValuePerTon().multiply(ton);
+        }
+        return cost;
+    }
+
+    private static Map<String, Object> blockRow(Block block, DateTimeFormatter dateFmt) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", block.getId());
+        map.put("blockCode", block.getBlockCode());
+        map.put("stoneType", block.getStoneType() != null ? block.getStoneType() : "—");
+        map.put("quarryName", block.getQuarry() != null ? block.getQuarry().getName()
+                : block.getQuarryName() != null ? block.getQuarryName() : "Merkez Ocak");
+        map.put("arrivalDate", block.getArrivalDate() != null ? block.getArrivalDate().format(dateFmt)
+                : block.getCreatedDate() != null ? block.getCreatedDate().format(dateFmt) : "—");
+        map.put("estimatedTonnage", block.getEstimatedTonnage() != null ? block.getEstimatedTonnage()
+                : block.getApproximateTonnage());
+        map.put("actualTonnage", block.getActualTonnage());
+        map.put("dimensions", block.getDimensions() != null ? block.getDimensions() : "—");
+        map.put("customerName", block.getAssignedCustomer() != null ? block.getAssignedCustomer().getCompanyName() : null);
+        map.put("customerId", block.getAssignedCustomer() != null ? block.getAssignedCustomer().getId() : null);
+        map.put("isGeneralStock", block.getAssignedCustomer() == null);
+        map.put("statusLabel", "Kesilmemiş Blok");
+        map.put("notes", block.getNotes() != null ? block.getNotes() : "");
+        BigDecimal cost = block.getTotalCost() != null ? block.getTotalCost() : BigDecimal.ZERO;
+        BigDecimal saleOrMarket = block.getSalePrice();
+        if ((saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) && block.getUnitMarketValuePerTon() != null) {
+            BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage()
+                    : block.getApproximateTonnage() != null ? block.getApproximateTonnage() : BigDecimal.ZERO;
+            saleOrMarket = block.getUnitMarketValuePerTon().multiply(ton).setScale(2, RoundingMode.HALF_UP);
+        }
+        if (saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) {
+            saleOrMarket = cost;
+        }
+        map.put("totalCost", cost);
+        map.put("salePrice", saleOrMarket);
+        return map;
     }
 
     // --- 2. FABRİKA PLAKA STOK SAHASI ---

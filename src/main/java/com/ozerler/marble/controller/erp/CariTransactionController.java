@@ -6,7 +6,6 @@ import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.CariSummaryDto;
 import com.ozerler.marble.dto.CariTransactionDto;
 import com.ozerler.marble.model.CariTransaction;
-import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CariTransactionType;
 import com.ozerler.marble.model.enums.CustomerType;
@@ -36,12 +35,11 @@ public class CariTransactionController extends AbstractController {
 
     @GetMapping("/admin/definitions/customers/{customerId}/transactions")
     public String viewTransactions(@PathVariable("customerId") Long customerId, Model model) {
-        Customer customer = formLookup.customer(customerId)
-                .orElseThrow(() -> new IllegalArgumentException("Cari kart bulunamadı: " + customerId));
+        var customer = formLookup.getCustomer(customerId);
 
         List<CariTransactionDto> transactions = cariTransactionService.getTransactionsForCustomer(customerId);
         CariSummaryDto summary = cariTransactionService.getCustomerSummary(customerId);
-        List<com.ozerler.marble.model.Project> projects = formLookup.projectsForCustomer(customerId);
+        var projects = formLookup.projectsForCustomer(customerId);
 
         model.addAttribute("customer", customer);
         model.addAttribute("customerTypeLabel", labelOf(customer.getCustomerType()));

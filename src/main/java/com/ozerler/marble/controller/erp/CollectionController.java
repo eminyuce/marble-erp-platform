@@ -103,7 +103,7 @@ public class CollectionController extends AbstractController {
                                     @RequestParam(value = "customerId", required = false) Long customerId,
                                     Model model) {
 
-        Invoice invoice = invoiceId != null ? formLookup.invoiceWithCustomer(invoiceId).orElse(null) : null;
+        var invoice = formLookup.findInvoiceWithCustomer(invoiceId);
         if (invoice != null && invoice.getCustomer() != null && customerId == null) {
             customerId = invoice.getCustomer().getId();
         }

@@ -83,7 +83,7 @@ class InvoiceServiceTest {
                 factoryInventoryService,
                 blockCustomerMarkRepository,
                 cariTransactionService,
-                org.mockito.Mockito.mock(com.ozerler.marble.mapper.ErpViewMapper.class)
+                org.mockito.Mockito.mock(com.ozerler.marble.mapper.InvoiceMapper.class)
         );
     }
 

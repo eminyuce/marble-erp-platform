@@ -3,7 +3,6 @@ package com.ozerler.marble.controller.erp;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.ProjectDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.enums.ConsumptionType;
 import com.ozerler.marble.model.enums.ProjectStatus;
 import com.ozerler.marble.model.enums.SupplyRoute;
@@ -61,7 +60,10 @@ public class ProjectController {
                 projectSiteService.getProjectsPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, customerId, query.sortKey(), query.sortDirection()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         if (customerId != null) {
-            formLookup.customer(customerId).ifPresent(c -> model.addAttribute("selectedCustomerName", c.getCompanyName()));
+            var selected = formLookup.findCustomer(customerId);
+            if (selected != null) {
+                model.addAttribute("selectedCustomerName", selected.getCompanyName());
+            }
         }
         return "erp/projects/index";
     }
@@ -120,7 +122,7 @@ public class ProjectController {
 
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
-        Project project = projectSiteService.getProjectById(id);
+        var project = formLookup.getProject(id);
         model.addAttribute("customers", formLookup.customersByCompanyName());
         model.addAttribute("project", project);
         model.addAttribute("record", project);
@@ -154,14 +156,14 @@ public class ProjectController {
 
     @GetMapping("/{id}")
     public String projectDetail(@PathVariable("id") Long id, Model model) {
-        Project project = projectSiteService.getProjectById(id);
+        var project = formLookup.getProject(id);
         model.addAttribute("project", project);
         model.addAttribute("locations", projectSiteService.getLocationsByProject(id));
         model.addAttribute("consumptions", projectSiteService.getConsumptionsByProject(id));
         model.addAttribute("consumptionTypes", ConsumptionType.values());
         model.addAttribute("stonePlans", constructionSiteService.plansFor(id));
         model.addAttribute("installations", constructionSiteService.installationsFor(id));
-        model.addAttribute("profit", costAnalysisService.profitFor(project));
+        model.addAttribute("profit", costAnalysisService.profitFor(id));
         model.addAttribute("supplyRoutes", SupplyRoute.values());
         model.addAttribute("surfaceFinishes", SurfaceFinish.values());
         model.addAttribute("siteStockItems", formLookup.stockForProject(id));

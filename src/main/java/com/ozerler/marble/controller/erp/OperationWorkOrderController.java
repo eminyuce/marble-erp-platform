@@ -99,9 +99,7 @@ public class OperationWorkOrderController extends AbstractController {
                                @RequestParam(value = "customerId", required = false) Long customerId,
                                Model model) {
 
-        SalesOrderItem orderItem = orderItemId != null
-                ? formLookup.salesOrderItem(orderItemId).orElse(null)
-                : null;
+        var orderItem = formLookup.findSalesOrderItem(orderItemId);
 
         BigDecimal prefillCount = null;
         String prefillNotes = "";
@@ -114,11 +112,11 @@ public class OperationWorkOrderController extends AbstractController {
             if (orderItem.getSlab() != null && slabId == null) {
                 slabId = orderItem.getSlab().getId();
             }
-            if (customerId == null && orderItem.getSalesOrder() != null && orderItem.getSalesOrder().getCustomer() != null) {
-                customerId = orderItem.getSalesOrder().getCustomer().getId();
+            if (customerId == null) {
+                customerId = orderItem.getCustomerId();
             }
             model.addAttribute("prefillOrderItem", orderItem);
-            prefillNotes = "Sipariş: " + (orderItem.getSalesOrder() != null ? orderItem.getSalesOrder().getOrderNo() : "")
+            prefillNotes = "Sipariş: " + (orderItem.getOrderNo() != null ? orderItem.getOrderNo() : "")
                     + " | Kalem: " + orderItem.getDescription();
             if (orderItem.getBlock() != null && orderItem.getBlock().getStoneType() != null) {
                 prefillStoneType = orderItem.getBlock().getStoneType();
@@ -130,15 +128,13 @@ public class OperationWorkOrderController extends AbstractController {
             }
         }
 
-        Slab selectedSlab = slabId != null ? formLookup.slab(slabId).orElse(null) : null;
-        StockItem selectedStockItem = stockItemId != null ? formLookup.stockItem(stockItemId).orElse(null) : null;
-        Block selectedBlock = blockId != null ? formLookup.block(blockId).orElse(null) : null;
+        var selectedSlab = formLookup.findSlab(slabId);
+        var selectedStockItem = formLookup.findStockItem(stockItemId);
+        var selectedBlock = formLookup.findBlock(blockId);
 
-        List<Block> availableBlocks = formLookup.blocksInStatus(
-                List.of(BlockStatus.AT_FACTORY, BlockStatus.FACTORY_STOCK, BlockStatus.PRODUCED, BlockStatus.QUARRY, BlockStatus.EXTRACTED, BlockStatus.MARKED)
-        );
-        if (selectedBlock != null && !availableBlocks.contains(selectedBlock)) {
-            availableBlocks = new ArrayList<>(availableBlocks);
+        var availableBlocks = new java.util.ArrayList<>(formLookup.blocksInStatus(
+                List.of(BlockStatus.AT_FACTORY, BlockStatus.FACTORY_STOCK, BlockStatus.PRODUCED, BlockStatus.QUARRY, BlockStatus.EXTRACTED, BlockStatus.MARKED)));
+        if (selectedBlock != null && availableBlocks.stream().noneMatch(block -> block.getId().equals(selectedBlock.getId()))) {
             availableBlocks.add(0, selectedBlock);
         }
 

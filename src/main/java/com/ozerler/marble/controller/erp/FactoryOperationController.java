@@ -66,40 +66,18 @@ public class FactoryOperationController extends AbstractController {
                             @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
                             @ModelAttribute ListQuery query, Model model) {
 
-        List<Block> blocks = factoryStockService.getFactoryUncutBlocks(customerId, generalStockOnly);
-        List<Block> incomingBlocks = factoryStockService.getIncomingBlocksInTransit();
+        var figures = factoryStockService.factoryBlockFigures(customerId, generalStockOnly);
         var customers = formLookup.customers();
 
-        BigDecimal totalWeightTon = blocks.stream()
-                .map(b -> b.getActualTonnage() != null ? b.getActualTonnage() : b.getApproximateTonnage())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalCostValue = blocks.stream()
-                .map(b -> b.getTotalCost() != null ? b.getTotalCost() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalSaleValue = blocks.stream()
-                .map(b -> {
-                    if (b.getSalePrice() != null && b.getSalePrice().compareTo(BigDecimal.ZERO) > 0) {
-                        return b.getSalePrice();
-                    }
-                    if (b.getUnitMarketValuePerTon() != null && b.getUnitMarketValuePerTon().compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal ton = b.getActualTonnage() != null ? b.getActualTonnage() : b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO;
-                        return b.getUnitMarketValuePerTon().multiply(ton);
-                    }
-                    return b.getTotalCost() != null ? b.getTotalCost() : BigDecimal.ZERO;
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        model.addAttribute("blocks", blocks);
-        model.addAttribute("incomingBlocks", incomingBlocks);
+        model.addAttribute("blocks", factoryStockService.getFactoryUncutBlocks(customerId, generalStockOnly));
+        model.addAttribute("incomingBlocks", factoryStockService.getIncomingBlocksInTransit());
         model.addAttribute("customers", customers);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("generalStockOnly", generalStockOnly);
-        model.addAttribute("totalBlockCount", blocks.size());
-        model.addAttribute("totalWeightTon", totalWeightTon);
-        model.addAttribute("totalCostValue", totalCostValue);
-        model.addAttribute("totalSaleValue", totalSaleValue);
+        model.addAttribute("totalBlockCount", figures.count());
+        model.addAttribute("totalWeightTon", figures.weightTon());
+        model.addAttribute("totalCostValue", figures.costValue());
+        model.addAttribute("totalSaleValue", figures.saleValue());
         model.addAttribute("grid", OperationFactoryBlockGrid.view(
                 factoryStockService.getFactoryUncutBlocksPaged(customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
@@ -118,43 +96,7 @@ public class FactoryOperationController extends AbstractController {
             @RequestParam(value = "customerId", required = false) Long customerId,
             @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly) {
 
-        int pageIndex = Math.max(0, page - 1);
-        Page<Block> blocksPage = factoryStockService.getFactoryUncutBlocksPaged(customerId, generalStockOnly, search, pageIndex, size);
-
-        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-        List<Map<String, Object>> data = blocksPage.getContent().stream().map(b -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", b.getId());
-            map.put("blockCode", b.getBlockCode());
-            map.put("stoneType", b.getStoneType() != null ? b.getStoneType() : "—");
-            map.put("quarryName", b.getQuarry() != null ? b.getQuarry().getName() : b.getQuarryName() != null ? b.getQuarryName() : "Merkez Ocak");
-            map.put("arrivalDate", b.getArrivalDate() != null ? b.getArrivalDate().format(dateFmt) : b.getCreatedDate() != null ? b.getCreatedDate().format(dateFmt) : "—");
-            map.put("estimatedTonnage", b.getEstimatedTonnage() != null ? b.getEstimatedTonnage() : b.getApproximateTonnage() != null ? b.getApproximateTonnage() : null);
-            map.put("actualTonnage", b.getActualTonnage());
-            map.put("dimensions", b.getDimensions() != null ? b.getDimensions() : "—");
-            map.put("customerName", b.getAssignedCustomer() != null ? b.getAssignedCustomer().getCompanyName() : null);
-            map.put("customerId", b.getAssignedCustomer() != null ? b.getAssignedCustomer().getId() : null);
-            map.put("isGeneralStock", b.getAssignedCustomer() == null);
-            map.put("statusLabel", "Kesilmemiş Blok");
-            map.put("notes", b.getNotes() != null ? b.getNotes() : "");
-
-            BigDecimal cost = b.getTotalCost() != null ? b.getTotalCost() : BigDecimal.ZERO;
-            BigDecimal saleOrMarket = b.getSalePrice();
-            if ((saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) && b.getUnitMarketValuePerTon() != null) {
-                BigDecimal ton = b.getActualTonnage() != null ? b.getActualTonnage() : b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO;
-                saleOrMarket = b.getUnitMarketValuePerTon().multiply(ton).setScale(2, RoundingMode.HALF_UP);
-            }
-            if (saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) {
-                saleOrMarket = cost;
-            }
-            map.put("totalCost", cost);
-            map.put("salePrice", saleOrMarket);
-
-            return map;
-        }).collect(Collectors.toList());
-
-        return TabulatorResponse.of(data, blocksPage.getTotalPages(), blocksPage.getTotalElements());
+        return factoryStockService.factoryBlockRows(page, size, search, customerId, generalStockOnly);
     }
 
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
@@ -163,9 +105,7 @@ public class FactoryOperationController extends AbstractController {
                                         @RequestParam(value = "customerId", required = false) Long customerId,
                                         RedirectAttributes redirectAttributes) {
         try {
-            Block block = factoryStockService.assignCustomerToBlock(id, customerId);
-            String custName = block.getAssignedCustomer() != null ? block.getAssignedCustomer().getCompanyName() : "Genel Stok";
-            redirectAttributes.addFlashAttribute("successMessage", "Blok (" + block.getBlockCode() + ") müşterisi güncellendi: " + custName);
+            redirectAttributes.addFlashAttribute("successMessage", factoryStockService.assignCustomerMessage(id, customerId));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
@@ -178,8 +118,7 @@ public class FactoryOperationController extends AbstractController {
                                          @RequestParam(value = "notes", required = false) String notes,
                                          RedirectAttributes redirectAttributes) {
         try {
-            Block block = factoryStockService.dispatchBlockToCutting(id, notes);
-            redirectAttributes.addFlashAttribute("successMessage", "Blok (" + block.getBlockCode() + ") kesime alındı. Kesilmemiş blok stokundan düşüldü.");
+            redirectAttributes.addFlashAttribute("successMessage", factoryStockService.dispatchCuttingMessage(id, notes));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
@@ -190,8 +129,7 @@ public class FactoryOperationController extends AbstractController {
     @PostMapping("/blocks/{id}/receive")
     public String receiveBlock(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
-            Block block = factoryStockService.receiveBlockAtFactory(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Blok (" + block.getBlockCode() + ") başarıyla fabrika stok sahasına kabul edildi.");
+            redirectAttributes.addFlashAttribute("successMessage", factoryStockService.receiveAtFactoryMessage(id));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }

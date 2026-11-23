@@ -76,6 +76,12 @@ public class CostAnalysisService {
     }
 
     @Transactional(readOnly = true)
+    public SiteProfitDto profitFor(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new com.ozerler.marble.exception.ProjectNotFoundException(projectId));
+        return profitFor(project);
+    }
+
     public SiteProfitDto profitFor(Project project) {
         return profitFor(project, categoryMap(costTransactionRepository.sumCategoriesByProjectId(project.getId())));
     }
