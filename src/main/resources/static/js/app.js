@@ -520,6 +520,31 @@ function closeGridActionsMenu(restoreFocus) {
     }
 }
 
+function positionGridActionsMenu(triggerRect, menuSize, viewport) {
+    var gap = 4;
+    var margin = 8;
+    var left = triggerRect.left;
+    var top = triggerRect.bottom + gap;
+    if (top + menuSize.height > viewport.height - margin) {
+        var flipped = triggerRect.top - menuSize.height - gap;
+        if (flipped >= margin) {
+            top = flipped;
+        } else {
+            top = Math.max(margin, viewport.height - menuSize.height - margin);
+        }
+    }
+    if (left + menuSize.width > viewport.width - margin) {
+        left = viewport.width - menuSize.width - margin;
+    }
+    if (left < margin) {
+        left = margin;
+    }
+    if (top < margin) {
+        top = margin;
+    }
+    return {left: left, top: top};
+}
+
 function toggleGridActions(event, btn) {
     event.stopPropagation();
     event.preventDefault();
@@ -549,16 +574,21 @@ function toggleGridActions(event, btn) {
     if (isCompact) {
         menu.classList.add('grid-actions-portal--sheet');
         menu.style.cssText = 'position:fixed;left:12px;right:12px;bottom:max(12px, env(safe-area-inset-bottom));top:auto;z-index:9999;';
+        document.body.appendChild(menu);
     } else {
-        var rect = btn.getBoundingClientRect();
-        var spaceBelow = window.innerHeight - rect.bottom;
-        var top = spaceBelow > 220 ? (rect.bottom + 4) : Math.max(8, rect.top - 8);
-        var right = window.innerWidth - rect.right;
-        menu.style.cssText = 'position:fixed;top:' + top + 'px;right:' + right + 'px;z-index:9999;';
-        if (spaceBelow <= 220) menu.style.transform = 'translateY(-100%)';
+        menu.style.cssText = 'position:fixed;visibility:hidden;left:0;top:0;z-index:9999;';
+        document.body.appendChild(menu);
+        var placed = positionGridActionsMenu(
+            btn.getBoundingClientRect(),
+            {width: menu.offsetWidth, height: menu.offsetHeight},
+            {width: window.innerWidth, height: window.innerHeight}
+        );
+        menu.style.left = placed.left + 'px';
+        menu.style.top = placed.top + 'px';
+        menu.style.right = 'auto';
+        menu.style.visibility = 'visible';
     }
 
-    document.body.appendChild(menu);
     if (window.lucide) lucide.createIcons({nodes: [menu]});
     if (window.htmx) htmx.process(menu);
 
@@ -663,6 +693,7 @@ window.erpStatusBadge = erpStatusBadge;
 window.erpResponsiveCollapseColumn = erpResponsiveCollapseColumn;
 window.erpIndexColumn = erpIndexColumn;
 window.gridActionsHtml = gridActionsHtml;
+window.positionGridActionsMenu = positionGridActionsMenu;
 window.toggleGridActions = toggleGridActions;
 window.closeGridActionsMenu = closeGridActionsMenu;
 window.invokeGridAction = invokeGridAction;
