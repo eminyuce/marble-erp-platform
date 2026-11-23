@@ -16,6 +16,11 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
+  session:
+    jdbc:
+      # This profile uses an H2 file database and does not run Flyway.
+      # embedded creates SPRING_SESSION only when the database is embedded.
+      initialize-schema: embedded
   thymeleaf:
     cache: false
 

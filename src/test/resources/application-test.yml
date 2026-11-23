@@ -10,6 +10,10 @@ spring:
     show-sql: false
   flyway:
     enabled: false
+  session:
+    jdbc:
+      # Tests use H2 with Flyway off. embedded applies Spring Session's H2 script.
+      initialize-schema: embedded
 
 server:
   port: 81

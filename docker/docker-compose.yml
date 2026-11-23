@@ -104,6 +104,10 @@ services:
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
       RUSTFS_BUCKET: ${RUSTFS_BUCKET:-erp-files}
       RUSTFS_REGION: ${RUSTFS_REGION:-us-east-1}
+      SESSION_STORE_TYPE: ${SESSION_STORE_TYPE:-jdbc}
+      SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      SESSION_CLEANUP_CRON: "${SESSION_CLEANUP_CRON:-0 * * * * *}"
     ports:
       - "${APP_PORT:-81}:81"
     volumes:
