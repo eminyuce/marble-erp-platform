@@ -13,7 +13,7 @@
 
     <groupId>com.ozerler</groupId>
     <artifactId>marble-erp-platform</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <name>Özerler Mermer ERP</name>
     <description>Enterprise Marble ERP Platform - Physical Traceability, Waste Management &amp; Dynamic Cost Accounting</description>
 
