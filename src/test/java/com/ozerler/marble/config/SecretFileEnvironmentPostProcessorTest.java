@@ -85,4 +85,32 @@ class SecretFileEnvironmentPostProcessorTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("readable");
     }
+
+    @Test
+    @DisplayName("non-secret path variables ending with _FILE such as deployment lock files are ignored")
+    void ignoresNonSecretPathVariablesEndingWithFile() throws Exception {
+        Path passwordFile = directory.resolve("db_password.txt");
+        Files.writeString(passwordFile, "correct-horse\n", StandardCharsets.UTF_8);
+        Path emptyLockFile = directory.resolve("inapp-deploy.lock");
+        Files.writeString(emptyLockFile, "", StandardCharsets.UTF_8);
+        Path missingLogFile = directory.resolve("inapp-deploy.log");
+
+        ConfigurableEnvironment environment = new StandardEnvironment() {
+            @Override
+            public Map<String, Object> getSystemEnvironment() {
+                return Map.of(
+                        "DB_PASSWORD_FILE", passwordFile.toString(),
+                        "APP_DEPLOYMENT_LOCK_FILE", emptyLockFile.toString(),
+                        "APP_DEPLOYMENT_LOG_FILE", missingLogFile.toString(),
+                        "APP_DEPLOYMENT_STATUS_FILE", missingLogFile.toString());
+            }
+        };
+
+        new SecretFileEnvironmentPostProcessor().postProcessEnvironment(environment, new SpringApplication());
+
+        Assertions.assertThat(environment.getProperty("DB_PASSWORD")).isEqualTo("correct-horse");
+        Assertions.assertThat(environment.getProperty("APP_DEPLOYMENT_LOCK")).isNull();
+        Assertions.assertThat(environment.getProperty("APP_DEPLOYMENT_LOG")).isNull();
+        Assertions.assertThat(environment.getProperty("APP_DEPLOYMENT_STATUS")).isNull();
+    }
 }
