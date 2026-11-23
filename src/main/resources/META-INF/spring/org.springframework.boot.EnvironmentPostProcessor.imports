@@ -1,2 +1,0 @@
-com.ozerler.marble.config.DatabaseUrlEnvironmentPostProcessor
-com.ozerler.marble.config.SecretFileEnvironmentPostProcessor
