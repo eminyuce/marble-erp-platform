@@ -16,12 +16,14 @@ docker compose -f docker/docker-compose.yml up -d rustfs postgres
 
 | Variable | Purpose | Local default |
 | :--- | :--- | :--- |
-| `RUSTFS_ENDPOINT` | S3 API used by Spring Boot | `http://localhost:9000` when the app runs on the host; `http://rustfs:9000` when the app runs in Compose |
-| `RUSTFS_PUBLIC_ENDPOINT` | Browser-facing endpoint for short-lived presigned URLs | `http://localhost:9000` |
-| `RUSTFS_ACCESS_KEY` | Access key (must match the RustFS container) | set locally; never commit production values |
-| `RUSTFS_SECRET_KEY` | Secret key (must match the RustFS container) | set locally; never commit production values |
-| `RUSTFS_BUCKET` | Private bucket name | `erp-files` |
+| `RUSTFS_ENDPOINT` | Internal S3 API (upload, delete, head) | `http://localhost:9000` on the host; `http://rustfs:9000` in Compose |
+| `RUSTFS_PUBLIC_ENDPOINT` | Host written into presigned URLs. Prod must be https behind Nginx | `http://localhost:9000` in dev; `https://files.example.com` in prod |
+| `RUSTFS_ACCESS_KEY` | Access key (must match the RustFS container) | dev placeholder; prod startup fails when empty |
+| `RUSTFS_SECRET_KEY` | Secret key. Never log it | dev placeholder; prod startup fails when empty |
+| `RUSTFS_BUCKET` | Private bucket. No permanent public URL | `erp-files` |
 | `RUSTFS_REGION` | S3 region string | `us-east-1` |
+| `PRESIGNED_IMAGE_EXPIRY_MINUTES` | Image link lifetime | `30` |
+| `PRESIGNED_DOCUMENT_EXPIRY_MINUTES` | Document link lifetime | `5` |
 | `STORAGE_TYPE` | `rustfs` in every real environment | `rustfs` |
 
 3. Endpoints:
@@ -29,13 +31,24 @@ docker compose -f docker/docker-compose.yml up -d rustfs postgres
 - RustFS API: `http://localhost:9000`
 - RustFS Console: `http://localhost:9001`
 
-The application creates the configured bucket on startup if it is missing. The bucket is private. Downloads go through authenticated Spring Boot endpoints (`/api/upload/view/{id}`, `/api/upload/download/{id}`) or a short-lived presigned URL from `GET /api/upload/{id}/download-url`.
+The application creates the configured bucket on startup if it is missing. The bucket is private. The browser loads images with a presigned URL generated on each page render (`<img th:src="${presignedImageUrl}" />` on the block photo pages). Documents use `GET /api/upload/{id}/download-url`, which checks authorization first and returns `{ "url", "expiresInSeconds", "expiresAt" }`. Image links last 30 minutes (`X-Amz-Expires=1800`). Other files last 5 minutes (`X-Amz-Expires=300`). Those URLs are never stored.
+
+### Manual test
+
+1. Run `./scripts/run_local.sh` so the host JVM uses `http://localhost:9000` for both endpoints.
+2. Open `http://localhost:8080/blocks/{id}` for a block that has a photo.
+3. The image `src` is `http://localhost:9000/...` and contains `X-Amz-Expires=1800`. Opening it loads the file from RustFS.
+4. After 31 minutes the same URL returns an expired signature (`AccessDenied`). There is no permanent public object URL.
+
+Set `PRESIGNED_IMAGE_EXPIRY_MINUTES=15` before startup to shorten image links without changing code.
+
+Clock skew between this process and RustFS can expire a new URL immediately. An https page that embeds an http RustFS URL is mixed content. JavaScript `fetch` of the presigned URL needs CORS on the public RustFS host; an `<img>` tag does not.
 
 ### IDE vs Docker networking
 
 | How Spring Boot runs | `RUSTFS_ENDPOINT` |
 | :--- | :--- |
-| From the IDE / `./mvnw spring-boot:run` | `http://localhost:9000` |
+| From the IDE / `./mvnw spring-boot:run` | `http://localhost:9000` (export it; the dev profile default is `http://rustfs:9000`) |
 | Inside Docker Compose (`app` service) | `http://rustfs:9000` |
 
 Do not hardcode either value in Java. Use environment variables.
@@ -66,7 +79,7 @@ Native JAR installs (systemd) should still run RustFS in Docker and point the JA
 
 ```bash
 RUSTFS_ENDPOINT=http://127.0.0.1:9000
-RUSTFS_PUBLIC_ENDPOINT=https://files.example.com   # only if RustFS is reverse-proxied
+RUSTFS_PUBLIC_ENDPOINT=https://files.example.com   # required in prod: https behind Nginx or another reverse proxy
 RUSTFS_ACCESS_KEY=...
 RUSTFS_SECRET_KEY=...
 RUSTFS_BUCKET=erp-files

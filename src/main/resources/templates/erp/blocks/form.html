@@ -215,7 +215,7 @@
                                    title="Önizlemek için tıklayın">
                                     <!-- Görsel Önizleme veya Dosya İkonu -->
                                     <div class="w-10 h-10 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-200 shadow-2xs">
-                                        <img th:if="${file.image}" th:src="${file.filePath}" alt="Ek" class="w-full h-full object-cover">
+                                        <img th:if="${file.image}" th:src="${file.presignedImageUrl} ?: ${file.filePath}" alt="Ek" class="w-full h-full object-cover">
                                         <span th:if="${file.pdf}" class="text-xs font-bold text-rose-600">PDF</span>
                                         <span th:if="${file.excel}" class="text-xs font-bold text-emerald-600">XLS</span>
                                         <span th:if="${file.csv}" class="text-xs font-bold text-teal-600">CSV</span>

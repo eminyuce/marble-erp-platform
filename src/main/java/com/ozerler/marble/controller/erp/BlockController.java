@@ -7,6 +7,7 @@ import com.ozerler.marble.dto.BlockDto;
 import com.ozerler.marble.dto.FileStorageDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.FileStorage;
 import com.ozerler.marble.model.BlockCustomerMark;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.QualityGrade;
@@ -173,7 +174,7 @@ public class BlockController extends AbstractController {
         model.addAttribute("canDelete", quarryBlockService.canDeleteBlock(block));
 
         List<FileStorageDto> attachedFiles = fileStorageService.getFilesForEntity("BLOCK", id).stream()
-                .map(FileStorageDto::fromEntity)
+                .map(file -> toFileView(file))
                 .toList();
         model.addAttribute("attachedFiles", attachedFiles);
         model.addAttribute("imageFiles", attachedFiles.stream().filter(f -> f != null && f.isImage()).toList());
@@ -227,6 +228,7 @@ public class BlockController extends AbstractController {
         model.addAttribute("block", block);
         model.addAttribute("imageFiles", images);
         model.addAttribute("currentImage", currentImage);
+        model.addAttribute("presignedImageUrl", currentImage.getPresignedImageUrl());
         model.addAttribute("currentIndex", currentIndex);
         model.addAttribute("previousImage", previousImage);
         model.addAttribute("nextImage", nextImage);
@@ -242,7 +244,7 @@ public class BlockController extends AbstractController {
         model.addAttribute("isEdit", true);
 
         List<FileStorageDto> attachedFiles = fileStorageService.getFilesForEntity("BLOCK", id).stream()
-                .map(FileStorageDto::fromEntity)
+                .map(file -> toFileView(file))
                 .toList();
         model.addAttribute("attachedFiles", attachedFiles);
 
@@ -290,7 +292,7 @@ public class BlockController extends AbstractController {
                 model.addAttribute("block", block);
                 model.addAttribute("currentLocationType", block.getCurrentLocation() != null ? block.getCurrentLocation().getLocationType() : StockLocationType.PRODUCTION_YARD);
                 List<FileStorageDto> attachedFiles = fileStorageService.getFilesForEntity("BLOCK", id).stream()
-                        .map(FileStorageDto::fromEntity)
+                        .map(file -> toFileView(file))
                         .toList();
                 model.addAttribute("attachedFiles", attachedFiles);
             } catch (Exception ignored) {
@@ -729,9 +731,21 @@ public class BlockController extends AbstractController {
         return StockLocationType.PRODUCTION_YARD;
     }
 
+    private FileStorageDto toFileView(FileStorage file) {
+        FileStorageDto dto = FileStorageDto.fromEntity(file);
+        if (dto == null) {
+            return null;
+        }
+        String presignedImageUrl = fileStorageService.presignedImageUrlFor(file);
+        if (presignedImageUrl != null) {
+            dto.setPresignedImageUrl(presignedImageUrl);
+        }
+        return dto;
+    }
+
     private List<FileStorageDto> listBlockImages(Long blockId) {
         return fileStorageService.getFilesForEntity("BLOCK", blockId).stream()
-                .map(FileStorageDto::fromEntity)
+                .map(file -> toFileView(file))
                 .filter(f -> f != null && f.isImage())
                 .toList();
     }

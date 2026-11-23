@@ -199,6 +199,13 @@ class DeploymentServiceTest {
         assertThat(script).contains("rollback-previous");
         assertThat(script).contains("last-known-good.env");
         assertThat(script).contains("/health/");
+        assertThat(script).contains("Yayın öncesi — teknik özet");
+        assertThat(script).contains("Yayın sonrası — teknik özet");
+        assertThat(script).contains("SONUÇ: BAŞARILI");
+        assertThat(script).contains("Europe/Istanbul");
+        assertThat(script).contains("/actuator/info");
+        assertThat(script).doesNotContain("RUSTFS_SECRET_KEY");
+        assertThat(script).doesNotContain("DB_PASSWORD");
         assertThat(script).doesNotContain("down -v");
         assertThat(script).doesNotContain("volume rm");
         assertThat(script).doesNotContain("volume prune");

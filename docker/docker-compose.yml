@@ -98,12 +98,16 @@ services:
       APP_UPLOAD_DIR: /app/uploads
       APP_MEDIA_DIR: /app/media
       STORAGE_TYPE: rustfs
-      RUSTFS_ENDPOINT: http://rustfs:9000
-      RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-http://localhost:9000}
+      # This service uses the prod profile, so the public endpoint must be https.
+      # Host-side dev (scripts/run_local.sh) uses http://localhost:9000 instead.
+      RUSTFS_ENDPOINT: ${RUSTFS_ENDPOINT:-http://rustfs:9000}
+      RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-https://files.example.com}
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
       RUSTFS_BUCKET: ${RUSTFS_BUCKET:-erp-files}
       RUSTFS_REGION: ${RUSTFS_REGION:-us-east-1}
+      PRESIGNED_IMAGE_EXPIRY_MINUTES: ${PRESIGNED_IMAGE_EXPIRY_MINUTES:-30}
+      PRESIGNED_DOCUMENT_EXPIRY_MINUTES: ${PRESIGNED_DOCUMENT_EXPIRY_MINUTES:-5}
       SESSION_STORE_TYPE: ${SESSION_STORE_TYPE:-jdbc}
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
       # This local stack publishes plain HTTP. The prod profile would otherwise

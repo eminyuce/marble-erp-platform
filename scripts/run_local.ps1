@@ -143,6 +143,13 @@ Write-Host "Email:       admin@eimece.test" -ForegroundColor White
 Write-Host "Pass:        B2u5c8JB" -ForegroundColor White
 Write-Host ""
 Write-Host "[APP] Starting Spring Boot (dev profile)..." -ForegroundColor Yellow
+Write-Host "Dev profile defaults RUSTFS_ENDPOINT to http://rustfs:9000 (Compose DNS)." -ForegroundColor Yellow
+Write-Host "This host-side run overrides it to http://localhost:9000." -ForegroundColor Yellow
+
+if (-not $env:RUSTFS_ENDPOINT) { $env:RUSTFS_ENDPOINT = "http://localhost:9000" }
+if (-not $env:RUSTFS_PUBLIC_ENDPOINT) { $env:RUSTFS_PUBLIC_ENDPOINT = "http://localhost:9000" }
+if (-not $env:PRESIGNED_IMAGE_EXPIRY_MINUTES) { $env:PRESIGNED_IMAGE_EXPIRY_MINUTES = "30" }
+if (-not $env:PRESIGNED_DOCUMENT_EXPIRY_MINUTES) { $env:PRESIGNED_DOCUMENT_EXPIRY_MINUTES = "5" }
 
 & $mvnw spring-boot:run
 exit $LASTEXITCODE

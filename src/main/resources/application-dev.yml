@@ -44,12 +44,23 @@ app:
   storage:
     type: ${STORAGE_TYPE:rustfs}
     rustfs:
-      endpoint: ${RUSTFS_ENDPOINT:http://localhost:9000}
+      endpoint: ${RUSTFS_ENDPOINT:http://rustfs:9000}
       public-endpoint: ${RUSTFS_PUBLIC_ENDPOINT:http://localhost:9000}
       access-key: ${RUSTFS_ACCESS_KEY:marblerustfs}
       secret-key: ${RUSTFS_SECRET_KEY:marblerustfs_change_me}
       bucket: ${RUSTFS_BUCKET:erp-files}
       region: ${RUSTFS_REGION:us-east-1}
+
+# Dev default endpoint is the Compose DNS name. A host-side ./mvnw spring-boot:run
+# must set RUSTFS_ENDPOINT=http://localhost:9000 (scripts/run_local.sh does this).
+# The public endpoint is what the browser uses to fetch presigned URLs.
+rustfs:
+  endpoint: ${RUSTFS_ENDPOINT:http://rustfs:9000}
+  public-endpoint: ${RUSTFS_PUBLIC_ENDPOINT:http://localhost:9000}
+  access-key: ${RUSTFS_ACCESS_KEY:marblerustfs}
+  secret-key: ${RUSTFS_SECRET_KEY:marblerustfs_change_me}
+  bucket: ${RUSTFS_BUCKET:erp-files}
+  region: ${RUSTFS_REGION:us-east-1}
 
 rate-limiting:
   login:

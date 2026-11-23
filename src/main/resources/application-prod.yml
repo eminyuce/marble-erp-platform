@@ -63,6 +63,22 @@ app:
     allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.onrender.com}
   deployment:
     enabled: true
+  storage:
+    rustfs:
+      endpoint: ${RUSTFS_ENDPOINT:http://rustfs:9000}
+      public-endpoint: ${RUSTFS_PUBLIC_ENDPOINT:https://files.example.com}
+      bucket: ${RUSTFS_BUCKET:erp-files}
+      region: ${RUSTFS_REGION:us-east-1}
+
+# Public endpoint must be https on a public host. Startup fails otherwise.
+# RUSTFS_ENDPOINT stays on the internal Docker DNS name.
+rustfs:
+  endpoint: ${RUSTFS_ENDPOINT:http://rustfs:9000}
+  public-endpoint: ${RUSTFS_PUBLIC_ENDPOINT:https://files.example.com}
+  access-key: ${RUSTFS_ACCESS_KEY:}
+  secret-key: ${RUSTFS_SECRET_KEY:}
+  bucket: ${RUSTFS_BUCKET:erp-files}
+  region: ${RUSTFS_REGION:us-east-1}
 
 springdoc:
   api-docs:

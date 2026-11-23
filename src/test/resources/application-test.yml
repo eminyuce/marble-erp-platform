@@ -23,6 +23,21 @@ app:
     type: memory
     rustfs:
       endpoint: http://localhost:9000
+      public-endpoint: http://localhost:9000
       access-key: test-access-key
       secret-key: test-secret-key
       bucket: erp-files-test
+      region: us-east-1
+
+rustfs:
+  endpoint: http://localhost:9000
+  public-endpoint: http://localhost:9000
+  access-key: test-access-key
+  secret-key: test-secret-key
+  bucket: erp-files-test
+  region: us-east-1
+
+presigned:
+  url:
+    image-expiry-minutes: 30
+    document-expiry-minutes: 5

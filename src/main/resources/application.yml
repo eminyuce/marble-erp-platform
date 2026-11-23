@@ -151,7 +151,7 @@ app:
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
   version: "1.0.1"
-  asset-version: "20261110-settings-titles"
+  asset-version: "20261123-presigned-urls"
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy
@@ -169,6 +169,19 @@ app:
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:8080,http://127.0.0.1:8080}
     allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.trycloudflare.com}
+
+# Canonical RustFS settings. app.storage.rustfs repeats the same variable names
+# for the existing storage port (bucket name and browser access). Profile files
+# set endpoint and public-endpoint. Do not log the secret key.
+rustfs:
+  bucket: ${RUSTFS_BUCKET:erp-files}
+  region: ${RUSTFS_REGION:us-east-1}
+  access-key: ${RUSTFS_ACCESS_KEY:}
+  secret-key: ${RUSTFS_SECRET_KEY:}
+presigned:
+  url:
+    image-expiry-minutes: ${PRESIGNED_IMAGE_EXPIRY_MINUTES:30}
+    document-expiry-minutes: ${PRESIGNED_DOCUMENT_EXPIRY_MINUTES:5}
 
 springdoc:
   api-docs:

@@ -23,6 +23,18 @@ public interface ObjectStorageService {
 
     String createPresignedUrl(String objectKey, Duration expiration);
 
+    /**
+     * Browser GET for an image. Expiry comes from {@code presigned.url.image-expiry-minutes}
+     * (30 minutes unless overridden). Generated per call and never stored.
+     */
+    String presignedImageUrl(String objectKey);
+
+    /**
+     * Browser GET for a document. Expiry comes from {@code presigned.url.document-expiry-minutes}
+     * (5 minutes unless overridden). Generated per call and never stored.
+     */
+    String presignedDocumentUrl(String objectKey);
+
     DependencyHealth checkHealth();
 
     String getBucketName();

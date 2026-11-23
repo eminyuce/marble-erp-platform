@@ -1,7 +1,10 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.config.PresignedUrlProperties;
 import com.ozerler.marble.dto.DependencyHealth;
+import com.ozerler.marble.dto.FileStorageDto;
+import com.ozerler.marble.dto.PresignedDownload;
 import com.ozerler.marble.exception.FileAccessDeniedException;
 import com.ozerler.marble.exception.FileValidationException;
 import com.ozerler.marble.model.FileStorage;
@@ -27,7 +30,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,6 +66,7 @@ class FileStorageServiceTest {
                 messageSource,
                 objectStorageService,
                 properties,
+                new PresignedUrlProperties(),
                 validator,
                 new FileObjectKeyFactory());
     }
@@ -367,21 +370,90 @@ class FileStorageServiceTest {
     }
 
     @Test
-    @DisplayName("createPresignedDownloadUrl should authorize then ask object storage for a URL")
-    void createPresignedDownloadUrl_Success() {
+    @DisplayName("createPresignedDownload authorizes then signs a document for 5 minutes")
+    void createPresignedDownload_DocumentUsesShortExpiry() {
         FileStorage fs = FileStorage.builder()
                 .id(8L)
                 .objectKey("documents/block/1/a.pdf")
+                .originalName("a.pdf")
+                .mimeType("application/pdf")
                 .entityType("BLOCK")
                 .entityId(1L)
                 .build();
         when(fileStorageRepository.findByIdAndDeletedFalse(8L)).thenReturn(Optional.of(fs));
-        when(objectStorageService.createPresignedUrl("documents/block/1/a.pdf", Duration.ofMinutes(15)))
-                .thenReturn("http://localhost:9000/erp-files/documents/block/1/a.pdf?X-Amz-Expires=900");
+        when(objectStorageService.presignedDocumentUrl("documents/block/1/a.pdf"))
+                .thenReturn("http://localhost:9000/erp-files/documents/block/1/a.pdf?X-Amz-Expires=300");
 
-        String url = fileStorageService.createPresignedDownloadUrl(8L);
+        PresignedDownload download = fileStorageService.createPresignedDownload(8L);
 
-        assertThat(url).contains("erp-files");
+        assertThat(download.url()).contains("erp-files");
+        assertThat(download.expiresInSeconds()).isEqualTo(300);
+        assertThat(download.expiresAt()).isAfter(java.time.Instant.now());
+        verify(objectStorageService, never()).presignedImageUrl(anyString());
+    }
+
+    @Test
+    @DisplayName("createPresignedDownload signs an image for 30 minutes")
+    void createPresignedDownload_ImageUsesLongerExpiry() {
+        FileStorage fs = FileStorage.builder()
+                .id(9L)
+                .objectKey("images/block/1/a.jpg")
+                .originalName("a.jpg")
+                .mimeType("image/jpeg")
+                .entityType("BLOCK")
+                .entityId(1L)
+                .build();
+        when(fileStorageRepository.findByIdAndDeletedFalse(9L)).thenReturn(Optional.of(fs));
+        when(objectStorageService.presignedImageUrl("images/block/1/a.jpg"))
+                .thenReturn("http://localhost:9000/erp-files/images/block/1/a.jpg?X-Amz-Expires=1800");
+
+        PresignedDownload download = fileStorageService.createPresignedDownload(9L);
+
+        assertThat(download.expiresInSeconds()).isEqualTo(1800);
+        verify(objectStorageService, never()).presignedDocumentUrl(anyString());
+    }
+
+    @Test
+    @DisplayName("access is checked before a presigned URL is created")
+    void createPresignedDownload_UnauthorizedUser_DoesNotSign() {
+        FileStorage fs = FileStorage.builder()
+                .id(3L)
+                .objectKey("images/block/pending/a.jpg")
+                .originalName("a.jpg")
+                .mimeType("image/jpeg")
+                .entityType("BLOCK")
+                .build();
+        fs.setAddUserId("owner@example.com");
+        when(fileStorageRepository.findByIdAndDeletedFalse(3L)).thenReturn(Optional.of(fs));
+        authenticate("other@example.com", "ROLE_USER");
+
+        assertThatThrownBy(() -> fileStorageService.createPresignedDownload(3L))
+                .isInstanceOf(FileAccessDeniedException.class);
+        verify(objectStorageService, never()).presignedImageUrl(anyString());
+        verify(objectStorageService, never()).presignedDocumentUrl(anyString());
+    }
+
+    @Test
+    @DisplayName("toView attaches a fresh image URL and does not persist it")
+    void toView_Image_SetsPresignedUrlOnlyOnTheDto() {
+        FileStorage fs = FileStorage.builder()
+                .id(4L)
+                .objectKey("images/block/1/a.jpg")
+                .originalName("a.jpg")
+                .mimeType("image/jpeg")
+                .fileName("a.jpg")
+                .filePath("/api/upload/view/4")
+                .fileSize(10L)
+                .entityType("BLOCK")
+                .entityId(1L)
+                .build();
+        when(objectStorageService.presignedImageUrl("images/block/1/a.jpg"))
+                .thenReturn("http://localhost:9000/erp-files/images/block/1/a.jpg?X-Amz-Signature=hidden");
+
+        FileStorageDto view = fileStorageService.toView(fs);
+
+        assertThat(view.getPresignedImageUrl()).contains("X-Amz-Signature");
+        assertThat(fs.getFilePath()).isEqualTo("/api/upload/view/4");
     }
 
     @Test

@@ -2,7 +2,10 @@ package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.config.PresignedUrlProperties;
 import com.ozerler.marble.dto.DependencyHealth;
+import com.ozerler.marble.dto.FileStorageDto;
+import com.ozerler.marble.dto.PresignedDownload;
 import com.ozerler.marble.exception.FileAccessDeniedException;
 import com.ozerler.marble.exception.StorageException;
 import com.ozerler.marble.exception.StoredFileNotFoundException;
@@ -33,6 +36,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HexFormat;
@@ -48,6 +52,7 @@ public class FileStorageService {
     private final org.springframework.context.MessageSource messageSource;
     private final ObjectStorageService objectStorageService;
     private final ObjectStorageProperties storageProperties;
+    private final PresignedUrlProperties presignedUrlProperties;
     private final FileUploadValidator fileUploadValidator;
     private final FileObjectKeyFactory fileObjectKeyFactory;
 
@@ -228,20 +233,57 @@ public class FileStorageService {
         return loadLegacyFilesystemResource(fileStorage);
     }
 
-    public String createPresignedDownloadUrl(Long fileId) {
+    /**
+     * Authorizes first, then signs a fresh URL. Image files use the image expiry.
+     * Everything else uses the shorter document expiry. The URL is not logged.
+     */
+    public PresignedDownload createPresignedDownload(Long fileId) {
         FileStorage fileStorage = requireAccessibleFile(fileId);
         if (fileStorage.getObjectKey() == null || fileStorage.getObjectKey().isBlank()) {
             throw new StorageException("File has not been migrated to object storage yet");
         }
-        Duration expiry = storageProperties.getPresignedUrlExpiry();
+        boolean image = fileStorage.isImage();
+        Duration expiry = image
+                ? presignedUrlProperties.imageExpiry()
+                : presignedUrlProperties.documentExpiry();
+        String url = image
+                ? objectStorageService.presignedImageUrl(fileStorage.getObjectKey())
+                : objectStorageService.presignedDocumentUrl(fileStorage.getObjectKey());
         log.info("Presigned download URL created fileId={} entityType={} entityId={} objectKey={} expirySeconds={}",
                 fileId, fileStorage.getEntityType(), fileStorage.getEntityId(), fileStorage.getObjectKey(),
                 expiry.toSeconds());
-        return objectStorageService.createPresignedUrl(fileStorage.getObjectKey(), expiry);
+        return new PresignedDownload(url, expiry.toSeconds(), Instant.now().plus(expiry));
     }
 
-    public Duration getPresignedUrlExpiry() {
-        return storageProperties.getPresignedUrlExpiry();
+    /**
+     * View model for a page render. Image files receive a new presigned URL.
+     * The value is not written back to the database.
+     */
+    public FileStorageDto toView(FileStorage entity) {
+        FileStorageDto dto = FileStorageDto.fromEntity(entity);
+        if (dto == null) {
+            return null;
+        }
+        String presignedImageUrl = presignedImageUrlFor(entity);
+        if (presignedImageUrl != null) {
+            dto.setPresignedImageUrl(presignedImageUrl);
+        }
+        return dto;
+    }
+
+    /**
+     * A new image link for this request, or null when the file is not an image
+     * or has not been stored in RustFS yet. The URL is not persisted.
+     */
+    public String presignedImageUrlFor(FileStorage entity) {
+        if (entity == null || !entity.isImage()) {
+            return null;
+        }
+        String objectKey = entity.getObjectKey();
+        if (objectKey == null || objectKey.isBlank()) {
+            return null;
+        }
+        return objectStorageService.presignedImageUrl(objectKey);
     }
 
     public FileStorage requireAccessibleFile(Long fileId) {

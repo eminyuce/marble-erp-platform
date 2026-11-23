@@ -244,6 +244,9 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <additionalProperties>
+                        <java.version>${java.version}</java.version>
+                    </additionalProperties>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

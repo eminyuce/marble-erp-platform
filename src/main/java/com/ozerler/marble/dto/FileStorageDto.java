@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.FileStorage;
 import lombok.AllArgsConstructor;
@@ -35,6 +36,13 @@ public class FileStorageDto {
 
     @JsonProperty("filePath")
     private String filePath;
+
+    /**
+     * Fresh RustFS presigned URL for this render. Not a database column.
+     */
+    @JsonProperty("presignedImageUrl")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String presignedImageUrl;
 
     @JsonProperty("entityType")
     private String entityType;

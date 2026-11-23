@@ -57,12 +57,11 @@ services:
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
       RUSTFS_ADDRESS: ":9000"
-      RUSTFS_CONSOLE_ADDRESS: ":9001"
-      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ENABLE: "false"
       RUSTFS_OBS_LOGGER_LEVEL: error
     ports:
+      # API only. The console port 9001 is not published in production.
       - "127.0.0.1:${RUSTFS_API_PORT:-9000}:9000"
-      - "127.0.0.1:${RUSTFS_CONSOLE_PORT:-9001}:9001"
     volumes:
       - ${RUSTFS_DATA_DIR:-/opt/rustfs/data}:/data
     healthcheck:
@@ -122,12 +121,15 @@ services:
       APP_UPLOAD_DIR: /app/uploads
       APP_MEDIA_DIR: /app/media
       STORAGE_TYPE: rustfs
-      RUSTFS_ENDPOINT: http://rustfs:9000
-      RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-http://localhost:9000}
+      RUSTFS_ENDPOINT: ${RUSTFS_ENDPOINT:-http://rustfs:9000}
+      # Must be https on a public host (Nginx or another reverse proxy). Plain http fails startup.
+      RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-https://files.example.com}
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
       RUSTFS_BUCKET: ${RUSTFS_BUCKET:-erp-files}
       RUSTFS_REGION: ${RUSTFS_REGION:-us-east-1}
+      PRESIGNED_IMAGE_EXPIRY_MINUTES: ${PRESIGNED_IMAGE_EXPIRY_MINUTES:-30}
+      PRESIGNED_DOCUMENT_EXPIRY_MINUTES: ${PRESIGNED_DOCUMENT_EXPIRY_MINUTES:-5}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:81}
       SESSION_STORE_TYPE: ${SESSION_STORE_TYPE:-jdbc}
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
