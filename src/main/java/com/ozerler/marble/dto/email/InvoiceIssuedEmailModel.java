@@ -1,11 +1,12 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Model for 'INVOICE_ISSUED' email template.
@@ -39,18 +40,18 @@ public class InvoiceIssuedEmailModel implements BaseEmailModel {
     @Override
     public Map<String, String> toVariables() {
         Map<String, String> vars = new LinkedHashMap<>();
-        vars.put("customerName", customerName != null ? customerName : "");
-        vars.put("invoiceNumber", invoiceNumber != null ? invoiceNumber : "");
-        vars.put("invoiceDate", invoiceDate != null ? invoiceDate : "");
-        vars.put("dueDate", dueDate != null ? dueDate : "");
-        vars.put("subtotalAmount", subtotalAmount != null ? subtotalAmount : "0.00");
-        vars.put("taxAmount", taxAmount != null ? taxAmount : "0.00");
-        vars.put("grandTotal", grandTotal != null ? grandTotal : "0.00");
-        vars.put("currency", currency != null ? currency : "TL");
-        vars.put("bankName", bankName != null ? bankName : "");
-        vars.put("bankIban", bankIban != null ? bankIban : "");
-        vars.put("pdfDownloadUrl", pdfDownloadUrl != null ? pdfDownloadUrl : "#");
-        vars.put("companyName", companyName != null ? companyName : "Özerler Mermer A.Ş.");
+        vars.put("customerName", Objects.requireNonNullElse(customerName, ""));
+        vars.put("invoiceNumber", Objects.requireNonNullElse(invoiceNumber, ""));
+        vars.put("invoiceDate", Objects.requireNonNullElse(invoiceDate, ""));
+        vars.put("dueDate", Objects.requireNonNullElse(dueDate, ""));
+        vars.put("subtotalAmount", Objects.requireNonNullElse(subtotalAmount, "0.00"));
+        vars.put("taxAmount", Objects.requireNonNullElse(taxAmount, "0.00"));
+        vars.put("grandTotal", Objects.requireNonNullElse(grandTotal, "0.00"));
+        vars.put("currency", Objects.requireNonNullElse(currency, "TL"));
+        vars.put("bankName", Objects.requireNonNullElse(bankName, ""));
+        vars.put("bankIban", Objects.requireNonNullElse(bankIban, ""));
+        vars.put("pdfDownloadUrl", Objects.requireNonNullElse(pdfDownloadUrl, "#"));
+        vars.put("companyName", Objects.requireNonNullElse(companyName, "Özerler Mermer A.Ş."));
         return vars;
     }
 

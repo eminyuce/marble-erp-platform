@@ -1,23 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.util.UniqueCodes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.ozerler.marble.dto.CutOrderDto;
-import com.ozerler.marble.dto.OrderChildAggregate;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.*;
-import com.ozerler.marble.model.enums.ScrapReasonCode;
-import com.ozerler.marble.model.enums.SlabStatus;
-import com.ozerler.marble.repository.*;
-import com.ozerler.marble.util.GridPages;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -28,55 +10,122 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.CutOrderDto;
+import com.ozerler.marble.dto.OrderChildAggregate;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.CutOrderView;
+import com.ozerler.marble.dto.view.ProjectView;
+import com.ozerler.marble.dto.view.SlabView;
+import com.ozerler.marble.mapper.CutOrderMapper;
+import com.ozerler.marble.mapper.ProjectMapper;
+import com.ozerler.marble.mapper.SlabMapper;
+import com.ozerler.marble.model.CutItem;
+import com.ozerler.marble.model.CutOrder;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.ProjectLocation;
+import com.ozerler.marble.model.ScrapLog;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.enums.ScrapReasonCode;
+import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.repository.CostTransactionRepository;
+import com.ozerler.marble.repository.CutItemRepository;
+import com.ozerler.marble.repository.CutOrderRepository;
+import com.ozerler.marble.repository.ProjectLocationRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.ScrapLogRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
+import com.ozerler.marble.util.UniqueCodes;
+
+import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
 public class WorkshopCutService {
 
-    private static final Logger log = LoggerFactory.getLogger(WorkshopCutService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WorkshopCutService.class);
+    private static final int ITEM_CODE_RANGE = 10_000;
+    private static final int SCRAP_SUFFIX_MODULUS = 10000;
 
     private final CutOrderRepository cutOrderRepository;
+    private final CutOrderMapper cutOrderMapper;
+    private final ProjectMapper projectMapper;
+    private final SlabMapper slabMapper;
     private final CutItemRepository cutItemRepository;
     private final SlabRepository slabRepository;
     private final ProjectRepository projectRepository;
     private final ProjectLocationRepository projectLocationRepository;
     private final ScrapLogRepository scrapLogRepository;
     private final CostTransactionRepository costTransactionRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
-    public record WorkshopSummaryDto(long totalOrders, long activeOrders, long completedOrders, long totalPieces) {}
+    public record WorkshopSummaryDto(long totalOrders, long activeOrders, long completedOrders, long totalPieces) {
+    }
 
     @Transactional(readOnly = true)
     public WorkshopSummaryDto getWorkshopSummary() {
-        List<CutOrder> all = cutOrderRepository.findAll();
+        List<CutOrder> all = BoundedReads.all(cutOrderRepository);
         long total = all.size();
-        long active = all.stream().filter(o -> o.getStatus() != null && "IN_PROGRESS".equalsIgnoreCase(o.getStatus())).count();
-        long completed = all.stream().filter(o -> o.getStatus() != null && "COMPLETED".equalsIgnoreCase(o.getStatus())).count();
+        long active =
+                all.stream()
+                        .filter(
+                                o ->
+                                        o.getStatus() != null
+                                                && "IN_PROGRESS".equalsIgnoreCase(o.getStatus()))
+                        .count();
+        long completed =
+                all.stream()
+                        .filter(
+                                o ->
+                                        o.getStatus() != null
+                                                && "COMPLETED".equalsIgnoreCase(o.getStatus()))
+                        .count();
         long totalPieces = cutItemRepository.count();
         return new WorkshopSummaryDto(total, active, completed, totalPieces);
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<CutOrderDto> getCutOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
+    public TabulatorResponse<CutOrderDto> getCutOrdersPaged(
+            int page, int size, String search, String sortField, String sortDir) {
         return getCutOrdersPaged(page, size, search, null, sortField, sortDir);
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<CutOrderDto> getCutOrdersPaged(int page, int size, String search, String status, String sortField, String sortDir) {
+    public TabulatorResponse<CutOrderDto> getCutOrdersPaged(
+            int page, int size, String search, String status, String sortField, String sortDir) {
         Page<CutOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.CUT_ORDER_SORTS,
                 pageable -> cutOrderRepository.searchCutOrders(GridPages.normalizeSearch(search), pageable));
         List<CutOrder> orders = orderPage.getContent();
         if (status != null && !status.isBlank()) {
-            orders = orders.stream().filter(o -> o.getStatus() != null && o.getStatus().equalsIgnoreCase(status)).toList();
+            orders =
+                    orders.stream()
+                            .filter(
+                                    o ->
+                                            o.getStatus() != null
+                                                    && o.getStatus().equalsIgnoreCase(status))
+                            .toList();
         }
         return TabulatorResponse.of(
                 toCutOrderDtos(orders),
@@ -140,7 +189,12 @@ public class WorkshopCutService {
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.slab.not_found", slabId)));
 
         Project project = resolveProject(projectId);
-        ProjectLocation location = locationId != null ? projectLocationRepository.findById(locationId).orElse(null) : null;
+        ProjectLocation location;
+        if (locationId != null) {
+            location = projectLocationRepository.findById(locationId).orElse(null);
+        } else {
+            location = null;
+        }
 
         sourceSlab.setStatus(SlabStatus.IN_CUTTING);
         slabRepository.save(sourceSlab);
@@ -221,13 +275,28 @@ public class WorkshopCutService {
     }
 
     private BigDecimal calculateItemArea(BigDecimal widthCm, BigDecimal lengthCm) {
-        return widthCm.multiply(lengthCm).divide(Constants.SQUARE_CENTIMETERS_PER_SQUARE_METER, Constants.AREA_SCALE, RoundingMode.HALF_UP);
+        return widthCm.multiply(lengthCm)
+                .divide(
+                        Constants.SQUARE_CENTIMETERS_PER_SQUARE_METER,
+                        Constants.AREA_SCALE,
+                        RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateLoadedUnitCost(CutOrder order, Slab sourceSlab) {
-        BigDecimal baseCostPerM2 = zero(sourceSlab != null ? sourceSlab.getCostPerM2() : null);
+        BigDecimal zeroValue;
+        if (sourceSlab != null) {
+            zeroValue = sourceSlab.getCostPerM2();
+        } else {
+            zeroValue = null;
+        }
+        BigDecimal baseCostPerM2 = zero(zeroValue);
         BigDecimal posted = postedWorkshopCost(order, sourceSlab);
-        BigDecimal area = sourceSlab != null ? zero(sourceSlab.getSurfaceAreaM2()) : BigDecimal.ZERO;
+        BigDecimal area;
+        if (sourceSlab != null) {
+            area = zero(sourceSlab.getSurfaceAreaM2());
+        } else {
+            area = BigDecimal.ZERO;
+        }
         if (posted.compareTo(BigDecimal.ZERO) > 0 && area.compareTo(BigDecimal.ZERO) > 0) {
             return baseCostPerM2.add(posted.divide(area, Constants.COST_SCALE, RoundingMode.HALF_UP))
                     .setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
@@ -250,27 +319,50 @@ public class WorkshopCutService {
     }
 
     private BigDecimal applyWorkshopOverheadFallback(CutOrder order, BigDecimal baseCostPerM2) {
-        log.info("No posted workshop expenses for cut order {}; applying {} overhead fallback",
-                order != null ? order.getCutOrderNo() : "new", Constants.WORKSHOP_OVERHEAD_FACTOR);
-        return baseCostPerM2.multiply(Constants.WORKSHOP_OVERHEAD_FACTOR).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
+        Object cutOrderNo;
+        if (order != null) {
+            cutOrderNo = order.getCutOrderNo();
+        } else {
+            cutOrderNo = "new";
+        }
+        LOG.info("No posted workshop expenses for cut order {}; applying {} overhead fallback",
+                cutOrderNo, Constants.WORKSHOP_OVERHEAD_FACTOR);
+        return baseCostPerM2
+                .multiply(Constants.WORKSHOP_OVERHEAD_FACTOR)
+                .setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
     }
 
     private static BigDecimal zero(BigDecimal value) {
-        return value != null ? value : BigDecimal.ZERO;
+        if (value != null) {
+            return value;
+        }
+        return BigDecimal.ZERO;
     }
 
     private List<CutItem> generateCutItems(CutOrder order, Slab sourceSlab, ProjectLocation location,
                                            int piecesCount, BigDecimal targetWidthCm, BigDecimal targetLengthCm,
                                            BigDecimal itemArea, BigDecimal unitCost,
                                            String edgeFinish, String targetLocationDesc) {
-        String finish = StringUtils.isNotBlank(edgeFinish) ? edgeFinish : Constants.DEFAULT_EDGE_FINISH;
-        String resolvedLocation = StringUtils.isNotBlank(targetLocationDesc)
-                ? targetLocationDesc
-                : location != null ? location.getLocationName() : Constants.DEFAULT_TARGET_LOCATION;
+        String finish;
+        if (StringUtils.isNotBlank(edgeFinish)) {
+            finish = edgeFinish;
+        } else {
+            finish = Constants.DEFAULT_EDGE_FINISH;
+        }
+        String resolvedLocation;
+        if (StringUtils.isNotBlank(targetLocationDesc)) {
+            resolvedLocation = targetLocationDesc;
+        } else {
+            if (location != null) {
+                resolvedLocation = location.getLocationName();
+            } else {
+                resolvedLocation = Constants.DEFAULT_TARGET_LOCATION;
+            }
+        }
 
         List<CutItem> items = new ArrayList<>(piecesCount);
         for (int i = 1; i <= piecesCount; i++) {
-            String itemCode = UniqueCodes.yearly("ITM", 10_000, cutItemRepository::existsByItemCode);
+            String itemCode = UniqueCodes.yearly("ITM", ITEM_CODE_RANGE, cutItemRepository::existsByItemCode);
             CutItem item = CutItem.builder()
                     .itemCode(itemCode)
                     .cutOrder(order)
@@ -289,14 +381,18 @@ public class WorkshopCutService {
         return items;
     }
 
-    private void recordNestingScrapIfApplicable(CutOrder order, Slab sourceSlab, BigDecimal totalCutArea, String operatorName) {
+    private void recordNestingScrapIfApplicable(
+            CutOrder order, Slab sourceSlab, BigDecimal totalCutArea, String operatorName) {
         BigDecimal scrapArea = sourceSlab.getSurfaceAreaM2().subtract(totalCutArea);
         if (scrapArea.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal costImpact = scrapArea.multiply(sourceSlab.getCostPerM2()).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
+            BigDecimal costImpact =
+                    scrapArea
+                            .multiply(sourceSlab.getCostPerM2())
+                            .setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
 
             ScrapLog scrap = ScrapLog.builder()
                     .scrapCode(UniqueCodes.allocate(
-                            () -> "SCRAP-W-" + (System.nanoTime() % 10000),
+                            () -> "SCRAP-W-" + (System.nanoTime() % SCRAP_SUFFIX_MODULUS),
                             scrapLogRepository::existsByScrapCode))
                     .cutOrder(order)
                     .slab(sourceSlab)
@@ -318,6 +414,71 @@ public class WorkshopCutService {
 
     @Transactional(readOnly = true)
     public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+        return BoundedReads.all(projectRepository);
+    }
+
+    /**
+     * Same as {@code getAvailableSlabs}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<SlabView> getAvailableSlabViews() {
+        return getAvailableSlabs().stream().map(slabMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getAllProjects}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<ProjectView> getAllProjectViews() {
+        return getAllProjects().stream().map(projectMapper::toDto).toList();
+    }
+
+    /**
+     * Loads a cut order with project, machine and items and copies it into a view. Status labels come from
+     * the entities and are set here, not in the mapper.
+     *
+     * @param id cut order id
+     * @return the cut order view
+     */
+    @Transactional(readOnly = true)
+    public CutOrderView getCutOrder(Long id) {
+        CutOrder order = getCutOrderWithDetails(id);
+        CutOrderView view = cutOrderMapper.toDto(order);
+        view.setStatusLabel(order.getStatusLabel());
+        if (view.getItems() != null && order.getItems() != null) {
+            int count = Math.min(view.getItems().size(), order.getItems().size());
+            for (int i = 0; i < count; i++) {
+                view.getItems().get(i).setStatusLabel(order.getItems().get(i).getStatusLabel());
+            }
+        }
+        return view;
+    }
+
+    /**
+     * Creates a cut order and returns its id.
+     *
+     * @param projectId          optional project
+     * @param locationId         optional project location
+     * @param slabId             source slab
+     * @param machineName        machine name
+     * @param operatorName       operator
+     * @param piecesCount        number of pieces
+     * @param targetWidthCm      piece width
+     * @param targetLengthCm     piece length
+     * @param edgeFinish         edge finish
+     * @param targetLocationDesc target location text
+     * @param notes              notes
+     * @return id of the new cut order
+     */
+    @Transactional
+    public Long createCutOrderId(Long projectId, Long locationId, Long slabId, String machineName, String operatorName,
+                                 int piecesCount, BigDecimal targetWidthCm, BigDecimal targetLengthCm,
+                                 String edgeFinish, String targetLocationDesc, String notes) {
+        return createCutOrder(projectId, locationId, slabId, machineName, operatorName, piecesCount, targetWidthCm,
+                targetLengthCm, edgeFinish, targetLocationDesc, notes).getId();
     }
 }

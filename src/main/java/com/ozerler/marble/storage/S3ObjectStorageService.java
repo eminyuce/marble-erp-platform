@@ -1,14 +1,26 @@
 package com.ozerler.marble.storage;
 
+import java.io.InputStream;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
 import com.ozerler.marble.config.ObjectStorageProperties;
 import com.ozerler.marble.config.PresignedUrlProperties;
 import com.ozerler.marble.dto.DependencyHealth;
+import com.ozerler.marble.dto.StoredObjectMetadata;
 import com.ozerler.marble.exception.StorageException;
 import com.ozerler.marble.exception.StoredFileNotFoundException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
@@ -16,24 +28,15 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
-import com.ozerler.marble.dto.StoredObjectMetadata;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
-
-import jakarta.annotation.PostConstruct;
-import java.io.InputStream;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -42,6 +45,7 @@ import java.util.UUID;
 public class S3ObjectStorageService implements ObjectStorageService {
 
     private static final String HEALTH_PROBE_PREFIX = ".health-probe/";
+    private static final int HTTP_NOT_FOUND = 404;
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
@@ -62,7 +66,7 @@ public class S3ObjectStorageService implements ObjectStorageService {
         } catch (NoSuchBucketException notFound) {
             createPrivateBucket(bucket);
         } catch (S3Exception e) {
-            if (e.statusCode() == 404) {
+            if (e.statusCode() == HTTP_NOT_FOUND) {
                 createPrivateBucket(bucket);
                 return;
             }
@@ -101,7 +105,7 @@ public class S3ObjectStorageService implements ObjectStorageService {
         } catch (NoSuchKeyException e) {
             throw new StoredFileNotFoundException("Stored object was not found: " + objectKey);
         } catch (S3Exception e) {
-            if (e.statusCode() == 404) {
+            if (e.statusCode() == HTTP_NOT_FOUND) {
                 throw new StoredFileNotFoundException("Stored object was not found: " + objectKey);
             }
             log.error("Object download failed objectKey={}", objectKey, e);
@@ -136,7 +140,7 @@ public class S3ObjectStorageService implements ObjectStorageService {
         } catch (NoSuchKeyException e) {
             return false;
         } catch (S3Exception e) {
-            if (e.statusCode() == 404) {
+            if (e.statusCode() == HTTP_NOT_FOUND) {
                 return false;
             }
             throw new StorageException("Unable to check whether the stored file exists", e);
@@ -168,7 +172,12 @@ public class S3ObjectStorageService implements ObjectStorageService {
 
     private String presignedUrl(String objectKey, Duration expiration, String responseContentType) {
         validateObjectKey(objectKey);
-        Duration ttl = expiration != null ? expiration : storageProperties.getPresignedUrlExpiry();
+        Duration ttl;
+        if (expiration != null) {
+            ttl = expiration;
+        } else {
+            ttl = storageProperties.getPresignedUrlExpiry();
+        }
         try {
             GetObjectRequest.Builder getObject = GetObjectRequest.builder()
                     .bucket(getBucketName())

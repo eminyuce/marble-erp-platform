@@ -8,7 +8,10 @@ import com.ozerler.marble.util.MessageUtils;
  */
 public enum QuarryCategory {
     MAZOT("enum.quarry_category.mazot", "Mazot", "Mazot alımı ve mazot stoğu"),
-    SARF_MALZEME("enum.quarry_category.sarf_malzeme", "Sarf Malzeme", "Ocakta kullanılan sarf malzemeleri (yağ, filtre, kesici ekipman vb.)"),
+    SARF_MALZEME(
+            "enum.quarry_category.sarf_malzeme",
+            "Sarf Malzeme",
+            "Ocakta kullanılan sarf malzemeleri (yağ, filtre, kesici ekipman vb.)"),
     ELEKTRIK("enum.quarry_category.elektrik", "Elektrik", "Elektrik faturaları ve enerji giderleri"),
     DIGER("enum.quarry_category.diger", "Diğer", "Yukarıdaki kategorilere girmeyen ürün ve giderler");
 
@@ -29,6 +32,7 @@ public enum QuarryCategory {
                 return msg;
             }
         } catch (Exception ignored) {
+            // best effort: fall back to the default below
         }
         return defaultLabel;
     }

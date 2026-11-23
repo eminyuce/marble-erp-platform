@@ -1,7 +1,9 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.Slab;
-import com.ozerler.marble.model.enums.SlabStatus;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,9 +12,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface SlabRepository extends JpaRepository<Slab, Long> {
@@ -46,10 +48,11 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
     List<Slab> findAllWithBlock();
 
     @EntityGraph(attributePaths = {"block", "productionOrder", "pallet"})
-    @Query("SELECT s FROM Slab s WHERE " +
-            "(:search IS NULL OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(s.block.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(s.block.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query(value = "SELECT s FROM Slab s WHERE "
+            + "(:search IS NULL OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(s.block.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(s.block.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Slab> searchSlabs(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT s FROM Slab s WHERE LOWER(s.slabCode) LIKE LOWER(CONCAT('%', :query, '%'))")
@@ -64,24 +67,27 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
     long countByStatus(SlabStatus status);
 
     @EntityGraph(attributePaths = {"block", "block.quarry", "customer", "productionOrder", "pallet"})
-    @Query("SELECT s FROM Slab s " +
-           "LEFT JOIN s.customer c " +
-           "LEFT JOIN s.block b " +
-           "WHERE (:status IS NULL OR s.status = :status) " +
-           "AND (:customerId IS NULL OR c.id = :customerId) " +
-           "AND (:generalStockOnly = false OR c IS NULL) " +
-           "AND (:search IS NULL OR :search = '' " +
-           "OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(COALESCE(c.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
-           "ORDER BY s.id DESC")
+    @Query(value = "SELECT s FROM Slab s "
+            + "LEFT JOIN s.customer c "
+            + "LEFT JOIN s.block b "
+            + "WHERE (:status IS NULL OR s.status = :status) "
+            + "AND (:customerId IS NULL OR c.id = :customerId) "
+            + "AND (:generalStockOnly = false OR c IS NULL) "
+            + "AND (:search IS NULL OR :search = '' "
+            + "OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(COALESCE(c.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
+            + "ORDER BY s.id DESC",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Slab> searchSlabsWithCustomer(@Param("status") SlabStatus status,
                                        @Param("customerId") Long customerId,
                                        @Param("generalStockOnly") boolean generalStockOnly,
                                        @Param("search") String search,
                                        Pageable pageable);
 
-    @Query("SELECT COALESCE(SUM(s.surfaceAreaM2), 0) FROM Slab s WHERE s.customer.id = :customerId AND s.status IN ('AVAILABLE', 'RESERVED')")
+    @Query(
+            "SELECT COALESCE(SUM(s.surfaceAreaM2), 0) FROM Slab s WHERE s.customer.id = :customerId AND s.status IN "
+                    + "('AVAILABLE', 'RESERVED')")
     BigDecimal getTotalAreaByCustomer(@Param("customerId") Long customerId);
 }

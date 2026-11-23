@@ -1,7 +1,8 @@
 package com.ozerler.marble.util;
 
-import com.ozerler.marble.common.Constants;
 import jakarta.servlet.http.HttpServletRequest;
+
+import com.ozerler.marble.common.Constants;
 
 public final class ClientIps {
 
@@ -24,7 +25,10 @@ public final class ClientIps {
         }
 
         String remoteAddr = request.getRemoteAddr();
-        return remoteAddr == null ? "" : remoteAddr;
+        if (remoteAddr == null) {
+            return "";
+        }
+        return remoteAddr;
     }
 
     private static boolean isPresent(String value) {

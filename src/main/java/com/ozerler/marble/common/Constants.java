@@ -11,10 +11,6 @@ import java.util.regex.Pattern;
  */
 public final class Constants {
 
-    private Constants() {
-        // Prevent instantiation
-    }
-
     // =========================================================================
     // 1. System & Application Defaults
     // =========================================================================
@@ -22,6 +18,7 @@ public final class Constants {
      * Header name for tracing requests across distributed layers.
      */
     public static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
+    public static final String TRACE_ID_HEADER = "X-Trace-Id";
 
     /**
      * Default application name used in logs and health reports.
@@ -153,6 +150,7 @@ public final class Constants {
      * MDC key storing correlation id.
      */
     public static final String MDC_CORRELATION_ID = "correlationId";
+    public static final String MDC_TRACE_ID = "traceId";
 
     /**
      * MDC key storing authenticated username or anonymous indicator.
@@ -572,10 +570,10 @@ public final class Constants {
     /**
      * Advanced placeholder pattern matching {{{raw}}}, {{escaped}}, or ${key}.
      */
-    public static final Pattern PATTERN_ADVANCED_PLACEHOLDER = Pattern.compile(
-            "(\\{\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\}\\})|(\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\})|(\\$\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\})"
-    );
-
+    public static final Pattern PATTERN_ADVANCED_PLACEHOLDER =
+            Pattern.compile(
+                    "(\\{\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\}\\})|(\\{\\{\\s*([a-zA-Z0-9_.-]+)\\s*\\}\\})|(\\$\\{\\s*"
+                            + "([a-zA-Z0-9_.-]+)\\s*\\})");
 
     // =========================================================================
     // 19. Asynchronous Logging Subsystem Defaults
@@ -620,4 +618,8 @@ public final class Constants {
     public static final String[] ALLOWED_CORS_METHODS = {
             "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
     };
+
+    private Constants() {
+        // Prevent instantiation
+    }
 }

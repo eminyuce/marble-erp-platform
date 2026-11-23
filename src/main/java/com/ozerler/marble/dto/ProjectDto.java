@@ -1,16 +1,17 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.Project;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
 
 /**
  * Data Transfer Object representing architecture and installation projects.
@@ -95,29 +96,69 @@ public class ProjectDto {
 
     public static ProjectDto fromEntity(Project p) {
         BigDecimal variance = p.getActualCost().subtract(p.getEstimatedCost());
-        BigDecimal varPct = p.getEstimatedCost().compareTo(BigDecimal.ZERO) > 0 ?
-                variance.divide(p.getEstimatedCost(), 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")).setScale(1, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        BigDecimal varPct;
+        if (p.getEstimatedCost().compareTo(BigDecimal.ZERO) > 0) {
+            varPct =
+                    variance.divide(p.getEstimatedCost(), 4, RoundingMode.HALF_UP)
+                            .multiply(new BigDecimal("100"))
+                            .setScale(1, RoundingMode.HALF_UP);
+        } else {
+            varPct = BigDecimal.ZERO;
+        }
 
-        BigDecimal plannedArea = p.getLocations() != null ?
-                p.getLocations().stream()
-                        .map(l -> l.getPlannedAreaM2() != null ? l.getPlannedAreaM2() : BigDecimal.ZERO)
-                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b))
-                : BigDecimal.ZERO;
+        BigDecimal plannedArea;
+        if (p.getLocations() != null) {
+            plannedArea = p.getLocations().stream()
+                            .map(l -> {
+                                if (l.getPlannedAreaM2() != null) {
+                                    return l.getPlannedAreaM2();
+                                }
+                                return BigDecimal.ZERO;
+                            })
+                            .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        } else {
+            plannedArea = BigDecimal.ZERO;
+        }
 
-        BigDecimal installedArea = p.getLocations() != null ?
-                p.getLocations().stream()
-                        .map(l -> l.getInstalledAreaM2() != null ? l.getInstalledAreaM2() : BigDecimal.ZERO)
-                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b))
-                : BigDecimal.ZERO;
+        BigDecimal installedArea;
+        if (p.getLocations() != null) {
+            installedArea = p.getLocations().stream()
+                            .map(l -> {
+                                if (l.getInstalledAreaM2() != null) {
+                                    return l.getInstalledAreaM2();
+                                }
+                                return BigDecimal.ZERO;
+                            })
+                            .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        } else {
+            installedArea = BigDecimal.ZERO;
+        }
 
+        Long customerIdValue;
+        if (p.getCustomer() != null) {
+            customerIdValue = p.getCustomer().getId();
+        } else {
+            customerIdValue = null;
+        }
+        String customerCodeValue;
+        if (p.getCustomer() != null) {
+            customerCodeValue = p.getCustomer().getCustomerCode();
+        } else {
+            customerCodeValue = null;
+        }
+        int locationCountValue;
+        if (p.getLocations() != null) {
+            locationCountValue = p.getLocations().size();
+        } else {
+            locationCountValue = 0;
+        }
         return ProjectDto.builder()
                 .id(p.getId())
                 .projectCode(p.getProjectCode())
                 .name(p.getName())
                 .customerName(p.getCustomerName())
-                .customerId(p.getCustomer() != null ? p.getCustomer().getId() : null)
-                .customerCode(p.getCustomer() != null ? p.getCustomer().getCustomerCode() : null)
+                .customerId(customerIdValue)
+                .customerCode(customerCodeValue)
                 .contractValue(p.getContractValue())
                 .estimatedCost(p.getEstimatedCost())
                 .actualCost(p.getActualCost())
@@ -127,7 +168,7 @@ public class ProjectDto {
                 .deliveryDate(p.getDeliveryDate())
                 .status(p.getStatus().name())
                 .statusLabel(p.getStatus().getLabel())
-                .locationCount(p.getLocations() != null ? p.getLocations().size() : 0)
+                .locationCount(locationCountValue)
                 .totalPlannedAreaM2(plannedArea)
                 .totalInstalledAreaM2(installedArea)
                 .build();

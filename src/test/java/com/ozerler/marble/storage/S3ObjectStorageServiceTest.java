@@ -1,37 +1,37 @@
 package com.ozerler.marble.storage;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import com.ozerler.marble.config.PresignedUrlProperties;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Configuration;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
-
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.config.PresignedUrlProperties;
+
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 @ExtendWith(MockitoExtension.class)
 class S3ObjectStorageServiceTest {
@@ -54,80 +54,86 @@ class S3ObjectStorageServiceTest {
 
     @Test
     @DisplayName("checkHealth returns UP when bucket probe succeeds")
-    void checkHealth_WhenRustFsReachable_ReturnsUp() {
-        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+    void checkHealthWhenRustFsReachableReturnsUp() {
+        Mockito.when(
+                        s3Client.putObject(
+                                ArgumentMatchers.any(PutObjectRequest.class),
+                                ArgumentMatchers.any(RequestBody.class)))
                 .thenReturn(PutObjectResponse.builder().build());
 
         var health = storage.checkHealth();
 
-        assertThat(health.getStatus()).isEqualTo("UP");
-        assertThat(health.getError()).isNull();
+        Assertions.assertThat(health.getStatus()).isEqualTo("UP");
+        Assertions.assertThat(health.getError()).isNull();
     }
 
     @Test
     @DisplayName("checkHealth returns DOWN when RustFS cannot be reached")
-    void checkHealth_WhenRustFsUnreachable_ReturnsDown() {
-        when(s3Client.headBucket(any(HeadBucketRequest.class)))
+    void checkHealthWhenRustFsUnreachableReturnsDown() {
+        Mockito.when(s3Client.headBucket(ArgumentMatchers.any(HeadBucketRequest.class)))
                 .thenThrow(new RuntimeException("Connection refused"));
 
         var health = storage.checkHealth();
 
-        assertThat(health.getStatus()).isEqualTo("DOWN");
-        assertThat(health.getError()).isEqualTo("RustFS erişilemiyor");
+        Assertions.assertThat(health.getStatus()).isEqualTo("DOWN");
+        Assertions.assertThat(health.getError()).isEqualTo("RustFS erişilemiyor");
     }
 
     @Test
     @DisplayName("checkHealth returns DOWN when the write probe fails")
-    void checkHealth_WhenWriteProbeFails_ReturnsDown() {
-        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+    void checkHealthWhenWriteProbeFailsReturnsDown() {
+        Mockito.when(
+                        s3Client.putObject(
+                                ArgumentMatchers.any(PutObjectRequest.class),
+                                ArgumentMatchers.any(RequestBody.class)))
                 .thenThrow(new RuntimeException("Access Denied"));
 
         var health = storage.checkHealth();
 
-        assertThat(health.getStatus()).isEqualTo("DOWN");
-        assertThat(health.getError()).isEqualTo("RustFS erişilemiyor");
+        Assertions.assertThat(health.getStatus()).isEqualTo("DOWN");
+        Assertions.assertThat(health.getError()).isEqualTo("RustFS erişilemiyor");
     }
 
     @Test
     @DisplayName("presignedImageUrl signs for the configured image expiry and sets the image type")
-    void presignedImageUrl_UsesConfiguredImageExpiry() throws MalformedURLException {
+    void presignedImageUrlUsesConfiguredImageExpiry() throws MalformedURLException {
         stubPresigner();
 
         String url = storage.presignedImageUrl("images/block/1/photo.jpg");
 
         GetObjectPresignRequest request = capturedPresignRequest();
-        assertThat(request.signatureDuration()).isEqualTo(Duration.ofMinutes(30));
-        assertThat(request.getObjectRequest().responseContentType()).isEqualTo("image/jpeg");
-        assertThat(url).contains("photo.jpg");
+        Assertions.assertThat(request.signatureDuration()).isEqualTo(Duration.ofMinutes(30));
+        Assertions.assertThat(request.getObjectRequest().responseContentType()).isEqualTo("image/jpeg");
+        Assertions.assertThat(url).contains("photo.jpg");
     }
 
     @Test
     @DisplayName("presignedDocumentUrl signs for the configured document expiry")
-    void presignedDocumentUrl_UsesConfiguredDocumentExpiry() throws MalformedURLException {
+    void presignedDocumentUrlUsesConfiguredDocumentExpiry() throws MalformedURLException {
         stubPresigner();
 
         storage.presignedDocumentUrl("documents/block/1/spec.pdf");
 
         GetObjectPresignRequest request = capturedPresignRequest();
-        assertThat(request.signatureDuration()).isEqualTo(Duration.ofMinutes(5));
-        assertThat(request.getObjectRequest().responseContentType()).isNull();
+        Assertions.assertThat(request.signatureDuration()).isEqualTo(Duration.ofMinutes(5));
+        Assertions.assertThat(request.getObjectRequest().responseContentType()).isNull();
     }
 
     @Test
     @DisplayName("image expiry follows presigned.url.image-expiry-minutes without a code change")
-    void presignedImageUrl_HonorsOverriddenMinutes() throws MalformedURLException {
+    void presignedImageUrlHonorsOverriddenMinutes() throws MalformedURLException {
         presignedUrlProperties.setImageExpiryMinutes(15);
         stubPresigner();
 
         storage.presignedImageUrl("images/block/1/photo.png");
 
-        assertThat(capturedPresignRequest().signatureDuration()).isEqualTo(Duration.ofMinutes(15));
-        assertThat(capturedPresignRequest().getObjectRequest().responseContentType()).isEqualTo("image/png");
+        Assertions.assertThat(capturedPresignRequest().signatureDuration()).isEqualTo(Duration.ofMinutes(15));
+        Assertions.assertThat(capturedPresignRequest().getObjectRequest().responseContentType()).isEqualTo("image/png");
     }
 
     @Test
     @DisplayName("a real presigner stamps the public host and the image or document expiry")
-    void realPresigner_UsesPublicHostAndConfiguredExpiry() {
+    void realPresignerUsesPublicHostAndConfiguredExpiry() {
         String internalEndpoint = "http://rustfs:9000";
         String publicEndpoint = "http://files.example.com";
         ObjectStorageProperties properties = new ObjectStorageProperties();
@@ -150,17 +156,17 @@ class S3ObjectStorageServiceTest {
             String imageUrl = realStorage.presignedImageUrl("images/block/1/photo.jpg");
             String documentUrl = realStorage.presignedDocumentUrl("documents/block/1/spec.pdf");
 
-            assertThat(URI.create(imageUrl).getHost()).isEqualTo("files.example.com");
-            assertThat(URI.create(documentUrl).getHost()).isEqualTo("files.example.com");
-            assertThat(URI.create(imageUrl).getHost()).isNotEqualTo(URI.create(internalEndpoint).getHost());
-            assertThat(queryParams(imageUrl)).containsEntry("X-Amz-Expires", "1800");
-            assertThat(queryParams(documentUrl)).containsEntry("X-Amz-Expires", "300");
+            Assertions.assertThat(URI.create(imageUrl).getHost()).isEqualTo("files.example.com");
+            Assertions.assertThat(URI.create(documentUrl).getHost()).isEqualTo("files.example.com");
+            Assertions.assertThat(URI.create(imageUrl).getHost()).isNotEqualTo(URI.create(internalEndpoint).getHost());
+            Assertions.assertThat(queryParams(imageUrl)).containsEntry("X-Amz-Expires", "1800");
+            Assertions.assertThat(queryParams(documentUrl)).containsEntry("X-Amz-Expires", "300");
         }
     }
 
     @Test
     @DisplayName("production presigns on the application host under /erp-files/")
-    void realPresigner_UsesApplicationHostAndBucketPath() {
+    void realPresignerUsesApplicationHostAndBucketPath() {
         String publicEndpoint = "https://ozerler.naklink.com";
         ObjectStorageProperties properties = new ObjectStorageProperties();
         properties.getRustfs().setBucket("erp-files");
@@ -179,10 +185,10 @@ class S3ObjectStorageServiceTest {
                     s3Client, presigner, properties, expiry);
             URI image = URI.create(realStorage.presignedImageUrl("images/block/1/photo.jpg"));
 
-            assertThat(image.getScheme()).isEqualTo("https");
-            assertThat(image.getHost()).isEqualTo("ozerler.naklink.com");
-            assertThat(image.getPath()).startsWith("/erp-files/");
-            assertThat(image.getRawQuery()).contains("X-Amz-");
+            Assertions.assertThat(image.getScheme()).isEqualTo("https");
+            Assertions.assertThat(image.getHost()).isEqualTo("ozerler.naklink.com");
+            Assertions.assertThat(image.getPath()).startsWith("/erp-files/");
+            Assertions.assertThat(image.getRawQuery()).contains("X-Amz-");
         }
     }
 
@@ -191,23 +197,36 @@ class S3ObjectStorageServiceTest {
         Map<String, String> params = new HashMap<>();
         for (String pair : query.split("&")) {
             int separator = pair.indexOf('=');
-            String key = separator < 0 ? pair : pair.substring(0, separator);
-            String value = separator < 0 ? "" : pair.substring(separator + 1);
+            String key;
+            if (separator < 0) {
+                key = pair;
+            } else {
+                key = pair.substring(0, separator);
+            }
+            String value;
+            if (separator < 0) {
+                value = "";
+            } else {
+                value = pair.substring(separator + 1);
+            }
             params.put(key, value);
         }
         return params;
     }
 
     private void stubPresigner() throws MalformedURLException {
-        PresignedGetObjectRequest presigned = mock(PresignedGetObjectRequest.class);
-        when(presigned.url()).thenReturn(URI.create(
+        PresignedGetObjectRequest presigned = Mockito.mock(PresignedGetObjectRequest.class);
+        Mockito.when(presigned.url()).thenReturn(URI.create(
                 "http://files.example.com/erp-files/images/block/1/photo.jpg?X-Amz-Signature=hidden").toURL());
-        when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presigned);
+        Mockito.when(
+                        s3Presigner.presignGetObject(
+                                ArgumentMatchers.any(GetObjectPresignRequest.class)))
+                .thenReturn(presigned);
     }
 
     private GetObjectPresignRequest capturedPresignRequest() {
         ArgumentCaptor<GetObjectPresignRequest> captor = ArgumentCaptor.forClass(GetObjectPresignRequest.class);
-        org.mockito.Mockito.verify(s3Presigner).presignGetObject(captor.capture());
+        Mockito.verify(s3Presigner).presignGetObject(captor.capture());
         return captor.getValue();
     }
 }

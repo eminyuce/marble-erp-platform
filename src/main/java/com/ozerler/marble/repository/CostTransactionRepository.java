@@ -1,8 +1,8 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.CostTransaction;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.ExpenseType;
+import java.math.BigDecimal;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,8 +10,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
+import com.ozerler.marble.model.CostTransaction;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.ExpenseType;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface CostTransactionRepository extends JpaRepository<CostTransaction, Long> {
@@ -75,23 +77,43 @@ public interface CostTransactionRepository extends JpaRepository<CostTransaction
     List<CostTransaction> findByBusinessUnitAndExpensePeriodOrderByEntryDateDesc(
             BusinessUnit businessUnit, String expensePeriod);
 
-    @Query("SELECT c FROM CostTransaction c "
-            + "LEFT JOIN c.costCenter cc "
-            + "LEFT JOIN c.quarry q "
-            + "LEFT JOIN c.project p "
-            + "WHERE (:unit IS NULL OR c.businessUnit = :unit) "
-            + "AND (:period IS NULL OR :period = '' OR c.expensePeriod = :period) "
-            + "AND (:expenseType IS NULL OR c.expenseType = :expenseType) "
-            + "AND (:quarryId IS NULL OR (c.quarry IS NOT NULL AND c.quarry.id = :quarryId)) "
-            + "AND (:projectId IS NULL OR (c.project IS NOT NULL AND c.project.id = :projectId)) "
-            + "AND (:centerId IS NULL OR cc.id = :centerId) "
-            + "AND (:search IS NULL OR :search = '' OR "
-            + "     LOWER(COALESCE(c.documentNo, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "     LOWER(COALESCE(c.description, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "     LOWER(COALESCE(cc.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "     LOWER(COALESCE(cc.code, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "     LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query(value = "SELECT c FROM CostTransaction c "
+                    + "LEFT JOIN FETCH c.costCenter cc "
+                    + "LEFT JOIN FETCH c.quarry q "
+                    + "LEFT JOIN FETCH c.project p "
+                    + "WHERE (:unit IS NULL OR c.businessUnit = :unit) "
+                    + "AND (:period IS NULL OR :period = '' OR c.expensePeriod = :period) "
+                    + "AND (:expenseType IS NULL OR c.expenseType = :expenseType) "
+                    + "AND (:quarryId IS NULL OR (c.quarry IS NOT NULL AND c.quarry.id = :quarryId)) "
+                    + "AND (:projectId IS NULL OR (c.project IS NOT NULL AND c.project.id = :projectId)) "
+                    + "AND (:centerId IS NULL OR cc.id = :centerId) "
+                    + "AND (:search IS NULL OR :search = '' OR "
+                    + "     LOWER(COALESCE(c.documentNo, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "     LOWER(COALESCE(c.description, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                    + "OR "
+                    + "     LOWER(COALESCE(cc.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "     LOWER(COALESCE(cc.code, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "     LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            countQuery = "SELECT COUNT(c) FROM CostTransaction c "
+                    + "LEFT JOIN c.costCenter cc "
+                    + "LEFT JOIN c.quarry q "
+                    + "LEFT JOIN c.project p "
+                    + "WHERE (:unit IS NULL OR c.businessUnit = :unit) "
+                    + "AND (:period IS NULL OR :period = '' OR c.expensePeriod = :period) "
+                    + "AND (:expenseType IS NULL OR c.expenseType = :expenseType) "
+                    + "AND (:quarryId IS NULL OR (c.quarry IS NOT NULL AND c.quarry.id = :quarryId)) "
+                    + "AND (:projectId IS NULL OR (c.project IS NOT NULL AND c.project.id = :projectId)) "
+                    + "AND (:centerId IS NULL OR cc.id = :centerId) "
+                    + "AND (:search IS NULL OR :search = '' OR "
+                    + "     LOWER(COALESCE(c.documentNo, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "     LOWER(COALESCE(c.description, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                    + "OR "
+                    + "     LOWER(COALESCE(cc.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "     LOWER(COALESCE(cc.code, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "     LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<CostTransaction> searchExpenses(@Param("search") String search,
                                          @Param("unit") BusinessUnit unit,
                                          @Param("period") String period,

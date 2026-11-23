@@ -50,7 +50,9 @@ function quarryPage() {
 
 function initBlocksGrid() {
     const tableElement = document.getElementById("blocks-table");
-    if (!tableElement) return;
+    if (!tableElement || tableElement.classList.contains("erp-data-grid") || typeof Tabulator === "undefined") {
+        return;
+    }
 
     blocksTable = new Tabulator("#blocks-table", {
         ...erpGridDefaults(),

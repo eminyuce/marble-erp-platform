@@ -1,10 +1,14 @@
 package com.ozerler.marble.logging.db;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -13,12 +17,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -26,12 +28,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class DatabaseLogBatchWriter {
 
     private static final String INSERT_SQL =
-            "INSERT INTO application_logs (" +
-                    "timestamp, level, logger_name, message, exception_class, exception_message, " +
-                    "stack_trace, username, client_ip, http_method, request_uri, correlation_id, thread_name" +
-                    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "INSERT INTO application_logs ("
+                    + "timestamp, level, logger_name, message, exception_class, exception_message, "
+                    + "stack_trace, username, client_ip, http_method, request_uri, correlation_id, thread_name"
+                    + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final int BATCH_SIZE = 250;
+    private static final int CORRELATION_ID_PARAM = 12;
+    private static final int REQUEST_URI_PARAM = 11;
+    private static final int THREAD_NAME_PARAM = 13;
 
     private final JdbcTemplate jdbcTemplate;
     private final DatabaseLogQueue databaseLogQueue;
@@ -108,9 +113,9 @@ public class DatabaseLogBatchWriter {
                     ps.setString(8, entry.username());
                     ps.setString(9, entry.clientIp());
                     ps.setString(10, entry.httpMethod());
-                    ps.setString(11, entry.requestUri());
-                    ps.setString(12, entry.correlationId());
-                    ps.setString(13, entry.threadName());
+                    ps.setString(REQUEST_URI_PARAM, entry.requestUri());
+                    ps.setString(CORRELATION_ID_PARAM, entry.correlationId());
+                    ps.setString(THREAD_NAME_PARAM, entry.threadName());
                 }
 
                 @Override

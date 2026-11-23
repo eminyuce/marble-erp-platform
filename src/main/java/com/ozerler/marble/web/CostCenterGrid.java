@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.CostCenterDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.BusinessUnit;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Masraf merkezi listesi. Sort keys match {@code GridPages.COST_CENTER_SORTS}. Unit filter already exists.
@@ -25,12 +25,23 @@ public final class CostCenterGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "cost-centers-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "cost-centers-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(CostCenterDto center) {
-        String id = center.getId() == null ? "" : center.getId().toString();
-        String editUrl = id.isEmpty() ? "" : "/admin/definitions/cost-centers/" + id + "/edit";
+        String id;
+        if (center.getId() == null) {
+            id = "";
+        } else {
+            id = center.getId().toString();
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = "/admin/definitions/cost-centers/" + id + "/edit";
+        }
         String deleteName = GridTexts.text(center.getName());
         if (deleteName.isBlank()) {
             deleteName = GridTexts.text(center.getCode());
@@ -47,12 +58,12 @@ public final class CostCenterGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("code", "Merkez Kodu", true, 140),
-                GridColumn.text("name", "Masraf Merkezi Adı", true, 200),
-                GridColumn.filtered("businessUnitLabel", "İş Birimi", true, 140, "unit", units()),
-                GridColumn.text("monthlyBudget", "Aylık Bütçe", true, 150),
-                GridColumn.text("description", "Açıklama", false, 180)
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("code", "Merkez Kodu", true, GridWidth.PX_140),
+                GridColumn.text("name", "Masraf Merkezi Adı", true, GridWidth.PX_200),
+                GridColumn.filtered("businessUnitLabel", "İş Birimi", true, GridWidth.PX_140, "unit", units()),
+                GridColumn.text("monthlyBudget", "Aylık Bütçe", true, GridWidth.PX_150),
+                GridColumn.text("description", "Açıklama", false, GridWidth.PX_180)
         );
     }
 
@@ -67,6 +78,9 @@ public final class CostCenterGrid {
 
     private static String labelOrCode(String label, String code) {
         String text = GridTexts.text(label);
-        return text.isBlank() ? GridTexts.text(code) : text;
+        if (text.isBlank()) {
+            return GridTexts.text(code);
+        }
+        return text;
     }
 }

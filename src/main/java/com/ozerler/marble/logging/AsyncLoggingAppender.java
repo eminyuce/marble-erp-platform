@@ -1,14 +1,5 @@
 package com.ozerler.marble.logging;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.UnsynchronizedAppenderBase;
-import ch.qos.logback.core.spi.AppenderAttachable;
-import ch.qos.logback.core.util.ReentryGuard;
-import ch.qos.logback.core.util.ReentryGuardFactory;
-import com.ozerler.marble.common.Constants;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +8,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.ozerler.marble.common.Constants;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.UnsynchronizedAppenderBase;
+import ch.qos.logback.core.spi.AppenderAttachable;
+import ch.qos.logback.core.util.ReentryGuard;
+import ch.qos.logback.core.util.ReentryGuardFactory;
 
 /**
  * Non-blocking (by default) Logback appender that enqueues events on application
@@ -164,7 +165,10 @@ public class AsyncLoggingAppender extends UnsynchronizedAppenderBase<ILoggingEve
 
     public int queueDepth() {
         BlockingQueue<ILoggingEvent> current = queue;
-        return current == null ? 0 : current.size();
+        if (current == null) {
+            return 0;
+        }
+        return current.size();
     }
 
     public int queueCapacity() {

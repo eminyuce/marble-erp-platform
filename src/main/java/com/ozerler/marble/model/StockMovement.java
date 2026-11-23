@@ -1,13 +1,32 @@
 package com.ozerler.marble.model;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
+
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.StockMovementType;
 import com.ozerler.marble.model.enums.TargetDestination;
-import jakarta.persistence.*;
-import lombok.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "stock_movements")
@@ -22,6 +41,11 @@ public class StockMovement extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 0;
 
     @Column(name = "movement_code", nullable = false, unique = true, length = 60)
     private String movementCode;
@@ -97,29 +121,46 @@ public class StockMovement extends AuditableEntity {
 
     @Transient
     public String getItemDisplayName() {
-        if (block != null) return "Blok: " + block.getBlockCode();
-        if (slab != null) return "Plaka: " + slab.getSlabCode();
-        if (stockItem != null) return "Ürün: " + stockItem.getItemCode();
-        return itemDescription != null ? itemDescription : "—";
+        if (block != null) {
+            return "Blok: " + block.getBlockCode();
+        }
+        if (slab != null) {
+            return "Plaka: " + slab.getSlabCode();
+        }
+        if (stockItem != null) {
+            return "Ürün: " + stockItem.getItemCode();
+        }
+        if (itemDescription != null) {
+            return itemDescription;
+        }
+        return "—";
     }
 
     @Transient
     public String getSourceDisplayName() {
-        if (fromLocation != null) return fromLocation.getName();
-        if (sourceDepartment != null) return sourceDepartment.getLabel();
+        if (fromLocation != null) {
+            return fromLocation.getName();
+        }
+        if (sourceDepartment != null) {
+            return sourceDepartment.getLabel();
+        }
         return "—";
     }
 
     @Transient
     public String getTargetDisplayName() {
-        if (toLocation != null) return toLocation.getName();
+        if (toLocation != null) {
+            return toLocation.getName();
+        }
         if (targetDestination != null) {
             if (targetDestination == TargetDestination.CUSTOMER && customer != null) {
                 return "Müşteri: " + customer.getCompanyName();
             }
             return targetDestination.getLabel();
         }
-        if (targetDepartment != null) return targetDepartment.getLabel();
+        if (targetDepartment != null) {
+            return targetDepartment.getLabel();
+        }
         return "—";
     }
 }

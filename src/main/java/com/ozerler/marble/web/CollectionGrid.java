@@ -1,11 +1,13 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.CollectionRecord;
-import com.ozerler.marble.model.enums.CollectionMethod;
-import org.springframework.data.domain.Page;
-
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
+
+import org.springframework.data.domain.Page;
+
+import com.ozerler.marble.dto.view.CollectionRef;
+import com.ozerler.marble.model.enums.CollectionMethod;
 
 /**
  * Tahsilat listesi. Method is the existing filter. There is no separate detail route.
@@ -15,39 +17,67 @@ public final class CollectionGrid {
     private CollectionGrid() {
     }
 
-    public static DataGridView view(Page<CollectionRecord> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<CollectionRef> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "collections-table", columns(), CollectionGrid::row);
     }
 
-    static GridRow row(CollectionRecord record) {
-        String invoiceNo = record.getInvoice() == null ? "" : record.getInvoice().getInvoiceNumber();
-        String invoiceUrl = record.getInvoice() == null ? null : "/invoices/" + record.getInvoice().getId();
+    static GridRow row(CollectionRef record) {
+        String invoiceNo;
+        if (record.getInvoice() == null) {
+            invoiceNo = "";
+        } else {
+            invoiceNo = record.getInvoice().getInvoiceNo();
+        }
+        String invoiceUrl;
+        if (record.getInvoice() == null) {
+            invoiceUrl = null;
+        } else {
+            invoiceUrl = "/invoices/" + record.getInvoice().getId();
+        }
+        String badge;
+        if (record.getCollectionMethod() == null) {
+            badge = "";
+        } else {
+            badge = record.getCollectionMethod().getDisplayName();
+        }
+        String value;
+        if (record.getCustomer() == null) {
+            value = "";
+        } else {
+            value = record.getCustomer().getCompanyName();
+        }
+        GridCell valueValue;
+        if (invoiceUrl == null) {
+            valueValue = GridCell.text(invoiceNo);
+        } else {
+            valueValue = GridCell.link(invoiceNo, invoiceUrl);
+        }
         return GridRow.of(null, null, null, null, List.of(
-                GridCell.badge(record.getCollectionMethod() == null ? "" : record.getCollectionMethod().getDisplayName()),
+                GridCell.badge(badge),
                 GridCell.chip(record.getId()),
                 GridCell.text(record.getCollectionNo()),
                 GridCell.text(OperationGridSupport.day(record.getCollectionDate())),
-                GridCell.text(record.getCustomer() == null ? "" : record.getCustomer().getCompanyName()),
+                GridCell.text(value),
                 GridCell.text(record.getBankName()),
-                invoiceUrl == null ? GridCell.text(invoiceNo) : GridCell.link(invoiceNo, invoiceUrl),
-                GridCell.text(GridTexts.money(record.getAmount() == null ? BigDecimal.ZERO : record.getAmount())),
+                valueValue,
+                GridCell.text(GridTexts.money(Objects.requireNonNullElse(record.getAmount(), BigDecimal.ZERO))),
                 GridCell.text(record.getNotes())
         ));
     }
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("method", "Yöntem", false, 150, "method",
+                GridColumn.filtered("method", "Yöntem", false, GridWidth.PX_150, "method",
                         OperationGridSupport.choices(CollectionMethod.values(), CollectionMethod::getDisplayName)),
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("collectionNo", "Makbuz / Belge No", false, 180),
-                GridColumn.text("collectionDate", "Tarih", false, 130),
-                GridColumn.text("customerName", "Müşteri / Cari", false, 200),
-                GridColumn.text("bankName", "Banka / Kasa", false, 160),
-                GridColumn.text("invoiceNo", "İlişkili Fatura", false, 160),
-                GridColumn.text("amount", "Tahsilat Tutarı", false, 150),
-                GridColumn.text("notes", "Açıklama", false, 200)
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("collectionNo", "Makbuz / Belge No", false, GridWidth.PX_180),
+                GridColumn.text("collectionDate", "Tarih", false, GridWidth.PX_130),
+                GridColumn.text("customerName", "Müşteri / Cari", false, GridWidth.PX_200),
+                GridColumn.text("bankName", "Banka / Kasa", false, GridWidth.PX_160),
+                GridColumn.text("invoiceNo", "İlişkili Fatura", false, GridWidth.PX_160),
+                GridColumn.text("amount", "Tahsilat Tutarı", false, GridWidth.PX_150),
+                GridColumn.text("notes", "Açıklama", false, GridWidth.PX_200)
         );
     }
 }

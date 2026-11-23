@@ -1,7 +1,13 @@
 package com.ozerler.marble.storage;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import com.ozerler.marble.config.PresignedUrlProperties;
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
@@ -9,6 +15,10 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+
+import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.config.PresignedUrlProperties;
+
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
@@ -19,15 +29,6 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
-import java.io.ByteArrayInputStream;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 @Testcontainers(disabledWithoutDocker = true)
 class S3ObjectStorageServiceContainerTest {
 
@@ -37,7 +38,7 @@ class S3ObjectStorageServiceContainerTest {
 
     @Container
     @SuppressWarnings("resource")
-    static final GenericContainer<?> rustfs = new GenericContainer<>(DockerImageName.parse("rustfs/rustfs:1.0.1"))
+    static final GenericContainer<?> RUSTFS = new GenericContainer<>(DockerImageName.parse("rustfs/rustfs:1.0.1"))
             .withEnv("RUSTFS_ACCESS_KEY", ACCESS_KEY)
             .withEnv("RUSTFS_SECRET_KEY", SECRET_KEY)
             .withEnv("RUSTFS_ADDRESS", ":9000")
@@ -48,7 +49,7 @@ class S3ObjectStorageServiceContainerTest {
     @Test
     @DisplayName("S3-compatible RustFS client can upload, download, exist-check, presign, and delete")
     void objectLifecycleAgainstRustFs() throws Exception {
-        String endpoint = "http://" + rustfs.getHost() + ":" + rustfs.getMappedPort(9000);
+        String endpoint = "http://" + RUSTFS.getHost() + ":" + RUSTFS.getMappedPort(9000);
         ObjectStorageProperties properties = new ObjectStorageProperties();
         properties.getRustfs().setEndpoint(endpoint);
         properties.getRustfs().setPublicEndpoint(endpoint);
@@ -58,7 +59,7 @@ class S3ObjectStorageServiceContainerTest {
         properties.getRustfs().setRegion("us-east-1");
 
         try (S3Client s3Client = s3Client(endpoint);
-             S3Presigner presigner = s3Presigner(endpoint)) {
+                S3Presigner presigner = s3Presigner(endpoint)) {
             S3ObjectStorageService storage = new S3ObjectStorageService(
                     s3Client, presigner, properties, new PresignedUrlProperties());
             storage.ensureBucketExists();
@@ -67,22 +68,22 @@ class S3ObjectStorageServiceContainerTest {
             byte[] payload = "rustfs-integration".getBytes(StandardCharsets.UTF_8);
             storage.upload(key, new ByteArrayInputStream(payload), payload.length, "text/plain");
 
-            assertThat(storage.exists(key)).isTrue();
-            assertThat(storage.download(key).readAllBytes()).isEqualTo(payload);
-            assertThat(storage.createPresignedUrl(key, Duration.ofMinutes(5)))
+            Assertions.assertThat(storage.exists(key)).isTrue();
+            Assertions.assertThat(storage.download(key).readAllBytes()).isEqualTo(payload);
+            Assertions.assertThat(storage.createPresignedUrl(key, Duration.ofMinutes(5)))
                     .startsWith(endpoint)
                     .contains(key);
-            assertThat(storage.checkHealth().getStatus()).isEqualTo("UP");
+            Assertions.assertThat(storage.checkHealth().getStatus()).isEqualTo("UP");
 
             storage.delete(key);
-            assertThat(storage.exists(key)).isFalse();
+            Assertions.assertThat(storage.exists(key)).isFalse();
         }
     }
 
     @Test
     @DisplayName("presigned image and document URLs use the public host and configured expiry")
     void presignedUrlsUsePublicEndpointAndDistinctExpiries() {
-        String internalEndpoint = "http://" + rustfs.getHost() + ":" + rustfs.getMappedPort(9000);
+        String internalEndpoint = "http://" + RUSTFS.getHost() + ":" + RUSTFS.getMappedPort(9000);
         String publicEndpoint = "http://files.example.com";
         ObjectStorageProperties properties = new ObjectStorageProperties();
         properties.getRustfs().setEndpoint(internalEndpoint);
@@ -95,7 +96,7 @@ class S3ObjectStorageServiceContainerTest {
         expiry.setDocumentExpiryMinutes(5);
 
         try (S3Client s3Client = s3Client(internalEndpoint);
-             S3Presigner presigner = s3Presigner(publicEndpoint)) {
+                S3Presigner presigner = s3Presigner(publicEndpoint)) {
             S3ObjectStorageService storage = new S3ObjectStorageService(s3Client, presigner, properties, expiry);
 
             String imageUrl = storage.presignedImageUrl("images/block/1/photo.jpg");
@@ -103,13 +104,13 @@ class S3ObjectStorageServiceContainerTest {
 
             URI image = URI.create(imageUrl);
             URI document = URI.create(documentUrl);
-            assertThat(image.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
-            assertThat(document.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
-            assertThat(image.getHost()).isNotEqualTo(URI.create(internalEndpoint).getHost());
-            assertThat(image.getAuthority()).doesNotContain(":" + rustfs.getMappedPort(9000));
-            assertThat(queryParams(imageUrl)).containsEntry("X-Amz-Expires", "1800");
-            assertThat(queryParams(documentUrl)).containsEntry("X-Amz-Expires", "300");
-            assertThat(imageUrl).contains("response-content-type=");
+            Assertions.assertThat(image.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
+            Assertions.assertThat(document.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
+            Assertions.assertThat(image.getHost()).isNotEqualTo(URI.create(internalEndpoint).getHost());
+            Assertions.assertThat(image.getAuthority()).doesNotContain(":" + RUSTFS.getMappedPort(9000));
+            Assertions.assertThat(queryParams(imageUrl)).containsEntry("X-Amz-Expires", "1800");
+            Assertions.assertThat(queryParams(documentUrl)).containsEntry("X-Amz-Expires", "300");
+            Assertions.assertThat(imageUrl).contains("response-content-type=");
         }
     }
 
@@ -121,8 +122,18 @@ class S3ObjectStorageServiceContainerTest {
         }
         for (String pair : query.split("&")) {
             int separator = pair.indexOf('=');
-            String key = separator < 0 ? pair : pair.substring(0, separator);
-            String value = separator < 0 ? "" : pair.substring(separator + 1);
+            String key;
+            if (separator < 0) {
+                key = pair;
+            } else {
+                key = pair.substring(0, separator);
+            }
+            String value;
+            if (separator < 0) {
+                value = "";
+            } else {
+                value = pair.substring(separator + 1);
+            }
             params.put(key, value);
         }
         return params;

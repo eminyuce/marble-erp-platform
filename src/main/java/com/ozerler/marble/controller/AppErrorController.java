@@ -1,12 +1,11 @@
 package com.ozerler.marble.controller;
 
-import com.ozerler.marble.exception.ErrorResponse;
-import com.ozerler.marble.util.ErrorPageDetails;
-import com.ozerler.marble.util.HtmlErrors;
+import java.util.Map;
+
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.error.ErrorAttributeOptions.Include;
 import org.springframework.boot.webmvc.error.ErrorAttributes;
@@ -19,7 +18,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
 
-import java.util.Map;
+import com.ozerler.marble.exception.ErrorResponse;
+import com.ozerler.marble.util.ErrorPageDetails;
+import com.ozerler.marble.util.HtmlErrors;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("${spring.web.error.path:${error.path:/error}}")
@@ -45,7 +48,8 @@ public class AppErrorController implements ErrorController {
     public String errorHtml(HttpServletRequest request, HttpServletResponse response, Model model) {
         HttpStatus status = statusOf(request);
         response.setStatus(status.value());
-        Map<String, Object> attributes = errorAttributes.getErrorAttributes(new ServletWebRequest(request), HTML_OPTIONS);
+        Map<String, Object> attributes =
+                errorAttributes.getErrorAttributes(new ServletWebRequest(request), HTML_OPTIONS);
         Throwable error = errorAttributes.getError(new ServletWebRequest(request));
         ErrorPageDetails page = HtmlErrors.page(status.value(), status.getReasonPhrase(), attributes, request, error);
         model.addAttribute("errorPage", page);
@@ -55,7 +59,8 @@ public class AppErrorController implements ErrorController {
     @RequestMapping
     public ResponseEntity<ErrorResponse> errorJson(HttpServletRequest request) {
         HttpStatus status = statusOf(request);
-        Map<String, Object> attributes = errorAttributes.getErrorAttributes(new ServletWebRequest(request), JSON_OPTIONS);
+        Map<String, Object> attributes =
+                errorAttributes.getErrorAttributes(new ServletWebRequest(request), JSON_OPTIONS);
         String path = HtmlErrors.pathOf(request, stringValue(attributes.get("path")));
         String message = HtmlErrors.messageFor(status.value(), stringValue(attributes.get("message")));
         return ResponseEntity.status(status).body(ErrorResponse.of(status, message, path));
@@ -74,6 +79,9 @@ public class AppErrorController implements ErrorController {
     }
 
     private static String stringValue(Object value) {
-        return value == null ? "" : String.valueOf(value);
+        if (value == null) {
+            return "";
+        }
+        return String.valueOf(value);
     }
 }

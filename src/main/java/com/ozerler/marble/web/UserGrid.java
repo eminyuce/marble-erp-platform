@@ -1,13 +1,13 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.dto.UserDto;
-import com.ozerler.marble.model.enums.UserRole;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.UserDto;
+import com.ozerler.marble.model.enums.UserRole;
 
 /**
  * Kullanıcı listesi. Sort keys match {@code GridPages.USER_SORTS}. Enabled filter already exists.
@@ -27,19 +27,41 @@ public final class UserGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "users-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "users-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(UserDto user) {
-        String id = user.getId() == null ? "" : user.getId().toString();
-        String viewUrl = id.isEmpty() ? "" : "/admin/users/" + id;
-        String editUrl = id.isEmpty() ? "" : viewUrl + "/edit";
+        String id;
+        if (user.getId() == null) {
+            id = "";
+        } else {
+            id = user.getId().toString();
+        }
+        String viewUrl;
+        if (id.isEmpty()) {
+            viewUrl = "";
+        } else {
+            viewUrl = "/admin/users/" + id;
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = viewUrl + "/edit";
+        }
         String deleteName = GridTexts.text(user.getFullName());
         if (deleteName.isBlank()) {
             deleteName = GridTexts.text(user.getUsername());
         }
-        return GridRow.of(viewUrl, editUrl, user.getId(), deleteName, List.of(
-                GridCell.badge(user.isEnabled() ? "Aktif" : "Askıda"),
+        String badge;
+        if (user.isEnabled()) {
+            badge = "Aktif";
+        } else {
+            badge = "Askıda";
+        }
+        return new GridRow(viewUrl, editUrl, id, deleteName, userActions(viewUrl, editUrl, user, deleteName), List.of(
+                GridCell.badge(badge),
                 GridCell.chip(user.getId()),
                 GridCell.link(user.getUsername(), viewUrl),
                 GridCell.link(user.getFullName(), viewUrl),
@@ -51,13 +73,13 @@ public final class UserGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("enabled", "Durum", true, 120, "enabled", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("username", "Kullanıcı Adı", true, 160),
-                GridColumn.text("fullName", "Ad Soyad", false, 180),
-                GridColumn.text("email", "E-Posta", true, 220),
-                GridColumn.text("roles", "Roller", false, 220),
-                GridColumn.text("createdAt", "Kayıt Tarihi", true, 140)
+                GridColumn.filtered("enabled", "Durum", true, GridWidth.PX_120, "enabled", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("username", "Kullanıcı Adı", true, GridWidth.PX_160),
+                GridColumn.text("fullName", "Ad Soyad", false, GridWidth.PX_180),
+                GridColumn.text("email", "E-Posta", true, GridWidth.PX_220),
+                GridColumn.text("roles", "Roller", false, GridWidth.PX_220),
+                GridColumn.text("createdAt", "Kayıt Tarihi", true, GridWidth.PX_140)
         );
     }
 
@@ -88,10 +110,33 @@ public final class UserGrid {
     }
 
     private static String createdOn(UserDto user) {
-        LocalDateTime created = user.getCreatedAt() != null ? user.getCreatedAt() : user.getCreatedDate();
+        LocalDateTime created;
+        if (user.getCreatedAt() != null) {
+            created = user.getCreatedAt();
+        } else {
+            created = user.getCreatedDate();
+        }
         if (created == null) {
             return "";
         }
         return GridTexts.date(created.toLocalDate());
+    }
+
+    private static List<GridAction> userActions(String viewUrl, String editUrl,
+                                                UserDto user, String deleteName) {
+        List<GridAction> items = new ArrayList<>();
+        if (!viewUrl.isBlank()) {
+            items.add(GridAction.link("Detay", "eye", viewUrl));
+        }
+        if (!editUrl.isBlank()) {
+            items.add(GridAction.link("Düzenle", "edit-3", editUrl));
+        }
+        if (!viewUrl.isBlank()) {
+            items.add(GridAction.link("Şifre Sıfırla", "key", viewUrl + "/reset-password"));
+        }
+        if (user.getId() != null) {
+            items.add(GridAction.delete("Sil", user.getId(), deleteName));
+        }
+        return items;
     }
 }

@@ -17,6 +17,8 @@
         </button>
         <div class="admin-topbar-title">
             <span class="admin-topbar-panel">Özerler Mermer ERP</span>
+            <span class="admin-topbar-version" th:text="${appVersion}" title="Uygulama sürümü"
+                  aria-label="Uygulama sürümü">1.0.7</span>
             <span class="admin-topbar-page" id="adminTopbarPage">Yönetim</span>
         </div>
         <nav class="hidden xl:flex items-center gap-1 ml-3" aria-label="Hızlı Modül Menüsü">
@@ -293,6 +295,23 @@
     </div>
 
     <style>
+        .admin-topbar-version {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 0.35rem;
+            padding: 0 0.45rem;
+            height: 1.25rem;
+            border: 1px solid #d7dee8;
+            border-radius: 999px;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            line-height: 1;
+        }
         .admin-topbar-health {
             display: inline-flex;
             align-items: center;

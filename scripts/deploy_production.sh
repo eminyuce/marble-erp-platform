@@ -7,7 +7,7 @@
 #   ./scripts/deploy_production.sh -y     # deploys without prompting
 #   ./scripts/deploy_production.sh --yes  # deploys without prompting
 #
-# See docs/production-deploy.md and DEPLOYMENT.md
+# See docs/production-deploy.md and docs/DEPLOYMENT_LINUX.md
 #
 # What this does:
 #   1. Pre-flight checks: Linux host, JDK 25+, Docker DB container running
@@ -88,6 +88,7 @@ SERVICE_GROUP="${SERVICE_GROUP:-$(id -gn "$SERVICE_USER" 2>/dev/null || echo "$S
 SERVER_PORT="${SERVER_PORT:-8080}"
 HEALTH_PATH="${HEALTH_PATH:-/health/}"
 ENV_FILE="${DEPLOY_DIR}/marble-erp.env"
+SECRETS_DIR="${SECRETS_DIR:-${DEPLOY_DIR}/secrets}"
 UNIT_PATH="/etc/systemd/system/${SERVICE_NAME}.service"
 JAR_NAME="marble-erp-platform-1.0.0.jar"
 BUILT_JAR="${REPO_ROOT}/target/${JAR_NAME}"
@@ -184,8 +185,40 @@ WantedBy=multi-user.target
 EOF
 }
 
+ensure_secret() {
+    local name="$1"
+    local provided="${2:-}"
+    local legacy_key="${3:-}"
+    local file="${SECRETS_DIR}/${name}.txt"
+    sudo_cmd mkdir -p "$SECRETS_DIR"
+    sudo_cmd chmod 700 "$SECRETS_DIR"
+    if sudo_cmd test -s "$file"; then
+        sudo_cmd chown "${APP_UID:-1001}:${APP_GID:-1001}" "$file"
+        sudo_cmd chmod 400 "$file"
+        return 0
+    fi
+    local value="$provided"
+    if [ -z "$value" ] && [ -n "$legacy_key" ] && [ -f "$ENV_FILE" ]; then
+        value="$(grep -E "^${legacy_key}=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d '"' || true)"
+    fi
+    if [ -z "$value" ] || [ "$value" = "CHANGE_ME" ]; then
+        die "Missing ${file}. Run scripts/setup-secrets.sh or pass ${legacy_key}."
+    fi
+    printf '%s\n' "$value" | sudo_cmd tee "$file" >/dev/null
+    sudo_cmd chown "${APP_UID:-1001}:${APP_GID:-1001}" "$file"
+    sudo_cmd chmod 400 "$file"
+}
+
+read_secret() {
+    sudo_cmd cat "${SECRETS_DIR}/$1.txt"
+}
+
 write_env_template() {
-    sudo_cmd tee "$ENV_FILE" >/dev/null <<'EOF'
+    ensure_secret db_password "${DB_PASSWORD:-}" DB_PASSWORD
+    ensure_secret remember_me_key "${REMEMBER_ME_KEY:-}" REMEMBER_ME_KEY
+    ensure_secret rustfs_access_key "${RUSTFS_ACCESS_KEY:-}" RUSTFS_ACCESS_KEY
+    ensure_secret rustfs_secret_key "${RUSTFS_SECRET_KEY:-}" RUSTFS_SECRET_KEY
+    sudo_cmd tee "$ENV_FILE" >/dev/null <<EOF
 # Production environment for Özerler Mermer ERP
 # Loaded by systemd (EnvironmentFile). Do not commit this file.
 # Matches src/main/resources/application-prod.yml
@@ -199,7 +232,7 @@ DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_NAME=marble_erp
 DB_USERNAME=marbleuser
-DB_PASSWORD=marblepass
+DB_PASSWORD_FILE=${SECRETS_DIR}/db_password.txt
 DB_URL=jdbc:postgresql://127.0.0.1:5432/marble_erp
 
 # Database Connection Pool Settings
@@ -219,8 +252,9 @@ RUSTFS_ENDPOINT=http://127.0.0.1:9000
 RUSTFS_PUBLIC_ENDPOINT=https://ozerler.naklink.com
 PRESIGNED_IMAGE_EXPIRY_MINUTES=30
 PRESIGNED_DOCUMENT_EXPIRY_MINUTES=5
-RUSTFS_ACCESS_KEY=CHANGE_ME
-RUSTFS_SECRET_KEY=CHANGE_ME
+REMEMBER_ME_KEY_FILE=${SECRETS_DIR}/remember_me_key.txt
+RUSTFS_ACCESS_KEY_FILE=${SECRETS_DIR}/rustfs_access_key.txt
+RUSTFS_SECRET_KEY_FILE=${SECRETS_DIR}/rustfs_secret_key.txt
 RUSTFS_BUCKET=erp-files
 RUSTFS_REGION=us-east-1
 RUSTFS_DATA_DIR=/opt/rustfs/data
@@ -332,6 +366,18 @@ echo "[STORAGE] Preserving legacy media directories for RustFS migration: $MEDIA
 sudo_cmd chown -R "${TARGET_USER}:${TARGET_GROUP}" "$MEDIA_DIR" "$DEPLOY_DIR/uploads" || true
 sudo_cmd chmod -R u+rwX "$MEDIA_DIR" "$DEPLOY_DIR/uploads" || true
 
+point_secret() {
+    local key="$1"
+    local file_key="$2"
+    local file_name="$3"
+    if grep -q "^${key}=" "$ENV_FILE"; then
+        sudo_cmd sed -i "/^${key}=/d" "$ENV_FILE"
+    fi
+    if ! grep -q "^${file_key}=" "$ENV_FILE"; then
+        printf '%s=%s/%s.txt\n' "$file_key" "$SECRETS_DIR" "$file_name" | sudo_cmd tee -a "$ENV_FILE" >/dev/null
+    fi
+}
+
 ensure_rustfs_env_keys() {
     if [ ! -f "$ENV_FILE" ]; then
         return 0
@@ -339,23 +385,6 @@ ensure_rustfs_env_keys() {
     if grep -q '^STORAGE_TYPE=minio$' "$ENV_FILE"; then
         echo "[ENV] Switching STORAGE_TYPE from minio to rustfs in $ENV_FILE"
         sudo_cmd sed -i 's/^STORAGE_TYPE=minio$/STORAGE_TYPE=rustfs/' "$ENV_FILE"
-    fi
-
-    # Append each key at most once. A later deploy must not grow marble-erp.env.
-    local access_key secret_key
-    access_key="$(grep -E '^RUSTFS_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | head -n 1 | cut -d'=' -f2- | tr -d ' "' || true)"
-    secret_key="$(grep -E '^RUSTFS_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | head -n 1 | cut -d'=' -f2- | tr -d ' "' || true)"
-    if [ -z "$access_key" ]; then
-        access_key="$(grep -E '^MINIO_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | head -n 1 | cut -d'=' -f2- | tr -d ' "' || true)"
-    fi
-    if [ -z "$secret_key" ]; then
-        secret_key="$(grep -E '^MINIO_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | head -n 1 | cut -d'=' -f2- | tr -d ' "' || true)"
-    fi
-    if [ -z "$access_key" ] || [ "$access_key" = "CHANGE_ME" ]; then
-        access_key="CHANGE_ME"
-    fi
-    if [ -z "$secret_key" ] || [ "$secret_key" = "CHANGE_ME" ]; then
-        secret_key="CHANGE_ME"
     fi
 
     local -a missing_lines=()
@@ -367,12 +396,6 @@ ensure_rustfs_env_keys() {
     fi
     if ! grep -q '^RUSTFS_PUBLIC_ENDPOINT=' "$ENV_FILE"; then
         missing_lines+=("RUSTFS_PUBLIC_ENDPOINT=https://ozerler.naklink.com")
-    fi
-    if ! grep -q '^RUSTFS_ACCESS_KEY=' "$ENV_FILE"; then
-        missing_lines+=("RUSTFS_ACCESS_KEY=${access_key}")
-    fi
-    if ! grep -q '^RUSTFS_SECRET_KEY=' "$ENV_FILE"; then
-        missing_lines+=("RUSTFS_SECRET_KEY=${secret_key}")
     fi
     if ! grep -q '^RUSTFS_BUCKET=' "$ENV_FILE"; then
         missing_lines+=("RUSTFS_BUCKET=erp-files")
@@ -387,20 +410,22 @@ ensure_rustfs_env_keys() {
         return 0
     fi
 
-    echo "[ENV] Appending missing RustFS object-storage settings to $ENV_FILE"
-    {
-        echo ""
-        if ! grep -q '^RUSTFS_ENDPOINT=' "$ENV_FILE" && ! grep -q '^RUSTFS_BUCKET=' "$ENV_FILE"; then
-            echo "# RustFS object storage (S3-compatible Docker). Do not mount a MinIO data directory."
-        fi
-        printf '%s\n' "${missing_lines[@]}"
-    } | sudo_cmd tee -a "$ENV_FILE" >/dev/null
+    echo "[ENV] Appending missing RustFS settings to $ENV_FILE"
+    printf '%s\n' "${missing_lines[@]}" | sudo_cmd tee -a "$ENV_FILE" >/dev/null
 }
 
 if [ ! -f "$ENV_FILE" ]; then
     echo "[ENV] Writing initial $ENV_FILE"
     write_env_template
 else
+    ensure_secret db_password "${DB_PASSWORD:-}" DB_PASSWORD
+    ensure_secret remember_me_key "${REMEMBER_ME_KEY:-}" REMEMBER_ME_KEY
+    ensure_secret rustfs_access_key "${RUSTFS_ACCESS_KEY:-}" RUSTFS_ACCESS_KEY
+    ensure_secret rustfs_secret_key "${RUSTFS_SECRET_KEY:-}" RUSTFS_SECRET_KEY
+    point_secret DB_PASSWORD DB_PASSWORD_FILE db_password
+    point_secret REMEMBER_ME_KEY REMEMBER_ME_KEY_FILE remember_me_key
+    point_secret RUSTFS_ACCESS_KEY RUSTFS_ACCESS_KEY_FILE rustfs_access_key
+    point_secret RUSTFS_SECRET_KEY RUSTFS_SECRET_KEY_FILE rustfs_secret_key
     ensure_rustfs_env_keys
 fi
 if grep -Eq 'CHANGE_ME|YOUR_PUBLIC_HOST|YOUR_STRONG' "$ENV_FILE"; then
@@ -449,8 +474,10 @@ if command -v docker >/dev/null 2>&1; then
         (cd "$REPO_ROOT" && docker compose -f docker/docker-compose.yml down --remove-orphans 2>/dev/null || true)
 
         echo "[RUSTFS] Creating RustFS container from docker/docker-compose.yml (data: $RUSTFS_DATA_DIR_VALUE)"
-        RUSTFS_ACCESS_KEY_VALUE="$(grep -E '^RUSTFS_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
-        RUSTFS_SECRET_KEY_VALUE="$(grep -E '^RUSTFS_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
+        # The RustFS image reads keys from the environment. Values stay in secret files
+        # and are passed only to this compose process. This script never uses "down -v".
+        RUSTFS_ACCESS_KEY_VALUE="$(read_secret rustfs_access_key)"
+        RUSTFS_SECRET_KEY_VALUE="$(read_secret rustfs_secret_key)"
         set +e
         (cd "$REPO_ROOT" && \
             RUSTFS_DATA_DIR="$RUSTFS_DATA_DIR_VALUE" \

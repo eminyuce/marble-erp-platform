@@ -1,10 +1,11 @@
 package com.ozerler.marble.dto;
 
+import java.time.LocalDate;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Value;
-
-import java.time.LocalDate;
 
 /**
  * Page-specific help payload served to the slide-over panel.
@@ -24,17 +25,17 @@ import java.time.LocalDate;
 public class HelpPageDto {
 
     @JsonProperty("pageKey")
-    String pageKey;
+    private String pageKey;
 
     @JsonProperty("title")
-    String title;
+    private String title;
 
     @JsonProperty("body")
-    String body;
+    private String body;
 
     @JsonProperty("format")
-    String format;
+    private String format;
 
     @JsonProperty("lastUpdated")
-    LocalDate lastUpdated;
+    private LocalDate lastUpdated;
 }

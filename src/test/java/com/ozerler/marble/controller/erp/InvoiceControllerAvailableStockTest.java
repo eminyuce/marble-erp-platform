@@ -1,66 +1,44 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.model.StockItem;
-import com.ozerler.marble.model.StockLocation;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.repository.BlockRepository;
-import com.ozerler.marble.repository.CustomerRepository;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.repository.SlabRepository;
-import com.ozerler.marble.repository.StockItemRepository;
-import com.ozerler.marble.repository.SupplierRepository;
-import com.ozerler.marble.service.InvoiceService;
-import com.ozerler.marble.service.QuarryInventoryService;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.StockLocation;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.service.FormLookupService;
+import com.ozerler.marble.service.InvoiceScreenService;
+import com.ozerler.marble.service.InvoiceService;
+import com.ozerler.marble.service.QuarryInventoryService;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceControllerAvailableStockTest {
 
     @Mock
+    private FormLookupService formLookup;
+
+    @Mock
     private InvoiceService invoiceService;
-
-    @Mock
-    private CustomerRepository customerRepository;
-
-    @Mock
-    private SupplierRepository supplierRepository;
-
-    @Mock
-    private BlockRepository blockRepository;
-
-    @Mock
-    private StockItemRepository stockItemRepository;
-
-    @Mock
-    private SlabRepository slabRepository;
-
-    @Mock
-    private ProjectRepository projectRepository;
 
     @Mock
     private QuarryInventoryService quarryInventoryService;
 
-    @Mock
-    private com.ozerler.marble.service.ProcurementService procurementService;
-
     @InjectMocks
-    private InvoiceController controller;
+    private InvoiceScreenService screen;
 
     @Test
     @DisplayName("sized stock is filtered by the already loaded stock location business unit")
-    void getAvailableStock_FiltersSizedItemsByLoadedLocation() {
+    void getAvailableStockFiltersSizedItemsByLoadedLocation() {
         StockItem factoryItem = sizedItem("EB-FAB", BusinessUnit.FACTORY);
         StockItem workshopItem = sizedItem("EB-ATL", BusinessUnit.WORKSHOP);
         StockItem unlocatedItem = StockItem.builder()
@@ -69,13 +47,13 @@ class InvoiceControllerAvailableStockTest {
                 .stoneType("Traverten")
                 .build();
 
-        when(stockItemRepository.findPositiveQuantityWithLocation())
+        Mockito.when(formLookup.positiveStockEntities())
                 .thenReturn(List.of(factoryItem, workshopItem, unlocatedItem));
 
-        List<Map<String, Object>> result = controller.getAvailableStock(
+        List<Map<String, Object>> result = screen.availableStock(
                 BusinessUnit.FACTORY, "SIZED", null, null, false);
 
-        assertThat(result).extracting(row -> row.get("code"))
+        Assertions.assertThat(result).extracting(row -> row.get("code"))
                 .containsExactly("EB-FAB", "EB-YOK");
     }
 

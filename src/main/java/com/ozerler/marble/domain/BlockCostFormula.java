@@ -1,10 +1,10 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.common.Constants;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
+
+import com.ozerler.marble.common.Constants;
 
 /**
  * Ocak blok çıkarma maliyeti hesapları.
@@ -19,8 +19,18 @@ public final class BlockCostFormula {
     }
 
     public static BigDecimal expensePerTon(BigDecimal totalExpenses, BigDecimal totalTonnage) {
-        BigDecimal expenses = totalExpenses != null ? totalExpenses : BigDecimal.ZERO;
-        BigDecimal tons = totalTonnage != null ? totalTonnage : BigDecimal.ZERO;
+        BigDecimal expenses;
+        if (totalExpenses != null) {
+            expenses = totalExpenses;
+        } else {
+            expenses = BigDecimal.ZERO;
+        }
+        BigDecimal tons;
+        if (totalTonnage != null) {
+            tons = totalTonnage;
+        } else {
+            tons = BigDecimal.ZERO;
+        }
         if (tons.compareTo(BigDecimal.ZERO) <= 0) {
             return null;
         }
@@ -66,7 +76,12 @@ public final class BlockCostFormula {
         if (totalTonnage.compareTo(BigDecimal.ZERO) <= 0 || avgMarketValuePerTon == null) {
             return null;
         }
-        BigDecimal expenses = totalExpenses != null ? totalExpenses : BigDecimal.ZERO;
+        BigDecimal expenses;
+        if (totalExpenses != null) {
+            expenses = totalExpenses;
+        } else {
+            expenses = BigDecimal.ZERO;
+        }
         return avgMarketValuePerTon.subtract(
                 expenses.divide(totalTonnage, Constants.COST_SCALE, RoundingMode.HALF_UP));
     }

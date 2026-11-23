@@ -1,19 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.GlobalSearchHit;
-import com.ozerler.marble.dto.GlobalSearchResponse;
-import com.ozerler.marble.model.Block;
-import com.ozerler.marble.repository.*;
-import com.ozerler.marble.util.Strings;
-import com.ozerler.marble.util.Urls;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -22,9 +8,44 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.GlobalSearchHit;
+import com.ozerler.marble.dto.GlobalSearchResponse;
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.CutItemRepository;
+import com.ozerler.marble.repository.CutOrderRepository;
+import com.ozerler.marble.repository.ProductionOrderRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.PurchaseOrderRepository;
+import com.ozerler.marble.repository.QuarryRepository;
+import com.ozerler.marble.repository.SalesOrderRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.SupplierRepository;
+import com.ozerler.marble.repository.UserRepository;
+import com.ozerler.marble.util.MessageUtils;
+import com.ozerler.marble.util.Strings;
+import com.ozerler.marble.util.Urls;
+
+import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
 public class GlobalSearchService {
+
+    private static final int PREFIX_MATCH_SCORE = 80;
+    private static final int SUBTITLE_MATCH_SCORE = 40;
+    private static final int TITLE_MATCH_SCORE = 60;
 
     private final BlockRepository blockRepository;
     private final ProjectRepository projectRepository;
@@ -39,7 +60,7 @@ public class GlobalSearchService {
     private final CostCenterRepository costCenterRepository;
     private final CutItemRepository cutItemRepository;
     private final QuarryRepository quarryRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     @Qualifier(Constants.SEARCH_EXECUTOR)
     private final AsyncTaskExecutor searchTaskExecutor;
@@ -47,15 +68,21 @@ public class GlobalSearchService {
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public GlobalSearchResponse search(String rawQuery) {
-        String query = rawQuery == null ? "" : rawQuery.trim();
+        String query;
+        if (rawQuery == null) {
+            query = "";
+        } else {
+            query = rawQuery.trim();
+        }
         if (query.length() < Constants.SEARCH_MIN_QUERY_LENGTH) {
             return GlobalSearchResponse.empty(query);
         }
@@ -125,9 +152,17 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchSlabs(String query, Pageable limit) {
         return slabRepository.searchBySlabCode(query, limit).stream()
-                .map(slab -> hit("SLAB", getMessage("search.type.slab"), "layers", slab.getSlabCode(),
-                        slab.getStatus() != null ? slab.getStatus().name() : null,
-                        "/passport/" + Urls.encode(slab.getSlabCode()), query))
+                .map(slab -> {
+                    String hitValue;
+                    if (slab.getStatus() != null) {
+                        hitValue = slab.getStatus().name();
+                    } else {
+                        hitValue = null;
+                    }
+                    return hit("SLAB", getMessage("search.type.slab"), "layers", slab.getSlabCode(),
+                            hitValue,
+                            "/passport/" + Urls.encode(slab.getSlabCode()), query);
+                })
                 .toList();
     }
 
@@ -142,10 +177,18 @@ public class GlobalSearchService {
     private List<GlobalSearchHit> searchCutOrders(String query, Pageable limit) {
         return cutOrderRepository.searchByCutOrderNo(query, limit).stream()
                 .map(order -> {
-                    String url = order.getProject() != null
-                            ? "/projects/" + order.getProject().getId()
-                            : "/workshop";
-                    String projectName = order.getProject() != null ? order.getProject().getName() : null;
+                    String url;
+                    if (order.getProject() != null) {
+                        url = "/projects/" + order.getProject().getId();
+                    } else {
+                        url = "/workshop";
+                    }
+                    String projectName;
+                    if (order.getProject() != null) {
+                        projectName = order.getProject().getName();
+                    } else {
+                        projectName = null;
+                    }
                     return hit("CUT_ORDER", getMessage("search.type.cut_order"), "scissors", order.getCutOrderNo(),
                             projectName, url, query);
                 })
@@ -154,17 +197,33 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchSalesOrders(String query, Pageable limit) {
         return salesOrderRepository.searchByOrderNo(query, limit).stream()
-                .map(order -> hit("SALES", getMessage("search.type.sales"), "shopping-cart", order.getOrderNo(),
-                        order.getCustomer() != null ? order.getCustomer().getCompanyName() : null,
-                        "/sales/" + order.getId(), query))
+                .map(order -> {
+                    String hitValue;
+                    if (order.getCustomer() != null) {
+                        hitValue = order.getCustomer().getCompanyName();
+                    } else {
+                        hitValue = null;
+                    }
+                    return hit("SALES", getMessage("search.type.sales"), "shopping-cart", order.getOrderNo(),
+                            hitValue,
+                            "/sales/" + order.getId(), query);
+                })
                 .toList();
     }
 
     private List<GlobalSearchHit> searchPurchaseOrders(String query, Pageable limit) {
         return purchaseOrderRepository.searchByPoNumber(query, limit).stream()
-                .map(order -> hit("PROCUREMENT", getMessage("search.type.procurement"), "truck", order.getPoNumber(),
-                        order.getSupplier() != null ? order.getSupplier().getCompanyName() : null,
-                        "/procurement/" + order.getId(), query))
+                .map(order -> {
+                    String hitValue;
+                    if (order.getSupplier() != null) {
+                        hitValue = order.getSupplier().getCompanyName();
+                    } else {
+                        hitValue = null;
+                    }
+                    return hit("PROCUREMENT", getMessage("search.type.procurement"), "truck", order.getPoNumber(),
+                            hitValue,
+                            "/procurement/" + order.getId(), query);
+                })
                 .toList();
     }
 
@@ -241,18 +300,21 @@ public class GlobalSearchService {
             return 100;
         }
         if (t.startsWith(q)) {
-            return 80;
+            return PREFIX_MATCH_SCORE;
         }
         if (t.contains(q)) {
-            return 60;
+            return TITLE_MATCH_SCORE;
         }
         if (s.contains(q)) {
-            return 40;
+            return SUBTITLE_MATCH_SCORE;
         }
         return 10;
     }
 
     private static String statusLabel(Block block) {
-        return block.getStatus() != null ? block.getStatus().name() : null;
+        if (block.getStatus() != null) {
+            return block.getStatus().name();
+        }
+        return null;
     }
 }

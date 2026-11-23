@@ -1,7 +1,9 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.dto.OrderChildAggregate;
-import com.ozerler.marble.model.ProductionOrder;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,9 +12,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.dto.OrderChildAggregate;
+import com.ozerler.marble.model.ProductionOrder;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface ProductionOrderRepository extends JpaRepository<ProductionOrder, Long> {
@@ -27,10 +29,11 @@ public interface ProductionOrderRepository extends JpaRepository<ProductionOrder
     List<ProductionOrder> findByBlockId(Long blockId);
 
     @EntityGraph(attributePaths = {"block"})
-    @Query("SELECT p FROM ProductionOrder p WHERE " +
-            "(:search IS NULL OR LOWER(p.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(p.machineName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(p.block.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query(value = "SELECT p FROM ProductionOrder p WHERE "
+            + "(:search IS NULL OR LOWER(p.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(p.machineName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(p.block.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<ProductionOrder> searchOrders(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT p FROM ProductionOrder p WHERE LOWER(p.orderNo) LIKE LOWER(CONCAT('%', :query, '%'))")

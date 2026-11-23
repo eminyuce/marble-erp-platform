@@ -1,6 +1,31 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import org.hibernate.Hibernate;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.dto.OrderChildAggregate;
+import com.ozerler.marble.dto.ProductionOrderDto;
+import com.ozerler.marble.dto.SlabDto;
+import com.ozerler.marble.dto.SlabLabelDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.ProductionOrderView;
+import com.ozerler.marble.dto.view.SlabView;
+import com.ozerler.marble.mapper.ProductionOrderMapper;
+import com.ozerler.marble.mapper.SlabMapper;
 import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.ScrapLog;
 import com.ozerler.marble.model.Slab;
@@ -14,49 +39,47 @@ import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.ScrapLogRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.util.GridPages;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.hibernate.Hibernate;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.ozerler.marble.util.MessageUtils;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ProductionService {
 
     private final ProductionOrderRepository productionOrderRepository;
+    private final ProductionOrderMapper productionOrderMapper;
+    private final SlabMapper slabMapper;
     private final SlabRepository slabRepository;
     private final ScrapLogRepository scrapLogRepository;
     private final BarcodeService barcodeService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
     private final FactoryProductionService factoryProductionService;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
-    public record ProductionSummaryDto(long totalOrders, long activeOrders, long completedOrders, BigDecimal totalSlabAreaM2) {}
+    public record ProductionSummaryDto(
+            long totalOrders,
+            long activeOrders,
+            long completedOrders,
+            BigDecimal totalSlabAreaM2) {
+    }
 
     @Transactional(readOnly = true)
     public ProductionSummaryDto getProductionSummary() {
         long totalOrders = productionOrderRepository.count();
         long activeOrders = productionOrderRepository.countActiveOrders();
         long completedOrders = Math.max(0, totalOrders - activeOrders);
-        BigDecimal totalSlabArea = slabRepository.findAll().stream()
+        BigDecimal totalSlabArea = BoundedReads.all(slabRepository).stream()
                 .map(slab -> slab.getSurfaceAreaM2())
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
@@ -64,14 +87,24 @@ public class ProductionService {
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<ProductionOrderDto> getOrdersPaged(int page, int size, String search, String sortField, String sortDir) {
+    public TabulatorResponse<ProductionOrderDto> getOrdersPaged(
+            int page, int size, String search, String sortField, String sortDir) {
         return getOrdersPaged(page, size, search, null, sortField, sortDir);
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<ProductionOrderDto> getOrdersPaged(int page, int size, String search, String status, String sortField, String sortDir) {
-        Page<ProductionOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PRODUCTION_ORDER_SORTS,
-                pageable -> productionOrderRepository.searchOrders(GridPages.normalizeSearch(search), pageable));
+    public TabulatorResponse<ProductionOrderDto> getOrdersPaged(
+            int page, int size, String search, String status, String sortField, String sortDir) {
+        Page<ProductionOrder> orderPage =
+                GridPages.execute(
+                        page,
+                        size,
+                        sortField,
+                        sortDir,
+                        GridPages.PRODUCTION_ORDER_SORTS,
+                        pageable ->
+                                productionOrderRepository.searchOrders(
+                                        GridPages.normalizeSearch(search), pageable));
         List<ProductionOrder> orders = orderPage.getContent();
         if (status != null && !status.isBlank()) {
             orders = orders.stream()
@@ -142,41 +175,81 @@ public class ProductionService {
                 scrapReason, scrapWeightKg, scrapNotes));
     }
 
-    public record SlabSummaryDto(long totalSlabs, BigDecimal totalAreaM2, BigDecimal avgCostPerM2, long reservedCount) {}
+    public record SlabSummaryDto(long totalSlabs, BigDecimal totalAreaM2, BigDecimal avgCostPerM2, long reservedCount) {
+    }
 
     @Transactional(readOnly = true)
     public SlabSummaryDto getSlabSummary() {
-        List<Slab> all = slabRepository.findAll();
+        List<Slab> all = BoundedReads.all(slabRepository);
         long totalSlabs = all.size();
         BigDecimal totalArea = all.stream()
                 .map(slab -> slab.getSurfaceAreaM2())
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalCost = all.stream()
-                .map(s -> (s.getCostPerM2() != null && s.getSurfaceAreaM2() != null) ? s.getCostPerM2().multiply(s.getSurfaceAreaM2()) : BigDecimal.ZERO)
+                .map(s -> {
+                    if (s.getCostPerM2() != null && s.getSurfaceAreaM2() != null) {
+                        return s.getCostPerM2().multiply(s.getSurfaceAreaM2());
+                    }
+                    return BigDecimal.ZERO;
+                })
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        BigDecimal avgCost = (totalArea.compareTo(BigDecimal.ZERO) > 0)
-                ? totalCost.divide(totalArea, 2, java.math.RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-        long reserved = all.stream().filter(s -> s.getStatus() != null && "RESERVED".equalsIgnoreCase(s.getStatus().name())).count();
+        BigDecimal avgCost;
+        if (totalArea.compareTo(BigDecimal.ZERO) > 0) {
+            avgCost = totalCost.divide(totalArea, 2, RoundingMode.HALF_UP);
+        } else {
+            avgCost = BigDecimal.ZERO;
+        }
+        long reserved =
+                all.stream()
+                        .filter(
+                                s ->
+                                        s.getStatus() != null
+                                                && "RESERVED"
+                                                        .equalsIgnoreCase(s.getStatus().name()))
+                        .count();
         return new SlabSummaryDto(totalSlabs, totalArea, avgCost, reserved);
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<SlabDto> getSlabsPaged(int page, int size, String search, String sortField, String sortDir) {
+    public TabulatorResponse<SlabDto> getSlabsPaged(
+            int page, int size, String search, String sortField, String sortDir) {
         return getSlabsPaged(page, size, search, null, null, sortField, sortDir);
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<SlabDto> getSlabsPaged(int page, int size, String search, String status, String quality, String sortField, String sortDir) {
+    public TabulatorResponse<SlabDto> getSlabsPaged(
+            int page,
+            int size,
+            String search,
+            String status,
+            String quality,
+            String sortField,
+            String sortDir) {
         Page<Slab> slabPage = GridPages.execute(page, size, sortField, sortDir, GridPages.SLAB_SORTS,
                 pageable -> slabRepository.searchSlabs(GridPages.normalizeSearch(search), pageable));
         List<Slab> slabs = slabPage.getContent();
         if (status != null && !status.isBlank()) {
-            slabs = slabs.stream().filter(s -> s.getStatus() != null && s.getStatus().name().equalsIgnoreCase(status)).toList();
+            slabs =
+                    slabs.stream()
+                            .filter(
+                                    s ->
+                                            s.getStatus() != null
+                                                    && s.getStatus()
+                                                            .name()
+                                                            .equalsIgnoreCase(status))
+                            .toList();
         }
         if (quality != null && !quality.isBlank()) {
-            slabs = slabs.stream().filter(s -> s.getQualityGrade() != null && s.getQualityGrade().name().equalsIgnoreCase(quality)).toList();
+            slabs =
+                    slabs.stream()
+                            .filter(
+                                    s ->
+                                            s.getQualityGrade() != null
+                                                    && s.getQualityGrade()
+                                                            .name()
+                                                            .equalsIgnoreCase(quality))
+                            .toList();
         }
         List<SlabDto> dtos = slabs.stream()
                 .map(SlabDto::fromEntity)
@@ -186,7 +259,7 @@ public class ProductionService {
 
     @Transactional(readOnly = true)
     public List<ScrapLog> getAllScrapLogs() {
-        return scrapLogRepository.findAll();
+        return BoundedReads.all(scrapLogRepository);
     }
 
     @Transactional(readOnly = true)
@@ -206,22 +279,39 @@ public class ProductionService {
         Slab slab = slabRepository.findByIdWithBlockAndQuarry(id)
                 .orElseThrow(() -> new EntityNotFoundException(getMessage("error.slab.entity_not_found", id)));
 
-        String baseUrl = passportBaseUrl != null && !passportBaseUrl.isBlank()
-                ? passportBaseUrl
-                : "http://localhost:8080/passport/";
+        String baseUrl;
+        if (passportBaseUrl != null && !passportBaseUrl.isBlank()) {
+            baseUrl = passportBaseUrl;
+        } else {
+            baseUrl = "http://localhost:8080/passport/";
+        }
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }
         String passportUrl = baseUrl + slab.getSlabCode();
         String qrCodeBase64 = barcodeService.generateQrCodeBase64(passportUrl);
 
-        String blockCode = slab.getBlock() != null ? slab.getBlock().getBlockCode() : "—";
-        String stoneType = slab.getBlock() != null ? slab.getBlock().getStoneType() : "—";
-        String quarryName = slab.getBlock() != null && slab.getBlock().getQuarry() != null
-                ? slab.getBlock().getQuarry().getName() : "—";
+        String blockCode;
+        if (slab.getBlock() != null) {
+            blockCode = slab.getBlock().getBlockCode();
+        } else {
+            blockCode = "—";
+        }
+        String stoneType;
+        if (slab.getBlock() != null) {
+            stoneType = slab.getBlock().getStoneType();
+        } else {
+            stoneType = "—";
+        }
+        String quarryName;
+        if (slab.getBlock() != null && slab.getBlock().getQuarry() != null) {
+            quarryName = slab.getBlock().getQuarry().getName();
+        } else {
+            quarryName = "—";
+        }
 
         return SlabLabelDto.builder()
-                .slab(slab)
+                .slab(slabMapper.toDto(slab))
                 .qrCodeBase64(qrCodeBase64)
                 .blockCode(blockCode)
                 .stoneType(stoneType)
@@ -273,5 +363,30 @@ public class ProductionService {
             slab.setStatus(status);
         }
         return slabRepository.save(slab);
+    }
+
+    /**
+     * Loads a production order with its block, slabs and scrap logs and copies it into a view.
+     *
+     * @param id production order id
+     * @return the production order view
+     */
+    @Transactional(readOnly = true)
+    public ProductionOrderView getOrderView(Long id) {
+        ProductionOrder order = getOrderWithDetails(id);
+        ProductionOrderView view = productionOrderMapper.toDto(order);
+        view.setStatusLabel(order.getStatusLabel());
+        return view;
+    }
+
+    /**
+     * Loads a slab with its block, pallet and production order and copies it into a view.
+     *
+     * @param id slab id
+     * @return the slab view
+     */
+    @Transactional(readOnly = true)
+    public SlabView getSlabView(Long id) {
+        return slabMapper.toDto(getSlabWithDetails(id));
     }
 }

@@ -1,11 +1,12 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Model for 'ORDER_CONFIRMATION' email template.
@@ -38,17 +39,17 @@ public class OrderConfirmationEmailModel implements BaseEmailModel {
     @Override
     public Map<String, String> toVariables() {
         Map<String, String> vars = new LinkedHashMap<>();
-        vars.put("customerName", customerName != null ? customerName : "");
-        vars.put("orderNumber", orderNumber != null ? orderNumber : "");
-        vars.put("orderDate", orderDate != null ? orderDate : "");
-        vars.put("deliveryDate", deliveryDate != null ? deliveryDate : "");
-        vars.put("totalM2", totalM2 != null ? totalM2 : "0.00");
-        vars.put("itemsSummary", itemsSummary != null ? itemsSummary : "");
-        vars.put("totalAmount", totalAmount != null ? totalAmount : "0.00");
-        vars.put("currency", currency != null ? currency : "TL");
-        vars.put("salesRepresentative", salesRepresentative != null ? salesRepresentative : "");
-        vars.put("notes", notes != null ? notes : "");
-        vars.put("companyName", companyName != null ? companyName : "Özerler Mermer A.Ş.");
+        vars.put("customerName", Objects.requireNonNullElse(customerName, ""));
+        vars.put("orderNumber", Objects.requireNonNullElse(orderNumber, ""));
+        vars.put("orderDate", Objects.requireNonNullElse(orderDate, ""));
+        vars.put("deliveryDate", Objects.requireNonNullElse(deliveryDate, ""));
+        vars.put("totalM2", Objects.requireNonNullElse(totalM2, "0.00"));
+        vars.put("itemsSummary", Objects.requireNonNullElse(itemsSummary, ""));
+        vars.put("totalAmount", Objects.requireNonNullElse(totalAmount, "0.00"));
+        vars.put("currency", Objects.requireNonNullElse(currency, "TL"));
+        vars.put("salesRepresentative", Objects.requireNonNullElse(salesRepresentative, ""));
+        vars.put("notes", Objects.requireNonNullElse(notes, ""));
+        vars.put("companyName", Objects.requireNonNullElse(companyName, "Özerler Mermer A.Ş."));
         return vars;
     }
 

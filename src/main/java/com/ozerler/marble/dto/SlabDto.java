@@ -1,15 +1,16 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.Slab;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * Data Transfer Object representing slab inventory details.
@@ -106,27 +107,99 @@ public class SlabDto {
         if (s == null) {
             return null;
         }
+        Long blockIdValue;
+        if (s.getBlock() != null) {
+            blockIdValue = s.getBlock().getId();
+        } else {
+            blockIdValue = null;
+        }
+        String blockCodeValue;
+        if (s.getBlock() != null) {
+            blockCodeValue = s.getBlock().getBlockCode();
+        } else {
+            blockCodeValue = null;
+        }
+        Long orderIdValue;
+        if (s.getProductionOrder() != null) {
+            orderIdValue = s.getProductionOrder().getId();
+        } else {
+            orderIdValue = null;
+        }
+        String orderNoValue;
+        if (s.getProductionOrder() != null) {
+            orderNoValue = s.getProductionOrder().getOrderNo();
+        } else {
+            orderNoValue = null;
+        }
+        Long palletIdValue;
+        if (s.getPallet() != null) {
+            palletIdValue = s.getPallet().getId();
+        } else {
+            palletIdValue = null;
+        }
+        String palletCodeValue;
+        if (s.getPallet() != null) {
+            palletCodeValue = s.getPallet().getPalletCode();
+        } else {
+            palletCodeValue = null;
+        }
+        String surfaceFinishValue;
+        if (s.getSurfaceFinish() != null) {
+            surfaceFinishValue = s.getSurfaceFinish().name();
+        } else {
+            surfaceFinishValue = null;
+        }
+        String surfaceFinishLabelValue;
+        if (s.getSurfaceFinish() != null) {
+            surfaceFinishLabelValue = s.getSurfaceFinish().getLabel();
+        } else {
+            surfaceFinishLabelValue = null;
+        }
+        String qualityGradeValue;
+        if (s.getQualityGrade() != null) {
+            qualityGradeValue = s.getQualityGrade().name();
+        } else {
+            qualityGradeValue = null;
+        }
+        String qualityGradeLabelValue;
+        if (s.getQualityGrade() != null) {
+            qualityGradeLabelValue = s.getQualityGrade().getLabel();
+        } else {
+            qualityGradeLabelValue = null;
+        }
+        String statusValue;
+        if (s.getStatus() != null) {
+            statusValue = s.getStatus().name();
+        } else {
+            statusValue = null;
+        }
+        String statusLabelValue;
+        if (s.getStatus() != null) {
+            statusLabelValue = s.getStatus().getLabel();
+        } else {
+            statusLabelValue = null;
+        }
         return SlabDto.builder()
                 .id(s.getId())
                 .slabCode(s.getSlabCode())
-                .blockId(s.getBlock() != null ? s.getBlock().getId() : null)
-                .blockCode(s.getBlock() != null ? s.getBlock().getBlockCode() : null)
-                .orderId(s.getProductionOrder() != null ? s.getProductionOrder().getId() : null)
-                .orderNo(s.getProductionOrder() != null ? s.getProductionOrder().getOrderNo() : null)
-                .palletId(s.getPallet() != null ? s.getPallet().getId() : null)
-                .palletCode(s.getPallet() != null ? s.getPallet().getPalletCode() : null)
+                .blockId(blockIdValue)
+                .blockCode(blockCodeValue)
+                .orderId(orderIdValue)
+                .orderNo(orderNoValue)
+                .palletId(palletIdValue)
+                .palletCode(palletCodeValue)
                 .thicknessCm(s.getThicknessCm())
                 .widthCm(s.getWidthCm())
                 .lengthCm(s.getLengthCm())
                 .surfaceAreaM2(s.getSurfaceAreaM2())
-                .surfaceFinish(s.getSurfaceFinish() != null ? s.getSurfaceFinish().name() : null)
-                .surfaceFinishLabel(s.getSurfaceFinish() != null ? s.getSurfaceFinish().getLabel() : null)
-                .qualityGrade(s.getQualityGrade() != null ? s.getQualityGrade().name() : null)
-                .qualityGradeLabel(s.getQualityGrade() != null ? s.getQualityGrade().getLabel() : null)
+                .surfaceFinish(surfaceFinishValue)
+                .surfaceFinishLabel(surfaceFinishLabelValue)
+                .qualityGrade(qualityGradeValue)
+                .qualityGradeLabel(qualityGradeLabelValue)
                 .glossLevel(s.getGlossLevel())
                 .costPerM2(s.getCostPerM2())
-                .status(s.getStatus() != null ? s.getStatus().name() : null)
-                .statusLabel(s.getStatus() != null ? s.getStatus().getLabel() : null)
+                .status(statusValue)
+                .statusLabel(statusLabelValue)
                 .createdAt(s.getCreatedAt())
                 .build();
     }

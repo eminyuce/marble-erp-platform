@@ -1,14 +1,34 @@
 package com.ozerler.marble.model;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.Objects;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
 import com.ozerler.marble.domain.BlockMeasurement;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.TargetDestination;
-import jakarta.persistence.*;
-import lombok.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "blocks")
@@ -142,7 +162,12 @@ public class Block extends AuditableEntity {
     public void calculateMetrics(BigDecimal specificGravity) {
         if (widthCm != null && lengthCm != null && heightCm != null) {
             this.volumeM3 = BlockMeasurement.volumeCubicMeters(widthCm, lengthCm, heightCm);
-            BigDecimal density = specificGravity != null ? specificGravity : new BigDecimal("2.70");
+            BigDecimal density;
+            if (specificGravity != null) {
+                density = specificGravity;
+            } else {
+                density = new BigDecimal("2.70");
+            }
             BigDecimal approximateTonnage = BlockMeasurement.approximateTonnage(this.volumeM3, density);
             this.theoreticalWeightKg = BlockMeasurement.theoreticalWeightKg(approximateTonnage);
             if (this.estimatedTonnage == null || this.estimatedTonnage.compareTo(BigDecimal.ZERO) == 0) {
@@ -151,13 +176,25 @@ public class Block extends AuditableEntity {
             if (this.actualTonnage != null && this.actualTonnage.compareTo(BigDecimal.ZERO) > 0) {
                 this.actualWeightKg = this.actualTonnage.multiply(BigDecimal.valueOf(1000));
             } else if (this.actualWeightKg != null && this.actualWeightKg.compareTo(BigDecimal.ZERO) > 0) {
-                this.actualTonnage = this.actualWeightKg.divide(BigDecimal.valueOf(1000), 2, java.math.RoundingMode.HALF_UP);
+                this.actualTonnage = this.actualWeightKg.divide(BigDecimal.valueOf(1000), 2, RoundingMode.HALF_UP);
             }
-            this.weightDeviationPct = BlockMeasurement.weightDeviationPercent(this.actualWeightKg, this.theoreticalWeightKg);
+            this.weightDeviationPct =
+                    BlockMeasurement.weightDeviationPercent(
+                            this.actualWeightKg, this.theoreticalWeightKg);
         }
 
-        BigDecimal ext = extractionCost != null ? extractionCost : BigDecimal.ZERO;
-        BigDecimal trp = transportCost != null ? transportCost : BigDecimal.ZERO;
+        BigDecimal ext;
+        if (extractionCost != null) {
+            ext = extractionCost;
+        } else {
+            ext = BigDecimal.ZERO;
+        }
+        BigDecimal trp;
+        if (transportCost != null) {
+            trp = transportCost;
+        } else {
+            trp = BigDecimal.ZERO;
+        }
         this.totalCost = ext.add(trp);
     }
 
@@ -198,7 +235,10 @@ public class Block extends AuditableEntity {
 
     @Transient
     public BlockStatus getCanonicalStatus() {
-        return status == null ? BlockStatus.PRODUCED : status.canonical();
+        if (status == null) {
+            return BlockStatus.PRODUCED;
+        }
+        return status.canonical();
     }
 
     @Transient
@@ -208,17 +248,44 @@ public class Block extends AuditableEntity {
 
     @Transient
     public String getColorQuality() {
-        return (colorTone != null ? colorTone : "") + (qualityGrade != null ? " / " + qualityGrade.getLabel() : "");
+        String value;
+        if (qualityGrade != null) {
+            value = " / " + qualityGrade.getLabel();
+        } else {
+            value = "";
+        }
+        return Objects.requireNonNullElse(colorTone, "") + value;
     }
 
     @Transient
     public String getDimensions() {
-        return (lengthCm != null ? lengthCm + "×" : "") + (widthCm != null ? widthCm + "×" : "") + (heightCm != null ? heightCm + " cm" : "");
+        String value;
+        if (lengthCm != null) {
+            value = lengthCm + "×";
+        } else {
+            value = "";
+        }
+        String valueValue;
+        if (widthCm != null) {
+            valueValue = widthCm + "×";
+        } else {
+            valueValue = "";
+        }
+        String valueValue2;
+        if (heightCm != null) {
+            valueValue2 = heightCm + " cm";
+        } else {
+            valueValue2 = "";
+        }
+        return value + valueValue + valueValue2;
     }
 
     @Transient
     public String getQuarryName() {
-        return quarry != null ? quarry.getName() : null;
+        if (quarry != null) {
+            return quarry.getName();
+        }
+        return null;
     }
 
     @Transient

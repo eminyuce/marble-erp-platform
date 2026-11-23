@@ -1,5 +1,23 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.BlockLocationMovement;
 import com.ozerler.marble.model.CostCenter;
@@ -22,29 +40,6 @@ import com.ozerler.marble.repository.QuarryRepository;
 import com.ozerler.marble.repository.ShipmentItemRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockLocationRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class QuarryBlockServiceTest {
@@ -88,64 +83,82 @@ class QuarryBlockServiceTest {
 
     @BeforeEach
     void setUp() {
-        quarryBlockService = new QuarryBlockService(
-                blockRepository, quarryRepository, null, stockLocationRepository, movementRepository,
-                costAnalysisService, blockCostCalculationService, expenseService, costCenterRepository, customerRepository,
-                slabRepository, factoryWorkOrderRepository, productionOrderRepository,
-                blockCustomerMarkRepository, costTransactionRepository, shipmentItemRepository,
-                fileStorageService, quarryInventoryService);
+        quarryBlockService =
+                new QuarryBlockService(
+                        blockRepository,
+                        null,
+                        null,
+                        quarryRepository,
+                        null,
+                        stockLocationRepository,
+                        movementRepository,
+                        costAnalysisService,
+                        blockCostCalculationService,
+                        expenseService,
+                        costCenterRepository,
+                        customerRepository,
+                        slabRepository,
+                        factoryWorkOrderRepository,
+                        productionOrderRepository,
+                        blockCustomerMarkRepository,
+                        costTransactionRepository,
+                        shipmentItemRepository,
+                        fileStorageService,
+                        quarryInventoryService,
+                        null);
     }
 
     @Test
     @DisplayName("getBlockWithDetails returns the block loaded with its quarry")
-    void getBlockWithDetails_ReturnsBlock() {
+    void getBlockWithDetailsReturnsBlock() {
         Block block = Block.builder()
                 .id(5L)
                 .blockCode("BLK-001")
                 .quarry(Quarry.builder().id(1L).name("Ana Ocak").build())
                 .build();
-        when(blockRepository.findByIdWithQuarry(5L)).thenReturn(Optional.of(block));
+        Mockito.when(blockRepository.findByIdWithQuarry(5L)).thenReturn(Optional.of(block));
 
         Block result = quarryBlockService.getBlockWithDetails(5L);
 
-        assertThat(result.getBlockCode()).isEqualTo("BLK-001");
-        assertThat(result.getQuarry().getName()).isEqualTo("Ana Ocak");
-        verify(blockRepository).findByIdWithQuarry(5L);
+        Assertions.assertThat(result.getBlockCode()).isEqualTo("BLK-001");
+        Assertions.assertThat(result.getQuarry().getName()).isEqualTo("Ana Ocak");
+        Mockito.verify(blockRepository).findByIdWithQuarry(5L);
     }
 
     @Test
     @DisplayName("getBlockWithDetails throws when the block is missing")
-    void getBlockWithDetails_MissingBlock_Throws() {
-        when(blockRepository.findByIdWithQuarry(99L)).thenReturn(Optional.empty());
+    void getBlockWithDetailsMissingBlockThrows() {
+        Mockito.when(blockRepository.findByIdWithQuarry(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> quarryBlockService.getBlockWithDetails(99L))
+        Assertions.assertThatThrownBy(() -> quarryBlockService.getBlockWithDetails(99L))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("getBlockWithDetails rejects a null id")
-    void getBlockWithDetails_NullId_Throws() {
-        assertThatThrownBy(() -> quarryBlockService.getBlockWithDetails(null))
+    void getBlockWithDetailsNullIdThrows() {
+        Assertions.assertThatThrownBy(() -> quarryBlockService.getBlockWithDetails(null))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     @DisplayName("duplicate block codes are rejected on create")
-    void registerBlock_DuplicateCode_Throws() {
-        when(quarryRepository.findById(1L)).thenReturn(Optional.of(Quarry.builder().id(1L).name("Ocak").build()));
-        when(blockRepository.existsByBlockCodeIgnoreCase("BLK-1")).thenReturn(true);
+    void registerBlockDuplicateCodeThrows() {
+        Mockito.when(quarryRepository.findById(1L))
+                .thenReturn(Optional.of(Quarry.builder().id(1L).name("Ocak").build()));
+        Mockito.when(blockRepository.existsByBlockCodeIgnoreCase("BLK-1")).thenReturn(true);
 
-        assertThatThrownBy(() -> quarryBlockService.registerBlock(
+        Assertions.assertThatThrownBy(() -> quarryBlockService.registerBlock(
                 1L, "BLK-1", null, 100, 100, 100, BigDecimal.TEN, "Beyaz", null,
                 null, 0, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("BLK-1");
-        verify(blockRepository, never()).save(any());
+        Mockito.verify(blockRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("factory transfer leaves quarry stock, enters factory yard and posts nakliye")
-    void transferToFactory_MovesToFactoryYardAndPostsExpense() {
+    void transferToFactoryMovesToFactoryYardAndPostsExpense() {
         Quarry quarry = Quarry.builder().id(1L).name("Ocak").specificGravity(new BigDecimal("2.70")).build();
         StockLocation dispatch = StockLocation.builder()
                 .id(2L).code("OCAK-SEVK").name("Stok Sahası")
@@ -169,33 +182,36 @@ class QuarryBlockServiceTest {
         CostCenter factoryTransport = CostCenter.builder()
                 .id(6L).code("CC-006").name("Nakliye").businessUnit(BusinessUnit.FACTORY).build();
 
-        when(blockRepository.findById(8L)).thenReturn(Optional.of(block));
-        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.FACTORY_BLOCK_YARD))
+        Mockito.when(blockRepository.findById(8L)).thenReturn(Optional.of(block));
+        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.FACTORY_BLOCK_YARD))
                 .thenReturn(Optional.of(factoryYard));
-        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(costCenterRepository.findByCode("CC-006")).thenReturn(Optional.of(factoryTransport));
+        Mockito.when(blockRepository.save(ArgumentMatchers.any(Block.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(costCenterRepository.findByCode("CC-006")).thenReturn(Optional.of(factoryTransport));
 
         Block saved = quarryBlockService.transferToFactory(8L, new BigDecimal("1500"));
 
-        assertThat(saved.getStatus()).isEqualTo(BlockStatus.IN_TRANSIT);
-        assertThat(saved.getCurrentLocation()).isNull();
-        assertThat(saved.getTransportCost()).isEqualByComparingTo("1500");
-        ArgumentCaptor<ExpenseService.ExpenseDraft> expense = ArgumentCaptor.forClass(ExpenseService.ExpenseDraft.class);
-        verify(expenseService).recordExpense(expense.capture());
-        assertThat(expense.getValue().businessUnit()).isEqualTo(BusinessUnit.FACTORY);
-        assertThat(expense.getValue().amount()).isEqualByComparingTo("1500");
-        assertThat(expense.getValue().centerId()).isEqualTo(6L);
-        verify(movementRepository).save(any());
+        Assertions.assertThat(saved.getStatus()).isEqualTo(BlockStatus.IN_TRANSIT);
+        Assertions.assertThat(saved.getCurrentLocation()).isNull();
+        Assertions.assertThat(saved.getTransportCost()).isEqualByComparingTo("1500");
+        ArgumentCaptor<ExpenseService.ExpenseDraft> expense =
+                ArgumentCaptor.forClass(ExpenseService.ExpenseDraft.class);
+        Mockito.verify(expenseService).recordExpense(expense.capture());
+        Assertions.assertThat(expense.getValue().businessUnit()).isEqualTo(BusinessUnit.FACTORY);
+        Assertions.assertThat(expense.getValue().amount()).isEqualByComparingTo("1500");
+        Assertions.assertThat(expense.getValue().centerId()).isEqualTo(6L);
+        Mockito.verify(movementRepository).save(ArgumentMatchers.any());
 
         // Fabrika kullanıcısı Stoğa Al dediğinde
         Block received = quarryBlockService.receiveBlockAtFactory(8L);
-        assertThat(received.getStatus()).isEqualTo(BlockStatus.AT_FACTORY);
-        assertThat(received.getCurrentLocation().getLocationType()).isEqualTo(StockLocationType.FACTORY_BLOCK_YARD);
+        Assertions.assertThat(received.getStatus()).isEqualTo(BlockStatus.AT_FACTORY);
+        Assertions.assertThat(received.getCurrentLocation().getLocationType())
+                .isEqualTo(StockLocationType.FACTORY_BLOCK_YARD);
     }
 
     @Test
     @DisplayName("external sale stores the customer on the sold block")
-    void sellBlockExternally_SetsCustomer() {
+    void sellBlockExternallySetsCustomer() {
         StockLocation dispatch = StockLocation.builder()
                 .id(2L).code("OCAK-SEVK").name("Stok Sahası")
                 .locationType(StockLocationType.DISPATCH_YARD).businessUnit(BusinessUnit.QUARRY).build();
@@ -206,21 +222,26 @@ class QuarryBlockServiceTest {
                 .currentLocation(dispatch)
                 .build();
         Customer customer = Customer.builder().id(2L).companyName("Mermer A.Ş.").build();
-        when(blockRepository.findById(4L)).thenReturn(Optional.of(block));
-        when(customerRepository.findById(2L)).thenReturn(Optional.of(customer));
-        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(blockRepository.findById(4L)).thenReturn(Optional.of(block));
+        Mockito.when(customerRepository.findById(2L)).thenReturn(Optional.of(customer));
+        Mockito.when(blockRepository.save(ArgumentMatchers.any(Block.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Block sold = quarryBlockService.sellBlockExternally(4L, 2L, new BigDecimal("750000"), java.time.LocalDate.now(), "Test satış");
+        Block sold =
+                quarryBlockService.sellBlockExternally(
+                        4L, 2L, new BigDecimal("750000"), LocalDate.now(), "Test satış");
 
-        assertThat(sold.getStatus()).isEqualTo(BlockStatus.SOLD);
-        assertThat(sold.getSoldCustomer().getCompanyName()).isEqualTo("Mermer A.Ş.");
-        assertThat(sold.getSalePrice()).isEqualByComparingTo("750000");
-        verify(movementRepository).save(any());
+        Assertions.assertThat(sold.getStatus()).isEqualTo(BlockStatus.SOLD);
+        Assertions.assertThat(sold.getSoldCustomer().getCompanyName()).isEqualTo("Mermer A.Ş.");
+        Assertions.assertThat(sold.getSalePrice()).isEqualByComparingTo("750000");
+        Mockito.verify(movementRepository).save(ArgumentMatchers.any());
     }
 
     @Test
-    @DisplayName("registering a block without actual weighbridge weight calculates theoretical weight from dimensions and quarry specific gravity")
-    void registerBlock_WithoutActualWeight_CalculatesTheoreticalMetrics() {
+    @DisplayName(
+            "registering a block without actual weighbridge weight calculates theoretical weight from dimensions and "
+                    + "quarry specific gravity")
+    void registerBlockWithoutActualWeightCalculatesTheoreticalMetrics() {
         Quarry quarry = Quarry.builder()
                 .id(1L)
                 .name("Afyon Ocağı")
@@ -234,28 +255,31 @@ class QuarryBlockServiceTest {
                 .businessUnit(BusinessUnit.QUARRY)
                 .build();
 
-        when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
-        when(blockRepository.existsByBlockCodeIgnoreCase("BLK-AUTO-01")).thenReturn(false);
-        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
+        Mockito.when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
+        Mockito.when(blockRepository.existsByBlockCodeIgnoreCase("BLK-AUTO-01")).thenReturn(false);
+        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
                 .thenReturn(Optional.of(production));
-        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(blockRepository.save(ArgumentMatchers.any(Block.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // En: 200 cm, Boy: 250 cm, Yükseklik: 150 cm -> Hacim: 7.500 m³ -> 7.5 * 2.70 = 20.25 ton = 20250.00 kg
         Block saved = quarryBlockService.registerBlock(
                 1L, "BLK-AUTO-01", null, 200, 250, 150, null, "Beyaz Mermer", "Açık",
                 QualityGrade.A, 0, "Notlar", null);
 
-        assertThat(saved).isNotNull();
-        assertThat(saved.getVolumeM3()).isEqualByComparingTo(new BigDecimal("7.500"));
-        assertThat(saved.getTheoreticalWeightKg()).isEqualByComparingTo(new BigDecimal("20250.00"));
-        assertThat(saved.getActualWeightKg()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(saved.getApproximateTonnage()).isEqualByComparingTo(new BigDecimal("20.25"));
-        verify(blockRepository).save(any(Block.class));
+        Assertions.assertThat(saved).isNotNull();
+        Assertions.assertThat(saved.getVolumeM3()).isEqualByComparingTo(new BigDecimal("7.500"));
+        Assertions.assertThat(saved.getTheoreticalWeightKg()).isEqualByComparingTo(new BigDecimal("20250.00"));
+        Assertions.assertThat(saved.getActualWeightKg()).isEqualByComparingTo(BigDecimal.ZERO);
+        Assertions.assertThat(saved.getApproximateTonnage()).isEqualByComparingTo(new BigDecimal("20.25"));
+        Mockito.verify(blockRepository).save(ArgumentMatchers.any(Block.class));
     }
 
     @Test
-    @DisplayName("canDeleteBlock returns true when block is PRODUCED, unsold, has no transport cost and is unused downstream")
-    void canDeleteBlock_WhenUnused_ReturnsTrue() {
+    @DisplayName(
+            "canDeleteBlock returns true when block is PRODUCED, unsold, has no transport cost and is unused "
+                    + "downstream")
+    void canDeleteBlockWhenUnusedReturnsTrue() {
         Block block = Block.builder()
                 .id(10L)
                 .blockCode("BLK-DELETE-01")
@@ -263,22 +287,22 @@ class QuarryBlockServiceTest {
                 .transportCost(BigDecimal.ZERO)
                 .build();
 
-        when(blockRepository.findById(10L)).thenReturn(Optional.of(block));
-        when(slabRepository.existsByBlockId(10L)).thenReturn(false);
-        when(factoryWorkOrderRepository.findFirstByBlockIdOrderByIdDesc(10L)).thenReturn(Optional.empty());
-        when(productionOrderRepository.findByBlockId(10L)).thenReturn(List.of());
-        when(blockCustomerMarkRepository.existsByBlockId(10L)).thenReturn(false);
-        when(costTransactionRepository.findByBlockId(10L)).thenReturn(List.of());
-        when(shipmentItemRepository.existsByBlockId(10L)).thenReturn(false);
+        Mockito.when(blockRepository.findById(10L)).thenReturn(Optional.of(block));
+        Mockito.when(slabRepository.existsByBlockId(10L)).thenReturn(false);
+        Mockito.when(factoryWorkOrderRepository.findFirstByBlockIdOrderByIdDesc(10L)).thenReturn(Optional.empty());
+        Mockito.when(productionOrderRepository.findByBlockId(10L)).thenReturn(List.of());
+        Mockito.when(blockCustomerMarkRepository.existsByBlockId(10L)).thenReturn(false);
+        Mockito.when(costTransactionRepository.findByBlockId(10L)).thenReturn(List.of());
+        Mockito.when(shipmentItemRepository.existsByBlockId(10L)).thenReturn(false);
 
         boolean canDelete = quarryBlockService.canDeleteBlock(10L);
 
-        assertThat(canDelete).isTrue();
+        Assertions.assertThat(canDelete).isTrue();
     }
 
     @Test
     @DisplayName("canDeleteBlock returns false when block has slabs cut from it")
-    void canDeleteBlock_WhenUsedInSlabs_ReturnsFalse() {
+    void canDeleteBlockWhenUsedInSlabsReturnsFalse() {
         Block block = Block.builder()
                 .id(11L)
                 .blockCode("BLK-DELETE-02")
@@ -286,17 +310,17 @@ class QuarryBlockServiceTest {
                 .transportCost(BigDecimal.ZERO)
                 .build();
 
-        when(blockRepository.findById(11L)).thenReturn(Optional.of(block));
-        when(slabRepository.existsByBlockId(11L)).thenReturn(true);
+        Mockito.when(blockRepository.findById(11L)).thenReturn(Optional.of(block));
+        Mockito.when(slabRepository.existsByBlockId(11L)).thenReturn(true);
 
         boolean canDelete = quarryBlockService.canDeleteBlock(11L);
 
-        assertThat(canDelete).isFalse();
+        Assertions.assertThat(canDelete).isFalse();
     }
 
     @Test
     @DisplayName("deleteBlock deletes block and its initial location movements when completely unused")
-    void deleteBlock_WhenUnused_DeletesSuccessfully() {
+    void deleteBlockWhenUnusedDeletesSuccessfully() {
         Block block = Block.builder()
                 .id(12L)
                 .blockCode("BLK-DELETE-03")
@@ -305,65 +329,66 @@ class QuarryBlockServiceTest {
                 .build();
         BlockLocationMovement mv = BlockLocationMovement.builder().id(101L).block(block).build();
 
-        when(blockRepository.findById(12L)).thenReturn(Optional.of(block));
-        when(slabRepository.existsByBlockId(12L)).thenReturn(false);
-        when(factoryWorkOrderRepository.findFirstByBlockIdOrderByIdDesc(12L)).thenReturn(Optional.empty());
-        when(productionOrderRepository.findByBlockId(12L)).thenReturn(List.of());
-        when(blockCustomerMarkRepository.existsByBlockId(12L)).thenReturn(false);
-        when(costTransactionRepository.findByBlockId(12L)).thenReturn(List.of());
-        when(shipmentItemRepository.existsByBlockId(12L)).thenReturn(false);
-        when(movementRepository.findByBlockIdOrderByCreatedDateDesc(12L)).thenReturn(List.of(mv));
+        Mockito.when(blockRepository.findById(12L)).thenReturn(Optional.of(block));
+        Mockito.when(slabRepository.existsByBlockId(12L)).thenReturn(false);
+        Mockito.when(factoryWorkOrderRepository.findFirstByBlockIdOrderByIdDesc(12L)).thenReturn(Optional.empty());
+        Mockito.when(productionOrderRepository.findByBlockId(12L)).thenReturn(List.of());
+        Mockito.when(blockCustomerMarkRepository.existsByBlockId(12L)).thenReturn(false);
+        Mockito.when(costTransactionRepository.findByBlockId(12L)).thenReturn(List.of());
+        Mockito.when(shipmentItemRepository.existsByBlockId(12L)).thenReturn(false);
+        Mockito.when(movementRepository.findByBlockIdOrderByCreatedDateDesc(12L)).thenReturn(List.of(mv));
 
         quarryBlockService.deleteBlock(12L);
 
-        verify(movementRepository).deleteAll(List.of(mv));
-        verify(blockRepository).delete(block);
+        Mockito.verify(movementRepository).deleteAll(List.of(mv));
+        Mockito.verify(blockRepository).delete(block);
     }
 
     @Test
     @DisplayName("deleteBlock throws IllegalStateException when block is not deletable")
-    void deleteBlock_WhenUsed_ThrowsIllegalStateException() {
+    void deleteBlockWhenUsedThrowsIllegalStateException() {
         Block block = Block.builder()
                 .id(13L)
                 .blockCode("BLK-DELETE-04")
                 .status(BlockStatus.AT_FACTORY)
                 .build();
 
-        when(blockRepository.findById(13L)).thenReturn(Optional.of(block));
+        Mockito.when(blockRepository.findById(13L)).thenReturn(Optional.of(block));
 
-        assertThatThrownBy(() -> quarryBlockService.deleteBlock(13L))
+        Assertions.assertThatThrownBy(() -> quarryBlockService.deleteBlock(13L))
                 .isInstanceOf(IllegalStateException.class);
 
-        verify(blockRepository, never()).delete(any());
-        verify(movementRepository, never()).deleteAll(any());
+        Mockito.verify(blockRepository, Mockito.never()).delete(ArgumentMatchers.any());
+        Mockito.verify(movementRepository, Mockito.never()).deleteAll(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("registerBlock with locationType assigns selected location and records initial movement")
-    void registerBlock_WithLocationType_AssignsSelectedLocationAndRecordsMovement() {
+    void registerBlockWithLocationTypeAssignsSelectedLocationAndRecordsMovement() {
         Quarry quarry = Quarry.builder().id(1L).specificGravity(new BigDecimal("2.70")).build();
         StockLocation dispatchYard = StockLocation.builder()
                 .id(2L).code("OCAK-SEVK").name("Stok Sahası")
                 .locationType(StockLocationType.DISPATCH_YARD).businessUnit(BusinessUnit.QUARRY).build();
 
-        when(blockRepository.existsByBlockCodeIgnoreCase("BLK-REG-01")).thenReturn(false);
-        when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
-        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.DISPATCH_YARD))
+        Mockito.when(blockRepository.existsByBlockCodeIgnoreCase("BLK-REG-01")).thenReturn(false);
+        Mockito.when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
+        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.DISPATCH_YARD))
                 .thenReturn(Optional.of(dispatchYard));
-        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(blockRepository.save(ArgumentMatchers.any(Block.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Block result = quarryBlockService.registerBlock(
                 1L, "BLK-REG-01", null, 200, 200, 150,
                 null, "Beyaz", "Açık", QualityGrade.A, 0,
                 "Not", null, StockLocationType.DISPATCH_YARD);
 
-        assertThat(result.getCurrentLocation()).isEqualTo(dispatchYard);
-        verify(movementRepository).save(any(BlockLocationMovement.class));
+        Assertions.assertThat(result.getCurrentLocation()).isEqualTo(dispatchYard);
+        Mockito.verify(movementRepository).save(ArgumentMatchers.any(BlockLocationMovement.class));
     }
 
     @Test
     @DisplayName("updateBlock with locationType change updates location and records movement")
-    void updateBlock_WithLocationTypeChange_UpdatesLocationAndRecordsMovement() {
+    void updateBlockWithLocationTypeChangeUpdatesLocationAndRecordsMovement() {
         Quarry quarry = Quarry.builder().id(1L).specificGravity(new BigDecimal("2.70")).build();
         StockLocation prodYard = StockLocation.builder()
                 .id(1L).code("OCAK-URETIM").name("Üretim Sahası")
@@ -379,26 +404,27 @@ class QuarryBlockServiceTest {
                 .status(BlockStatus.PRODUCED)
                 .build();
 
-        when(blockRepository.findById(20L)).thenReturn(Optional.of(block));
-        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.DISPATCH_YARD))
+        Mockito.when(blockRepository.findById(20L)).thenReturn(Optional.of(block));
+        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.DISPATCH_YARD))
                 .thenReturn(Optional.of(dispatchYard));
-        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(blockRepository.save(ArgumentMatchers.any(Block.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Block updated = quarryBlockService.updateBlock(
                 20L, 1L, "BLK-UPD-01", null, 200, 200, 150,
                 null, "Beyaz", "Açık", QualityGrade.A, 0,
                 BigDecimal.valueOf(1000), "Not", null, StockLocationType.DISPATCH_YARD);
 
-        assertThat(updated.getCurrentLocation()).isEqualTo(dispatchYard);
+        Assertions.assertThat(updated.getCurrentLocation()).isEqualTo(dispatchYard);
         ArgumentCaptor<BlockLocationMovement> captor = ArgumentCaptor.forClass(BlockLocationMovement.class);
-        verify(movementRepository).save(captor.capture());
-        assertThat(captor.getValue().getFromLocation()).isEqualTo(prodYard);
-        assertThat(captor.getValue().getToLocation()).isEqualTo(dispatchYard);
+        Mockito.verify(movementRepository).save(captor.capture());
+        Assertions.assertThat(captor.getValue().getFromLocation()).isEqualTo(prodYard);
+        Assertions.assertThat(captor.getValue().getToLocation()).isEqualTo(dispatchYard);
     }
 
     @Test
     @DisplayName("deleteBlock should clean up all associated files from storage and disk")
-    void deleteBlock_CleansUpAttachedFiles() {
+    void deleteBlockCleansUpAttachedFiles() {
         Long blockId = 50L;
         Block block = Block.builder()
                 .id(blockId)
@@ -407,27 +433,33 @@ class QuarryBlockServiceTest {
                 .transportCost(BigDecimal.ZERO)
                 .build();
 
-        when(blockRepository.findById(blockId)).thenReturn(Optional.of(block));
+        Mockito.when(blockRepository.findById(blockId)).thenReturn(Optional.of(block));
 
         quarryBlockService.deleteBlock(blockId);
 
-        verify(fileStorageService).deleteAllFilesForEntity("BLOCK", blockId);
-        verify(blockRepository).delete(block);
+        Mockito.verify(fileStorageService).deleteAllFilesForEntity("BLOCK", blockId);
+        Mockito.verify(blockRepository).delete(block);
     }
 
     @Test
     @DisplayName("registerBlock with fileIds should attach files to newly created block")
-    void registerBlock_AttachesFileIds() {
-        Quarry quarry = Quarry.builder().id(1L).code("Q1").name("Quarry 1").specificGravity(new BigDecimal("2.70")).build();
+    void registerBlockAttachesFileIds() {
+        Quarry quarry =
+                Quarry.builder()
+                        .id(1L)
+                        .code("Q1")
+                        .name("Quarry 1")
+                        .specificGravity(new BigDecimal("2.70"))
+                        .build();
         StockLocation prodYard = StockLocation.builder()
                 .id(1L).code("OCAK-URETIM").name("Üretim Sahası")
                 .locationType(StockLocationType.PRODUCTION_YARD).build();
 
-        when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
-        when(blockRepository.existsByBlockCodeIgnoreCase("BLK-NEW-FILES")).thenReturn(false);
-        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
+        Mockito.when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
+        Mockito.when(blockRepository.existsByBlockCodeIgnoreCase("BLK-NEW-FILES")).thenReturn(false);
+        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
                 .thenReturn(Optional.of(prodYard));
-        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> {
+        Mockito.when(blockRepository.save(ArgumentMatchers.any(Block.class))).thenAnswer(invocation -> {
             Block b = invocation.getArgument(0);
             b.setId(99L);
             return b;
@@ -439,99 +471,124 @@ class QuarryBlockServiceTest {
                 null, "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
                 "Not", null, StockLocationType.PRODUCTION_YARD, fileIds);
 
-        assertThat(saved).isNotNull();
-        verify(fileStorageService).attachFilesToEntity(fileIds, "BLOCK", 99L);
+        Assertions.assertThat(saved).isNotNull();
+        Mockito.verify(fileStorageService).attachFilesToEntity(fileIds, "BLOCK", 99L);
     }
 
     @Test
     @DisplayName("registerBlock stores lowercase block codes as uppercase")
-    void registerBlock_LowercaseCode_PersistsUppercase() {
+    void registerBlockLowercaseCodePersistsUppercase() {
         Quarry quarry = Quarry.builder().id(1L).specificGravity(new BigDecimal("2.70")).build();
         StockLocation production = StockLocation.builder()
                 .id(1L).code("OCAK-URETIM").name("Üretim Sahası")
                 .locationType(StockLocationType.PRODUCTION_YARD).businessUnit(BusinessUnit.QUARRY).build();
 
-        when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
-        when(blockRepository.existsByBlockCodeIgnoreCase("BLK-LOWER-01")).thenReturn(false);
-        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
+        Mockito.when(quarryRepository.findById(1L)).thenReturn(Optional.of(quarry));
+        Mockito.when(blockRepository.existsByBlockCodeIgnoreCase("BLK-LOWER-01")).thenReturn(false);
+        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD))
                 .thenReturn(Optional.of(production));
-        when(blockRepository.save(any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(blockRepository.save(ArgumentMatchers.any(Block.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Block saved = quarryBlockService.registerBlock(
                 1L, "blk-lower-01", null, 100, 100, 100, BigDecimal.TEN, "Beyaz", null,
                 QualityGrade.A, 0, null, null);
 
-        assertThat(saved.getBlockCode()).isEqualTo("BLK-LOWER-01");
+        Assertions.assertThat(saved.getBlockCode()).isEqualTo("BLK-LOWER-01");
     }
 
     @Test
     @DisplayName("normalizeBlockCode uppercases with Locale.ROOT so Turkish i becomes I")
-    void normalizeBlockCode_UsesRootLocale() {
-        assertThat(QuarryBlockService.normalizeBlockCode(" blk-i1 ")).isEqualTo("BLK-I1");
+    void normalizeBlockCodeUsesRootLocale() {
+        Assertions.assertThat(QuarryBlockService.normalizeBlockCode(" blk-i1 ")).isEqualTo("BLK-I1");
     }
 
     @Test
     @DisplayName("getBlocksPaged puts filtered tonnage, m2, extraction and total cost into grid meta")
-    void getBlocksPaged_IncludesFooterTotalsInMeta() {
-        when(blockRepository.searchBlocksWithStockFilter(isNull(), isNull(), isNull(), any(), any()))
+    void getBlocksPagedIncludesFooterTotalsInMeta() {
+        Mockito.when(
+                        blockRepository.searchBlocksWithStockFilter(
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any()))
                 .thenReturn(new PageImpl<>(List.of()));
-        when(blockCostCalculationService.expensePerTonByQuarry(any()))
+        Mockito.when(blockCostCalculationService.expensePerTonByQuarry(ArgumentMatchers.any()))
                 .thenReturn(Map.of(1L, new BigDecimal("100")));
         List<Object[]> metricRows = List.<Object[]>of(new Object[]{
                 1L, new BigDecimal("10"), new BigDecimal("4.50"), new BigDecimal("250")
         });
-        when(blockRepository.sumGridMetricsWithStockFilterByQuarry(isNull(), isNull(), isNull(), any()))
+        Mockito.when(
+                        blockRepository.sumGridMetricsWithStockFilterByQuarry(
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.isNull(),
+                                ArgumentMatchers.any()))
                 .thenReturn(metricRows);
 
         var response = quarryBlockService.getBlocksPaged(1, 25, null, null, null, null, null);
 
-        assertThat((BigDecimal) response.getMeta().get("totalTonnage")).isEqualByComparingTo("10");
-        assertThat((BigDecimal) response.getMeta().get("totalSurfaceM2")).isEqualByComparingTo("4.50");
-        assertThat((BigDecimal) response.getMeta().get("totalExtractionCost")).isEqualByComparingTo("1000.00");
-        assertThat((BigDecimal) response.getMeta().get("totalCost")).isEqualByComparingTo("1250.00");
+        Assertions.assertThat((BigDecimal) response.getMeta().get("totalTonnage")).isEqualByComparingTo("10");
+        Assertions.assertThat((BigDecimal) response.getMeta().get("totalSurfaceM2")).isEqualByComparingTo("4.50");
+        Assertions.assertThat((BigDecimal) response.getMeta().get("totalExtractionCost"))
+                .isEqualByComparingTo("1000.00");
+        Assertions.assertThat((BigDecimal) response.getMeta().get("totalCost")).isEqualByComparingTo("1250.00");
     }
 
     @Test
     @DisplayName("sell from production yard is rejected")
-    void sellBlockExternally_NotInDispatchYard_Throws() {
+    void sellBlockExternallyNotInDispatchYardThrows() {
         StockLocation production = StockLocation.builder()
                 .locationType(StockLocationType.PRODUCTION_YARD).businessUnit(BusinessUnit.QUARRY).build();
         Block block = Block.builder().id(20L).status(BlockStatus.PRODUCED).currentLocation(production).build();
-        when(blockRepository.findById(20L)).thenReturn(Optional.of(block));
+        Mockito.when(blockRepository.findById(20L)).thenReturn(Optional.of(block));
 
-        assertThatThrownBy(() -> quarryBlockService.sellBlockExternally(
-                20L, 2L, new BigDecimal("10"), java.time.LocalDate.now(), null))
+        Assertions.assertThatThrownBy(() -> quarryBlockService.sellBlockExternally(
+                20L, 2L, new BigDecimal("10"), LocalDate.now(), null))
                 .isInstanceOf(IllegalArgumentException.class);
-        verify(blockRepository, never()).save(any());
+        Mockito.verify(blockRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("factory transfer from production yard is rejected")
-    void transferToFactory_NotInDispatchYard_Throws() {
+    void transferToFactoryNotInDispatchYardThrows() {
         StockLocation production = StockLocation.builder()
                 .locationType(StockLocationType.PRODUCTION_YARD).businessUnit(BusinessUnit.QUARRY).build();
         Block block = Block.builder().id(21L).status(BlockStatus.PRODUCED).currentLocation(production).build();
-        when(blockRepository.findById(21L)).thenReturn(Optional.of(block));
+        Mockito.when(blockRepository.findById(21L)).thenReturn(Optional.of(block));
 
-        assertThatThrownBy(() -> quarryBlockService.transferToFactory(21L, BigDecimal.TEN))
+        Assertions.assertThatThrownBy(() -> quarryBlockService.transferToFactory(21L, BigDecimal.TEN))
                 .isInstanceOf(IllegalArgumentException.class);
-        verify(blockRepository, never()).save(any());
+        Mockito.verify(blockRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("block codes increment per section and year")
-    void generateStandardBlockCode_UsesSectionYearSequence() {
-        when(blockRepository.countByQuarrySectionAndYear(eq(1L), eq("A-BLOK"), any(), any())).thenReturn(0L);
-        when(blockRepository.existsByBlockCode("A-BLOK-2026-001")).thenReturn(false);
-        when(blockRepository.existsByBlockCodeIgnoreCase("A-BLOK-2026-001")).thenReturn(false);
+    void generateStandardBlockCodeUsesSectionYearSequence() {
+        Mockito.when(
+                        blockRepository.countByQuarrySectionAndYear(
+                                ArgumentMatchers.eq(1L),
+                                ArgumentMatchers.eq("A-BLOK"),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any()))
+                .thenReturn(0L);
+        Mockito.when(blockRepository.existsByBlockCode("A-BLOK-2026-001")).thenReturn(false);
+        Mockito.when(blockRepository.existsByBlockCodeIgnoreCase("A-BLOK-2026-001")).thenReturn(false);
 
         String first = quarryBlockService.generateStandardBlockCode(1L, "a-blok");
-        assertThat(first).isEqualTo("A-BLOK-" + java.time.LocalDate.now().getYear() + "-001");
+        Assertions.assertThat(first).isEqualTo("A-BLOK-" + LocalDate.now().getYear() + "-001");
 
-        when(blockRepository.countByQuarrySectionAndYear(eq(1L), eq("A-BLOK"), any(), any())).thenReturn(1L);
-        when(blockRepository.existsByBlockCode(any())).thenReturn(false);
-        when(blockRepository.existsByBlockCodeIgnoreCase(any())).thenReturn(false);
+        Mockito.when(
+                        blockRepository.countByQuarrySectionAndYear(
+                                ArgumentMatchers.eq(1L),
+                                ArgumentMatchers.eq("A-BLOK"),
+                                ArgumentMatchers.any(),
+                                ArgumentMatchers.any()))
+                .thenReturn(1L);
+        Mockito.when(blockRepository.existsByBlockCode(ArgumentMatchers.any())).thenReturn(false);
+        Mockito.when(blockRepository.existsByBlockCodeIgnoreCase(ArgumentMatchers.any())).thenReturn(false);
         String second = quarryBlockService.generateStandardBlockCode(1L, "A-BLOK");
-        assertThat(second).isEqualTo("A-BLOK-" + java.time.LocalDate.now().getYear() + "-002");
+        Assertions.assertThat(second).isEqualTo("A-BLOK-" + LocalDate.now().getYear() + "-002");
     }
 }

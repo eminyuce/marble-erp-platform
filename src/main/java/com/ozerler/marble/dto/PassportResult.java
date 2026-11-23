@@ -1,9 +1,10 @@
 package com.ozerler.marble.dto;
 
-import com.ozerler.marble.model.Block;
-import com.ozerler.marble.model.CutItem;
-import com.ozerler.marble.model.Pallet;
-import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.dto.view.BlockView;
+import com.ozerler.marble.dto.view.CutOrderView;
+import com.ozerler.marble.dto.view.PalletRef;
+import com.ozerler.marble.dto.view.SlabView;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -12,10 +13,10 @@ import lombok.Getter;
 public class PassportResult {
     private final String type;
     private final String title;
-    private final Pallet pallet;
-    private final Slab slab;
-    private final CutItem item;
-    private final Block block;
+    private final PalletRef pallet;
+    private final SlabView slab;
+    private final CutOrderView.ItemView item;
+    private final BlockView block;
     private final String errorMessage;
     private final boolean found;
 }

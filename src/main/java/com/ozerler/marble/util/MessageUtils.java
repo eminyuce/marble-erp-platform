@@ -1,12 +1,12 @@
 package com.ozerler.marble.util;
 
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.stereotype.Component;
-
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
+
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.stereotype.Component;
 
 /**
  * Static bridge and helper for retrieving localized messages from Spring MessageSource,
@@ -31,7 +31,12 @@ public class MessageUtils {
     }
 
     public static String getMessage(String code, Locale locale, Object... args) {
-        Locale targetLocale = (locale != null && "tr".equalsIgnoreCase(locale.getLanguage())) ? locale : DEFAULT_LOCALE;
+        Locale targetLocale;
+        if (locale != null && "tr".equalsIgnoreCase(locale.getLanguage())) {
+            targetLocale = locale;
+        } else {
+            targetLocale = DEFAULT_LOCALE;
+        }
         if (messageSource != null) {
             try {
                 return messageSource.getMessage(code, args, targetLocale);
@@ -40,7 +45,12 @@ public class MessageUtils {
             }
         }
         try {
-            ResourceBundle bundle = ResourceBundle.getBundle("messages", targetLocale, ResourceBundle.Control.getNoFallbackControl(ResourceBundle.Control.FORMAT_PROPERTIES));
+            ResourceBundle bundle =
+                    ResourceBundle.getBundle(
+                            "messages",
+                            targetLocale,
+                            ResourceBundle.Control.getNoFallbackControl(
+                                    ResourceBundle.Control.FORMAT_PROPERTIES));
             if (bundle.containsKey(code)) {
                 String pattern = bundle.getString(code);
                 if (args != null && args.length > 0) {

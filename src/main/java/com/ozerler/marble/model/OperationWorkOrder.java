@@ -1,14 +1,36 @@
 package com.ozerler.marble.model;
 
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
+
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "operation_work_orders")
@@ -23,6 +45,11 @@ public class OperationWorkOrder extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 0;
 
     @Column(name = "order_no", nullable = false, unique = true, length = 60)
     private String orderNo;
@@ -107,16 +134,6 @@ public class OperationWorkOrder extends AuditableEntity {
     @Builder.Default
     private List<WorkOrderStatusHistory> statusHistory = new ArrayList<>();
 
-    public void addItem(OperationWorkOrderItem item) {
-        if (item != null) {
-            item.setWorkOrder(this);
-            if (this.items == null) {
-                this.items = new ArrayList<>();
-            }
-            this.items.add(item);
-        }
-    }
-
     /**
      * Company name copied while the persistence session is still open.
      * The detail page reads this instead of the lazy customer association.
@@ -126,6 +143,16 @@ public class OperationWorkOrder extends AuditableEntity {
 
     @Transient
     private String loadedCustomerName;
+
+    public void addItem(OperationWorkOrderItem item) {
+        if (item != null) {
+            item.setWorkOrder(this);
+            if (this.items == null) {
+                this.items = new ArrayList<>();
+            }
+            this.items.add(item);
+        }
+    }
 
     public void rememberCustomerName(String companyName) {
         this.loadedCustomerName = companyName;
@@ -152,14 +179,23 @@ public class OperationWorkOrder extends AuditableEntity {
     }
 
     private static String blankTo(String value, String fallback) {
-        return value == null || value.isBlank() ? fallback : value;
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        return value;
     }
 
     @Transient
     public String getDepartmentDisplayName() {
-        if (department == BusinessUnit.FACTORY) return "Fabrika";
-        if (department == BusinessUnit.WORKSHOP) return "Atölye";
-        if (department == BusinessUnit.SITE) return "Şantiye";
+        if (department == BusinessUnit.FACTORY) {
+            return "Fabrika";
+        }
+        if (department == BusinessUnit.WORKSHOP) {
+            return "Atölye";
+        }
+        if (department == BusinessUnit.SITE) {
+            return "Şantiye";
+        }
         return department.name();
     }
 

@@ -1,11 +1,30 @@
 package com.ozerler.marble.model;
 
-import com.ozerler.marble.model.enums.CariTransactionType;
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
+
+import com.ozerler.marble.model.enums.CariTransactionType;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "cari_transactions")
@@ -20,6 +39,11 @@ public class CariTransaction extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 0;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
@@ -61,8 +85,18 @@ public class CariTransaction extends AuditableEntity {
 
     @Transient
     public BigDecimal getNetImpact() {
-        BigDecimal d = debitAmount != null ? debitAmount : BigDecimal.ZERO;
-        BigDecimal c = creditAmount != null ? creditAmount : BigDecimal.ZERO;
+        BigDecimal d;
+        if (debitAmount != null) {
+            d = debitAmount;
+        } else {
+            d = BigDecimal.ZERO;
+        }
+        BigDecimal c;
+        if (creditAmount != null) {
+            c = creditAmount;
+        } else {
+            c = BigDecimal.ZERO;
+        }
         return d.subtract(c);
     }
 }

@@ -1,27 +1,39 @@
 package com.ozerler.marble.controller.admin;
 
-import com.ozerler.marble.dto.EmailPlaceholderSample;
-import com.ozerler.marble.dto.EmailPreviewDto;
-import com.ozerler.marble.dto.email.EmailTemplateCatalog;
-import com.ozerler.marble.model.EmailTemplate;
-import com.ozerler.marble.service.EmailService;
-import com.ozerler.marble.service.SettingService;
-import com.ozerler.marble.web.EmailTemplateGrid;
-import com.ozerler.marble.web.ListQuery;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.*;
+import com.ozerler.marble.dto.EmailPlaceholderSample;
+import com.ozerler.marble.dto.EmailPreviewDto;
+import com.ozerler.marble.dto.EmailTemplateDto;
+import com.ozerler.marble.dto.email.EmailTemplateCatalog;
+import com.ozerler.marble.service.EmailService;
+import com.ozerler.marble.service.SettingService;
+import com.ozerler.marble.web.EmailTemplateGrid;
+import com.ozerler.marble.web.ListQuery;
+
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Dedicated System Controller managing the Corporate Email Template Engine.
@@ -69,26 +81,34 @@ public class EmailTemplateEngineController {
     @GetMapping
     public String index(@ModelAttribute ListQuery query, Model model,
                         @RequestParam(value = "category", required = false) String category) {
-        Page<EmailTemplate> result = emailService.getTemplatesPaged(query.pageNumber(), query.pageSize(), category, query.getSearch());
+        Page<EmailTemplateDto> result =
+                emailService.getTemplateViewsPaged(
+                        query.pageNumber(), query.pageSize(), category, query.getSearch());
         Set<String> categories = emailService.templateCategories();
 
         String host = settingService.getSetting("smtp.host", settingService.getSetting("mail.smtp.host", ""));
         boolean smtpReady = StringUtils.isNotBlank(host);
         long totalCount = emailService.countTemplates();
 
+        String smtpHost;
+        if (smtpReady) {
+            smtpHost = host;
+        } else {
+            smtpHost = "Yapılandırılmadı";
+        }
         TemplateKpiDto kpi = TemplateKpiDto.builder()
                 .totalCount(totalCount)
                 .activeCount(emailService.countActiveTemplates())
                 .categoriesCount(categories.size())
                 .smtpReady(smtpReady)
-                .smtpHost(smtpReady ? host : "Yapılandırılmadı")
+                .smtpHost(smtpHost)
                 .build();
 
         model.addAttribute("templates", result.getContent());
         model.addAttribute("allCount", totalCount);
         model.addAttribute("kpi", kpi);
         model.addAttribute("categories", categories);
-        model.addAttribute("selectedCategory", category != null ? category : "ALL");
+        model.addAttribute("selectedCategory", Objects.requireNonNullElse(category, "ALL"));
         model.addAttribute("grid", EmailTemplateGrid.view(result, query.pageNumber(), query.pageSize(),
                 template -> emailService.placeholderKeys(template).size()));
         model.addAttribute("activeMegaGroup", "system");
@@ -104,9 +124,12 @@ public class EmailTemplateEngineController {
     @ResponseBody
     public ResponseEntity<List<TemplateGridRowDto>> data(
             @RequestParam(value = "category", required = false) String category) {
-        List<EmailTemplate> list = (StringUtils.isNotBlank(category) && !"ALL".equalsIgnoreCase(category))
-                ? emailService.getTemplatesByCategory(category)
-                : emailService.getAllTemplates();
+        List<EmailTemplateDto> list;
+        if (StringUtils.isNotBlank(category) && !"ALL".equalsIgnoreCase(category)) {
+            list = emailService.getTemplateViewsByCategory(category);
+        } else {
+            list = emailService.getAllTemplateViews();
+        }
 
         List<TemplateGridRowDto> rows = list.stream().map(t -> {
             int count = emailService.placeholderKeys(t).size();
@@ -116,7 +139,7 @@ public class EmailTemplateEngineController {
                     .name(t.getTemplateName())
                     .category(StringUtils.defaultIfBlank(t.getCategory(), "Genel"))
                     .subject(t.getSubject())
-                    .description(t.getDescription() == null ? "—" : t.getDescription())
+                    .description(Objects.requireNonNullElse(t.getDescription(), "—"))
                     .active(Boolean.TRUE.equals(t.getIsActive()))
                     .placeholderCount(count)
                     .editUrl("/admin/email-templates/" + t.getId() + "/edit")
@@ -133,7 +156,7 @@ public class EmailTemplateEngineController {
     @GetMapping("/create")
     public String createForm(Model model) {
         model.addAttribute("isEdit", false);
-        model.addAttribute("record", EmailTemplate.builder()
+        model.addAttribute("record", EmailTemplateDto.builder()
                 .category("Sipariş & Satış")
                 .isActive(true)
                 .build());
@@ -156,17 +179,22 @@ public class EmailTemplateEngineController {
                                RedirectAttributes redirectAttributes,
                                Model model) {
         try {
-            EmailTemplate created = emailService.createTemplate(
+            EmailTemplateDto created = emailService.createTemplateView(
                     templateKey, templateName, category, description,
                     subject, bodyHtml, placeholders, isActive
             );
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "'" + created.getTemplateName() + "' (" + created.getTemplateKey() + ") şablonu başarıyla oluşturuldu.");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "'"
+                            + created.getTemplateName()
+                            + "' ("
+                            + created.getTemplateKey()
+                            + ") şablonu başarıyla oluşturuldu.");
             return "redirect:/admin/email-templates/" + created.getId();
         } catch (IllegalArgumentException e) {
             model.addAttribute("isEdit", false);
             model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("record", EmailTemplate.builder()
+            model.addAttribute("record", EmailTemplateDto.builder()
                     .templateKey(templateKey)
                     .templateName(templateName)
                     .category(category)
@@ -186,7 +214,7 @@ public class EmailTemplateEngineController {
      */
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable("id") Long id, Model model) {
-        EmailTemplate template = emailService.getTemplateById(id);
+        EmailTemplateDto template = emailService.getTemplate(id);
         model.addAttribute("isEdit", true);
         model.addAttribute("record", template);
         populateFormLookups(model, template.getTemplateKey());
@@ -208,7 +236,7 @@ public class EmailTemplateEngineController {
                              RedirectAttributes redirectAttributes,
                              Model model) {
         try {
-            EmailTemplate updated = emailService.updateTemplate(
+            EmailTemplateDto updated = emailService.updateTemplateView(
                     id, templateName, category, description,
                     subject, bodyHtml, placeholders, isActive
             );
@@ -216,7 +244,7 @@ public class EmailTemplateEngineController {
                     "'" + updated.getTemplateName() + "' şablonu başarıyla güncellendi.");
             return "redirect:/admin/email-templates/" + id;
         } catch (IllegalArgumentException e) {
-            EmailTemplate existing = emailService.getTemplateById(id);
+            EmailTemplateDto existing = emailService.getTemplate(id);
             existing.setTemplateName(templateName);
             existing.setCategory(category);
             existing.setDescription(description);
@@ -238,7 +266,7 @@ public class EmailTemplateEngineController {
      */
     @GetMapping("/{id}")
     public String detailPage(@PathVariable("id") Long id, Model model) {
-        EmailTemplate template = emailService.getTemplateById(id);
+        EmailTemplateDto template = emailService.getTemplate(id);
         EmailPreviewDto preview = emailService.previewTemplate(template.getTemplateKey())
                 .orElse(EmailPreviewDto.builder()
                         .templateKey(template.getTemplateKey())
@@ -250,8 +278,9 @@ public class EmailTemplateEngineController {
                         .build());
 
         List<EmailPlaceholderSample> samples = emailService.placeholderSamples(template);
-        Optional<EmailTemplateCatalog.TemplateMeta> catalogMeta = EmailTemplateCatalog.getByKey(template.getTemplateKey());
-        List<EmailTemplate> allTemplates = emailService.getAllTemplates();
+        Optional<EmailTemplateCatalog.TemplateMeta> catalogMeta =
+                EmailTemplateCatalog.getByKey(template.getTemplateKey());
+        List<EmailTemplateDto> allTemplates = emailService.getAllTemplateViews();
 
         String fromName = settingService.getSetting("smtp.from_name", "Özerler Mermer ERP");
         String fromAddress = settingService.getSetting("smtp.from_address", "info@ozerlermermer.com");
@@ -277,7 +306,7 @@ public class EmailTemplateEngineController {
     public String sendTestEmail(@PathVariable("id") Long id,
                                 @RequestParam("testEmail") String testEmail,
                                 RedirectAttributes redirectAttributes) {
-        EmailTemplate template = emailService.getTemplateById(id);
+        EmailTemplateDto template = emailService.getTemplate(id);
         if (StringUtils.isBlank(testEmail) || !testEmail.contains("@")) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lütfen geçerli bir test e-posta adresi giriniz.");
             return "redirect:/admin/email-templates/" + id;
@@ -286,11 +315,18 @@ public class EmailTemplateEngineController {
         try {
             boolean dispatched = emailService.sendTestEmail(testEmail.trim(), template.getTemplateKey());
             if (dispatched) {
-                redirectAttributes.addFlashAttribute("successMessage",
-                        "'" + template.getTemplateName() + "' şablonu ile '" + testEmail.trim() + "' adresine test e-postası başarıyla gönderildi.");
+                redirectAttributes.addFlashAttribute(
+                        "successMessage",
+                        "'"
+                                + template.getTemplateName()
+                                + "' şablonu ile '"
+                                + testEmail.trim()
+                                + "' adresine test e-postası başarıyla gönderildi.");
             } else {
-                redirectAttributes.addFlashAttribute("errorMessage",
-                        "E-posta gönderilemedi! Lütfen Sistem Ayarları altındaki SMTP sunucu ve kimlik doğrulama ayarlarını kontrol ediniz.");
+                redirectAttributes.addFlashAttribute(
+                        "errorMessage",
+                        "E-posta gönderilemedi! Lütfen Sistem Ayarları altındaki SMTP sunucu ve kimlik doğrulama "
+                                + "ayarlarını kontrol ediniz.");
             }
         } catch (Exception ex) {
             log.error("Test email dispatch failure: {}", ex.getMessage(), ex);
@@ -306,11 +342,15 @@ public class EmailTemplateEngineController {
     @PostMapping("/{id}/delete")
     public String deleteTemplate(@PathVariable("id") Long id,
                                  RedirectAttributes redirectAttributes) {
-        EmailTemplate template = emailService.getTemplateById(id);
+        EmailTemplateDto template = emailService.getTemplate(id);
         // Protect seeded catalog templates from accidental removal
         if (EmailTemplateCatalog.getByKey(template.getTemplateKey()).isPresent()) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    "'" + template.getTemplateKey() + "' temel kurumsal ERP şablonudur ve sistem bütünlüğü için silinemez. Dilerseniz pasife alabilirsiniz.");
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "'"
+                            + template.getTemplateKey()
+                            + "' temel kurumsal ERP şablonudur ve sistem bütünlüğü için silinemez. Dilerseniz pasife "
+                            + "alabilirsiniz.");
             return "redirect:/admin/email-templates/" + id;
         }
 

@@ -1,15 +1,16 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.PurchaseOrder;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Data
 @Builder
@@ -66,14 +67,32 @@ public class PurchaseOrderDto {
     private String statusLabel;
 
     public static PurchaseOrderDto fromEntity(PurchaseOrder po) {
+        String projectNameValue;
+        if (po.getProject() != null) {
+            projectNameValue = po.getProject().getName();
+        } else {
+            projectNameValue = "—";
+        }
+        String businessUnitValue;
+        if (po.getBusinessUnit() != null) {
+            businessUnitValue = po.getBusinessUnit().name();
+        } else {
+            businessUnitValue = "";
+        }
+        String businessUnitLabelValue;
+        if (po.getBusinessUnit() != null) {
+            businessUnitLabelValue = po.getBusinessUnit().getLabel();
+        } else {
+            businessUnitLabelValue = "—";
+        }
         return PurchaseOrderDto.builder()
                 .id(po.getId())
                 .poNumber(po.getPoNumber())
                 .supplierName(po.getSupplier().getCompanyName())
                 .supplierType(po.getSupplier().getSupplierType().getLabel())
-                .projectName(po.getProject() != null ? po.getProject().getName() : "—")
-                .businessUnit(po.getBusinessUnit() != null ? po.getBusinessUnit().name() : "")
-                .businessUnitLabel(po.getBusinessUnit() != null ? po.getBusinessUnit().getLabel() : "—")
+                .projectName(projectNameValue)
+                .businessUnit(businessUnitValue)
+                .businessUnitLabel(businessUnitLabelValue)
                 .orderDate(po.getOrderDate())
                 .expectedDelivery(po.getExpectedDelivery())
                 .totalAmount(po.getTotalAmount())

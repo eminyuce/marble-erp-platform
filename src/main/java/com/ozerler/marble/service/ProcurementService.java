@@ -1,8 +1,30 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.CostCenterDto;
 import com.ozerler.marble.dto.PurchaseOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.option.ProjectOption;
+import com.ozerler.marble.dto.view.CostCenterRef;
+import com.ozerler.marble.dto.view.PartyView;
+import com.ozerler.marble.dto.view.PurchaseOrderView;
+import com.ozerler.marble.mapper.CostCenterMapper;
+import com.ozerler.marble.mapper.PurchaseOrderMapper;
+import com.ozerler.marble.mapper.SupplierMapper;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.PurchaseOrder;
@@ -17,48 +39,74 @@ import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.PurchaseOrderRepository;
 import com.ozerler.marble.repository.SupplierRepository;
 import com.ozerler.marble.util.GridPages;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.ozerler.marble.util.MessageUtils;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ProcurementService {
 
+    private static final int ORDER_NO_RANGE = 99999;
+
     private final PurchaseOrderRepository purchaseOrderRepository;
+    private final CostCenterMapper costCenterMapper;
+    private final PurchaseOrderMapper purchaseOrderMapper;
+    private final SupplierMapper supplierMapper;
     private final SupplierRepository supplierRepository;
     private final ProjectRepository projectRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
     private final ExpenseService expenseService;
     private final CostCenterRepository costCenterRepository;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
-    public record ProcurementSummaryDto(long totalOrders, BigDecimal totalAmount, long pendingDeliveries, long completedDeliveries) {}
+    public record ProcurementSummaryDto(
+            long totalOrders,
+            BigDecimal totalAmount,
+            long pendingDeliveries,
+            long completedDeliveries) {
+    }
 
     @Transactional(readOnly = true)
     public ProcurementSummaryDto getProcurementSummary() {
-        List<PurchaseOrder> all = purchaseOrderRepository.findAll();
+        List<PurchaseOrder> all = BoundedReads.all(purchaseOrderRepository);
         long total = all.size();
-        BigDecimal totalAmt = all.stream().map(order -> order.getTotalAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        long pending = all.stream().filter(p -> p.getStatus() != null && ("DRAFT".equalsIgnoreCase(p.getStatus().name()) || "SENT".equalsIgnoreCase(p.getStatus().name()) || "CONFIRMED".equalsIgnoreCase(p.getStatus().name()))).count();
-        long completed = all.stream().filter(p -> p.getStatus() != null && "DELIVERED".equalsIgnoreCase(p.getStatus().name())).count();
+        BigDecimal totalAmt =
+                all.stream()
+                        .map(order -> order.getTotalAmount())
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        long pending =
+                all.stream()
+                        .filter(
+                                p ->
+                                        p.getStatus() != null
+                                                && ("DRAFT".equalsIgnoreCase(p.getStatus().name())
+                                                        || "SENT"
+                                                                .equalsIgnoreCase(
+                                                                        p.getStatus().name())
+                                                        || "CONFIRMED"
+                                                                .equalsIgnoreCase(
+                                                                        p.getStatus().name())))
+                        .count();
+        long completed =
+                all.stream()
+                        .filter(
+                                p ->
+                                        p.getStatus() != null
+                                                && "DELIVERED"
+                                                        .equalsIgnoreCase(p.getStatus().name()))
+                        .count();
         return new ProcurementSummaryDto(total, totalAmt, pending, completed);
     }
 
@@ -69,13 +117,29 @@ public class ProcurementService {
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<PurchaseOrderDto> getPurchaseOrdersPaged(int page, int size,
-                                                                      String search, String status, String sortField, String sortDir) {
-        Page<PurchaseOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.PURCHASE_ORDER_SORTS,
-                pageable -> purchaseOrderRepository.searchPurchaseOrders(GridPages.normalizeSearch(search), pageable));
+    public TabulatorResponse<PurchaseOrderDto> getPurchaseOrdersPaged(
+            int page, int size, String search, String status, String sortField, String sortDir) {
+        Page<PurchaseOrder> orderPage =
+                GridPages.execute(
+                        page,
+                        size,
+                        sortField,
+                        sortDir,
+                        GridPages.PURCHASE_ORDER_SORTS,
+                        pageable ->
+                                purchaseOrderRepository.searchPurchaseOrders(
+                                        GridPages.normalizeSearch(search), pageable));
         List<PurchaseOrder> orders = orderPage.getContent();
         if (status != null && !status.isBlank()) {
-            orders = orders.stream().filter(o -> o.getStatus() != null && o.getStatus().name().equalsIgnoreCase(status)).toList();
+            orders =
+                    orders.stream()
+                            .filter(
+                                    o ->
+                                            o.getStatus() != null
+                                                    && o.getStatus()
+                                                            .name()
+                                                            .equalsIgnoreCase(status))
+                            .toList();
         }
         List<PurchaseOrderDto> dtos = orders.stream()
                 .map(PurchaseOrderDto::fromEntity)
@@ -85,13 +149,17 @@ public class ProcurementService {
     }
 
     @Transactional(readOnly = true)
-    public List<Supplier> getAllSuppliers() {
-        return supplierRepository.findAllByOrderByCompanyNameAsc();
+    public List<PartyView> getAllSuppliers() {
+        return BoundedReads.all(supplierRepository, Sort.by("companyName")).stream()
+                .map(supplierMapper::toDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+    public List<ProjectOption> getAllProjects() {
+        return BoundedReads.all(projectRepository).stream()
+                .map(project -> new ProjectOption(project.getId(), project.getName(), project.getProjectCode()))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -132,8 +200,14 @@ public class ProcurementService {
 
         CostCenter costCenter = resolveCostCenter(businessUnit, costCenterId);
 
+        String poNumberValue;
+        if (poNumber != null) {
+            poNumberValue = poNumber.trim();
+        } else {
+            poNumberValue = "SIP-" + System.currentTimeMillis();
+        }
         PurchaseOrder order = PurchaseOrder.builder()
-                .poNumber(poNumber != null ? poNumber.trim() : "SIP-" + System.currentTimeMillis())
+                .poNumber(poNumberValue)
                 .supplier(supplier)
                 .project(project)
                 .businessUnit(businessUnit)
@@ -156,9 +230,9 @@ public class ProcurementService {
                 .purchaseOrder(order)
                 .itemName(itemName)
                 .itemType(PurchaseItemType.fromCode(itemType))
-                .quantity(quantity != null ? quantity : BigDecimal.ONE)
-                .unit(unit != null ? unit : "ADET")
-                .unitPrice(unitPrice != null ? unitPrice : BigDecimal.ZERO)
+                .quantity(Objects.requireNonNullElse(quantity, BigDecimal.ONE))
+                .unit(Objects.requireNonNullElse(unit, "ADET"))
+                .unitPrice(Objects.requireNonNullElse(unitPrice, BigDecimal.ZERO))
                 .build();
 
         item.calculateLineTotal();
@@ -180,20 +254,33 @@ public class ProcurementService {
     }
 
     public String generatePoNumber() {
-        return "SIP-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999));
+        return "SIP-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * ORDER_NO_RANGE));
     }
 
     private CostCenter resolveCostCenter(BusinessUnit unit, Long costCenterId) {
         if (costCenterId != null) {
-            CostCenter selected = costCenterRepository.findById(costCenterId)
-                    .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.not_found", costCenterId)));
+            CostCenter selected =
+                    costCenterRepository
+                            .findById(costCenterId)
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    getMessage(
+                                                            "error.cost_center.not_found",
+                                                            costCenterId)));
             if (selected.getBusinessUnit() != unit) {
                 throw new IllegalArgumentException(getMessage("error.cost_center.unit.mismatch", unit.getLabel()));
             }
             return selected;
         }
-        return costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
-                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.unit.missing", unit.getLabel())));
+        return costCenterRepository
+                .findFirstByBusinessUnitOrderByCodeAsc(unit)
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        getMessage(
+                                                "error.cost_center.unit.missing",
+                                                unit.getLabel())));
     }
 
     private void postPurchaseExpense(PurchaseOrder order) {
@@ -207,14 +294,77 @@ public class ProcurementService {
         if (unit == BusinessUnit.SITE && order.getProject() == null) {
             throw new IllegalArgumentException(getMessage("error.purchase.site.project.required"));
         }
-        CostCenter center = order.getCostCenter() != null
-                ? order.getCostCenter()
-                : resolveCostCenter(unit, null);
+        CostCenter center;
+        if (order.getCostCenter() != null) {
+            center = order.getCostCenter();
+        } else {
+            center = resolveCostCenter(unit, null);
+        }
         String period = YearMonth.now().toString();
         expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 center.getId(), ExpenseType.MATERIAL, null, unit, order.getTotalAmount(),
                 Constants.CURRENCY_TRY, order.getPoNumber(), LocalDate.now(), LocalDate.now(),
                 period, period, null, null, null, order.getProject(), null, null, null, order.getPoNumber(),
                 "Satın alma: " + order.getPoNumber()));
+    }
+
+    /**
+     * Same as {@code getOrderById}, copied into a view inside the transaction.
+     *
+     * @param id see {@code getOrderById}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public PurchaseOrderView getOrder(Long id) {
+        return purchaseOrderMapper.toDto(getOrderById(id));
+    }
+
+    /**
+     * Same as {@code createPurchaseOrder}, copied into a view inside the transaction.
+     *
+     * @param poNumber see {@code createPurchaseOrder}
+     * @param supplierId see {@code createPurchaseOrder}
+     * @param projectId see {@code createPurchaseOrder}
+     * @param businessUnit see {@code createPurchaseOrder}
+     * @param costCenterId see {@code createPurchaseOrder}
+     * @param expectedDelivery see {@code createPurchaseOrder}
+     * @param notes see {@code createPurchaseOrder}
+     * @return the view
+     */
+    @Transactional
+    public PurchaseOrderView createPurchaseOrderView(String poNumber, Long supplierId, Long projectId,
+                                             BusinessUnit businessUnit, Long costCenterId,
+                                             LocalDate expectedDelivery, String notes) {
+        return purchaseOrderMapper.toDto(
+                createPurchaseOrder(
+                        poNumber,
+                        supplierId,
+                        projectId,
+                        businessUnit,
+                        costCenterId,
+                        expectedDelivery,
+                        notes));
+    }
+
+    /**
+     * Same as {@code getCostCentersForUnit}, copied into a view inside the transaction.
+     *
+     * @param businessUnit see {@code getCostCentersForUnit}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<CostCenterRef> getCostCenterViewsForUnit(BusinessUnit businessUnit) {
+        return getCostCentersForUnit(businessUnit).stream().map(costCenterMapper::toDto).toList();
+    }
+
+    /**
+     * Cost centers of a business unit for the JSON lookup endpoint.
+     *
+     * @param businessUnit the unit
+     * @return cost center DTOs
+     */
+    @Transactional(readOnly = true)
+    public List<CostCenterDto> getCostCenterDtosForUnit(BusinessUnit businessUnit) {
+        return getCostCentersForUnit(businessUnit).stream().map(CostCenterDto::fromEntity).toList();
     }
 }

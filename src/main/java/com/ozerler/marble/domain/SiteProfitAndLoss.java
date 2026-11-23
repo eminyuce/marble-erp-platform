@@ -1,11 +1,11 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.util.MessageUtils;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.util.MessageUtils;
 
 /**
  * Construction-site profit and loss from movement totals, not an incremental column.
@@ -27,7 +27,10 @@ public final class SiteProfitAndLoss {
         BigDecimal totalCost = sum(
                 installedMaterialCost, laborCost, taxCost, consumableCost, transportationCost, otherCost);
         BigDecimal revenue = zeroIfNull(realizedRevenue);
-        return new Result(totalCost, revenue, revenue.subtract(totalCost).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP));
+        return new Result(
+                totalCost,
+                revenue,
+                revenue.subtract(totalCost).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP));
     }
 
     private static BigDecimal sum(BigDecimal... amounts) {
@@ -42,7 +45,10 @@ public final class SiteProfitAndLoss {
         if (value != null && value.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.cost.negative_amount"));
         }
-        return value != null ? value : BigDecimal.ZERO;
+        if (value != null) {
+            return value;
+        }
+        return BigDecimal.ZERO;
     }
 
     public record Result(BigDecimal totalCost, BigDecimal realizedRevenue, BigDecimal netProfitOrLoss) {

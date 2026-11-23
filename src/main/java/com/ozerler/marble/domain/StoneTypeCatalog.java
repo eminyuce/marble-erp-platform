@@ -9,18 +9,51 @@ import java.util.Optional;
  */
 public final class StoneTypeCatalog {
 
-    public record StoneTypeItem(String code, String name, BigDecimal specificGravity, String description) {}
+    public record StoneTypeItem(String code, String name, BigDecimal specificGravity, String description) {
+    }
 
-    private static final List<StoneTypeItem> CATALOG = List.of(
-            new StoneTypeItem("BEJ", "Burdur / Klasik Bej", new BigDecimal("2.71"), "Standart bej mermer (2.71 t/m³)"),
-            new StoneTypeItem("BEYAZ", "Muğla / Afyon Beyaz", new BigDecimal("2.70"), "Saf kristalin beyaz mermer (2.70 t/m³)"),
-            new StoneTypeItem("TRAVERTEN", "Denizli Traverten", new BigDecimal("2.45"), "Gözenekli açık/koyu traverten (2.45 t/m³)"),
-            new StoneTypeItem("GRI", "Afyon / Tundra Gri", new BigDecimal("2.75"), "Damarlı gri mermer (2.75 t/m³)"),
-            new StoneTypeItem("SIYAH", "Toros Siyah", new BigDecimal("2.73"), "Koyu siyah kalsit damarlı (2.73 t/m³)"),
-            new StoneTypeItem("ONIKS", "Oniks (Onyx)", new BigDecimal("2.72"), "Yarı saydam kalsit oniks (2.72 t/m³)"),
-            new StoneTypeItem("GRANIT", "Doğal Granit", new BigDecimal("2.80"), "Sert magma kökenli granit (2.80 t/m³)"),
-            new StoneTypeItem("LIMESTONE", "Limestone / Kireçtaşı", new BigDecimal("2.60"), "Yumuşak sedimanter kireçtaşı (2.60 t/m³)")
-    );
+    private static final List<StoneTypeItem> CATALOG =
+            List.of(
+                    new StoneTypeItem(
+                            "BEJ",
+                            "Burdur / Klasik Bej",
+                            new BigDecimal("2.71"),
+                            "Standart bej mermer (2.71 t/m³)"),
+                    new StoneTypeItem(
+                            "BEYAZ",
+                            "Muğla / Afyon Beyaz",
+                            new BigDecimal("2.70"),
+                            "Saf kristalin beyaz mermer (2.70 t/m³)"),
+                    new StoneTypeItem(
+                            "TRAVERTEN",
+                            "Denizli Traverten",
+                            new BigDecimal("2.45"),
+                            "Gözenekli açık/koyu traverten (2.45 t/m³)"),
+                    new StoneTypeItem(
+                            "GRI",
+                            "Afyon / Tundra Gri",
+                            new BigDecimal("2.75"),
+                            "Damarlı gri mermer (2.75 t/m³)"),
+                    new StoneTypeItem(
+                            "SIYAH",
+                            "Toros Siyah",
+                            new BigDecimal("2.73"),
+                            "Koyu siyah kalsit damarlı (2.73 t/m³)"),
+                    new StoneTypeItem(
+                            "ONIKS",
+                            "Oniks (Onyx)",
+                            new BigDecimal("2.72"),
+                            "Yarı saydam kalsit oniks (2.72 t/m³)"),
+                    new StoneTypeItem(
+                            "GRANIT",
+                            "Doğal Granit",
+                            new BigDecimal("2.80"),
+                            "Sert magma kökenli granit (2.80 t/m³)"),
+                    new StoneTypeItem(
+                            "LIMESTONE",
+                            "Limestone / Kireçtaşı",
+                            new BigDecimal("2.60"),
+                            "Yumuşak sedimanter kireçtaşı (2.60 t/m³)"));
 
     private StoneTypeCatalog() {
     }
@@ -31,7 +64,10 @@ public final class StoneTypeCatalog {
 
     public static BigDecimal findDensityOrDefault(String stoneName, BigDecimal fallback) {
         if (stoneName == null || stoneName.isBlank()) {
-            return fallback != null ? fallback : new BigDecimal("2.70");
+            if (fallback != null) {
+                return fallback;
+            }
+            return new BigDecimal("2.70");
         }
         String normalized = stoneName.trim().toUpperCase();
         for (StoneTypeItem item : CATALOG) {
@@ -39,7 +75,10 @@ public final class StoneTypeCatalog {
                 return item.specificGravity();
             }
         }
-        return fallback != null ? fallback : new BigDecimal("2.70");
+        if (fallback != null) {
+            return fallback;
+        }
+        return new BigDecimal("2.70");
     }
 
     public static Optional<StoneTypeItem> findByName(String stoneName) {

@@ -1,17 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ozerler.marble.dto.DependencyHealth;
-import com.ozerler.marble.dto.HealthResponse;
-import com.ozerler.marble.storage.ObjectStorageService;
-import com.ozerler.marble.util.DateTimes;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.info.BuildProperties;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Service;
-
-import javax.sql.DataSource;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -20,7 +8,30 @@ import java.sql.DatabaseMetaData;
 import java.sql.Statement;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ozerler.marble.dto.DependencyHealth;
+import com.ozerler.marble.dto.HealthResponse;
+import com.ozerler.marble.storage.ObjectStorageService;
+import com.ozerler.marble.util.DateTimes;
+import com.ozerler.marble.util.MessageUtils;
+
+import javax.sql.DataSource;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service orchestrating system diagnostic metrics, JVM runtime stats, database,
@@ -32,21 +43,25 @@ import java.util.*;
 public class SystemHealthService {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final int BYTES_PER_KIB = 1024;
+    private static final int DEFAULT_SERVER_PORT = 81;
+    private static final int UNREACHABLE_LATENCY_MS = 999;
 
     private final DataSource dataSource;
     private final Environment environment;
     private final Optional<BuildProperties> buildProperties;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
     private final ObjectStorageService objectStorageService;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public Map<String, Object> collectHealthMetrics() {
@@ -55,8 +70,13 @@ public class SystemHealthService {
         // 1. Application & Environment Info
         String appName = getMessage("system.health.app_name");
         String version = buildProperties.map(props -> props.getVersion()).orElse("unknown");
-        String[] activeProfiles = environment.getActiveProfiles().length > 0 ? environment.getActiveProfiles() : new String[]{"default"};
-        int port = 81;
+        String[] activeProfiles;
+        if (environment.getActiveProfiles().length > 0) {
+            activeProfiles = environment.getActiveProfiles();
+        } else {
+            activeProfiles = new String[]{"default"};
+        }
+        int port = DEFAULT_SERVER_PORT;
 
         RuntimeMXBean runtimeMX = ManagementFactory.getRuntimeMXBean();
         String formattedUptime = DateTimes.formatUptime(Duration.ofMillis(runtimeMX.getUptime()));
@@ -75,9 +95,9 @@ public class SystemHealthService {
         long freeMemBytes = runtime.freeMemory();
         long usedMemBytes = totalMemBytes - freeMemBytes;
 
-        long usedMemMb = usedMemBytes / (1024 * 1024);
-        long totalMemMb = totalMemBytes / (1024 * 1024);
-        long maxMemMb = maxMemBytes / (1024 * 1024);
+        long usedMemMb = usedMemBytes / (BYTES_PER_KIB * BYTES_PER_KIB);
+        long totalMemMb = totalMemBytes / (BYTES_PER_KIB * BYTES_PER_KIB);
+        long maxMemMb = maxMemBytes / (BYTES_PER_KIB * BYTES_PER_KIB);
         int memPercent = (int) Math.round((double) usedMemBytes / totalMemBytes * 100);
 
         metrics.put("javaVersion", System.getProperty("java.version", "24"));
@@ -109,13 +129,19 @@ public class SystemHealthService {
         } catch (Exception ex) {
             log.error("Database health check ping failed: {}", ex.getMessage());
             dbStatus = "DOWN";
-            dbLatencyMs = 999;
+            dbLatencyMs = UNREACHABLE_LATENCY_MS;
         }
 
         metrics.put("dbStatus", dbStatus);
         metrics.put("dbName", dbName);
         metrics.put("dbVersion", dbVersion);
-        metrics.put("dbLatencyMs", dbLatencyMs >= 0 ? dbLatencyMs : 1);
+        long dbLatencyMsValue;
+        if (dbLatencyMs >= 0) {
+            dbLatencyMsValue = dbLatencyMs;
+        } else {
+            dbLatencyMsValue = 1;
+        }
+        metrics.put("dbLatencyMs", dbLatencyMsValue);
 
         // 4. Disk Storage Health
         File rootPartition = new File(".");
@@ -124,9 +150,14 @@ public class SystemHealthService {
         long usableDiskBytes = rootPartition.getUsableSpace();
         long usedDiskBytes = totalDiskBytes - freeDiskBytes;
 
-        long totalDiskGb = totalDiskBytes / (1024 * 1024 * 1024);
-        long usableDiskGb = usableDiskBytes / (1024 * 1024 * 1024);
-        int diskPercent = totalDiskBytes > 0 ? (int) Math.round((double) usedDiskBytes / totalDiskBytes * 100) : 0;
+        long totalDiskGb = totalDiskBytes / (BYTES_PER_KIB * BYTES_PER_KIB * BYTES_PER_KIB);
+        long usableDiskGb = usableDiskBytes / (BYTES_PER_KIB * BYTES_PER_KIB * BYTES_PER_KIB);
+        int diskPercent;
+        if (totalDiskBytes > 0) {
+            diskPercent = (int) Math.round((double) usedDiskBytes / totalDiskBytes * 100);
+        } else {
+            diskPercent = 0;
+        }
 
         metrics.put("diskStatus", "UP");
         metrics.put("totalDiskGb", totalDiskGb);
@@ -138,30 +169,129 @@ public class SystemHealthService {
         DependencyHealth rustFsHealth = checkRustFsHealth();
         long rustFsLatencyMs = System.currentTimeMillis() - rustFsStart;
         String rustFsStatus = rustFsHealth.getStatus();
-        String rustFsDesc = rustFsHealth.getError() != null
-                ? rustFsHealth.getError()
-                : getMessage("system.health.comp.rustfs.desc");
+        String rustFsDesc;
+        if (rustFsHealth.getError() != null) {
+            rustFsDesc = rustFsHealth.getError();
+        } else {
+            rustFsDesc = getMessage("system.health.comp.rustfs.desc");
+        }
 
         metrics.put("rustfsStatus", rustFsStatus);
         metrics.put("rustfsLatencyMs", rustFsLatencyMs);
         metrics.put("rustfsBucket", objectStorageService.getBucketName());
 
-        String overallStatus = ("UP".equals(dbStatus) && "UP".equals(rustFsStatus)) ? "UP" : "DOWN";
+        String overallStatus;
+        if ("UP".equals(dbStatus) && "UP".equals(rustFsStatus)) {
+            overallStatus = "UP";
+        } else {
+            overallStatus = "DOWN";
+        }
         metrics.put("overallStatus", overallStatus);
 
         // 6. Component Subsystem Statuses
         List<Map<String, Object>> components = new ArrayList<>();
-        components.add(Map.of("name", getMessage("system.health.comp.db.name"), "status", dbStatus, "latency", (dbLatencyMs >= 0 ? dbLatencyMs : 1) + " ms", "desc", getMessage("system.health.comp.db.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.rustfs.name"), "status", rustFsStatus, "latency", rustFsLatencyMs + " ms", "desc", rustFsDesc));
-        components.add(Map.of("name", getMessage("system.health.comp.quarry.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.quarry.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.gangsaw.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.gangsaw.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.workshop.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.workshop.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.site.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.site.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.cost.name"), "status", "UP", "latency", "<1 ms", "desc", getMessage("system.health.comp.cost.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.email.name"), "status", "UP", "latency", "UP", "desc", getMessage("system.health.comp.email.desc")));
-        components.add(Map.of("name", getMessage("system.health.comp.actuator.name"), "status", "UP", "latency", "/health/", "desc", getMessage("system.health.comp.actuator.desc")));
+        long dbLatencyMsValue2;
+        if (dbLatencyMs >= 0) {
+            dbLatencyMsValue2 = dbLatencyMs;
+        } else {
+            dbLatencyMsValue2 = 1;
+        }
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.db.name"),
+                        "status",
+                        dbStatus,
+                        "latency",
+                        dbLatencyMsValue2 + " ms",
+                        "desc",
+                        getMessage("system.health.comp.db.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.rustfs.name"),
+                        "status",
+                        rustFsStatus,
+                        "latency",
+                        rustFsLatencyMs + " ms",
+                        "desc",
+                        rustFsDesc));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.quarry.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "<1 ms",
+                        "desc",
+                        getMessage("system.health.comp.quarry.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.gangsaw.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "<1 ms",
+                        "desc",
+                        getMessage("system.health.comp.gangsaw.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.workshop.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "<1 ms",
+                        "desc",
+                        getMessage("system.health.comp.workshop.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.site.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "<1 ms",
+                        "desc",
+                        getMessage("system.health.comp.site.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.cost.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "<1 ms",
+                        "desc",
+                        getMessage("system.health.comp.cost.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.email.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "UP",
+                        "desc",
+                        getMessage("system.health.comp.email.desc")));
+        components.add(
+                Map.of(
+                        "name",
+                        getMessage("system.health.comp.actuator.name"),
+                        "status",
+                        "UP",
+                        "latency",
+                        "/health/",
+                        "desc",
+                        getMessage("system.health.comp.actuator.desc")));
 
-        int upComponentCount = (int) components.stream().filter(component -> "UP".equals(component.get("status"))).count();
+        int upComponentCount =
+                (int)
+                        components.stream()
+                                .filter(component -> "UP".equals(component.get("status")))
+                                .count();
         metrics.put("components", components);
         metrics.put("componentCount", components.size());
         metrics.put("upComponentCount", upComponentCount);
@@ -181,10 +311,30 @@ public class SystemHealthService {
         rustFsJson.put("status", rustFsStatus);
         rustFsJson.put("bucket", objectStorageService.getBucketName());
         rustFsJson.put("pingMs", rustFsLatencyMs);
-        rustFsJson.put("error", rustFsHealth.getError() != null ? rustFsHealth.getError() : "None");
+        rustFsJson.put("error", Objects.requireNonNullElse(rustFsHealth.getError(), "None"));
         compMap.put("rustfs", rustFsJson);
-        compMap.put("diskSpace", Map.of("status", "UP", "totalGb", totalDiskGb, "usableGb", usableDiskGb, "usedPercent", diskPercent + "%"));
-        compMap.put("jvmMemory", Map.of("usedMb", usedMemMb, "totalMb", totalMemMb, "maxMb", maxMemMb, "percent", memPercent + "%"));
+        compMap.put(
+                "diskSpace",
+                Map.of(
+                        "status",
+                        "UP",
+                        "totalGb",
+                        totalDiskGb,
+                        "usableGb",
+                        usableDiskGb,
+                        "usedPercent",
+                        diskPercent + "%"));
+        compMap.put(
+                "jvmMemory",
+                Map.of(
+                        "usedMb",
+                        usedMemMb,
+                        "totalMb",
+                        totalMemMb,
+                        "maxMb",
+                        maxMemMb,
+                        "percent",
+                        memPercent + "%"));
         compMap.put("threads", Map.of("active", Thread.activeCount(), "processors", runtime.availableProcessors()));
         compMap.put("quarryService", Map.of("status", "UP"));
         compMap.put("factoryService", Map.of("status", "UP"));
@@ -216,8 +366,13 @@ public class SystemHealthService {
         dependencies.put("costAccounting", DependencyHealth.up());
         dependencies.put("diskSpace", checkDiskSpaceHealth());
 
-        String overallStatus = dependencies.values().stream()
-                .allMatch(dependency -> "UP".equals(dependency.getStatus())) ? "UP" : "DOWN";
+        String overallStatus;
+        if (dependencies.values().stream()
+                .allMatch(dependency -> "UP".equals(dependency.getStatus()))) {
+            overallStatus = "UP";
+        } else {
+            overallStatus = "DOWN";
+        }
 
         return HealthResponse.builder()
                 .status(overallStatus)

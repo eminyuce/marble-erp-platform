@@ -1,10 +1,10 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.QuarryDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.QuarryDto;
+import com.ozerler.marble.dto.TabulatorResponse;
 
 /**
  * Ocak listesi. Sort keys match {@code GridPages.QUARRY_SORTS}.
@@ -24,12 +24,23 @@ public final class QuarryGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "quarries-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "quarries-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(QuarryDto quarry) {
-        String id = quarry.getId() == null ? "" : quarry.getId().toString();
-        String editUrl = id.isEmpty() ? "" : "/admin/definitions/quarries/" + id + "/edit";
+        String id;
+        if (quarry.getId() == null) {
+            id = "";
+        } else {
+            id = quarry.getId().toString();
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = "/admin/definitions/quarries/" + id + "/edit";
+        }
         String deleteName = GridTexts.text(quarry.getName());
         if (deleteName.isBlank()) {
             deleteName = GridTexts.text(quarry.getCode());
@@ -46,12 +57,12 @@ public final class QuarryGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("code", "Ocak Kodu", true, 140),
-                GridColumn.text("name", "Ocak Adı", true, 180),
-                GridColumn.text("location", "Lokasyon / Mevkii", true, 180),
-                GridColumn.text("specificGravity", "Özgül Ağırlık", true, 140),
-                GridColumn.text("licenseNo", "Ruhsat No", true, 140)
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("code", "Ocak Kodu", true, GridWidth.PX_140),
+                GridColumn.text("name", "Ocak Adı", true, GridWidth.PX_180),
+                GridColumn.text("location", "Lokasyon / Mevkii", true, GridWidth.PX_180),
+                GridColumn.text("specificGravity", "Özgül Ağırlık", true, GridWidth.PX_140),
+                GridColumn.text("licenseNo", "Ruhsat No", true, GridWidth.PX_140)
         );
     }
 }

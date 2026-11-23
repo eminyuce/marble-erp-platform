@@ -1,10 +1,25 @@
 package com.ozerler.marble.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Locale;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "invoice_items")
@@ -84,7 +99,9 @@ public class InvoiceItem extends AuditableEntity {
     private BigDecimal wasteQuantity = BigDecimal.ZERO;
 
     public static boolean isRunningMeterUnit(String unit) {
-        if (unit == null) return false;
+        if (unit == null) {
+            return false;
+        }
         String u = unit.trim().toLowerCase();
         return u.equals("m.t.") || u.equals("mt") || u.equals("m.t") || u.equals("m.tül") || u.equals("m.tul")
                 || u.equals("metretül") || u.equals("metretul") || u.equals("metre tül") || u.equals("metre tul")
@@ -101,10 +118,21 @@ public class InvoiceItem extends AuditableEntity {
             return "m²";
         }
         String u = unit.trim();
-        return switch (u.toLowerCase(java.util.Locale.ROOT)) {
+        return switch (u.toLowerCase(Locale.ROOT)) {
             case "m2", "m²", "square_meter", "sqm" -> "m²";
             case "m3", "m³", "cubic_meter", "cbm" -> "m³";
-            case "m.t.", "mt", "m.t", "m.tül", "m.tul", "metretül", "metretul", "metre tül", "metre tul", "lineer metre", "lineer" -> "m.t.";
+            case "m.t.",
+                    "mt",
+                    "m.t",
+                    "m.tül",
+                    "m.tul",
+                    "metretül",
+                    "metretul",
+                    "metre tül",
+                    "metre tul",
+                    "lineer metre",
+                    "lineer" ->
+                    "m.t.";
             case "ton", "tons", "t" -> "ton";
             case "adet", "piece", "pieces", "pcs", "ad" -> "adet";
             case "litre", "liter", "lt", "l" -> "litre";
@@ -121,7 +149,9 @@ public class InvoiceItem extends AuditableEntity {
         }
 
         BigDecimal w = this.widthCm;
-        if ((w == null || w.compareTo(BigDecimal.ZERO) <= 0) && this.stockItem != null && this.stockItem.getWidthCm() != null) {
+        if ((w == null || w.compareTo(BigDecimal.ZERO) <= 0)
+                && this.stockItem != null
+                && this.stockItem.getWidthCm() != null) {
             w = this.stockItem.getWidthCm();
             this.widthCm = w;
         }
@@ -129,7 +159,11 @@ public class InvoiceItem extends AuditableEntity {
         if (isRunningMeter() && quantity != null && w != null && w.compareTo(BigDecimal.ZERO) > 0) {
             this.calculatedM2 = quantity.multiply(w).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
         } else if ("m2".equalsIgnoreCase(unit) || "m²".equalsIgnoreCase(unit)) {
-            this.calculatedM2 = quantity != null ? quantity.setScale(2, RoundingMode.HALF_UP) : null;
+            if (quantity != null) {
+                this.calculatedM2 = quantity.setScale(2, RoundingMode.HALF_UP);
+            } else {
+                this.calculatedM2 = null;
+            }
         }
     }
 }

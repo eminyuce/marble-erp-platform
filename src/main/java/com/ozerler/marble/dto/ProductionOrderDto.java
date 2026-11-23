@@ -1,16 +1,18 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.enums.OperationStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * Data Transfer Object representing factory sawing and production orders.
@@ -120,7 +122,7 @@ public class ProductionOrderDto {
                 .status(p.getStatus())
                 .statusLabel(OperationStatus.labelOf(p.getStatus()))
                 .slabCount(slabCount)
-                .totalSlabAreaM2(totalSlabAreaM2 != null ? totalSlabAreaM2 : BigDecimal.ZERO)
+                .totalSlabAreaM2(Objects.requireNonNullElse(totalSlabAreaM2, BigDecimal.ZERO))
                 .notes(p.getNotes())
                 .build();
     }

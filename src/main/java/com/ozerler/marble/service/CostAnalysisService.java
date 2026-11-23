@@ -1,5 +1,18 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.domain.BlockMeasurement;
 import com.ozerler.marble.domain.ExpensePeriods;
@@ -8,6 +21,7 @@ import com.ozerler.marble.domain.QuarryPeriodCost;
 import com.ozerler.marble.domain.SiteProfitAndLoss;
 import com.ozerler.marble.dto.CostAnalysisDto;
 import com.ozerler.marble.dto.SiteProfitDto;
+import com.ozerler.marble.exception.ProjectNotFoundException;
 import com.ozerler.marble.model.CostTransaction;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.enums.BusinessUnit;
@@ -20,19 +34,8 @@ import com.ozerler.marble.repository.CostTransactionRepository;
 import com.ozerler.marble.repository.FactoryOperationRepository;
 import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.WorkshopOperationRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +49,13 @@ public class CostAnalysisService {
 
     @Transactional(readOnly = true)
     public CostAnalysisDto analyze(BusinessUnit unit, String period) {
-        String current = ExpensePeriods.normalize(period != null ? period : YearMonth.now().toString());
+        String normalize;
+        if (period != null) {
+            normalize = period;
+        } else {
+            normalize = YearMonth.now().toString();
+        }
+        String current = ExpensePeriods.normalize(normalize);
         String previous = ExpensePeriods.of(ExpensePeriods.parse(current).minusMonths(1));
         return switch (unit) {
             case QUARRY -> quarryAnalysis(current, previous);
@@ -69,13 +78,19 @@ public class CostAnalysisService {
             }
         }
         List<SiteProfitDto> rows = new ArrayList<>();
-        for (Project project : projectRepository.findAll()) {
+        for (Project project : BoundedReads.all(projectRepository)) {
             rows.add(profitFor(project, categoriesByProject.getOrDefault(project.getId(), Map.of())));
         }
         return rows;
     }
 
     @Transactional(readOnly = true)
+    public SiteProfitDto profitFor(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ProjectNotFoundException(projectId));
+        return profitFor(project);
+    }
+
     public SiteProfitDto profitFor(Project project) {
         return profitFor(project, categoryMap(costTransactionRepository.sumCategoriesByProjectId(project.getId())));
     }
@@ -91,7 +106,12 @@ public class CostAnalysisService {
                 .add(byCategory.getOrDefault(ExpenseCategory.DIESEL, BigDecimal.ZERO))
                 .add(byCategory.getOrDefault(ExpenseCategory.ELECTRICITY, BigDecimal.ZERO))
                 .add(byCategory.getOrDefault(ExpenseCategory.MAINTENANCE, BigDecimal.ZERO));
-        BigDecimal revenue = project.getContractValue() != null ? project.getContractValue() : BigDecimal.ZERO;
+        BigDecimal revenue;
+        if (project.getContractValue() != null) {
+            revenue = project.getContractValue();
+        } else {
+            revenue = BigDecimal.ZERO;
+        }
         SiteProfitAndLoss.Result result = SiteProfitAndLoss.calculate(
                 material, labor, tax, consumable, transport, other, revenue);
         return SiteProfitDto.builder()
@@ -116,7 +136,8 @@ public class CostAnalysisService {
         BigDecimal tons = producedTons(current);
         BigDecimal previousTons = producedTons(previous);
         QuarryPeriodCost.QuarryPeriodCostResult result = QuarryPeriodCost.calculate(current, expense, tons);
-        QuarryPeriodCost.QuarryPeriodCostResult previousResult = QuarryPeriodCost.calculate(previous, previousExpense, previousTons);
+        QuarryPeriodCost.QuarryPeriodCostResult previousResult =
+                QuarryPeriodCost.calculate(previous, previousExpense, previousTons);
         return base(BusinessUnit.QUARRY, current, previous, expense, previousExpense,
                 tons, "ton", result.costPerTon(), previousResult.costPerTon(), result.unallocatedCarryForward())
                 .expenseByCategory(categoryTotals(BusinessUnit.QUARRY, current))
@@ -126,7 +147,8 @@ public class CostAnalysisService {
 
     private CostAnalysisDto factoryAnalysis(String current, String previous) {
         BigDecimal factoryExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, current));
-        BigDecimal previousFactoryExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, previous));
+        BigDecimal previousFactoryExpense =
+                zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, previous));
         BigDecimal incomingBlockCost = incomingFactoryBlockCost(current);
         BigDecimal previousIncoming = incomingFactoryBlockCost(previous);
         BigDecimal expense = factoryExpense.add(incomingBlockCost);
@@ -135,11 +157,24 @@ public class CostAnalysisService {
         BigDecimal outputM2 = yields.stream()
                 .map(row -> row.getOutputQuantity())
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        BigDecimal unitCost = outputM2.compareTo(BigDecimal.ZERO) > 0
-                ? expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP)
-                : null;
-        return base(BusinessUnit.FACTORY, current, previous, expense, previousExpense,
-                outputM2, "m²", unitCost, null, outputM2.compareTo(BigDecimal.ZERO) == 0 && expense.compareTo(BigDecimal.ZERO) > 0)
+        BigDecimal unitCost;
+        if (outputM2.compareTo(BigDecimal.ZERO) > 0) {
+            unitCost = expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP);
+        } else {
+            unitCost = null;
+        }
+        return base(
+                        BusinessUnit.FACTORY,
+                        current,
+                        previous,
+                        expense,
+                        previousExpense,
+                        outputM2,
+                        "m²",
+                        unitCost,
+                        null,
+                        outputM2.compareTo(BigDecimal.ZERO) == 0
+                                && expense.compareTo(BigDecimal.ZERO) > 0)
                 .incomingBlockCost(incomingBlockCost)
                 .yields(yields)
                 .expenseByCategory(categoryTotals(BusinessUnit.FACTORY, current))
@@ -157,13 +192,27 @@ public class CostAnalysisService {
 
     private CostAnalysisDto workshopAnalysis(String current, String previous) {
         BigDecimal expense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, current));
-        BigDecimal previousExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, previous));
+        BigDecimal previousExpense =
+                zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, previous));
         BigDecimal outputM2 = zero(workshopOperationRepository.sumOutputAreaM2ByStatus(OperationStatus.COMPLETED));
-        BigDecimal unitCost = outputM2.compareTo(BigDecimal.ZERO) > 0
-                ? expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP)
-                : null;
-        return base(BusinessUnit.WORKSHOP, current, previous, expense, previousExpense,
-                outputM2, "m²", unitCost, null, outputM2.compareTo(BigDecimal.ZERO) == 0 && expense.compareTo(BigDecimal.ZERO) > 0)
+        BigDecimal unitCost;
+        if (outputM2.compareTo(BigDecimal.ZERO) > 0) {
+            unitCost = expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP);
+        } else {
+            unitCost = null;
+        }
+        return base(
+                        BusinessUnit.WORKSHOP,
+                        current,
+                        previous,
+                        expense,
+                        previousExpense,
+                        outputM2,
+                        "m²",
+                        unitCost,
+                        null,
+                        outputM2.compareTo(BigDecimal.ZERO) == 0
+                                && expense.compareTo(BigDecimal.ZERO) > 0)
                 .expenseByCategory(categoryTotals(BusinessUnit.WORKSHOP, current))
                 .lines(lines(BusinessUnit.WORKSHOP, current))
                 .build();
@@ -238,9 +287,15 @@ public class CostAnalysisService {
     private List<CostAnalysisDto.Line> lines(BusinessUnit unit, String period) {
         List<CostAnalysisDto.Line> result = new ArrayList<>();
         for (CostTransaction tx : costTransactionRepository.findByBusinessUnitAndExpensePeriod(unit, period)) {
+            String categoryLabel;
+            if (tx.getExpenseCategory() != null) {
+                categoryLabel = tx.getExpenseCategory().getLabel();
+            } else {
+                categoryLabel = tx.getExpenseType().getLabel();
+            }
             result.add(CostAnalysisDto.Line.builder()
                     .id(tx.getId())
-                    .categoryLabel(tx.getExpenseCategory() != null ? tx.getExpenseCategory().getLabel() : tx.getExpenseType().getLabel())
+                    .categoryLabel(categoryLabel)
                     .description(tx.getDescription())
                     .amount(tx.getAmount())
                     .documentNo(tx.getDocumentNo())
@@ -270,6 +325,9 @@ public class CostAnalysisService {
     }
 
     private static BigDecimal zero(BigDecimal value) {
-        return value != null ? value : BigDecimal.ZERO;
+        if (value != null) {
+            return value;
+        }
+        return BigDecimal.ZERO;
     }
 }

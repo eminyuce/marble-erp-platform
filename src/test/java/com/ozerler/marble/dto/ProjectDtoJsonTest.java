@@ -1,10 +1,10 @@
 package com.ozerler.marble.dto;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 class ProjectDtoJsonTest {
 
@@ -21,8 +21,8 @@ class ProjectDtoJsonTest {
 
         String json = objectMapper.writeValueAsString(dto);
 
-        assertThat(json).contains("\"project_code\":\"PRJ-2026-0001\"");
-        assertThat(json).doesNotContain("\"projectCode\"");
+        Assertions.assertThat(json).contains("\"project_code\":\"PRJ-2026-0001\"");
+        Assertions.assertThat(json).doesNotContain("\"projectCode\"");
     }
 
     @Test
@@ -30,14 +30,14 @@ class ProjectDtoJsonTest {
     void projectsGridCamelizesApiRows() throws Exception {
         String html;
         try (var in = getClass().getResourceAsStream("/templates/erp/projects/index.html")) {
-            assertThat(in).isNotNull();
+            Assertions.assertThat(in).isNotNull();
             html = new String(in.readAllBytes());
         }
 
-        assertThat(html).contains("fragments/data-grid :: shell");
+        Assertions.assertThat(html).contains("fragments/data-grid :: shell");
         try (var app = getClass().getResourceAsStream("/static/js/app.js")) {
-            assertThat(app).isNotNull();
-            assertThat(new String(app.readAllBytes())).contains("camelizeTabulatorRows");
+            Assertions.assertThat(app).isNotNull();
+            Assertions.assertThat(new String(app.readAllBytes())).contains("camelizeTabulatorRows");
         }
     }
 }

@@ -1,10 +1,26 @@
 package com.ozerler.marble.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "operation_work_order_items")
@@ -15,6 +31,8 @@ import java.math.RoundingMode;
 @Builder
 @EqualsAndHashCode(callSuper = false, of = "id")
 public class OperationWorkOrderItem extends AuditableEntity {
+
+    private static final int CM2_PER_M2 = 10000;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -67,11 +85,16 @@ public class OperationWorkOrderItem extends AuditableEntity {
     @PrePersist
     @PreUpdate
     public void computeMetrics() {
-        int count = pieceCount != null ? Math.max(1, pieceCount) : 1;
+        int count;
+        if (pieceCount != null) {
+            count = Math.max(1, pieceCount);
+        } else {
+            count = 1;
+        }
         if (widthCm != null && lengthCm != null) {
             this.calculatedM2 = widthCm.multiply(lengthCm)
                     .multiply(BigDecimal.valueOf(count))
-                    .divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+                    .divide(BigDecimal.valueOf(CM2_PER_M2), 4, RoundingMode.HALF_UP);
         }
         if (lengthCm != null) {
             this.calculatedMt = lengthCm.multiply(BigDecimal.valueOf(count))

@@ -1,29 +1,53 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.model.*;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.StockMovementType;
-import com.ozerler.marble.model.enums.TargetDestination;
-import com.ozerler.marble.repository.StockMovementRepository;
-import com.ozerler.marble.util.UniqueCodes;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import jakarta.persistence.Persistence;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.StockMovementView;
+import com.ozerler.marble.mapper.InvoiceMapper;
+import com.ozerler.marble.mapper.StockMovementMapper;
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.Invoice;
+import com.ozerler.marble.model.OperationWorkOrder;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.StockLocation;
+import com.ozerler.marble.model.StockMovement;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.StockMovementType;
+import com.ozerler.marble.model.enums.TargetDestination;
+import com.ozerler.marble.repository.StockMovementRepository;
+import com.ozerler.marble.util.UniqueCodes;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class StockMovementService {
 
+    private static final int RECENT_DAYS = 30;
+
     private final StockMovementRepository movementRepository;
+    private final StockMovementMapper stockMovementMapper;
+    private final InvoiceMapper invoiceMapper;
 
     @Transactional
     public StockMovement recordMovement(StockMovementType type,
@@ -59,8 +83,8 @@ public class StockMovementService {
                 .slab(slab)
                 .stockItem(stockItem)
                 .itemDescription(itemDescription)
-                .quantity(quantity != null ? quantity : BigDecimal.ONE)
-                .quantityUnit(quantityUnit != null ? quantityUnit : "adet")
+                .quantity(Objects.requireNonNullElse(quantity, BigDecimal.ONE))
+                .quantityUnit(Objects.requireNonNullElse(quantityUnit, "adet"))
                 .tonnage(tonnage)
                 .customer(customer)
                 .workOrder(workOrder)
@@ -73,7 +97,18 @@ public class StockMovementService {
 
     @Transactional
     public StockMovement recordBlockQuarryProduction(Block block, StockLocation yard) {
-        BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage() : block.getApproximateTonnage();
+        BigDecimal ton;
+        if (block.getActualTonnage() != null) {
+            ton = block.getActualTonnage();
+        } else {
+            ton = block.getApproximateTonnage();
+        }
+        String value;
+        if (block.getActualTonnage() != null) {
+            value = block.getActualTonnage() + " ton";
+        } else {
+            value = "Girilmedi";
+        }
         return recordMovement(
                 StockMovementType.PRODUCTION,
                 BusinessUnit.QUARRY,
@@ -84,26 +119,63 @@ public class StockMovementService {
                 block,
                 null,
                 null,
-                "Blok Üretimi: " + block.getBlockCode() + " (" + (block.getStoneType() != null ? block.getStoneType() : "") + ")",
+                "Blok Üretimi: "
+                        + block.getBlockCode()
+                        + " ("
+                        + Objects.requireNonNullElse(block.getStoneType(), "")
+                        + ")",
                 BigDecimal.ONE,
                 "adet",
                 ton,
                 block.getAssignedCustomer(),
                 null,
                 null,
-                "Ocakta blok üretildi - Tahmini: " + block.getApproximateTonnage() + " ton, Gerçek: " + (block.getActualTonnage() != null ? block.getActualTonnage() + " ton" : "Girilmedi")
-        );
+                "Ocakta blok üretildi - Tahmini: "
+                        + block.getApproximateTonnage()
+                        + " ton, Gerçek: "
+                        + value);
     }
 
     @Transactional
-    public StockMovement recordBlockDispatch(Block block, StockLocation fromLoc, StockLocation toLoc,
-                                            TargetDestination targetDest, Customer customer, Invoice invoice, String notes) {
-        BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage() : block.getApproximateTonnage();
-        BusinessUnit targetDept = targetDest == TargetDestination.FACTORY ? BusinessUnit.FACTORY
-                : targetDest == TargetDestination.WORKSHOP ? BusinessUnit.WORKSHOP : BusinessUnit.QUARRY;
+    public StockMovement recordBlockDispatch(
+            Block block,
+            StockLocation fromLoc,
+            StockLocation toLoc,
+            TargetDestination targetDest,
+            Customer customer,
+            Invoice invoice,
+            String notes) {
+        BigDecimal ton;
+        if (block.getActualTonnage() != null) {
+            ton = block.getActualTonnage();
+        } else {
+            ton = block.getApproximateTonnage();
+        }
+        BusinessUnit targetDept;
+        if (targetDest == TargetDestination.FACTORY) {
+            targetDept = BusinessUnit.FACTORY;
+        } else {
+            if (targetDest == TargetDestination.WORKSHOP) {
+                targetDept = BusinessUnit.WORKSHOP;
+            } else {
+                targetDept = BusinessUnit.QUARRY;
+            }
+        }
 
+        StockMovementType recordMovementValue;
+        if (targetDest == TargetDestination.CUSTOMER) {
+            recordMovementValue = StockMovementType.OUTGOING;
+        } else {
+            recordMovementValue = StockMovementType.TRANSFER;
+        }
+        String label;
+        if (targetDest != null) {
+            label = targetDest.getLabel();
+        } else {
+            label = "Fabrika";
+        }
         return recordMovement(
-                targetDest == TargetDestination.CUSTOMER ? StockMovementType.OUTGOING : StockMovementType.TRANSFER,
+                recordMovementValue,
                 BusinessUnit.QUARRY,
                 targetDept,
                 targetDest,
@@ -112,24 +184,41 @@ public class StockMovementService {
                 block,
                 null,
                 null,
-                "Blok Sevkiyatı: " + block.getBlockCode() + " -> " + (targetDest != null ? targetDest.getLabel() : "Fabrika"),
+                "Blok Sevkiyatı: " + block.getBlockCode() + " -> " + label,
                 BigDecimal.ONE,
                 "adet",
                 ton,
                 customer,
                 null,
                 invoice,
-                notes != null ? notes : "Ocaktan sevk edildi"
+                Objects.requireNonNullElse(notes, "Ocaktan sevk edildi")
         );
     }
 
     @Transactional
     public StockMovement recordBlockMovement(Block block, StockLocation fromLoc, StockLocation toLoc, String notes) {
-        BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage() : block.getApproximateTonnage();
+        BigDecimal ton;
+        if (block.getActualTonnage() != null) {
+            ton = block.getActualTonnage();
+        } else {
+            ton = block.getApproximateTonnage();
+        }
+        BusinessUnit recordMovementValue;
+        if (fromLoc != null) {
+            recordMovementValue = fromLoc.getBusinessUnit();
+        } else {
+            recordMovementValue = BusinessUnit.QUARRY;
+        }
+        BusinessUnit recordMovementValue2;
+        if (toLoc != null) {
+            recordMovementValue2 = toLoc.getBusinessUnit();
+        } else {
+            recordMovementValue2 = BusinessUnit.FACTORY;
+        }
         return recordMovement(
                 StockMovementType.TRANSFER,
-                fromLoc != null ? fromLoc.getBusinessUnit() : BusinessUnit.QUARRY,
-                toLoc != null ? toLoc.getBusinessUnit() : BusinessUnit.FACTORY,
+                recordMovementValue,
+                recordMovementValue2,
                 TargetDestination.FACTORY,
                 fromLoc,
                 toLoc,
@@ -143,13 +232,18 @@ public class StockMovementService {
                 block.getAssignedCustomer(),
                 null,
                 null,
-                notes != null ? notes : "Fabrika stoğuna kabul edildi"
+                Objects.requireNonNullElse(notes, "Fabrika stoğuna kabul edildi")
         );
     }
 
     @Transactional
     public StockMovement recordBlockCuttingStart(Block block, String notes) {
-        BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage() : block.getApproximateTonnage();
+        BigDecimal ton;
+        if (block.getActualTonnage() != null) {
+            ton = block.getActualTonnage();
+        } else {
+            ton = block.getApproximateTonnage();
+        }
         return recordMovement(
                 StockMovementType.PRODUCTION_CONSUMPTION,
                 BusinessUnit.FACTORY,
@@ -167,12 +261,18 @@ public class StockMovementService {
                 block.getAssignedCustomer(),
                 null,
                 null,
-                notes != null ? notes : "Fabrika kesim sürecine alındı, kesilmemiş blok stokundan düşüldü"
+                Objects.requireNonNullElse(notes, "Fabrika kesim sürecine alındı, kesilmemiş blok stokundan düşüldü")
         );
     }
 
     @Transactional
     public StockMovement recordSlabProduction(Slab slab, Block block, Customer customer) {
+        String value;
+        if (customer != null) {
+            value = " (" + customer.getCompanyName() + ")";
+        } else {
+            value = " (Genel Stok)";
+        }
         return recordMovement(
                 StockMovementType.PRODUCTION,
                 BusinessUnit.FACTORY,
@@ -190,12 +290,18 @@ public class StockMovementService {
                 customer,
                 null,
                 null,
-                "Plaka Stok Sahasına eklendi" + (customer != null ? " (" + customer.getCompanyName() + ")" : " (Genel Stok)")
+                "Plaka Stok Sahasına eklendi" + value
         );
     }
 
     @Transactional
     public StockMovement recordSizedItemProduction(StockItem item, Block block, Customer customer) {
+        String value;
+        if (customer != null) {
+            value = " (" + customer.getCompanyName() + ")";
+        } else {
+            value = " (Genel Stok)";
+        }
         return recordMovement(
                 StockMovementType.PRODUCTION,
                 BusinessUnit.FACTORY,
@@ -213,12 +319,19 @@ public class StockMovementService {
                 customer,
                 null,
                 null,
-                "Fabrika Ebatlı Stok Sahasına eklendi" + (customer != null ? " (" + customer.getCompanyName() + ")" : " (Genel Stok)")
+                "Fabrika Ebatlı Stok Sahasına eklendi" + value
         );
     }
 
     @Transactional
-    public StockMovement recordWorkshopSizedProduction(StockItem item, Slab sourceSlab, StockItem sourceItem, Customer customer) {
+    public StockMovement recordWorkshopSizedProduction(
+            StockItem item, Slab sourceSlab, StockItem sourceItem, Customer customer) {
+        String value;
+        if (customer != null) {
+            value = " (" + customer.getCompanyName() + ")";
+        } else {
+            value = " (Genel Stok)";
+        }
         return recordMovement(
                 StockMovementType.PRODUCTION,
                 BusinessUnit.WORKSHOP,
@@ -236,38 +349,81 @@ public class StockMovementService {
                 customer,
                 null,
                 null,
-                "Atölye Ebatlı Stok Sahasına eklendi" + (customer != null ? " (" + customer.getCompanyName() + ")" : " (Genel Stok)")
+                "Atölye Ebatlı Stok Sahasına eklendi" + value
         );
     }
 
     @Transactional
-    public StockMovement recordWorkshopWaste(StockItem item, Project project, BigDecimal wasteQty, String unit, String reason) {
+    public StockMovement recordWorkshopWaste(
+            StockItem item, Project project, BigDecimal wasteQty, String unit, String reason) {
+        BusinessUnit recordMovementValue;
+        if (project != null) {
+            recordMovementValue = BusinessUnit.SITE;
+        } else {
+            recordMovementValue = BusinessUnit.WORKSHOP;
+        }
+        TargetDestination recordMovementValue2;
+        if (project != null) {
+            recordMovementValue2 = TargetDestination.SITE;
+        } else {
+            recordMovementValue2 = TargetDestination.WORKSHOP;
+        }
+        StockLocation recordMovementValue3;
+        if (item != null) {
+            recordMovementValue3 = item.getStockLocation();
+        } else {
+            recordMovementValue3 = null;
+        }
+        Block recordMovementValue4;
+        if (item != null) {
+            recordMovementValue4 = item.getSourceBlock();
+        } else {
+            recordMovementValue4 = null;
+        }
+        String itemCode;
+        if (item != null) {
+            itemCode = item.getItemCode();
+        } else {
+            itemCode = "Hammadde";
+        }
         return recordMovement(
                 StockMovementType.SCRAP,
                 BusinessUnit.WORKSHOP,
-                project != null ? BusinessUnit.SITE : BusinessUnit.WORKSHOP,
-                project != null ? TargetDestination.SITE : TargetDestination.WORKSHOP,
-                item != null ? item.getStockLocation() : null,
+                recordMovementValue,
+                recordMovementValue2,
+                recordMovementValue3,
                 null,
-                item != null ? item.getSourceBlock() : null,
+                recordMovementValue4,
                 null,
                 item,
-                "Atölye Üretim/Ebatlama Fire Çıkışı: " + (item != null ? item.getItemCode() : "Hammadde"),
+                "Atölye Üretim/Ebatlama Fire Çıkışı: " + itemCode,
                 wasteQty,
-                unit != null ? unit : "m2",
+                Objects.requireNonNullElse(unit, "m2"),
                 null,
                 null,
                 null,
                 null,
-                reason != null ? reason : "Atölyede kesim firesi zayi olarak düşüldü ve maliyetleştirildi"
+                Objects.requireNonNullElse(reason, "Atölyede kesim firesi zayi olarak düşüldü ve maliyetleştirildi")
         );
     }
 
     @Transactional
-    public StockMovement recordWorkOrderConsumption(OperationWorkOrder order, StockItem item, Slab slab, Block block, BigDecimal qty, String unit) {
+    public StockMovement recordWorkOrderConsumption(
+            OperationWorkOrder order,
+            StockItem item,
+            Slab slab,
+            Block block,
+            BigDecimal qty,
+            String unit) {
+        BusinessUnit recordMovementValue;
+        if (order.getDepartment() == BusinessUnit.WORKSHOP) {
+            recordMovementValue = BusinessUnit.FACTORY;
+        } else {
+            recordMovementValue = order.getDepartment();
+        }
         return recordMovement(
                 StockMovementType.PRODUCTION_CONSUMPTION,
-                order.getDepartment() == BusinessUnit.WORKSHOP ? BusinessUnit.FACTORY : order.getDepartment(),
+                recordMovementValue,
                 order.getDepartment(),
                 TargetDestination.WORKSHOP,
                 null,
@@ -288,13 +444,132 @@ public class StockMovementService {
 
     @Transactional(readOnly = true)
     public Page<StockMovement> searchMovements(StockMovementType type, BusinessUnit sourceDept, BusinessUnit targetDept,
-                                              Long customerId, LocalDateTime fromDate, LocalDateTime toDate, int page, int size) {
-        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
+                                              Long customerId, LocalDateTime fromDate, LocalDateTime toDate,
+                                              Pageable pageable) {
         return movementRepository.searchMovements(type, sourceDept, targetDept, customerId, fromDate, toDate, pageable);
     }
 
     @Transactional(readOnly = true)
+    public Page<StockMovement> searchMovements(
+            StockMovementType type,
+            BusinessUnit sourceDept,
+            BusinessUnit targetDept,
+            Long customerId,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            int page,
+            int size) {
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
+        return searchMovements(type, sourceDept, targetDept, customerId, fromDate, toDate, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public List<StockMovement> getRecentQuarryDispatches() {
-        return movementRepository.findRecentBySourceDepartment(BusinessUnit.QUARRY, LocalDateTime.now().minusDays(30));
+        return movementRepository.findRecentBySourceDepartment(
+                BusinessUnit.QUARRY, LocalDateTime.now().minusDays(RECENT_DAYS));
+    }
+
+    /**
+     * Builds grid rows inside the read transaction (moved from the controller unchanged).
+     *
+     * @return grid rows
+     */
+    @Transactional(readOnly = true)
+    public TabulatorResponse<Map<String, Object>> quarryDispatchRows(int page, int size) {
+        int pageIndex = Math.max(0, page - 1);
+        Page<StockMovement> pageData = searchMovements(
+                null, BusinessUnit.QUARRY, null, null, null, null,
+                PageRequest.of(pageIndex, size));
+
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+        List<Map<String, Object>> list = pageData.getContent().stream().map(m -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", m.getId());
+            Object value;
+            if (m.getMovementDate() != null) {
+                value = m.getMovementDate().format(dateFmt);
+            } else {
+                value = "—";
+            }
+            map.put("movementDate", value);
+            Object blockCode;
+            if (m.getBlock() != null) {
+                blockCode = m.getBlock().getBlockCode();
+            } else {
+                if (m.getItemDescription() != null) {
+                    blockCode = m.getItemDescription();
+                } else {
+                    blockCode = "Mermer Blok";
+                }
+            }
+            map.put("productName", blockCode);
+            Long id;
+            if (m.getBlock() != null) {
+                id = m.getBlock().getId();
+            } else {
+                id = null;
+            }
+            map.put("blockId", id);
+            map.put("tonnage", m.getTonnage());
+            map.put("quantity", m.getQuantity());
+            map.put("unit", Objects.requireNonNullElse(m.getQuantityUnit(), "ton"));
+            map.put("source", "Ocak");
+            Object displayName;
+            if (m.getTargetDestination() != null) {
+                displayName = m.getTargetDestination().getDisplayName();
+            } else {
+                if (m.getTargetDepartment() != null) {
+                    displayName = m.getTargetDepartment().getDisplayName();
+                } else {
+                    displayName = "Fabrika";
+                }
+            }
+            map.put("targetDestination", displayName);
+            Object companyName;
+            if (m.getCustomer() != null) {
+                companyName = m.getCustomer().getCompanyName();
+            } else {
+                companyName = "—";
+            }
+            map.put("customerName", companyName);
+            Object invoiceNumber;
+            if (m.getInvoice() != null) {
+                invoiceNumber = m.getInvoice().getInvoiceNumber();
+            } else {
+                invoiceNumber = null;
+            }
+            map.put("invoiceNo", invoiceNumber);
+            Long idValue;
+            if (m.getInvoice() != null) {
+                idValue = m.getInvoice().getId();
+            } else {
+                idValue = null;
+            }
+            map.put("invoiceId", idValue);
+            map.put("notes", Objects.requireNonNullElse(m.getNotes(), "—"));
+            return map;
+        }).toList();
+
+        return TabulatorResponse.of(list, pageData.getTotalPages(), pageData.getTotalElements());
+    }
+
+    /**
+     * Quarry dispatch report page as views. The invoice is copied only when the query already loaded it.
+     *
+     * @param pageable page request
+     * @return movement views
+     */
+    @Transactional(readOnly = true)
+    public Page<StockMovementView> quarryDispatchViews(
+            Pageable pageable) {
+        return searchMovements(null, BusinessUnit.QUARRY, null, null, null, null, pageable).map(movement -> {
+            StockMovementView view = stockMovementMapper.toDto(movement);
+            if (Persistence.getPersistenceUtil().isLoaded(movement, "invoice")
+                    && movement.getInvoice() != null) {
+                view.setInvoice(invoiceMapper.toRef(movement.getInvoice()));
+            }
+            return view;
+        });
     }
 }

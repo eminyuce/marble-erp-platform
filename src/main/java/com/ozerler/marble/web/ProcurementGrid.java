@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.PurchaseOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.PurchaseOrderStatus;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Satın alma siparişleri. Sort keys match {@code GridPages.PURCHASE_ORDER_SORTS}.
@@ -23,35 +23,56 @@ public final class ProcurementGrid {
                 rows.add(row(order));
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "procurement-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "procurement-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(PurchaseOrderDto order) {
-        String id = order.getId() == null ? "" : order.getId().toString();
+        String id;
+        if (order.getId() == null) {
+            id = "";
+        } else {
+            id = order.getId().toString();
+        }
         String viewUrl = "/procurement/" + id;
         String invoiceUrl = "/invoices/new?type=PURCHASE&purchaseOrderId=" + id;
-        return GridRow.of(viewUrl, viewUrl, null, order.getPoNumber(), List.of(
-                GridCell.badge(order.getStatusLabel()),
-                GridCell.chip(order.getId()),
-                GridCell.link(order.getPoNumber(), viewUrl),
-                GridCell.link(GridWindow.clean(order.getSupplierName()), viewUrl, GridWindow.clean(order.getSupplierType()), null),
-                GridCell.link(GridWindow.clean(order.getProjectName()), null, GridWindow.clean(order.getBusinessUnitLabel()), null),
-                GridCell.text(GridTexts.date(order.getOrderDate())),
-                GridCell.text(GridTexts.money(order.getTotalAmount())),
-                GridCell.link("Faturalaştır", invoiceUrl)
-        ));
+        return new GridRow(
+                viewUrl,
+                "",
+                "",
+                order.getPoNumber(),
+                List.of(
+                        GridAction.link("Faturalaştır", "receipt", invoiceUrl),
+                        GridAction.link("Detay", "eye", viewUrl)),
+                List.of(
+                        GridCell.badge(order.getStatusLabel()),
+                        GridCell.chip(order.getId()),
+                        GridCell.link(order.getPoNumber(), viewUrl),
+                        GridCell.link(
+                                GridWindow.clean(order.getSupplierName()),
+                                viewUrl,
+                                GridWindow.clean(order.getSupplierType()),
+                                null),
+                        GridCell.link(
+                                GridWindow.clean(order.getProjectName()),
+                                null,
+                                GridWindow.clean(order.getBusinessUnitLabel()),
+                                null),
+                        GridCell.text(GridTexts.date(order.getOrderDate())),
+                        GridCell.text(GridTexts.money(order.getTotalAmount())),
+                        GridCell.link("Faturalaştır", invoiceUrl)));
     }
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", true, 150, "status", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("poNumber", "Sipariş No", true, 160),
-                GridColumn.text("supplierName", "Tedarikçi", true, 220),
-                GridColumn.text("projectName", "Proje / Birim", true, 180),
-                GridColumn.text("orderDate", "Sipariş Tarihi", true, 140),
-                GridColumn.text("totalAmount", "Toplam Tutar", true, 150),
-                GridColumn.text("", "Fatura", false, 140)
+                GridColumn.filtered("status", "Durum", true, GridWidth.PX_150, "status", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("poNumber", "Sipariş No", true, GridWidth.PX_160),
+                GridColumn.text("supplierName", "Tedarikçi", true, GridWidth.PX_220),
+                GridColumn.text("projectName", "Proje / Birim", true, GridWidth.PX_180),
+                GridColumn.text("orderDate", "Sipariş Tarihi", true, GridWidth.PX_140),
+                GridColumn.text("totalAmount", "Toplam Tutar", true, GridWidth.PX_150),
+                GridColumn.text("", "Fatura", false, GridWidth.PX_140)
         );
     }
 

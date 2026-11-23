@@ -1,0 +1,5 @@
+# Boot 4.2 loads EnvironmentPostProcessor only from META-INF/spring.factories,
+# not from META-INF/spring/*.imports. Minimal registration; see docs/KNOWN_ISSUES.md.
+org.springframework.boot.EnvironmentPostProcessor=\
+com.ozerler.marble.config.DatabaseUrlEnvironmentPostProcessor,\
+com.ozerler.marble.config.SecretFileEnvironmentPostProcessor

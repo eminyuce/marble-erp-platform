@@ -9,6 +9,9 @@ public final class Urls {
     }
 
     public static String encode(String value) {
-        return value == null ? "" : URLEncoder.encode(value, StandardCharsets.UTF_8);
+        if (value == null) {
+            return "";
+        }
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

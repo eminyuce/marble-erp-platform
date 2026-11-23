@@ -1,15 +1,5 @@
 package com.ozerler.marble.storage;
 
-import com.ozerler.marble.config.PresignedUrlProperties;
-import com.ozerler.marble.dto.DependencyHealth;
-import com.ozerler.marble.dto.StoredObjectMetadata;
-import com.ozerler.marble.exception.StorageException;
-import com.ozerler.marble.exception.StoredFileNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Duration;
@@ -18,6 +8,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+
+import com.ozerler.marble.config.PresignedUrlProperties;
+import com.ozerler.marble.dto.DependencyHealth;
+import com.ozerler.marble.dto.StoredObjectMetadata;
+import com.ozerler.marble.exception.StorageException;
+import com.ozerler.marble.exception.StoredFileNotFoundException;
 
 /**
  * In-memory object storage used by the {@code test} profile so Spring Boot tests
@@ -29,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InMemoryObjectStorageService implements ObjectStorageService {
 
     private static final String BUCKET = "erp-files-test";
+    private static final int DEFAULT_PRESIGN_SECONDS = 900;
 
     private final Map<String, StoredObject> objects = new ConcurrentHashMap<>();
     private final PresignedUrlProperties presignedUrlProperties;
@@ -86,7 +88,12 @@ public class InMemoryObjectStorageService implements ObjectStorageService {
         if (!exists(objectKey)) {
             throw new StoredFileNotFoundException("Stored object was not found: " + objectKey);
         }
-        long seconds = expiration != null ? expiration.toSeconds() : 900;
+        long seconds;
+        if (expiration != null) {
+            seconds = expiration.toSeconds();
+        } else {
+            seconds = DEFAULT_PRESIGN_SECONDS;
+        }
         return "memory://" + BUCKET + "/" + objectKey + "?expires=" + seconds;
     }
 

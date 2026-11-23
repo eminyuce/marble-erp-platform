@@ -1,9 +1,21 @@
 package com.ozerler.marble.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Reusable entity representing uploaded file metadata stored in the database.
@@ -19,6 +31,10 @@ import java.time.LocalDateTime;
 @Builder
 @EqualsAndHashCode(callSuper = false, of = "id")
 public class FileStorage extends AuditableEntity {
+
+    private static final long KIB = 1024L;
+    private static final long MIB = KIB * KIB;
+    private static final long GIB = MIB * KIB;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -154,14 +170,14 @@ public class FileStorage extends AuditableEntity {
         if (fileSize == null || fileSize <= 0) {
             return "0 B";
         }
-        if (fileSize < 1024) {
+        if (fileSize < KIB) {
             return fileSize + " B";
-        } else if (fileSize < 1024 * 1024) {
-            return String.format("%.1f KB", fileSize / 1024.0);
-        } else if (fileSize < 1024L * 1024 * 1024) {
-            return String.format("%.2f MB", fileSize / (1024.0 * 1024.0));
+        } else if (fileSize < MIB) {
+            return String.format("%.1f KB", fileSize / (double) KIB);
+        } else if (fileSize < GIB) {
+            return String.format("%.2f MB", fileSize / (double) MIB);
         } else {
-            return String.format("%.2f GB", fileSize / (1024.0 * 1024.0 * 1024.0));
+            return String.format("%.2f GB", fileSize / (double) GIB);
         }
     }
 

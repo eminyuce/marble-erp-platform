@@ -1,23 +1,23 @@
 package com.ozerler.marble.controller.admin;
 
-import com.ozerler.marble.model.EmailTemplate;
-import com.ozerler.marble.service.EmailService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.ozerler.marble.model.EmailTemplate;
+import com.ozerler.marble.service.EmailService;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -35,7 +35,7 @@ class EmailTemplateEngineControllerTest {
     void setUp() {
         this.mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
-                .apply(springSecurity())
+                .apply(SecurityMockMvcConfigurers.springSecurity())
                 .build();
     }
 
@@ -43,47 +43,47 @@ class EmailTemplateEngineControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("Admin can access email templates index page")
     void adminCanAccessIndexPage() throws Exception {
-        mockMvc.perform(get("/admin/email-templates"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/email-templates/index"))
-                .andExpect(model().attributeExists("templates", "kpi", "categories"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/email-templates"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/email-templates/index"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("templates", "kpi", "categories"));
     }
 
     @Test
     @WithMockUser(roles = "USER")
     @DisplayName("Non-admin user is forbidden from accessing email templates")
     void nonAdminIsForbidden() throws Exception {
-        mockMvc.perform(get("/admin/email-templates"))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/email-templates"))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("Data endpoint returns JSON response for Tabulator")
     void dataEndpointReturnsJson() throws Exception {
-        mockMvc.perform(get("/admin/email-templates/data"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/email-templates/data"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("Admin can open create form page")
     void adminCanOpenCreateForm() throws Exception {
-        mockMvc.perform(get("/admin/email-templates/create"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/email-templates/form"))
-                .andExpect(model().attribute("isEdit", false));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/email-templates/create"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/email-templates/form"))
+                .andExpect(MockMvcResultMatchers.model().attribute("isEdit", false));
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("Admin can open guide page")
     void adminCanOpenGuidePage() throws Exception {
-        mockMvc.perform(get("/admin/email-templates/guide"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/email-templates/guide"))
-                .andExpect(model().attributeExists("catalogList"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/email-templates/guide"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/email-templates/guide"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("catalogList"));
     }
 
     @Test
@@ -100,10 +100,10 @@ class EmailTemplateEngineControllerTest {
                 .isActive(true)
                 .build());
 
-        mockMvc.perform(get("/admin/email-templates/" + template.getId()))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/email-templates/detail"))
-                .andExpect(model().attributeExists("template", "preview", "placeholderSamples"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/email-templates/" + template.getId()))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/email-templates/detail"))
+                .andExpect(MockMvcResultMatchers.model().attributeExists("template", "preview", "placeholderSamples"));
     }
 
     @Test
@@ -113,8 +113,8 @@ class EmailTemplateEngineControllerTest {
         String uniqueKey = "TEST_KEY_" + System.currentTimeMillis();
 
         // Create
-        mockMvc.perform(post("/admin/email-templates/create")
-                        .with(csrf())
+        mockMvc.perform(MockMvcRequestBuilders.post("/admin/email-templates/create")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("templateKey", uniqueKey)
                         .param("templateName", "Otomasyon Şablonu")
                         .param("category", "Sipariş & Satış")
@@ -123,13 +123,13 @@ class EmailTemplateEngineControllerTest {
                         .param("bodyHtml", "<p>Sipariş {{orderNumber}}</p>")
                         .param("placeholders", "orderNumber")
                         .param("isActive", "true"))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection());
 
         EmailTemplate created = emailService.getTemplateByKey(uniqueKey).orElseThrow();
 
         // Edit
-        mockMvc.perform(post("/admin/email-templates/" + created.getId() + "/edit")
-                        .with(csrf())
+        mockMvc.perform(MockMvcRequestBuilders.post("/admin/email-templates/" + created.getId() + "/edit")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("templateName", "Güncellenmiş Otomasyon")
                         .param("category", "Sipariş & Satış")
                         .param("description", "Yeni Açıklama")
@@ -137,7 +137,7 @@ class EmailTemplateEngineControllerTest {
                         .param("bodyHtml", "<p>Yeni Gövde {{orderNumber}}</p>")
                         .param("placeholders", "orderNumber")
                         .param("isActive", "true"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/email-templates/" + created.getId()));
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/admin/email-templates/" + created.getId()));
     }
 }

@@ -1,9 +1,8 @@
 package com.ozerler.marble.controller.erp;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductionGridActionsTest {
 
@@ -12,12 +11,14 @@ class ProductionGridActionsTest {
     void operationsColumnIncludesEditLink() throws Exception {
         String script;
         try (var in = getClass().getResourceAsStream("/static/js/production-grid.js")) {
-            assertThat(in).isNotNull();
+            Assertions.assertThat(in).isNotNull();
             script = new String(in.readAllBytes());
         }
 
-        assertThat(script).contains("{icon: 'edit-3', label: 'Düzenle', href: '/production/orders/' + row.id + '/edit'}");
-        assertThat(script).contains("erpStatusBadge(row.status, row.statusLabel)");
+        Assertions.assertThat(script)
+                .contains(
+                        "{icon: 'edit-3', label: 'Düzenle', href: '/production/orders/' + row.id + '/edit'}");
+        Assertions.assertThat(script).contains("erpStatusBadge(row.status, row.statusLabel)");
     }
 
     @Test
@@ -25,13 +26,13 @@ class ProductionGridActionsTest {
     void indexLinksToAcceptPage() throws Exception {
         String html;
         try (var in = getClass().getResourceAsStream("/templates/erp/production/index.html")) {
-            assertThat(in).isNotNull();
+            Assertions.assertThat(in).isNotNull();
             html = new String(in.readAllBytes());
         }
 
-        assertThat(html).contains("th:href=\"@{/production/accept}\"");
-        assertThat(html).contains("Blok kabul");
-        assertThat(html).doesNotContain("th:action=\"@{/production/accept}\"");
+        Assertions.assertThat(html).contains("th:href=\"@{/production/accept}\"");
+        Assertions.assertThat(html).contains("Blok kabul");
+        Assertions.assertThat(html).doesNotContain("th:action=\"@{/production/accept}\"");
     }
 
     @Test
@@ -39,20 +40,20 @@ class ProductionGridActionsTest {
     void acceptPageLinksBackToProductionList() throws Exception {
         String html;
         try (var in = getClass().getResourceAsStream("/templates/erp/production/accept.html")) {
-            assertThat(in).isNotNull();
+            Assertions.assertThat(in).isNotNull();
             html = new String(in.readAllBytes());
         }
 
-        assertThat(html).contains("th:action=\"@{/production/accept}\"");
-        assertThat(html).contains("th:href=\"@{/production}\"");
-        assertThat(html).contains("Fabrika iş emirleri");
-        assertThat(html).contains("exportDropdown('factory-accept-table', 'fabrika_blok_kabulleri')");
-        assertThat(html).contains("name=\"blockId\"");
-        assertThat(html).contains("name=\"responsibleName\"");
-        assertThat(html).contains("class=\"erp-form-actions\"");
-        assertThat(html).contains("type=\"submit\"");
-        assertThat(html).doesNotContain("form=\"factory-accept-form\"");
-        assertThat(html).contains("b.stoneType != null");
+        Assertions.assertThat(html).contains("th:action=\"@{/production/accept}\"");
+        Assertions.assertThat(html).contains("th:href=\"@{/production}\"");
+        Assertions.assertThat(html).contains("Fabrika iş emirleri");
+        Assertions.assertThat(html).contains("exportDropdown('factory-accept-table', 'fabrika_blok_kabulleri')");
+        Assertions.assertThat(html).contains("name=\"blockId\"");
+        Assertions.assertThat(html).contains("name=\"responsibleName\"");
+        Assertions.assertThat(html).contains("class=\"erp-form-actions\"");
+        Assertions.assertThat(html).contains("type=\"submit\"");
+        Assertions.assertThat(html).doesNotContain("form=\"factory-accept-form\"");
+        Assertions.assertThat(html).contains("b.stoneType != null");
     }
 
     @Test
@@ -60,11 +61,11 @@ class ProductionGridActionsTest {
     void detailPageUsesStatusLabel() throws Exception {
         String html;
         try (var in = getClass().getResourceAsStream("/templates/erp/production/detail.html")) {
-            assertThat(in).isNotNull();
+            Assertions.assertThat(in).isNotNull();
             html = new String(in.readAllBytes());
         }
 
-        assertThat(html).contains("th:text=\"${order.statusLabel}\"");
-        assertThat(html).doesNotContain("th:text=\"${order.status}\"");
+        Assertions.assertThat(html).contains("th:text=\"${order.statusLabel}\"");
+        Assertions.assertThat(html).doesNotContain("th:text=\"${order.status}\"");
     }
 }

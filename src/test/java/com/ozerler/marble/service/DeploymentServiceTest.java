@@ -1,15 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.config.DeploymentProperties;
-import com.ozerler.marble.dto.DeploymentLogDto;
-import com.ozerler.marble.dto.DeploymentStartResult;
-import com.ozerler.marble.dto.DeploymentState;
-import com.ozerler.marble.dto.DeploymentStatusDto;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,12 +9,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import com.ozerler.marble.config.DeploymentProperties;
+import com.ozerler.marble.dto.DeploymentLogDto;
+import com.ozerler.marble.dto.DeploymentStartResult;
+import com.ozerler.marble.dto.DeploymentState;
+import com.ozerler.marble.dto.DeploymentStatusDto;
 
 class DeploymentServiceTest {
 
     @TempDir
-    Path tempDir;
+    private Path tempDir;
 
     private Path commandFile;
     private Path repoDir;
@@ -58,30 +58,30 @@ class DeploymentServiceTest {
 
     @Test
     @DisplayName("currentStatus refuses to start when the feature is disabled")
-    void currentStatus_Disabled_CannotStart() {
+    void currentStatusDisabledCannotStart() {
         properties.setEnabled(false);
 
         DeploymentStatusDto status = deploymentService.currentStatus();
 
-        assertThat(status.isCanStart()).isFalse();
-        assertThat(status.getBlockingReasons()).anyMatch(reason -> reason.contains("kapalı"));
+        Assertions.assertThat(status.isCanStart()).isFalse();
+        Assertions.assertThat(status.getBlockingReasons()).anyMatch(reason -> reason.contains("kapalı"));
     }
 
     @Test
     @DisplayName("currentStatus refuses to start when the wrapper binary is missing")
-    void currentStatus_MissingCommand_CannotStart() throws Exception {
+    void currentStatusMissingCommandCannotStart() throws Exception {
         Files.deleteIfExists(commandFile);
 
         DeploymentStatusDto status = deploymentService.currentStatus();
 
-        assertThat(status.isCanStart()).isFalse();
-        assertThat(status.getBlockingReasons()).anyMatch(reason -> reason.contains("yardımcısı"));
-        assertThat(status.isCommandAvailable()).isFalse();
+        Assertions.assertThat(status.isCanStart()).isFalse();
+        Assertions.assertThat(status.getBlockingReasons()).anyMatch(reason -> reason.contains("yardımcısı"));
+        Assertions.assertThat(status.isCommandAvailable()).isFalse();
     }
 
     @Test
     @DisplayName("startDeploy launches the wrapper and reports accepted when probes pass")
-    void startDeploy_WhenReady_StartsWrapper() {
+    void startDeployWhenReadyStartsWrapper() {
         commandRunner.pingOutput = DeploymentService.PING_TOKEN;
         commandRunner.startExitCode = 0;
         DeploymentService linuxService = new DeploymentService(properties, commandRunner) {
@@ -93,16 +93,16 @@ class DeploymentServiceTest {
 
         DeploymentStartResult result = linuxService.startDeploy();
 
-        assertThat(result.isAccepted()).isTrue();
-        assertThat(result.getState()).isEqualTo(DeploymentState.RUNNING);
-        assertThat(commandRunner.startedCommands).isNotEmpty();
-        assertThat(commandRunner.startedCommands.getLast()).contains(commandFile.toString());
-        assertThat(commandRunner.startedCommands.getLast()).doesNotContain("sudo");
+        Assertions.assertThat(result.isAccepted()).isTrue();
+        Assertions.assertThat(result.getState()).isEqualTo(DeploymentState.RUNNING);
+        Assertions.assertThat(commandRunner.startedCommands).isNotEmpty();
+        Assertions.assertThat(commandRunner.startedCommands.getLast()).contains(commandFile.toString());
+        Assertions.assertThat(commandRunner.startedCommands.getLast()).doesNotContain("sudo");
     }
 
     @Test
     @DisplayName("currentStatus on a non-Linux host cannot start a production deploy")
-    void currentStatus_NonLinux_CannotStart() {
+    void currentStatusNonLinuxCannotStart() {
         properties.setEnabled(true);
         DeploymentService windowsService = new DeploymentService(properties, commandRunner) {
             @Override
@@ -113,16 +113,16 @@ class DeploymentServiceTest {
 
         DeploymentStatusDto status = windowsService.currentStatus();
 
-        assertThat(status.isCanStart()).isFalse();
-        assertThat(status.isLinuxHost()).isFalse();
-        assertThat(status.getImageRepository()).isEqualTo("guvenulu/marble-erp-platform");
-        assertThat(status.getImageTag()).isEqualTo("latest");
-        assertThat(status.getBlockingReasons()).anyMatch(reason -> reason.contains("Linux"));
+        Assertions.assertThat(status.isCanStart()).isFalse();
+        Assertions.assertThat(status.isLinuxHost()).isFalse();
+        Assertions.assertThat(status.getImageRepository()).isEqualTo("guvenulu/marble-erp-platform");
+        Assertions.assertThat(status.getImageTag()).isEqualTo("latest");
+        Assertions.assertThat(status.getBlockingReasons()).anyMatch(reason -> reason.contains("Linux"));
     }
 
     @Test
     @DisplayName("startDeploy is rejected while a RUNNING status file exists")
-    void startDeploy_AlreadyRunning_Rejected() throws Exception {
+    void startDeployAlreadyRunningRejected() throws Exception {
         Files.writeString(statusFile, """
                 STATE=RUNNING
                 STARTED_AT=%s
@@ -132,29 +132,30 @@ class DeploymentServiceTest {
 
         DeploymentStartResult result = deploymentService.startDeploy();
 
-        assertThat(result.isAccepted()).isFalse();
-        assertThat(result.getState()).isEqualTo(DeploymentState.RUNNING);
-        assertThat(commandRunner.startedCommands)
+        Assertions.assertThat(result.isAccepted()).isFalse();
+        Assertions.assertThat(result.getState()).isEqualTo(DeploymentState.RUNNING);
+        Assertions.assertThat(commandRunner.startedCommands)
                 .noneMatch(argv -> argv.contains(commandFile.toString()) && !argv.contains("--ping"));
     }
 
     @Test
     @DisplayName("readLog returns incremental chunks from the deploy log file")
-    void readLog_ReturnsChunksFromOffset() throws Exception {
+    void readLogReturnsChunksFromOffset() throws Exception {
         Files.writeString(logFile, "hello\nworld\n", StandardCharsets.UTF_8);
 
         DeploymentLogDto first = deploymentService.readLog(0);
-        assertThat(first.getChunk()).isEqualTo("hello\nworld\n");
-        assertThat(first.getNextOffset()).isEqualTo("hello\nworld\n".getBytes(StandardCharsets.UTF_8).length);
+        Assertions.assertThat(first.getChunk()).isEqualTo("hello\nworld\n");
+        Assertions.assertThat(first.getNextOffset())
+                .isEqualTo("hello\nworld\n".getBytes(StandardCharsets.UTF_8).length);
 
         DeploymentLogDto second = deploymentService.readLog(first.getNextOffset());
-        assertThat(second.getChunk()).isEmpty();
-        assertThat(second.getNextOffset()).isEqualTo(first.getNextOffset());
+        Assertions.assertThat(second.getChunk()).isEmpty();
+        Assertions.assertThat(second.getNextOffset()).isEqualTo(first.getNextOffset());
     }
 
     @Test
     @DisplayName("stale RUNNING status older than the timeout is treated as FAILED")
-    void currentStatus_StaleRunning_BecomesFailed() throws Exception {
+    void currentStatusStaleRunningBecomesFailed() throws Exception {
         properties.setStaleRunningMinutes(1);
         Files.writeString(statusFile, """
                 STATE=RUNNING
@@ -165,89 +166,92 @@ class DeploymentServiceTest {
 
         DeploymentStatusDto status = deploymentService.currentStatus();
 
-        assertThat(status.getState()).isEqualTo(DeploymentState.FAILED);
+        Assertions.assertThat(status.getState()).isEqualTo(DeploymentState.FAILED);
     }
 
     @Test
     @DisplayName("docker-compose.prod.yml avoids /stack file bind mounts and fixes volume permissions recursively")
-    void prodCompose_AvoidsStackFileMountsAndFixesVolumePerms() throws Exception {
+    void prodComposeAvoidsStackFileMountsAndFixesVolumePerms() throws Exception {
         String compose = Files.readString(Path.of("docker-compose.prod.yml"), StandardCharsets.UTF_8);
 
-        assertThat(compose).doesNotContain("./docker-compose.prod.yml:/stack/docker-compose.prod.yml");
-        assertThat(compose).doesNotContain("./.env:/stack/.env");
-        assertThat(compose).contains("chown -R 1001:1001 /logs /uploads /media");
+        Assertions.assertThat(compose).doesNotContain("./docker-compose.prod.yml:/stack/docker-compose.prod.yml");
+        Assertions.assertThat(compose).doesNotContain("./.env:/stack/.env");
+        Assertions.assertThat(compose).contains("chown -R 1001:1001 /logs /uploads /media");
     }
 
     @Test
     @DisplayName("deploy_from_app.sh syncs compose file from pulled image and marks status FAILED if docker run fails")
-    void deployFromAppScript_SyncsComposeFileAndHandlesLaunchFailure() throws Exception {
+    void deployFromAppScriptSyncsComposeFileAndHandlesLaunchFailure() throws Exception {
         String script = Files.readString(Path.of("scripts/deploy_from_app.sh"), StandardCharsets.UTF_8);
 
-        assertThat(script).contains("-v \"${host_stack}:${host_stack}\"");
-        assertThat(script).contains("docker cp \"\\$cid:/stack/docker-compose.prod.yml\"");
-        assertThat(script).contains("write_status \"FAILED\" \"$started_at\"");
-        assertThat(script).contains("chown -R 1001:1001 /logs");
+        Assertions.assertThat(script).contains("-v \"${host_stack}:${host_stack}\"");
+        Assertions.assertThat(script).contains("docker cp \"\\$cid:/stack/docker-compose.prod.yml\"");
+        Assertions.assertThat(script).contains("write_status \"FAILED\" \"$started_at\"");
+        Assertions.assertThat(script).contains("chown -R 1001:1001 /logs");
     }
 
     @Test
-    @DisplayName("deploy_from_app.sh performs app-only update with --no-deps app, deep health check, and automatic rollback")
-    void deployFromAppScript_UsesAppOnlyUpdateAndAutomaticRollback() throws Exception {
+    @DisplayName(
+            "deploy_from_app.sh performs app-only update with --no-deps app, deep health check, and automatic rollback")
+    void deployFromAppScriptUsesAppOnlyUpdateAndAutomaticRollback() throws Exception {
         String script = Files.readString(Path.of("scripts/deploy_from_app.sh"), StandardCharsets.UTF_8);
 
-        assertThat(script).contains("pull app");
-        assertThat(script).contains("up -d --no-deps app");
-        assertThat(script).contains("rollback-previous");
-        assertThat(script).contains("last-known-good.env");
-        assertThat(script).contains("/health/");
-        assertThat(script).contains("Yayın öncesi — teknik özet");
-        assertThat(script).contains("Yayın sonrası — teknik özet");
-        assertThat(script).contains("SONUÇ: BAŞARILI");
-        assertThat(script).contains("Europe/Istanbul");
-        assertThat(script).contains("/actuator/info");
-        assertThat(script).contains("Spring Boot:");
-        assertThat(script).contains("Spring Framework:");
-        assertThat(script).contains("Git commit:");
-        assertThat(script).contains("Flyway şema sürümü");
-        assertThat(script).doesNotContain("RUSTFS_SECRET_KEY");
-        assertThat(script).doesNotContain("DB_PASSWORD");
-        assertThat(script).doesNotContain("down -v");
-        assertThat(script).doesNotContain("volume rm");
-        assertThat(script).doesNotContain("volume prune");
+        Assertions.assertThat(script).contains("pull app");
+        Assertions.assertThat(script).contains("up -d --no-deps app");
+        Assertions.assertThat(script).contains("rollback-previous");
+        Assertions.assertThat(script).contains("last-known-good.env");
+        Assertions.assertThat(script).contains("/health/");
+        Assertions.assertThat(script).contains("Yayın öncesi — teknik özet");
+        Assertions.assertThat(script).contains("Yayın sonrası — teknik özet");
+        Assertions.assertThat(script).contains("SONUÇ: BAŞARILI");
+        Assertions.assertThat(script).contains("Europe/Istanbul");
+        Assertions.assertThat(script).contains("/actuator/info");
+        Assertions.assertThat(script).contains("Spring Boot:");
+        Assertions.assertThat(script).contains("Spring Framework:");
+        Assertions.assertThat(script).contains("Git commit:");
+        Assertions.assertThat(script).contains("Flyway şema sürümü");
+        Assertions.assertThat(script).doesNotContain("RUSTFS_SECRET_KEY");
+        Assertions.assertThat(script).doesNotContain("DB_PASSWORD");
+        Assertions.assertThat(script).doesNotContain("down -v");
+        Assertions.assertThat(script).doesNotContain("volume rm");
+        Assertions.assertThat(script).doesNotContain("volume prune");
     }
 
     @Test
     @DisplayName("Dockerfile and .dockerignore bundle compose files, scripts, and docker-compose v2 plugin")
-    void dockerfileAndDockerignore_BundleStackAndComposePlugin() throws Exception {
+    void dockerfileAndDockerignoreBundleStackAndComposePlugin() throws Exception {
         String dockerfile = Files.readString(Path.of("Dockerfile"), StandardCharsets.UTF_8);
         String dockerignore = Files.readString(Path.of(".dockerignore"), StandardCharsets.UTF_8);
 
-        assertThat(dockerignore).doesNotContain("!.env.example");
-        assertThat(dockerfile).contains("/usr/local/lib/docker/cli-plugins/docker-compose");
-        assertThat(dockerfile).contains("COPY docker-compose.prod.yml /stack/docker-compose.prod.yml");
-        assertThat(dockerfile).contains("COPY docker/docker-compose.yml /stack/docker-compose.yml");
-        assertThat(dockerfile).doesNotContain(".env.example");
-        assertThat(dockerfile).contains("ENTRYPOINT [\"/usr/local/bin/docker-entrypoint.sh\"]");
+        Assertions.assertThat(dockerignore).doesNotContain("!.env.example");
+        Assertions.assertThat(dockerfile).contains("/usr/local/lib/docker/cli-plugins/docker-compose");
+        Assertions.assertThat(dockerfile).contains("COPY docker-compose.prod.yml /stack/docker-compose.prod.yml");
+        Assertions.assertThat(dockerfile).contains("COPY docker/docker-compose.yml /stack/docker-compose.yml");
+        Assertions.assertThat(dockerfile).doesNotContain(".env.example");
+        Assertions.assertThat(dockerfile).contains("ENTRYPOINT [\"/usr/local/bin/docker-entrypoint.sh\"]");
     }
 
     @Test
     @DisplayName("Production compose, CI/CD pipelines, and operational scripts enforce zero-data-loss rules")
-    void productionInfrastructure_EnforcesZeroDataLossRules() throws Exception {
+    void productionInfrastructureEnforcesZeroDataLossRules() throws Exception {
         String prodCompose = Files.readString(Path.of("docker-compose.prod.yml"), StandardCharsets.UTF_8);
-        String githubWorkflow = Files.readString(Path.of(".github/workflows/docker-publish.yml"), StandardCharsets.UTF_8);
+        String githubWorkflow =
+                Files.readString(
+                        Path.of(".github/workflows/docker-publish.yml"), StandardCharsets.UTF_8);
         String gitlabCi = Files.readString(Path.of(".gitlab-ci.yml"), StandardCharsets.UTF_8);
         String backupScript = Files.readString(Path.of("scripts/backup_production.sh"), StandardCharsets.UTF_8);
         String rollbackScript = Files.readString(Path.of("scripts/rollback_production.sh"), StandardCharsets.UTF_8);
         String freshInstallScript = Files.readString(Path.of("scripts/init_fresh_install.sh"), StandardCharsets.UTF_8);
 
-        assertThat(prodCompose).contains("name: ${POSTGRES_VOLUME_NAME:-docker_postgres_data}");
-        assertThat(prodCompose).contains("external: true");
-        assertThat(githubWorkflow).contains("type=sha");
-        assertThat(githubWorkflow).contains("GIT_COMMIT_SHA=${{ github.sha }}");
-        assertThat(gitlabCi).contains("./scripts/deploy_from_app.sh --foreground");
-        assertThat(backupScript).contains("-Fc");
-        assertThat(backupScript).contains("pg_restore --list");
-        assertThat(rollbackScript).contains("up -d --no-deps app");
-        assertThat(freshInstallScript).contains("Existing production installation detected");
+        Assertions.assertThat(prodCompose).contains("name: ${POSTGRES_VOLUME_NAME:-docker_postgres_data}");
+        Assertions.assertThat(prodCompose).contains("external: true");
+        Assertions.assertThat(githubWorkflow).contains("type=sha");
+        Assertions.assertThat(githubWorkflow).contains("GIT_COMMIT_SHA=${{ github.sha }}");
+        Assertions.assertThat(gitlabCi).contains("./scripts/deploy_from_app.sh --foreground");
+        Assertions.assertThat(backupScript).contains("-Fc");
+        Assertions.assertThat(backupScript).contains("pg_restore --list");
+        Assertions.assertThat(rollbackScript).contains("up -d --no-deps app");
+        Assertions.assertThat(freshInstallScript).contains("Existing production installation detected");
     }
 
     private static final class RecordingCommandRunner implements HostCommandRunner {
@@ -273,7 +277,13 @@ class DeploymentServiceTest {
                 }
                 return new HostCommandResult(0, "latest commit");
             }
-            return new HostCommandResult(startExitCode, startExitCode == 0 ? "started" : "failed");
+            String value;
+            if (startExitCode == 0) {
+                value = "started";
+            } else {
+                value = "failed";
+            }
+            return new HostCommandResult(startExitCode, value);
         }
     }
 }

@@ -1,28 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.domain.ExpensePeriods;
-import com.ozerler.marble.model.CostCenter;
-import com.ozerler.marble.model.CostPeriodClose;
-import com.ozerler.marble.model.CostTransaction;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.ExpenseCategory;
-import com.ozerler.marble.model.enums.ExpenseType;
-import com.ozerler.marble.repository.CostCenterRepository;
-import com.ozerler.marble.repository.CostPeriodCloseRepository;
-import com.ozerler.marble.repository.CostTransactionRepository;
-import com.ozerler.marble.security.SecurityUtils;
-import com.ozerler.marble.util.MessageUtils;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.ozerler.marble.dto.ExpenseDto;
-import com.ozerler.marble.dto.ExpenseSummaryDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.util.GridPages;
-import org.springframework.data.domain.Page;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,6 +8,39 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.domain.ExpensePeriods;
+import com.ozerler.marble.dto.ExpenseDto;
+import com.ozerler.marble.dto.ExpenseSummaryDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.CostCenter;
+import com.ozerler.marble.model.CostPeriodClose;
+import com.ozerler.marble.model.CostTransaction;
+import com.ozerler.marble.model.FactoryOperation;
+import com.ozerler.marble.model.Machine;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.Quarry;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.WorkshopOperation;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.ExpenseCategory;
+import com.ozerler.marble.model.enums.ExpenseType;
+import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.CostPeriodCloseRepository;
+import com.ozerler.marble.repository.CostTransactionRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.QuarryRepository;
+import com.ozerler.marble.security.SecurityUtils;
+import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
+
+import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
 public class ExpenseService {
@@ -38,6 +48,8 @@ public class ExpenseService {
     private final CostTransactionRepository costTransactionRepository;
     private final CostCenterRepository costCenterRepository;
     private final CostPeriodCloseRepository costPeriodCloseRepository;
+    private final ProjectRepository projectRepository;
+    private final QuarryRepository quarryRepository;
 
     @Transactional
     public CostTransaction recordExpense(ExpenseDraft draft) {
@@ -48,9 +60,12 @@ public class ExpenseService {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.cost.negative_amount"));
         }
 
-        BusinessUnit unit = draft.businessUnit() != null
-                ? draft.businessUnit()
-                : BusinessUnit.FACTORY;
+        BusinessUnit unit;
+        if (draft.businessUnit() != null) {
+            unit = draft.businessUnit();
+        } else {
+            unit = BusinessUnit.FACTORY;
+        }
 
         CostCenter center;
         if (draft.centerId() != null) {
@@ -59,21 +74,45 @@ public class ExpenseService {
                             MessageUtils.getMessage("error.cost_center.not_found", draft.centerId())));
         } else {
             center = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
-                    .or(() -> costCenterRepository.findAll().stream().findFirst())
+                    .or(() -> BoundedReads.all(costCenterRepository).stream().findFirst())
                     .orElseThrow(() -> new IllegalArgumentException("Masraf merkezi tanımlı değil."));
         }
+        String normalize;
+        if (draft.postingPeriod() != null) {
+            normalize = draft.postingPeriod();
+        } else {
+            normalize = YearMonth.now().toString();
+        }
         String postingPeriod = ExpensePeriods.normalize(
-                draft.postingPeriod() != null ? draft.postingPeriod() : YearMonth.now().toString());
-        String expensePeriod = draft.expensePeriod() != null
-                ? ExpensePeriods.normalize(draft.expensePeriod())
-                : ExpensePeriods.expensePeriod(draft.expenseType(), draft.invoiceDate(), draft.entryDate());
+                normalize);
+        String expensePeriod;
+        if (draft.expensePeriod() != null) {
+            expensePeriod = ExpensePeriods.normalize(draft.expensePeriod());
+        } else {
+            expensePeriod = ExpensePeriods.expensePeriod(draft.expenseType(), draft.invoiceDate(), draft.entryDate());
+        }
 
         assertPeriodOpen(unit, expensePeriod);
 
-        ExpenseCategory category = draft.expenseCategory() != null
-                ? draft.expenseCategory()
-                : draft.expenseType().toCategory();
+        ExpenseCategory category;
+        if (draft.expenseCategory() != null) {
+            category = draft.expenseCategory();
+        } else {
+            category = draft.expenseType().toCategory();
+        }
 
+        String currency;
+        if (draft.currency() != null) {
+            currency = draft.currency();
+        } else {
+            currency = Constants.CURRENCY_TRY;
+        }
+        LocalDate entryDate;
+        if (draft.entryDate() != null) {
+            entryDate = draft.entryDate();
+        } else {
+            entryDate = LocalDate.now();
+        }
         CostTransaction tx = CostTransaction.builder()
                 .costCenter(center)
                 .block(draft.block())
@@ -85,10 +124,10 @@ public class ExpenseService {
                 .expenseCategory(category)
                 .businessUnit(unit)
                 .amount(draft.amount())
-                .currency(draft.currency() != null ? draft.currency() : Constants.CURRENCY_TRY)
+                .currency(currency)
                 .documentNo(draft.documentNo())
                 .invoiceDate(draft.invoiceDate())
-                .entryDate(draft.entryDate() != null ? draft.entryDate() : LocalDate.now())
+                .entryDate(entryDate)
                 .expensePeriod(expensePeriod)
                 .postingPeriod(postingPeriod)
                 .machine(draft.machine())
@@ -101,10 +140,45 @@ public class ExpenseService {
     }
 
     @Transactional
+    public CostTransaction recordForScreen(ExpenseDraft draft, Long projectId, Long quarryId) {
+        return recordExpense(link(draft, projectId, quarryId));
+    }
+
+    @Transactional
+    public CostTransaction updateForScreen(Long id, ExpenseDraft draft, Long projectId, Long quarryId) {
+        return updateExpense(id, link(draft, projectId, quarryId));
+    }
+
+    private ExpenseDraft link(ExpenseDraft draft, Long projectId, Long quarryId) {
+        BusinessUnit unit = draft.businessUnit();
+        Project project;
+        if (unit == BusinessUnit.SITE && projectId != null) {
+            project = projectRepository.findById(projectId).orElseThrow(() -> new IllegalArgumentException(
+                            MessageUtils.getMessage("error.project.not_found", projectId)));
+        } else {
+            project = null;
+        }
+        Quarry quarry;
+        if (unit == BusinessUnit.QUARRY && quarryId != null) {
+            quarry = quarryRepository.findById(quarryId).orElseThrow(() -> new IllegalArgumentException(
+                            MessageUtils.getMessage("error.quarry.not_found", quarryId)));
+        } else {
+            quarry = null;
+        }
+        return new ExpenseDraft(
+                draft.centerId(), draft.expenseType(), draft.expenseCategory(), draft.businessUnit(),
+                draft.amount(), draft.currency(), draft.documentNo(), draft.invoiceDate(), draft.entryDate(),
+                draft.expensePeriod(), draft.postingPeriod(), draft.block(), quarry, draft.slab(), project,
+                draft.machine(), draft.factoryOperation(), draft.workshopOperation(), draft.allocationKey(),
+                draft.description());
+    }
+
+    @Transactional
     public CostPeriodClose closePeriod(BusinessUnit unit, String period, String notes) {
         String normalized = ExpensePeriods.normalize(period);
         if (costPeriodCloseRepository.existsByBusinessUnitAndExpensePeriod(unit, normalized)) {
-            throw new IllegalArgumentException(MessageUtils.getMessage("error.expense.period.already_closed", normalized));
+            throw new IllegalArgumentException(
+                    MessageUtils.getMessage("error.expense.period.already_closed", normalized));
         }
         CostPeriodClose close = CostPeriodClose.builder()
                 .businessUnit(unit)
@@ -142,7 +216,12 @@ public class ExpenseService {
             Long centerId, Long quarryId, Long projectId) {
 
         String normSearch = GridPages.normalizeSearch(search);
-        String normPeriod = (period != null && !period.isBlank()) ? ExpensePeriods.normalize(period) : null;
+        String normPeriod;
+        if (period != null && !period.isBlank()) {
+            normPeriod = ExpensePeriods.normalize(period);
+        } else {
+            normPeriod = null;
+        }
 
         Page<CostTransaction> paged = GridPages.execute(
                 page, size, sortField, sortDir, GridPages.EXPENSE_SORTS,
@@ -160,7 +239,7 @@ public class ExpenseService {
                 .toList();
 
         Map<String, Object> meta = Map.of(
-                "totalAmount", filteredTotal != null ? filteredTotal : BigDecimal.ZERO,
+                "totalAmount", Objects.requireNonNullElse(filteredTotal, BigDecimal.ZERO),
                 "count", paged.getTotalElements()
         );
 
@@ -169,7 +248,13 @@ public class ExpenseService {
 
     @Transactional(readOnly = true)
     public ExpenseSummaryDto getExpenseSummary(String period) {
-        String normalized = ExpensePeriods.normalize(period != null && !period.isBlank() ? period : YearMonth.now().toString());
+        String normalize;
+        if (period != null && !period.isBlank()) {
+            normalize = period;
+        } else {
+            normalize = YearMonth.now().toString();
+        }
+        String normalized = ExpensePeriods.normalize(normalize);
         BigDecimal quarry = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, normalized));
         BigDecimal factory = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, normalized));
         BigDecimal workshop = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, normalized));
@@ -190,8 +275,14 @@ public class ExpenseService {
 
     @Transactional(readOnly = true)
     public ExpenseDto getExpenseDto(Long id) {
-        CostTransaction tx = costTransactionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.expense.not_found", id)));
+        CostTransaction tx =
+                costTransactionRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.expense.not_found", id)));
         boolean closed = isPeriodClosed(tx.getBusinessUnit(), tx.getExpensePeriod());
         return ExpenseDto.fromEntity(tx, closed);
     }
@@ -206,12 +297,27 @@ public class ExpenseService {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.cost.negative_amount"));
         }
 
-        CostTransaction tx = costTransactionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.expense.not_found", id)));
+        CostTransaction tx =
+                costTransactionRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.expense.not_found", id)));
 
         assertPeriodOpen(tx.getBusinessUnit(), tx.getExpensePeriod());
 
-        BusinessUnit unit = draft.businessUnit() != null ? draft.businessUnit() : tx.getBusinessUnit() != null ? tx.getBusinessUnit() : BusinessUnit.FACTORY;
+        BusinessUnit unit;
+        if (draft.businessUnit() != null) {
+            unit = draft.businessUnit();
+        } else {
+            if (tx.getBusinessUnit() != null) {
+                unit = tx.getBusinessUnit();
+            } else {
+                unit = BusinessUnit.FACTORY;
+            }
+        }
 
         CostCenter center;
         if (draft.centerId() != null) {
@@ -222,31 +328,43 @@ public class ExpenseService {
             center = tx.getCostCenter();
         } else {
             center = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
-                    .or(() -> costCenterRepository.findAll().stream().findFirst())
+                    .or(() -> BoundedReads.all(costCenterRepository).stream().findFirst())
                     .orElseThrow(() -> new IllegalArgumentException("Masraf merkezi tanımlı değil."));
         }
 
-        String expensePeriod = draft.expensePeriod() != null
-                ? ExpensePeriods.normalize(draft.expensePeriod())
-                : ExpensePeriods.expensePeriod(draft.expenseType(), draft.invoiceDate(), draft.entryDate());
+        String expensePeriod;
+        if (draft.expensePeriod() != null) {
+            expensePeriod = ExpensePeriods.normalize(draft.expensePeriod());
+        } else {
+            expensePeriod = ExpensePeriods.expensePeriod(draft.expenseType(), draft.invoiceDate(), draft.entryDate());
+        }
 
         assertPeriodOpen(unit, expensePeriod);
 
-        ExpenseCategory category = draft.expenseCategory() != null
-                ? draft.expenseCategory()
-                : draft.expenseType().toCategory();
+        ExpenseCategory category;
+        if (draft.expenseCategory() != null) {
+            category = draft.expenseCategory();
+        } else {
+            category = draft.expenseType().toCategory();
+        }
 
         tx.setCostCenter(center);
         tx.setBusinessUnit(unit);
         tx.setExpenseType(draft.expenseType());
         tx.setExpenseCategory(category);
         tx.setAmount(draft.amount());
-        if (draft.currency() != null) tx.setCurrency(draft.currency());
+        if (draft.currency() != null) {
+            tx.setCurrency(draft.currency());
+        }
         tx.setDocumentNo(draft.documentNo());
         tx.setInvoiceDate(draft.invoiceDate());
-        if (draft.entryDate() != null) tx.setEntryDate(draft.entryDate());
+        if (draft.entryDate() != null) {
+            tx.setEntryDate(draft.entryDate());
+        }
         tx.setExpensePeriod(expensePeriod);
-        if (draft.postingPeriod() != null) tx.setPostingPeriod(ExpensePeriods.normalize(draft.postingPeriod()));
+        if (draft.postingPeriod() != null) {
+            tx.setPostingPeriod(ExpensePeriods.normalize(draft.postingPeriod()));
+        }
         tx.setQuarry(draft.quarry());
         tx.setProject(draft.project());
         tx.setConstructionSite(draft.project());
@@ -257,14 +375,23 @@ public class ExpenseService {
 
     @Transactional
     public void deleteExpense(Long id) {
-        CostTransaction tx = costTransactionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.expense.not_found", id)));
+        CostTransaction tx =
+                costTransactionRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.expense.not_found", id)));
         assertPeriodOpen(tx.getBusinessUnit(), tx.getExpensePeriod());
         costTransactionRepository.delete(tx);
     }
 
     private BigDecimal zero(BigDecimal val) {
-        return val != null ? val : BigDecimal.ZERO;
+        if (val != null) {
+            return val;
+        }
+        return BigDecimal.ZERO;
     }
 
     private void assertPeriodOpen(BusinessUnit unit, String expensePeriod) {
@@ -285,13 +412,13 @@ public class ExpenseService {
             LocalDate entryDate,
             String expensePeriod,
             String postingPeriod,
-            com.ozerler.marble.model.Block block,
-            com.ozerler.marble.model.Quarry quarry,
-            com.ozerler.marble.model.Slab slab,
-            com.ozerler.marble.model.Project project,
-            com.ozerler.marble.model.Machine machine,
-            com.ozerler.marble.model.FactoryOperation factoryOperation,
-            com.ozerler.marble.model.WorkshopOperation workshopOperation,
+            Block block,
+            Quarry quarry,
+            Slab slab,
+            Project project,
+            Machine machine,
+            FactoryOperation factoryOperation,
+            WorkshopOperation workshopOperation,
             String allocationKey,
             String description
     ) {

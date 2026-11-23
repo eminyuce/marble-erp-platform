@@ -1,9 +1,10 @@
 package com.ozerler.marble.security;
 
-import com.ozerler.marble.model.Role;
-import com.ozerler.marble.model.User;
-import com.ozerler.marble.repository.RoleRepository;
-import com.ozerler.marble.repository.UserRepository;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,25 +12,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.matchesPattern;
-import static org.hamcrest.Matchers.not;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.ozerler.marble.model.Role;
+import com.ozerler.marble.model.User;
+import com.ozerler.marble.repository.RoleRepository;
+import com.ozerler.marble.repository.UserRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -53,16 +50,40 @@ class SecurityConfigTest {
     void setUp() {
         this.mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
-                .apply(springSecurity())
+                .apply(SecurityMockMvcConfigurers.springSecurity())
                 .build();
 
         if (userRepository.findByEmail("admin@eimece.test").isEmpty()) {
-            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                    .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_ADMIN").description("Yönetici").build()));
-            Role userRole = roleRepository.findByName("ROLE_USER")
-                    .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_USER").description("Kullanıcı").build()));
-            Role execRole = roleRepository.findByName("ROLE_EXECUTIVE")
-                    .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_EXECUTIVE").description("Üst Yönetici").build()));
+            Role adminRole =
+                    roleRepository
+                            .findByName("ROLE_ADMIN")
+                            .orElseGet(
+                                    () ->
+                                            roleRepository.save(
+                                                    Role.builder()
+                                                            .name("ROLE_ADMIN")
+                                                            .description("Yönetici")
+                                                            .build()));
+            Role userRole =
+                    roleRepository
+                            .findByName("ROLE_USER")
+                            .orElseGet(
+                                    () ->
+                                            roleRepository.save(
+                                                    Role.builder()
+                                                            .name("ROLE_USER")
+                                                            .description("Kullanıcı")
+                                                            .build()));
+            Role execRole =
+                    roleRepository
+                            .findByName("ROLE_EXECUTIVE")
+                            .orElseGet(
+                                    () ->
+                                            roleRepository.save(
+                                                    Role.builder()
+                                                            .name("ROLE_EXECUTIVE")
+                                                            .description("Üst Yönetici")
+                                                            .build()));
 
             User admin = User.builder()
                     .username("admin_eimece")
@@ -79,172 +100,221 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("Admin login page /account/adminlogin/ should be publicly accessible")
-    void adminLoginPage_publicAccess() throws Exception {
-        mockMvc.perform(get("/account/adminlogin/"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("auth/admin-login"));
+    void adminLoginPagePublicAccess() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/account/adminlogin/"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("auth/admin-login"));
     }
 
     @Test
     @DisplayName("Standard /login should be publicly accessible")
-    void loginPage_publicAccess() throws Exception {
-        mockMvc.perform(get("/login"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("auth/admin-login"));
+    void loginPagePublicAccess() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/login"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("auth/admin-login"));
     }
 
     @Test
     @DisplayName("Health endpoint /health/ and /health should be publicly accessible and return status UP")
-    void healthCheck_publicAccess() throws Exception {
-        mockMvc.perform(get("/health/"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.database.status").value("UP"))
-                .andExpect(jsonPath("$.response").doesNotExist())
-                .andExpect(jsonPath("$.serviceStatus").doesNotExist());
+    void healthCheckPublicAccess() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/health/"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("UP"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.dependencies").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.response").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.serviceStatus").doesNotExist());
 
-        mockMvc.perform(get("/health"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.diskSpace.status").value("UP"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/health"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("UP"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.dependencies").doesNotExist());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/actuator/metrics"))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection());
     }
 
     @Test
     @DisplayName("Pre-seeded admin admin@eimece.test should authenticate successfully with password B2u5c8JB")
-    void adminUser_eimeceAuthentication() throws Exception {
-        mockMvc.perform(formLogin("/account/adminlogin/")
-                        .user("username", "admin@eimece.test")
-                        .password("password", "B2u5c8JB"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/dashboard"))
-                .andExpect(authenticated().withUsername("admin@eimece.test").withRoles("ADMIN", "USER", "EXECUTIVE"));
+    void adminUserEimeceAuthentication() throws Exception {
+        mockMvc.perform(
+                        SecurityMockMvcRequestBuilders.formLogin("/account/adminlogin/")
+                                .user("username", "admin@eimece.test")
+                                .password("password", "B2u5c8JB"))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/admin/dashboard"))
+                .andExpect(
+                        SecurityMockMvcResultMatchers.authenticated()
+                                .withUsername("admin@eimece.test")
+                                .withRoles("ADMIN", "USER", "EXECUTIVE"));
     }
 
     @Test
     @DisplayName("Invalid credentials should fail authentication")
-    void invalidLogin_fails() throws Exception {
-        mockMvc.perform(formLogin("/account/adminlogin/")
+    void invalidLoginFails() throws Exception {
+        mockMvc.perform(SecurityMockMvcRequestBuilders.formLogin("/account/adminlogin/")
                         .user("username", "admin@eimece.test")
                         .password("password", "WRONG_PASSWORD"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/account/adminlogin/?error=true"))
-                .andExpect(unauthenticated());
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/account/adminlogin/?error=true"))
+                .andExpect(SecurityMockMvcResultMatchers.unauthenticated());
     }
 
     @Test
     @DisplayName("Admin dashboard should redirect unauthenticated request to /account/adminlogin/")
-    void adminDashboard_unauthenticatedRedirects() throws Exception {
-        mockMvc.perform(get("/admin/dashboard"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/account/adminlogin/"));
+    void adminDashboardUnauthenticatedRedirects() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard"))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrl("/account/adminlogin/"));
     }
 
     @Test
     @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
     @DisplayName("Admin user with ROLE_ADMIN should access /admin/users and /admin/settings")
-    void adminUsersAndSettings_allowedForAdmin() throws Exception {
-        mockMvc.perform(get("/admin/users"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/users/index"))
-                .andExpect(content().string(containsString("Roller ve Yetkiler")))
-                .andExpect(content().string(containsString("rolesInfoOpen")))
-                .andExpect(content().string(containsString("Sistem Yöneticisi")));
+    void adminUsersAndSettingsAllowedForAdmin() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/users"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/users/index"))
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("Roller ve Yetkiler")))
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("rolesInfoOpen")))
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("Sistem Yöneticisi")));
 
-        mockMvc.perform(get("/roles"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(MockMvcRequestBuilders.get("/roles"))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
 
-        mockMvc.perform(get("/admin/settings"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/settings/index"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/settings/index"));
 
-        mockMvc.perform(get("/admin/deployment"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/deployment"))
-                .andExpect(content().string(containsString("Üretim Yayını")))
-                .andExpect(content().string(containsString("deployment-start-btn")));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/deployment"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/deployment"))
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("Üretim Yayını")))
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("deployment-start-btn")));
 
-        mockMvc.perform(get("/admin/dashboard/systemhealth/"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/system-health"))
-                .andExpect(model().attributeExists("overallStatus", "uptime", "components", "rawJson"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard/systemhealth/"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/system-health"))
+                .andExpect(
+                        MockMvcResultMatchers.model()
+                                .attributeExists(
+                                        "overallStatus", "uptime", "components", "rawJson"));
 
-        mockMvc.perform(get("/admin/dashboard/systemhealth"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/system-health"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard/systemhealth"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/system-health"));
 
-        mockMvc.perform(get("/admin/dashboard/systemhealth/api"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.response.body.overallStatus").value("UP"))
-                .andExpect(jsonPath("$.response.body.appPort").value(81));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard/systemhealth/api"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.response.body.overallStatus").value("UP"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.response.body.appPort").value(81));
 
-        mockMvc.perform(get("/admin/dashboard/oursitefeatures/"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/site-features"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard/oursitefeatures/"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/site-features"));
 
-        mockMvc.perform(get("/admin/dashboard/oursitefeatures"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/site-features"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard/oursitefeatures"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/site-features"));
     }
 
     @Test
     @WithMockUser(username = "user@example.com", roles = {"USER"})
     @DisplayName("Regular user without ROLE_ADMIN should be denied access to /admin/settings")
-    void adminSettings_deniedForRegularUser() throws Exception {
-        mockMvc.perform(get("/admin/settings"))
-                .andExpect(status().isForbidden());
+    void adminSettingsDeniedForRegularUser() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings"))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
 
-        mockMvc.perform(get("/admin/deployment"))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/deployment"))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
     @Test
     @WithMockUser(username = "admin@eimece.test", roles = {"ADMIN"})
     @DisplayName("Authorized user should access /reports and export reports in CSV/Excel")
-    void reports_allowedAndExportable() throws Exception {
-        mockMvc.perform(get("/reports"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("erp/reports/index"));
+    void reportsAllowedAndExportable() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/reports"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("erp/reports/index"));
 
-        mockMvc.perform(get("/reports/export/QUARRY_BLOCKS").param("format", "csv"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", containsString("text/csv")))
-                .andExpect(header().string("Content-Disposition",
-                        matchesPattern(".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}\\.csv\".*")))
-                .andExpect(header().string("Content-Disposition", not(containsString(":"))));
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/reports/export/QUARRY_BLOCKS")
+                                .param("format", "csv"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string("Content-Type", Matchers.containsString("text/csv")))
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string(
+                                        "Content-Disposition",
+                                        Matchers.matchesPattern(
+                                                ".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}"
+                                                        + "\\.csv\".*")))
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string(
+                                        "Content-Disposition",
+                                        Matchers.not(Matchers.containsString(":"))));
 
-        mockMvc.perform(get("/reports/export/QUARRY_BLOCKS").param("format", "excel"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", containsString("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")))
-                .andExpect(header().string("Content-Disposition",
-                        matchesPattern(".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}\\.xlsx\".*")))
-                .andExpect(header().string("Content-Disposition", not(containsString(":"))));
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/reports/export/QUARRY_BLOCKS")
+                                .param("format", "excel"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string(
+                                        "Content-Type",
+                                        Matchers.containsString(
+                                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")))
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string(
+                                        "Content-Disposition",
+                                        Matchers.matchesPattern(
+                                                ".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}"
+                                                        + "\\.xlsx\".*")))
+                .andExpect(
+                        MockMvcResultMatchers.header()
+                                .string(
+                                        "Content-Disposition",
+                                        Matchers.not(Matchers.containsString(":"))));
     }
 
     @Test
     @WithMockUser(username = "admin@eimece.test", roles = {"ADMIN"})
     @DisplayName("A POST with a bad CSRF token is forbidden instead of method not allowed")
     void wrongCsrfReturnsForbidden() throws Exception {
-        mockMvc.perform(post("/projects/create").with(csrf().useInvalidToken()))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(
+                        MockMvcRequestBuilders.post("/projects/create")
+                                .with(
+                                        SecurityMockMvcRequestPostProcessors.csrf()
+                                                .useInvalidToken()))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
     @Test
     @DisplayName("Public digital stone passport should be accessible without authentication")
-    void digitalPassport_publicAccess() throws Exception {
-        mockMvc.perform(get("/passport/NONEXISTENT"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("erp/passport/view"));
+    void digitalPassportPublicAccess() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/passport/NONEXISTENT"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("erp/passport/view"));
     }
 
     @Test
     @WithMockUser(username = "operator@example.com", roles = {"OPERATOR"})
     @DisplayName("Any authenticated user should access system health dashboard and see health icon in navbar")
-    void systemHealth_accessibleToAnyAuthenticatedUserAndIconPresent() throws Exception {
-        mockMvc.perform(get("/admin/dashboard/systemhealth/"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/system-health"))
-                .andExpect(content().string(containsString("adminTopbarSystemHealth")))
-                .andExpect(content().string(containsString("admin-topbar-health")))
-                .andExpect(content().string(containsString("/admin/dashboard/systemhealth/")));
+    void systemHealthAccessibleToAnyAuthenticatedUserAndIconPresent() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard/systemhealth/"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.view().name("admin/system-health"))
+                .andExpect(
+                        MockMvcResultMatchers.content()
+                                .string(Matchers.containsString("adminTopbarSystemHealth")))
+                .andExpect(
+                        MockMvcResultMatchers.content()
+                                .string(Matchers.containsString("admin-topbar-health")))
+                .andExpect(
+                        MockMvcResultMatchers.content()
+                                .string(Matchers.containsString("/admin/dashboard/systemhealth/")));
     }
 }

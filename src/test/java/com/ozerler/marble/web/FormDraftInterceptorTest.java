@@ -1,5 +1,9 @@
 package com.ozerler.marble.web;
 
+import java.util.List;
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -7,11 +11,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.FlashMap;
 import org.springframework.web.servlet.ModelAndView;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class FormDraftInterceptorTest {
 
@@ -31,9 +30,9 @@ class FormDraftInterceptorTest {
         @SuppressWarnings("unchecked")
         Map<String, List<String>> preserved =
                 (Map<String, List<String>>) modelAndView.getModel().get(FormDraft.VALUES);
-        assertThat(preserved.get("blockCode")).containsExactly("BLK-1");
-        assertThat(preserved).doesNotContainKey("_csrf");
-        assertThat(modelAndView.getModel().get(FormDraft.ACTION)).isEqualTo("/blocks/create");
+        Assertions.assertThat(preserved.get("blockCode")).containsExactly("BLK-1");
+        Assertions.assertThat(preserved).doesNotContainKey("_csrf");
+        Assertions.assertThat(modelAndView.getModel().get(FormDraft.ACTION)).isEqualTo("/blocks/create");
     }
 
     @Test
@@ -50,8 +49,8 @@ class FormDraftInterceptorTest {
 
         @SuppressWarnings("unchecked")
         Map<String, List<String>> preserved = (Map<String, List<String>>) flash.get(FormDraft.VALUES);
-        assertThat(preserved.get("operatorName")).containsExactly("Ayşe");
-        assertThat(flash.get(FormDraft.ACTION)).isEqualTo("/production/polish");
+        Assertions.assertThat(preserved.get("operatorName")).containsExactly("Ayşe");
+        Assertions.assertThat(flash.get(FormDraft.ACTION)).isEqualTo("/production/polish");
     }
 
     @Test
@@ -64,6 +63,6 @@ class FormDraftInterceptorTest {
 
         interceptor.postHandle(request, new MockHttpServletResponse(), new Object(), modelAndView);
 
-        assertThat(modelAndView.getModel()).doesNotContainKey(FormDraft.VALUES);
+        Assertions.assertThat(modelAndView.getModel()).doesNotContainKey(FormDraft.VALUES);
     }
 }

@@ -1,19 +1,19 @@
 package com.ozerler.marble.controller.admin;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.GlobalSearchResponse;
-import com.ozerler.marble.model.response.BackEndResponse;
-import com.ozerler.marble.service.GlobalSearchService;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.GlobalSearchResponse;
+import com.ozerler.marble.model.response.BackEndResponse;
+import com.ozerler.marble.service.GlobalSearchService;
 
 @ExtendWith(MockitoExtension.class)
 class GlobalSearchControllerTest {
@@ -29,24 +29,24 @@ class GlobalSearchControllerTest {
     void shouldReturnBackEndResponseOnSearch() {
         String query = "AFYON";
         GlobalSearchResponse dummy = GlobalSearchResponse.empty(query);
-        when(globalSearchService.search(query)).thenReturn(dummy);
+        Mockito.when(globalSearchService.search(query)).thenReturn(dummy);
 
         BackEndResponse response = globalSearchController.search(query);
 
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        assertThat(response.getResponse().getBody()).isEqualTo(dummy);
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
+        Assertions.assertThat(response.getResponse().getBody()).isEqualTo(dummy);
     }
 
     @Test
     @DisplayName("search should return fatal BackEndResponse on search failure")
     void shouldReturnFatalBackEndResponseOnError() {
         String query = "AFYON";
-        when(globalSearchService.search(query)).thenThrow(new RuntimeException("Search timeout"));
+        Mockito.when(globalSearchService.search(query)).thenThrow(new RuntimeException("Search timeout"));
 
         BackEndResponse response = globalSearchController.search(query);
 
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
     }
 }

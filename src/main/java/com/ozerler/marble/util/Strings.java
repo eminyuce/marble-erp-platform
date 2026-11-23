@@ -1,9 +1,9 @@
 package com.ozerler.marble.util;
 
-import com.ozerler.marble.common.Constants;
-
 import java.util.Map;
 import java.util.regex.Matcher;
+
+import com.ozerler.marble.common.Constants;
 
 public final class Strings {
 
@@ -11,14 +11,20 @@ public final class Strings {
     }
 
     public static String lowerTurkish(String value) {
-        return value == null ? "" : value.toLowerCase(Constants.LOCALE_TR);
+        if (value == null) {
+            return "";
+        }
+        return value.toLowerCase(Constants.LOCALE_TR);
     }
 
     public static String joinDistinct(String separator, String first, String second) {
         boolean hasFirst = isPresent(first);
         boolean hasSecond = isPresent(second);
         if (!hasFirst) {
-            return hasSecond ? second : null;
+            if (hasSecond) {
+                return second;
+            }
+            return null;
         }
         if (!hasSecond || second.equals(first)) {
             return first;
@@ -37,7 +43,12 @@ public final class Strings {
         Matcher matcher = Constants.PATTERN_TEMPLATE_PLACEHOLDER.matcher(template);
         StringBuilder sb = new StringBuilder();
         while (matcher.find()) {
-            String key = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+            String key;
+            if (matcher.group(1) != null) {
+                key = matcher.group(1);
+            } else {
+                key = matcher.group(2);
+            }
             String replacement = resolveVariable(key, variables);
             if (replacement == null) {
                 replacement = "";

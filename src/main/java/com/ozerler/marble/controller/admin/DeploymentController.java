@@ -1,10 +1,5 @@
 package com.ozerler.marble.controller.admin;
 
-import com.ozerler.marble.dto.DeploymentLogDto;
-import com.ozerler.marble.dto.DeploymentStartResult;
-import com.ozerler.marble.dto.DeploymentStatusDto;
-import com.ozerler.marble.service.DeploymentService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +10,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ozerler.marble.dto.DeploymentLogDto;
+import com.ozerler.marble.dto.DeploymentStartResult;
+import com.ozerler.marble.dto.DeploymentStatusDto;
+import com.ozerler.marble.service.DeploymentService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/admin/deployment")

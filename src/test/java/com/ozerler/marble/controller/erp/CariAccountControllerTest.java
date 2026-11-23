@@ -1,10 +1,10 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.model.enums.BusinessUnit;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.ozerler.marble.model.enums.BusinessUnit;
 
 class CariAccountControllerTest {
 
@@ -12,43 +12,43 @@ class CariAccountControllerTest {
 
     @Test
     @DisplayName("accountsIndex redirects to definitions customers")
-    void accountsIndex_WithoutUnit_RedirectsToCustomers() {
+    void accountsIndexWithoutUnitRedirectsToCustomers() {
         String view = controller.accountsIndex(null);
-        assertThat(view).isEqualTo("redirect:/admin/definitions/customers");
+        Assertions.assertThat(view).isEqualTo("redirect:/admin/definitions/customers");
     }
 
     @Test
     @DisplayName("accountsIndex with unit redirects to definitions customers with unit query param")
-    void accountsIndex_WithUnit_RedirectsWithQuery() {
+    void accountsIndexWithUnitRedirectsWithQuery() {
         String view = controller.accountsIndex(BusinessUnit.QUARRY);
-        assertThat(view).isEqualTo("redirect:/admin/definitions/customers?unit=QUARRY");
+        Assertions.assertThat(view).isEqualTo("redirect:/admin/definitions/customers?unit=QUARRY");
     }
 
     @Test
     @DisplayName("createAccount redirects to customer create form")
-    void createAccount_WithoutUnit_RedirectsToCreate() {
+    void createAccountWithoutUnitRedirectsToCreate() {
         String view = controller.createAccount(null);
-        assertThat(view).isEqualTo("redirect:/admin/definitions/customers/create");
+        Assertions.assertThat(view).isEqualTo("redirect:/admin/definitions/customers/create");
     }
 
     @Test
     @DisplayName("createAccount with unit redirects to create with unit prefill")
-    void createAccount_WithUnit_RedirectsWithUnit() {
+    void createAccountWithUnitRedirectsWithUnit() {
         String view = controller.createAccount(BusinessUnit.FACTORY);
-        assertThat(view).isEqualTo("redirect:/admin/definitions/customers/create?unit=FACTORY");
+        Assertions.assertThat(view).isEqualTo("redirect:/admin/definitions/customers/create?unit=FACTORY");
     }
 
     @Test
     @DisplayName("suppliers redirects to suppliers definition list")
-    void suppliers_RedirectsToSuppliers() {
+    void suppliersRedirectsToSuppliers() {
         String view = controller.suppliers();
-        assertThat(view).isEqualTo("redirect:/admin/definitions/suppliers");
+        Assertions.assertThat(view).isEqualTo("redirect:/admin/definitions/suppliers");
     }
 
     @Test
     @DisplayName("projects redirects to projects list")
-    void projects_RedirectsToProjects() {
+    void projectsRedirectsToProjects() {
         String view = controller.projects();
-        assertThat(view).isEqualTo("redirect:/projects");
+        Assertions.assertThat(view).isEqualTo("redirect:/projects");
     }
 }

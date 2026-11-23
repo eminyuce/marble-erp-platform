@@ -1,14 +1,18 @@
 package com.ozerler.marble.exception;
 
-import com.ozerler.marble.util.MessageUtils;
-import com.ozerler.marble.web.FormDraft;
+import java.net.URI;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,10 +22,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.net.URI;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import com.ozerler.marble.util.MessageUtils;
+import com.ozerler.marble.web.FormDraft;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Turns business-rule failures into a readable page notice instead of the developer error screen.
@@ -31,6 +35,18 @@ import java.util.Map;
 public class UserFacingExceptionHandler {
 
     static final String ERROR_VIEW = "error/user-message";
+    private static final int MAX_MESSAGE_LENGTH = 400;
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public Object handleNotFound(ResourceNotFoundException ex,
+                                 HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 HandlerMethod handlerMethod,
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
+        return handleIllegalArgument(new IllegalArgumentException(ex.getMessage()),
+                request, response, handlerMethod, model, redirectAttributes);
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public Object handleIllegalArgument(IllegalArgumentException ex,
@@ -40,13 +56,19 @@ public class UserFacingExceptionHandler {
                                         Model model,
                                         RedirectAttributes redirectAttributes) {
         String message = readableMessage(ex);
-        List<String> invalidFields = ex instanceof RejectedInputException rejected
-                ? rejected.fieldNames()
-                : List.of();
+        List<String> invalidFields;
+        if (ex instanceof RejectedInputException rejected) {
+            invalidFields = rejected.fieldNames();
+        } else {
+            invalidFields = List.of();
+        }
         log.warn("Rejected request on {}: {}", request.getRequestURI(), message);
         if (writesJson(handlerMethod, request)) {
-            return ResponseEntity.badRequest()
-                    .body(ErrorResponse.of(HttpStatus.BAD_REQUEST, message, request.getRequestURI(), fieldErrors(invalidFields, message)));
+            ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, message);
+            problem.setTitle(HttpStatus.BAD_REQUEST.getReasonPhrase());
+            problem.setInstance(URI.create(request.getRequestURI()));
+            problem.setProperty("errors", fieldErrors(invalidFields, message));
+            return ResponseEntity.badRequest().body(problem);
         }
         String target = returnPath(request);
         if (target != null) {
@@ -66,7 +88,7 @@ public class UserFacingExceptionHandler {
             return MessageUtils.getMessage("notice.fallback");
         }
         String trimmed = message.trim();
-        if (trimmed.indexOf('\n') >= 0 || trimmed.indexOf('\r') >= 0 || trimmed.length() > 400) {
+        if (trimmed.indexOf('\n') >= 0 || trimmed.indexOf('\r') >= 0 || trimmed.length() > MAX_MESSAGE_LENGTH) {
             return MessageUtils.getMessage("notice.fallback");
         }
         return trimmed;
@@ -85,8 +107,12 @@ public class UserFacingExceptionHandler {
 
     private static boolean writesJson(HandlerMethod handlerMethod, HttpServletRequest request) {
         if (handlerMethod != null) {
-            boolean methodWritesBody = AnnotatedElementUtils.hasAnnotation(handlerMethod.getMethod(), ResponseBody.class);
-            boolean typeWritesBody = AnnotatedElementUtils.hasAnnotation(handlerMethod.getBeanType(), ResponseBody.class);
+            boolean methodWritesBody =
+                    AnnotatedElementUtils.hasAnnotation(
+                            handlerMethod.getMethod(), ResponseBody.class);
+            boolean typeWritesBody =
+                    AnnotatedElementUtils.hasAnnotation(
+                            handlerMethod.getBeanType(), ResponseBody.class);
             if (methodWritesBody || typeWritesBody) {
                 return true;
             }
@@ -113,7 +139,10 @@ public class UserFacingExceptionHandler {
         if (referer != null) {
             return referer;
         }
-        return isAppPath(requestUri) ? requestUri : null;
+        if (isAppPath(requestUri)) {
+            return requestUri;
+        }
+        return null;
     }
 
     private static String sameOriginPath(String referer, HttpServletRequest request) {
@@ -147,7 +176,10 @@ public class UserFacingExceptionHandler {
 
     private static String pathOnly(String pathAndQuery) {
         int query = pathAndQuery.indexOf('?');
-        return query < 0 ? pathAndQuery : pathAndQuery.substring(0, query);
+        if (query < 0) {
+            return pathAndQuery;
+        }
+        return pathAndQuery.substring(0, query);
     }
 
     private static boolean isAppPath(String path) {

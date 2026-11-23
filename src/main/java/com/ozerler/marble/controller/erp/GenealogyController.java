@@ -1,15 +1,19 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.dto.GenealogyNodeDto;
-import com.ozerler.marble.service.GenealogyService;
-import lombok.RequiredArgsConstructor;
+import java.util.Locale;
+import java.util.Optional;
+
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.Optional;
+import com.ozerler.marble.dto.GenealogyNodeDto;
+import com.ozerler.marble.service.GenealogyService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/genealogy")
@@ -17,15 +21,15 @@ import java.util.Optional;
 public class GenealogyController {
 
     private final GenealogyService genealogyService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     @GetMapping
     public String genealogyIndex(@RequestParam(value = "code", required = false) String code,
                                  @RequestParam(value = "blockId", required = false) Long blockId,
                                  Model model,
-                                 java.util.Locale locale) {
+                                 Locale locale) {
 
-        model.addAttribute("allBlocks", genealogyService.getAllBlocks());
+        model.addAttribute("allBlocks", genealogyService.getAllBlockViews());
 
         GenealogyNodeDto tree = null;
         if (code != null && !code.isBlank()) {

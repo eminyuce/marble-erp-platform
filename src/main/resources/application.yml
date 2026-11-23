@@ -4,6 +4,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   profiles:
     active: dev
   messages:
@@ -40,6 +42,8 @@ spring:
     baseline-on-migrate: true
     encoding: UTF-8
     locations: classpath:db/migration
+  jpa:
+    open-in-view: false
   session:
     # Spring Boot 4 removed spring.session.store-type. The property is kept so
     # SESSION_STORE_TYPE remains a documented environment variable for operators.
@@ -66,6 +70,7 @@ spring:
       flush-mode: on-save
 
 server:
+  shutdown: graceful
   port: ${SERVER_PORT:8080}
   request:
     header:
@@ -111,10 +116,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info
   endpoint:
     health:
-      show-details: always
+      show-details: when_authorized
 
 app:
   media:
@@ -151,10 +156,13 @@ app:
     retention:
       retention-days: ${BACKUP_RETENTION_DAYS:10}
       cleanup-cron: ${BACKUP_CLEANUP_CRON:0 0 3 * * ?}
+  security:
+    remember-me-key: ${REMEMBER_ME_KEY:local-dev-remember-me-not-for-production}
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
-  version: "1.0.5"
-  asset-version: "20261123-data-grid"
+  version: "1.0.7"
+  # Query-string cache buster for static assets (?v=). Keep in lockstep with app.version.
+  asset-version: ${app.version}
   deployment:
     enabled: false
     command: /usr/local/sbin/marble-erp-inapp-deploy

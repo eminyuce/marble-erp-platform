@@ -1,11 +1,11 @@
 package com.ozerler.marble.domain;
 
+import java.util.List;
+import java.util.Objects;
+
 import com.ozerler.marble.exception.RejectedInputException;
 import com.ozerler.marble.model.enums.FactoryProcessType;
 import com.ozerler.marble.util.MessageUtils;
-
-import java.util.List;
-import java.util.Objects;
 
 /**
  * ST kesim yalnızca Dar Bant Cila'ya, Katrak kesim yalnızca Plaka Cila'ya gidebilir.

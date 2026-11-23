@@ -1,7 +1,21 @@
 package com.ozerler.marble.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.GenealogyNodeDto;
+import com.ozerler.marble.dto.view.BlockView;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CostTransaction;
 import com.ozerler.marble.model.CutItem;
@@ -23,18 +37,16 @@ import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.ShipmentItemRepository;
 import com.ozerler.marble.repository.SiteInstallationRepository;
 import com.ozerler.marble.repository.SlabRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.ozerler.marble.util.MessageUtils;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class GenealogyService {
 
     private final BlockRepository blockRepository;
+    private final BlockViews blockViews;
     private final ProductionOrderRepository productionOrderRepository;
     private final SlabRepository slabRepository;
     private final CutItemRepository cutItemRepository;
@@ -43,16 +55,17 @@ public class GenealogyService {
     private final ShipmentItemRepository shipmentItemRepository;
     private final SiteInstallationRepository siteInstallationRepository;
     private final CostTransactionRepository costTransactionRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     /**
@@ -77,11 +90,14 @@ public class GenealogyService {
                 .collect(Collectors.groupingBy(s -> s.getProductionOrder().getId()));
 
         List<Long> slabIds = allSlabs.stream().map(slab -> slab.getId()).toList();
-        Map<Long, List<CutItem>> itemsBySlabId = slabIds.isEmpty()
-                ? Collections.emptyMap()
-                : cutItemRepository.findBySourceSlabIdIn(slabIds).stream()
-                .filter(i -> i.getSourceSlab() != null)
-                .collect(Collectors.groupingBy(i -> i.getSourceSlab().getId()));
+        Map<Long, List<CutItem>> itemsBySlabId;
+        if (slabIds.isEmpty()) {
+            itemsBySlabId = Collections.emptyMap();
+        } else {
+            itemsBySlabId = cutItemRepository.findBySourceSlabIdIn(slabIds).stream()
+                    .filter(i -> i.getSourceSlab() != null)
+                    .collect(Collectors.groupingBy(i -> i.getSourceSlab().getId()));
+        }
         LotEventContext lotEvents = preloadLotEvents(slabIds);
 
         for (ProductionOrder order : orders) {
@@ -163,11 +179,14 @@ public class GenealogyService {
                 .map(item -> item.getPallet().getId())
                 .distinct()
                 .toList();
-        Map<Long, List<ShipmentItem>> shipmentItemsByPalletId = palletIds.isEmpty()
-                ? Map.of()
-                : shipmentItemRepository.findByPalletIdIn(palletIds).stream()
-                .filter(item -> item.getPallet() != null)
-                .collect(Collectors.groupingBy(item -> item.getPallet().getId()));
+        Map<Long, List<ShipmentItem>> shipmentItemsByPalletId;
+        if (palletIds.isEmpty()) {
+            shipmentItemsByPalletId = Map.of();
+        } else {
+            shipmentItemsByPalletId = shipmentItemRepository.findByPalletIdIn(palletIds).stream()
+                    .filter(item -> item.getPallet() != null)
+                    .collect(Collectors.groupingBy(item -> item.getPallet().getId()));
+        }
 
         Map<Long, List<SiteInstallation>> installationsByLotId =
                 siteInstallationRepository.findByMaterialLotIdIn(lotIds).stream()
@@ -179,16 +198,24 @@ public class GenealogyService {
 
     private void attachLotEvents(GenealogyNodeDto parent, MaterialLot lot, LotEventContext lotEvents) {
         for (PalletItem palletItem : lotEvents.palletItemsByLotId().getOrDefault(lot.getId(), List.of())) {
-            GenealogyNodeDto palletNode = GenealogyNodeDto.builder()
-                    .id("PAL-" + palletItem.getPallet().getId())
-                    .type("PALLET")
-                    .title(getMessage("genealogy.node.pallet.title", palletItem.getPallet().getPalletCode()))
-                    .subtitle(palletItem.getPallet().getStatusLabel())
-                    .details(getMessage("genealogy.node.pallet.details", palletItem.getQuantity(), palletItem.getAreaM2()))
-                    .status(palletItem.getPallet().getStatusLabel())
-                    .qrCode(palletItem.getPallet().getPalletCode())
-                    .children(new ArrayList<>())
-                    .build();
+            GenealogyNodeDto palletNode =
+                    GenealogyNodeDto.builder()
+                            .id("PAL-" + palletItem.getPallet().getId())
+                            .type("PALLET")
+                            .title(
+                                    getMessage(
+                                            "genealogy.node.pallet.title",
+                                            palletItem.getPallet().getPalletCode()))
+                            .subtitle(palletItem.getPallet().getStatusLabel())
+                            .details(
+                                    getMessage(
+                                            "genealogy.node.pallet.details",
+                                            palletItem.getQuantity(),
+                                            palletItem.getAreaM2()))
+                            .status(palletItem.getPallet().getStatusLabel())
+                            .qrCode(palletItem.getPallet().getPalletCode())
+                            .children(new ArrayList<>())
+                            .build();
             for (ShipmentItem shipmentItem : lotEvents.shipmentItemsByPalletId()
                     .getOrDefault(palletItem.getPallet().getId(), List.of())) {
                 palletNode.getChildren().add(GenealogyNodeDto.builder()
@@ -207,11 +234,17 @@ public class GenealogyService {
             parent.getChildren().add(palletNode);
         }
         for (SiteInstallation installation : lotEvents.installationsByLotId().getOrDefault(lot.getId(), List.of())) {
+            String subtitle;
+            if (installation.getLocation() != null) {
+                subtitle = installation.getLocation().getLocationName();
+            } else {
+                subtitle = "";
+            }
             parent.getChildren().add(GenealogyNodeDto.builder()
                     .id("INS-" + installation.getId())
                     .type("SITE")
                     .title(getMessage("genealogy.node.site.title", installation.getProject().getName()))
-                    .subtitle(installation.getLocation() != null ? installation.getLocation().getLocationName() : "")
+                    .subtitle(subtitle)
                     .details(getMessage("genealogy.node.site.details",
                             installation.getInstalledAreaM2(), installation.getWasteAreaM2()))
                     .status(installation.getCrewName())
@@ -232,13 +265,19 @@ public class GenealogyService {
     }
 
     private GenealogyNodeDto buildCostNode(CostTransaction tx) {
+        String status;
+        if (tx.getAmount() != null) {
+            status = tx.getAmount().toPlainString();
+        } else {
+            status = "0";
+        }
         return GenealogyNodeDto.builder()
                 .id("CST-" + tx.getId())
                 .type("COST")
                 .title(getMessage("genealogy.node.cost.title", tx.getExpenseType().getLabel()))
                 .subtitle(tx.getExpensePeriod())
                 .details(tx.getDescription())
-                .status(tx.getAmount() != null ? tx.getAmount().toPlainString() : "0")
+                .status(status)
                 .children(new ArrayList<>())
                 .build();
     }
@@ -249,6 +288,12 @@ public class GenealogyService {
                 block.getQuarry().getName(), block.getWidthCm(), block.getLengthCm(), block.getHeightCm(),
                 block.getActualWeightKg(), block.getQualityGrade().getLabel());
 
+        String alertMessage;
+        if (hasCriticalCrack) {
+            alertMessage = getMessage("genealogy.node.block.crack_warning");
+        } else {
+            alertMessage = null;
+        }
         return GenealogyNodeDto.builder()
                 .id("BLK-" + block.getId())
                 .type("BLOCK")
@@ -258,7 +303,7 @@ public class GenealogyService {
                 .status(block.getStatus().getLabel())
                 .qrCode("BLK-" + block.getBlockCode())
                 .alert(hasCriticalCrack)
-                .alertMessage(hasCriticalCrack ? getMessage("genealogy.node.block.crack_warning") : null)
+                .alertMessage(alertMessage)
                 .children(new ArrayList<>())
                 .build();
     }
@@ -315,12 +360,22 @@ public class GenealogyService {
 
     @Transactional(readOnly = true)
     public List<Block> getAllBlocks() {
-        return blockRepository.findAll();
+        return BoundedReads.all(blockRepository);
     }
 
     @Transactional(readOnly = true)
     public Optional<GenealogyNodeDto> getDefaultTree() {
         return blockRepository.findTop1ByOrderByIdAsc()
                 .map(block -> buildTreeForBlock(block.getId()));
+    }
+
+    /**
+     * Same as {@code getAllBlocks}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<BlockView> getAllBlockViews() {
+        return getAllBlocks().stream().map(blockViews::toView).toList();
     }
 }

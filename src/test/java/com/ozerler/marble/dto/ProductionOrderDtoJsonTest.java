@@ -1,16 +1,16 @@
 package com.ozerler.marble.dto;
 
+import java.time.LocalDateTime;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.enums.ProcessType;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import java.time.LocalDateTime;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductionOrderDtoJsonTest {
 
@@ -28,14 +28,14 @@ class ProductionOrderDtoJsonTest {
 
         JsonNode json = objectMapper.readTree(objectMapper.writeValueAsString(dto));
 
-        assertThat(json.path("status").asText()).isEqualTo("COMPLETED");
-        assertThat(json.path("status_label").asText()).isEqualTo("Tamamlandı");
-        assertThat(json.has("statusLabel")).isFalse();
+        Assertions.assertThat(json.path("status").asText()).isEqualTo("COMPLETED");
+        Assertions.assertThat(json.path("status_label").asText()).isEqualTo("Tamamlandı");
+        Assertions.assertThat(json.has("statusLabel")).isFalse();
     }
 
     @Test
     @DisplayName("fromEntity maps COMPLETED to the Turkish status label")
-    void fromEntity_mapsTurkishStatusLabel() {
+    void fromEntityMapsTurkishStatusLabel() {
         ProductionOrder order = ProductionOrder.builder()
                 .id(1L)
                 .orderNo("PRD-2026-0001")
@@ -48,8 +48,8 @@ class ProductionOrderDtoJsonTest {
 
         ProductionOrderDto dto = ProductionOrderDto.fromEntity(order);
 
-        assertThat(dto.getStatus()).isEqualTo("COMPLETED");
-        assertThat(dto.getStatusLabel()).isEqualTo("Tamamlandı");
-        assertThat(dto.getProcessLabel()).isEqualTo("Katrak");
+        Assertions.assertThat(dto.getStatus()).isEqualTo("COMPLETED");
+        Assertions.assertThat(dto.getStatusLabel()).isEqualTo("Tamamlandı");
+        Assertions.assertThat(dto.getProcessLabel()).isEqualTo("Katrak");
     }
 }

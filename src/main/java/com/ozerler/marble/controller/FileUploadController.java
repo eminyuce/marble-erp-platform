@@ -1,32 +1,41 @@
 package com.ozerler.marble.controller;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.FileStorageDto;
-import com.ozerler.marble.dto.PresignedDownload;
-import com.ozerler.marble.exception.FileAccessDeniedException;
-import com.ozerler.marble.exception.FileValidationException;
-import com.ozerler.marble.exception.StoredFileNotFoundException;
-import com.ozerler.marble.model.FileStorage;
-import com.ozerler.marble.model.response.BackEndResponse;
-import com.ozerler.marble.model.response.ServiceStatus;
-import com.ozerler.marble.model.response.Status;
-import com.ozerler.marble.service.FileStorageService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.FileStorageDto;
+import com.ozerler.marble.dto.PresignedDownload;
+import com.ozerler.marble.exception.FileAccessDeniedException;
+import com.ozerler.marble.exception.FileValidationException;
+import com.ozerler.marble.exception.StoredFileNotFoundException;
+import com.ozerler.marble.model.response.BackEndResponse;
+import com.ozerler.marble.model.response.ServiceStatus;
+import com.ozerler.marble.model.response.Status;
+import com.ozerler.marble.service.FileStorageService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -48,9 +57,12 @@ public class FileUploadController extends AbstractController {
         status.setErrorCode(Constants.NO_ERR);
 
         try {
-            log.info("Uploading file {} for entityType={} entityId={}", file.getOriginalFilename(), entityType, entityId);
-            FileStorage saved = fileStorageService.storeFile(file, entityType, entityId);
-            FileStorageDto dto = FileStorageDto.fromEntity(saved);
+            log.info(
+                    "Uploading file {} for entityType={} entityId={}",
+                    file.getOriginalFilename(),
+                    entityType,
+                    entityId);
+            FileStorageDto dto = fileStorageService.storeFileView(file, entityType, entityId);
 
             HttpHeaders responseHeaders = new HttpHeaders();
             ResponseEntity<FileStorageDto> resp = new ResponseEntity<>(dto, responseHeaders, HttpStatus.OK);
@@ -88,13 +100,13 @@ public class FileUploadController extends AbstractController {
             List<FileStorageDto> uploadedList = new ArrayList<>();
             for (MultipartFile file : files) {
                 if (!file.isEmpty()) {
-                    FileStorage saved = fileStorageService.storeFile(file, entityType, entityId);
-                    uploadedList.add(FileStorageDto.fromEntity(saved));
+                    uploadedList.add(fileStorageService.storeFileView(file, entityType, entityId));
                 }
             }
 
             HttpHeaders responseHeaders = new HttpHeaders();
-            ResponseEntity<List<FileStorageDto>> resp = new ResponseEntity<>(uploadedList, responseHeaders, HttpStatus.OK);
+            ResponseEntity<List<FileStorageDto>> resp =
+                    new ResponseEntity<>(uploadedList, responseHeaders, HttpStatus.OK);
 
             ber.setResponse(resp);
             serviceStatus.setHttpStatus(HttpStatus.OK);
@@ -107,7 +119,13 @@ public class FileUploadController extends AbstractController {
             serviceStatus.setHttpStatus(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             log.error("Multi-file upload failed", e);
-            ber = buildFatalResponse(ber, serviceStatus, status, "uploadMultipleFiles: " + e.getMessage(), Constants.ERR_FATAL);
+            ber =
+                    buildFatalResponse(
+                            ber,
+                            serviceStatus,
+                            status,
+                            "uploadMultipleFiles: " + e.getMessage(),
+                            Constants.ERR_FATAL);
         }
 
         return ber;
@@ -154,7 +172,12 @@ public class FileUploadController extends AbstractController {
         status.setErrorCode(Constants.NO_ERR);
 
         try {
-            String payload = filePayload != null ? filePayload.trim() : "";
+            String payload;
+            if (filePayload != null) {
+                payload = filePayload.trim();
+            } else {
+                payload = "";
+            }
             log.info("Reverting file upload with payload {}", payload);
             boolean deleted = false;
 
@@ -238,7 +261,7 @@ public class FileUploadController extends AbstractController {
     }
 
     private ResponseEntity<Resource> serveFile(Long id, boolean attachment) {
-        FileStorage fileStorage = fileStorageService.requireAccessibleFile(id);
+        FileStorageDto fileStorage = fileStorageService.requireAccessibleFileView(id);
         Resource resource = fileStorageService.loadAsResource(id);
 
         String originalName = fileStorage.getOriginalName();
@@ -254,9 +277,13 @@ public class FileUploadController extends AbstractController {
             mime = "text/plain;charset=UTF-8";
         }
 
-        ContentDisposition contentDisposition = (attachment
-                ? ContentDisposition.attachment()
-                : ContentDisposition.inline())
+        ContentDisposition.Builder value;
+        if (attachment) {
+            value = ContentDisposition.attachment();
+        } else {
+            value = ContentDisposition.inline();
+        }
+        ContentDisposition contentDisposition = value
                 .filename(originalName, StandardCharsets.UTF_8)
                 .build();
 

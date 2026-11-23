@@ -1,13 +1,34 @@
 package com.ozerler.marble.model;
 
-import com.ozerler.marble.domain.PalletCostAccumulator;
-import com.ozerler.marble.model.enums.PackagingType;
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+import com.ozerler.marble.domain.PalletCostAccumulator;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.PackagingType;
+import com.ozerler.marble.model.enums.PalletStatus;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "pallets")
@@ -48,7 +69,7 @@ public class Pallet extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "department", length = 40)
     @Builder.Default
-    private com.ozerler.marble.model.enums.BusinessUnit department = com.ozerler.marble.model.enums.BusinessUnit.FACTORY;
+    private BusinessUnit department = BusinessUnit.FACTORY;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
@@ -72,12 +93,15 @@ public class Pallet extends AuditableEntity {
 
     @Transient
     public String getStatusLabel() {
-        return com.ozerler.marble.model.enums.PalletStatus.labelOf(status);
+        return PalletStatus.labelOf(status);
     }
 
     @Transient
     public int getTotalLotCount() {
-        return items != null ? items.size() : 0;
+        if (items != null) {
+            return items.size();
+        }
+        return 0;
     }
 
     @Transient
@@ -118,7 +142,8 @@ public class Pallet extends AuditableEntity {
 
     @Transient
     public boolean isShippable() {
-        return !"SHIPPED".equalsIgnoreCase(status) && (getTotalQuantity() > 0 || getTotalAreaM2().compareTo(BigDecimal.ZERO) > 0);
+        return !"SHIPPED".equalsIgnoreCase(status)
+                && (getTotalQuantity() > 0 || getTotalAreaM2().compareTo(BigDecimal.ZERO) > 0);
     }
 
     @Transient

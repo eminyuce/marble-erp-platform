@@ -1,15 +1,16 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.enums.BusinessUnit;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -43,12 +44,24 @@ public class CostCenterDto {
 
     public static CostCenterDto fromEntity(CostCenter costCenter) {
         BusinessUnit unit = costCenter.getBusinessUnit();
+        String businessUnitValue;
+        if (unit != null) {
+            businessUnitValue = unit.name();
+        } else {
+            businessUnitValue = null;
+        }
+        String businessUnitLabelValue;
+        if (unit != null) {
+            businessUnitLabelValue = unit.getLabel();
+        } else {
+            businessUnitLabelValue = "";
+        }
         return CostCenterDto.builder()
                 .id(costCenter.getId())
                 .code(costCenter.getCode())
                 .name(costCenter.getName())
-                .businessUnit(unit != null ? unit.name() : null)
-                .businessUnitLabel(unit != null ? unit.getLabel() : "")
+                .businessUnit(businessUnitValue)
+                .businessUnitLabel(businessUnitLabelValue)
                 .monthlyBudget(costCenter.getMonthlyBudget())
                 .description(costCenter.getDescription())
                 .build();

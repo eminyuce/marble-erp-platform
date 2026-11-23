@@ -1,9 +1,10 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.Slab;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 
-import java.util.List;
+import com.ozerler.marble.dto.view.SlabView;
 
 /**
  * Atölye plaka sahası. The row action opens ebatlama with the selected slab.
@@ -13,12 +14,12 @@ public final class WorkshopSlabGrid {
     private WorkshopSlabGrid() {
     }
 
-    public static DataGridView view(Page<Slab> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<SlabView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "workshop-slabs-table", columns(), WorkshopSlabGrid::row);
     }
 
-    static GridRow row(Slab slab) {
+    static GridRow row(SlabView slab) {
         String cutUrl = "/operations/workshop/sized/new?slabId=" + slab.getId();
         return GridRow.of(cutUrl, null, null, null, List.of(
                 SlabGridCells.status(slab),
@@ -45,7 +46,7 @@ public final class WorkshopSlabGrid {
                 SlabGridCells.thicknessColumn(),
                 SlabGridCells.dimensionsColumn(),
                 SlabGridCells.areaColumn(),
-                GridColumn.text("customerName", "Müşteri Durumu", false, 180)
+                GridColumn.text("customerName", "Müşteri Durumu", false, GridWidth.PX_180)
         );
     }
 }

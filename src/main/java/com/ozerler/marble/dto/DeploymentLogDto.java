@@ -1,6 +1,7 @@
 package com.ozerler.marble.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Value;
 
@@ -9,20 +10,20 @@ import lombok.Value;
 public class DeploymentLogDto {
 
     @JsonProperty("offset")
-    long offset;
+    private long offset;
 
     @JsonProperty("nextOffset")
-    long nextOffset;
+    private long nextOffset;
 
     @JsonProperty("chunk")
-    String chunk;
+    private String chunk;
 
     @JsonProperty("state")
-    DeploymentState state;
+    private DeploymentState state;
 
     @JsonProperty("startedAt")
-    String startedAt;
+    private String startedAt;
 
     @JsonProperty("finishedAt")
-    String finishedAt;
+    private String finishedAt;
 }

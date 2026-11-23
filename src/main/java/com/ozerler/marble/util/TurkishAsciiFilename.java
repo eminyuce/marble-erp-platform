@@ -1,8 +1,8 @@
 package com.ozerler.marble.util;
 
-import com.ozerler.marble.common.Constants;
-
 import java.util.Locale;
+
+import com.ozerler.marble.common.Constants;
 
 /**
  * Builds download filenames from Turkish words using ASCII-only letters.
@@ -28,6 +28,9 @@ public final class TurkishAsciiFilename {
                 .replaceAll("[^a-z0-9._-]+", "_")
                 .replaceAll("^_+|_+$", "");
 
-        return ascii.isEmpty() ? Constants.FALLBACK_DOWNLOAD_FILENAME : ascii;
+        if (ascii.isEmpty()) {
+            return Constants.FALLBACK_DOWNLOAD_FILENAME;
+        }
+        return ascii;
     }
 }

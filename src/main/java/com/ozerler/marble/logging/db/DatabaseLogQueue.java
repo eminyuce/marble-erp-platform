@@ -1,11 +1,11 @@
 package com.ozerler.marble.logging.db;
 
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class DatabaseLogQueue {

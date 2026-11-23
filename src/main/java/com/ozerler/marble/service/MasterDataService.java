@@ -1,5 +1,18 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.CostCenterDto;
 import com.ozerler.marble.dto.CustomerDto;
@@ -8,25 +21,45 @@ import com.ozerler.marble.dto.QuarryDto;
 import com.ozerler.marble.dto.StockLocationDto;
 import com.ozerler.marble.dto.SupplierDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.*;
+import com.ozerler.marble.dto.form.CostCenterForm;
+import com.ozerler.marble.dto.form.CustomerForm;
+import com.ozerler.marble.dto.form.MachineForm;
+import com.ozerler.marble.dto.form.QuarryForm;
+import com.ozerler.marble.dto.form.StockLocationForm;
+import com.ozerler.marble.dto.form.SupplierForm;
+import com.ozerler.marble.mapper.CostCenterMapper;
+import com.ozerler.marble.mapper.CustomerMapper;
+import com.ozerler.marble.mapper.MachineMapper;
+import com.ozerler.marble.mapper.QuarryMapper;
+import com.ozerler.marble.mapper.StockLocationMapper;
+import com.ozerler.marble.mapper.SupplierMapper;
+import com.ozerler.marble.model.CostCenter;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.Machine;
+import com.ozerler.marble.model.Quarry;
+import com.ozerler.marble.model.StockLocation;
+import com.ozerler.marble.model.Supplier;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CustomerType;
 import com.ozerler.marble.model.enums.SupplierType;
-import com.ozerler.marble.repository.*;
+import com.ozerler.marble.repository.BlockCustomerMarkRepository;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CollectionRecordRepository;
+import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.CostTransactionRepository;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.InvoiceRepository;
+import com.ozerler.marble.repository.MachineFuelEntryRepository;
+import com.ozerler.marble.repository.MachineRepository;
+import com.ozerler.marble.repository.PurchaseOrderRepository;
+import com.ozerler.marble.repository.QuarryRepository;
+import com.ozerler.marble.repository.SalesOrderRepository;
+import com.ozerler.marble.repository.StockLocationRepository;
+import com.ozerler.marble.repository.SupplierRepository;
 import com.ozerler.marble.util.GridPages;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -58,13 +91,19 @@ public class MasterDataService {
     private final BlockCustomerMarkRepository blockCustomerMarkRepository;
     private final InvoiceRepository invoiceRepository;
     private final CollectionRecordRepository collectionRecordRepository;
+    private final CustomerMapper customerMapper;
+    private final SupplierMapper supplierMapper;
+    private final MachineMapper machineMapper;
+    private final QuarryMapper quarryMapper;
+    private final StockLocationMapper stockLocationMapper;
+    private final CostCenterMapper costCenterMapper;
 
     // =========================================================================
     // MACHINES
     // =========================================================================
 
     public List<Machine> getAllMachines() {
-        return machineRepository.findAllByOrderByCodeAsc();
+        return BoundedReads.all(machineRepository, Sort.by("code"));
     }
 
     public TabulatorResponse<MachineDto> getMachinesPaged(int page, int size, String search, BusinessUnit unit,
@@ -125,7 +164,7 @@ public class MasterDataService {
     // =========================================================================
 
     public List<StockLocation> getAllStockLocations() {
-        return stockLocationRepository.findAllByOrderByCodeAsc();
+        return BoundedReads.all(stockLocationRepository, Sort.by("code"));
     }
 
     public TabulatorResponse<StockLocationDto> getStockLocationsPaged(int page, int size, String search,
@@ -162,7 +201,8 @@ public class MasterDataService {
         if (location.getId() != null) {
             StockLocation stored = getStockLocationById(location.getId());
             if (CORE_STOCK_LOCATION_CODES.contains(stored.getCode()) && !stored.getCode().equals(cleanCode)) {
-                throw new IllegalStateException("Temel ERP operasyon sahasının kodu değiştirilemez: " + stored.getCode());
+                throw new IllegalStateException(
+                        "Temel ERP operasyon sahasının kodu değiştirilemez: " + stored.getCode());
             }
         }
 
@@ -199,7 +239,7 @@ public class MasterDataService {
     // =========================================================================
 
     public List<Quarry> getAllQuarries() {
-        return quarryRepository.findAllByOrderByCodeAsc();
+        return BoundedReads.all(quarryRepository, Sort.by("code"));
     }
 
     public TabulatorResponse<QuarryDto> getQuarriesPaged(int page, int size, String search,
@@ -241,7 +281,8 @@ public class MasterDataService {
     public void deleteQuarry(Long id) {
         Quarry quarry = getQuarryById(id);
         if (blockRepository.existsByQuarryId(id)) {
-            throw new IllegalStateException("Bu ocağa ait blok kayıtları bulunmaktadır. İlişkili veriler korunmalıdır.");
+            throw new IllegalStateException(
+                    "Bu ocağa ait blok kayıtları bulunmaktadır. İlişkili veriler korunmalıdır.");
         }
         quarryRepository.delete(quarry);
         log.info("Quarry deleted successfully. ID: {}, Code: {}", id, quarry.getCode());
@@ -252,7 +293,7 @@ public class MasterDataService {
     // =========================================================================
 
     public List<Customer> getAllCustomers() {
-        return customerRepository.findAllByOrderByCompanyNameAsc();
+        return BoundedReads.all(customerRepository, Sort.by("companyName"));
     }
 
     public TabulatorResponse<CustomerDto> getCustomersPaged(int page, int size, String search, CustomerType type,
@@ -263,9 +304,12 @@ public class MasterDataService {
     public TabulatorResponse<CustomerDto> getCustomersPaged(int page, int size, String search, CustomerType type,
                                                             BusinessUnit unit, String sortField, String sortDir) {
         Page<Customer> result = GridPages.execute(page, size, sortField, sortDir, GridPages.CUSTOMER_SORTS,
-                pageable -> unit != null
-                        ? customerRepository.search(GridPages.normalizeSearch(search), type, unit, pageable)
-                        : customerRepository.search(GridPages.normalizeSearch(search), type, pageable));
+                pageable -> {
+                    if (unit != null) {
+                        return customerRepository.search(GridPages.normalizeSearch(search), type, unit, pageable);
+                    }
+                    return customerRepository.search(GridPages.normalizeSearch(search), type, pageable);
+                });
 
         List<Customer> customers = result.getContent();
         List<Long> customerIds = customers.stream().map(Customer::getId).filter(Objects::nonNull).toList();
@@ -278,7 +322,9 @@ public class MasterDataService {
                         salesMap.put((Long) row[0], (BigDecimal) row[1]);
                     }
                 });
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+                // best effort: fall back to the default below
+            }
         }
 
         Map<Long, BigDecimal> collectionsMap = new HashMap<>();
@@ -289,7 +335,9 @@ public class MasterDataService {
                         collectionsMap.put((Long) row[0], (BigDecimal) row[1]);
                     }
                 });
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+                // best effort: fall back to the default below
+            }
         }
 
         List<CustomerDto> dtos = customers.stream().map(c -> {
@@ -336,9 +384,10 @@ public class MasterDataService {
         Customer customer = getCustomerById(id);
         if (salesOrderRepository.existsByCustomerId(id)
                 || blockCustomerMarkRepository.existsByCustomerId(id)
-                || blockRepository.existsBySoldCustomer_Id(id)
+                || blockRepository.existsBySoldCustomerId(id)
                 || invoiceRepository.existsByCustomerId(id)) {
-            throw new IllegalStateException("Bu müşteriye ait satış, fatura, işaret veya satılan blok kayıtları mevcuttur. Müşteri silinemez.");
+            throw new IllegalStateException(
+                    "Bu müşteriye ait satış, fatura, işaret veya satılan blok kayıtları mevcuttur. Müşteri silinemez.");
         }
         customerRepository.delete(customer);
         log.info("Customer deleted successfully. ID: {}, Code: {}", id, customer.getCustomerCode());
@@ -349,7 +398,7 @@ public class MasterDataService {
     // =========================================================================
 
     public List<Supplier> getAllSuppliers() {
-        return supplierRepository.findAllByOrderByCompanyNameAsc();
+        return BoundedReads.all(supplierRepository, Sort.by("companyName"));
     }
 
     public TabulatorResponse<SupplierDto> getSuppliersPaged(int page, int size, String search, SupplierType type,
@@ -360,9 +409,12 @@ public class MasterDataService {
     public TabulatorResponse<SupplierDto> getSuppliersPaged(int page, int size, String search, SupplierType type,
                                                             BusinessUnit unit, String sortField, String sortDir) {
         Page<Supplier> result = GridPages.execute(page, size, sortField, sortDir, GridPages.SUPPLIER_SORTS,
-                pageable -> unit != null
-                        ? supplierRepository.search(GridPages.normalizeSearch(search), type, unit, pageable)
-                        : supplierRepository.search(GridPages.normalizeSearch(search), type, pageable));
+                pageable -> {
+                    if (unit != null) {
+                        return supplierRepository.search(GridPages.normalizeSearch(search), type, unit, pageable);
+                    }
+                    return supplierRepository.search(GridPages.normalizeSearch(search), type, pageable);
+                });
         return TabulatorResponse.of(
                 result.getContent().stream().map(SupplierDto::fromEntity).toList(),
                 result.getTotalPages(),
@@ -398,7 +450,8 @@ public class MasterDataService {
     public void deleteSupplier(Long id) {
         Supplier supplier = getSupplierById(id);
         if (purchaseOrderRepository.existsBySupplierId(id)) {
-            throw new IllegalStateException("Bu tedarikçiye ait satın alma siparişleri mevcuttur. Tedarikçi silinemez.");
+            throw new IllegalStateException(
+                    "Bu tedarikçiye ait satın alma siparişleri mevcuttur. Tedarikçi silinemez.");
         }
         supplierRepository.delete(supplier);
         log.info("Supplier deleted successfully. ID: {}, Code: {}", id, supplier.getSupplierCode());
@@ -409,7 +462,7 @@ public class MasterDataService {
     // =========================================================================
 
     public List<CostCenter> getAllCostCenters() {
-        return costCenterRepository.findAllByOrderByCodeAsc();
+        return BoundedReads.all(costCenterRepository, Sort.by("code"));
     }
 
     public TabulatorResponse<CostCenterDto> getCostCentersPaged(int page, int size, String search, BusinessUnit unit,
@@ -455,6 +508,112 @@ public class MasterDataService {
         }
         costCenterRepository.delete(costCenter);
         log.info("Cost center deleted successfully. ID: {}, Code: {}", id, costCenter.getCode());
+    }
+
+    public CustomerForm customerForm(Long id) {
+        return customerMapper.toForm(getCustomerById(id));
+    }
+
+    @Transactional
+    public Customer saveCustomerForm(CustomerForm form) {
+        Customer customer;
+        if (form.getId() == null) {
+            customer = new Customer();
+        } else {
+            customer = getCustomerById(form.getId());
+        }
+        customerMapper.updateEntity(form, customer);
+        return saveCustomer(customer);
+    }
+
+    public SupplierForm supplierForm(Long id) {
+        return supplierMapper.toForm(getSupplierById(id));
+    }
+
+    @Transactional
+    public Supplier saveSupplierForm(SupplierForm form) {
+        Supplier supplier;
+        if (form.getId() == null) {
+            supplier = new Supplier();
+        } else {
+            supplier = getSupplierById(form.getId());
+        }
+        supplierMapper.updateEntity(form, supplier);
+        return saveSupplier(supplier);
+    }
+
+    public MachineForm machineForm(Long id) {
+        return machineMapper.toForm(getMachineById(id));
+    }
+
+    @Transactional
+    public MachineForm toggleMachineForm(Long id) {
+        return machineMapper.toForm(toggleMachineActive(id));
+    }
+
+    @Transactional
+    public Machine saveMachineForm(MachineForm form) {
+        Machine machine;
+        if (form.getId() == null) {
+            machine = new Machine();
+        } else {
+            machine = getMachineById(form.getId());
+        }
+        machineMapper.updateEntity(form, machine);
+        return saveMachine(machine);
+    }
+
+    public QuarryForm quarryForm(Long id) {
+        return quarryMapper.toForm(getQuarryById(id));
+    }
+
+    @Transactional
+    public Quarry saveQuarryForm(QuarryForm form) {
+        Quarry quarry;
+        if (form.getId() == null) {
+            quarry = new Quarry();
+        } else {
+            quarry = getQuarryById(form.getId());
+        }
+        quarryMapper.updateEntity(form, quarry);
+        return saveQuarry(quarry);
+    }
+
+    public StockLocationForm stockLocationForm(Long id) {
+        return stockLocationMapper.toForm(getStockLocationById(id));
+    }
+
+    @Transactional
+    public StockLocationForm toggleStockLocationForm(Long id) {
+        return stockLocationMapper.toForm(toggleStockLocationActive(id));
+    }
+
+    @Transactional
+    public StockLocation saveStockLocationForm(StockLocationForm form) {
+        StockLocation location;
+        if (form.getId() == null) {
+            location = new StockLocation();
+        } else {
+            location = getStockLocationById(form.getId());
+        }
+        stockLocationMapper.updateEntity(form, location);
+        return saveStockLocation(location);
+    }
+
+    public CostCenterForm costCenterForm(Long id) {
+        return costCenterMapper.toForm(getCostCenterById(id));
+    }
+
+    @Transactional
+    public CostCenter saveCostCenterForm(CostCenterForm form) {
+        CostCenter costCenter;
+        if (form.getId() == null) {
+            costCenter = new CostCenter();
+        } else {
+            costCenter = getCostCenterById(form.getId());
+        }
+        costCenterMapper.updateEntity(form, costCenter);
+        return saveCostCenter(costCenter);
     }
 
     static String normalizeCode(String raw) {

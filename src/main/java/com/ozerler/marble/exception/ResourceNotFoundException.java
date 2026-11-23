@@ -1,8 +1,9 @@
 package com.ozerler.marble.exception;
 
-import com.ozerler.marble.util.MessageUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import com.ozerler.marble.util.MessageUtils;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class ResourceNotFoundException extends RuntimeException {

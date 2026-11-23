@@ -7,29 +7,79 @@ import java.util.List;
  */
 public final class GridColumn {
 
+    private static final int DEFAULT_WIDTH_PX = 160;
+    private static final int MIN_WIDTH_PX = 72;
+
     private final String key;
     private final String label;
     private final boolean sortable;
     private final int minWidth;
     private final String filterParam;
     private final List<FilterChoice> filters;
+    private final boolean headerFilter;
+    private final GridFilterKind filterKind;
 
     public GridColumn(String key, String label, boolean sortable, int minWidth) {
-        this(key, label, sortable, minWidth, null, List.of());
+        this(key, label, sortable, minWidth, null, List.of(), false, GridFilterKind.TEXT);
     }
 
     public GridColumn(String key, String label, boolean sortable, int minWidth,
                       String filterParam, List<FilterChoice> filters) {
-        this.key = key == null ? "" : key;
-        this.label = label == null ? "" : label;
+        this(key, label, sortable, minWidth, filterParam, filters, false, GridFilterKind.TEXT);
+    }
+
+    public GridColumn(String key, String label, boolean sortable, int minWidth,
+                      String filterParam, List<FilterChoice> filters, boolean headerFilter) {
+        this(key, label, sortable, minWidth, filterParam, filters, headerFilter, GridFilterKind.TEXT);
+    }
+
+    public GridColumn(String key, String label, boolean sortable, int minWidth,
+                      String filterParam, List<FilterChoice> filters, boolean headerFilter,
+                      GridFilterKind filterKind) {
+        if (key == null) {
+            this.key = "";
+        } else {
+            this.key = key;
+        }
+        if (label == null) {
+            this.label = "";
+        } else {
+            this.label = label;
+        }
         this.sortable = sortable && !this.key.isBlank();
-        this.minWidth = minWidth < 72 ? 72 : minWidth;
-        this.filterParam = filterParam == null ? "" : filterParam;
-        this.filters = filters == null ? List.of() : List.copyOf(filters);
+        if (minWidth < MIN_WIDTH_PX) {
+            this.minWidth = MIN_WIDTH_PX;
+        } else {
+            this.minWidth = minWidth;
+        }
+        if (filterParam == null) {
+            this.filterParam = "";
+        } else {
+            this.filterParam = filterParam;
+        }
+        if (filters == null) {
+            this.filters = List.of();
+        } else {
+            this.filters = List.copyOf(filters);
+        }
+        this.headerFilter = headerFilter;
+        if (filterKind == null) {
+            this.filterKind = GridFilterKind.TEXT;
+        } else {
+            this.filterKind = filterKind;
+        }
+    }
+
+    public GridColumn withHeaderFilter(boolean enabled) {
+        return withHeaderFilter(enabled, filterKind);
+    }
+
+    public GridColumn withHeaderFilter(boolean enabled, GridFilterKind kind) {
+        return new GridColumn(key, label, sortable, minWidth, filterParam, filters, enabled, kind);
     }
 
     public static GridColumn text(String key, String label, boolean sortable) {
-        return new GridColumn(key, label, sortable, 160);
+        return new GridColumn(key, label, sortable, DEFAULT_WIDTH_PX);
     }
 
     public static GridColumn text(String key, String label, boolean sortable, int minWidth) {
@@ -69,13 +119,33 @@ public final class GridColumn {
         return !filterParam.isBlank() && !filters.isEmpty();
     }
 
+    public boolean isHeaderFilter() {
+        return headerFilter && !key.isBlank();
+    }
+
+    public String getFilterKind() {
+        return filterKind.getCode();
+    }
+
+    public List<GridFilterOperator> getFilterOperators() {
+        return filterKind.operators();
+    }
+
     public static final class FilterChoice {
         private final String value;
         private final String label;
 
         public FilterChoice(String value, String label) {
-            this.value = value == null ? "" : value;
-            this.label = label == null ? "" : label;
+            if (value == null) {
+                this.value = "";
+            } else {
+                this.value = value;
+            }
+            if (label == null) {
+                this.label = "";
+            } else {
+                this.label = label;
+            }
         }
 
         public String getValue() {

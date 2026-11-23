@@ -1,5 +1,33 @@
 package com.ozerler.marble.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.config.ObjectStorageProperties;
 import com.ozerler.marble.config.PresignedUrlProperties;
@@ -15,33 +43,11 @@ import com.ozerler.marble.security.SecurityUtils;
 import com.ozerler.marble.storage.FileObjectKeyFactory;
 import com.ozerler.marble.storage.ObjectStorageService;
 import com.ozerler.marble.util.Filenames;
+import com.ozerler.marble.util.MessageUtils;
 import com.ozerler.marble.validation.FileUploadValidator;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HexFormat;
-import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -49,7 +55,7 @@ import java.util.Optional;
 public class FileStorageService {
 
     private final FileStorageRepository fileStorageRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
     private final ObjectStorageService objectStorageService;
     private final ObjectStorageProperties storageProperties;
     private final PresignedUrlProperties presignedUrlProperties;
@@ -59,11 +65,12 @@ public class FileStorageService {
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     /**
@@ -81,7 +88,12 @@ public class FileStorageService {
     @Transactional
     public FileStorage storeFile(MultipartFile file, String entityType, Long entityId) throws IOException {
         FileUploadValidator.ValidatedUpload validated = fileUploadValidator.validate(file);
-        String entity = (entityType != null && !entityType.isBlank()) ? entityType.trim().toUpperCase() : "BLOCK";
+        String entity;
+        if (entityType != null && !entityType.isBlank()) {
+            entity = entityType.trim().toUpperCase();
+        } else {
+            entity = "BLOCK";
+        }
         String objectKey = fileObjectKeyFactory.create(entity, entityId, validated.cleanExtension());
 
         log.info("File upload started entityType={} entityId={} objectKey={}", entity, entityId, objectKey);
@@ -147,7 +159,12 @@ public class FileStorageService {
         if (fileIds == null || fileIds.isEmpty() || entityId == null) {
             return;
         }
-        String entity = entityType != null ? entityType.trim().toUpperCase() : "BLOCK";
+        String entity;
+        if (entityType != null) {
+            entity = entityType.trim().toUpperCase();
+        } else {
+            entity = "BLOCK";
+        }
         List<FileStorage> files = fileStorageRepository.findByIdInAndDeletedFalse(fileIds);
         for (FileStorage file : files) {
             assertCanModify(file);
@@ -243,12 +260,18 @@ public class FileStorageService {
             throw new StorageException("File has not been migrated to object storage yet");
         }
         boolean image = fileStorage.isImage();
-        Duration expiry = image
-                ? presignedUrlProperties.imageExpiry()
-                : presignedUrlProperties.documentExpiry();
-        String url = image
-                ? objectStorageService.presignedImageUrl(fileStorage.getObjectKey())
-                : objectStorageService.presignedDocumentUrl(fileStorage.getObjectKey());
+        Duration expiry;
+        if (image) {
+            expiry = presignedUrlProperties.imageExpiry();
+        } else {
+            expiry = presignedUrlProperties.documentExpiry();
+        }
+        String url;
+        if (image) {
+            url = objectStorageService.presignedImageUrl(fileStorage.getObjectKey());
+        } else {
+            url = objectStorageService.presignedDocumentUrl(fileStorage.getObjectKey());
+        }
         log.info("Presigned download URL created fileId={} entityType={} entityId={} objectKey={} expirySeconds={}",
                 fileId, fileStorage.getEntityType(), fileStorage.getEntityId(), fileStorage.getObjectKey(),
                 expiry.toSeconds());
@@ -317,7 +340,7 @@ public class FileStorageService {
                 }
             } else {
                 try (InputStream raw = file.getInputStream();
-                     DigestInputStream digestStream = new DigestInputStream(raw, digest)) {
+                        DigestInputStream digestStream = new DigestInputStream(raw, digest)) {
                     objectStorageService.upload(objectKey, digestStream, validated.fileSize(), validated.mimeType());
                 }
             }
@@ -486,7 +509,61 @@ public class FileStorageService {
 
         @Override
         public long contentLength() {
-            return fileStorage.getFileSize() != null ? fileStorage.getFileSize() : -1L;
+            if (fileStorage.getFileSize() != null) {
+                return fileStorage.getFileSize();
+            }
+            return -1L;
         }
+    }
+
+    /**
+     * Files attached to a record as DTOs, with a presigned image URL where one is available.
+     *
+     * @param entityType owning entity type
+     * @param entityId   owning entity id
+     * @return file DTOs in storage order
+     */
+    @Transactional(readOnly = true)
+    public List<FileStorageDto> getFileViewsForEntity(String entityType, Long entityId) {
+        List<FileStorageDto> views = new ArrayList<>();
+        for (FileStorage file : getFilesForEntity(entityType, entityId)) {
+            FileStorageDto dto = FileStorageDto.fromEntity(file);
+            if (dto == null) {
+                views.add(null);
+                continue;
+            }
+            String presignedImageUrl = presignedImageUrlFor(file);
+            if (presignedImageUrl != null) {
+                dto.setPresignedImageUrl(presignedImageUrl);
+            }
+            views.add(dto);
+        }
+        return views;
+    }
+
+    /**
+     * Same access check as {@code requireAccessibleFile}, returning the file metadata as a DTO.
+     *
+     * @param id file id
+     * @return file metadata
+     */
+    @Transactional(readOnly = true)
+    public FileStorageDto requireAccessibleFileView(Long id) {
+        return FileStorageDto.fromEntity(requireAccessibleFile(id));
+    }
+
+    /**
+     * Stores an upload and returns its metadata as a DTO.
+     *
+     * @param file       the upload
+     * @param entityType owning entity type
+     * @param entityId   owning entity id
+     * @return file metadata
+     * @throws IOException when the bytes cannot be stored
+     */
+    @Transactional
+    public FileStorageDto storeFileView(MultipartFile file, String entityType, Long entityId)
+            throws IOException {
+        return FileStorageDto.fromEntity(storeFile(file, entityType, entityId));
     }
 }

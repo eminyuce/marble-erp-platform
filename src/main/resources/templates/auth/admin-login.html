@@ -6,7 +6,7 @@
     <title>Yönetici Paneli Girişi | Özerler Mermer ERP</title>
     <link rel="preload" th:href="@{/fonts/inter-latin-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" th:href="@{/fonts/inter-latin-ext-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css(v=${assetVersion})}">
     <script th:src="@{/vendor/lucide.min.js}"></script>
 </head>
 <body class="admin-login-page">
@@ -115,6 +115,9 @@
                 <span>
                     <i data-lucide="network" class="w-3.5 h-3.5" aria-hidden="true"></i>
                     IP Adresiniz : <strong th:text="${clientIp}">—</strong>
+                </span>
+                <span>
+                    Sürüm : <strong th:text="${appVersion}">1.0.7</strong>
                 </span>
             </div>
         </section>

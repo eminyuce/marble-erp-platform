@@ -1,9 +1,10 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.Invoice;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.InvoiceStatus;
-import com.ozerler.marble.model.enums.InvoiceType;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,10 +12,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.model.Invoice;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.InvoiceStatus;
+import com.ozerler.marble.model.enums.InvoiceType;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
@@ -33,45 +35,46 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     boolean existsByCustomerId(Long customerId);
 
-    @Query("SELECT DISTINCT i FROM Invoice i " +
-           "LEFT JOIN FETCH i.customer " +
-           "LEFT JOIN FETCH i.supplier " +
-           "LEFT JOIN FETCH i.project " +
-           "LEFT JOIN FETCH i.items it " +
-           "LEFT JOIN FETCH it.block " +
-           "LEFT JOIN FETCH it.slab " +
-           "LEFT JOIN FETCH it.stockItem " +
-           "WHERE i.id = :id")
+    @Query("SELECT DISTINCT i FROM Invoice i "
+            + "LEFT JOIN FETCH i.customer "
+            + "LEFT JOIN FETCH i.supplier "
+            + "LEFT JOIN FETCH i.project "
+            + "LEFT JOIN FETCH i.items it "
+            + "LEFT JOIN FETCH it.block "
+            + "LEFT JOIN FETCH it.slab "
+            + "LEFT JOIN FETCH it.stockItem "
+            + "WHERE i.id = :id")
     Optional<Invoice> findByIdWithDetails(@Param("id") Long id);
 
-    @Query(value = "SELECT i FROM Invoice i " +
-           "LEFT JOIN FETCH i.customer " +
-           "LEFT JOIN FETCH i.supplier " +
-           "LEFT JOIN FETCH i.project " +
-           "WHERE (:invoiceType IS NULL OR i.invoiceType = :invoiceType) " +
-           "AND (:department IS NULL OR i.department = :department) " +
-           "AND (:status IS NULL OR i.status = :status) " +
-           "AND (:customerId IS NULL OR i.customer.id = :customerId) " +
-           "AND (:startDate IS NULL OR i.invoiceDate >= :startDate) " +
-           "AND (:endDate IS NULL OR i.invoiceDate <= :endDate) " +
-           "AND (:search IS NULL OR :search = '' " +
-           "OR LOWER(i.invoiceNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(COALESCE(i.partyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(COALESCE(i.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
-           "ORDER BY i.invoiceDate DESC, i.id DESC",
-           countQuery = "SELECT COUNT(i) FROM Invoice i " +
-           "LEFT JOIN i.customer " +
-           "LEFT JOIN i.supplier " +
-           "WHERE (:invoiceType IS NULL OR i.invoiceType = :invoiceType) " +
-           "AND (:department IS NULL OR i.department = :department) " +
-           "AND (:status IS NULL OR i.status = :status) " +
-           "AND (:customerId IS NULL OR i.customer.id = :customerId) " +
-           "AND (:startDate IS NULL OR i.invoiceDate >= :startDate) " +
-           "AND (:endDate IS NULL OR i.invoiceDate <= :endDate) " +
-           "AND (:search IS NULL OR :search = '' " +
-           "OR LOWER(i.invoiceNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(COALESCE(i.partyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(COALESCE(i.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query(value = "SELECT i FROM Invoice i "
+            + "LEFT JOIN FETCH i.customer "
+            + "LEFT JOIN FETCH i.supplier "
+            + "LEFT JOIN FETCH i.project "
+            + "WHERE (:invoiceType IS NULL OR i.invoiceType = :invoiceType) "
+            + "AND (:department IS NULL OR i.department = :department) "
+            + "AND (:status IS NULL OR i.status = :status) "
+            + "AND (:customerId IS NULL OR i.customer.id = :customerId) "
+            + "AND (:startDate IS NULL OR i.invoiceDate >= :startDate) "
+            + "AND (:endDate IS NULL OR i.invoiceDate <= :endDate) "
+            + "AND (:search IS NULL OR :search = '' "
+            + "OR LOWER(i.invoiceNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(COALESCE(i.partyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(COALESCE(i.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
+            + "ORDER BY i.invoiceDate DESC, i.id DESC",
+            countQuery = "SELECT COUNT(i) FROM Invoice i "
+            + "LEFT JOIN i.customer "
+            + "LEFT JOIN i.supplier "
+            + "WHERE (:invoiceType IS NULL OR i.invoiceType = :invoiceType) "
+            + "AND (:department IS NULL OR i.department = :department) "
+            + "AND (:status IS NULL OR i.status = :status) "
+            + "AND (:customerId IS NULL OR i.customer.id = :customerId) "
+            + "AND (:startDate IS NULL OR i.invoiceDate >= :startDate) "
+            + "AND (:endDate IS NULL OR i.invoiceDate <= :endDate) "
+            + "AND (:search IS NULL OR :search = '' "
+            + "OR LOWER(i.invoiceNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(COALESCE(i.partyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+            + "OR LOWER(COALESCE(i.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Invoice> searchInvoices(@Param("invoiceType") InvoiceType invoiceType,
                                 @Param("department") BusinessUnit department,
                                 @Param("status") InvoiceStatus status,
@@ -81,34 +84,34 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
                                 @Param("search") String search,
                                 Pageable pageable);
 
-    @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM Invoice i " +
-           "WHERE i.invoiceType = :invoiceType " +
-           "AND (:department IS NULL OR i.department = :department) " +
-           "AND i.invoiceDate >= :startDate AND i.invoiceDate <= :endDate " +
-           "AND i.status != 'CANCELLED'")
+    @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM Invoice i "
+            + "WHERE i.invoiceType = :invoiceType "
+            + "AND (:department IS NULL OR i.department = :department) "
+            + "AND i.invoiceDate >= :startDate AND i.invoiceDate <= :endDate "
+            + "AND i.status != 'CANCELLED'")
     BigDecimal sumAmountByTypeAndDateRange(@Param("invoiceType") InvoiceType invoiceType,
                                           @Param("department") BusinessUnit department,
                                           @Param("startDate") LocalDate startDate,
                                           @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM Invoice i " +
-           "WHERE i.invoiceType = :invoiceType " +
-           "AND i.invoiceDate >= :startDate AND i.invoiceDate <= :endDate " +
-           "AND i.status != 'CANCELLED'")
+    @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM Invoice i "
+            + "WHERE i.invoiceType = :invoiceType "
+            + "AND i.invoiceDate >= :startDate AND i.invoiceDate <= :endDate "
+            + "AND i.status != 'CANCELLED'")
     BigDecimal sumAmountByTypeThisMonth(@Param("invoiceType") InvoiceType invoiceType,
                                        @Param("startDate") LocalDate startDate,
                                        @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM Invoice i " +
-           "WHERE i.customer.id = :customerId " +
-           "AND i.invoiceType = com.ozerler.marble.model.enums.InvoiceType.SALES " +
-           "AND i.status != com.ozerler.marble.model.enums.InvoiceStatus.CANCELLED")
+    @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM Invoice i "
+            + "WHERE i.customer.id = :customerId "
+            + "AND i.invoiceType = com.ozerler.marble.model.enums.InvoiceType.SALES "
+            + "AND i.status != com.ozerler.marble.model.enums.InvoiceStatus.CANCELLED")
     BigDecimal sumSalesTotalByCustomer(@Param("customerId") Long customerId);
 
-    @Query("SELECT i.customer.id, COALESCE(SUM(i.totalAmount), 0) FROM Invoice i " +
-           "WHERE i.customer.id IN :customerIds " +
-           "AND i.invoiceType = com.ozerler.marble.model.enums.InvoiceType.SALES " +
-           "AND i.status != com.ozerler.marble.model.enums.InvoiceStatus.CANCELLED " +
-           "GROUP BY i.customer.id")
+    @Query("SELECT i.customer.id, COALESCE(SUM(i.totalAmount), 0) FROM Invoice i "
+            + "WHERE i.customer.id IN :customerIds "
+            + "AND i.invoiceType = com.ozerler.marble.model.enums.InvoiceType.SALES "
+            + "AND i.status != com.ozerler.marble.model.enums.InvoiceStatus.CANCELLED "
+            + "GROUP BY i.customer.id")
     List<Object[]> sumSalesTotalByCustomerIds(@Param("customerIds") List<Long> customerIds);
 }

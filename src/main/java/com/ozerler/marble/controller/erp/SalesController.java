@@ -1,23 +1,33 @@
 package com.ozerler.marble.controller.erp;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Locale;
+import java.util.Objects;
+
+import org.springframework.context.MessageSource;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.SalesOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.SalesOrder;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
 import com.ozerler.marble.service.SalesService;
 import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.SalesGrid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Locale;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/sales")
@@ -33,10 +43,21 @@ public class SalesController {
                              @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("statuses", SalesOrderStatus.values());
         model.addAttribute("summary", salesService.getSalesSummary());
-        model.addAttribute("selectedStatus", status == null ? "" : status);
-        model.addAttribute("grid", SalesGrid.view(
-                salesService.getSalesOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
+        model.addAttribute(
+                "grid",
+                SalesGrid.view(
+                        salesService.getSalesOrdersPaged(
+                                query.pageNumber(),
+                                query.pageSize(),
+                                query.getSearch(),
+                                status,
+                                query.sortKey(),
+                                query.sortDirection()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         return "erp/sales/index";
     }
 
@@ -59,18 +80,22 @@ public class SalesController {
         return "erp/sales/form";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     @PostMapping("/create")
-    public String createOrder(@RequestParam("orderNo") String orderNo,
-                              @RequestParam("customerId") Long customerId,
-                              @RequestParam(value = "deliveryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
-                              @RequestParam(value = "notes", required = false) String notes,
-                              Locale locale,
-                              Model model,
-                              RedirectAttributes redirectAttributes) {
+    public String createOrder(
+            @RequestParam("orderNo") String orderNo,
+            @RequestParam("customerId") Long customerId,
+            @RequestParam(value = "deliveryDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate deliveryDate,
+            @RequestParam(value = "notes", required = false) String notes,
+            Locale locale,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         try {
-            SalesOrder order = salesService.createSalesOrder(orderNo, customerId, deliveryDate, notes);
+            String createdNo = salesService.createOrderNo(orderNo, customerId, deliveryDate, notes);
             redirectAttributes.addFlashAttribute("successMessage",
-                    messageSource.getMessage("erp.sales.create.success", new Object[]{order.getOrderNo()}, locale));
+                    messageSource.getMessage("erp.sales.create.success", new Object[]{createdNo}, locale));
             return "redirect:/sales";
         } catch (Exception e) {
             model.addAttribute("errorMessage",
@@ -82,7 +107,7 @@ public class SalesController {
 
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
-        SalesOrder order = salesService.getOrderById(id);
+        var order = salesService.getOrder(id);
         populateSalesForm(model, locale);
         model.addAttribute("record", order);
         model.addAttribute("isEdit", true);
@@ -92,11 +117,11 @@ public class SalesController {
 
     @GetMapping("/{id}")
     public String orderDetail(@PathVariable("id") Long id, Model model) {
-        SalesOrder order = salesService.getOrderById(id);
-        model.addAttribute("order", order);
+        model.addAttribute("order", salesService.getOrder(id));
         return "erp/sales/detail";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     @PostMapping("/{id}/items")
     public String addItem(@PathVariable("id") Long id,
                           @RequestParam("description") String description,
@@ -109,6 +134,7 @@ public class SalesController {
         return "redirect:/sales/" + id;
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     @PostMapping("/{id}/confirm")
     public String confirmOrder(@PathVariable("id") Long id) {
         salesService.confirmOrder(id);

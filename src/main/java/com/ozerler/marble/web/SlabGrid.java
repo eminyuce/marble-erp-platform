@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.SlabStatus;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Plaka stok listesi. Sort keys match {@code GridPages.SLAB_SORTS}.
@@ -23,16 +23,27 @@ public final class SlabGrid {
                 rows.add(row(slab));
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "slabs-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "slabs-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(SlabDto slab) {
-        String id = slab.getId() == null ? "" : slab.getId().toString();
+        String id;
+        if (slab.getId() == null) {
+            id = "";
+        } else {
+            id = slab.getId().toString();
+        }
         String viewUrl = "/production/slabs/" + id;
         String editUrl = viewUrl + "/edit";
         String code = GridWindow.clean(slab.getSlabCode());
-        String passport = code.isBlank() ? "" : "/passport/" + code;
-        return GridRow.of(viewUrl, editUrl, null, code, List.of(
+        String passport;
+        if (code.isBlank()) {
+            passport = "";
+        } else {
+            passport = "/passport/" + code;
+        }
+        return new GridRow(viewUrl, editUrl, "", code, slabActions(viewUrl, editUrl, passport), List.of(
                 GridCell.badge(slab.getStatusLabel()),
                 GridCell.chip(slab.getId()),
                 GridCell.link(code, viewUrl),
@@ -48,16 +59,16 @@ public final class SlabGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", true, 150, "status", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("slabCode", "Plaka Kodu", true, 160),
-                GridColumn.text("", "Ebatlar (cm)", false, 180),
-                GridColumn.text("surfaceAreaM2", "Net Alan", true, 120),
-                GridColumn.text("surfaceFinish", "Yüzey", true, 150),
-                GridColumn.text("qualityGrade", "Kalite", true, 120),
-                GridColumn.text("costPerM2", "Birim Maliyet (m²)", true, 160),
-                GridColumn.text("", "Pasaport", false, 120),
-                GridColumn.text("", "Barkod", false, 120)
+                GridColumn.filtered("status", "Durum", true, GridWidth.PX_150, "status", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("slabCode", "Plaka Kodu", true, GridWidth.PX_160),
+                GridColumn.text("", "Ebatlar (cm)", false, GridWidth.PX_180),
+                GridColumn.text("surfaceAreaM2", "Net Alan", true, GridWidth.PX_120),
+                GridColumn.text("surfaceFinish", "Yüzey", true, GridWidth.PX_150),
+                GridColumn.text("qualityGrade", "Kalite", true, GridWidth.PX_120),
+                GridColumn.text("costPerM2", "Birim Maliyet (m²)", true, GridWidth.PX_160),
+                GridColumn.text("", "Pasaport", false, GridWidth.PX_120),
+                GridColumn.text("", "Barkod", false, GridWidth.PX_120)
         );
     }
 
@@ -82,6 +93,20 @@ public final class SlabGrid {
 
     private static String label(String preferred, String fallback) {
         String text = GridWindow.clean(preferred);
-        return text.isBlank() ? GridWindow.clean(fallback) : text;
+        if (text.isBlank()) {
+            return GridWindow.clean(fallback);
+        }
+        return text;
+    }
+
+    private static List<GridAction> slabActions(String viewUrl, String editUrl, String passport) {
+        List<GridAction> items = new ArrayList<>();
+        items.add(GridAction.link("Detay", "eye", viewUrl));
+        items.add(GridAction.link("Düzenle", "edit-3", editUrl));
+        if (!passport.isBlank()) {
+            items.add(GridAction.link("Pasaport", "qr-code", passport, "_blank"));
+        }
+        items.add(GridAction.link("Barkod Yazdır", "printer", viewUrl + "/label", "_blank"));
+        return items;
     }
 }

@@ -1,5 +1,9 @@
 # Agent instructions
 
+## Development standards
+
+Every change must follow [docs/DEVELOPMENT_STANDARDS.md](docs/DEVELOPMENT_STANDARDS.md). The 12 mandatory rules and the per-feature checklist in that document are required for UI, API, and data changes.
+
 ## Version bump
 
 Every pull request bumps the application version by one patch step.

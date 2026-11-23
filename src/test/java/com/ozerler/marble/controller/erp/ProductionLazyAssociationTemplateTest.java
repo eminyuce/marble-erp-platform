@@ -1,9 +1,8 @@
 package com.ozerler.marble.controller.erp;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductionLazyAssociationTemplateTest {
 
@@ -16,19 +15,19 @@ class ProductionLazyAssociationTemplateTest {
 
         assertDoesNotDereferenceLazyBlock(index);
         assertDoesNotDereferenceLazyBlock(accept);
-        assertThat(accept).contains("fragments/data-grid :: shell");
+        Assertions.assertThat(accept).contains("fragments/data-grid :: shell");
         assertDoesNotDereferenceLazyBlock(polish);
-        assertThat(polish).contains("fragments/data-grid :: shell");
-        assertThat(polish).contains("wo.blockCode");
+        Assertions.assertThat(polish).contains("fragments/data-grid :: shell");
+        Assertions.assertThat(polish).contains("wo.blockCode");
     }
 
     private static void assertDoesNotDereferenceLazyBlock(String html) {
-        assertThat(html).doesNotContainPattern("wo\\.block(?![A-Za-z])");
+        Assertions.assertThat(html).doesNotContainPattern("wo\\.block(?![A-Za-z])");
     }
 
     private static String read(String resource) throws Exception {
         try (var in = ProductionLazyAssociationTemplateTest.class.getResourceAsStream(resource)) {
-            assertThat(in).as("classpath resource %s", resource).isNotNull();
+            Assertions.assertThat(in).as("classpath resource %s", resource).isNotNull();
             return new String(in.readAllBytes());
         }
     }

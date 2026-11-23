@@ -1,5 +1,15 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.time.YearMonth;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.domain.BlockCostFormula;
 import com.ozerler.marble.domain.BlockMeasurement;
 import com.ozerler.marble.domain.ExpensePeriods;
@@ -9,16 +19,8 @@ import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CostTransactionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.YearMonth;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +31,13 @@ public class BlockCostCalculationService {
 
     @Transactional(readOnly = true)
     public QuarryCostBreakdownDto quarryBreakdown(Long quarryId, String period) {
-        String normalized = ExpensePeriods.normalize(period != null ? period : YearMonth.now().toString());
+        String normalize;
+        if (period != null) {
+            normalize = period;
+        } else {
+            normalize = YearMonth.now().toString();
+        }
+        String normalized = ExpensePeriods.normalize(normalize);
         BigDecimal totalExpenses = zero(costTransactionRepository.sumByQuarryAndPeriod(quarryId, normalized));
         if (totalExpenses.compareTo(BigDecimal.ZERO) == 0) {
             totalExpenses = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, normalized));
@@ -67,7 +75,12 @@ public class BlockCostCalculationService {
         }
 
         String quarryName = blocks.stream()
-                .map(b -> b.getQuarry() != null ? b.getQuarry().getName() : null)
+                .map(b -> {
+                    if (b.getQuarry() != null) {
+                        return b.getQuarry().getName();
+                    }
+                    return null;
+                })
                 .filter(n -> n != null && !n.isBlank())
                 .findFirst()
                 .orElse("Ocak");
@@ -88,7 +101,13 @@ public class BlockCostCalculationService {
 
     @Transactional(readOnly = true)
     public Map<Long, BigDecimal> expensePerTonByQuarry(String period) {
-        String normalized = ExpensePeriods.normalize(period != null ? period : YearMonth.now().toString());
+        String normalize;
+        if (period != null) {
+            normalize = period;
+        } else {
+            normalize = YearMonth.now().toString();
+        }
+        String normalized = ExpensePeriods.normalize(normalize);
         BigDecimal unitExpenses = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, normalized));
 
         Map<Long, BigDecimal> quarryExpenses = new LinkedHashMap<>();
@@ -131,7 +150,12 @@ public class BlockCostCalculationService {
     @Transactional(readOnly = true)
     public BigDecimal calculatedTotalCost(Block block, BigDecimal expensePerTon) {
         BigDecimal extraction = calculatedExtractionCost(block, expensePerTon);
-        BigDecimal transport = block.getTransportCost() != null ? block.getTransportCost() : BigDecimal.ZERO;
+        BigDecimal transport;
+        if (block.getTransportCost() != null) {
+            transport = block.getTransportCost();
+        } else {
+            transport = BigDecimal.ZERO;
+        }
         return extraction.add(transport);
     }
 
@@ -149,6 +173,9 @@ public class BlockCostCalculationService {
     }
 
     private static BigDecimal zero(BigDecimal value) {
-        return value != null ? value : BigDecimal.ZERO;
+        if (value != null) {
+            return value;
+        }
+        return BigDecimal.ZERO;
     }
 }

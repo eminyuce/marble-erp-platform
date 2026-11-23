@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.OperationWorkOrder;
-import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.view.WorkOrderView;
+import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
 
 /**
  * Cells shared by the factory, workshop, and combined work-order grids.
@@ -15,18 +15,18 @@ final class WorkOrderGridRows {
     private WorkOrderGridRows() {
     }
 
-    static String url(OperationWorkOrder order) {
+    static String url(WorkOrderView order) {
         return "/work-orders/" + order.getId();
     }
 
-    static GridRow factory(OperationWorkOrder order) {
+    static GridRow factory(WorkOrderView order) {
         List<GridCell> cells = lead(order);
         cells.add(ordered(order));
         cells.add(due(order));
         return row(order, cells);
     }
 
-    static GridRow workshop(OperationWorkOrder order) {
+    static GridRow workshop(WorkOrderView order) {
         List<GridCell> cells = lead(order);
         cells.add(person(order));
         cells.add(ordered(order));
@@ -34,7 +34,7 @@ final class WorkOrderGridRows {
         return row(order, cells);
     }
 
-    static GridRow combined(OperationWorkOrder order) {
+    static GridRow combined(WorkOrderView order) {
         List<GridCell> cells = new ArrayList<>();
         cells.add(status(order));
         cells.add(GridCell.chip(order.getId()));
@@ -48,11 +48,11 @@ final class WorkOrderGridRows {
         return row(order, cells);
     }
 
-    static GridRow row(OperationWorkOrder order, List<GridCell> cells) {
+    static GridRow row(WorkOrderView order, List<GridCell> cells) {
         return GridRow.of(url(order), null, null, null, cells);
     }
 
-    private static List<GridCell> lead(OperationWorkOrder order) {
+    private static List<GridCell> lead(WorkOrderView order) {
         List<GridCell> cells = new ArrayList<>();
         cells.add(status(order));
         cells.add(GridCell.chip(order.getId()));
@@ -63,45 +63,68 @@ final class WorkOrderGridRows {
         return cells;
     }
 
-    static GridCell status(OperationWorkOrder order) {
-        return GridCell.badge(order.getStatus() == null ? "" : order.getStatus().getDisplayName());
+    static GridCell status(WorkOrderView order) {
+        String badge;
+        if (order.getStatus() == null) {
+            badge = "";
+        } else {
+            badge = order.getStatus().getDisplayName();
+        }
+        return GridCell.badge(badge);
     }
 
-    static GridCell code(OperationWorkOrder order) {
+    static GridCell code(WorkOrderView order) {
         return GridCell.link(order.getOrderNo(), url(order));
     }
 
-    static GridCell customer(OperationWorkOrder order) {
+    static GridCell customer(WorkOrderView order) {
         return GridCell.text(order.getCustomerDisplayName());
     }
 
-    static GridCell stone(OperationWorkOrder order) {
+    static GridCell stone(WorkOrderView order) {
         return GridCell.text(order.getStoneType());
     }
 
-    static GridCell quantity(OperationWorkOrder order) {
-        BigDecimal quantity = order.getQuantity() == null ? BigDecimal.ZERO : order.getQuantity();
-        String unit = order.getUnit() == null ? "m²" : order.getUnit();
+    static GridCell quantity(WorkOrderView order) {
+        BigDecimal quantity;
+        if (order.getQuantity() == null) {
+            quantity = BigDecimal.ZERO;
+        } else {
+            quantity = order.getQuantity();
+        }
+        String unit;
+        if (order.getUnit() == null) {
+            unit = "m²";
+        } else {
+            unit = order.getUnit();
+        }
         return GridCell.text(OperationGridSupport.amount(quantity, unit));
     }
 
-    static GridCell person(OperationWorkOrder order) {
+    static GridCell person(WorkOrderView order) {
         return GridCell.text(order.getResponsiblePerson());
     }
 
-    static GridCell ordered(OperationWorkOrder order) {
+    static GridCell ordered(WorkOrderView order) {
         return GridCell.text(OperationGridSupport.day(order.getOrderDate()));
     }
 
-    static GridCell due(OperationWorkOrder order) {
+    static GridCell due(WorkOrderView order) {
         return GridCell.text(OperationGridSupport.day(order.getDueDate()));
     }
 
-    static GridCell department(OperationWorkOrder order) {
-        return GridCell.text(order.getDepartment() == null ? "" : order.getDepartment().getDisplayName());
+    static GridCell department(WorkOrderView order) {
+        String value;
+        if (order.getDepartment() == null) {
+            value = "";
+        } else {
+            value = order.getDepartment().getDisplayName();
+        }
+        return GridCell.text(value);
     }
 
     static List<GridColumn.FilterChoice> statuses() {
-        return OperationGridSupport.choices(OperationWorkOrderStatus.values(), OperationWorkOrderStatus::getDisplayName);
+        return OperationGridSupport.choices(
+                OperationWorkOrderStatus.values(), OperationWorkOrderStatus::getDisplayName);
     }
 }

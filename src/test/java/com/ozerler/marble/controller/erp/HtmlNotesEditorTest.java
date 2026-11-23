@@ -1,9 +1,8 @@
 package com.ozerler.marble.controller.erp;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class HtmlNotesEditorTest {
 
@@ -12,12 +11,12 @@ class HtmlNotesEditorTest {
     void editorSetupAutoBindsNotesFields() throws Exception {
         String script = read("/static/js/editor-setup.js");
 
-        assertThat(script).contains("function isNotesFieldName(");
-        assertThat(script).contains("name === \"notes\" || name === \"saleNotes\"");
-        assertThat(script).contains("function enhanceHtmlNotes(");
-        assertThat(script).contains("window.initDualEditor = initDualEditor");
-        assertThat(script).contains("window.enhanceHtmlNotes = enhanceHtmlNotes");
-        assertThat(script).contains("contenteditable");
+        Assertions.assertThat(script).contains("function isNotesFieldName(");
+        Assertions.assertThat(script).contains("name === \"notes\" || name === \"saleNotes\"");
+        Assertions.assertThat(script).contains("function enhanceHtmlNotes(");
+        Assertions.assertThat(script).contains("window.initDualEditor = initDualEditor");
+        Assertions.assertThat(script).contains("window.enhanceHtmlNotes = enhanceHtmlNotes");
+        Assertions.assertThat(script).contains("contenteditable");
     }
 
     @Test
@@ -28,19 +27,19 @@ class HtmlNotesEditorTest {
         String blockForm = read("/templates/erp/blocks/form.html");
         String layout = read("/templates/layout/base.html");
 
-        assertThat(projectForm).contains("data-html-notes");
-        assertThat(projectForm).contains("name=\"notes\"");
-        assertThat(sellForm).contains("data-html-notes");
-        assertThat(sellForm).contains("name=\"saleNotes\"");
-        assertThat(sellForm).doesNotContain("<textarea id=\"saleNotes\"");
-        assertThat(blockForm).contains("data-html-notes");
-        assertThat(blockForm).contains("data-hidden-id=\"notes-hidden-input\"");
-        assertThat(layout).contains("@{/js/editor-setup.js(v=${assetVersion})}");
+        Assertions.assertThat(projectForm).contains("data-html-notes");
+        Assertions.assertThat(projectForm).contains("name=\"notes\"");
+        Assertions.assertThat(sellForm).contains("data-html-notes");
+        Assertions.assertThat(sellForm).contains("name=\"saleNotes\"");
+        Assertions.assertThat(sellForm).doesNotContain("<textarea id=\"saleNotes\"");
+        Assertions.assertThat(blockForm).contains("data-html-notes");
+        Assertions.assertThat(blockForm).contains("data-hidden-id=\"notes-hidden-input\"");
+        Assertions.assertThat(layout).contains("@{/js/editor-setup.js(v=${assetVersion})}");
     }
 
     private static String read(String resource) throws Exception {
         try (var in = HtmlNotesEditorTest.class.getResourceAsStream(resource)) {
-            assertThat(in).as("classpath resource %s", resource).isNotNull();
+            Assertions.assertThat(in).as("classpath resource %s", resource).isNotNull();
             return new String(in.readAllBytes());
         }
     }

@@ -1,15 +1,16 @@
 package com.ozerler.marble.logging.db;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.IThrowableProxy;
-import ch.qos.logback.classic.spi.ThrowableProxyUtil;
-import ch.qos.logback.core.AppenderBase;
-import com.ozerler.marble.common.Constants;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
+
+import com.ozerler.marble.common.Constants;
+
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.IThrowableProxy;
+import ch.qos.logback.classic.spi.ThrowableProxyUtil;
+import ch.qos.logback.core.AppenderBase;
 
 /**
  * Logback appender that sends logging events to the non-blocking {@link DatabaseLogQueue}.
@@ -28,6 +29,10 @@ public class DatabaseLogAppender extends AppenderBase<ILoggingEvent> {
             "org.flywaydb",
             "com.ozerler.marble.logging.db"
     };
+    private static final int MAX_CORRELATION_ID_LENGTH = 64;
+    private static final int MAX_NAME_LENGTH = 255;
+    private static final int MAX_SHORT_FIELD_LENGTH = 16;
+    private static final int MAX_URI_LENGTH = 500;
 
     @Override
     protected void append(ILoggingEvent event) {
@@ -46,7 +51,12 @@ public class DatabaseLogAppender extends AppenderBase<ILoggingEvent> {
                     ZoneId.systemDefault()
             );
 
-            String level = event.getLevel() != null ? event.getLevel().toString() : "INFO";
+            String level;
+            if (event.getLevel() != null) {
+                level = event.getLevel().toString();
+            } else {
+                level = "INFO";
+            }
             String formattedMessage = event.getFormattedMessage();
             if (formattedMessage == null) {
                 formattedMessage = "";
@@ -58,7 +68,7 @@ public class DatabaseLogAppender extends AppenderBase<ILoggingEvent> {
 
             IThrowableProxy throwableProxy = event.getThrowableProxy();
             if (throwableProxy != null) {
-                exceptionClass = truncate(throwableProxy.getClassName(), 255);
+                exceptionClass = truncate(throwableProxy.getClassName(), MAX_NAME_LENGTH);
                 exceptionMessage = throwableProxy.getMessage();
                 stackTrace = ThrowableProxyUtil.asString(throwableProxy);
             }
@@ -73,15 +83,15 @@ public class DatabaseLogAppender extends AppenderBase<ILoggingEvent> {
             if (mdc != null && !mdc.isEmpty()) {
                 username = truncate(mdc.get(Constants.MDC_USER_ID), 100);
                 clientIp = truncate(mdc.get(Constants.MDC_CLIENT_IP), 100);
-                httpMethod = truncate(mdc.get(Constants.MDC_HTTP_METHOD), 16);
-                requestUri = truncate(mdc.get(Constants.MDC_REQUEST_URI), 500);
-                correlationId = truncate(mdc.get(Constants.MDC_CORRELATION_ID), 64);
+                httpMethod = truncate(mdc.get(Constants.MDC_HTTP_METHOD), MAX_SHORT_FIELD_LENGTH);
+                requestUri = truncate(mdc.get(Constants.MDC_REQUEST_URI), MAX_URI_LENGTH);
+                correlationId = truncate(mdc.get(Constants.MDC_CORRELATION_ID), MAX_CORRELATION_ID_LENGTH);
             }
 
             DatabaseLogEntry entry = new DatabaseLogEntry(
                     timestamp,
-                    truncate(level, 16),
-                    truncate(loggerName, 255),
+                    truncate(level, MAX_SHORT_FIELD_LENGTH),
+                    truncate(loggerName, MAX_NAME_LENGTH),
                     formattedMessage,
                     exceptionClass,
                     exceptionMessage,

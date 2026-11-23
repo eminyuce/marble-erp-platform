@@ -1,7 +1,9 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.ScrapLog;
-import com.ozerler.marble.model.enums.ScrapReasonCode;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -9,9 +11,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.model.ScrapLog;
+import com.ozerler.marble.model.enums.ScrapReasonCode;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface ScrapLogRepository extends JpaRepository<ScrapLog, Long> {
@@ -30,13 +32,14 @@ public interface ScrapLogRepository extends JpaRepository<ScrapLog, Long> {
     @Query("SELECT s FROM ScrapLog s ORDER BY s.loggedAt DESC")
     List<ScrapLog> findAllWithBlock();
 
-    @Query("SELECT s.reasonCode, COUNT(s), COALESCE(SUM(s.scrapWeightKg), 0), COALESCE(SUM(s.costImpact), 0) " +
-            "FROM ScrapLog s GROUP BY s.reasonCode")
+    @Query("SELECT s.reasonCode, COUNT(s), COALESCE(SUM(s.scrapWeightKg), 0), COALESCE(SUM(s.costImpact), 0) "
+            + "FROM ScrapLog s GROUP BY s.reasonCode")
     List<Object[]> getScrapSummaryByReason();
 
     @Query("SELECT COALESCE(SUM(s.costImpact), 0) FROM ScrapLog s")
     BigDecimal getTotalScrapCostImpact();
 
-    @Query("SELECT s FROM ScrapLog s ORDER BY s.loggedAt DESC")
+    @Query(value = "SELECT s FROM ScrapLog s ORDER BY s.loggedAt DESC",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<ScrapLog> findAllPaged(Pageable pageable);
 }

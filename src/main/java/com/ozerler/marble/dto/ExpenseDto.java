@@ -1,16 +1,18 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Objects;
+
 import com.ozerler.marble.model.CostTransaction;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseCategory;
 import com.ozerler.marble.model.enums.ExpenseType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Data
 @Builder
@@ -57,24 +59,84 @@ public class ExpenseDto {
             target = tx.getBusinessUnit().getLabel();
         }
 
+        Long centerIdValue;
+        if (tx.getCostCenter() != null) {
+            centerIdValue = tx.getCostCenter().getId();
+        } else {
+            centerIdValue = null;
+        }
+        String costCenterCodeValue;
+        if (tx.getCostCenter() != null) {
+            costCenterCodeValue = tx.getCostCenter().getCode();
+        } else {
+            costCenterCodeValue = "—";
+        }
+        String costCenterNameValue;
+        if (tx.getCostCenter() != null) {
+            costCenterNameValue = tx.getCostCenter().getName();
+        } else {
+            costCenterNameValue = "—";
+        }
+        String businessUnitLabelValue;
+        if (tx.getBusinessUnit() != null) {
+            businessUnitLabelValue = tx.getBusinessUnit().getLabel();
+        } else {
+            businessUnitLabelValue = "—";
+        }
+        String expenseTypeLabelValue;
+        if (tx.getExpenseType() != null) {
+            expenseTypeLabelValue = tx.getExpenseType().getLabel();
+        } else {
+            expenseTypeLabelValue = "—";
+        }
+        String expenseCategoryLabelValue;
+        if (tx.getExpenseCategory() != null) {
+            expenseCategoryLabelValue = tx.getExpenseCategory().getLabel();
+        } else {
+            expenseCategoryLabelValue = "—";
+        }
+        Long quarryIdValue;
+        if (tx.getQuarry() != null) {
+            quarryIdValue = tx.getQuarry().getId();
+        } else {
+            quarryIdValue = null;
+        }
+        String quarryNameValue;
+        if (tx.getQuarry() != null) {
+            quarryNameValue = tx.getQuarry().getName();
+        } else {
+            quarryNameValue = null;
+        }
+        Long projectIdValue;
+        if (tx.getProject() != null) {
+            projectIdValue = tx.getProject().getId();
+        } else {
+            projectIdValue = null;
+        }
+        String projectNameValue;
+        if (tx.getProject() != null) {
+            projectNameValue = tx.getProject().getName();
+        } else {
+            projectNameValue = null;
+        }
         return ExpenseDto.builder()
                 .id(tx.getId())
-                .centerId(tx.getCostCenter() != null ? tx.getCostCenter().getId() : null)
-                .costCenterCode(tx.getCostCenter() != null ? tx.getCostCenter().getCode() : "—")
-                .costCenterName(tx.getCostCenter() != null ? tx.getCostCenter().getName() : "—")
+                .centerId(centerIdValue)
+                .costCenterCode(costCenterCodeValue)
+                .costCenterName(costCenterNameValue)
                 .businessUnit(tx.getBusinessUnit())
-                .businessUnitLabel(tx.getBusinessUnit() != null ? tx.getBusinessUnit().getLabel() : "—")
+                .businessUnitLabel(businessUnitLabelValue)
                 .expenseType(tx.getExpenseType())
-                .expenseTypeLabel(tx.getExpenseType() != null ? tx.getExpenseType().getLabel() : "—")
+                .expenseTypeLabel(expenseTypeLabelValue)
                 .expenseCategory(tx.getExpenseCategory())
-                .expenseCategoryLabel(tx.getExpenseCategory() != null ? tx.getExpenseCategory().getLabel() : "—")
-                .quarryId(tx.getQuarry() != null ? tx.getQuarry().getId() : null)
-                .quarryName(tx.getQuarry() != null ? tx.getQuarry().getName() : null)
-                .projectId(tx.getProject() != null ? tx.getProject().getId() : null)
-                .projectName(tx.getProject() != null ? tx.getProject().getName() : null)
+                .expenseCategoryLabel(expenseCategoryLabelValue)
+                .quarryId(quarryIdValue)
+                .quarryName(quarryNameValue)
+                .projectId(projectIdValue)
+                .projectName(projectNameValue)
                 .targetName(target)
                 .amount(tx.getAmount())
-                .currency(tx.getCurrency() != null ? tx.getCurrency() : "TRY")
+                .currency(Objects.requireNonNullElse(tx.getCurrency(), "TRY"))
                 .documentNo(tx.getDocumentNo())
                 .invoiceDate(tx.getInvoiceDate())
                 .entryDate(tx.getEntryDate())

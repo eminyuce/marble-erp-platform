@@ -1,14 +1,31 @@
 package com.ozerler.marble.model;
 
+import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 import com.ozerler.marble.model.enums.ChamferStatus;
 import com.ozerler.marble.model.enums.MaterialLotStatus;
 import com.ozerler.marble.model.enums.ProductForm;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.SurfaceFinish;
-import jakarta.persistence.*;
-import lombok.*;
 
-import java.math.BigDecimal;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "material_lots")

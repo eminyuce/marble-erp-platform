@@ -1,17 +1,33 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.CostDistributionDto;
-import com.ozerler.marble.dto.DashboardKpiDto;
-import com.ozerler.marble.dto.ScrapSummaryDto;
-import com.ozerler.marble.model.enums.ProjectStatus;
-import com.ozerler.marble.model.enums.SlabStatus;
-import com.ozerler.marble.repository.*;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
+import com.ozerler.marble.dto.CostDistributionDto;
+import com.ozerler.marble.dto.DashboardKpiDto;
+import com.ozerler.marble.dto.ScrapSummaryDto;
+import com.ozerler.marble.model.enums.InvoiceType;
+import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
+import com.ozerler.marble.model.enums.ProjectStatus;
+import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.model.enums.StockProductType;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CheckRecordRepository;
+import com.ozerler.marble.repository.CollectionRecordRepository;
+import com.ozerler.marble.repository.CostTransactionRepository;
+import com.ozerler.marble.repository.InvoiceRepository;
+import com.ozerler.marble.repository.OperationWorkOrderRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.ScrapLogRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.StockItemRepository;
+import com.ozerler.marble.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Service orchestrating General Management Cockpit (Genel Müdür Tek Ekran Canlı Kokpiti - BRD Section 9.1)
@@ -19,6 +35,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class DashboardService {
+
+    private static final int CHECK_WARNING_DAYS = 15;
 
     private final BlockRepository blockRepository;
     private final SlabRepository slabRepository;
@@ -40,7 +58,12 @@ public class DashboardService {
         BigDecimal reservedSlabArea = slabRepository.getTotalAreaByStatus(SlabStatus.RESERVED);
         long factoryBlockCount = blockRepository.getCountFactoryStock();
         Double factoryBlockWeight = blockRepository.getTotalFactoryStockWeightKg();
-        Double factoryBlockWeightTon = factoryBlockWeight != null ? factoryBlockWeight / 1000.0 : 0.0;
+        Double factoryBlockWeightTon;
+        if (factoryBlockWeight != null) {
+            factoryBlockWeightTon = factoryBlockWeight / 1000.0;
+        } else {
+            factoryBlockWeightTon = 0.0;
+        }
 
         // KPI 2: Active Projects
         long activeProjectsCount = projectRepository.countByStatus(ProjectStatus.ACTIVE);
@@ -62,29 +85,33 @@ public class DashboardService {
         // Operational & Commerce KPIs
         long quarryBlockCount = blockRepository.countQuarryBlocks();
         long factoryBlockUncutCount = blockRepository.countFactoryUncutBlocks();
-        long factorySizedItemCount = stockItemRepository.countAvailableByProductType(com.ozerler.marble.model.enums.StockProductType.SIZED);
-        BigDecimal factorySizedItemAreaM2 = stockItemRepository.sumQuantityByProductType(com.ozerler.marble.model.enums.StockProductType.SIZED);
+        long factorySizedItemCount = stockItemRepository.countAvailableByProductType(StockProductType.SIZED);
+        BigDecimal factorySizedItemAreaM2 = stockItemRepository.sumQuantityByProductType(StockProductType.SIZED);
 
         BigDecimal totalEstTon = blockRepository.sumTotalEstimatedTonnage();
         BigDecimal totalActTon = blockRepository.sumTotalActualTonnage();
         BigDecimal totalEffectiveTon = blockRepository.sumTotalEffectiveBlockTonnage();
         long totalStockBlockCount = blockRepository.countTotalStockBlocks();
 
-        long openOrders = workOrderRepository.countByStatus(com.ozerler.marble.model.enums.OperationWorkOrderStatus.NEW)
-                + workOrderRepository.countByStatus(com.ozerler.marble.model.enums.OperationWorkOrderStatus.APPROVED);
-        long inProdOrders = workOrderRepository.countByStatus(com.ozerler.marble.model.enums.OperationWorkOrderStatus.IN_PRODUCTION);
-        long completedOrders = workOrderRepository.countByStatus(com.ozerler.marble.model.enums.OperationWorkOrderStatus.COMPLETED);
+        long openOrders = workOrderRepository.countByStatus(OperationWorkOrderStatus.NEW)
+                + workOrderRepository.countByStatus(OperationWorkOrderStatus.APPROVED);
+        long inProdOrders = workOrderRepository.countByStatus(OperationWorkOrderStatus.IN_PRODUCTION);
+        long completedOrders = workOrderRepository.countByStatus(OperationWorkOrderStatus.COMPLETED);
 
-        java.time.LocalDate monthStart = java.time.LocalDate.now().withDayOfMonth(1);
-        java.time.LocalDate monthEnd = java.time.LocalDate.now().plusMonths(1).withDayOfMonth(1).minusDays(1);
+        LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
+        LocalDate monthEnd = LocalDate.now().plusMonths(1).withDayOfMonth(1).minusDays(1);
 
-        BigDecimal monthlyPurchases = invoiceRepository.sumAmountByTypeThisMonth(com.ozerler.marble.model.enums.InvoiceType.PURCHASE, monthStart, monthEnd);
-        BigDecimal monthlySales = invoiceRepository.sumAmountByTypeThisMonth(com.ozerler.marble.model.enums.InvoiceType.SALES, monthStart, monthEnd);
+        BigDecimal monthlyPurchases =
+                invoiceRepository.sumAmountByTypeThisMonth(
+                        InvoiceType.PURCHASE, monthStart, monthEnd);
+        BigDecimal monthlySales = invoiceRepository.sumAmountByTypeThisMonth(InvoiceType.SALES, monthStart, monthEnd);
         BigDecimal monthlyCollections = collectionRepository.sumAmountByMethodAndDateRange(null, monthStart, monthEnd);
 
-        java.time.LocalDate today = java.time.LocalDate.now();
-        long approachingChecksCount = checkRepository.countApproachingChecks(today, today.plusDays(15));
-        BigDecimal approachingChecksTotal = checkRepository.sumApproachingChecksAmount(today, today.plusDays(15));
+        LocalDate today = LocalDate.now();
+        long approachingChecksCount = checkRepository.countApproachingChecks(today, today.plusDays(CHECK_WARNING_DAYS));
+        BigDecimal approachingChecksTotal =
+                checkRepository.sumApproachingChecksAmount(
+                        today, today.plusDays(CHECK_WARNING_DAYS));
 
         return DashboardKpiDto.builder()
                 .totalSlabArea(totalSlabArea)

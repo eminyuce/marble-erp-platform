@@ -1,10 +1,10 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.ApplicationLogDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.ApplicationLogDto;
+import com.ozerler.marble.dto.TabulatorResponse;
 
 /**
  * Uygulama log listesi. Sort keys match {@code ApplicationLogService} resolveSortField.
@@ -25,17 +25,29 @@ public final class ApplicationLogGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "logs-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "logs-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(ApplicationLogDto log) {
-        String viewUrl = log.getId() == null ? "" : "#log-" + log.getId();
+        String viewUrl;
+        if (log.getId() == null) {
+            viewUrl = "";
+        } else {
+            viewUrl = "#log-" + log.getId();
+        }
+        String link;
+        if (log.isHasException()) {
+            link = "Hata";
+        } else {
+            link = "";
+        }
         return GridRow.of(viewUrl, "", null, null, List.of(
                 GridCell.badge(log.getLevel()),
                 GridCell.chip(log.getId()),
                 GridCell.text(when(log)),
                 logger(log),
-                GridCell.link(log.getMessage(), null, log.isHasException() ? "Hata" : "", null),
+                GridCell.link(log.getMessage(), null, link, null),
                 GridCell.text(log.getUsername()),
                 GridCell.text(log.getClientIp())
         ));
@@ -43,13 +55,13 @@ public final class ApplicationLogGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("level", "Seviye", true, 120, "levels", levels()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("timestamp", "Tarih & Saat", true, 170),
-                GridColumn.text("shortLoggerName", "Kaynak (Logger)", true, 180),
-                GridColumn.text("message", "Mesaj", false, 280),
-                GridColumn.text("username", "Kullanıcı", true, 140),
-                GridColumn.text("clientIp", "İstemci IP", true, 130)
+                GridColumn.filtered("level", "Seviye", true, GridWidth.PX_120, "levels", levels()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("timestamp", "Tarih & Saat", true, GridWidth.PX_170),
+                GridColumn.text("shortLoggerName", "Kaynak (Logger)", true, GridWidth.PX_180),
+                GridColumn.text("message", "Mesaj", false, GridWidth.PX_280),
+                GridColumn.text("username", "Kullanıcı", true, GridWidth.PX_140),
+                GridColumn.text("clientIp", "İstemci IP", true, GridWidth.PX_130)
         );
     }
 
@@ -77,7 +89,12 @@ public final class ApplicationLogGrid {
         if (shortName.isBlank()) {
             return GridCell.text(fullName);
         }
-        String detail = fullName.equals(shortName) ? "" : fullName;
+        String detail;
+        if (fullName.equals(shortName)) {
+            detail = "";
+        } else {
+            detail = fullName;
+        }
         return GridCell.link(shortName, null, detail, null);
     }
 }

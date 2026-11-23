@@ -1,6 +1,8 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.User;
+import java.util.Collection;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -9,8 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
-import java.util.Optional;
+import com.ozerler.marble.model.User;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -24,26 +26,28 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     @EntityGraph(attributePaths = {"roles"})
-    @Query("SELECT u FROM User u WHERE u.deleted = false AND " +
-            "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND " +
-            "(:roleName IS NULL OR EXISTS (SELECT 1 FROM u.roles r WHERE r.name = :roleName)) AND " +
-            "(:enabled IS NULL OR u.enabled = :enabled)")
+    @Query(value = "SELECT u FROM User u WHERE u.deleted = false AND "
+            + "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+            + "(:roleName IS NULL OR EXISTS (SELECT 1 FROM u.roles r WHERE r.name = :roleName)) AND "
+            + "(:enabled IS NULL OR u.enabled = :enabled)",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<User> searchActiveUsers(@Param("search") String search,
                                  @Param("roleName") String roleName,
                                  @Param("enabled") Boolean enabled,
                                  Pageable pageable);
 
     @EntityGraph(attributePaths = {"roles"})
-    @Query("SELECT u FROM User u WHERE u.deleted = false AND " +
-            "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND " +
-            "EXISTS (SELECT 1 FROM u.roles r WHERE r.name IN :roleNames) AND " +
-            "(:enabled IS NULL OR u.enabled = :enabled)")
+    @Query(value = "SELECT u FROM User u WHERE u.deleted = false AND "
+            + "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+            + "EXISTS (SELECT 1 FROM u.roles r WHERE r.name IN :roleNames) AND "
+            + "(:enabled IS NULL OR u.enabled = :enabled)",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<User> searchActiveUsersByAnyRole(@Param("search") String search,
                                           @Param("roleNames") Collection<String> roleNames,
                                           @Param("enabled") Boolean enabled,

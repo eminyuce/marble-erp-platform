@@ -1,42 +1,51 @@
 package com.ozerler.marble.controller.erp;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Locale;
+
+import org.springframework.context.MessageSource;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.ProjectDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.enums.ConsumptionType;
 import com.ozerler.marble.model.enums.ProjectStatus;
 import com.ozerler.marble.model.enums.SupplyRoute;
 import com.ozerler.marble.model.enums.SurfaceFinish;
 import com.ozerler.marble.service.ConstructionSiteService;
 import com.ozerler.marble.service.CostAnalysisService;
+import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.service.ProjectSiteService;
 import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.ProjectGrid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Locale;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/projects")
 @RequiredArgsConstructor
-@lombok.extern.slf4j.Slf4j
+@Slf4j
 public class ProjectController {
+
+    private final FormLookupService formLookup;
 
     private final ProjectSiteService projectSiteService;
     private final ConstructionSiteService constructionSiteService;
     private final CostAnalysisService costAnalysisService;
-    private final com.ozerler.marble.repository.CustomerRepository customerRepository;
-    private final com.ozerler.marble.repository.StockItemRepository stockItemRepository;
     private final MessageSource messageSource;
 
     @GetMapping("/customers")
@@ -56,12 +65,27 @@ public class ProjectController {
                                 @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", projectSiteService.getProjectSummary());
         model.addAttribute("selectedCustomerId", customerId);
-        model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
-        model.addAttribute("grid", ProjectGrid.view(
-                projectSiteService.getProjectsPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, customerId, query.sortKey(), query.sortDirection()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute("customers", formLookup.customersByCompanyName());
+        model.addAttribute(
+                "grid",
+                ProjectGrid.view(
+                        projectSiteService.getProjectsPaged(
+                                query.pageNumber(),
+                                query.pageSize(),
+                                query.getSearch(),
+                                status,
+                                customerId,
+                                query.sortKey(),
+                                query.sortDirection()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         if (customerId != null) {
-            customerRepository.findById(customerId).ifPresent(c -> model.addAttribute("selectedCustomerName", c.getCompanyName()));
+            var selected = formLookup.findCustomer(customerId);
+            if (selected != null) {
+                model.addAttribute("selectedCustomerName", selected.getCompanyName());
+            }
         }
         return "erp/projects/index";
     }
@@ -83,7 +107,7 @@ public class ProjectController {
     @GetMapping("/create")
     public String showCreateForm(@RequestParam(value = "customerId", required = false) Long customerId,
                                  Locale locale, Model model) {
-        model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
+        model.addAttribute("customers", formLookup.customersByCompanyName());
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("pageTitle", messageSource.getMessage("erp.project.title.create", null, locale));
         return "erp/projects/form";
@@ -91,26 +115,40 @@ public class ProjectController {
 
     @PostMapping("/create")
     @PreAuthorize(Constants.PRE_AUTH_SITE_WRITE)
-    public String createProject(@RequestParam("projectCode") String projectCode,
-                                @RequestParam("name") String name,
-                                @RequestParam(value = "customerName", required = false) String customerName,
-                                @RequestParam(value = "customerId", required = false) Long customerId,
-                                @RequestParam("contractValue") BigDecimal contractValue,
-                                @RequestParam("estimatedCost") BigDecimal estimatedCost,
-                                @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-                                @RequestParam(value = "deliveryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
-                                @RequestParam(value = "notes", required = false) String notes,
-                                Locale locale,
-                                Model model,
-                                RedirectAttributes redirectAttributes) {
+    public String createProject(
+            @RequestParam("projectCode") String projectCode,
+            @RequestParam("name") String name,
+            @RequestParam(value = "customerName", required = false) String customerName,
+            @RequestParam(value = "customerId", required = false) Long customerId,
+            @RequestParam("contractValue") BigDecimal contractValue,
+            @RequestParam("estimatedCost") BigDecimal estimatedCost,
+            @RequestParam(value = "startDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate startDate,
+            @RequestParam(value = "deliveryDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate deliveryDate,
+            @RequestParam(value = "notes", required = false) String notes,
+            Locale locale,
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         try {
-            projectSiteService.createProject(projectCode, name, customerName, customerId, contractValue, estimatedCost, startDate, deliveryDate, notes);
+            projectSiteService.createProject(
+                    projectCode,
+                    name,
+                    customerName,
+                    customerId,
+                    contractValue,
+                    estimatedCost,
+                    startDate,
+                    deliveryDate,
+                    notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.project.create.success", null, locale));
             return "redirect:/projects";
         } catch (Exception e) {
-            model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
+            model.addAttribute("customers", formLookup.customersByCompanyName());
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
             model.addAttribute("pageTitle", messageSource.getMessage("erp.project.title.create", null, locale));
@@ -120,8 +158,8 @@ public class ProjectController {
 
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
-        Project project = projectSiteService.getProjectById(id);
-        model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
+        var project = formLookup.getProject(id);
+        model.addAttribute("customers", formLookup.customersByCompanyName());
         model.addAttribute("project", project);
         model.addAttribute("record", project);
         model.addAttribute("isEdit", true);
@@ -132,19 +170,24 @@ public class ProjectController {
 
     @PostMapping("/{id}/edit")
     @PreAuthorize(Constants.PRE_AUTH_SITE_WRITE)
-    public String updateProject(@PathVariable("id") Long id,
-                                @RequestParam("projectCode") String projectCode,
-                                @RequestParam("name") String name,
-                                @RequestParam("customerName") String customerName,
-                                @RequestParam(value = "customerId", required = false) Long customerId,
-                                @RequestParam("contractValue") BigDecimal contractValue,
-                                @RequestParam("estimatedCost") BigDecimal estimatedCost,
-                                @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-                                @RequestParam(value = "deliveryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
-                                @RequestParam(value = "notes", required = false) String notes,
-                                @RequestParam(value = "status", required = false) ProjectStatus status,
-                                Locale locale,
-                                RedirectAttributes redirectAttributes) {
+    public String updateProject(
+            @PathVariable("id") Long id,
+            @RequestParam("projectCode") String projectCode,
+            @RequestParam("name") String name,
+            @RequestParam("customerName") String customerName,
+            @RequestParam(value = "customerId", required = false) Long customerId,
+            @RequestParam("contractValue") BigDecimal contractValue,
+            @RequestParam("estimatedCost") BigDecimal estimatedCost,
+            @RequestParam(value = "startDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate startDate,
+            @RequestParam(value = "deliveryDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate deliveryDate,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "status", required = false) ProjectStatus status,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
         constructionSiteService.updateProject(id, projectCode, name, customerName, customerId,
                 contractValue, estimatedCost, startDate, deliveryDate, notes, status);
         redirectAttributes.addFlashAttribute("successMessage",
@@ -154,17 +197,17 @@ public class ProjectController {
 
     @GetMapping("/{id}")
     public String projectDetail(@PathVariable("id") Long id, Model model) {
-        Project project = projectSiteService.getProjectById(id);
+        var project = formLookup.getProject(id);
         model.addAttribute("project", project);
-        model.addAttribute("locations", projectSiteService.getLocationsByProject(id));
-        model.addAttribute("consumptions", projectSiteService.getConsumptionsByProject(id));
+        model.addAttribute("locations", projectSiteService.getLocationViewsByProject(id));
+        model.addAttribute("consumptions", projectSiteService.getConsumptionViewsByProject(id));
         model.addAttribute("consumptionTypes", ConsumptionType.values());
-        model.addAttribute("stonePlans", constructionSiteService.plansFor(id));
-        model.addAttribute("installations", constructionSiteService.installationsFor(id));
-        model.addAttribute("profit", costAnalysisService.profitFor(project));
+        model.addAttribute("stonePlans", constructionSiteService.planViewsFor(id));
+        model.addAttribute("installations", constructionSiteService.installationViewsFor(id));
+        model.addAttribute("profit", costAnalysisService.profitFor(id));
         model.addAttribute("supplyRoutes", SupplyRoute.values());
         model.addAttribute("surfaceFinishes", SurfaceFinish.values());
-        model.addAttribute("siteStockItems", stockItemRepository.findByProjectId(id));
+        model.addAttribute("siteStockItems", formLookup.stockForProject(id));
         return "erp/projects/detail";
     }
 
@@ -220,17 +263,20 @@ public class ProjectController {
 
     @PostMapping("/{id}/installations")
     @PreAuthorize(Constants.PRE_AUTH_SITE_WRITE)
-    public String recordInstallation(@PathVariable("id") Long projectId,
-                                     @RequestParam("locationId") Long locationId,
-                                     @RequestParam(value = "materialLotId", required = false) Long materialLotId,
-                                     @RequestParam(value = "palletId", required = false) Long palletId,
-                                     @RequestParam("installedAreaM2") BigDecimal installedAreaM2,
-                                     @RequestParam(value = "wasteAreaM2", required = false) BigDecimal wasteAreaM2,
-                                     @RequestParam(value = "installedOn", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate installedOn,
-                                     @RequestParam(value = "crewName", required = false) String crewName,
-                                     @RequestParam(value = "notes", required = false) String notes,
-                                     Locale locale,
-                                     RedirectAttributes redirectAttributes) {
+    public String recordInstallation(
+            @PathVariable("id") Long projectId,
+            @RequestParam("locationId") Long locationId,
+            @RequestParam(value = "materialLotId", required = false) Long materialLotId,
+            @RequestParam(value = "palletId", required = false) Long palletId,
+            @RequestParam("installedAreaM2") BigDecimal installedAreaM2,
+            @RequestParam(value = "wasteAreaM2", required = false) BigDecimal wasteAreaM2,
+            @RequestParam(value = "installedOn", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate installedOn,
+            @RequestParam(value = "crewName", required = false) String crewName,
+            @RequestParam(value = "notes", required = false) String notes,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
         constructionSiteService.recordInstallation(projectId, locationId, materialLotId, palletId,
                 installedAreaM2, wasteAreaM2, installedOn, crewName, notes);
         redirectAttributes.addFlashAttribute("successMessage",

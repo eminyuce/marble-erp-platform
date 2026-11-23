@@ -1,36 +1,56 @@
 package com.ozerler.marble.service;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import jakarta.mail.internet.MimeMessage;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.EmailPlaceholderSample;
 import com.ozerler.marble.dto.EmailPreviewDto;
+import com.ozerler.marble.dto.EmailTemplateDto;
+import com.ozerler.marble.dto.email.BaseEmailModel;
+import com.ozerler.marble.dto.email.EmailTemplateCatalog;
 import com.ozerler.marble.exception.ResourceNotFoundException;
+import com.ozerler.marble.mapper.EmailTemplateMapper;
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.repository.EmailTemplateRepository;
 import com.ozerler.marble.util.GridPages;
 import com.ozerler.marble.util.Ints;
+import com.ozerler.marble.util.MessageUtils;
 import com.ozerler.marble.util.Strings;
-import jakarta.mail.internet.MimeMessage;
+import com.ozerler.marble.web.GridColumnFilterContext;
+import com.ozerler.marble.web.GridFilterCatalog;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.ozerler.marble.dto.email.BaseEmailModel;
-import com.ozerler.marble.dto.email.EmailTemplateCatalog;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Service managing corporate email templates, dynamic rendering engine,
@@ -43,19 +63,23 @@ public class EmailService {
 
     private static final Pattern PLACEHOLDER_TOKEN = Pattern.compile(
             "\\{\\{\\s*([A-Za-z0-9_]+)\\s*\\}\\}|\\$\\{\\s*([A-Za-z0-9_]+)\\s*\\}");
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int DEFAULT_SMTP_PORT = 587;
 
     private final EmailTemplateRepository templateRepository;
+    private final EmailTemplateMapper emailTemplateMapper;
     private final SettingService settingService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     @Transactional(readOnly = true)
@@ -109,13 +133,21 @@ public class EmailService {
             activeOnly = Boolean.TRUE;
         }
         int pageIndex = Math.max(0, page - 1);
-        int pageSize = size > 0 ? size : 20;
+        int pageSize;
+        if (size > 0) {
+            pageSize = size;
+        } else {
+            pageSize = DEFAULT_PAGE_SIZE;
+        }
         Sort order = Sort.by(Sort.Order.asc("category"), Sort.Order.asc("templateName"));
-        return templateRepository.searchTemplates(
-                categoryFilter,
-                activeOnly,
-                GridPages.normalizeSearch(search),
-                PageRequest.of(pageIndex, pageSize, order));
+        try (GridColumnFilterContext ignored =
+                     GridColumnFilterContext.open(GridFilterCatalog.aliases("email-templates-table"))) {
+            return templateRepository.searchTemplates(
+                    categoryFilter,
+                    activeOnly,
+                    GridPages.normalizeSearch(search),
+                    PageRequest.of(pageIndex, pageSize, order));
+        }
     }
 
     @Cacheable(value = "emailTemplates", key = "#key.trim().toUpperCase()")
@@ -165,10 +197,16 @@ public class EmailService {
         validateTemplateSyntax(subject);
         validateTemplateSyntax(bodyHtml);
 
+        String categoryValue;
+        if (StringUtils.isNotBlank(category)) {
+            categoryValue = category.trim();
+        } else {
+            categoryValue = "Genel";
+        }
         EmailTemplate template = EmailTemplate.builder()
                 .templateKey(cleanKey)
                 .templateName(templateName.trim())
-                .category(StringUtils.isNotBlank(category) ? category.trim() : "Genel")
+                .category(categoryValue)
                 .description(StringUtils.trimToNull(description))
                 .subject(subject.trim())
                 .bodyHtml(bodyHtml.trim())
@@ -263,14 +301,27 @@ public class EmailService {
 
         while (matcher.find()) {
             boolean isRaw = matcher.group(1) != null;
-            String key = isRaw ? matcher.group(2) : matcher.group(4) != null ? matcher.group(4) : matcher.group(6);
+            String key;
+            if (isRaw) {
+                key = matcher.group(2);
+            } else {
+                if (matcher.group(4) != null) {
+                    key = matcher.group(4);
+                } else {
+                    key = matcher.group(6);
+                }
+            }
             String value = Strings.resolveVariable(key, variables);
 
             if (value != null) {
                 replacedCount++;
                 String replacement;
                 if (isHtml) {
-                    replacement = isRaw ? value : escapeHtml(value);
+                    if (isRaw) {
+                        replacement = value;
+                    } else {
+                        replacement = escapeHtml(value);
+                    }
                 } else {
                     replacement = value.replace("\r", "").replace("\n", " ").trim();
                 }
@@ -385,7 +436,7 @@ public class EmailService {
     /**
      * Ordered placeholder keys declared on the template, plus any tokens found in subject/body.
      */
-    public List<String> placeholderKeys(EmailTemplate template) {
+    public List<String> placeholderKeys(EmailTemplateDto template) {
         LinkedHashSet<String> keys = new LinkedHashSet<>();
         if (template != null && StringUtils.isNotBlank(template.getPlaceholders())) {
             for (String part : template.getPlaceholders().split("[,;]+")) {
@@ -405,24 +456,27 @@ public class EmailService {
     /**
      * Sample values used to render the live preview, in the same order as {@link #placeholderKeys}.
      */
-    public List<EmailPlaceholderSample> placeholderSamples(EmailTemplate template) {
-        Map<String, String> samples = template != null
-                ? getSampleVariablesForTemplate(template.getTemplateKey())
-                : getDefaultSampleVariables();
+    public List<EmailPlaceholderSample> placeholderSamples(EmailTemplateDto template) {
+        Map<String, String> samples;
+        if (template != null) {
+            samples = getSampleVariablesForTemplate(template.getTemplateKey());
+        } else {
+            samples = getDefaultSampleVariables();
+        }
         List<EmailPlaceholderSample> result = new ArrayList<>();
         for (String key : placeholderKeys(template)) {
             String value = samples.get(key);
             result.add(EmailPlaceholderSample.builder()
                     .key(key)
                     .label(placeholderLabel(template, key))
-                    .sampleValue(value != null ? value : "—")
+                    .sampleValue(Objects.requireNonNullElse(value, "—"))
                     .known(value != null)
                     .build());
         }
         return result;
     }
 
-    private static String placeholderLabel(EmailTemplate template, String key) {
+    private static String placeholderLabel(EmailTemplateDto template, String key) {
         if (template == null || key == null) {
             return key;
         }
@@ -454,7 +508,12 @@ public class EmailService {
         }
         Matcher matcher = PLACEHOLDER_TOKEN.matcher(text);
         while (matcher.find()) {
-            String key = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+            String key;
+            if (matcher.group(1) != null) {
+                key = matcher.group(1);
+            } else {
+                key = matcher.group(2);
+            }
             if (StringUtils.isNotBlank(key)) {
                 keys.add(key);
             }
@@ -515,9 +574,16 @@ public class EmailService {
             return sendTemplatedEmail(testEmail, templateKey.trim(), sampleVars);
         } else {
             String defaultSubject = getMessage("admin.settings.email.test.subject");
-            String defaultHtml = "<h2 style='color:#0284c7;'>" + getMessage("admin.settings.email.test.heading") + "</h2>" +
-                    "<p>" + getMessage("admin.settings.email.test.body") + "</p>" +
-                    "<p style='color:#64748b; font-size:12px;'>" + getMessage("admin.settings.email.test.timestamp", LocalDateTime.now()) + "</p>";
+            String defaultHtml =
+                    "<h2 style='color:#0284c7;'>"
+                            + getMessage("admin.settings.email.test.heading")
+                            + "</h2>"
+                            + "<p>"
+                            + getMessage("admin.settings.email.test.body")
+                            + "</p>"
+                            + "<p style='color:#64748b; font-size:12px;'>"
+                            + getMessage("admin.settings.email.test.timestamp", LocalDateTime.now())
+                            + "</p>";
             return sendEmail(testEmail, defaultSubject, defaultHtml);
         }
     }
@@ -528,12 +594,26 @@ public class EmailService {
      */
     public JavaMailSender buildDynamicMailSender() {
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
-        String host = settingService.getSetting("smtp.host", settingService.getSetting("mail.smtp.host", "smtp.office365.com"));
-        int port = Ints.parseOrDefault(settingService.getSetting("smtp.port", settingService.getSetting("mail.smtp.port", "587")), 587);
-        String username = settingService.getSetting("smtp.username", settingService.getSetting("mail.smtp.username", ""));
-        String password = settingService.getSetting("smtp.password", settingService.getSetting("mail.smtp.password", ""));
+        String host =
+                settingService.getSetting(
+                        "smtp.host",
+                        settingService.getSetting("mail.smtp.host", "smtp.office365.com"));
+        int port =
+                Ints.parseOrDefault(
+                        settingService.getSetting(
+                                "smtp.port", settingService.getSetting("mail.smtp.port", "587")),
+                        DEFAULT_SMTP_PORT);
+        String username =
+                settingService.getSetting(
+                        "smtp.username", settingService.getSetting("mail.smtp.username", ""));
+        String password =
+                settingService.getSetting(
+                        "smtp.password", settingService.getSetting("mail.smtp.password", ""));
         String auth = settingService.getSetting("smtp.auth", settingService.getSetting("mail.smtp.auth", "true"));
-        String starttls = settingService.getSetting("smtp.starttls.enable", settingService.getSetting("mail.smtp.starttls", "true"));
+        String starttls =
+                settingService.getSetting(
+                        "smtp.starttls.enable",
+                        settingService.getSetting("mail.smtp.starttls", "true"));
 
         sender.setHost(host);
         sender.setPort(port);
@@ -555,7 +635,10 @@ public class EmailService {
      * Sends an HTML email with dynamic SMTP settings. Gracefully logs network/auth timeouts.
      */
     public boolean sendEmail(String to, String subject, String bodyHtml) {
-        String from = settingService.getSetting("smtp.from_address", settingService.getSetting("mail.smtp.from", "info@ozerlermermer.com"));
+        String from =
+                settingService.getSetting(
+                        "smtp.from_address",
+                        settingService.getSetting("mail.smtp.from", "info@ozerlermermer.com"));
         String senderName = settingService.getSetting("smtp.from_name", getMessage("system.health.app_name"));
 
         log.info("Sending email to: '{}', Subject: '{}'", to, subject);
@@ -563,7 +646,11 @@ public class EmailService {
         try {
             JavaMailSender dynamicSender = buildDynamicMailSender();
             MimeMessage message = dynamicSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, StandardCharsets.UTF_8.name());
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(
+                            message,
+                            MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                            StandardCharsets.UTF_8.name());
 
             helper.setFrom(from, senderName);
             helper.setTo(to);
@@ -610,5 +697,109 @@ public class EmailService {
             return false;
         }
         return sendTemplatedEmail(to, model.getTemplateKey(), model.toVariables());
+    }
+
+    /**
+     * Same as {@code getAllTemplates}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<EmailTemplateDto> getAllTemplateViews() {
+        return getAllTemplates().stream().map(emailTemplateMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getTemplatesByCategory}, copied into a view inside the transaction.
+     *
+     * @param category see {@code getTemplatesByCategory}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<EmailTemplateDto> getTemplateViewsByCategory(String category) {
+        return getTemplatesByCategory(category).stream().map(emailTemplateMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getTemplateById}, copied into a view inside the transaction.
+     *
+     * @param id see {@code getTemplateById}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public EmailTemplateDto getTemplate(Long id) {
+        return emailTemplateMapper.toDto(getTemplateById(id));
+    }
+
+    /**
+     * Same as {@code createTemplate}, copied into a view inside the transaction.
+     *
+     * @param templateKey see {@code createTemplate}
+     * @param templateName see {@code createTemplate}
+     * @param category see {@code createTemplate}
+     * @param description see {@code createTemplate}
+     * @param subject see {@code createTemplate}
+     * @param bodyHtml see {@code createTemplate}
+     * @param placeholders see {@code createTemplate}
+     * @param isActive see {@code createTemplate}
+     * @return the view
+     */
+    @CacheEvict(value = "emailTemplates", allEntries = true)
+    @Transactional
+    public EmailTemplateDto createTemplateView(
+            String templateKey,
+            String templateName,
+            String category,
+            String description,
+            String subject,
+            String bodyHtml,
+            String placeholders,
+            boolean isActive) {
+        return emailTemplateMapper.toDto(
+                createTemplate(
+                        templateKey,
+                        templateName,
+                        category,
+                        description,
+                        subject,
+                        bodyHtml,
+                        placeholders,
+                        isActive));
+    }
+
+    /**
+     * One page of templates copied into DTOs.
+     *
+     * @param page     one-based page
+     * @param size     page size
+     * @param category category filter, {@code ALL} or {@code ACTIVE}
+     * @param search   free-text filter
+     * @return the page of DTOs
+     */
+    @Transactional(readOnly = true)
+    public Page<EmailTemplateDto> getTemplateViewsPaged(int page, int size, String category,
+            String search) {
+        return getTemplatesPaged(page, size, category, search).map(emailTemplateMapper::toDto);
+    }
+
+    /**
+     * Same as the full {@code updateTemplate}, copied into a DTO inside the transaction.
+     *
+     * @param id           template id
+     * @param templateName name
+     * @param category     category
+     * @param description  description
+     * @param subject      subject
+     * @param bodyHtml     body
+     * @param placeholders placeholders
+     * @param isActive     active flag
+     * @return the DTO
+     */
+    @CacheEvict(value = "emailTemplates", allEntries = true)
+    @Transactional
+    public EmailTemplateDto updateTemplateView(Long id, String templateName, String category,
+            String description, String subject, String bodyHtml, String placeholders, boolean isActive) {
+        return emailTemplateMapper.toDto(updateTemplate(id, templateName, category, description, subject, bodyHtml,
+                placeholders, isActive));
     }
 }

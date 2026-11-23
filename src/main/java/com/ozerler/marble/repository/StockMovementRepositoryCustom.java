@@ -1,12 +1,13 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.StockMovement;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.StockMovementType;
+import java.time.LocalDateTime;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
+import com.ozerler.marble.model.StockMovement;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.StockMovementType;
 
 public interface StockMovementRepositoryCustom {
 

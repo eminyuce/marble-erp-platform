@@ -1,10 +1,11 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.Block;
-import com.ozerler.marble.model.enums.BlockStatus;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 
-import java.util.List;
+import com.ozerler.marble.dto.view.BlockView;
+import com.ozerler.marble.model.enums.BlockStatus;
 
 /**
  * Ocak blok listesi. Status filter already exists. Detail and dispatch stay as the two row links.
@@ -14,25 +15,43 @@ public final class OperationQuarryBlockGrid {
     private OperationQuarryBlockGrid() {
     }
 
-    public static DataGridView view(Page<Block> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<BlockView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "quarry-blocks-table", columns(), OperationQuarryBlockGrid::row);
     }
 
-    static GridRow row(Block block) {
+    static GridRow row(BlockView block) {
         String viewUrl = "/blocks/" + block.getId();
         String dispatchUrl = "/operations/quarry/" + block.getId() + "/dispatch";
-        String quarry = block.getQuarry() == null ? "" : OperationGridSupport.named(block.getQuarry().getName(), "");
+        String quarry;
+        if (block.getQuarry() == null) {
+            quarry = "";
+        } else {
+            quarry = OperationGridSupport.named(block.getQuarry().getName(), "");
+        }
         String section = block.getQuarrySection();
         if (quarry.isBlank()) {
-            quarry = section == null ? "" : section;
+            if (section == null) {
+                quarry = "";
+            } else {
+                quarry = section;
+            }
             section = "";
         }
-        String actual = block.getActualTonnage() == null
-                ? "Kantar Gir"
-                : OperationGridSupport.amount(block.getActualTonnage(), "ton");
+        String actual;
+        if (block.getActualTonnage() == null) {
+            actual = "Kantar Gir";
+        } else {
+            actual = OperationGridSupport.amount(block.getActualTonnage(), "ton");
+        }
+        String badge;
+        if (block.getStatus() == null) {
+            badge = "";
+        } else {
+            badge = block.getStatus().getDisplayName();
+        }
         return GridRow.of(viewUrl, dispatchUrl, null, null, List.of(
-                GridCell.badge(block.getStatus() == null ? "" : block.getStatus().getDisplayName()),
+                GridCell.badge(badge),
                 GridCell.chip(block.getId()),
                 GridCell.link(block.getBlockCode(), viewUrl),
                 OperationGridSupport.lines(quarry, section),
@@ -45,15 +64,15 @@ public final class OperationQuarryBlockGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", false, 160, "status",
+                GridColumn.filtered("status", "Durum", false, GridWidth.PX_160, "status",
                         OperationGridSupport.choices(BlockStatus.values(), BlockStatus::getDisplayName)),
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("blockCode", "Blok No", false, 160),
-                GridColumn.text("quarryName", "Ocak & Lokasyon", false, 180),
-                GridColumn.text("stoneType", "Taş Türü", false, 140),
-                GridColumn.text("dimensions", "Ölçüler", false, 140),
-                GridColumn.text("approximateTonnage", "Tahmini Tonaj", false, 140),
-                GridColumn.text("actualTonnage", "Gerçek Tonaj", false, 140)
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("blockCode", "Blok No", false, GridWidth.PX_160),
+                GridColumn.text("quarryName", "Ocak & Lokasyon", false, GridWidth.PX_180),
+                GridColumn.text("stoneType", "Taş Türü", false, GridWidth.PX_140),
+                GridColumn.text("dimensions", "Ölçüler", false, GridWidth.PX_140),
+                GridColumn.text("approximateTonnage", "Tahmini Tonaj", false, GridWidth.PX_140),
+                GridColumn.text("actualTonnage", "Gerçek Tonaj", false, GridWidth.PX_140)
         );
     }
 }

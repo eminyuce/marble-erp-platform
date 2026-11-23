@@ -1,17 +1,20 @@
 package com.ozerler.marble.dto;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Request DTO for creating a new user account.
@@ -60,8 +63,8 @@ public class UserCreateRequest {
     @JsonAlias("roles")
     private Set<String> roles = new HashSet<>();
 
-    private java.time.LocalDateTime createdDate;
-    private java.time.LocalDateTime updatedDate;
+    private LocalDateTime createdDate;
+    private LocalDateTime updatedDate;
     private Long addUserId;
     private Long updateUserId;
 }

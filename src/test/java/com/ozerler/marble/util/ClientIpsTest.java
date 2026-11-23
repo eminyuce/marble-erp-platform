@@ -1,10 +1,9 @@
 package com.ozerler.marble.util;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class ClientIpsTest {
 
@@ -16,7 +15,7 @@ class ClientIpsTest {
         request.addHeader("X-Real-IP", "198.51.100.20");
         request.setRemoteAddr("127.0.0.1");
 
-        assertThat(ClientIps.from(request)).isEqualTo("203.0.113.10");
+        Assertions.assertThat(ClientIps.from(request)).isEqualTo("203.0.113.10");
     }
 
     @Test
@@ -27,7 +26,7 @@ class ClientIpsTest {
         request.addHeader("X-Real-IP", "198.51.100.20");
         request.setRemoteAddr("127.0.0.1");
 
-        assertThat(ClientIps.from(request)).isEqualTo("198.51.100.20");
+        Assertions.assertThat(ClientIps.from(request)).isEqualTo("198.51.100.20");
     }
 
     @Test
@@ -36,12 +35,12 @@ class ClientIpsTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRemoteAddr("127.0.0.1");
 
-        assertThat(ClientIps.from(request)).isEqualTo("127.0.0.1");
+        Assertions.assertThat(ClientIps.from(request)).isEqualTo("127.0.0.1");
     }
 
     @Test
     @DisplayName("returns empty string for a null request")
     void nullRequest() {
-        assertThat(ClientIps.from(null)).isEmpty();
+        Assertions.assertThat(ClientIps.from(null)).isEmpty();
     }
 }

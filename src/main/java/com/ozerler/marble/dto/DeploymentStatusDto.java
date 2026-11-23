@@ -1,57 +1,58 @@
 package com.ozerler.marble.dto;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.List;
 
 @Value
 @Builder
 public class DeploymentStatusDto {
 
     @JsonProperty("state")
-    DeploymentState state;
+    private DeploymentState state;
 
     @JsonProperty("canStart")
-    boolean canStart;
+    private boolean canStart;
 
     @JsonProperty("linuxHost")
-    boolean linuxHost;
+    private boolean linuxHost;
 
     @JsonProperty("enabled")
-    boolean enabled;
+    private boolean enabled;
 
     @JsonProperty("commandAvailable")
-    boolean commandAvailable;
+    private boolean commandAvailable;
 
     @JsonProperty("sudoReady")
-    boolean sudoReady;
+    private boolean sudoReady;
 
     @JsonProperty("branch")
-    String branch;
+    private String branch;
 
     @JsonProperty("headCommit")
-    String headCommit;
+    private String headCommit;
 
     @JsonProperty("headMessage")
-    String headMessage;
+    private String headMessage;
 
     @JsonProperty("imageRepository")
-    String imageRepository;
+    private String imageRepository;
 
     @JsonProperty("imageTag")
-    String imageTag;
+    private String imageTag;
 
     @JsonProperty("startedAt")
-    String startedAt;
+    private String startedAt;
 
     @JsonProperty("finishedAt")
-    String finishedAt;
+    private String finishedAt;
 
     @JsonProperty("message")
-    String message;
+    private String message;
 
     @JsonProperty("blockingReasons")
-    List<String> blockingReasons;
+    private List<String> blockingReasons;
 }

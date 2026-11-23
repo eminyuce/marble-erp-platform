@@ -1,32 +1,31 @@
 package com.ozerler.marble.util;
 
-import org.junit.jupiter.api.Test;
-
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 class StringsTest {
 
     @Test
     void lowerTurkishHandlesNullAndDottedI() {
-        assertThat(Strings.lowerTurkish(null)).isEmpty();
-        assertThat(Strings.lowerTurkish("İMALAT")).isEqualTo("imalat");
+        Assertions.assertThat(Strings.lowerTurkish(null)).isEmpty();
+        Assertions.assertThat(Strings.lowerTurkish("İMALAT")).isEqualTo("imalat");
     }
 
     @Test
     void joinDistinctSkipsBlanksAndDuplicates() {
-        assertThat(Strings.joinDistinct(" · ", "PRJ-1", "Villa")).isEqualTo("PRJ-1 · Villa");
-        assertThat(Strings.joinDistinct(" · ", "PRJ-1", "PRJ-1")).isEqualTo("PRJ-1");
-        assertThat(Strings.joinDistinct(" · ", null, "Villa")).isEqualTo("Villa");
-        assertThat(Strings.joinDistinct(" · ", "PRJ-1", "  ")).isEqualTo("PRJ-1");
+        Assertions.assertThat(Strings.joinDistinct(" · ", "PRJ-1", "Villa")).isEqualTo("PRJ-1 · Villa");
+        Assertions.assertThat(Strings.joinDistinct(" · ", "PRJ-1", "PRJ-1")).isEqualTo("PRJ-1");
+        Assertions.assertThat(Strings.joinDistinct(" · ", null, "Villa")).isEqualTo("Villa");
+        Assertions.assertThat(Strings.joinDistinct(" · ", "PRJ-1", "  ")).isEqualTo("PRJ-1");
     }
 
     @Test
     void replacePlaceholdersSubstitutesTokens() {
-        assertThat(Strings.replacePlaceholders("Merhaba {{name}}", Map.of("name", "Emin")))
+        Assertions.assertThat(Strings.replacePlaceholders("Merhaba {{name}}", Map.of("name", "Emin")))
                 .isEqualTo("Merhaba Emin");
-        assertThat(Strings.replacePlaceholders(null, Map.of("name", "Emin"))).isEmpty();
-        assertThat(Strings.replacePlaceholders("Sabit", null)).isEqualTo("Sabit");
+        Assertions.assertThat(Strings.replacePlaceholders(null, Map.of("name", "Emin"))).isEmpty();
+        Assertions.assertThat(Strings.replacePlaceholders("Sabit", null)).isEqualTo("Sabit");
     }
 }

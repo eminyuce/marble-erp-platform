@@ -1,6 +1,7 @@
 package com.ozerler.marble.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Value;
 
@@ -9,11 +10,11 @@ import lombok.Value;
 public class DeploymentStartResult {
 
     @JsonProperty("accepted")
-    boolean accepted;
+    private boolean accepted;
 
     @JsonProperty("state")
-    DeploymentState state;
+    private DeploymentState state;
 
     @JsonProperty("message")
-    String message;
+    private String message;
 }

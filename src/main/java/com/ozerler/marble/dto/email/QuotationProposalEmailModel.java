@@ -1,11 +1,12 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Model for 'QUOTATION_PROPOSAL' email template.
@@ -39,18 +40,18 @@ public class QuotationProposalEmailModel implements BaseEmailModel {
     @Override
     public Map<String, String> toVariables() {
         Map<String, String> vars = new LinkedHashMap<>();
-        vars.put("customerName", customerName != null ? customerName : "");
-        vars.put("quotationNumber", quotationNumber != null ? quotationNumber : "");
-        vars.put("validUntilDate", validUntilDate != null ? validUntilDate : "");
-        vars.put("projectReference", projectReference != null ? projectReference : "");
-        vars.put("itemsSummary", itemsSummary != null ? itemsSummary : "");
-        vars.put("totalPrice", totalPrice != null ? totalPrice : "0.00");
-        vars.put("currency", currency != null ? currency : "USD");
-        vars.put("paymentTerms", paymentTerms != null ? paymentTerms : "%50 Peşin, %50 Yükleme Öncesi");
-        vars.put("salesEngineerName", salesEngineerName != null ? salesEngineerName : "");
-        vars.put("salesEngineerPhone", salesEngineerPhone != null ? salesEngineerPhone : "");
-        vars.put("portalLink", portalLink != null ? portalLink : "#");
-        vars.put("companyName", companyName != null ? companyName : "Özerler Mermer A.Ş.");
+        vars.put("customerName", Objects.requireNonNullElse(customerName, ""));
+        vars.put("quotationNumber", Objects.requireNonNullElse(quotationNumber, ""));
+        vars.put("validUntilDate", Objects.requireNonNullElse(validUntilDate, ""));
+        vars.put("projectReference", Objects.requireNonNullElse(projectReference, ""));
+        vars.put("itemsSummary", Objects.requireNonNullElse(itemsSummary, ""));
+        vars.put("totalPrice", Objects.requireNonNullElse(totalPrice, "0.00"));
+        vars.put("currency", Objects.requireNonNullElse(currency, "USD"));
+        vars.put("paymentTerms", Objects.requireNonNullElse(paymentTerms, "%50 Peşin, %50 Yükleme Öncesi"));
+        vars.put("salesEngineerName", Objects.requireNonNullElse(salesEngineerName, ""));
+        vars.put("salesEngineerPhone", Objects.requireNonNullElse(salesEngineerPhone, ""));
+        vars.put("portalLink", Objects.requireNonNullElse(portalLink, "#"));
+        vars.put("companyName", Objects.requireNonNullElse(companyName, "Özerler Mermer A.Ş."));
         return vars;
     }
 

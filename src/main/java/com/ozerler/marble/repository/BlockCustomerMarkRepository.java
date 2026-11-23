@@ -1,13 +1,14 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.BlockCustomerMark;
-import com.ozerler.marble.model.enums.BlockMarkStatus;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.model.BlockCustomerMark;
+import com.ozerler.marble.model.enums.BlockMarkStatus;
 
 @Repository
 public interface BlockCustomerMarkRepository extends JpaRepository<BlockCustomerMark, Long> {

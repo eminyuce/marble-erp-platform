@@ -1,11 +1,12 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.common.Constants;
-import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import com.ozerler.marble.common.Constants;
 
 @Service
 public class PricingService {
@@ -47,10 +48,26 @@ public class PricingService {
     /**
      * Strongly typed domain simulation method adhering to clean code immutability
      */
-    public PriceSimulationResult calculateSimulation(BigDecimal unitCost, BigDecimal targetMarginPct, BigDecimal discountPct) {
-        BigDecimal cost = unitCost != null ? unitCost : Constants.DEFAULT_STANDARD_COST_PER_M2;
-        BigDecimal margin = targetMarginPct != null ? targetMarginPct : Constants.DEFAULT_TARGET_MARGIN_PCT;
-        BigDecimal discount = discountPct != null ? discountPct : BigDecimal.ZERO;
+    public PriceSimulationResult calculateSimulation(
+            BigDecimal unitCost, BigDecimal targetMarginPct, BigDecimal discountPct) {
+        BigDecimal cost;
+        if (unitCost != null) {
+            cost = unitCost;
+        } else {
+            cost = Constants.DEFAULT_STANDARD_COST_PER_M2;
+        }
+        BigDecimal margin;
+        if (targetMarginPct != null) {
+            margin = targetMarginPct;
+        } else {
+            margin = Constants.DEFAULT_TARGET_MARGIN_PCT;
+        }
+        BigDecimal discount;
+        if (discountPct != null) {
+            discount = discountPct;
+        } else {
+            discount = BigDecimal.ZERO;
+        }
 
         BigDecimal basePrice = calculateBasePrice(cost, margin);
         BigDecimal netPrice = calculateDiscountedPrice(basePrice, discount);
@@ -71,7 +88,11 @@ public class PricingService {
     }
 
     private BigDecimal calculateBasePrice(BigDecimal cost, BigDecimal targetMarginPct) {
-        BigDecimal marginFraction = targetMarginPct.divide(Constants.PERCENT_DIVISOR, Constants.CALCULATION_SCALE, RoundingMode.HALF_UP);
+        BigDecimal marginFraction =
+                targetMarginPct.divide(
+                        Constants.PERCENT_DIVISOR,
+                        Constants.CALCULATION_SCALE,
+                        RoundingMode.HALF_UP);
         BigDecimal divisor = BigDecimal.ONE.subtract(marginFraction);
         if (divisor.compareTo(BigDecimal.ZERO) <= 0) {
             return cost;
@@ -80,8 +101,14 @@ public class PricingService {
     }
 
     private BigDecimal calculateDiscountedPrice(BigDecimal basePrice, BigDecimal discountPct) {
-        BigDecimal discountFraction = discountPct.divide(Constants.PERCENT_DIVISOR, Constants.CALCULATION_SCALE, RoundingMode.HALF_UP);
-        return basePrice.multiply(BigDecimal.ONE.subtract(discountFraction)).setScale(Constants.CURRENCY_SCALE, RoundingMode.HALF_UP);
+        BigDecimal discountFraction =
+                discountPct.divide(
+                        Constants.PERCENT_DIVISOR,
+                        Constants.CALCULATION_SCALE,
+                        RoundingMode.HALF_UP);
+        return basePrice
+                .multiply(BigDecimal.ONE.subtract(discountFraction))
+                .setScale(Constants.CURRENCY_SCALE, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateResultingMargin(BigDecimal netPrice, BigDecimal grossProfit) {

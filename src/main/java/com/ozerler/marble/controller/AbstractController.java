@@ -1,12 +1,15 @@
 package com.ozerler.marble.controller;
 
+import java.util.Objects;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 /**
  * Base abstract controller providing standardized BackEndResponse builders
@@ -27,7 +30,7 @@ public abstract class AbstractController {
         }
         serviceStatus.setHttpStatus(HttpStatus.BAD_REQUEST);
         status.setMessage("A serious error occurred in " + action);
-        status.setErrorCode(code != null ? code : Constants.ERR_FATAL);
+        status.setErrorCode(Objects.requireNonNullElse(code, Constants.ERR_FATAL));
         status.addError("Request failed");
         serviceStatus.setStatus(status);
         ber.setServiceStatus(serviceStatus);
@@ -45,9 +48,9 @@ public abstract class AbstractController {
         if (status == null) {
             status = new Status();
         }
-        serviceStatus.setHttpStatus(httpStatus != null ? httpStatus : HttpStatus.BAD_REQUEST);
+        serviceStatus.setHttpStatus(Objects.requireNonNullElse(httpStatus, HttpStatus.BAD_REQUEST));
         status.setMessage("A serious error occurred in " + action);
-        status.setErrorCode(code != null ? code : Constants.ERR_BAD_REQUEST);
+        status.setErrorCode(Objects.requireNonNullElse(code, Constants.ERR_BAD_REQUEST));
         status.addError("Request failed");
         serviceStatus.setStatus(status);
         ber.setServiceStatus(serviceStatus);
@@ -66,7 +69,7 @@ public abstract class AbstractController {
             status = new Status();
         }
         status.setErrorCode(Constants.NO_ERR);
-        status.setMessage(message != null ? message : "Operation successful");
+        status.setMessage(Objects.requireNonNullElse(message, "Operation successful"));
         serviceStatus.setHttpStatus(HttpStatus.OK);
         serviceStatus.setStatus(status);
 

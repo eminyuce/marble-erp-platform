@@ -1,10 +1,25 @@
 package com.ozerler.marble.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "machine_fuel_entries")
@@ -53,7 +68,7 @@ public class MachineFuelEntry extends AuditableEntity {
 
     public void calculateTotal() {
         if (litres != null && pricePerLitre != null) {
-            this.totalAmount = litres.multiply(pricePerLitre).setScale(2, java.math.RoundingMode.HALF_UP);
+            this.totalAmount = litres.multiply(pricePerLitre).setScale(2, RoundingMode.HALF_UP);
         }
     }
 }

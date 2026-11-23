@@ -1,11 +1,12 @@
 package com.ozerler.marble.exception;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.springframework.http.HttpStatus;
-
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
+
+import org.springframework.http.HttpStatus;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ErrorResponse(
@@ -22,7 +23,11 @@ public record ErrorResponse(
         Objects.requireNonNull(error, "error");
         Objects.requireNonNull(message, "message");
         Objects.requireNonNull(path, "path");
-        errors = (errors == null || errors.isEmpty()) ? null : Map.copyOf(errors);
+        if (errors == null || errors.isEmpty()) {
+            errors = null;
+        } else {
+            errors = Map.copyOf(errors);
+        }
     }
 
     public static ErrorResponse of(HttpStatus httpStatus, String message, String path) {

@@ -1,9 +1,15 @@
 package com.ozerler.marble.validation;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import com.ozerler.marble.exception.FileValidationException;
-import com.ozerler.marble.util.Filenames;
-import lombok.RequiredArgsConstructor;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.UnsupportedFileFormatException;
 import org.apache.poi.ooxml.POIXMLException;
@@ -14,18 +20,20 @@ import org.apache.tika.mime.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.exception.FileValidationException;
+import com.ozerler.marble.util.Filenames;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class FileUploadValidator {
+
+    /**
+     * How many leading bytes are enough for Tika's magic-byte detector.
+     */
+    public static final int MEDIA_TYPE_PREFIX_BYTES = 64 * 1024;
 
     static final Set<String> ALLOWED_IMAGE_EXTENSIONS = Set.of(
             "jpg", "jpeg", "png", "webp", "gif", "bmp", "svg"
@@ -35,12 +43,11 @@ public class FileUploadValidator {
             "pdf", "docx", "doc", "txt", "md", "xlsx", "xls", "csv"
     );
 
-    /**
-     * How many leading bytes are enough for Tika's magic-byte detector.
-     */
-    public static final int MEDIA_TYPE_PREFIX_BYTES = 64 * 1024;
-
     private static final Set<String> ALLOWED_EXTENSIONS;
+    private static final int WEBP_HEADER_LENGTH = 12;
+    private static final byte[] JPEG_MAGIC = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF};
+    private static final byte[] PNG_MAGIC = {(byte) 0x89, 0x50, 0x4E, 0x47};
+    private static final byte[] ZIP_MAGIC = {0x50, 0x4B};
 
     static {
         Set<String> extensions = new HashSet<>();
@@ -104,9 +111,12 @@ public class FileUploadValidator {
         }
 
         String rawExtension = Filenames.extension(originalFilename);
-        String cleanExtension = rawExtension.startsWith(".")
-                ? rawExtension.substring(1).toLowerCase(Locale.ROOT)
-                : rawExtension.toLowerCase(Locale.ROOT);
+        String cleanExtension;
+        if (rawExtension.startsWith(".")) {
+            cleanExtension = rawExtension.substring(1).toLowerCase(Locale.ROOT);
+        } else {
+            cleanExtension = rawExtension.toLowerCase(Locale.ROOT);
+        }
         if (!ALLOWED_EXTENSIONS.contains(cleanExtension)) {
             throw new FileValidationException("Unsupported file type: " + cleanExtension);
         }
@@ -134,10 +144,18 @@ public class FileUploadValidator {
     }
 
     public static String detectMimeType(String filename, byte[] content) {
-        byte[] prefix = content == null ? new byte[0] : content;
-        String detected = filename == null || filename.isBlank()
-                ? TIKA.detect(prefix)
-                : TIKA.detect(prefix, filename);
+        byte[] prefix;
+        if (content == null) {
+            prefix = new byte[0];
+        } else {
+            prefix = content;
+        }
+        String detected;
+        if (filename == null || filename.isBlank()) {
+            detected = TIKA.detect(prefix);
+        } else {
+            detected = TIKA.detect(prefix, filename);
+        }
         return MediaType.parse(detected).getBaseType().toString();
     }
 
@@ -161,21 +179,21 @@ public class FileUploadValidator {
             throw new FileValidationException("Cannot save empty file");
         }
         switch (extension) {
-            case "jpg", "jpeg" -> requireMagic(header, new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF}, "JPEG");
-            case "png" -> requireMagic(header, new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47}, "PNG");
+            case "jpg", "jpeg" -> requireMagic(header, JPEG_MAGIC, "JPEG");
+            case "png" -> requireMagic(header, PNG_MAGIC, "PNG");
             case "gif" -> requireAsciiPrefix(header, "GIF8", "GIF");
             case "bmp" -> requireAsciiPrefix(header, "BM", "BMP");
             case "webp" -> {
                 requireAsciiPrefix(header, "RIFF", "WEBP");
-                if (header.length >= 12) {
-                    String webp = new String(header, 8, 4, java.nio.charset.StandardCharsets.US_ASCII);
+                if (header.length >= WEBP_HEADER_LENGTH) {
+                    String webp = new String(header, 8, 4, StandardCharsets.US_ASCII);
                     if (!"WEBP".equals(webp)) {
                         throw new FileValidationException("File content does not match the WEBP type");
                     }
                 }
             }
             case "pdf" -> requireAsciiPrefix(header, "%PDF", "PDF");
-            case "docx", "xlsx" -> requireMagic(header, new byte[]{0x50, 0x4B}, "Office Open XML");
+            case "docx", "xlsx" -> requireMagic(header, ZIP_MAGIC, "Office Open XML");
             case "svg", "txt", "md", "csv", "doc", "xls" -> {
                 // SVG is checked by SvgContentValidator. Text and legacy OLE
                 // documents have no short magic header beyond Tika's detection.
@@ -229,7 +247,7 @@ public class FileUploadValidator {
         if (header.length < prefix.length()) {
             throw new FileValidationException("File content does not match the " + type + " type");
         }
-        String actual = new String(header, 0, prefix.length(), java.nio.charset.StandardCharsets.US_ASCII);
+        String actual = new String(header, 0, prefix.length(), StandardCharsets.US_ASCII);
         if (!prefix.equals(actual)) {
             throw new FileValidationException("File content does not match the " + type + " type");
         }

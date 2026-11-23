@@ -1,8 +1,9 @@
 package com.ozerler.marble.config;
 
-import com.ozerler.marble.util.Ints;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
+
+import com.ozerler.marble.util.Ints;
 
 /**
  * Converts Tabulator query parameters such as {@code page=undefined} into

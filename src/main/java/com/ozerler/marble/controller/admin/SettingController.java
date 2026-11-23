@@ -1,19 +1,12 @@
 package com.ozerler.marble.controller.admin;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.dto.EmailPlaceholderSample;
-import com.ozerler.marble.dto.EmailPreviewDto;
-import com.ozerler.marble.exception.ResourceNotFoundException;
-import com.ozerler.marble.model.EmailTemplate;
-import com.ozerler.marble.model.response.BackEndResponse;
-import com.ozerler.marble.model.response.ServiceStatus;
-import com.ozerler.marble.model.response.Status;
-import com.ozerler.marble.service.EmailService;
-import com.ozerler.marble.service.NoticeDismissDuration;
-import com.ozerler.marble.service.SettingService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,15 +14,30 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.servlet.http.HttpServletRequest;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.dto.EmailPlaceholderSample;
+import com.ozerler.marble.dto.EmailPreviewDto;
+import com.ozerler.marble.dto.EmailTemplateDto;
+import com.ozerler.marble.exception.ResourceNotFoundException;
+import com.ozerler.marble.model.response.BackEndResponse;
+import com.ozerler.marble.model.response.ServiceStatus;
+import com.ozerler.marble.model.response.Status;
+import com.ozerler.marble.service.DatabaseBackupService;
+import com.ozerler.marble.service.EmailService;
+import com.ozerler.marble.service.NoticeDismissDuration;
+import com.ozerler.marble.service.SettingService;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/admin/settings")
@@ -41,12 +49,12 @@ public class SettingController extends AbstractController {
     private final SettingService settingService;
     private final EmailService emailService;
     private final MessageSource messageSource;
-    private final com.ozerler.marble.service.DatabaseBackupService backupService;
+    private final DatabaseBackupService backupService;
 
     @GetMapping
     public String index(Model model, HttpServletRequest request) {
         Map<String, String> settings = settingService.getAllSettingsAsMap();
-        List<EmailTemplate> templates = emailService.getAllTemplates();
+        List<EmailTemplateDto> templates = emailService.getAllTemplateViews();
 
         model.addAttribute("settings", settings);
         model.addAttribute("templates", templates);
@@ -84,9 +92,14 @@ public class SettingController extends AbstractController {
         if (toUpdate.containsKey(NoticeDismissDuration.SETTING_KEY)) {
             String duration = toUpdate.get(NoticeDismissDuration.SETTING_KEY);
             if (!NoticeDismissDuration.isAcceptable(duration)) {
-                redirectAttributes.addFlashAttribute("errorMessage",
-                        messageSource.getMessage("admin.settings.notice.duration.invalid",
-                                new Object[]{NoticeDismissDuration.MINIMUM_SECONDS, NoticeDismissDuration.MAXIMUM_SECONDS},
+                redirectAttributes.addFlashAttribute(
+                        "errorMessage",
+                        messageSource.getMessage(
+                                "admin.settings.notice.duration.invalid",
+                                new Object[] {
+                                    NoticeDismissDuration.MINIMUM_SECONDS,
+                                    NoticeDismissDuration.MAXIMUM_SECONDS
+                                },
                                 locale));
                 redirectAttributes.addFlashAttribute("invalidFields", List.of(NoticeDismissDuration.SETTING_KEY));
                 return "redirect:/admin/settings";
@@ -125,7 +138,7 @@ public class SettingController extends AbstractController {
 
     @GetMapping("/templates/{id}/edit")
     public String editTemplate(@PathVariable("id") Long id, Locale locale, Model model) {
-        EmailTemplate template = emailService.getTemplateById(id);
+        EmailTemplateDto template = emailService.getTemplate(id);
         model.addAttribute("template", template);
         model.addAttribute("pageTitle", messageSource.getMessage("admin.settings.template.title.edit", null, locale));
         return "admin/settings/template-form";
@@ -133,11 +146,11 @@ public class SettingController extends AbstractController {
 
     @GetMapping("/templates/{id}/preview")
     public String previewTemplatePage(@PathVariable("id") Long id, Model model) {
-        EmailTemplate template = emailService.getTemplateById(id);
+        EmailTemplateDto template = emailService.getTemplate(id);
         EmailPreviewDto preview = emailService.previewTemplate(template.getTemplateKey())
                 .orElseThrow(() -> new ResourceNotFoundException("EmailTemplate", id));
         List<EmailPlaceholderSample> samples = emailService.placeholderSamples(template);
-        List<EmailTemplate> templates = emailService.getAllTemplates();
+        List<EmailTemplateDto> templates = emailService.getAllTemplateViews();
 
         model.addAttribute("template", template);
         model.addAttribute("preview", preview);
@@ -183,7 +196,8 @@ public class SettingController extends AbstractController {
             var previewOpt = emailService.previewTemplate(templateKey);
             if (previewOpt.isPresent()) {
                 HttpHeaders responseHeaders = new HttpHeaders();
-                ResponseEntity<EmailPreviewDto> resp = new ResponseEntity<>(previewOpt.get(), responseHeaders, HttpStatus.OK);
+                ResponseEntity<EmailPreviewDto> resp =
+                        new ResponseEntity<>(previewOpt.get(), responseHeaders, HttpStatus.OK);
                 ber.setResponse(resp);
                 serviceStatus.setHttpStatus(HttpStatus.OK);
                 status.setMessage("Preview template successful");

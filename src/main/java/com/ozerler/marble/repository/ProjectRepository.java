@@ -1,7 +1,9 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.Project;
-import com.ozerler.marble.model.enums.ProjectStatus;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,9 +11,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.enums.ProjectStatus;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
@@ -28,25 +30,27 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     long countByCustomerId(Long customerId);
 
-    @Query("SELECT p FROM Project p WHERE " +
-            "(:customerId IS NULL OR (p.customer IS NOT NULL AND p.customer.id = :customerId)) AND " +
-            "(:status IS NULL OR p.status = :status) AND " +
-            "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query(value = "SELECT p FROM Project p WHERE "
+            + "(:customerId IS NULL OR (p.customer IS NOT NULL AND p.customer.id = :customerId)) AND "
+            + "(:status IS NULL OR p.status = :status) AND "
+            + "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Project> searchProjectsFiltered(@Param("search") String search,
                                          @Param("status") ProjectStatus status,
                                          @Param("customerId") Long customerId,
                                          Pageable pageable);
 
-    @Query("SELECT p FROM Project p WHERE " +
-            "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query(value = "SELECT p FROM Project p WHERE "
+            + "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Project> searchProjects(@Param("search") String search, Pageable pageable);
 
-    @Query("SELECT p FROM Project p WHERE LOWER(p.projectCode) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @Query("SELECT p FROM Project p WHERE LOWER(p.projectCode) LIKE LOWER(CONCAT('%', :query, '%')) "
+            + "OR LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Project> searchByCodeOrName(@Param("query") String query, Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(p.contractValue), 0) FROM Project p")

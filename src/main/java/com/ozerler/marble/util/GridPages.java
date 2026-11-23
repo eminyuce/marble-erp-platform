@@ -1,6 +1,8 @@
 package com.ozerler.marble.util;
 
-import com.ozerler.marble.common.Constants;
+import java.util.Map;
+import java.util.function.Function;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.data.domain.Page;
@@ -8,8 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import java.util.Map;
-import java.util.function.Function;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.web.GridColumnFilterContext;
 
 /**
  * Builds Tabulator remote-pagination {@link Pageable} values, maps grid column
@@ -215,7 +217,10 @@ public final class GridPages {
     }
 
     public static String normalizeSearch(String search) {
-        return Strings.isPresent(search) ? search.trim() : null;
+        if (Strings.isPresent(search)) {
+            return search.trim();
+        }
+        return null;
     }
 
     public static Pageable of(int page, int size, String sortField, String sortDir) {
@@ -233,7 +238,12 @@ public final class GridPages {
     public static Pageable of(int page, int size, String sortField, String sortDir,
                               String defaultProperty, Map<String, String> sortAliases) {
         int pageIndex = Math.max(0, page - 1);
-        int pageSize = size > 0 ? size : Constants.DEFAULT_PAGE_SIZE;
+        int pageSize;
+        if (size > 0) {
+            pageSize = size;
+        } else {
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
+        }
         return PageRequest.of(pageIndex, pageSize, sort(sortField, sortDir, defaultProperty, sortAliases));
     }
 
@@ -242,9 +252,19 @@ public final class GridPages {
     }
 
     public static Sort sort(String sortField, String sortDir, String defaultProperty, Map<String, String> sortAliases) {
-        String fallback = Strings.isPresent(defaultProperty) ? defaultProperty : DEFAULT_SORT_PROPERTY;
+        String fallback;
+        if (Strings.isPresent(defaultProperty)) {
+            fallback = defaultProperty;
+        } else {
+            fallback = DEFAULT_SORT_PROPERTY;
+        }
         String property = resolveSortProperty(sortField, fallback, sortAliases);
-        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort.Direction direction;
+        if ("asc".equalsIgnoreCase(sortDir)) {
+            direction = Sort.Direction.ASC;
+        } else {
+            direction = Sort.Direction.DESC;
+        }
         return Sort.by(direction, property);
     }
 
@@ -256,7 +276,9 @@ public final class GridPages {
     public static <T> Page<T> execute(int page, int size, String sortField, String sortDir,
                                       Map<String, String> sortAliases,
                                       Function<Pageable, Page<T>> query) {
-        return execute(of(page, size, sortField, sortDir, sortAliases), query);
+        try (GridColumnFilterContext ignored = GridColumnFilterContext.open(sortAliases)) {
+            return execute(of(page, size, sortField, sortDir, sortAliases), query);
+        }
     }
 
     public static <T> Page<T> execute(Pageable pageable, Function<Pageable, Page<T>> query) {
@@ -295,7 +317,10 @@ public final class GridPages {
             return aliased;
         }
         String common = COMMON_SORT_ALIASES.get(requested);
-        return Strings.isPresent(common) ? common : requested;
+        if (Strings.isPresent(common)) {
+            return common;
+        }
+        return requested;
     }
 
     private static String lookupAlias(String camelized, String original, Map<String, String> sortAliases) {

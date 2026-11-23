@@ -1,6 +1,8 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.CariTransaction;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,13 +10,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.model.CariTransaction;
 
 @Repository
 public interface CariTransactionRepository extends JpaRepository<CariTransaction, Long> {
 
-    List<CariTransaction> findByCustomerIdOrderByTransactionDateAscIdAsc(Long customerId);
+    @Query("SELECT t FROM CariTransaction t JOIN FETCH t.customer "
+            + "WHERE t.customer.id = :customerId ORDER BY t.transactionDate ASC, t.id ASC")
+    List<CariTransaction> findByCustomerIdOrderByTransactionDateAscIdAsc(@Param("customerId") Long customerId);
 
     List<CariTransaction> findByCustomerIdOrderByTransactionDateDescIdDesc(Long customerId);
 
@@ -24,11 +27,11 @@ public interface CariTransactionRepository extends JpaRepository<CariTransaction
 
     Optional<CariTransaction> findByCollectionId(Long collectionId);
 
-    @Query("SELECT COALESCE(SUM(t.debitAmount), 0), COALESCE(SUM(t.creditAmount), 0) " +
-           "FROM CariTransaction t WHERE t.customer.id = :customerId")
+    @Query("SELECT COALESCE(SUM(t.debitAmount), 0), COALESCE(SUM(t.creditAmount), 0) "
+            + "FROM CariTransaction t WHERE t.customer.id = :customerId")
     List<Object[]> getDebitCreditTotalsByCustomerId(@Param("customerId") Long customerId);
 
-    @Query("SELECT t.customer.id, COALESCE(SUM(t.debitAmount), 0), COALESCE(SUM(t.creditAmount), 0) " +
-           "FROM CariTransaction t WHERE t.customer.id IN :customerIds GROUP BY t.customer.id")
+    @Query("SELECT t.customer.id, COALESCE(SUM(t.debitAmount), 0), COALESCE(SUM(t.creditAmount), 0) "
+            + "FROM CariTransaction t WHERE t.customer.id IN :customerIds GROUP BY t.customer.id")
     List<Object[]> sumTotalsByCustomerIds(@Param("customerIds") List<Long> customerIds);
 }

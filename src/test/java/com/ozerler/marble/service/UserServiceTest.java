@@ -1,5 +1,23 @@
 package com.ozerler.marble.service;
 
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.dto.UserCreateRequest;
 import com.ozerler.marble.dto.UserDto;
@@ -7,25 +25,6 @@ import com.ozerler.marble.model.Role;
 import com.ozerler.marble.model.User;
 import com.ozerler.marble.repository.RoleRepository;
 import com.ozerler.marble.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -54,7 +53,7 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Should successfully create a user with hashed password and assigned roles")
-    void createUser_success() {
+    void createUserSuccess() {
         UserCreateRequest request = UserCreateRequest.builder()
                 .username("new_operator")
                 .email("operator@ozerler.com")
@@ -65,10 +64,10 @@ class UserServiceTest {
                 .roles(Set.of("ROLE_ADMIN"))
                 .build();
 
-        when(userRepository.existsByUsername("new_operator")).thenReturn(false);
-        when(userRepository.existsByEmail("operator@ozerler.com")).thenReturn(false);
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(roleAdmin));
-        when(passwordEncoder.encode("password123")).thenReturn("$2a$10$hashedPassword");
+        Mockito.when(userRepository.existsByUsername("new_operator")).thenReturn(false);
+        Mockito.when(userRepository.existsByEmail("operator@ozerler.com")).thenReturn(false);
+        Mockito.when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(roleAdmin));
+        Mockito.when(passwordEncoder.encode("password123")).thenReturn("$2a$10$hashedPassword");
 
         User savedUser = User.builder()
                 .id(10L)
@@ -82,23 +81,23 @@ class UserServiceTest {
                 .roles(Set.of(roleAdmin))
                 .build();
 
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(savedUser);
 
         UserDto result = userService.createUser(request);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(10L);
-        assertThat(result.getUsername()).isEqualTo("new_operator");
-        assertThat(result.getEmail()).isEqualTo("operator@ozerler.com");
-        assertThat(result.getRoles()).contains("ROLE_ADMIN");
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result.getId()).isEqualTo(10L);
+        Assertions.assertThat(result.getUsername()).isEqualTo("new_operator");
+        Assertions.assertThat(result.getEmail()).isEqualTo("operator@ozerler.com");
+        Assertions.assertThat(result.getRoles()).contains("ROLE_ADMIN");
 
-        verify(passwordEncoder).encode("password123");
-        verify(userRepository).save(any(User.class));
+        Mockito.verify(passwordEncoder).encode("password123");
+        Mockito.verify(userRepository).save(Mockito.any(User.class));
     }
 
     @Test
     @DisplayName("Should throw exception when username already exists")
-    void createUser_duplicateUsername() {
+    void createUserDuplicateUsername() {
         UserCreateRequest request = UserCreateRequest.builder()
                 .username("existing_user")
                 .email("user@ozerler.com")
@@ -107,18 +106,18 @@ class UserServiceTest {
                 .lastName("Can")
                 .build();
 
-        when(userRepository.existsByUsername("existing_user")).thenReturn(true);
+        Mockito.when(userRepository.existsByUsername("existing_user")).thenReturn(true);
 
-        assertThatThrownBy(() -> userService.createUser(request))
+        Assertions.assertThatThrownBy(() -> userService.createUser(request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Bu kullanıcı adı zaten kullanımda");
 
-        verify(userRepository, never()).save(any());
+        Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
     }
 
     @Test
     @DisplayName("Should soft delete user and disable account")
-    void softDeleteUser_success() {
+    void softDeleteUserSuccess() {
         User user = User.builder()
                 .id(5L)
                 .username("test_user")
@@ -126,44 +125,68 @@ class UserServiceTest {
                 .deleted(false)
                 .build();
 
-        when(userRepository.findById(5L)).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.findById(5L)).thenReturn(Optional.of(user));
 
         userService.softDeleteUser(5L);
 
-        assertThat(user.isDeleted()).isTrue();
-        assertThat(user.isEnabled()).isFalse();
-        verify(userRepository).save(user);
+        Assertions.assertThat(user.isDeleted()).isTrue();
+        Assertions.assertThat(user.isEnabled()).isFalse();
+        Mockito.verify(userRepository).save(user);
     }
 
     @Test
     @DisplayName("Empty role selection lists all users")
-    void getUsersPaged_emptyRoles_doesNotFilterByRole() {
-        when(userRepository.searchActiveUsers(isNull(), isNull(), isNull(), any(Pageable.class)))
+    void getUsersPagedEmptyRolesDoesNotFilterByRole() {
+        Mockito.when(
+                        userRepository.searchActiveUsers(
+                                Mockito.isNull(),
+                                Mockito.isNull(),
+                                Mockito.isNull(),
+                                Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         TabulatorResponse<UserDto> response = userService.getUsersPaged(
                 1, 10, null, null, null, List.of(), null);
 
-        assertThat(response.getData()).isEmpty();
-        verify(userRepository).searchActiveUsers(isNull(), isNull(), isNull(), any(Pageable.class));
-        verify(userRepository, never()).searchActiveUsersByAnyRole(any(), any(), any(), any());
+        Assertions.assertThat(response.getData()).isEmpty();
+        Mockito.verify(userRepository)
+                .searchActiveUsers(
+                        Mockito.isNull(),
+                        Mockito.isNull(),
+                        Mockito.isNull(),
+                        Mockito.any(Pageable.class));
+        Mockito.verify(userRepository, Mockito.never())
+                .searchActiveUsersByAnyRole(
+                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
     @DisplayName("Blank role tokens are treated as no role filter")
-    void getUsersPaged_blankRoles_doesNotFilterByRole() {
-        when(userRepository.searchActiveUsers(isNull(), isNull(), isNull(), any(Pageable.class)))
+    void getUsersPagedBlankRolesDoesNotFilterByRole() {
+        Mockito.when(
+                        userRepository.searchActiveUsers(
+                                Mockito.isNull(),
+                                Mockito.isNull(),
+                                Mockito.isNull(),
+                                Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         userService.getUsersPaged(1, 10, null, null, null, List.of("  ", ""), null);
 
-        verify(userRepository).searchActiveUsers(isNull(), isNull(), isNull(), any(Pageable.class));
-        verify(userRepository, never()).searchActiveUsersByAnyRole(any(), any(), any(), any());
+        Mockito.verify(userRepository)
+                .searchActiveUsers(
+                        Mockito.isNull(),
+                        Mockito.isNull(),
+                        Mockito.isNull(),
+                        Mockito.any(Pageable.class));
+        Mockito.verify(userRepository, Mockito.never())
+                .searchActiveUsersByAnyRole(
+                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
     @DisplayName("Selected roles filter users who have any of those roles")
-    void getUsersPaged_multipleRoles_matchesAnySelectedRole() {
+    void getUsersPagedMultipleRolesMatchesAnySelectedRole() {
         User adminUser = User.builder()
                 .id(1L)
                 .username("admin")
@@ -172,30 +195,47 @@ class UserServiceTest {
                 .lastName("Yöneticisi")
                 .roles(Set.of(roleAdmin))
                 .build();
-        when(userRepository.searchActiveUsersByAnyRole(
-                isNull(), eq(List.of("ROLE_ADMIN", "ROLE_SALES")), isNull(), any(Pageable.class)))
+        Mockito.when(
+                        userRepository.searchActiveUsersByAnyRole(
+                                Mockito.isNull(),
+                                Mockito.eq(List.of("ROLE_ADMIN", "ROLE_SALES")),
+                                Mockito.isNull(),
+                                Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(adminUser)));
 
         TabulatorResponse<UserDto> response = userService.getUsersPaged(
                 1, 10, null, null, null, List.of("ROLE_ADMIN", "ROLE_SALES"), null);
 
-        assertThat(response.getData()).hasSize(1);
-        assertThat(response.getData().getFirst().getUsername()).isEqualTo("admin");
-        verify(userRepository).searchActiveUsersByAnyRole(
-                isNull(), eq(List.of("ROLE_ADMIN", "ROLE_SALES")), isNull(), any(Pageable.class));
-        verify(userRepository, never()).searchActiveUsers(any(), any(), any(), any());
+        Assertions.assertThat(response.getData()).hasSize(1);
+        Assertions.assertThat(response.getData().getFirst().getUsername()).isEqualTo("admin");
+        Mockito.verify(userRepository)
+                .searchActiveUsersByAnyRole(
+                        Mockito.isNull(),
+                        Mockito.eq(List.of("ROLE_ADMIN", "ROLE_SALES")),
+                        Mockito.isNull(),
+                        Mockito.any(Pageable.class));
+        Mockito.verify(userRepository, Mockito.never())
+                .searchActiveUsers(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
     @DisplayName("Comma-separated role tokens are split before querying")
-    void getUsersPaged_commaSeparatedRoles_areNormalized() {
-        when(userRepository.searchActiveUsersByAnyRole(
-                isNull(), eq(List.of("ROLE_ADMIN", "ROLE_USER")), eq(true), any(Pageable.class)))
+    void getUsersPagedCommaSeparatedRolesAreNormalized() {
+        Mockito.when(
+                        userRepository.searchActiveUsersByAnyRole(
+                                Mockito.isNull(),
+                                Mockito.eq(List.of("ROLE_ADMIN", "ROLE_USER")),
+                                Mockito.eq(true),
+                                Mockito.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         userService.getUsersPaged(1, 10, null, null, null, List.of("ROLE_ADMIN, ROLE_USER"), true);
 
-        verify(userRepository).searchActiveUsersByAnyRole(
-                isNull(), eq(List.of("ROLE_ADMIN", "ROLE_USER")), eq(true), any(Pageable.class));
+        Mockito.verify(userRepository)
+                .searchActiveUsersByAnyRole(
+                        Mockito.isNull(),
+                        Mockito.eq(List.of("ROLE_ADMIN", "ROLE_USER")),
+                        Mockito.eq(true),
+                        Mockito.any(Pageable.class));
     }
 }

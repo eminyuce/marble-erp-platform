@@ -1,24 +1,31 @@
 package com.ozerler.marble.web;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Rewrites page, size, sort, and an existing filter while keeping the other query parameters.
  */
 public final class GridLinks {
 
+    private final HttpServletRequest request;
     private final String path;
     private final Map<String, String[]> parameters;
 
     public GridLinks(HttpServletRequest request) {
+        this.request = request;
         this.path = request.getRequestURI();
         this.parameters = request.getParameterMap();
+    }
+
+    public String getPath() {
+        return path;
     }
 
     public String page(int page) {
@@ -30,7 +37,12 @@ public final class GridLinks {
     }
 
     public String sort(String field) {
-        String next = field.equals(first("sort")) && "asc".equalsIgnoreCase(first("dir")) ? "desc" : "asc";
+        String next;
+        if (field.equals(first("sort")) && "asc".equalsIgnoreCase(first("dir"))) {
+            next = "desc";
+        } else {
+            next = "asc";
+        }
         return url(query().put("sort", field).put("dir", next).put("page", "1"));
     }
 
@@ -38,7 +50,10 @@ public final class GridLinks {
         if (!field.equals(first("sort"))) {
             return "↕";
         }
-        return "asc".equalsIgnoreCase(first("dir")) ? "↑" : "↓";
+        if ("asc".equalsIgnoreCase(first("dir"))) {
+            return "↑";
+        }
+        return "↓";
     }
 
     public String with(String name, String value) {
@@ -47,6 +62,112 @@ public final class GridLinks {
             return url(query.remove(name));
         }
         return url(query.put(name, value));
+    }
+
+
+    public boolean filtered(String key) {
+        return !first(GridColumnFilters.VALUE_PREFIX + key).isBlank()
+                || !first(GridColumnFilters.TO_PREFIX + key).isBlank();
+    }
+
+    public boolean hasColumnFilters() {
+        for (String name : parameters.keySet()) {
+            if (GridColumnFilters.isFilterParameter(name) && !first(name).isBlank()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String operator(String key) {
+        return operator(key, GridFilterKind.TEXT.getCode());
+    }
+
+    public String operator(String key, String kind) {
+        String current = first(GridColumnFilters.OPERATOR_PREFIX + key);
+        return GridFilterOperator.parse(current, GridFilterKind.parse(kind)).getCode();
+    }
+
+    public String value(String key) {
+        return first(GridColumnFilters.VALUE_PREFIX + key);
+    }
+
+    public String toValue(String key) {
+        return first(GridColumnFilters.TO_PREFIX + key);
+    }
+
+    public String clearFilter(String key) {
+        return url(query()
+                .remove(GridColumnFilters.VALUE_PREFIX + key)
+                .remove(GridColumnFilters.OPERATOR_PREFIX + key)
+                .remove(GridColumnFilters.TO_PREFIX + key)
+                .put("page", "1"));
+    }
+
+    public String clearFilters() {
+        Query next = query();
+        for (String name : List.copyOf(parameters.keySet())) {
+            if (GridColumnFilters.isFilterParameter(name)) {
+                next = next.remove(name);
+            }
+        }
+        return url(next.put("page", "1"));
+    }
+
+    public List<String> getFilterMessages() {
+        if (request == null) {
+            return List.of();
+        }
+        Object value = request.getAttribute(GridColumnFilters.MESSAGES_ATTRIBUTE);
+        if (!(value instanceof List<?> items)) {
+            return List.of();
+        }
+        List<String> messages = new ArrayList<>();
+        for (Object item : items) {
+            if (item != null) {
+                messages.add(item.toString());
+            }
+        }
+        return List.copyOf(messages);
+    }
+
+    public String filterValues(String tableId, String columnKey) {
+        return "/grid-filter-values?grid=" + encode(tableId) + "&column=" + encode(columnKey);
+    }
+
+    public List<GridParameter> hiddenParameters(String columnKey) {
+        List<GridParameter> hidden = new ArrayList<>();
+        String valueName = GridColumnFilters.VALUE_PREFIX + columnKey;
+        String operatorName = GridColumnFilters.OPERATOR_PREFIX + columnKey;
+        String toName = GridColumnFilters.TO_PREFIX + columnKey;
+        Query current = query();
+        for (int index = 0; index < current.names.size(); index++) {
+            String name = current.names.get(index);
+            if ("page".equals(name) || name.equals(valueName) || name.equals(operatorName)
+                    || name.equals(toName)) {
+                continue;
+            }
+            hidden.add(new GridParameter(name, current.values.get(index)));
+        }
+        return List.copyOf(hidden);
+    }
+
+    public static final class GridParameter {
+        private final String name;
+        private final String value;
+
+        public GridParameter(String name, String value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getValue() {
+            return value;
+        }
     }
 
     private String first(String name) {
@@ -67,7 +188,7 @@ public final class GridLinks {
             }
             for (String item : current) {
                 names.add(entry.getKey());
-                values.add(item == null ? "" : item);
+                values.add(Objects.requireNonNullElse(item, ""));
             }
         }
         return new Query(names, values);
@@ -91,7 +212,7 @@ public final class GridLinks {
     }
 
     private static String encode(String value) {
-        return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
+        return URLEncoder.encode(Objects.requireNonNullElse(value, ""), StandardCharsets.UTF_8);
     }
 
     private static final class Query {

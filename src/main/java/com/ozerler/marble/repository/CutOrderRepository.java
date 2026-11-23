@@ -1,7 +1,9 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.dto.OrderChildAggregate;
-import com.ozerler.marble.model.CutOrder;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,9 +12,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.dto.OrderChildAggregate;
+import com.ozerler.marble.model.CutOrder;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface CutOrderRepository extends JpaRepository<CutOrder, Long> {
@@ -30,14 +32,24 @@ public interface CutOrderRepository extends JpaRepository<CutOrder, Long> {
     @Query("SELECT DISTINCT c FROM CutOrder c ORDER BY c.id DESC")
     List<CutOrder> findAllWithProject();
 
-    @EntityGraph(attributePaths = {"project", "location"})
-    @Query("SELECT c FROM CutOrder c WHERE " +
-            "(:search IS NULL OR LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(c.machineName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(c.project.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query(value = "SELECT c FROM CutOrder c "
+                    + "LEFT JOIN FETCH c.project project "
+                    + "LEFT JOIN FETCH c.location location WHERE "
+                    + "(:search IS NULL OR LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                    + "OR LOWER(c.machineName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(project.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            countQuery = "SELECT COUNT(c) FROM CutOrder c "
+                    + "LEFT JOIN c.project project "
+                    + "LEFT JOIN c.location location WHERE "
+                    + "(:search IS NULL OR LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+                    + "OR LOWER(c.machineName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(project.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<CutOrder> searchCutOrders(@Param("search") String search, Pageable pageable);
 
-    @Query("SELECT c FROM CutOrder c LEFT JOIN FETCH c.project WHERE LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @Query(
+            "SELECT c FROM CutOrder c LEFT JOIN FETCH c.project WHERE LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', "
+                    + ":query, '%'))")
     List<CutOrder> searchByCutOrderNo(@Param("query") String query, Pageable pageable);
 
     @Query("SELECT c.id AS parentId, COUNT(i.id) AS itemCount, COALESCE(SUM(i.areaM2), 0) AS totalArea "

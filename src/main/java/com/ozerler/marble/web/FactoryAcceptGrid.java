@@ -1,9 +1,9 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.FactoryWorkOrderSummaryDto;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.FactoryWorkOrderSummaryDto;
 
 /**
  * Fabrika blok kabul listesi. Rows are already loaded and paged in memory. Columns are not sortable.
@@ -15,10 +15,13 @@ public final class FactoryAcceptGrid {
 
     public static DataGridView view(List<FactoryWorkOrderSummaryDto> orders, int page, int size, String search) {
         List<FactoryWorkOrderSummaryDto> matched = new ArrayList<>();
+        GridColumnFilters filters = GridColumnFilters.fromCurrentRequest(
+                GridFilterCatalog.aliases("factory-accept-table"));
         if (orders != null) {
             for (FactoryWorkOrderSummaryDto order : orders) {
                 if (GridWindow.matches(search, order.getOrderNo(), order.getBlockCode(), order.getStoneType(),
-                        order.getMachineName(), order.getResponsibleName(), order.getStatusLabel())) {
+                        order.getMachineName(), order.getResponsibleName(), order.getStatusLabel())
+                        && GridColumnFilterMatcher.matches(filters, key -> columnValue(order, key))) {
                     matched.add(order);
                 }
             }
@@ -28,7 +31,7 @@ public final class FactoryAcceptGrid {
             rows.add(row(order));
         }
         return GridAssembler.from(page, size, GridWindow.pageCount(matched.size(), size), matched.size(),
-                null, null, "factory-accept-table", 4, columns(), rows);
+                null, null, "factory-accept-table", GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     private static GridRow row(FactoryWorkOrderSummaryDto order) {
@@ -44,16 +47,40 @@ public final class FactoryAcceptGrid {
         ));
     }
 
+    private static String columnValue(FactoryWorkOrderSummaryDto order, String key) {
+        if (order == null || key == null) {
+            return "";
+        }
+        return switch (key) {
+            case "status" -> order.getStatusLabel();
+            case "id" -> idValue(order.getId());
+            case "orderNo" -> order.getOrderNo();
+            case "stoneType" -> order.getStoneType();
+            case "blockCode" -> order.getBlockCode();
+            case "machineName" -> order.getMachineName();
+            case "responsibleName" -> order.getResponsibleName();
+            case "acceptedAt" -> order.getAcceptedAt();
+            default -> "";
+        };
+    }
+
+    private static String idValue(Long id) {
+        if (id == null) {
+            return "";
+        }
+        return id.toString();
+    }
+
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("", "Durum", false, 150),
-                GridColumn.text("", "Id", false, 110),
-                GridColumn.text("", "İş Emri No", false, 160),
-                GridColumn.text("", "Taş cinsi", false, 140),
-                GridColumn.text("", "Blok", false, 140),
-                GridColumn.text("", "Makine", false, 150),
-                GridColumn.text("", "Sorumlu", false, 150),
-                GridColumn.text("", "Tarih", false, 130)
+                GridColumn.text("status", "Durum", false, GridWidth.PX_150),
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("orderNo", "İş Emri No", false, GridWidth.PX_160),
+                GridColumn.text("stoneType", "Taş cinsi", false, GridWidth.PX_140),
+                GridColumn.text("blockCode", "Blok", false, GridWidth.PX_140),
+                GridColumn.text("machineName", "Makine", false, GridWidth.PX_150),
+                GridColumn.text("responsibleName", "Sorumlu", false, GridWidth.PX_150),
+                GridColumn.text("acceptedAt", "Tarih", false, GridWidth.PX_130)
         );
     }
 }

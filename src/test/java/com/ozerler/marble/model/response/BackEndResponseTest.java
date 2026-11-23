@@ -1,14 +1,14 @@
 package com.ozerler.marble.model.response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 class BackEndResponseTest {
 
@@ -32,18 +32,19 @@ class BackEndResponseTest {
         ber.setResponse(responseEntity);
         ber.setServiceStatus(serviceStatus);
 
-        assertThat(ber.getResponse()).isEqualTo(responseEntity);
-        assertThat(ber.getServiceStatus()).isEqualTo(serviceStatus);
-        assertThat(ber.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(ber.getServiceStatus().getStatus().getMessage()).isEqualTo("All good");
-        assertThat(ber.getServiceStatus().getStatus().getErrorCode()).isEqualTo("0");
-        assertThat(ber.getServiceStatus().getStatus().hasErrors()).isTrue();
-        assertThat(ber.getServiceStatus().getStatus().getErrors()).containsExactly("detail error", "error2", "error3");
-        assertThat(ber.toString()).contains("BackEndResponse");
-        assertThat(ber.hashCode()).isNotZero();
+        Assertions.assertThat(ber.getResponse()).isEqualTo(responseEntity);
+        Assertions.assertThat(ber.getServiceStatus()).isEqualTo(serviceStatus);
+        Assertions.assertThat(ber.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(ber.getServiceStatus().getStatus().getMessage()).isEqualTo("All good");
+        Assertions.assertThat(ber.getServiceStatus().getStatus().getErrorCode()).isEqualTo("0");
+        Assertions.assertThat(ber.getServiceStatus().getStatus().hasErrors()).isTrue();
+        Assertions.assertThat(ber.getServiceStatus().getStatus().getErrors())
+                .containsExactly("detail error", "error2", "error3");
+        Assertions.assertThat(ber.toString()).contains("BackEndResponse");
+        Assertions.assertThat(ber.hashCode()).isNotZero();
 
         BackEndResponse ber2 = new BackEndResponse(responseEntity, serviceStatus);
-        assertThat(ber).isEqualTo(ber2);
+        Assertions.assertThat(ber).isEqualTo(ber2);
     }
 
     @Test
@@ -55,23 +56,23 @@ class BackEndResponseTest {
 
         String json = objectMapper.writeValueAsString(ber);
 
-        assertThat(json).contains("\"serviceStatus\"");
-        assertThat(json).contains("\"httpStatus\":\"OK\"");
-        assertThat(json).contains("\"message\":\"Retrieval successful\"");
-        assertThat(json).contains("\"errorCode\":\"0\"");
-        assertThat(json).contains("\"response\"");
+        Assertions.assertThat(json).contains("\"serviceStatus\"");
+        Assertions.assertThat(json).contains("\"httpStatus\":\"OK\"");
+        Assertions.assertThat(json).contains("\"message\":\"Retrieval successful\"");
+        Assertions.assertThat(json).contains("\"errorCode\":\"0\"");
+        Assertions.assertThat(json).contains("\"response\"");
     }
 
     @Test
     @DisplayName("Should handle empty error list correctly in Status")
     void shouldHandleEmptyErrorsInStatus() {
         Status status = new Status();
-        assertThat(status.hasErrors()).isFalse();
+        Assertions.assertThat(status.hasErrors()).isFalse();
 
         status.setErrors(List.of());
-        assertThat(status.hasErrors()).isFalse();
+        Assertions.assertThat(status.hasErrors()).isFalse();
 
         status.addError("err");
-        assertThat(status.hasErrors()).isTrue();
+        Assertions.assertThat(status.hasErrors()).isTrue();
     }
 }

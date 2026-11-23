@@ -1,10 +1,9 @@
 package com.ozerler.marble.config;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class DatabaseUrlEnvironmentPostProcessorTest {
 
@@ -14,15 +13,17 @@ class DatabaseUrlEnvironmentPostProcessorTest {
     @DisplayName("Normalizes Render postgres:// URI into Spring JDBC datasource properties")
     void normalizesRenderPostgresUri() {
         MockEnvironment environment = new MockEnvironment();
-        environment.setProperty("DATABASE_URL", "postgres://marbleuser:secretpass@dpg-abc1234-a.render.com:5432/marble_erp");
+        environment.setProperty(
+                "DATABASE_URL",
+                "postgres://marbleuser:secretpass@dpg-abc1234-a.render.com:5432/marble_erp");
 
         processor.postProcessEnvironment(environment, null);
 
-        assertThat(environment.getProperty("spring.datasource.url"))
+        Assertions.assertThat(environment.getProperty("spring.datasource.url"))
                 .isEqualTo("jdbc:postgresql://dpg-abc1234-a.render.com:5432/marble_erp");
-        assertThat(environment.getProperty("spring.datasource.username"))
+        Assertions.assertThat(environment.getProperty("spring.datasource.username"))
                 .isEqualTo("marbleuser");
-        assertThat(environment.getProperty("spring.datasource.password"))
+        Assertions.assertThat(environment.getProperty("spring.datasource.password"))
                 .isEqualTo("secretpass");
     }
 
@@ -34,11 +35,11 @@ class DatabaseUrlEnvironmentPostProcessorTest {
 
         processor.postProcessEnvironment(environment, null);
 
-        assertThat(environment.getProperty("spring.datasource.url"))
+        Assertions.assertThat(environment.getProperty("spring.datasource.url"))
                 .isEqualTo("jdbc:postgresql://db.render.internal:5432/marble_db");
-        assertThat(environment.getProperty("spring.datasource.username"))
+        Assertions.assertThat(environment.getProperty("spring.datasource.username"))
                 .isEqualTo("admin");
-        assertThat(environment.getProperty("spring.datasource.password"))
+        Assertions.assertThat(environment.getProperty("spring.datasource.password"))
                 .isEqualTo("mypass");
     }
 
@@ -50,6 +51,6 @@ class DatabaseUrlEnvironmentPostProcessorTest {
 
         processor.postProcessEnvironment(environment, null);
 
-        assertThat(environment.getProperty("spring.datasource.url")).isNull();
+        Assertions.assertThat(environment.getProperty("spring.datasource.url")).isNull();
     }
 }

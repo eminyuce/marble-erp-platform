@@ -1,29 +1,34 @@
 package com.ozerler.marble.service;
 
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.CutItem;
 import com.ozerler.marble.model.CutOrder;
 import com.ozerler.marble.model.Project;
-import com.ozerler.marble.repository.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.ozerler.marble.repository.CutItemRepository;
+import com.ozerler.marble.repository.CutOrderRepository;
+import com.ozerler.marble.repository.ProjectLocationRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.ScrapLogRepository;
+import com.ozerler.marble.repository.SlabRepository;
 
 @ExtendWith(MockitoExtension.class)
 class WorkshopCutServiceTest {
@@ -46,15 +51,15 @@ class WorkshopCutServiceTest {
     @BeforeEach
     void setUp() {
         workshopCutService = new WorkshopCutService(
-                cutOrderRepository, cutItemRepository, slabRepository,
+                cutOrderRepository, null, null, null, cutItemRepository, slabRepository,
                 projectRepository, projectLocationRepository, scrapLogRepository, null, null
         );
     }
 
     @Test
     @DisplayName("createCutOrder throws IllegalArgumentException when piecesCount <= 0")
-    void createCutOrder_ZeroPieces_ThrowsException() {
-        assertThatThrownBy(() -> workshopCutService.createCutOrder(
+    void createCutOrderZeroPiecesThrowsException() {
+        Assertions.assertThatThrownBy(() -> workshopCutService.createCutOrder(
                 1L, 1L, 1L, "BridgeSaw-01", "Ahmet",
                 0, new BigDecimal("60"), new BigDecimal("120"),
                 "PAHLI", "Banyo", "Notlar"
@@ -64,8 +69,8 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("createCutOrder throws IllegalArgumentException when target dimensions are invalid")
-    void createCutOrder_InvalidDimensions_ThrowsException() {
-        assertThatThrownBy(() -> workshopCutService.createCutOrder(
+    void createCutOrderInvalidDimensionsThrowsException() {
+        Assertions.assertThatThrownBy(() -> workshopCutService.createCutOrder(
                 1L, 1L, 1L, "BridgeSaw-01", "Ahmet",
                 5, BigDecimal.ZERO, new BigDecimal("120"),
                 "PAHLI", "Banyo", "Notlar"
@@ -75,24 +80,24 @@ class WorkshopCutServiceTest {
 
     @Test
     @DisplayName("getCutOrderById throws NullPointerException when ID is null")
-    void getCutOrderById_NullId_ThrowsException() {
-        assertThatThrownBy(() -> workshopCutService.getCutOrderById(null))
+    void getCutOrderByIdNullIdThrowsException() {
+        Assertions.assertThatThrownBy(() -> workshopCutService.getCutOrderById(null))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("ID");
     }
 
     @Test
     @DisplayName("getCutOrdersPaged maps database item aggregates instead of loading child collections")
-    void getCutOrdersPaged_UsesDatabaseAggregates() {
+    void getCutOrdersPagedUsesDatabaseAggregates() {
         CutOrder order = CutOrder.builder()
                 .id(9L)
                 .cutOrderNo("CO-2026-009")
                 .machineName("Köprü-01")
                 .status("COMPLETED")
                 .build();
-        when(cutOrderRepository.searchCutOrders(any(), any(Pageable.class)))
+        Mockito.when(cutOrderRepository.searchCutOrders(ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(order)));
-        when(cutOrderRepository.aggregateItemMetrics(List.of(9L)))
+        Mockito.when(cutOrderRepository.aggregateItemMetrics(List.of(9L)))
                 .thenReturn(List.of(new OrderChildAggregate() {
                     @Override
                     public Long getParentId() {
@@ -112,40 +117,40 @@ class WorkshopCutServiceTest {
 
         TabulatorResponse<CutOrderDto> response = workshopCutService.getCutOrdersPaged(1, 10, null, null, null);
 
-        assertThat(response.getData()).hasSize(1);
+        Assertions.assertThat(response.getData()).hasSize(1);
         CutOrderDto dto = response.getData().getFirst();
-        assertThat(dto.getCutOrderNo()).isEqualTo("CO-2026-009");
-        assertThat(dto.getStatus()).isEqualTo("COMPLETED");
-        assertThat(dto.getStatusLabel()).isEqualTo("Tamamlandı");
-        assertThat(dto.getItemCount()).isEqualTo(4);
-        assertThat(dto.getTotalAreaM2()).isEqualByComparingTo("6.2500");
-        assertThat(order.getItems()).isEmpty();
+        Assertions.assertThat(dto.getCutOrderNo()).isEqualTo("CO-2026-009");
+        Assertions.assertThat(dto.getStatus()).isEqualTo("COMPLETED");
+        Assertions.assertThat(dto.getStatusLabel()).isEqualTo("Tamamlandı");
+        Assertions.assertThat(dto.getItemCount()).isEqualTo(4);
+        Assertions.assertThat(dto.getTotalAreaM2()).isEqualByComparingTo("6.2500");
+        Assertions.assertThat(order.getItems()).isEmpty();
     }
 
     @Test
     @DisplayName("getCutOrderWithDetails returns the cut order")
-    void getCutOrderWithDetails_ReturnsOrder() {
+    void getCutOrderWithDetailsReturnsOrder() {
         CutOrder order = CutOrder.builder().id(3L).cutOrderNo("CO-2026-003").status("COMPLETED").build();
-        when(cutOrderRepository.findWithDetailsById(3L)).thenReturn(Optional.of(order));
+        Mockito.when(cutOrderRepository.findWithDetailsById(3L)).thenReturn(Optional.of(order));
 
         CutOrder result = workshopCutService.getCutOrderWithDetails(3L);
 
-        assertThat(result.getCutOrderNo()).isEqualTo("CO-2026-003");
-        verify(cutOrderRepository).findWithDetailsById(3L);
+        Assertions.assertThat(result.getCutOrderNo()).isEqualTo("CO-2026-003");
+        Mockito.verify(cutOrderRepository).findWithDetailsById(3L);
     }
 
     @Test
     @DisplayName("getCutOrderWithDetails throws when the cut order is missing")
-    void getCutOrderWithDetails_MissingOrder_Throws() {
-        when(cutOrderRepository.findWithDetailsById(99L)).thenReturn(Optional.empty());
+    void getCutOrderWithDetailsMissingOrderThrows() {
+        Mockito.when(cutOrderRepository.findWithDetailsById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> workshopCutService.getCutOrderWithDetails(99L))
+        Assertions.assertThatThrownBy(() -> workshopCutService.getCutOrderWithDetails(99L))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("updateCutOrder updates header fields and existing item metadata")
-    void updateCutOrder_UpdatesHeaderAndItems() {
+    void updateCutOrderUpdatesHeaderAndItems() {
         Project existingProject = Project.builder().id(1L).name("Eski").build();
         Project newProject = Project.builder().id(2L).name("Villa").build();
         CutOrder order = CutOrder.builder()
@@ -164,27 +169,27 @@ class WorkshopCutServiceTest {
                 .edgeFinish("HAM")
                 .targetLocation("Depo")
                 .build();
-        when(cutOrderRepository.findById(5L)).thenReturn(Optional.of(order));
-        when(projectRepository.findById(2L)).thenReturn(Optional.of(newProject));
-        when(cutItemRepository.findByCutOrderId(5L)).thenReturn(List.of(item));
-        when(cutOrderRepository.save(order)).thenReturn(order);
+        Mockito.when(cutOrderRepository.findById(5L)).thenReturn(Optional.of(order));
+        Mockito.when(projectRepository.findById(2L)).thenReturn(Optional.of(newProject));
+        Mockito.when(cutItemRepository.findByCutOrderId(5L)).thenReturn(List.of(item));
+        Mockito.when(cutOrderRepository.save(order)).thenReturn(order);
 
         CutOrder result = workshopCutService.updateCutOrder(
                 5L, 2L, "Köprü-02", "Ayşe", "PAHLI", "Lobi", "Yeni not");
 
-        assertThat(result.getProject()).isEqualTo(newProject);
-        assertThat(result.getMachineName()).isEqualTo("Köprü-02");
-        assertThat(result.getOperatorName()).isEqualTo("Ayşe");
-        assertThat(result.getNotes()).isEqualTo("Yeni not");
-        assertThat(item.getEdgeFinish()).isEqualTo("PAHLI");
-        assertThat(item.getTargetLocation()).isEqualTo("Lobi");
-        verify(cutItemRepository).saveAll(List.of(item));
-        verify(cutOrderRepository).save(order);
+        Assertions.assertThat(result.getProject()).isEqualTo(newProject);
+        Assertions.assertThat(result.getMachineName()).isEqualTo("Köprü-02");
+        Assertions.assertThat(result.getOperatorName()).isEqualTo("Ayşe");
+        Assertions.assertThat(result.getNotes()).isEqualTo("Yeni not");
+        Assertions.assertThat(item.getEdgeFinish()).isEqualTo("PAHLI");
+        Assertions.assertThat(item.getTargetLocation()).isEqualTo("Lobi");
+        Mockito.verify(cutItemRepository).saveAll(List.of(item));
+        Mockito.verify(cutOrderRepository).save(order);
     }
 
     @Test
     @DisplayName("updateCutOrder clears the project and skips item writes when metadata is blank")
-    void updateCutOrder_ClearsProjectWithoutTouchingItems() {
+    void updateCutOrderClearsProjectWithoutTouchingItems() {
         CutOrder order = CutOrder.builder()
                 .id(8L)
                 .cutOrderNo("CUT-2026-008")
@@ -193,24 +198,24 @@ class WorkshopCutServiceTest {
                 .operatorName("Ali")
                 .status("COMPLETED")
                 .build();
-        when(cutOrderRepository.findById(8L)).thenReturn(Optional.of(order));
-        when(cutOrderRepository.save(order)).thenReturn(order);
+        Mockito.when(cutOrderRepository.findById(8L)).thenReturn(Optional.of(order));
+        Mockito.when(cutOrderRepository.save(order)).thenReturn(order);
 
         CutOrder result = workshopCutService.updateCutOrder(8L, null, "Köprü-03", "Can", "  ", "", "Not");
 
-        assertThat(result.getProject()).isNull();
-        assertThat(result.getMachineName()).isEqualTo("Köprü-03");
-        assertThat(result.getOperatorName()).isEqualTo("Can");
-        verify(cutItemRepository, never()).findByCutOrderId(8L);
-        verify(cutItemRepository, never()).saveAll(any());
+        Assertions.assertThat(result.getProject()).isNull();
+        Assertions.assertThat(result.getMachineName()).isEqualTo("Köprü-03");
+        Assertions.assertThat(result.getOperatorName()).isEqualTo("Can");
+        Mockito.verify(cutItemRepository, Mockito.never()).findByCutOrderId(8L);
+        Mockito.verify(cutItemRepository, Mockito.never()).saveAll(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("updateCutOrder throws when the cut order is missing")
-    void updateCutOrder_MissingOrder_Throws() {
-        when(cutOrderRepository.findById(99L)).thenReturn(Optional.empty());
+    void updateCutOrderMissingOrderThrows() {
+        Mockito.when(cutOrderRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> workshopCutService.updateCutOrder(
+        Assertions.assertThatThrownBy(() -> workshopCutService.updateCutOrder(
                 99L, null, "Köprü-01", "Ali", null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }

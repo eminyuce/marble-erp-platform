@@ -1,5 +1,14 @@
 package com.ozerler.marble.controller.admin;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.GlobalSearchResponse;
@@ -7,12 +16,9 @@ import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
 import com.ozerler.marble.service.GlobalSearchService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -34,7 +40,8 @@ public class GlobalSearchController extends AbstractController {
             GlobalSearchResponse searchResponse = globalSearchService.search(query);
 
             HttpHeaders responseHeaders = new HttpHeaders();
-            ResponseEntity<GlobalSearchResponse> resp = new ResponseEntity<>(searchResponse, responseHeaders, HttpStatus.OK);
+            ResponseEntity<GlobalSearchResponse> resp =
+                    new ResponseEntity<>(searchResponse, responseHeaders, HttpStatus.OK);
 
             ber.setResponse(resp);
             serviceStatus.setHttpStatus(HttpStatus.OK);

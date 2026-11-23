@@ -26,7 +26,9 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-marble_erp}
       POSTGRES_USER: ${DB_USERNAME:-marbleuser}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-marblepass}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
     ports:
       - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
@@ -58,8 +60,8 @@ services:
       rustfs-perms:
         condition: service_completed_successfully
     environment:
-      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
-      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:?RUSTFS_ACCESS_KEY is required}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?RUSTFS_SECRET_KEY is required}
       RUSTFS_ADDRESS: ":9000"
       # Leave RUSTFS_SERVER_DOMAINS unset. It is only for virtual-hosted names
       # (erp-files.ozerler.naklink.com). Path-style /erp-files/<key> needs no domain list.
@@ -95,7 +97,14 @@ services:
     image: ${DOCKERHUB_USERNAME:-guvenulu}/marble-erp-platform:${APP_TAG:-latest}
     container_name: marble-erp
     init: true
+    mem_limit: 2g
+    cpus: 2
     stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2g
     restart: unless-stopped
     group_add:
       - "${DOCKER_GID:-999}"
@@ -126,7 +135,10 @@ services:
       DB_PORT: "5432"
       DB_NAME: ${DB_NAME:-marble_erp}
       DB_USERNAME: ${DB_USERNAME:-marbleuser}
-      DB_PASSWORD: ${DB_PASSWORD:-marblepass}
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      REMEMBER_ME_KEY_FILE: /run/secrets/remember_me_key
+      RUSTFS_ACCESS_KEY_FILE: /run/secrets/rustfs_access_key
+      RUSTFS_SECRET_KEY_FILE: /run/secrets/rustfs_secret_key
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-marble_erp}
       APP_UPLOAD_DIR: /app/uploads
       APP_MEDIA_DIR: /app/media
@@ -134,13 +146,11 @@ services:
       RUSTFS_ENDPOINT: ${RUSTFS_ENDPOINT:-http://rustfs:9000}
       # Same host as the app. Nginx forwards /erp-files/ to RustFS without rewriting the path.
       RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-https://ozerler.naklink.com}
-      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
-      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
       RUSTFS_BUCKET: ${RUSTFS_BUCKET:-erp-files}
       RUSTFS_REGION: ${RUSTFS_REGION:-us-east-1}
       PRESIGNED_IMAGE_EXPIRY_MINUTES: ${PRESIGNED_IMAGE_EXPIRY_MINUTES:-30}
       PRESIGNED_DOCUMENT_EXPIRY_MINUTES: ${PRESIGNED_DOCUMENT_EXPIRY_MINUTES:-5}
-      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:81}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-}
       SESSION_STORE_TYPE: ${SESSION_STORE_TYPE:-jdbc}
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
       # Session cookie Secure=true comes from application-prod.yml.
@@ -160,8 +170,23 @@ services:
       timeout: 10s
       retries: 5
       start_period: 120s
+    secrets:
+      - db_password
+      - remember_me_key
+      - rustfs_access_key
+      - rustfs_secret_key
     networks:
       - marble-network
+
+secrets:
+  db_password:
+    file: ${SECRETS_DIR:-/opt/marble-erp/secrets}/db_password.txt
+  remember_me_key:
+    file: ${SECRETS_DIR:-/opt/marble-erp/secrets}/remember_me_key.txt
+  rustfs_access_key:
+    file: ${SECRETS_DIR:-/opt/marble-erp/secrets}/rustfs_access_key.txt
+  rustfs_secret_key:
+    file: ${SECRETS_DIR:-/opt/marble-erp/secrets}/rustfs_secret_key.txt
 
 networks:
   marble-network:

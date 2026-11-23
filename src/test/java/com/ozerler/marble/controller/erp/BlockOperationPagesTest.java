@@ -1,13 +1,12 @@
 package com.ozerler.marble.controller.erp;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class BlockOperationPagesTest {
 
@@ -18,7 +17,7 @@ class BlockOperationPagesTest {
         String index = read("src/main/resources/templates/erp/blocks/index.html");
         String detail = read("src/main/resources/templates/erp/blocks/detail.html");
 
-        assertThat(grid)
+        Assertions.assertThat(grid)
                 .contains("/blocks/\" + row.id + \"/move?targetType=PRODUCTION_YARD")
                 .contains("/blocks/\" + row.id + \"/move?targetType=DISPATCH_YARD")
                 .contains("/blocks/\" + row.id + \"/transfer-to-factory")
@@ -26,12 +25,12 @@ class BlockOperationPagesTest {
                 .doesNotContain("openMoveBlock")
                 .doesNotContain("openTransferBlock");
 
-        assertThat(index)
+        Assertions.assertThat(index)
                 .doesNotContain("id=\"move-block-dialog\"")
                 .doesNotContain("id=\"transfer-block-dialog\"")
                 .contains("id=\"delete-block-dialog\"");
 
-        assertThat(detail)
+        Assertions.assertThat(detail)
                 .contains("/blocks/' + ${block.id} + '/move'")
                 .contains("/blocks/' + ${block.id} + '/transfer-to-factory'")
                 .doesNotContain("name=\"transportCost\"")
@@ -44,7 +43,7 @@ class BlockOperationPagesTest {
         String move = read("src/main/resources/templates/erp/blocks/move.html");
         String transfer = read("src/main/resources/templates/erp/blocks/transfer.html");
 
-        assertThat(move)
+        Assertions.assertThat(move)
                 .contains("layout:decorate=\"~{layout/base}\"")
                 .contains("erp-form-page")
                 .contains("erp-ops-info-callout")
@@ -58,7 +57,7 @@ class BlockOperationPagesTest {
                 .contains("Kaydet ve Detaya Dön")
                 .contains("Saha Taşıma Süreci");
 
-        assertThat(transfer)
+        Assertions.assertThat(transfer)
                 .contains("layout:decorate=\"~{layout/base}\"")
                 .contains("erp-form-page")
                 .contains("erp-ops-info-callout")
@@ -78,8 +77,8 @@ class BlockOperationPagesTest {
         String moveHelp = read("src/main/resources/help/block-move.html");
         String transferHelp = read("src/main/resources/help/block-transfer.html");
 
-        assertThat(moveHelp).contains("data-title=\"Blok Saha Taşıma\"").contains("help-panel-list");
-        assertThat(transferHelp).contains("data-title=\"Fabrikaya Sevk\"").contains("help-panel-list");
+        Assertions.assertThat(moveHelp).contains("data-title=\"Blok Saha Taşıma\"").contains("help-panel-list");
+        Assertions.assertThat(transferHelp).contains("data-title=\"Fabrikaya Sevk\"").contains("help-panel-list");
     }
 
     private static String read(String path) throws Exception {

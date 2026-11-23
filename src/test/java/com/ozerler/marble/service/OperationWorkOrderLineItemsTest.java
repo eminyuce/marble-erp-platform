@@ -1,27 +1,35 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.model.Customer;
-import com.ozerler.marble.model.OperationWorkOrder;
-import com.ozerler.marble.model.OperationWorkOrderItem;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
-import com.ozerler.marble.repository.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.ozerler.marble.mapper.WorkOrderMapperImpl;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.OperationWorkOrder;
+import com.ozerler.marble.model.OperationWorkOrderItem;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.OperationDefinitionRepository;
+import com.ozerler.marble.repository.OperationWorkOrderRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.StockItemRepository;
+import com.ozerler.marble.repository.WorkOrderStatusHistoryRepository;
 
 @ExtendWith(MockitoExtension.class)
 class OperationWorkOrderLineItemsTest {
@@ -49,6 +57,7 @@ class OperationWorkOrderLineItemsTest {
     void setUp() {
         workOrderService = new OperationWorkOrderService(
                 workOrderRepository,
+                new WorkOrderMapperImpl(),
                 historyRepository,
                 customerRepository,
                 stockItemRepository,
@@ -76,21 +85,21 @@ class OperationWorkOrderLineItemsTest {
         item.computeMetrics();
 
         // 60 * 120 * 10 / 10000 = 7.2000 m2
-        assertThat(item.getCalculatedM2()).isEqualByComparingTo("7.2000");
+        Assertions.assertThat(item.getCalculatedM2()).isEqualByComparingTo("7.2000");
         // 120 * 10 / 100 = 12.0000 mt
-        assertThat(item.getCalculatedMt()).isEqualByComparingTo("12.0000");
-        assertThat(item.getSurfaceOperation()).isEqualTo("Cilalı");
-        assertThat(item.getSurfaceUnit()).isEqualTo("m2");
-        assertThat(item.getEdgeOperation()).isEqualTo("Pah");
-        assertThat(item.getEdgeUnit()).isEqualTo("m.t.");
+        Assertions.assertThat(item.getCalculatedMt()).isEqualByComparingTo("12.0000");
+        Assertions.assertThat(item.getSurfaceOperation()).isEqualTo("Cilalı");
+        Assertions.assertThat(item.getSurfaceUnit()).isEqualTo("m2");
+        Assertions.assertThat(item.getEdgeOperation()).isEqualTo("Pah");
+        Assertions.assertThat(item.getEdgeUnit()).isEqualTo("m.t.");
     }
 
     @Test
     @DisplayName("createWorkOrder persists line items and links them to work order")
     void testCreateWorkOrderWithItems() {
         Customer customer = Customer.builder().id(5L).companyName("Test Müşteri").build();
-        when(customerRepository.findById(5L)).thenReturn(Optional.of(customer));
-        when(workOrderRepository.save(any(OperationWorkOrder.class))).thenAnswer(inv -> {
+        Mockito.when(customerRepository.findById(5L)).thenReturn(Optional.of(customer));
+        Mockito.when(workOrderRepository.save(ArgumentMatchers.any(OperationWorkOrder.class))).thenAnswer(inv -> {
             OperationWorkOrder wo = inv.getArgument(0);
             wo.setId(99L);
             return wo;
@@ -130,15 +139,15 @@ class OperationWorkOrderLineItemsTest {
 
         OperationWorkOrder created = workOrderService.createWorkOrder(form);
 
-        assertThat(created).isNotNull();
-        assertThat(created.getItems()).hasSize(1);
-        assertThat(created.getItems().get(0).getWorkOrder()).isEqualTo(created);
-        assertThat(created.getItems().get(0).getSurfaceOperation()).isEqualTo("Honlu");
-        assertThat(created.getItems().get(0).getEdgeUnit()).isEqualTo("m.t.");
+        Assertions.assertThat(created).isNotNull();
+        Assertions.assertThat(created.getItems()).hasSize(1);
+        Assertions.assertThat(created.getItems().get(0).getWorkOrder()).isEqualTo(created);
+        Assertions.assertThat(created.getItems().get(0).getSurfaceOperation()).isEqualTo("Honlu");
+        Assertions.assertThat(created.getItems().get(0).getEdgeUnit()).isEqualTo("m.t.");
 
         ArgumentCaptor<OperationWorkOrder> captor = ArgumentCaptor.forClass(OperationWorkOrder.class);
-        verify(workOrderRepository).save(captor.capture());
-        assertThat(captor.getValue().getItems()).isNotEmpty();
+        Mockito.verify(workOrderRepository).save(captor.capture());
+        Assertions.assertThat(captor.getValue().getItems()).isNotEmpty();
     }
 
     @Test
@@ -150,14 +159,17 @@ class OperationWorkOrderLineItemsTest {
                 .status(OperationWorkOrderStatus.NEW)
                 .build();
 
-        when(workOrderRepository.findByIdWithDetails(10L)).thenReturn(Optional.of(existing));
-        when(workOrderRepository.save(any(OperationWorkOrder.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(workOrderRepository.findByIdWithDetails(10L)).thenReturn(Optional.of(existing));
+        Mockito.when(workOrderRepository.save(ArgumentMatchers.any(OperationWorkOrder.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        OperationWorkOrder updated = workOrderService.updateStatus(10L, OperationWorkOrderStatus.APPROVED, "Müşteri onayladı");
+        OperationWorkOrder updated =
+                workOrderService.updateStatus(
+                        10L, OperationWorkOrderStatus.APPROVED, "Müşteri onayladı");
 
-        assertThat(updated.getStatus()).isEqualTo(OperationWorkOrderStatus.APPROVED);
-        verify(historyRepository).save(any());
-        verify(workOrderRepository).save(existing);
+        Assertions.assertThat(updated.getStatus()).isEqualTo(OperationWorkOrderStatus.APPROVED);
+        Mockito.verify(historyRepository).save(ArgumentMatchers.any());
+        Mockito.verify(workOrderRepository).save(existing);
     }
 
     @Test
@@ -171,12 +183,12 @@ class OperationWorkOrderLineItemsTest {
                 .status(OperationWorkOrderStatus.APPROVED)
                 .build();
 
-        when(workOrderRepository.findByIdWithDetails(20L)).thenReturn(Optional.of(order));
+        Mockito.when(workOrderRepository.findByIdWithDetails(20L)).thenReturn(Optional.of(order));
 
         OperationWorkOrder fetched = workOrderService.getOrderById(20L);
 
-        assertThat(fetched).isNotNull();
-        assertThat(fetched.getCustomerDisplayName()).isEqualTo("Acme Mermer");
-        verify(workOrderRepository).findByIdWithDetails(20L);
+        Assertions.assertThat(fetched).isNotNull();
+        Assertions.assertThat(fetched.getCustomerDisplayName()).isEqualTo("Acme Mermer");
+        Mockito.verify(workOrderRepository).findByIdWithDetails(20L);
     }
 }

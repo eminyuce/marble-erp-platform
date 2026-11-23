@@ -1,27 +1,27 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+
 import lombok.Builder;
 import lombok.Value;
-
-import java.math.BigDecimal;
 
 @Value
 @Builder
 public class QuarrySummaryDto {
-    BigDecimal producedTonsThisMonth;
-    long productionYardCount;
-    long dispatchYardCount;
-    long factoryYardCount;
-    long soldCount;
-    long readyForDispatchCount;
-    long inTransitCount;
-    long totalInStockCount;
-    long markedCount;
-    BigDecimal fuelStockLiters;
-    long consumablesCount;
-    BigDecimal costPerTonThisMonth;
-    boolean unallocatedCarryForward;
-    String expensePeriod;
-    BigDecimal totalCostInStock;
-    BigDecimal totalMarketValueInStock;
+    private BigDecimal producedTonsThisMonth;
+    private long productionYardCount;
+    private long dispatchYardCount;
+    private long factoryYardCount;
+    private long soldCount;
+    private long readyForDispatchCount;
+    private long inTransitCount;
+    private long totalInStockCount;
+    private long markedCount;
+    private BigDecimal fuelStockLiters;
+    private long consumablesCount;
+    private BigDecimal costPerTonThisMonth;
+    private boolean unallocatedCarryForward;
+    private String expensePeriod;
+    private BigDecimal totalCostInStock;
+    private BigDecimal totalMarketValueInStock;
 }

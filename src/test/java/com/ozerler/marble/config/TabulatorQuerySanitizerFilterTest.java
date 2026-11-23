@@ -1,10 +1,9 @@
 package com.ozerler.marble.config;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class TabulatorQuerySanitizerFilterTest {
 
@@ -19,11 +18,11 @@ class TabulatorQuerySanitizerFilterTest {
         TabulatorQuerySanitizerFilter.SanitizedRequest sanitized =
                 new TabulatorQuerySanitizerFilter.SanitizedRequest(request);
 
-        assertThat(sanitized.getParameter("page")).isNull();
-        assertThat(sanitized.getParameterValues("page")).isNull();
-        assertThat(sanitized.getParameter("size")).isNull();
-        assertThat(sanitized.getParameter("search")).isEqualTo("SIP");
-        assertThat(sanitized.getParameterMap()).containsOnlyKeys("search");
+        Assertions.assertThat(sanitized.getParameter("page")).isNull();
+        Assertions.assertThat(sanitized.getParameterValues("page")).isNull();
+        Assertions.assertThat(sanitized.getParameter("size")).isNull();
+        Assertions.assertThat(sanitized.getParameter("search")).isEqualTo("SIP");
+        Assertions.assertThat(sanitized.getParameterMap()).containsOnlyKeys("search");
     }
 
     @Test
@@ -36,8 +35,8 @@ class TabulatorQuerySanitizerFilterTest {
         TabulatorQuerySanitizerFilter.SanitizedRequest sanitized =
                 new TabulatorQuerySanitizerFilter.SanitizedRequest(request);
 
-        assertThat(sanitized.getParameter("page")).isEqualTo("2");
-        assertThat(sanitized.getParameter("size")).isEqualTo("25");
-        assertThat(sanitized.getParameterMap()).containsEntry("page", new String[]{"2"});
+        Assertions.assertThat(sanitized.getParameter("page")).isEqualTo("2");
+        Assertions.assertThat(sanitized.getParameter("size")).isEqualTo("25");
+        Assertions.assertThat(sanitized.getParameterMap()).containsEntry("page", new String[]{"2"});
     }
 }

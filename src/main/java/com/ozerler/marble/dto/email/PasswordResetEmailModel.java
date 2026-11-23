@@ -1,11 +1,12 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Model for 'PASSWORD_RESET' email template.
@@ -35,14 +36,14 @@ public class PasswordResetEmailModel implements BaseEmailModel {
     @Override
     public Map<String, String> toVariables() {
         Map<String, String> vars = new LinkedHashMap<>();
-        vars.put("fullName", fullName != null ? fullName : "");
-        vars.put("resetCode", resetCode != null ? resetCode : "");
-        vars.put("expirationMinutes", expirationMinutes != null ? expirationMinutes : "15");
-        vars.put("resetUrl", resetUrl != null ? resetUrl : "#");
-        vars.put("requestIp", requestIp != null ? requestIp : "127.0.0.1");
-        vars.put("requestTime", requestTime != null ? requestTime : "");
-        vars.put("companyName", companyName != null ? companyName : "Özerler Mermer A.Ş.");
-        vars.put("supportEmail", supportEmail != null ? supportEmail : "guvenlik@ozerlermermer.com");
+        vars.put("fullName", Objects.requireNonNullElse(fullName, ""));
+        vars.put("resetCode", Objects.requireNonNullElse(resetCode, ""));
+        vars.put("expirationMinutes", Objects.requireNonNullElse(expirationMinutes, "15"));
+        vars.put("resetUrl", Objects.requireNonNullElse(resetUrl, "#"));
+        vars.put("requestIp", Objects.requireNonNullElse(requestIp, "127.0.0.1"));
+        vars.put("requestTime", Objects.requireNonNullElse(requestTime, ""));
+        vars.put("companyName", Objects.requireNonNullElse(companyName, "Özerler Mermer A.Ş."));
+        vars.put("supportEmail", Objects.requireNonNullElse(supportEmail, "guvenlik@ozerlermermer.com"));
         return vars;
     }
 

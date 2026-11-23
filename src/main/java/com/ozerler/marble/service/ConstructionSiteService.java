@@ -1,6 +1,19 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.domain.SiteProfitAndLoss;
+import com.ozerler.marble.dto.view.SiteViews;
+import com.ozerler.marble.mapper.SiteMapper;
 import com.ozerler.marble.model.ConstructionSiteStonePlan;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.MaterialLot;
@@ -31,16 +44,9 @@ import com.ozerler.marble.repository.SiteSupplyAllocationRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockReservationRepository;
 import com.ozerler.marble.util.MessageUtils;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 @Service
 @Slf4j
@@ -48,6 +54,7 @@ import java.util.Objects;
 public class ConstructionSiteService {
 
     private final ProjectRepository projectRepository;
+    private final SiteMapper siteMapper;
     private final ProjectLocationRepository projectLocationRepository;
     private final ConstructionSiteStonePlanRepository stonePlanRepository;
     private final SiteSupplyAllocationRepository allocationRepository;
@@ -66,7 +73,9 @@ public class ConstructionSiteService {
     public void deleteProject(Long id) {
         Project project = projectSiteService.getProjectById(id);
         if (invoiceRepository != null && invoiceRepository.existsByProjectId(id)) {
-            throw new IllegalStateException("Bu şantiyeye bağlı fatura kayıtları bulunmaktadır. İlişkili verilerin korunması için şantiye silinemez.");
+            throw new IllegalStateException(
+                    "Bu şantiyeye bağlı fatura kayıtları bulunmaktadır. İlişkili verilerin korunması için şantiye "
+                            + "silinemez.");
         }
 
         installationRepository.deleteAll(installationRepository.findByProjectIdOrderByInstalledOnDesc(id));
@@ -100,15 +109,22 @@ public class ConstructionSiteService {
         project.setProjectCode(projectCode.trim());
         project.setName(name.trim());
         if (customerId != null) {
-            Customer customer = customerRepository.findById(customerId)
-                    .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.customer.not_found", customerId)));
+            Customer customer =
+                    customerRepository
+                            .findById(customerId)
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    MessageUtils.getMessage(
+                                                            "error.customer.not_found",
+                                                            customerId)));
             project.setCustomer(customer);
             project.setCustomerName(customer.getCompanyName());
         } else if (customerName != null) {
             project.setCustomerName(customerName.trim());
         }
-        project.setContractValue(contractValue != null ? contractValue : BigDecimal.ZERO);
-        project.setEstimatedCost(estimatedCost != null ? estimatedCost : BigDecimal.ZERO);
+        project.setContractValue(Objects.requireNonNullElse(contractValue, BigDecimal.ZERO));
+        project.setEstimatedCost(Objects.requireNonNullElse(estimatedCost, BigDecimal.ZERO));
         project.setStartDate(startDate);
         project.setDeliveryDate(deliveryDate);
         project.setNotes(notes);
@@ -121,16 +137,41 @@ public class ConstructionSiteService {
     }
 
     @Transactional
-    public ConstructionSiteStonePlan addStonePlan(Long projectId, Long locationId, String stoneType,
-                                                  SurfaceFinish surfaceFinish, BigDecimal widthCm, BigDecimal lengthCm,
-                                                  BigDecimal plannedAreaM2, BigDecimal scrapPercent, SupplyRoute supplyRoute,
-                                                  String notes) {
+    public ConstructionSiteStonePlan addStonePlan(
+            Long projectId,
+            Long locationId,
+            String stoneType,
+            SurfaceFinish surfaceFinish,
+            BigDecimal widthCm,
+            BigDecimal lengthCm,
+            BigDecimal plannedAreaM2,
+            BigDecimal scrapPercent,
+            SupplyRoute supplyRoute,
+            String notes) {
         Project project = projectSiteService.getProjectById(projectId);
-        ProjectLocation location = projectLocationRepository.findById(locationId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.location.not_found", locationId)));
-        BigDecimal planned = plannedAreaM2 != null ? plannedAreaM2 : BigDecimal.ZERO;
-        BigDecimal scrap = scrapPercent != null ? scrapPercent : BigDecimal.ZERO;
-        BigDecimal required = projectSiteService.calculateProductionRequirement(planned, scrap, BigDecimal.ZERO, BigDecimal.ZERO);
+        ProjectLocation location =
+                projectLocationRepository
+                        .findById(locationId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.location.not_found", locationId)));
+        BigDecimal planned;
+        if (plannedAreaM2 != null) {
+            planned = plannedAreaM2;
+        } else {
+            planned = BigDecimal.ZERO;
+        }
+        BigDecimal scrap;
+        if (scrapPercent != null) {
+            scrap = scrapPercent;
+        } else {
+            scrap = BigDecimal.ZERO;
+        }
+        BigDecimal required =
+                projectSiteService.calculateProductionRequirement(
+                        planned, scrap, BigDecimal.ZERO, BigDecimal.ZERO);
         return stonePlanRepository.save(ConstructionSiteStonePlan.builder()
                 .project(project)
                 .location(location)
@@ -141,27 +182,45 @@ public class ConstructionSiteService {
                 .plannedAreaM2(planned)
                 .scrapPercent(scrap)
                 .requiredAreaM2(required)
-                .supplyRoute(supplyRoute != null ? supplyRoute : SupplyRoute.INTERNAL_PRODUCTION)
+                .supplyRoute(Objects.requireNonNullElse(supplyRoute, SupplyRoute.INTERNAL_PRODUCTION))
                 .notes(notes)
                 .build());
     }
 
     @Transactional
     public SiteSupplyAllocation allocateReservation(Long planId, Long slabId, BigDecimal areaM2) {
-        ConstructionSiteStonePlan plan = stonePlanRepository.findById(planId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.site.plan.not_found", planId)));
-        Slab slab = slabRepository.findById(slabId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.slab.not_found", slabId)));
+        ConstructionSiteStonePlan plan =
+                stonePlanRepository
+                        .findById(planId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.site.plan.not_found", planId)));
+        Slab slab =
+                slabRepository
+                        .findById(slabId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.slab.not_found", slabId)));
         List<StockReservation> active = stockReservationRepository.findByStatus("ACTIVE").stream()
                 .filter(reservation -> reservation.getSlab() != null && slabId.equals(reservation.getSlab().getId()))
                 .toList();
         if (!active.isEmpty()) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.reservation.active_exists"));
         }
+        BigDecimal reservedAreaM2;
+        if (areaM2 != null) {
+            reservedAreaM2 = areaM2;
+        } else {
+            reservedAreaM2 = slab.getSurfaceAreaM2();
+        }
         StockReservation reservation = stockReservationRepository.save(StockReservation.builder()
                 .slab(slab)
                 .project(plan.getProject())
-                .reservedAreaM2(areaM2 != null ? areaM2 : slab.getSurfaceAreaM2())
+                .reservedAreaM2(reservedAreaM2)
                 .status("ACTIVE")
                 .build());
         slab.setStatus(SlabStatus.RESERVED);
@@ -178,23 +237,50 @@ public class ConstructionSiteService {
                                                BigDecimal installedAreaM2, BigDecimal wasteAreaM2,
                                                LocalDate installedOn, String crewName, String notes) {
         Project project = projectSiteService.getProjectById(projectId);
-        ProjectLocation location = projectLocationRepository.findById(locationId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.location.not_found", locationId)));
+        ProjectLocation location =
+                projectLocationRepository
+                        .findById(locationId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.location.not_found", locationId)));
         Objects.requireNonNull(installedAreaM2, MessageUtils.getMessage("error.site.install.area.required"));
-        MaterialLot lot = materialLotId != null ? materialLotRepository.findById(materialLotId).orElse(null) : null;
-        Pallet pallet = palletId != null ? palletRepository.findById(palletId).orElse(null) : null;
+        MaterialLot lot;
+        if (materialLotId != null) {
+            lot = materialLotRepository.findById(materialLotId).orElse(null);
+        } else {
+            lot = null;
+        }
+        Pallet pallet;
+        if (palletId != null) {
+            pallet = palletRepository.findById(palletId).orElse(null);
+        } else {
+            pallet = null;
+        }
+        LocalDate installedOnValue;
+        if (installedOn != null) {
+            installedOnValue = installedOn;
+        } else {
+            installedOnValue = LocalDate.now();
+        }
         SiteInstallation installation = installationRepository.save(SiteInstallation.builder()
                 .project(project)
                 .location(location)
                 .materialLot(lot)
                 .pallet(pallet)
                 .installedAreaM2(installedAreaM2)
-                .wasteAreaM2(wasteAreaM2 != null ? wasteAreaM2 : BigDecimal.ZERO)
-                .installedOn(installedOn != null ? installedOn : LocalDate.now())
+                .wasteAreaM2(Objects.requireNonNullElse(wasteAreaM2, BigDecimal.ZERO))
+                .installedOn(installedOnValue)
                 .crewName(crewName)
                 .notes(notes)
                 .build());
-        BigDecimal installed = location.getInstalledAreaM2() != null ? location.getInstalledAreaM2() : BigDecimal.ZERO;
+        BigDecimal installed;
+        if (location.getInstalledAreaM2() != null) {
+            installed = location.getInstalledAreaM2();
+        } else {
+            installed = BigDecimal.ZERO;
+        }
         location.setInstalledAreaM2(installed.add(installedAreaM2));
         if (lot != null) {
             lot.setStatus(MaterialLotStatus.INSTALLED);
@@ -208,8 +294,8 @@ public class ConstructionSiteService {
         Project project = projectSiteService.getProjectById(projectId);
         BigDecimal consumptions = consumptionRepository.getTotalConsumptionByProject(projectId);
         BigDecimal expenses = costTransactionRepository.sumByProjectId(projectId);
-        BigDecimal total = (consumptions != null ? consumptions : BigDecimal.ZERO)
-                .add(expenses != null ? expenses : BigDecimal.ZERO);
+        BigDecimal total = Objects.requireNonNullElse(consumptions, BigDecimal.ZERO)
+                .add(Objects.requireNonNullElse(expenses, BigDecimal.ZERO));
         project.setActualCost(total);
         projectRepository.save(project);
         return total;
@@ -228,7 +314,7 @@ public class ConstructionSiteService {
     @Transactional(readOnly = true)
     public SiteProfitAndLoss.Result profitAndLoss(Long projectId) {
         Project project = projectSiteService.getProjectById(projectId);
-        Map<ExpenseCategory, BigDecimal> categories = new java.util.EnumMap<>(ExpenseCategory.class);
+        Map<ExpenseCategory, BigDecimal> categories = new EnumMap<>(ExpenseCategory.class);
         for (Object[] row : costTransactionRepository.sumCategoriesByProjectId(projectId)) {
             if (row[0] instanceof ExpenseCategory category) {
                 categories.put(category, (BigDecimal) row[1]);
@@ -246,6 +332,28 @@ public class ConstructionSiteService {
     }
 
     public List<Customer> customers() {
-        return customerRepository.findAllByOrderByCompanyNameAsc();
+        return BoundedReads.all(customerRepository, Sort.by("companyName"));
+    }
+
+    /**
+     * Same as {@code plansFor}, copied into a view inside the transaction.
+     *
+     * @param projectId see {@code plansFor}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<SiteViews.PlanView> planViewsFor(Long projectId) {
+        return plansFor(projectId).stream().map(siteMapper::toPlan).toList();
+    }
+
+    /**
+     * Same as {@code installationsFor}, copied into a view inside the transaction.
+     *
+     * @param projectId see {@code installationsFor}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<SiteViews.InstallationView> installationViewsFor(Long projectId) {
+        return installationsFor(projectId).stream().map(siteMapper::toInstallation).toList();
     }
 }

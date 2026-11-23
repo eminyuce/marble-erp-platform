@@ -1,26 +1,14 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.config.BackupProperties;
-import com.ozerler.marble.dto.BackupItemDto;
-import com.ozerler.marble.dto.BackupOperationStatus;
-import com.ozerler.marble.dto.StoredObjectMetadata;
-import com.ozerler.marble.exception.StorageException;
-import com.ozerler.marble.exception.StoredFileNotFoundException;
-import com.ozerler.marble.storage.ObjectStorageService;
-import com.ozerler.marble.storage.RustFsBrowserAccess;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
-
-import javax.sql.DataSource;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -36,11 +24,42 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import com.ozerler.marble.config.BackupProperties;
+import com.ozerler.marble.dto.BackupItemDto;
+import com.ozerler.marble.dto.BackupOperationStatus;
+import com.ozerler.marble.dto.StoredObjectMetadata;
+import com.ozerler.marble.exception.StorageException;
+import com.ozerler.marble.exception.StoredFileNotFoundException;
+import com.ozerler.marble.storage.ObjectStorageService;
+import com.ozerler.marble.storage.RustFsBrowserAccess;
+
+import javax.sql.DataSource;
+import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.BucketLifecycleConfiguration;
+import software.amazon.awssdk.services.s3.model.ExpirationStatus;
+import software.amazon.awssdk.services.s3.model.LifecycleExpiration;
+import software.amazon.awssdk.services.s3.model.LifecycleRule;
+import software.amazon.awssdk.services.s3.model.LifecycleRuleFilter;
+import software.amazon.awssdk.services.s3.model.PutBucketLifecycleConfigurationRequest;
 
 @Service
 @Slf4j
@@ -49,6 +68,10 @@ public class DatabaseBackupService {
     private static final Pattern SAFE_BACKUP_FILE_NAME =
             Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,180}\\.sql\\.gz");
     private static final String BACKUP_CONTENT_TYPE = "application/gzip";
+    private static final int BYTES_PER_UNIT = 1024;
+    private static final int DEFAULT_POSTGRES_PORT = 5432;
+    private static final int ERROR_READER_JOIN_MILLIS = 2000;
+    private static final DateTimeFormatter FILE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
 
     private final ObjectStorageService objectStorageService;
     private final BackupProperties properties;
@@ -59,7 +82,6 @@ public class DatabaseBackupService {
     private final String datasourceUsername;
     private final String datasourcePassword;
 
-    private static final DateTimeFormatter FILE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     private final BackupOperationStatus operationStatus = new BackupOperationStatus();
 
     public DatabaseBackupService(
@@ -93,11 +115,31 @@ public class DatabaseBackupService {
         this.objectStorageService = objectStorageService;
         this.properties = properties;
         this.browserAccess = browserAccess;
-        this.s3Client = s3Clients == null ? null : s3Clients.getIfAvailable();
-        this.dataSource = dataSources == null ? null : dataSources.getIfAvailable();
-        this.datasourceUrl = datasourceUrl == null ? "" : datasourceUrl;
-        this.datasourceUsername = datasourceUsername == null ? "" : datasourceUsername;
-        this.datasourcePassword = datasourcePassword == null ? "" : datasourcePassword;
+        if (s3Clients == null) {
+            this.s3Client = null;
+        } else {
+            this.s3Client = s3Clients.getIfAvailable();
+        }
+        if (dataSources == null) {
+            this.dataSource = null;
+        } else {
+            this.dataSource = dataSources.getIfAvailable();
+        }
+        if (datasourceUrl == null) {
+            this.datasourceUrl = "";
+        } else {
+            this.datasourceUrl = datasourceUrl;
+        }
+        if (datasourceUsername == null) {
+            this.datasourceUsername = "";
+        } else {
+            this.datasourceUsername = datasourceUsername;
+        }
+        if (datasourcePassword == null) {
+            this.datasourcePassword = "";
+        } else {
+            this.datasourcePassword = datasourcePassword;
+        }
     }
 
     @PostConstruct
@@ -203,7 +245,12 @@ public class DatabaseBackupService {
             }
 
             String key = obj.getKey();
-            String fileName = key.contains("/") ? key.substring(key.lastIndexOf('/') + 1) : key;
+            String fileName;
+            if (key.contains("/")) {
+                fileName = key.substring(key.lastIndexOf('/') + 1);
+            } else {
+                fileName = key;
+            }
             String downloadUrl = authenticatedDownloadPath(fileName);
             if (presignForBrowser && isSafeBackupFileName(fileName)) {
                 try {
@@ -213,12 +260,18 @@ public class DatabaseBackupService {
                 }
             }
 
+            Instant createdAt;
+            if (obj.getLastModified() != null) {
+                createdAt = obj.getLastModified();
+            } else {
+                createdAt = Instant.now();
+            }
             result.add(BackupItemDto.builder()
                     .fileName(fileName)
                     .s3Key(key)
                     .sizeBytes(obj.getSizeBytes())
                     .formattedSize(formatFileSize(obj.getSizeBytes()))
-                    .createdAt(obj.getLastModified() != null ? obj.getLastModified() : Instant.now())
+                    .createdAt(createdAt)
                     .downloadUrl(downloadUrl)
                     .build());
         }
@@ -325,13 +378,15 @@ public class DatabaseBackupService {
 
             // 1. RustFS'ten dosyayı indir
             try (InputStream in = objectStorageService.download(s3Key);
-                 OutputStream out = Files.newOutputStream(tempCompressed)) {
+                    OutputStream out = Files.newOutputStream(tempCompressed)) {
                 in.transferTo(out);
             }
 
             // 2. GZIP aç
-            try (GZIPInputStream gzis = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(tempCompressed)));
-                 OutputStream fos = new BufferedOutputStream(Files.newOutputStream(tempSql))) {
+            try (GZIPInputStream gzis =
+                            new GZIPInputStream(
+                                    new BufferedInputStream(Files.newInputStream(tempCompressed)));
+                    OutputStream fos = new BufferedOutputStream(Files.newOutputStream(tempSql))) {
                 gzis.transferTo(fos);
             }
 
@@ -349,7 +404,13 @@ public class DatabaseBackupService {
                             "-d", dbInfo.database(),
                             "-f", tempSql.toAbsolutePath().toString()
                     );
-                    pb.environment().put("PGPASSWORD", dbInfo.password() != null ? dbInfo.password() : "");
+                    String value;
+                    if (dbInfo.password() != null) {
+                        value = dbInfo.password();
+                    } else {
+                        value = "";
+                    }
+                    pb.environment().put("PGPASSWORD", value);
 
                     Process process = pb.start();
                     int exitCode = process.waitFor();
@@ -368,7 +429,9 @@ public class DatabaseBackupService {
                 } catch (IOException ioException) {
                     log.warn("psql aracı çalıştırılamadı ({}).", ioException.getMessage());
                     if (!properties.getDatabase().isAllowFallbackDump()) {
-                        throw new RuntimeException("Sistemde 'psql' aracı bulunamadı: " + ioException.getMessage(), ioException);
+                        throw new RuntimeException(
+                                "Sistemde 'psql' aracı bulunamadı: " + ioException.getMessage(),
+                                ioException);
                     }
                     restored = true;
                 }
@@ -425,7 +488,9 @@ public class DatabaseBackupService {
             s3Client.putBucketLifecycleConfiguration(req);
             log.info("RustFS bucket={} için {} günlük Lifecycle politikası uygulandı.", bucket, days);
         } catch (Exception e) {
-            log.warn("RustFS Lifecycle politikası tanımlanamadı (Spring @Scheduled devrede kalacak): {}", e.getMessage());
+            log.warn(
+                    "RustFS Lifecycle politikası tanımlanamadı (Spring @Scheduled devrede kalacak): {}",
+                    e.getMessage());
         }
     }
 
@@ -457,17 +522,29 @@ public class DatabaseBackupService {
     // ─────────────────────────────────────────────────────────────
 
     private boolean dumpWithPgDump(Path tempFile, DbConnectionInfo dbInfo, String fileName) {
+        String value;
+        if (dbInfo.username() == null) {
+            value = "";
+        } else {
+            value = dbInfo.username();
+        }
         ProcessBuilder builder = new ProcessBuilder(
                 properties.getDatabase().getPgDumpPath(),
                 "-h", dbInfo.host(),
                 "-p", String.valueOf(dbInfo.port()),
-                "-U", dbInfo.username() == null ? "" : dbInfo.username(),
+                "-U", value,
                 "-F", "p",
                 "--no-owner",
                 "--no-privileges",
                 dbInfo.database()
         );
-        builder.environment().put("PGPASSWORD", dbInfo.password() != null ? dbInfo.password() : "");
+        String valueValue;
+        if (dbInfo.password() != null) {
+            valueValue = dbInfo.password();
+        } else {
+            valueValue = "";
+        }
+        builder.environment().put("PGPASSWORD", valueValue);
         return runDumpProcess(builder, tempFile, fileName, "pg_dump");
     }
 
@@ -480,10 +557,16 @@ public class DatabaseBackupService {
             log.warn("Geçersiz PostgreSQL konteyner adı, docker pg_dump atlandı.");
             return false;
         }
+        String value;
+        if (dbInfo.username() == null) {
+            value = "";
+        } else {
+            value = dbInfo.username();
+        }
         ProcessBuilder builder = new ProcessBuilder(
                 "docker", "exec", container,
                 "pg_dump",
-                "-U", dbInfo.username() == null ? "" : dbInfo.username(),
+                "-U", value,
                 "-d", dbInfo.database(),
                 "-F", "p",
                 "--no-owner",
@@ -509,12 +592,12 @@ public class DatabaseBackupService {
 
             long bytes;
             try (InputStream stdout = process.getInputStream();
-                 OutputStream fos = Files.newOutputStream(tempFile);
-                 GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(fos))) {
+                    OutputStream fos = Files.newOutputStream(tempFile);
+                    GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(fos))) {
                 bytes = stdout.transferTo(gzip);
             }
             int exitCode = process.waitFor();
-            errorReader.join(2000);
+            errorReader.join(ERROR_READER_JOIN_MILLIS);
             if (exitCode == 0 && bytes > 0) {
                 log.info("{} ile yedekleme tamamlandı: {} ({} bayt)", source, fileName, bytes);
                 return true;
@@ -537,7 +620,8 @@ public class DatabaseBackupService {
         }
     }
 
-    private boolean dumpWithJdbc(Path tempFile, DbConnectionInfo dbInfo, String fileName) throws IOException, SQLException {
+    private boolean dumpWithJdbc(Path tempFile, DbConnectionInfo dbInfo, String fileName)
+            throws IOException, SQLException {
         if (dataSource == null) {
             log.warn("PostgreSQL veri yedeği için DataSource yok.");
             return false;
@@ -548,8 +632,8 @@ public class DatabaseBackupService {
             connection.setAutoCommit(false);
             connection.setReadOnly(true);
             try (OutputStream fos = Files.newOutputStream(tempFile);
-                 GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(fos));
-                 Writer writer = new OutputStreamWriter(gzip, StandardCharsets.UTF_8)) {
+                    GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(fos));
+                    Writer writer = new OutputStreamWriter(gzip, StandardCharsets.UTF_8)) {
                 long rows = new PostgresDataDump().write(connection, writer, dbInfo.database());
                 log.info("PostgreSQL veri yedeği yazıldı: {} satır, dosya {}", rows, fileName);
             } finally {
@@ -564,21 +648,29 @@ public class DatabaseBackupService {
     private void generateFallbackDump(Path targetGzFile, DbConnectionInfo dbInfo) throws IOException {
         log.info("Fallback SQL dump üretiliyor: {}", targetGzFile);
         try (OutputStream fos = Files.newOutputStream(targetGzFile);
-             GZIPOutputStream gzos = new GZIPOutputStream(new BufferedOutputStream(fos));
-             PrintWriter writer = new PrintWriter(new OutputStreamWriter(gzos, StandardCharsets.UTF_8))) {
+                GZIPOutputStream gzos = new GZIPOutputStream(new BufferedOutputStream(fos));
+                PrintWriter writer = new PrintWriter(new OutputStreamWriter(gzos, StandardCharsets.UTF_8))) {
 
             writer.println("-- ========================================================");
             writer.println("-- Özerler Mermer ERP Database Backup");
             writer.println("-- Timestamp: " + Instant.now());
-            writer.println("-- Database: " + (dbInfo != null ? dbInfo.database() : "marble_erp"));
+            String value;
+            if (dbInfo != null) {
+                value = dbInfo.database();
+            } else {
+                value = "marble_erp";
+            }
+            writer.println("-- Database: " + value);
             writer.println("-- Format: SQL GZIP Archive");
             writer.println("-- ========================================================");
             writer.println();
 
             if (dataSource != null) {
                 try (Connection conn = dataSource.getConnection();
-                     Statement stmt = conn.createStatement()) {
-                    ResultSet rs = stmt.executeQuery("SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
+                        Statement stmt = conn.createStatement()) {
+                    ResultSet rs =
+                            stmt.executeQuery(
+                                    "SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
                     writer.println("-- Tablo Listesi:");
                     while (rs.next()) {
                         writer.println("-- Table: " + rs.getString(1));
@@ -609,15 +701,19 @@ public class DatabaseBackupService {
         boolean isH2 = url.contains(":h2:");
 
         String host = "localhost";
-        int port = 5432;
+        int port = DEFAULT_POSTGRES_PORT;
         String database = "marble_erp";
 
         try {
             if (url.startsWith("jdbc:postgresql://")) {
                 String clean = url.substring("jdbc:".length());
                 URI uri = URI.create(clean);
-                if (uri.getHost() != null) host = uri.getHost();
-                if (uri.getPort() > 0) port = uri.getPort();
+                if (uri.getHost() != null) {
+                    host = uri.getHost();
+                }
+                if (uri.getPort() > 0) {
+                    port = uri.getPort();
+                }
                 if (uri.getPath() != null && uri.getPath().length() > 1) {
                     database = uri.getPath().substring(1);
                     if (database.contains("?")) {
@@ -700,13 +796,23 @@ public class DatabaseBackupService {
     }
 
     private String formatFileSize(long bytes) {
-        if (bytes < 1024) return bytes + " B";
-        int exp = (int) (Math.log(bytes) / Math.log(1024));
+        if (bytes < BYTES_PER_UNIT) {
+            return bytes + " B";
+        }
+        int exp = (int) (Math.log(bytes) / Math.log(BYTES_PER_UNIT));
         char pre = "KMGTPE".charAt(exp - 1);
-        return String.format(Locale.US, "%.1f %cB", bytes / Math.pow(1024, exp), pre);
+        return String.format(Locale.US, "%.1f %cB", bytes / Math.pow(BYTES_PER_UNIT, exp), pre);
     }
 
-    private record DbConnectionInfo(String host, int port, String database, String username, String password, boolean isH2) {}
+    private record DbConnectionInfo(
+            String host,
+            int port,
+            String database,
+            String username,
+            String password,
+            boolean isH2) {
+    }
 
-    public record BackupContent(String fileName, long sizeBytes, String contentType, InputStream body) {}
+    public record BackupContent(String fileName, long sizeBytes, String contentType, InputStream body) {
+    }
 }

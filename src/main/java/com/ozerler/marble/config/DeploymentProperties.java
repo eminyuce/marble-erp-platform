@@ -1,9 +1,10 @@
 package com.ozerler.marble.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * In-app production deploy settings. Enabled only on the Linux host (prod profile).
@@ -13,6 +14,9 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 public class DeploymentProperties {
+
+    private static final int DEFAULT_LOG_CHUNK_BYTES = 32768;
+    private static final int DEFAULT_STALE_RUNNING_MINUTES = 45;
 
     /**
      * Master switch. Keep false on local/dev/Windows.
@@ -54,10 +58,10 @@ public class DeploymentProperties {
     /**
      * Treat a RUNNING status older than this as stale (crash / reboot mid-deploy).
      */
-    private int staleRunningMinutes = 45;
+    private int staleRunningMinutes = DEFAULT_STALE_RUNNING_MINUTES;
 
     /**
      * Maximum log bytes returned per poll.
      */
-    private int logChunkBytes = 32768;
+    private int logChunkBytes = DEFAULT_LOG_CHUNK_BYTES;
 }

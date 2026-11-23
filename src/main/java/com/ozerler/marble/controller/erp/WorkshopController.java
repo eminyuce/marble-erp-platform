@@ -1,18 +1,10 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.CutOrderDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.CutOrder;
-import com.ozerler.marble.model.enums.WorkshopProcessType;
-import com.ozerler.marble.model.enums.WorkshopReceiptSource;
-import com.ozerler.marble.model.enums.WorkshopWorkPurpose;
-import com.ozerler.marble.service.WorkshopCutService;
-import com.ozerler.marble.service.WorkshopOperationService;
-import com.ozerler.marble.web.ListQuery;
-import com.ozerler.marble.web.WorkshopGrid;
-import com.ozerler.marble.web.WorkshopReceiptGrid;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Locale;
+import java.util.Objects;
+
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,9 +19,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Locale;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.CutOrderDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.CutOrderView;
+import com.ozerler.marble.model.enums.WorkshopProcessType;
+import com.ozerler.marble.model.enums.WorkshopReceiptSource;
+import com.ozerler.marble.model.enums.WorkshopWorkPurpose;
+import com.ozerler.marble.service.WorkshopCutService;
+import com.ozerler.marble.service.WorkshopOperationService;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.WorkshopGrid;
+import com.ozerler.marble.web.WorkshopReceiptGrid;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/workshop")
@@ -45,10 +48,21 @@ public class WorkshopController {
                                 @RequestParam(value = "status", required = false) String status,
                                 @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", workshopCutService.getWorkshopSummary());
-        model.addAttribute("selectedStatus", status == null ? "" : status);
-        model.addAttribute("grid", WorkshopGrid.view(
-                workshopCutService.getCutOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
+        model.addAttribute(
+                "grid",
+                WorkshopGrid.view(
+                        workshopCutService.getCutOrdersPaged(
+                                query.pageNumber(),
+                                query.pageSize(),
+                                query.getSearch(),
+                                status,
+                                query.sortKey(),
+                                query.sortDirection()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         return "erp/workshop/index";
     }
 
@@ -79,27 +93,28 @@ public class WorkshopController {
 
     @PostMapping("/create")
     @PreAuthorize(Constants.PRE_AUTH_WORKSHOP_WRITE)
-    public String createCutOrder(@RequestParam(value = "projectId", required = false) Long projectId,
-                                 @RequestParam(value = "locationId", required = false) Long locationId,
-                                 @RequestParam("slabId") Long slabId,
-                                 @RequestParam("machineName") String machineName,
-                                 @RequestParam(value = "machineId", required = false) Long machineId,
-                                 @RequestParam("operatorName") String operatorName,
-                                 @RequestParam("piecesCount") int piecesCount,
-                                 @RequestParam("targetWidthCm") BigDecimal targetWidthCm,
-                                 @RequestParam("targetLengthCm") BigDecimal targetLengthCm,
-                                 @RequestParam(value = "edgeFinish", required = false) String edgeFinish,
-                                 @RequestParam(value = "targetLocationDesc", required = false) String targetLocationDesc,
-                                 @RequestParam(value = "notes", required = false) String notes,
-                                 @RequestParam(value = "purpose", required = false) WorkshopWorkPurpose purpose,
-                                 Locale locale,
-                                 Model model,
-                                 RedirectAttributes redirectAttributes) {
+    public String createCutOrder(
+            @RequestParam(value = "projectId", required = false) Long projectId,
+            @RequestParam(value = "locationId", required = false) Long locationId,
+            @RequestParam("slabId") Long slabId,
+            @RequestParam("machineName") String machineName,
+            @RequestParam(value = "machineId", required = false) Long machineId,
+            @RequestParam("operatorName") String operatorName,
+            @RequestParam("piecesCount") int piecesCount,
+            @RequestParam("targetWidthCm") BigDecimal targetWidthCm,
+            @RequestParam("targetLengthCm") BigDecimal targetLengthCm,
+            @RequestParam(value = "edgeFinish", required = false) String edgeFinish,
+            @RequestParam(value = "targetLocationDesc", required = false) String targetLocationDesc,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "purpose", required = false) WorkshopWorkPurpose purpose,
+            Locale locale,
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         try {
-            var order = workshopCutService.createCutOrder(projectId, locationId, slabId, machineName, operatorName,
+            Long orderId = workshopCutService.createCutOrderId(projectId, locationId, slabId, machineName, operatorName,
                     piecesCount, targetWidthCm, targetLengthCm, edgeFinish, targetLocationDesc, notes);
-            workshopOperationService.assignPurposeAndMachine(order.getId(), purpose, machineId);
+            workshopOperationService.assignPurposeAndMachine(orderId, purpose, machineId);
 
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.workshop.cut.success", null, locale));
@@ -114,34 +129,35 @@ public class WorkshopController {
 
     @GetMapping("/{id}")
     public String cutOrderDetail(@PathVariable("id") Long id, Model model) {
-        model.addAttribute("order", workshopCutService.getCutOrderWithDetails(id));
-        model.addAttribute("operations", workshopOperationService.operationsFor(id));
+        model.addAttribute("order", workshopCutService.getCutOrder(id));
+        model.addAttribute("operations", workshopOperationService.operationViewsFor(id));
         model.addAttribute("orderCost", workshopOperationService.orderCost(id));
         model.addAttribute("processTypes", WorkshopProcessType.values());
-        model.addAttribute("workshopMachines", workshopOperationService.workshopMachines());
+        model.addAttribute("workshopMachines", workshopOperationService.workshopMachineViews());
         return "erp/workshop/detail";
     }
 
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
-        populateCutEditForm(model, locale, workshopCutService.getCutOrderWithDetails(id));
+        populateCutEditForm(model, locale, workshopCutService.getCutOrder(id));
         return "erp/workshop/cut-order-form";
     }
 
     @PostMapping("/{id}/edit")
     @PreAuthorize(Constants.PRE_AUTH_WORKSHOP_WRITE)
-    public String updateCutOrder(@PathVariable("id") Long id,
-                                 @RequestParam(value = "projectId", required = false) Long projectId,
-                                 @RequestParam("machineName") String machineName,
-                                 @RequestParam(value = "machineId", required = false) Long machineId,
-                                 @RequestParam("operatorName") String operatorName,
-                                 @RequestParam(value = "edgeFinish", required = false) String edgeFinish,
-                                 @RequestParam(value = "targetLocationDesc", required = false) String targetLocationDesc,
-                                 @RequestParam(value = "notes", required = false) String notes,
-                                 @RequestParam(value = "purpose", required = false) WorkshopWorkPurpose purpose,
-                                 Locale locale,
-                                 Model model,
-                                 RedirectAttributes redirectAttributes) {
+    public String updateCutOrder(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "projectId", required = false) Long projectId,
+            @RequestParam("machineName") String machineName,
+            @RequestParam(value = "machineId", required = false) Long machineId,
+            @RequestParam("operatorName") String operatorName,
+            @RequestParam(value = "edgeFinish", required = false) String edgeFinish,
+            @RequestParam(value = "targetLocationDesc", required = false) String targetLocationDesc,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "purpose", required = false) WorkshopWorkPurpose purpose,
+            Locale locale,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         try {
             workshopCutService.updateCutOrder(id, projectId, machineName, operatorName,
                     edgeFinish, targetLocationDesc, notes);
@@ -152,25 +168,28 @@ public class WorkshopController {
         } catch (Exception e) {
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
-            populateCutEditForm(model, locale, workshopCutService.getCutOrderWithDetails(id));
+            populateCutEditForm(model, locale, workshopCutService.getCutOrder(id));
             return "erp/workshop/cut-order-form";
         }
     }
 
     @PostMapping("/receipts")
     @PreAuthorize(Constants.PRE_AUTH_WORKSHOP_WRITE)
-    public String receiveMaterial(@RequestParam("source") WorkshopReceiptSource source,
-                                  @RequestParam(value = "supplierId", required = false) Long supplierId,
-                                  @RequestParam(value = "purchaseOrderItemId", required = false) Long purchaseOrderItemId,
-                                  @RequestParam("stoneType") String stoneType,
-                                  @RequestParam(value = "quantity", required = false) BigDecimal quantity,
-                                  @RequestParam(value = "areaM2", required = false) BigDecimal areaM2,
-                                  @RequestParam(value = "purchaseCost", required = false) BigDecimal purchaseCost,
-                                  @RequestParam(value = "receivedAt", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate receivedAt,
-                                  @RequestParam(value = "notes", required = false) String notes,
-                                  Locale locale,
-                                  Model model,
-                                  RedirectAttributes redirectAttributes) {
+    public String receiveMaterial(
+            @RequestParam("source") WorkshopReceiptSource source,
+            @RequestParam(value = "supplierId", required = false) Long supplierId,
+            @RequestParam(value = "purchaseOrderItemId", required = false) Long purchaseOrderItemId,
+            @RequestParam("stoneType") String stoneType,
+            @RequestParam(value = "quantity", required = false) BigDecimal quantity,
+            @RequestParam(value = "areaM2", required = false) BigDecimal areaM2,
+            @RequestParam(value = "purchaseCost", required = false) BigDecimal purchaseCost,
+            @RequestParam(value = "receivedAt", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate receivedAt,
+            @RequestParam(value = "notes", required = false) String notes,
+            Locale locale,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         try {
             workshopOperationService.receiveMaterial(source, supplierId, purchaseOrderItemId, stoneType,
                     quantity, areaM2, purchaseCost, receivedAt, notes);
@@ -207,14 +226,14 @@ public class WorkshopController {
     }
 
     private void populateCutForm(Model model, Locale locale) {
-        model.addAttribute("availableSlabs", workshopCutService.getAvailableSlabs());
-        model.addAttribute("projects", workshopCutService.getAllProjects());
-        model.addAttribute("workshopMachines", workshopOperationService.workshopMachines());
+        model.addAttribute("availableSlabs", workshopCutService.getAvailableSlabViews());
+        model.addAttribute("projects", workshopCutService.getAllProjectViews());
+        model.addAttribute("workshopMachines", workshopOperationService.workshopMachineViews());
         model.addAttribute("purposes", WorkshopWorkPurpose.values());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.workshop.title.create", null, locale));
     }
 
-    private void populateCutEditForm(Model model, Locale locale, CutOrder order) {
+    private void populateCutEditForm(Model model, Locale locale, CutOrderView order) {
         populateCutForm(model, locale);
         model.addAttribute("record", order);
         model.addAttribute("isEdit", true);
@@ -226,6 +245,6 @@ public class WorkshopController {
         model.addAttribute("grid", WorkshopReceiptGrid.view(
                 workshopOperationService.listReceipts(), query.pageNumber(), query.pageSize(), query.getSearch()));
         model.addAttribute("receiptSources", WorkshopReceiptSource.values());
-        model.addAttribute("suppliers", workshopOperationService.suppliers());
+        model.addAttribute("suppliers", workshopOperationService.supplierViews());
     }
 }

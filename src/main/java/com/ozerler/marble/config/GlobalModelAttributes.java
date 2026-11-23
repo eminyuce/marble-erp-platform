@@ -1,32 +1,41 @@
 package com.ozerler.marble.config;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
 import com.ozerler.marble.service.HelpService;
 import com.ozerler.marble.service.NoticeDismissDuration;
 import com.ozerler.marble.service.SettingService;
 import com.ozerler.marble.util.Ints;
-import jakarta.servlet.http.HttpServletRequest;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ModelAttribute;
 
 @ControllerAdvice
 @RequiredArgsConstructor
 public class GlobalModelAttributes {
 
+    private static final int DEFAULT_PAGE_SIZE = 25;
+
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20261123-data-grid}")
-    private String configuredAssetVersion;
+    @Value("${app.version}")
+    private String configuredAppVersion;
 
-    private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();
+    @Value("${app.asset-version:#{null}}")
+    private String configuredAssetVersion;
 
     @ModelAttribute("gridDefaultPageSize")
     public int gridDefaultPageSize() {
         String val = settingService.getSetting("grid.default_page_size", "25");
-        int size = Ints.parseOrDefault(val, 25);
-        return (size > 0 && size <= 100) ? size : 25;
+        int size = Ints.parseOrDefault(val, DEFAULT_PAGE_SIZE);
+        if (size > 0 && size <= 100) {
+            return size;
+        }
+        return DEFAULT_PAGE_SIZE;
     }
 
     @ModelAttribute("noticeDismissSeconds")
@@ -47,11 +56,16 @@ public class GlobalModelAttributes {
         return helpService.resolvePageKey(request.getRequestURI()).orElse("");
     }
 
+    @ModelAttribute("appVersion")
+    public String appVersion() {
+        return configuredAppVersion;
+    }
+
     @ModelAttribute("assetVersion")
     public String assetVersion() {
         if (configuredAssetVersion != null && !configuredAssetVersion.isBlank()) {
             return configuredAssetVersion;
         }
-        return fallbackAssetVersion;
+        return configuredAppVersion;
     }
 }

@@ -1,13 +1,13 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.model.enums.ExpenseType;
-import com.ozerler.marble.util.MessageUtils;
-
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
+
+import com.ozerler.marble.model.enums.ExpenseType;
+import com.ozerler.marble.util.MessageUtils;
 
 /**
  * Costing period stored as YYYY-MM. Invoice month and costing month may differ.
@@ -38,7 +38,12 @@ public final class ExpensePeriods {
     }
 
     public static String postingPeriod(LocalDate entryDate) {
-        LocalDate reference = entryDate != null ? entryDate : LocalDate.now();
+        LocalDate reference;
+        if (entryDate != null) {
+            reference = entryDate;
+        } else {
+            reference = LocalDate.now();
+        }
         return of(YearMonth.from(reference));
     }
 
@@ -47,7 +52,16 @@ public final class ExpensePeriods {
      * unless the caller supplies an explicit consumption period.
      */
     public static String expensePeriod(ExpenseType type, LocalDate invoiceDate, LocalDate entryDate) {
-        LocalDate reference = invoiceDate != null ? invoiceDate : entryDate != null ? entryDate : LocalDate.now();
+        LocalDate reference;
+        if (invoiceDate != null) {
+            reference = invoiceDate;
+        } else {
+            if (entryDate != null) {
+                reference = entryDate;
+            } else {
+                reference = LocalDate.now();
+            }
+        }
         YearMonth month = YearMonth.from(reference);
         if (type == ExpenseType.ELECTRICITY) {
             return of(month.minusMonths(1));

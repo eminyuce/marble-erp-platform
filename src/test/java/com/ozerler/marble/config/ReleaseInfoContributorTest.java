@@ -1,20 +1,19 @@
 package com.ozerler.marble.config;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.actuate.info.Info;
-import org.springframework.boot.info.BuildProperties;
-import org.springframework.core.env.Environment;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.actuate.info.Info;
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.core.env.Environment;
 
 @ExtendWith(MockitoExtension.class)
 class ReleaseInfoContributorTest {
@@ -24,8 +23,8 @@ class ReleaseInfoContributorTest {
 
     @Test
     @DisplayName("actuator info exposes the pom version and omits secrets")
-    void contribute_PublishesReleaseFactsFromBuildInfo() {
-        when(environment.getActiveProfiles()).thenReturn(new String[]{"prod"});
+    void contributePublishesReleaseFactsFromBuildInfo() {
+        Mockito.when(environment.getActiveProfiles()).thenReturn(new String[]{"prod"});
         ObjectStorageProperties storage = new ObjectStorageProperties();
         storage.setType("rustfs");
         storage.getRustfs().setBucket("erp-files");
@@ -44,36 +43,36 @@ class ReleaseInfoContributorTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> release = (Map<String, Object>) builder.build().getDetails().get("release");
-        assertThat(release.get("appVersion")).isEqualTo("1.0.1");
-        assertThat(release.get("appName")).isEqualTo("Özerler Mermer ERP");
-        assertThat(release.get("gitBranch")).isEqualTo("main");
-        assertThat(release.get("sessionStore")).isEqualTo("JDBC");
-        assertThat(release.get("storageType")).isEqualTo("rustfs");
-        assertThat(release.get("bucket")).isEqualTo("erp-files");
-        assertThat(release.get("activeProfiles")).isEqualTo("prod");
-        assertThat(release.get("springBootVersion").toString()).isNotBlank();
-        assertThat(release.get("springFrameworkVersion").toString()).isNotBlank();
-        assertThat(release.get("image")).isEqualTo("guvenulu/marble-erp-platform:latest");
-        assertThat(release.toString()).doesNotContain("SECRET");
-        assertThat(release.toString()).doesNotContain("password");
+        Assertions.assertThat(release.get("appVersion")).isEqualTo("1.0.1");
+        Assertions.assertThat(release.get("appName")).isEqualTo("Özerler Mermer ERP");
+        Assertions.assertThat(release.get("gitBranch")).isEqualTo("main");
+        Assertions.assertThat(release.get("sessionStore")).isEqualTo("JDBC");
+        Assertions.assertThat(release.get("storageType")).isEqualTo("rustfs");
+        Assertions.assertThat(release.get("bucket")).isEqualTo("erp-files");
+        Assertions.assertThat(release.get("activeProfiles")).isEqualTo("prod");
+        Assertions.assertThat(release.get("springBootVersion").toString()).isNotBlank();
+        Assertions.assertThat(release.get("springFrameworkVersion").toString()).isNotBlank();
+        Assertions.assertThat(release.get("image")).isEqualTo("guvenulu/marble-erp-platform:latest");
+        Assertions.assertThat(release.toString()).doesNotContain("SECRET");
+        Assertions.assertThat(release.toString()).doesNotContain("password");
     }
 
     @Test
     @DisplayName("git commit is shortened and a missing sha stays unknown")
-    void shortSha_TrimsAndHidesUnknown() {
-        assertThat(ReleaseInfoContributor.shortSha("abcdef1234567890ffff")).isEqualTo("abcdef123456");
-        assertThat(ReleaseInfoContributor.shortSha("unknown")).isEqualTo("unknown");
-        assertThat(ReleaseInfoContributor.shortSha(null)).isEqualTo("unknown");
+    void shortShaTrimsAndHidesUnknown() {
+        Assertions.assertThat(ReleaseInfoContributor.shortSha("abcdef1234567890ffff")).isEqualTo("abcdef123456");
+        Assertions.assertThat(ReleaseInfoContributor.shortSha("unknown")).isEqualTo("unknown");
+        Assertions.assertThat(ReleaseInfoContributor.shortSha(null)).isEqualTo("unknown");
     }
 
     @Test
     @DisplayName("a baked git.properties value is used when the image env sha is missing")
-    void gitCommit_UsesPropertiesWhenEnvIsUnknown() {
+    void gitCommitUsesPropertiesWhenEnvIsUnknown() {
         Properties file = new Properties();
         file.setProperty("git.commit.id", "abcdef1234567890ffff");
-        assertThat(ReleaseInfoContributor.gitCommit("unknown", file)).isEqualTo("abcdef123456");
-        assertThat(ReleaseInfoContributor.gitCommit("1234567890abcdef", file)).isEqualTo("1234567890ab");
-        assertThat(ReleaseInfoContributor.gitCommit(null, null)).isEqualTo("unknown");
+        Assertions.assertThat(ReleaseInfoContributor.gitCommit("unknown", file)).isEqualTo("abcdef123456");
+        Assertions.assertThat(ReleaseInfoContributor.gitCommit("1234567890abcdef", file)).isEqualTo("1234567890ab");
+        Assertions.assertThat(ReleaseInfoContributor.gitCommit(null, null)).isEqualTo("unknown");
     }
 
     private static BuildProperties buildProperties() {

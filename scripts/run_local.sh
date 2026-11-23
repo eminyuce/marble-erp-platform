@@ -73,7 +73,7 @@ if [ "$DOCKER_ALL" -eq 1 ]; then
     echo "App:    http://localhost:81"
     echo "Admin:  http://localhost:81/account/adminlogin/"
     echo "Email:  admin@eimece.test"
-    echo "Pass:   B2u5c8JB"
+    echo "Pass:   set a password; the seeded hash is disabled by V34"
     exit 0
 fi
 
@@ -115,7 +115,7 @@ echo "Admin:       http://localhost:$APP_PORT/account/adminlogin/"
 echo "RustFS API:  http://localhost:9000"
 echo "RustFS UI:   http://localhost:9001"
 echo "Email:       admin@eimece.test"
-echo "Pass:        B2u5c8JB"
+echo "Pass:        set a password; the seeded hash is disabled by V34"
 echo ""
 echo "[APP] Starting Spring Boot (dev profile)..."
 echo "Host-side RustFS API and presigned links use http://localhost:9000."

@@ -1,8 +1,8 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.StockLocation;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.StockLocationType;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,8 +10,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.model.StockLocation;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface StockLocationRepository extends JpaRepository<StockLocation, Long> {
@@ -26,9 +28,10 @@ public interface StockLocationRepository extends JpaRepository<StockLocation, Lo
 
     List<StockLocation> findAllByOrderByCodeAsc();
 
-    @Query("SELECT l FROM StockLocation l WHERE (:search IS NULL "
+    @Query(value = "SELECT l FROM StockLocation l WHERE (:search IS NULL "
             + "OR LOWER(l.code) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(l.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-            + "AND (:unit IS NULL OR l.businessUnit = :unit)")
+            + "AND (:unit IS NULL OR l.businessUnit = :unit)",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<StockLocation> search(@Param("search") String search, @Param("unit") BusinessUnit unit, Pageable pageable);
 }

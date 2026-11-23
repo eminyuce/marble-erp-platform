@@ -1,12 +1,11 @@
 package com.ozerler.marble.domain;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class PalletCostAccumulatorTest {
 
@@ -18,9 +17,9 @@ class PalletCostAccumulatorTest {
         PalletCostAccumulator.StepResult afterPolish = PalletCostAccumulator.applyOperation(
                 first.newCostPerM2(), first.remainingAreaM2(), new BigDecimal("8.00"), new BigDecimal("200.00"));
 
-        assertThat(afterPolish.newCostPerM2()).isNotEqualByComparingTo(first.newCostPerM2());
-        assertThat(afterPolish.newTotalCost()).isEqualByComparingTo("1200.00");
-        assertThat(afterPolish.newCostPerM2()).isEqualByComparingTo("150.00");
+        Assertions.assertThat(afterPolish.newCostPerM2()).isNotEqualByComparingTo(first.newCostPerM2());
+        Assertions.assertThat(afterPolish.newTotalCost()).isEqualByComparingTo("1200.00");
+        Assertions.assertThat(afterPolish.newCostPerM2()).isEqualByComparingTo("150.00");
     }
 
     @Test
@@ -30,6 +29,6 @@ class PalletCostAccumulatorTest {
                 PalletCostAccumulator.line(new BigDecimal("2"), new BigDecimal("100")),
                 PalletCostAccumulator.line(new BigDecimal("6"), new BigDecimal("200"))
         ));
-        assertThat(avg).isEqualByComparingTo("175.00");
+        Assertions.assertThat(avg).isEqualByComparingTo("175.00");
     }
 }

@@ -1,16 +1,11 @@
 package com.ozerler.marble.controller.admin;
 
-import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.dto.ApplicationLogDto;
-import com.ozerler.marble.dto.ApplicationLogKpiDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.service.ApplicationLogService;
-import com.ozerler.marble.web.ApplicationLogGrid;
-import com.ozerler.marble.web.GridRequests;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,11 +19,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.dto.ApplicationLogDto;
+import com.ozerler.marble.dto.ApplicationLogKpiDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.service.ApplicationLogService;
+import com.ozerler.marble.web.ApplicationLogGrid;
+import com.ozerler.marble.web.GridRequests;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
@@ -77,10 +79,22 @@ public class ApplicationLogAdminController extends AbstractController {
         model.addAttribute("kpis", kpis);
         model.addAttribute("availableLevels", AVAILABLE_LEVELS);
         model.addAttribute("currentSection", "settings");
-        model.addAttribute("grid", ApplicationLogGrid.view(
-                applicationLogService.getLogs(pageNo, pageSize, query.getSearch(), sortKey, sortDirection,
-                        combineLevelFilters(selectedLevels, query.getLevel()), query.getStartDate(), query.getEndDate()),
-                pageNo, pageSize, sortKey, sortDirection));
+        model.addAttribute(
+                "grid",
+                ApplicationLogGrid.view(
+                        applicationLogService.getLogs(
+                                pageNo,
+                                pageSize,
+                                query.getSearch(),
+                                sortKey,
+                                sortDirection,
+                                combineLevelFilters(selectedLevels, query.getLevel()),
+                                query.getStartDate(),
+                                query.getEndDate()),
+                        pageNo,
+                        pageSize,
+                        sortKey,
+                        sortDirection));
         return "admin/settings/logs";
     }
 
@@ -94,8 +108,12 @@ public class ApplicationLogAdminController extends AbstractController {
             @RequestParam(value = "sortDir", required = false) String sortDir,
             @RequestParam(value = "level", required = false) String level,
             @RequestParam(value = "levels", required = false) List<String> levels,
-            @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam(value = "startDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate startDate,
+            @RequestParam(value = "endDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate endDate) {
 
         List<String> combinedLevels = combineLevelFilters(levels, level);
 
@@ -129,9 +147,12 @@ public class ApplicationLogAdminController extends AbstractController {
     public ResponseEntity<Map<String, Object>> cleanupOldLogs(
             @RequestParam(value = "retentionDays", defaultValue = "30") int retentionDays) {
         int deleted = applicationLogService.cleanupOldLogs(retentionDays);
-        String message = retentionDays == 0
-                ? "Tüm log kayıtları başarıyla temizlendi (" + deleted + " adet)."
-                : deleted + " adet eski log kaydı başarıyla temizlendi.";
+        String message;
+        if (retentionDays == 0) {
+            message = "Tüm log kayıtları başarıyla temizlendi (" + deleted + " adet).";
+        } else {
+            message = deleted + " adet eski log kaydı başarıyla temizlendi.";
+        }
         ApplicationLogKpiDto updatedKpis = applicationLogService.getKpiMetrics();
         return ResponseEntity.ok(Map.of(
                 "success", true,

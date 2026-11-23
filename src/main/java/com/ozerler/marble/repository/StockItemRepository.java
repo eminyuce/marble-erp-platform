@@ -1,7 +1,9 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.StockItem;
-import com.ozerler.marble.model.enums.StockProductType;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,9 +12,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.QuarryCategory;
+import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.model.enums.StockProductType;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface StockItemRepository extends JpaRepository<StockItem, Long> {
@@ -34,48 +39,51 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     List<StockItem> findByCustomerIdAndStatus(Long customerId, String status);
 
-    List<StockItem> findByStockLocation_LocationTypeAndStatus(com.ozerler.marble.model.enums.StockLocationType locationType, String status);
+    List<StockItem> findByStockLocationLocationTypeAndStatus(StockLocationType locationType, String status);
 
-    List<StockItem> findByStockLocation_BusinessUnitAndStatus(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String status);
+    List<StockItem> findByStockLocationBusinessUnitAndStatus(BusinessUnit businessUnit, String status);
 
-    List<StockItem> findByQuarryCategoryAndStatus(com.ozerler.marble.model.enums.QuarryCategory quarryCategory, String status);
+    List<StockItem> findByQuarryCategoryAndStatus(QuarryCategory quarryCategory, String status);
 
-    boolean existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String description);
+    boolean existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(BusinessUnit businessUnit, String description);
 
     boolean existsByDescriptionIgnoreCase(String description);
 
-    Optional<StockItem> findByStockLocation_BusinessUnitAndDescriptionIgnoreCase(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String description);
+    Optional<StockItem> findByStockLocationBusinessUnitAndDescriptionIgnoreCase(
+            BusinessUnit businessUnit, String description);
 
-    Optional<StockItem> findFirstByStockLocation_LocationTypeAndProductType(com.ozerler.marble.model.enums.StockLocationType locationType, StockProductType productType);
+    Optional<StockItem> findFirstByStockLocationLocationTypeAndProductType(
+            StockLocationType locationType, StockProductType productType);
 
     List<StockItem> findByProjectId(Long projectId);
 
     List<StockItem> findByProjectIdAndQuantityGreaterThan(Long projectId, BigDecimal minQty);
 
     @EntityGraph(attributePaths = {"customer", "sourceBlock", "stockLocation"})
-    @Query(value = "SELECT s FROM StockItem s " +
-           "LEFT JOIN s.customer c " +
-           "LEFT JOIN s.sourceBlock b " +
-           "LEFT JOIN s.stockLocation l " +
-           "WHERE (:productType IS NULL OR s.productType = :productType) " +
-           "AND (:status IS NULL OR s.status = :status) " +
-           "AND (:customerId IS NULL OR c.id = :customerId) " +
-           "AND (:generalStockOnly = false OR s.customer IS NULL) " +
-           "AND (:search IS NULL OR :search = '' " +
-           "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "ORDER BY s.id DESC",
-           countQuery = "SELECT COUNT(s) FROM StockItem s " +
-           "LEFT JOIN s.customer c " +
-           "WHERE (:productType IS NULL OR s.productType = :productType) " +
-           "AND (:status IS NULL OR s.status = :status) " +
-           "AND (:customerId IS NULL OR c.id = :customerId) " +
-           "AND (:generalStockOnly = false OR s.customer IS NULL) " +
-           "AND (:search IS NULL OR :search = '' " +
-           "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%')))")
+    @Query(value = "SELECT s FROM StockItem s "
+            + "LEFT JOIN s.customer c "
+            + "LEFT JOIN s.sourceBlock b "
+            + "LEFT JOIN s.stockLocation l "
+            + "WHERE (:productType IS NULL OR s.productType = :productType) "
+            + "AND (:status IS NULL OR s.status = :status) "
+            + "AND (:customerId IS NULL OR c.id = :customerId) "
+            + "AND (:generalStockOnly = false OR s.customer IS NULL) "
+            + "AND (:search IS NULL OR :search = '' "
+            + "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) "
+            + "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) "
+            + "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%'))) "
+            + "ORDER BY s.id DESC",
+            countQuery = "SELECT COUNT(s) FROM StockItem s "
+            + "LEFT JOIN s.customer c "
+            + "WHERE (:productType IS NULL OR s.productType = :productType) "
+            + "AND (:status IS NULL OR s.status = :status) "
+            + "AND (:customerId IS NULL OR c.id = :customerId) "
+            + "AND (:generalStockOnly = false OR s.customer IS NULL) "
+            + "AND (:search IS NULL OR :search = '' "
+            + "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) "
+            + "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) "
+            + "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<StockItem> searchItems(@Param("productType") StockProductType productType,
                                @Param("status") String status,
                                @Param("customerId") Long customerId,
@@ -84,31 +92,32 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
                                Pageable pageable);
 
     @EntityGraph(attributePaths = {"customer", "sourceBlock", "stockLocation"})
-    @Query(value = "SELECT s FROM StockItem s " +
-           "LEFT JOIN s.customer c " +
-           "LEFT JOIN s.sourceBlock b " +
-           "LEFT JOIN s.stockLocation l " +
-           "WHERE (:productType IS NULL OR s.productType = :productType) " +
-           "AND (:status IS NULL OR s.status = :status) " +
-           "AND (:customerId IS NULL OR c.id = :customerId) " +
-           "AND (:generalStockOnly = false OR s.customer IS NULL) " +
-           "AND (:customerOnly = false OR s.customer IS NOT NULL) " +
-           "AND (:search IS NULL OR :search = '' " +
-           "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "ORDER BY s.id DESC",
-           countQuery = "SELECT COUNT(s) FROM StockItem s " +
-           "LEFT JOIN s.customer c " +
-           "WHERE (:productType IS NULL OR s.productType = :productType) " +
-           "AND (:status IS NULL OR s.status = :status) " +
-           "AND (:customerId IS NULL OR c.id = :customerId) " +
-           "AND (:generalStockOnly = false OR s.customer IS NULL) " +
-           "AND (:customerOnly = false OR s.customer IS NOT NULL) " +
-           "AND (:search IS NULL OR :search = '' " +
-           "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%')))")
+    @Query(value = "SELECT s FROM StockItem s "
+            + "LEFT JOIN s.customer c "
+            + "LEFT JOIN s.sourceBlock b "
+            + "LEFT JOIN s.stockLocation l "
+            + "WHERE (:productType IS NULL OR s.productType = :productType) "
+            + "AND (:status IS NULL OR s.status = :status) "
+            + "AND (:customerId IS NULL OR c.id = :customerId) "
+            + "AND (:generalStockOnly = false OR s.customer IS NULL) "
+            + "AND (:customerOnly = false OR s.customer IS NOT NULL) "
+            + "AND (:search IS NULL OR :search = '' "
+            + "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) "
+            + "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) "
+            + "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%'))) "
+            + "ORDER BY s.id DESC",
+            countQuery = "SELECT COUNT(s) FROM StockItem s "
+            + "LEFT JOIN s.customer c "
+            + "WHERE (:productType IS NULL OR s.productType = :productType) "
+            + "AND (:status IS NULL OR s.status = :status) "
+            + "AND (:customerId IS NULL OR c.id = :customerId) "
+            + "AND (:generalStockOnly = false OR s.customer IS NULL) "
+            + "AND (:customerOnly = false OR s.customer IS NOT NULL) "
+            + "AND (:search IS NULL OR :search = '' "
+            + "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) "
+            + "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) "
+            + "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<StockItem> searchItemsDetailed(@Param("productType") StockProductType productType,
                                        @Param("status") String status,
                                        @Param("customerId") Long customerId,
@@ -120,9 +129,13 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
     @Query("SELECT COUNT(s) FROM StockItem s WHERE s.productType = :productType AND s.status = 'AVAILABLE'")
     long countAvailableByProductType(@Param("productType") StockProductType productType);
 
-    @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM StockItem s WHERE s.productType = :productType AND s.status = 'AVAILABLE'")
+    @Query(
+            "SELECT COALESCE(SUM(s.quantity), 0) FROM StockItem s WHERE s.productType = :productType AND s.status = "
+                    + "'AVAILABLE'")
     BigDecimal sumQuantityByProductType(@Param("productType") StockProductType productType);
 
-    @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM StockItem s WHERE s.customer.id = :customerId AND s.status = 'AVAILABLE'")
+    @Query(
+            "SELECT COALESCE(SUM(s.quantity), 0) FROM StockItem s WHERE s.customer.id = :customerId AND s.status = "
+                    + "'AVAILABLE'")
     BigDecimal sumQuantityByCustomer(@Param("customerId") Long customerId);
 }

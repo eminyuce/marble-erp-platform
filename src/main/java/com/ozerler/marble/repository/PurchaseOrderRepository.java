@@ -1,6 +1,8 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.PurchaseOrder;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -9,21 +11,33 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.ozerler.marble.model.PurchaseOrder;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
 
-    @EntityGraph(attributePaths = {"supplier", "project"})
-    @Query("SELECT po FROM PurchaseOrder po WHERE " +
-            "(:search IS NULL OR LOWER(po.poNumber) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(po.supplier.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query(value = "SELECT po FROM PurchaseOrder po "
+                    + "LEFT JOIN FETCH po.supplier supplier "
+                    + "LEFT JOIN FETCH po.project project WHERE "
+                    + "(:search IS NULL OR LOWER(po.poNumber) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(supplier.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                    + "'%')))",
+            countQuery = "SELECT COUNT(po) FROM PurchaseOrder po "
+                    + "LEFT JOIN po.supplier supplier "
+                    + "LEFT JOIN po.project project WHERE "
+                    + "(:search IS NULL OR LOWER(po.poNumber) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(supplier.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                    + "'%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<PurchaseOrder> searchPurchaseOrders(@Param("search") String search, Pageable pageable);
 
     @EntityGraph(attributePaths = {"supplier", "project", "items", "costCenter"})
-    java.util.Optional<PurchaseOrder> findWithDetailsById(@Param("id") Long id);
+    Optional<PurchaseOrder> findWithDetailsById(@Param("id") Long id);
 
-    @Query("SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier WHERE LOWER(po.poNumber) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @Query(
+            "SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier WHERE LOWER(po.poNumber) LIKE LOWER(CONCAT('%', "
+                    + ":query, '%'))")
     List<PurchaseOrder> searchByPoNumber(@Param("query") String query, Pageable pageable);
 
     boolean existsBySupplierId(Long supplierId);

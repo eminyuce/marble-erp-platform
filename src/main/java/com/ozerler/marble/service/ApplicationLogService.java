@@ -1,14 +1,16 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.ApplicationLogDto;
-import com.ozerler.marble.dto.ApplicationLogKpiDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.exception.ResourceNotFoundException;
-import com.ozerler.marble.model.ApplicationLog;
-import com.ozerler.marble.repository.ApplicationLogRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import jakarta.persistence.criteria.Predicate;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,13 +20,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import com.ozerler.marble.dto.ApplicationLogDto;
+import com.ozerler.marble.dto.ApplicationLogKpiDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.exception.ResourceNotFoundException;
+import com.ozerler.marble.logging.db.DatabaseLogQueue;
+import com.ozerler.marble.model.ApplicationLog;
+import com.ozerler.marble.repository.ApplicationLogRepository;
+import com.ozerler.marble.web.GridColumnFilterSpecifications;
+import com.ozerler.marble.web.GridColumnFilters;
+import com.ozerler.marble.web.GridFilterCatalog;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -33,6 +41,9 @@ public class ApplicationLogService {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
     private static final int DEFAULT_RETENTION_DAYS = 30;
+    private static final int DEFAULT_PAGE_SIZE = 50;
+    private static final int MAX_PAGE_SIZE = 500;
+    private static final int RECENT_HOURS = 24;
 
     private final ApplicationLogRepository applicationLogRepository;
 
@@ -48,10 +59,20 @@ public class ApplicationLogService {
             LocalDate endDate) {
 
         int pageIndex = Math.max(0, page - 1);
-        int pageSize = (size > 0 && size <= 500) ? size : 50;
+        int pageSize;
+        if (size > 0 && size <= MAX_PAGE_SIZE) {
+            pageSize = size;
+        } else {
+            pageSize = DEFAULT_PAGE_SIZE;
+        }
 
         String safeSortField = resolveSortField(sortField);
-        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort.Direction direction;
+        if ("asc".equalsIgnoreCase(sortDir)) {
+            direction = Sort.Direction.ASC;
+        } else {
+            direction = Sort.Direction.DESC;
+        }
         Pageable pageable = PageRequest.of(pageIndex, pageSize, Sort.by(direction, safeSortField));
 
         Specification<ApplicationLog> spec = (root, query, cb) -> {
@@ -90,6 +111,8 @@ public class ApplicationLogService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
+        Map<String, String> aliases = GridFilterCatalog.aliases("logs-table");
+        spec = spec.and(GridColumnFilterSpecifications.of(aliases, GridColumnFilters.fromCurrentRequest(aliases)));
         Page<ApplicationLog> pageResult = applicationLogRepository.findAll(spec, pageable);
         List<ApplicationLogDto> dtoList = pageResult.getContent().stream()
                 .map(this::mapToDto)
@@ -107,7 +130,7 @@ public class ApplicationLogService {
 
     @Transactional(readOnly = true)
     public ApplicationLogKpiDto getKpiMetrics() {
-        LocalDateTime since = LocalDateTime.now().minusHours(24);
+        LocalDateTime since = LocalDateTime.now().minusHours(RECENT_HOURS);
         long total = applicationLogRepository.countByTimestampAfter(since);
         long errors = applicationLogRepository.countByLevelAndTimestampAfter("ERROR", since);
         long warns = applicationLogRepository.countByLevelAndTimestampAfter("WARN", since);
@@ -129,12 +152,18 @@ public class ApplicationLogService {
     public int cleanupOldLogs(int retentionDays) {
         if (retentionDays == 0) {
             try {
-                com.ozerler.marble.logging.db.DatabaseLogQueue.getInstance().clear();
+                DatabaseLogQueue.getInstance().clear();
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
             return applicationLogRepository.deleteAllLogs();
         }
-        int days = retentionDays > 0 ? retentionDays : DEFAULT_RETENTION_DAYS;
+        int days;
+        if (retentionDays > 0) {
+            days = retentionDays;
+        } else {
+            days = DEFAULT_RETENTION_DAYS;
+        }
         LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
         return applicationLogRepository.deleteLogsOlderThan(cutoff);
     }
@@ -146,7 +175,12 @@ public class ApplicationLogService {
     }
 
     private ApplicationLogDto mapToDto(ApplicationLog entity) {
-        String formatted = entity.getTimestamp() != null ? entity.getTimestamp().format(FORMATTER) : "";
+        String formatted;
+        if (entity.getTimestamp() != null) {
+            formatted = entity.getTimestamp().format(FORMATTER);
+        } else {
+            formatted = "";
+        }
         String shortLogger = shortenLogger(entity.getLoggerName());
         boolean hasEx = (entity.getExceptionClass() != null && !entity.getExceptionClass().isBlank())
                 || (entity.getStackTrace() != null && !entity.getStackTrace().isBlank());

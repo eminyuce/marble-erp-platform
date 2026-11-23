@@ -1,14 +1,15 @@
 package com.ozerler.marble.web;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Copies a rejected form submission so the next render can put the values back.
@@ -77,7 +78,13 @@ public final class FormDraft {
                 if (value == null) {
                     continue;
                 }
-                values.add(value.length() > MAX_VALUE_LENGTH ? value.substring(0, MAX_VALUE_LENGTH) : value);
+                String valueValue;
+                if (value.length() > MAX_VALUE_LENGTH) {
+                    valueValue = value.substring(0, MAX_VALUE_LENGTH);
+                } else {
+                    valueValue = value;
+                }
+                values.add(valueValue);
             }
             kept.put(name, values);
         }

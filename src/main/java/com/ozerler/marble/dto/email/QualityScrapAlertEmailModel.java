@@ -1,11 +1,12 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Model for 'QUALITY_SCRAP_ALERT' email template.
@@ -37,16 +38,16 @@ public class QualityScrapAlertEmailModel implements BaseEmailModel {
     @Override
     public Map<String, String> toVariables() {
         Map<String, String> vars = new LinkedHashMap<>();
-        vars.put("blockCode", blockCode != null ? blockCode : "");
-        vars.put("quarryName", quarryName != null ? quarryName : "");
-        vars.put("defectType", defectType != null ? defectType : "");
-        vars.put("affectedCount", affectedCount != null ? affectedCount : "0");
-        vars.put("scrapM2", scrapM2 != null ? scrapM2 : "0.00");
-        vars.put("inspectorName", inspectorName != null ? inspectorName : "");
-        vars.put("inspectionDate", inspectionDate != null ? inspectionDate : "");
-        vars.put("quarantineLocation", quarantineLocation != null ? quarantineLocation : "");
-        vars.put("actionRequired", actionRequired != null ? actionRequired : "");
-        vars.put("companyName", companyName != null ? companyName : "Özerler Mermer A.Ş.");
+        vars.put("blockCode", Objects.requireNonNullElse(blockCode, ""));
+        vars.put("quarryName", Objects.requireNonNullElse(quarryName, ""));
+        vars.put("defectType", Objects.requireNonNullElse(defectType, ""));
+        vars.put("affectedCount", Objects.requireNonNullElse(affectedCount, "0"));
+        vars.put("scrapM2", Objects.requireNonNullElse(scrapM2, "0.00"));
+        vars.put("inspectorName", Objects.requireNonNullElse(inspectorName, ""));
+        vars.put("inspectionDate", Objects.requireNonNullElse(inspectionDate, ""));
+        vars.put("quarantineLocation", Objects.requireNonNullElse(quarantineLocation, ""));
+        vars.put("actionRequired", Objects.requireNonNullElse(actionRequired, ""));
+        vars.put("companyName", Objects.requireNonNullElse(companyName, "Özerler Mermer A.Ş."));
         return vars;
     }
 
@@ -60,7 +61,9 @@ public class QualityScrapAlertEmailModel implements BaseEmailModel {
                 .inspectorName("Müh. Serkan Varol")
                 .inspectionDate("07.10.2026 11:15")
                 .quarantineLocation("Kalite Kontrol Karantina Sahası K-2")
-                .actionRequired("Epoksi filesi çekilmeden veya blok sağlamlaştırılmadan nihai kesime ve sevkiyata izin verilmeyecektir.")
+                .actionRequired(
+                        "Epoksi filesi çekilmeden veya blok sağlamlaştırılmadan nihai kesime ve sevkiyata izin "
+                                + "verilmeyecektir.")
                 .companyName("Özerler Mermer A.Ş.")
                 .build();
     }

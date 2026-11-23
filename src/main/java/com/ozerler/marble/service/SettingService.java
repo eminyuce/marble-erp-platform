@@ -1,18 +1,21 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.model.SystemSetting;
-import com.ozerler.marble.repository.SystemSettingRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import com.ozerler.marble.model.SystemSetting;
+import com.ozerler.marble.repository.SystemSettingRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +27,7 @@ public class SettingService {
     @Cacheable(value = "settings", key = "'allSettingsMap'")
     @Transactional(readOnly = true)
     public Map<String, String> getAllSettingsAsMap() {
-        List<SystemSetting> all = settingRepository.findAll();
+        List<SystemSetting> all = BoundedReads.all(settingRepository);
         Map<String, String> map = new HashMap<>();
         for (SystemSetting s : all) {
             map.put(s.getKey(), s.getValue());
@@ -34,7 +37,7 @@ public class SettingService {
 
     @Transactional(readOnly = true)
     public List<SystemSetting> getAllSettings() {
-        return settingRepository.findAll();
+        return BoundedReads.all(settingRepository);
     }
 
     @Cacheable(value = "settings", key = "#key")
@@ -47,7 +50,10 @@ public class SettingService {
 
     public String getSetting(String key, String defaultValue) {
         String val = getSettingValue(key);
-        return val != null ? val : defaultValue;
+        if (val != null) {
+            return val;
+        }
+        return defaultValue;
     }
 
     @Transactional(readOnly = true)
@@ -62,7 +68,7 @@ public class SettingService {
         Optional<SystemSetting> existing = settingRepository.findByKey(key);
         SystemSetting setting = existing.orElseGet(() -> SystemSetting.builder()
                 .key(key)
-                .category(category != null ? category : "GENERAL")
+                .category(Objects.requireNonNullElse(category, "GENERAL"))
                 .description(description)
                 .build());
 
@@ -74,7 +80,7 @@ public class SettingService {
             setting.setDescription(description);
         }
         settingRepository.save(setting);
-        log.info("System setting saved: {} = {}", key, key.toLowerCase().contains("password") ? "******" : value);
+        log.info("System setting saved: {} = {}", key, SettingValueMask.display(key, value));
     }
 
     @CacheEvict(value = "settings", allEntries = true)

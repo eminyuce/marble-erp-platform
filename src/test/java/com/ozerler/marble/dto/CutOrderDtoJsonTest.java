@@ -1,14 +1,14 @@
 package com.ozerler.marble.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ozerler.marble.model.CutOrder;
+import java.math.BigDecimal;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ozerler.marble.model.CutOrder;
 
 class CutOrderDtoJsonTest {
 
@@ -32,22 +32,22 @@ class CutOrderDtoJsonTest {
 
         JsonNode json = objectMapper.readTree(objectMapper.writeValueAsString(dto));
 
-        assertThat(json.path("cut_order_no").asText()).isEqualTo("CUT-2026-0001");
-        assertThat(json.path("project_name").asText()).isEqualTo("Villa");
-        assertThat(json.path("item_count").asInt()).isEqualTo(4);
-        assertThat(json.path("total_area_m2").decimalValue()).isEqualByComparingTo("3.8400");
-        assertThat(json.path("status").asText()).isEqualTo("COMPLETED");
-        assertThat(json.path("status_label").asText()).isEqualTo("Tamamlandı");
-        assertThat(json.has("cutOrderNo")).isFalse();
-        assertThat(json.has("statusLabel")).isFalse();
-        assertThat(json.has("projectName")).isFalse();
-        assertThat(json.has("itemCount")).isFalse();
-        assertThat(json.has("totalAreaM2")).isFalse();
+        Assertions.assertThat(json.path("cut_order_no").asText()).isEqualTo("CUT-2026-0001");
+        Assertions.assertThat(json.path("project_name").asText()).isEqualTo("Villa");
+        Assertions.assertThat(json.path("item_count").asInt()).isEqualTo(4);
+        Assertions.assertThat(json.path("total_area_m2").decimalValue()).isEqualByComparingTo("3.8400");
+        Assertions.assertThat(json.path("status").asText()).isEqualTo("COMPLETED");
+        Assertions.assertThat(json.path("status_label").asText()).isEqualTo("Tamamlandı");
+        Assertions.assertThat(json.has("cutOrderNo")).isFalse();
+        Assertions.assertThat(json.has("statusLabel")).isFalse();
+        Assertions.assertThat(json.has("projectName")).isFalse();
+        Assertions.assertThat(json.has("itemCount")).isFalse();
+        Assertions.assertThat(json.has("totalAreaM2")).isFalse();
     }
 
     @Test
     @DisplayName("fromEntity maps COMPLETED to the Turkish status label")
-    void fromEntity_mapsTurkishStatusLabel() {
+    void fromEntityMapsTurkishStatusLabel() {
         CutOrderDto dto = CutOrderDto.fromEntity(
                 CutOrder.builder()
                         .id(1L)
@@ -55,7 +55,7 @@ class CutOrderDtoJsonTest {
                         .status("COMPLETED")
                         .build());
 
-        assertThat(dto.getStatus()).isEqualTo("COMPLETED");
-        assertThat(dto.getStatusLabel()).isEqualTo("Tamamlandı");
+        Assertions.assertThat(dto.getStatus()).isEqualTo("COMPLETED");
+        Assertions.assertThat(dto.getStatusLabel()).isEqualTo("Tamamlandı");
     }
 }

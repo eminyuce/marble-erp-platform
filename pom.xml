@@ -13,7 +13,7 @@
 
     <groupId>com.ozerler</groupId>
     <artifactId>marble-erp-platform</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.7</version>
     <name>Özerler Mermer ERP</name>
     <description>Enterprise Marble ERP Platform - Physical Traceability, Waste Management &amp; Dynamic Cost Accounting</description>
 
@@ -23,6 +23,8 @@
         <maven.compiler.target>24</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <awssdk.version>2.59.7</awssdk.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     </properties>
 
     <dependencyManagement>
@@ -113,6 +115,11 @@
         </dependency>
 
         <!-- Lombok -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${mapstruct.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -229,6 +236,12 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>1.4.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -268,6 +281,16 @@
                             <artifactId>lombok</artifactId>
                             <version>${lombok.version}</version>
                         </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>${lombok-mapstruct-binding.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
@@ -286,6 +309,16 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.16</version>
+                <configuration>
+                    <!-- dto and model stay out: they are data holders. config, constants, and
+                         exceptions are included so the ratio is not padded by skipping them. -->
+                    <excludes>
+                        <exclude>**/dto/**</exclude>
+                        <exclude>**/model/**</exclude>
+                        <exclude>**/realtime/payload/**</exclude>
+                        <exclude>**/MarbleErpApplication.class</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>jacoco-prepare-agent</id>
@@ -299,25 +332,85 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                         <configuration>
-                            <excludes>
-                                <exclude>**/dto/**</exclude>
-                                <exclude>**/config/**</exclude>
-                                <exclude>**/model/**</exclude>
-                                <exclude>**/model/enums/**</exclude>
-                                <exclude>**/common/exception/**</exclude>
-                                <exclude>**/common/enums/**</exclude>
-                                <exclude>**/common/Constants.class</exclude>
-                                <exclude>**/common/util/ErrorResponse.class</exclude>
-                                <exclude>**/common/util/ErrorCode.class</exclude>
-                                <exclude>**/realtime/payload/**</exclude>
-                                <exclude>**/MarbleErpApplication.class</exclude>
-                            </excludes>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.40</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-build</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[24,)</version>
+                                </requireJavaVersion>
+                                <requireMavenVersion>
+                                    <version>[3.6.3,)</version>
+                                </requireMavenVersion>
+                                <banDuplicatePomDependencyVersions/>
+                            </rules>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
             <!-- PMD Static Code Analysis -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.6.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>10.26.0</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <configLocation>config/checkstyle/checkstyle.xml</configLocation>
+                    <suppressionsLocation>config/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
+                    <propertyExpansion>config_loc=${project.basedir}/config/checkstyle</propertyExpansion>
+                    <inputEncoding>UTF-8</inputEncoding>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -328,6 +421,10 @@
                     <printFailingErrors>true</printFailingErrors>
                     <linkXRef>false</linkXRef>
                     <analysisCache>true</analysisCache>
+                    <!-- MapStruct output is generated code; analyse only hand-written sources. -->
+                    <excludeRoots>
+                        <excludeRoot>${project.build.directory}/generated-sources</excludeRoot>
+                    </excludeRoots>
                     <excludes>
                         <exclude>**/dto/**</exclude>
                         <exclude>**/model/**</exclude>

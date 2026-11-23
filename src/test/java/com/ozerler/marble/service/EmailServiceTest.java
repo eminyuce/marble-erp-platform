@@ -1,23 +1,23 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.EmailPreviewDto;
-import com.ozerler.marble.model.EmailTemplate;
-import com.ozerler.marble.repository.EmailTemplateRepository;
+import java.util.Map;
+import java.util.Optional;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
-import java.util.Map;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import com.ozerler.marble.dto.EmailPreviewDto;
+import com.ozerler.marble.dto.EmailTemplateDto;
+import com.ozerler.marble.mapper.EmailTemplateMapperImpl;
+import com.ozerler.marble.model.EmailTemplate;
+import com.ozerler.marble.repository.EmailTemplateRepository;
 
 @ExtendWith(MockitoExtension.class)
 class EmailServiceTest {
@@ -33,48 +33,48 @@ class EmailServiceTest {
 
     @BeforeEach
     void setUp() {
-        emailService = new EmailService(templateRepository, settingService, null);
+        emailService = new EmailService(templateRepository, new EmailTemplateMapperImpl(), settingService, null);
     }
 
     @Test
     @DisplayName("renderHtml escapes dangerous HTML characters to prevent XSS")
-    void renderHtml_EscapesHtmlCharacters() {
+    void renderHtmlEscapesHtmlCharacters() {
         String template = "<p>Sayın {{fullName}}, işleminiz tamamlandı.</p>";
         Map<String, String> vars = Map.of("fullName", "Ahmet <script>alert('xss')</script>");
 
         String rendered = emailService.renderHtml(template, vars);
 
-        assertThat(rendered).contains("&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;");
-        assertThat(rendered).doesNotContain("<script>");
+        Assertions.assertThat(rendered).contains("&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;");
+        Assertions.assertThat(rendered).doesNotContain("<script>");
     }
 
     @Test
     @DisplayName("renderHtml allows raw HTML when triple braces are used")
-    void renderHtml_TripleBracesAllowsRawHtml() {
+    void renderHtmlTripleBracesAllowsRawHtml() {
         String template = "<div>{{{badgeHtml}}}</div>";
         Map<String, String> vars = Map.of("badgeHtml", "<span class='badge'>ONAYLANDI</span>");
 
         String rendered = emailService.renderHtml(template, vars);
 
-        assertThat(rendered).isEqualTo("<div><span class='badge'>ONAYLANDI</span></div>");
+        Assertions.assertThat(rendered).isEqualTo("<div><span class='badge'>ONAYLANDI</span></div>");
     }
 
     @Test
     @DisplayName("renderSubject strips CR and LF characters to prevent SMTP header injection")
-    void renderSubject_StripsCrlfInjection() {
+    void renderSubjectStripsCrlfInjection() {
         String template = "Bildirim: {{subjectTitle}}";
         Map<String, String> vars = Map.of("subjectTitle", "Fatura Onayı\r\nBcc: hacker@evil.test");
 
         String rendered = emailService.renderSubject(template, vars);
 
-        assertThat(rendered).doesNotContain("\r");
-        assertThat(rendered).doesNotContain("\n");
-        assertThat(rendered).isEqualTo("Bildirim: Fatura Onayı Bcc: hacker@evil.test");
+        Assertions.assertThat(rendered).doesNotContain("\r");
+        Assertions.assertThat(rendered).doesNotContain("\n");
+        Assertions.assertThat(rendered).isEqualTo("Bildirim: Fatura Onayı Bcc: hacker@evil.test");
     }
 
     @Test
     @DisplayName("Rendering supports both {{var}} and ${var} syntax with internal whitespace and case-insensitivity")
-    void renderTemplate_SupportsMultipleSyntaxVariants() {
+    void renderTemplateSupportsMultipleSyntaxVariants() {
         String template = "Merhaba {{ fullName }}, kodunuz: ${ OTP_CODE } ve şirket: {{companyname}}.";
         Map<String, String> vars = Map.of(
                 "fullName", "Emin",
@@ -84,35 +84,35 @@ class EmailServiceTest {
 
         String rendered = emailService.renderHtml(template, vars);
 
-        assertThat(rendered).isEqualTo("Merhaba Emin, kodunuz: 456789 ve şirket: Özerler.");
+        Assertions.assertThat(rendered).isEqualTo("Merhaba Emin, kodunuz: 456789 ve şirket: Özerler.");
     }
 
     @Test
     @DisplayName("Unsupplied placeholders are replaced with empty string gracefully")
-    void renderTemplate_GracefullyHandlesMissingPlaceholders() {
+    void renderTemplateGracefullyHandlesMissingPlaceholders() {
         String template = "Kaynak: {{blockCode}} ({{missingQuarry}})";
         Map<String, String> vars = Map.of("blockCode", "BLK-001");
 
         String rendered = emailService.renderHtml(template, vars);
 
-        assertThat(rendered).isEqualTo("Kaynak: BLK-001 ()");
+        Assertions.assertThat(rendered).isEqualTo("Kaynak: BLK-001 ()");
     }
 
     @Test
     @DisplayName("validateTemplateSyntax rejects unclosed placeholders")
-    void validateTemplateSyntax_ThrowsOnUnclosedPlaceholders() {
-        assertThatThrownBy(() -> emailService.validateTemplateSyntax("Merhaba {{name"))
+    void validateTemplateSyntaxThrowsOnUnclosedPlaceholders() {
+        Assertions.assertThatThrownBy(() -> emailService.validateTemplateSyntax("Merhaba {{name"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Kapatılmamış '{{' ayracı bulundu");
 
-        assertThatThrownBy(() -> emailService.validateTemplateSyntax("Kod: ${otp"))
+        Assertions.assertThatThrownBy(() -> emailService.validateTemplateSyntax("Kod: ${otp"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Kapatılmamış '${' ayracı bulundu");
     }
 
     @Test
     @DisplayName("previewTemplate generates full preview with realistic domain sample variables")
-    void previewTemplate_RendersRealisticSampleData() {
+    void previewTemplateRendersRealisticSampleData() {
         EmailTemplate template = EmailTemplate.builder()
                 .id(1L)
                 .templateKey("USER_WELCOME")
@@ -122,19 +122,19 @@ class EmailServiceTest {
                 .isActive(true)
                 .build();
 
-        when(templateRepository.findByTemplateKey("USER_WELCOME")).thenReturn(Optional.of(template));
+        Mockito.when(templateRepository.findByTemplateKey("USER_WELCOME")).thenReturn(Optional.of(template));
 
         Optional<EmailPreviewDto> preview = emailService.previewTemplate("USER_WELCOME");
 
-        assertThat(preview).isPresent();
-        assertThat(preview.get().getSubject()).contains("Ahmet Yılmaz");
-        assertThat(preview.get().getHtml()).contains("ahmet.yilmaz@ozerler.test");
+        Assertions.assertThat(preview).isPresent();
+        Assertions.assertThat(preview.get().getSubject()).contains("Ahmet Yılmaz");
+        Assertions.assertThat(preview.get().getHtml()).contains("ahmet.yilmaz@ozerler.test");
     }
 
     @Test
     @DisplayName("placeholderSamples lists declared keys with sample values")
-    void placeholderSamples_UsesDeclaredKeysAndSampleValues() {
-        EmailTemplate template = EmailTemplate.builder()
+    void placeholderSamplesUsesDeclaredKeysAndSampleValues() {
+        EmailTemplateDto template = EmailTemplateDto.builder()
                 .id(1L)
                 .templateKey("USER_WELCOME")
                 .templateName("Hoş Geldiniz")
@@ -146,18 +146,18 @@ class EmailServiceTest {
 
         var samples = emailService.placeholderSamples(template);
 
-        assertThat(samples).extracting(sample -> sample.getKey())
+        Assertions.assertThat(samples).extracting(sample -> sample.getKey())
                 .containsExactly("fullName", "email");
-        assertThat(samples.get(0).isKnown()).isTrue();
-        assertThat(samples.get(0).getLabel()).isEqualTo("Ad Soyad");
-        assertThat(samples.get(1).getLabel()).isEqualTo("E-Posta");
-        assertThat(samples.get(0).getSampleValue()).contains("Ahmet");
-        assertThat(samples.get(1).getSampleValue()).isEqualTo("ahmet.yilmaz@ozerler.test");
+        Assertions.assertThat(samples.get(0).isKnown()).isTrue();
+        Assertions.assertThat(samples.get(0).getLabel()).isEqualTo("Ad Soyad");
+        Assertions.assertThat(samples.get(1).getLabel()).isEqualTo("E-Posta");
+        Assertions.assertThat(samples.get(0).getSampleValue()).contains("Ahmet");
+        Assertions.assertThat(samples.get(1).getSampleValue()).isEqualTo("ahmet.yilmaz@ozerler.test");
     }
 
     @Test
     @DisplayName("updateTemplate validates syntax and persists clean template")
-    void updateTemplate_ValidatesAndSaves() {
+    void updateTemplateValidatesAndSaves() {
         EmailTemplate template = EmailTemplate.builder()
                 .id(2L)
                 .templateKey("PASSWORD_RESET")
@@ -166,12 +166,18 @@ class EmailServiceTest {
                 .isActive(true)
                 .build();
 
-        when(templateRepository.findById(2L)).thenReturn(Optional.of(template));
-        when(templateRepository.save(any(EmailTemplate.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(templateRepository.findById(2L)).thenReturn(Optional.of(template));
+        Mockito.when(templateRepository.save(ArgumentMatchers.any(EmailTemplate.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        EmailTemplate updated = emailService.updateTemplate(2L, "Yeni Şifreniz: {{temporaryPassword}}", "<p>Geçici şifreniz: {{temporaryPassword}}</p>", true);
+        EmailTemplate updated =
+                emailService.updateTemplate(
+                        2L,
+                        "Yeni Şifreniz: {{temporaryPassword}}",
+                        "<p>Geçici şifreniz: {{temporaryPassword}}</p>",
+                        true);
 
-        assertThat(updated.getSubject()).isEqualTo("Yeni Şifreniz: {{temporaryPassword}}");
-        assertThat(updated.getBodyHtml()).isEqualTo("<p>Geçici şifreniz: {{temporaryPassword}}</p>");
+        Assertions.assertThat(updated.getSubject()).isEqualTo("Yeni Şifreniz: {{temporaryPassword}}");
+        Assertions.assertThat(updated.getBodyHtml()).isEqualTo("<p>Geçici şifreniz: {{temporaryPassword}}</p>");
     }
 }

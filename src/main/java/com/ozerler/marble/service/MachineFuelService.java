@@ -1,5 +1,26 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.dto.MachineFuelDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.FuelPeriodSummary;
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
+import com.ozerler.marble.dto.view.MachineRef;
+import com.ozerler.marble.mapper.MachineFuelMapper;
+import com.ozerler.marble.mapper.MachineMapper;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.MachineFuelEntry;
@@ -9,21 +30,21 @@ import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.repository.MachineFuelEntryRepository;
 import com.ozerler.marble.repository.MachineRepository;
 import com.ozerler.marble.util.MessageUtils;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.ozerler.marble.web.GridColumnFilterMatcher;
+import com.ozerler.marble.web.GridColumnFilters;
+import com.ozerler.marble.web.GridFilterCatalog;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.List;
-import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class MachineFuelService {
 
+    private static final int DEFAULT_PAGE_SIZE = 25;
+
     private final MachineFuelEntryRepository fuelEntryRepository;
+    private final MachineMapper machineMapper;
+    private final MachineFuelMapper machineFuelMapper;
     private final MachineRepository machineRepository;
     private final CostCenterRepository costCenterRepository;
     private final ExpenseService expenseService;
@@ -32,8 +53,14 @@ public class MachineFuelService {
     public MachineFuelEntry recordFuel(Long machineId, LocalDate entryDate, BigDecimal litres,
                                        BigDecimal pricePerLitre, BigDecimal workingHoursOrKm, String receiptNo,
                                        String issuedBy, String receivedBy, String notes) {
-        Machine machine = machineRepository.findById(machineId)
-                .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.machine.not_found", machineId)));
+        Machine machine =
+                machineRepository
+                        .findById(machineId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                MessageUtils.getMessage(
+                                                        "error.machine.not_found", machineId)));
         if (machine.getBusinessUnit() != BusinessUnit.QUARRY && machine.getBusinessUnit() != BusinessUnit.FACTORY) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.fuel.not_quarry_machine"));
         }
@@ -42,9 +69,15 @@ public class MachineFuelService {
         if (litres.compareTo(BigDecimal.ZERO) <= 0 || pricePerLitre.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.fuel.positive"));
         }
+        LocalDate entryDateValue;
+        if (entryDate != null) {
+            entryDateValue = entryDate;
+        } else {
+            entryDateValue = LocalDate.now();
+        }
         MachineFuelEntry entry = MachineFuelEntry.builder()
                 .machine(machine)
-                .entryDate(entryDate != null ? entryDate : LocalDate.now())
+                .entryDate(entryDateValue)
                 .litres(litres)
                 .pricePerLitre(pricePerLitre)
                 .workingHoursOrKm(workingHoursOrKm)
@@ -69,14 +102,34 @@ public class MachineFuelService {
 
         if (center != null) {
             CostCenter finalCenter = center;
+            String value;
+            if (workingHoursOrKm != null) {
+                value = workingHoursOrKm + " saat/km";
+            } else {
+                value = "Saat belirtilmedi";
+            }
             expenseService.recordExpense(
                     new ExpenseService.ExpenseDraft(
-                            finalCenter.getId(), ExpenseType.DIESEL, null, machine.getBusinessUnit(), saved.getTotalAmount(),
-                            "TRY", receiptNo, entry.getEntryDate(), entry.getEntryDate(),
+                            finalCenter.getId(),
+                            ExpenseType.DIESEL,
+                            null,
+                            machine.getBusinessUnit(),
+                            saved.getTotalAmount(),
+                            "TRY",
+                            receiptNo,
+                            entry.getEntryDate(),
+                            entry.getEntryDate(),
                             YearMonth.from(entry.getEntryDate()).toString(),
                             YearMonth.now().toString(),
-                            null, null, null, null, machine, null, null, machine.getCode(),
-                            "Mazot: " + machine.getName() + " / " + litres + " L (" + (workingHoursOrKm != null ? workingHoursOrKm + " saat/km" : "Saat belirtilmedi") + ")"));
+                            null,
+                            null,
+                            null,
+                            null,
+                            machine,
+                            null,
+                            null,
+                            machine.getCode(),
+                            "Mazot: " + machine.getName() + " / " + litres + " L (" + value + ")"));
         }
         return saved;
     }
@@ -100,75 +153,161 @@ public class MachineFuelService {
         return fuelEntryRepository.findByEntryDateBetweenOrderByEntryDateDesc(ym.atDay(1), ym.plusMonths(1).atDay(1));
     }
 
-    public record MachineFuelReportItem(String machineName, BigDecimal totalLitres, BigDecimal totalAmount, long entryCount) {}
+    public record MachineFuelReportItem(
+            String machineName, BigDecimal totalLitres, BigDecimal totalAmount, long entryCount) {
+    }
 
     @Transactional(readOnly = true)
     public List<MachineFuelReportItem> getMonthlyReport(String period) {
-        YearMonth ym = (period != null && !period.isBlank()) ? YearMonth.parse(period) : YearMonth.now();
+        YearMonth ym;
+        if (period != null && !period.isBlank()) {
+            ym = YearMonth.parse(period);
+        } else {
+            ym = YearMonth.now();
+        }
         List<Object[]> rows = fuelEntryRepository.sumFuelByMachineBetween(ym.atDay(1), ym.plusMonths(1).atDay(1));
         return rows.stream()
-                .map(r -> new MachineFuelReportItem((String) r[0], (BigDecimal) r[1], (BigDecimal) r[2], ((Number) r[3]).longValue()))
+                .map(
+                        r ->
+                                new MachineFuelReportItem(
+                                        (String) r[0],
+                                        (BigDecimal) r[1],
+                                        (BigDecimal) r[2],
+                                        ((Number) r[3]).longValue()))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<Machine> quarryAndFactoryMachines() {
-        return machineRepository.findAll().stream()
-                .filter(m -> m.isActive() && (m.getBusinessUnit() == BusinessUnit.QUARRY || m.getBusinessUnit() == BusinessUnit.FACTORY))
+        return BoundedReads.all(machineRepository).stream()
+                .filter(
+                        m ->
+                                m.isActive()
+                                        && (m.getBusinessUnit() == BusinessUnit.QUARRY
+                                                || m.getBusinessUnit() == BusinessUnit.FACTORY))
                 .filter(m -> m.getMachineType() == null || !m.getMachineType().isElectric())
                 .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.TabulatorResponse<com.ozerler.marble.dto.MachineFuelDto> getFuelPaged(
-            int page, int size, String search, String period, String unit, Long machineId, String sortField, String sortDir) {
+    public TabulatorResponse<MachineFuelDto> getFuelPaged(
+            int page,
+            int size,
+            String search,
+            String period,
+            String unit,
+            Long machineId,
+            String sortField,
+            String sortDir) {
 
-        List<MachineFuelEntry> allEntries = (period != null && !period.isBlank())
-                ? listByPeriod(period)
-                : listAll();
+        List<MachineFuelEntry> allEntries;
+        if (period != null && !period.isBlank()) {
+            allEntries = listByPeriod(period);
+        } else {
+            allEntries = listAll();
+        }
 
-        java.util.stream.Stream<MachineFuelEntry> stream = allEntries.stream();
+        Stream<MachineFuelEntry> stream = allEntries.stream();
 
         if (machineId != null) {
             stream = stream.filter(e -> e.getMachine() != null && e.getMachine().getId().equals(machineId));
         }
 
         if (unit != null && !unit.isBlank()) {
-            stream = stream.filter(e -> e.getMachine() != null && e.getMachine().getBusinessUnit() != null && e.getMachine().getBusinessUnit().name().equalsIgnoreCase(unit));
+            stream =
+                    stream.filter(
+                            e ->
+                                    e.getMachine() != null
+                                            && e.getMachine().getBusinessUnit() != null
+                                            && e.getMachine()
+                                                    .getBusinessUnit()
+                                                    .name()
+                                                    .equalsIgnoreCase(unit));
         }
 
         if (search != null && !search.isBlank()) {
-            String s = search.trim().toLowerCase(java.util.Locale.ROOT);
-            stream = stream.filter(e -> {
-                String mName = e.getMachine() != null ? e.getMachine().getName().toLowerCase(java.util.Locale.ROOT) : "";
-                String mCode = e.getMachine() != null ? e.getMachine().getCode().toLowerCase(java.util.Locale.ROOT) : "";
-                String receipt = e.getReceiptNo() != null ? e.getReceiptNo().toLowerCase(java.util.Locale.ROOT) : "";
-                String issued = e.getIssuedBy() != null ? e.getIssuedBy().toLowerCase(java.util.Locale.ROOT) : "";
-                String received = e.getReceivedBy() != null ? e.getReceivedBy().toLowerCase(java.util.Locale.ROOT) : "";
-                String notes = e.getNotes() != null ? e.getNotes().toLowerCase(java.util.Locale.ROOT) : "";
-                return mName.contains(s) || mCode.contains(s) || receipt.contains(s) || issued.contains(s) || received.contains(s) || notes.contains(s);
-            });
+            String s = search.trim().toLowerCase(Locale.ROOT);
+            stream =
+                    stream.filter(
+                            e -> {
+                                String mName;
+                                if (e.getMachine() != null) {
+                                    mName = e.getMachine().getName().toLowerCase(Locale.ROOT);
+                                } else {
+                                    mName = "";
+                                }
+                                String mCode;
+                                if (e.getMachine() != null) {
+                                    mCode = e.getMachine().getCode().toLowerCase(Locale.ROOT);
+                                } else {
+                                    mCode = "";
+                                }
+                                String receipt;
+                                if (e.getReceiptNo() != null) {
+                                    receipt = e.getReceiptNo().toLowerCase(Locale.ROOT);
+                                } else {
+                                    receipt = "";
+                                }
+                                String issued;
+                                if (e.getIssuedBy() != null) {
+                                    issued = e.getIssuedBy().toLowerCase(Locale.ROOT);
+                                } else {
+                                    issued = "";
+                                }
+                                String received;
+                                if (e.getReceivedBy() != null) {
+                                    received = e.getReceivedBy().toLowerCase(Locale.ROOT);
+                                } else {
+                                    received = "";
+                                }
+                                String notes;
+                                if (e.getNotes() != null) {
+                                    notes = e.getNotes().toLowerCase(Locale.ROOT);
+                                } else {
+                                    notes = "";
+                                }
+                                return mName.contains(s)
+                                        || mCode.contains(s)
+                                        || receipt.contains(s)
+                                        || issued.contains(s)
+                                        || received.contains(s)
+                                        || notes.contains(s);
+                            });
         }
 
-        List<com.ozerler.marble.dto.MachineFuelDto> dtos = stream
-                .map(com.ozerler.marble.dto.MachineFuelDto::fromEntity)
-                .collect(java.util.stream.Collectors.toList());
+        List<MachineFuelDto> dtos = stream
+                .map(MachineFuelDto::fromEntity)
+                .collect(Collectors.toList());
+        GridColumnFilters columnFilters = GridColumnFilters.fromCurrentRequest(
+                GridFilterCatalog.aliases("fuel-table"));
+        dtos = dtos.stream()
+                .filter(dto -> GridColumnFilterMatcher.matches(columnFilters, key -> fuelColumnValue(dto, key)))
+                .collect(Collectors.toList());
 
         // Sort
-        java.util.Comparator<com.ozerler.marble.dto.MachineFuelDto> comparator = java.util.Comparator.comparing(
+        Comparator<MachineFuelDto> comparator = Comparator.comparing(
                 dto -> dto.getEntryDate(),
-                java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())
+                Comparator.nullsLast(Comparator.reverseOrder())
         );
 
         if ("litres".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(dto -> dto.getLitres(), java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            comparator = Comparator.comparing(dto -> dto.getLitres(), Comparator.nullsLast(Comparator.naturalOrder()));
         } else if ("totalAmount".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(dto -> dto.getTotalAmount(), java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            comparator =
+                    Comparator.comparing(
+                            dto -> dto.getTotalAmount(),
+                            Comparator.nullsLast(Comparator.naturalOrder()));
         } else if ("machineName".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(dto -> dto.getMachineName(), java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+            comparator =
+                    Comparator.comparing(
+                            dto -> dto.getMachineName(),
+                            Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("workingHoursOrKm".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(dto -> dto.getWorkingHoursOrKm(), java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            comparator =
+                    Comparator.comparing(
+                            dto -> dto.getWorkingHoursOrKm(),
+                            Comparator.nullsLast(Comparator.naturalOrder()));
         }
 
         if ("desc".equalsIgnoreCase(sortDir) && !"entryDate".equalsIgnoreCase(sortField)) {
@@ -180,24 +319,142 @@ public class MachineFuelService {
         dtos.sort(comparator);
 
         int totalElements = dtos.size();
-        int safeSize = size > 0 ? size : 25;
+        int safeSize;
+        if (size > 0) {
+            safeSize = size;
+        } else {
+            safeSize = DEFAULT_PAGE_SIZE;
+        }
         int safePage = Math.max(1, page);
         int totalPages = (int) Math.ceil((double) totalElements / safeSize);
 
         int fromIndex = Math.min((safePage - 1) * safeSize, totalElements);
         int toIndex = Math.min(fromIndex + safeSize, totalElements);
 
-        List<com.ozerler.marble.dto.MachineFuelDto> pageData = dtos.subList(fromIndex, toIndex);
+        List<MachineFuelDto> pageData = dtos.subList(fromIndex, toIndex);
 
-        BigDecimal totalLitres = dtos.stream().map(dto -> dto.getLitres()).filter(value -> value != null).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        BigDecimal totalAmount = dtos.stream().map(dto -> dto.getTotalAmount()).filter(value -> value != null).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal totalLitres =
+                dtos.stream()
+                        .map(dto -> dto.getLitres())
+                        .filter(value -> value != null)
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal totalAmount =
+                dtos.stream()
+                        .map(dto -> dto.getTotalAmount())
+                        .filter(value -> value != null)
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
-        java.util.Map<String, Object> meta = java.util.Map.of(
+        Map<String, Object> meta = Map.of(
                 "totalLitres", totalLitres,
                 "totalAmount", totalAmount,
                 "count", totalElements
         );
 
-        return com.ozerler.marble.dto.TabulatorResponse.of(pageData, totalPages, totalElements, meta);
+        return TabulatorResponse.of(pageData, totalPages, totalElements, meta);
     }
+
+    /**
+     * Same as {@code recordFuel}, copied into a view inside the transaction.
+     *
+     * @param machineId see {@code recordFuel}
+     * @param entryDate see {@code recordFuel}
+     * @param litres see {@code recordFuel}
+     * @param pricePerLitre see {@code recordFuel}
+     * @param workingHoursOrKm see {@code recordFuel}
+     * @param receiptNo see {@code recordFuel}
+     * @param issuedBy see {@code recordFuel}
+     * @param receivedBy see {@code recordFuel}
+     * @param notes see {@code recordFuel}
+     * @return the view
+     */
+    @Transactional
+    public MachineFuelEntryView recordFuelView(Long machineId, LocalDate entryDate, BigDecimal litres,
+                                       BigDecimal pricePerLitre, BigDecimal workingHoursOrKm, String receiptNo,
+                                       String issuedBy, String receivedBy, String notes) {
+        return machineFuelMapper.toDto(
+                recordFuel(
+                        machineId,
+                        entryDate,
+                        litres,
+                        pricePerLitre,
+                        workingHoursOrKm,
+                        receiptNo,
+                        issuedBy,
+                        receivedBy,
+                        notes));
+    }
+
+    /**
+     * Same as {@code listByPeriod}, copied into a view inside the transaction.
+     *
+     * @param period see {@code listByPeriod}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<MachineFuelEntryView> listViewsByPeriod(String period) {
+        return listByPeriod(period).stream().map(machineFuelMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code quarryAndFactoryMachines}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<MachineRef> quarryAndFactoryMachineViews() {
+        return quarryAndFactoryMachines().stream().map(machineMapper::toDto).toList();
+    }
+
+    /**
+     * Totals of a period's fuel entries for the summary cards.
+     *
+     * @param period period as {@code yyyy-MM}; blank means all entries
+     * @return litres, amount, entry and machine counts
+     */
+    @Transactional(readOnly = true)
+    public FuelPeriodSummary periodSummary(String period) {
+        List<MachineFuelEntry> entries = listByPeriod(period);
+        BigDecimal totalLitres = entries.stream().map(MachineFuelEntry::getLitres)
+                .filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalAmount = entries.stream().map(MachineFuelEntry::getTotalAmount)
+                .filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        long machineCount = entries.stream().filter(entry -> entry.getMachine() != null)
+                .map(entry -> entry.getMachine().getId()).distinct().count();
+        return new FuelPeriodSummary(totalLitres, totalAmount, entries.size(), machineCount);
+    }
+
+    private static String fuelColumnValue(MachineFuelDto dto, String key) {
+        if (dto == null || key == null) {
+            return "";
+        }
+        if ("id".equals(key) && dto.getId() != null) {
+            return dto.getId().toString();
+        }
+        if ("receiptNo".equals(key)) {
+            return dto.getReceiptNo();
+        }
+        if ("machineName".equals(key)) {
+            return dto.getMachineName();
+        }
+        if ("entryDate".equals(key) && dto.getEntryDate() != null) {
+            return dto.getEntryDate().toString();
+        }
+        if ("litres".equals(key) && dto.getLitres() != null) {
+            return dto.getLitres().toPlainString();
+        }
+        if ("totalAmount".equals(key) && dto.getTotalAmount() != null) {
+            return dto.getTotalAmount().toPlainString();
+        }
+        if ("workingHoursOrKm".equals(key) && dto.getWorkingHoursOrKm() != null) {
+            return dto.getWorkingHoursOrKm().toPlainString();
+        }
+        if ("businessUnitLabel".equals(key)) {
+            return dto.getBusinessUnitLabel();
+        }
+        if ("pricePerLitre".equals(key) && dto.getPricePerLitre() != null) {
+            return dto.getPricePerLitre().toPlainString();
+        }
+        return "";
+    }
+
 }

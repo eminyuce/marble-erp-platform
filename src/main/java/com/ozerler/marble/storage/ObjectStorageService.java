@@ -1,9 +1,11 @@
 package com.ozerler.marble.storage;
 
-import com.ozerler.marble.dto.DependencyHealth;
-
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.List;
+
+import com.ozerler.marble.dto.DependencyHealth;
+import com.ozerler.marble.dto.StoredObjectMetadata;
 
 /**
  * S3-compatible object storage port. Business services depend on this
@@ -39,5 +41,5 @@ public interface ObjectStorageService {
 
     String getBucketName();
 
-    java.util.List<com.ozerler.marble.dto.StoredObjectMetadata> listObjects(String prefix);
+    List<StoredObjectMetadata> listObjects(String prefix);
 }

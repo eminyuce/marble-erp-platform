@@ -1,24 +1,37 @@
 package com.ozerler.marble.controller.erp;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+
+import org.springframework.context.MessageSource;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.CostCenterDto;
 import com.ozerler.marble.dto.PurchaseOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.PurchaseOrder;
+import com.ozerler.marble.dto.view.PurchaseOrderView;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.PurchaseOrderStatus;
 import com.ozerler.marble.service.ProcurementService;
 import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.ProcurementGrid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/procurement")
@@ -26,7 +39,7 @@ import java.util.List;
 public class ProcurementController {
 
     private final ProcurementService procurementService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     @GetMapping
     public String procurementIndex(@RequestParam(value = "page", required = false) Integer page,
@@ -34,10 +47,21 @@ public class ProcurementController {
                                    @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("statuses", PurchaseOrderStatus.values());
         model.addAttribute("summary", procurementService.getProcurementSummary());
-        model.addAttribute("selectedStatus", status == null ? "" : status);
-        model.addAttribute("grid", ProcurementGrid.view(
-                procurementService.getPurchaseOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
+        model.addAttribute(
+                "grid",
+                ProcurementGrid.view(
+                        procurementService.getPurchaseOrdersPaged(
+                                query.pageNumber(),
+                                query.pageSize(),
+                                query.getSearch(),
+                                status,
+                                query.sortKey(),
+                                query.sortDirection()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         return "erp/procurement/index";
     }
 
@@ -55,7 +79,7 @@ public class ProcurementController {
     }
 
     @GetMapping("/create")
-    public String showCreateForm(Model model, java.util.Locale locale) {
+    public String showCreateForm(Model model, Locale locale) {
         populateProcurementForm(model, locale);
         return "erp/procurement/form";
     }
@@ -63,27 +87,33 @@ public class ProcurementController {
     @GetMapping("/api/cost-centers")
     @ResponseBody
     public List<CostCenterDto> costCentersForUnit(@RequestParam("businessUnit") BusinessUnit businessUnit) {
-        return procurementService.getCostCentersForUnit(businessUnit).stream()
-                .map(CostCenterDto::fromEntity)
-                .toList();
+        return procurementService.getCostCenterDtosForUnit(businessUnit);
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/create")
-    public String createOrder(@RequestParam("poNumber") String poNumber,
-                              @RequestParam("supplierId") Long supplierId,
-                              @RequestParam("businessUnit") BusinessUnit businessUnit,
-                              @RequestParam(value = "costCenterId", required = false) Long costCenterId,
-                              @RequestParam(value = "projectId", required = false) Long projectId,
-                              @RequestParam(value = "expectedDelivery", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expectedDelivery,
-                              @RequestParam(value = "notes", required = false) String notes,
-                              Model model,
-                              RedirectAttributes redirectAttributes,
-                              java.util.Locale locale) {
+    public String createOrder(
+            @RequestParam("poNumber") String poNumber,
+            @RequestParam("supplierId") Long supplierId,
+            @RequestParam("businessUnit") BusinessUnit businessUnit,
+            @RequestParam(value = "costCenterId", required = false) Long costCenterId,
+            @RequestParam(value = "projectId", required = false) Long projectId,
+            @RequestParam(value = "expectedDelivery", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate expectedDelivery,
+            @RequestParam(value = "notes", required = false) String notes,
+            Model model,
+            RedirectAttributes redirectAttributes,
+            Locale locale) {
         try {
-            PurchaseOrder order = procurementService.createPurchaseOrder(
+            PurchaseOrderView order = procurementService.createPurchaseOrderView(
                     poNumber, supplierId, projectId, businessUnit, costCenterId, expectedDelivery, notes);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    messageSource.getMessage("erp.procurement.create.success", new Object[]{order.getPoNumber()}, locale));
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    messageSource.getMessage(
+                            "erp.procurement.create.success",
+                            new Object[] {order.getPoNumber()},
+                            locale));
             return "redirect:/procurement";
         } catch (Exception e) {
             model.addAttribute("errorMessage",
@@ -94,8 +124,8 @@ public class ProcurementController {
     }
 
     @GetMapping("/{id}/edit")
-    public String showEditForm(@PathVariable("id") Long id, Model model, java.util.Locale locale) {
-        PurchaseOrder order = procurementService.getOrderById(id);
+    public String showEditForm(@PathVariable("id") Long id, Model model, Locale locale) {
+        PurchaseOrderView order = procurementService.getOrder(id);
         populateProcurementForm(model, locale);
         model.addAttribute("record", order);
         model.addAttribute("isEdit", true);
@@ -105,11 +135,12 @@ public class ProcurementController {
 
     @GetMapping("/{id}")
     public String orderDetail(@PathVariable("id") Long id, Model model) {
-        PurchaseOrder order = procurementService.getOrderById(id);
+        PurchaseOrderView order = procurementService.getOrder(id);
         model.addAttribute("order", order);
         return "erp/procurement/detail";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/{id}/items")
     public String addItem(@PathVariable("id") Long id,
                           @RequestParam("itemName") String itemName,
@@ -121,12 +152,14 @@ public class ProcurementController {
         return "redirect:/procurement/" + id;
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/{id}/confirm")
     public String confirmOrder(@PathVariable("id") Long id) {
         procurementService.updateStatus(id, PurchaseOrderStatus.CONFIRMED);
         return "redirect:/procurement/" + id;
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/{id}/deliver")
     public String deliverOrder(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         procurementService.updateStatus(id, PurchaseOrderStatus.DELIVERED);
@@ -134,15 +167,15 @@ public class ProcurementController {
         return "redirect:/procurement/" + id;
     }
 
-    private void populateProcurementForm(Model model, java.util.Locale locale) {
+    private void populateProcurementForm(Model model, Locale locale) {
         model.addAttribute("suppliers", procurementService.getAllSuppliers());
         model.addAttribute("projects", procurementService.getAllProjects());
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("generatedPoNumber", procurementService.generatePoNumber());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.procurement.title.create", null, locale));
-        PurchaseOrder record = (PurchaseOrder) model.getAttribute("record");
+        PurchaseOrderView record = (PurchaseOrderView) model.getAttribute("record");
         if (record != null && record.getBusinessUnit() != null) {
-            model.addAttribute("costCenters", procurementService.getCostCentersForUnit(record.getBusinessUnit()));
+            model.addAttribute("costCenters", procurementService.getCostCenterViewsForUnit(record.getBusinessUnit()));
         }
     }
 }

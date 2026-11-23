@@ -1,9 +1,25 @@
 package com.ozerler.marble.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
+import java.util.Objects;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "pallet_items")
@@ -57,40 +73,84 @@ public class PalletItem extends AuditableEntity {
 
     @Transient
     public BigDecimal getEffectiveWidthCm() {
-        if (widthCm != null) return widthCm;
-        if (materialLot != null && materialLot.getWidthCm() != null) return materialLot.getWidthCm();
-        if (stockItem != null && stockItem.getWidthCm() != null) return stockItem.getWidthCm();
-        if (slab != null && slab.getWidthCm() != null) return slab.getWidthCm();
+        if (widthCm != null) {
+            return widthCm;
+        }
+        if (materialLot != null && materialLot.getWidthCm() != null) {
+            return materialLot.getWidthCm();
+        }
+        if (stockItem != null && stockItem.getWidthCm() != null) {
+            return stockItem.getWidthCm();
+        }
+        if (slab != null && slab.getWidthCm() != null) {
+            return slab.getWidthCm();
+        }
         return null;
     }
 
     @Transient
     public BigDecimal getEffectiveLengthCm() {
-        if (lengthCm != null) return lengthCm;
-        if (materialLot != null && materialLot.getLengthCm() != null) return materialLot.getLengthCm();
-        if (stockItem != null && stockItem.getLengthCm() != null) return stockItem.getLengthCm();
-        if (slab != null && slab.getLengthCm() != null) return slab.getLengthCm();
+        if (lengthCm != null) {
+            return lengthCm;
+        }
+        if (materialLot != null && materialLot.getLengthCm() != null) {
+            return materialLot.getLengthCm();
+        }
+        if (stockItem != null && stockItem.getLengthCm() != null) {
+            return stockItem.getLengthCm();
+        }
+        if (slab != null && slab.getLengthCm() != null) {
+            return slab.getLengthCm();
+        }
         return null;
     }
 
     @Transient
     public BigDecimal getEffectiveThicknessCm() {
-        if (thicknessCm != null) return thicknessCm;
-        if (materialLot != null && materialLot.getThicknessCm() != null) return materialLot.getThicknessCm();
-        if (stockItem != null && stockItem.getThicknessCm() != null) return stockItem.getThicknessCm();
-        if (slab != null && slab.getThicknessCm() != null) return slab.getThicknessCm();
+        if (thicknessCm != null) {
+            return thicknessCm;
+        }
+        if (materialLot != null && materialLot.getThicknessCm() != null) {
+            return materialLot.getThicknessCm();
+        }
+        if (stockItem != null && stockItem.getThicknessCm() != null) {
+            return stockItem.getThicknessCm();
+        }
+        if (slab != null && slab.getThicknessCm() != null) {
+            return slab.getThicknessCm();
+        }
         return null;
     }
 
     @Transient
     public String getDisplayName() {
-        if (productName != null && !productName.isBlank()) return productName;
-        if (materialLot != null) {
-            String form = materialLot.getProductForm() != null ? materialLot.getProductForm().getLabel() : "";
-            return materialLot.getLotCode() + (form.isEmpty() ? "" : " — " + form);
+        if (productName != null && !productName.isBlank()) {
+            return productName;
         }
-        if (stockItem != null) return stockItem.getItemCode() + " (" + (stockItem.getStoneType() != null ? stockItem.getStoneType() : "Ebatlı") + ")";
-        if (slab != null) return slab.getSlabCode() + " (Plaka)";
+        if (materialLot != null) {
+            String form;
+            if (materialLot.getProductForm() != null) {
+                form = materialLot.getProductForm().getLabel();
+            } else {
+                form = "";
+            }
+            String value;
+            if (form.isEmpty()) {
+                value = "";
+            } else {
+                value = " — " + form;
+            }
+            return materialLot.getLotCode() + value;
+        }
+        if (stockItem != null) {
+            return stockItem.getItemCode()
+                    + " ("
+                    + Objects.requireNonNullElse(stockItem.getStoneType(), "Ebatlı")
+                    + ")";
+        }
+        if (slab != null) {
+            return slab.getSlabCode() + " (Plaka)";
+        }
         return "Palet Ürünü #" + id;
     }
 }

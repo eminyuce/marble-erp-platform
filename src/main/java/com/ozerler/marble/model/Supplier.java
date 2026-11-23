@@ -1,8 +1,23 @@
 package com.ozerler.marble.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.SupplierType;
-import jakarta.persistence.*;
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "suppliers")
@@ -49,7 +64,7 @@ public class Supplier extends AuditableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "business_unit", length = 30)
-    private com.ozerler.marble.model.enums.BusinessUnit businessUnit;
+    private BusinessUnit businessUnit;
 
     @Column(columnDefinition = "TEXT")
     private String notes;

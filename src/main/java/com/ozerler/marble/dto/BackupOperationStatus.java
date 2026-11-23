@@ -1,9 +1,9 @@
 package com.ozerler.marble.dto;
 
+import java.time.Instant;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.Instant;
 
 @Getter
 @Setter
@@ -20,18 +20,24 @@ public class BackupOperationStatus {
     private Instant startTime;
     private Instant finishTime;
 
-    public synchronized void start(String operationType, String currentFile) {
+    public synchronized void start(String type, String fileName) {
         this.state = State.RUNNING;
-        this.operationType = operationType;
-        this.currentFile = currentFile;
+        this.operationType = type;
+        this.currentFile = fileName;
         this.startTime = Instant.now();
         this.finishTime = null;
-        this.message = ("BACKUP".equals(operationType) ? "Yedek alma" : "Geri yükleme") + " işlemi başlatıldı...";
+        String value;
+        if ("BACKUP".equals(type)) {
+            value = "Yedek alma";
+        } else {
+            value = "Geri yükleme";
+        }
+        this.message = value + " işlemi başlatıldı...";
     }
 
-    public synchronized void success(String message) {
+    public synchronized void success(String resultMessage) {
         this.state = State.SUCCESS;
-        this.message = message;
+        this.message = resultMessage;
         this.finishTime = Instant.now();
     }
 

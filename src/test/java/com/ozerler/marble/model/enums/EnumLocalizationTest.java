@@ -1,11 +1,10 @@
 package com.ozerler.marble.model.enums;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.lang.reflect.Method;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class EnumLocalizationTest {
 
@@ -66,22 +65,22 @@ class EnumLocalizationTest {
             for (Object constant : type.getEnumConstants()) {
                 String label = (String) getLabel.invoke(constant);
                 String name = ((Enum<?>) constant).name();
-                assertThat(label)
+                Assertions.assertThat(label)
                         .as("%s.%s", type.getSimpleName(), name)
                         .isNotBlank()
                         .doesNotStartWith("enum.");
                 if (name.contains("_")) {
-                    assertThat(label)
+                    Assertions.assertThat(label)
                             .as("%s.%s should not show the raw code", type.getSimpleName(), name)
                             .isNotEqualTo(name);
                 }
             }
         }
-        assertThat(ProcessType.ST.getLabel()).isEqualTo("ST");
-        assertThat(ProcessType.GANGSAW.getLabel()).isEqualTo("Katrak");
-        assertThat(QualityGrade.MOLOZ.getLabel()).isEqualTo("Moloz");
-        assertThat(StockLocationType.DISPATCH_YARD.getLabel()).isEqualTo("Stok Sahası");
-        assertThat(FactoryProcessType.ST_CUTTING.getLabel()).contains("ST");
-        assertThat(FactoryProcessType.GANGSAW_CUTTING.getLabel()).contains("Katrak");
+        Assertions.assertThat(ProcessType.ST.getLabel()).isEqualTo("ST");
+        Assertions.assertThat(ProcessType.GANGSAW.getLabel()).isEqualTo("Katrak");
+        Assertions.assertThat(QualityGrade.MOLOZ.getLabel()).isEqualTo("Moloz");
+        Assertions.assertThat(StockLocationType.DISPATCH_YARD.getLabel()).isEqualTo("Stok Sahası");
+        Assertions.assertThat(FactoryProcessType.ST_CUTTING.getLabel()).contains("ST");
+        Assertions.assertThat(FactoryProcessType.GANGSAW_CUTTING.getLabel()).contains("Katrak");
     }
 }

@@ -1,11 +1,11 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.util.MessageUtils;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.util.MessageUtils;
 
 /**
  * Central block geometry and tonnage formulas used by lists, details, reports and exports.
@@ -29,7 +29,9 @@ public final class BlockMeasurement {
 
     public static BigDecimal approximateTonnage(BigDecimal volumeM3, BigDecimal specificGravityTonPerM3) {
         Objects.requireNonNull(volumeM3, MessageUtils.getMessage("error.block.volume.required"));
-        Objects.requireNonNull(specificGravityTonPerM3, MessageUtils.getMessage("error.quarry.specific_gravity.required"));
+        Objects.requireNonNull(
+                specificGravityTonPerM3,
+                MessageUtils.getMessage("error.quarry.specific_gravity.required"));
         if (volumeM3.compareTo(BigDecimal.ZERO) <= 0 || specificGravityTonPerM3.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.block.measurement.positive"));
         }

@@ -1,15 +1,17 @@
 package com.ozerler.marble.storage;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.springframework.stereotype.Component;
+
+import com.ozerler.marble.config.ObjectStorageProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Decides whether a browser can fetch a RustFS presigned URL.
@@ -22,6 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class RustFsBrowserAccess {
 
     static final Duration PROBE_CACHE_TTL = Duration.ofSeconds(15);
+    private static final int HTTPS_DEFAULT_PORT = 443;
+    private static final int HTTP_DEFAULT_PORT = 80;
 
     private final ObjectStorageProperties storageProperties;
     private final Probe probe;
@@ -128,7 +132,10 @@ public class RustFsBrowserAccess {
         if (endpoint.getPort() > 0) {
             return endpoint.getPort();
         }
-        return "https".equalsIgnoreCase(endpoint.getScheme()) ? 443 : 80;
+        if ("https".equalsIgnoreCase(endpoint.getScheme())) {
+            return HTTPS_DEFAULT_PORT;
+        }
+        return HTTP_DEFAULT_PORT;
     }
 
     private static boolean isHttp(URI uri) {

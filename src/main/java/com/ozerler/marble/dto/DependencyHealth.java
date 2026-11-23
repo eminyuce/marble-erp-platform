@@ -2,6 +2,7 @@ package com.ozerler.marble.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Value;
 
@@ -11,10 +12,10 @@ import lombok.Value;
 public class DependencyHealth {
 
     @JsonProperty("status")
-    String status;
+    private String status;
 
     @JsonProperty("error")
-    String error;
+    private String error;
 
     public static DependencyHealth up() {
         return DependencyHealth.builder().status("UP").build();

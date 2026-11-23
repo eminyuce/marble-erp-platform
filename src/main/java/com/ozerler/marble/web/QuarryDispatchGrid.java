@@ -1,35 +1,59 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.Invoice;
-import com.ozerler.marble.model.StockMovement;
-import jakarta.persistence.Persistence;
-import org.springframework.data.domain.Page;
-
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
+import com.ozerler.marble.dto.view.InvoiceRef;
+import com.ozerler.marble.dto.view.StockMovementView;
+
 /**
- * Ocak sevkiyat raporu. The movement query has no search or status filter. Invoice is not fetched.
+ * Ocak sevkiyat raporu. The movement query has no search or status filter. Invoice is not fetched;
+ * the service copies it only when it is already loaded.
  */
 public final class QuarryDispatchGrid {
 
     private QuarryDispatchGrid() {
     }
 
-    public static DataGridView view(Page<StockMovement> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<StockMovementView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "quarry-dispatches-table", columns(), QuarryDispatchGrid::row);
     }
 
-    static GridRow row(StockMovement movement) {
+    static GridRow row(StockMovementView movement) {
         String product = productName(movement);
-        String blockUrl = movement.getBlock() == null ? null : "/blocks/" + movement.getBlock().getId();
-        String target = movement.getTargetDestination() != null
-                ? movement.getTargetDestination().getDisplayName()
-                : movement.getTargetDepartment() == null ? "Fabrika" : movement.getTargetDepartment().getDisplayName();
-        String customer = movement.getCustomer() == null ? "" : movement.getCustomer().getCompanyName();
+        String blockUrl;
+        if (movement.getBlock() == null) {
+            blockUrl = null;
+        } else {
+            blockUrl = "/blocks/" + movement.getBlock().getId();
+        }
+        String target;
+        if (movement.getTargetDestination() != null) {
+            target = movement.getTargetDestination().getDisplayName();
+        } else {
+            if (movement.getTargetDepartment() == null) {
+                target = "Fabrika";
+            } else {
+                target = movement.getTargetDepartment().getDisplayName();
+            }
+        }
+        String customer;
+        if (movement.getCustomer() == null) {
+            customer = "";
+        } else {
+            customer = movement.getCustomer().getCompanyName();
+        }
+        GridCell value;
+        if (blockUrl == null) {
+            value = GridCell.text(product);
+        } else {
+            value = GridCell.link(product, blockUrl);
+        }
         return GridRow.of(blockUrl, null, null, null, List.of(
                 GridCell.chip(movement.getId()),
-                blockUrl == null ? GridCell.text(product) : GridCell.link(product, blockUrl),
+                value,
                 GridCell.text(OperationGridSupport.day(movement.getMovementDate())),
                 GridCell.text(measure(movement)),
                 GridCell.badge("Ocak"),
@@ -42,38 +66,43 @@ public final class QuarryDispatchGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("productName", "Ürün / Blok", false, 160),
-                GridColumn.text("movementDate", "Tarih", false, 160),
-                GridColumn.text("tonnage", "Tonaj / Miktar", false, 150),
-                GridColumn.text("source", "Kaynak", false, 110),
-                GridColumn.text("targetDestination", "Hedef", false, 140),
-                GridColumn.text("customerName", "Müşteri", false, 180),
-                GridColumn.text("invoiceNo", "Fatura", false, 140),
-                GridColumn.text("notes", "Açıklama", false, 200)
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("productName", "Ürün / Blok", false, GridWidth.PX_160),
+                GridColumn.text("movementDate", "Tarih", false, GridWidth.PX_160),
+                GridColumn.text("tonnage", "Tonaj / Miktar", false, GridWidth.PX_150),
+                GridColumn.text("source", "Kaynak", false, GridWidth.PX_110),
+                GridColumn.text("targetDestination", "Hedef", false, GridWidth.PX_140),
+                GridColumn.text("customerName", "Müşteri", false, GridWidth.PX_180),
+                GridColumn.text("invoiceNo", "Fatura", false, GridWidth.PX_140),
+                GridColumn.text("notes", "Açıklama", false, GridWidth.PX_200)
         );
     }
 
-    private static GridCell invoice(StockMovement movement) {
-        if (!Persistence.getPersistenceUtil().isLoaded(movement, "invoice") || movement.getInvoice() == null) {
+    private static GridCell invoice(StockMovementView movement) {
+        InvoiceRef invoice = movement.getInvoice();
+        if (invoice == null) {
             return GridCell.text("");
         }
-        Invoice invoice = movement.getInvoice();
-        return GridCell.link(invoice.getInvoiceNumber(), "/invoices/" + invoice.getId());
+        return GridCell.link(invoice.getInvoiceNo(), "/invoices/" + invoice.getId());
     }
 
-    private static String productName(StockMovement movement) {
+    private static String productName(StockMovementView movement) {
         if (movement.getBlock() != null && movement.getBlock().getBlockCode() != null) {
             return movement.getBlock().getBlockCode();
         }
         return OperationGridSupport.named(movement.getItemDescription(), "Mermer Blok");
     }
 
-    private static String measure(StockMovement movement) {
+    private static String measure(StockMovementView movement) {
         if (movement.getTonnage() != null) {
             return OperationGridSupport.amount(movement.getTonnage(), "ton");
         }
-        String unit = movement.getQuantityUnit() == null ? "ton" : movement.getQuantityUnit();
+        String unit;
+        if (movement.getQuantityUnit() == null) {
+            unit = "ton";
+        } else {
+            unit = movement.getQuantityUnit();
+        }
         return OperationGridSupport.amount(movement.getQuantity(), unit);
     }
 }

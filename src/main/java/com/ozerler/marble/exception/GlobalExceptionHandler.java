@@ -1,13 +1,17 @@
 package com.ozerler.marble.exception;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.util.MessageUtils;
+import java.net.URI;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
@@ -16,9 +20,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.util.MessageUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestControllerAdvice(annotations = RestController.class)
@@ -36,21 +41,21 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(StoredFileNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleStoredFileNotFound(
+    public ResponseEntity<ProblemDetail> handleStoredFileNotFound(
             StoredFileNotFoundException ex, HttpServletRequest request, Locale locale) {
         log.info("Stored file not found on {}: {}", request.getRequestURI(), ex.getMessage());
         return respond(HttpStatus.NOT_FOUND, ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(FileValidationException.class)
-    public ResponseEntity<ErrorResponse> handleFileValidation(
+    public ResponseEntity<ProblemDetail> handleFileValidation(
             FileValidationException ex, HttpServletRequest request, Locale locale) {
         log.warn("File validation failed on {}: {}", request.getRequestURI(), ex.getMessage());
         return respond(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(FileAccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleFileAccessDenied(
+    public ResponseEntity<ProblemDetail> handleFileAccessDenied(
             FileAccessDeniedException ex, HttpServletRequest request, Locale locale) {
         log.warn("File access denied on {}: {}", request.getRequestURI(), ex.getMessage());
         String accessDeniedMsg = resolveMessage("error.file.access_denied", null, ex.getMessage(), locale);
@@ -58,73 +63,88 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(StorageException.class)
-    public ResponseEntity<ErrorResponse> handleStorageFailure(
+    public ResponseEntity<ProblemDetail> handleStorageFailure(
             StorageException ex, HttpServletRequest request, Locale locale) {
         log.error("Object storage failure on {}", request.getRequestURI(), ex);
-        String genericInternalMsg = resolveMessage("error.file.storage_failed", null, Constants.ERROR_GENERIC_INTERNAL, locale);
+        String genericInternalMsg =
+                resolveMessage(
+                        "error.file.storage_failed",
+                        null,
+                        Constants.ERROR_GENERIC_INTERNAL,
+                        locale);
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, genericInternalMsg, request, null);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(
+    public ResponseEntity<ProblemDetail> handleResourceNotFound(
             ResourceNotFoundException ex, HttpServletRequest request, Locale locale) {
         log.info("Resource not found on {}: {}", request.getRequestURI(), ex.getMessage());
         return respond(HttpStatus.NOT_FOUND, ex.getMessage(), request, null);
     }
 
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(
+    public ResponseEntity<ProblemDetail> handleResourceNotFound(
             ResourceNotFoundException ex, HttpServletRequest request) {
         return handleResourceNotFound(ex, request, LocaleContextHolder.getLocale());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(
+    public ResponseEntity<ProblemDetail> handleValidation(
             MethodArgumentNotValidException ex, HttpServletRequest request, Locale locale) {
         Map<String, String> fieldErrors = fieldErrors(ex, locale);
         log.warn("Validation failed on {}: {}", request.getRequestURI(), fieldErrors);
-        String validationFailedMsg = resolveMessage("error.validation.failed", null, Constants.ERROR_VALIDATION_FAILED, locale);
+        String validationFailedMsg =
+                resolveMessage(
+                        "error.validation.failed", null, Constants.ERROR_VALIDATION_FAILED, locale);
         return respond(HttpStatus.BAD_REQUEST, validationFailedMsg, request, fieldErrors);
     }
 
-    public ResponseEntity<ErrorResponse> handleValidation(
+    public ResponseEntity<ProblemDetail> handleValidation(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
         return handleValidation(ex, request, LocaleContextHolder.getLocale());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(
+    public ResponseEntity<ProblemDetail> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest request, Locale locale) {
         log.warn("Access denied on {}: {}", request.getRequestURI(), ex.getMessage());
         String accessDeniedMsg = resolveMessage("error.access.denied", null, Constants.ERROR_ACCESS_DENIED, locale);
         return respond(HttpStatus.FORBIDDEN, accessDeniedMsg, request, null);
     }
 
-    public ResponseEntity<ErrorResponse> handleAccessDenied(
+    public ResponseEntity<ProblemDetail> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest request) {
         return handleAccessDenied(ex, request, LocaleContextHolder.getLocale());
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex, HttpServletRequest request, Locale locale) {
+    public ResponseEntity<ProblemDetail> handleUnexpected(Exception ex, HttpServletRequest request, Locale locale) {
         log.error("Unhandled exception on {}", request.getRequestURI(), ex);
-        String genericInternalMsg = resolveMessage("error.generic.internal", null, Constants.ERROR_GENERIC_INTERNAL, locale);
+        String genericInternalMsg =
+                resolveMessage(
+                        "error.generic.internal", null, Constants.ERROR_GENERIC_INTERNAL, locale);
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, genericInternalMsg, request, null);
     }
 
-    public ResponseEntity<ErrorResponse> handleUnexpected(
+    public ResponseEntity<ProblemDetail> handleUnexpected(
             Exception ex, HttpServletRequest request) {
         return handleUnexpected(ex, request, LocaleContextHolder.getLocale());
     }
 
     private Map<String, String> fieldErrors(MethodArgumentNotValidException ex, Locale locale) {
         Map<String, String> errors = new LinkedHashMap<>();
-        Locale activeLocale = locale != null ? locale : LocaleContextHolder.getLocale();
+        Locale activeLocale;
+        if (locale != null) {
+            activeLocale = locale;
+        } else {
+            activeLocale = LocaleContextHolder.getLocale();
+        }
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             String message = null;
             if (messageSource != null) {
                 try {
                     message = messageSource.getMessage(fieldError, activeLocale);
                 } catch (Exception ignored) {
+                    // best effort: fall back to the default below
                 }
             }
             if (message == null || message.isBlank()) {
@@ -139,19 +159,30 @@ public class GlobalExceptionHandler {
     }
 
     private String resolveMessage(String code, Object[] args, String defaultMessage, Locale locale) {
-        Locale activeLocale = locale != null ? locale : LocaleContextHolder.getLocale();
+        Locale activeLocale;
+        if (locale != null) {
+            activeLocale = locale;
+        } else {
+            activeLocale = LocaleContextHolder.getLocale();
+        }
         if (messageSource != null) {
             try {
                 return messageSource.getMessage(code, args, defaultMessage, activeLocale);
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
         return MessageUtils.getMessage(code, activeLocale, args);
     }
 
-    private static ResponseEntity<ErrorResponse> respond(
+    private static ResponseEntity<ProblemDetail> respond(
             HttpStatus status, String message, HttpServletRequest request, Map<String, String> errors) {
-        return ResponseEntity.status(status)
-                .body(ErrorResponse.of(status, message, request.getRequestURI(), errors));
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, message);
+        problem.setTitle(status.getReasonPhrase());
+        problem.setInstance(URI.create(request.getRequestURI()));
+        if (errors != null && !errors.isEmpty()) {
+            problem.setProperty("errors", errors);
+        }
+        return ResponseEntity.status(status).body(problem);
     }
 }

@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.MachineDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.BusinessUnit;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Makine listesi. Sort keys match {@code GridPages.MACHINE_SORTS}. Unit filter already exists.
@@ -25,15 +25,32 @@ public final class MachineGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "machines-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "machines-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(MachineDto machine) {
-        String id = machine.getId() == null ? "" : machine.getId().toString();
-        String editUrl = id.isEmpty() ? "" : "/admin/definitions/machines/" + id + "/edit";
+        String id;
+        if (machine.getId() == null) {
+            id = "";
+        } else {
+            id = machine.getId().toString();
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = "/admin/definitions/machines/" + id + "/edit";
+        }
         String deleteName = firstText(machine.getName(), machine.getCode());
+        String badge;
+        if (machine.isActive()) {
+            badge = "Aktif";
+        } else {
+            badge = "Pasif";
+        }
         return GridRow.of(editUrl, editUrl, machine.getId(), deleteName, List.of(
-                GridCell.badge(machine.isActive() ? "Aktif" : "Pasif"),
+                GridCell.badge(badge),
                 GridCell.chip(machine.getId()),
                 GridCell.text(machine.getCode()),
                 GridCell.text(machine.getName()),
@@ -45,13 +62,13 @@ public final class MachineGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("active", "Durum", true, 120),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("code", "Kod", true, 140),
-                GridColumn.text("name", "Makine Adı", true, 180),
-                GridColumn.filtered("businessUnitLabel", "İş Birimi", true, 140, "unit", units()),
-                GridColumn.text("machineTypeLabel", "Makine Tipi", true, 150),
-                GridColumn.text("notes", "Not", false, 160)
+                GridColumn.text("active", "Durum", true, GridWidth.PX_120),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("code", "Kod", true, GridWidth.PX_140),
+                GridColumn.text("name", "Makine Adı", true, GridWidth.PX_180),
+                GridColumn.filtered("businessUnitLabel", "İş Birimi", true, GridWidth.PX_140, "unit", units()),
+                GridColumn.text("machineTypeLabel", "Makine Tipi", true, GridWidth.PX_150),
+                GridColumn.text("notes", "Not", false, GridWidth.PX_160)
         );
     }
 

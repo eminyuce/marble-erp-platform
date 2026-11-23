@@ -1,10 +1,11 @@
 package com.ozerler.marble.model.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.http.ResponseEntity;
-
 import java.io.Serializable;
 import java.util.Objects;
+
+import org.springframework.http.ResponseEntity;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Standard backend response envelope wrapping an inner ResponseEntity payload
@@ -46,11 +47,15 @@ public class BackEndResponse implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
         BackEndResponse other = (BackEndResponse) obj;
-        return Objects.equals(response, other.response) &&
-                Objects.equals(serviceStatus, other.serviceStatus);
+        return Objects.equals(response, other.response)
+                && Objects.equals(serviceStatus, other.serviceStatus);
     }
 
     @Override

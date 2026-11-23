@@ -1,9 +1,13 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CustomerType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -67,7 +71,7 @@ public class CustomerDto {
     private String notes;
 
     @JsonProperty("balance")
-    private java.math.BigDecimal balance;
+    private BigDecimal balance;
 
     @JsonProperty("projectCount")
     @JsonAlias("project_count")
@@ -75,8 +79,37 @@ public class CustomerDto {
 
     public static CustomerDto fromEntity(Customer customer) {
         CustomerType type = customer.getCustomerType();
-        com.ozerler.marble.model.enums.BusinessUnit bu = customer.getBusinessUnit();
-        int pCount = (customer.getProjects() != null) ? customer.getProjects().size() : 0;
+        BusinessUnit bu = customer.getBusinessUnit();
+        int pCount;
+        if (customer.getProjects() != null) {
+            pCount = customer.getProjects().size();
+        } else {
+            pCount = 0;
+        }
+        String customerTypeValue;
+        if (type != null) {
+            customerTypeValue = type.name();
+        } else {
+            customerTypeValue = null;
+        }
+        String customerTypeLabelValue;
+        if (type != null) {
+            customerTypeLabelValue = type.getLabel();
+        } else {
+            customerTypeLabelValue = "";
+        }
+        String businessUnitValue;
+        if (bu != null) {
+            businessUnitValue = bu.name();
+        } else {
+            businessUnitValue = null;
+        }
+        String businessUnitLabelValue;
+        if (bu != null) {
+            businessUnitLabelValue = bu.getDisplayName();
+        } else {
+            businessUnitLabelValue = "";
+        }
         return CustomerDto.builder()
                 .id(customer.getId())
                 .customerCode(customer.getCustomerCode())
@@ -87,10 +120,10 @@ public class CustomerDto {
                 .address(customer.getAddress())
                 .taxOffice(customer.getTaxOffice())
                 .taxNumber(customer.getTaxNumber())
-                .customerType(type != null ? type.name() : null)
-                .customerTypeLabel(type != null ? type.getLabel() : "")
-                .businessUnit(bu != null ? bu.name() : null)
-                .businessUnitLabel(bu != null ? bu.getDisplayName() : "")
+                .customerType(customerTypeValue)
+                .customerTypeLabel(customerTypeLabelValue)
+                .businessUnit(businessUnitValue)
+                .businessUnitLabel(businessUnitLabelValue)
                 .notes(customer.getNotes())
                 .projectCount(pCount)
                 .build();

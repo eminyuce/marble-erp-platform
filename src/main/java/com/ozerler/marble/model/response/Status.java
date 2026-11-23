@@ -79,12 +79,16 @@ public class Status implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
         Status other = (Status) obj;
-        return Objects.equals(message, other.message) &&
-                Objects.equals(errors, other.errors) &&
-                Objects.equals(errorCode, other.errorCode);
+        return Objects.equals(message, other.message)
+                && Objects.equals(errors, other.errors)
+                && Objects.equals(errorCode, other.errorCode);
     }
 
     @Override

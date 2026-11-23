@@ -1,27 +1,37 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.model.MachineFuelEntry;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.dto.MachineFuelDto;
-import com.ozerler.marble.service.MachineFuelService;
-import com.ozerler.marble.web.FuelGrid;
-import com.ozerler.marble.web.ListQuery;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.Locale;
+import java.util.Objects;
+
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.Locale;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.dto.MachineFuelDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.FuelPeriodSummary;
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
+import com.ozerler.marble.service.MachineFuelService;
+import com.ozerler.marble.web.FuelGrid;
+import com.ozerler.marble.web.ListQuery;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
@@ -41,27 +51,48 @@ public class MachineFuelController extends AbstractController {
                         @RequestParam(value = "unit", required = false) String unit,
                         @RequestParam(value = "machineId", required = false) Long machineId,
                         @ModelAttribute ListQuery query, Model model) {
-        String currentPeriod = (period != null && !period.isBlank()) ? period : YearMonth.now().toString();
-        String sortKey = query.sortKey() == null ? "entryDate" : query.sortKey();
+        String currentPeriod;
+        if (period != null && !period.isBlank()) {
+            currentPeriod = period;
+        } else {
+            currentPeriod = YearMonth.now().toString();
+        }
+        String sortKey;
+        if (query.sortKey() == null) {
+            sortKey = "entryDate";
+        } else {
+            sortKey = query.sortKey();
+        }
         model.addAttribute("period", currentPeriod);
-        model.addAttribute("selectedUnit", unit == null ? "" : unit);
+        model.addAttribute("selectedUnit", Objects.requireNonNullElse(unit, ""));
         model.addAttribute("selectedMachineId", machineId);
-        model.addAttribute("fuelEntries", machineFuelService.listByPeriod(currentPeriod));
+        model.addAttribute("fuelEntries", machineFuelService.listViewsByPeriod(currentPeriod));
         model.addAttribute("monthlyReport", machineFuelService.getMonthlyReport(currentPeriod));
-        model.addAttribute("machines", machineFuelService.quarryAndFactoryMachines());
-        TabulatorResponse<MachineFuelDto> fuel = machineFuelService.getFuelPaged(
-                query.pageNumber(), query.pageSize(), query.getSearch(), currentPeriod, unit, machineId, sortKey, query.sortDirection());
-        model.addAttribute("grid", FuelGrid.view(fuel, query.pageNumber(), query.pageSize(), sortKey, query.sortDirection()));
+        model.addAttribute("machines", machineFuelService.quarryAndFactoryMachineViews());
+        TabulatorResponse<MachineFuelDto> fuel =
+                machineFuelService.getFuelPaged(
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.getSearch(),
+                        currentPeriod,
+                        unit,
+                        machineId,
+                        sortKey,
+                        query.sortDirection());
+        model.addAttribute(
+                "grid",
+                FuelGrid.view(
+                        fuel,
+                        query.pageNumber(),
+                        query.pageSize(),
+                        sortKey,
+                        query.sortDirection()));
 
-        var entries = machineFuelService.listByPeriod(currentPeriod);
-        BigDecimal totalLitres = entries.stream().map(entry -> entry.getLitres()).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        BigDecimal totalAmount = entries.stream().map(entry -> entry.getTotalAmount()).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        long machineCount = entries.stream().map(e -> e.getMachine().getId()).distinct().count();
-
-        model.addAttribute("summaryTotalLitres", totalLitres);
-        model.addAttribute("summaryTotalAmount", totalAmount);
-        model.addAttribute("summaryEntryCount", entries.size());
-        model.addAttribute("summaryMachineCount", machineCount);
+        FuelPeriodSummary summary = machineFuelService.periodSummary(currentPeriod);
+        model.addAttribute("summaryTotalLitres", summary.totalLitres());
+        model.addAttribute("summaryTotalAmount", summary.totalAmount());
+        model.addAttribute("summaryEntryCount", summary.entryCount());
+        model.addAttribute("summaryMachineCount", summary.machineCount());
 
         return "erp/machines/fuel-index";
     }
@@ -82,27 +113,39 @@ public class MachineFuelController extends AbstractController {
 
     @GetMapping("/create")
     public String showCreateForm(Model model) {
-        model.addAttribute("machines", machineFuelService.quarryAndFactoryMachines());
+        model.addAttribute("machines", machineFuelService.quarryAndFactoryMachineViews());
         model.addAttribute("defaultDate", LocalDate.now());
         return "erp/machines/fuel-form";
     }
 
     @PostMapping("/create")
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
-    public String createFuelEntry(@RequestParam("machineId") Long machineId,
-                                  @RequestParam(value = "entryDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate,
-                                  @RequestParam("litres") BigDecimal litres,
-                                  @RequestParam("pricePerLitre") BigDecimal pricePerLitre,
-                                  @RequestParam(value = "workingHoursOrKm", required = false) BigDecimal workingHoursOrKm,
-                                  @RequestParam(value = "receiptNo", required = false) String receiptNo,
-                                  @RequestParam(value = "issuedBy", required = false) String issuedBy,
-                                  @RequestParam(value = "receivedBy", required = false) String receivedBy,
-                                  @RequestParam(value = "notes", required = false) String notes,
-                                  Locale locale,
-                                  RedirectAttributes redirectAttributes) {
+    public String createFuelEntry(
+            @RequestParam("machineId") Long machineId,
+            @RequestParam(value = "entryDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate entryDate,
+            @RequestParam("litres") BigDecimal litres,
+            @RequestParam("pricePerLitre") BigDecimal pricePerLitre,
+            @RequestParam(value = "workingHoursOrKm", required = false) BigDecimal workingHoursOrKm,
+            @RequestParam(value = "receiptNo", required = false) String receiptNo,
+            @RequestParam(value = "issuedBy", required = false) String issuedBy,
+            @RequestParam(value = "receivedBy", required = false) String receivedBy,
+            @RequestParam(value = "notes", required = false) String notes,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
         try {
-            MachineFuelEntry entry = machineFuelService.recordFuel(
-                    machineId, entryDate, litres, pricePerLitre, workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes);
+            MachineFuelEntryView entry =
+                    machineFuelService.recordFuelView(
+                            machineId,
+                            entryDate,
+                            litres,
+                            pricePerLitre,
+                            workingHoursOrKm,
+                            receiptNo,
+                            issuedBy,
+                            receivedBy,
+                            notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Mazot dolum kaydı başarıyla oluşturuldu: " + entry.getMachine().getName() + " (" + litres + " L)");
             return "redirect:/machines/fuel";

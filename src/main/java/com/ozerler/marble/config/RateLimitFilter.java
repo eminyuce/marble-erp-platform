@@ -1,24 +1,30 @@
 package com.ozerler.marble.config;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.service.RateLimitService;
 import com.ozerler.marble.service.RateLimitService.Tier;
 import com.ozerler.marble.service.SettingService;
 import com.ozerler.marble.util.ClientIps;
 import com.ozerler.marble.util.HttpRequests;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 /**
  * IP tabanlı istek sınırlandırma filtresi.
@@ -32,14 +38,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimitService rateLimitService;
     private final SettingService settingService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
-    private String buildJsonResponse(java.util.Locale locale) {
+    private String buildJsonResponse(Locale locale) {
         String msg = messageSource.getMessage("error.rate_limit.exceeded", null, locale);
         return "{\"error\":\"too_many_requests\",\"message\":\"" + msg + "\"}";
     }
 
-    private String buildHtmlResponse(java.util.Locale locale) {
+    private String buildHtmlResponse(Locale locale) {
         String title = messageSource.getMessage("error.http.429.title", null, locale);
         String message = messageSource.getMessage("error.http.429.message", null, locale);
         String homeBtn = messageSource.getMessage("common.button.home", null, locale);
@@ -90,7 +96,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         String clientIp = ClientIps.from(request);
         // Loopback is exempt. The literals are the addresses the servlet container reports.
-        if ("127.0.0.1".equals(clientIp) || "::1".equals(clientIp) || "0:0:0:0:0:0:0:1".equals(clientIp)) { // NOPMD AvoidUsingHardCodedIP
+        if ("127.0.0.1".equals(clientIp) // NOPMD AvoidUsingHardCodedIP
+                || "::1".equals(clientIp) // NOPMD AvoidUsingHardCodedIP
+                || "0:0:0:0:0:0:0:1".equals(clientIp)) { // NOPMD AvoidUsingHardCodedIP
             filterChain.doFilter(request, response);
             return;
         }
@@ -104,9 +112,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader("Retry-After", "60");
 
-            java.util.Locale locale = org.springframework.context.i18n.LocaleContextHolder.getLocale();
+            Locale locale = LocaleContextHolder.getLocale();
             if (locale == null) {
-                locale = java.util.Locale.forLanguageTag("tr");
+                locale = Locale.forLanguageTag("tr");
             }
 
             if (HttpRequests.expectsJson(request)) {

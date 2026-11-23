@@ -1,12 +1,11 @@
 package com.ozerler.marble.controller.erp;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class TabulatorGridUndefinedTest {
 
@@ -42,26 +41,26 @@ class TabulatorGridUndefinedTest {
     void sharedGridHelpersHardenRemotePagination() throws Exception {
         String appJs = readResource("/static/js/app.js");
 
-        assertThat(appJs).contains("function erpGridDefaults(");
-        assertThat(appJs).contains("function erpGridAjaxUrl(");
-        assertThat(appJs).contains("function erpGridAjaxResponse(");
-        assertThat(appJs).contains("function emptyTabulatorResponse(");
-        assertThat(appJs).contains("const page = Number(params && params.page) > 0 ? params.page : 1");
-        assertThat(appJs).contains("camelizeTabulatorRows(payload)");
-        assertThat(appJs).contains("function gridText(");
-        assertThat(appJs).contains("function gridMoney(");
-        assertThat(appJs).contains("function gridArea(");
-        assertThat(appJs).contains("function erpStatusBadge(");
-        assertThat(appJs).contains("window.gridText = gridText");
-        assertThat(appJs).contains("window.gridArea = gridArea");
-        assertThat(appJs).contains("window.gridMoney = gridMoney");
-        assertThat(appJs).contains("window.erpStatusBadge = erpStatusBadge");
-        assertThat(appJs).contains("window.erpGridDefaults = erpGridDefaults");
-        assertThat(appJs).contains("locale: \"tr\"");
-        assertThat(appJs).contains("first: \"İlk\"");
-        assertThat(appJs).contains("minHeight: 180");
-        assertThat(appJs).contains("placeholder: \"Kayıt bulunamadı.\"");
-        assertThat(appJs).contains("window.erpGridAjaxUrl = erpGridAjaxUrl");
+        Assertions.assertThat(appJs).contains("function erpGridDefaults(");
+        Assertions.assertThat(appJs).contains("function erpGridAjaxUrl(");
+        Assertions.assertThat(appJs).contains("function erpGridAjaxResponse(");
+        Assertions.assertThat(appJs).contains("function emptyTabulatorResponse(");
+        Assertions.assertThat(appJs).contains("const page = Number(params && params.page) > 0 ? params.page : 1");
+        Assertions.assertThat(appJs).contains("camelizeTabulatorRows(payload)");
+        Assertions.assertThat(appJs).contains("function gridText(");
+        Assertions.assertThat(appJs).contains("function gridMoney(");
+        Assertions.assertThat(appJs).contains("function gridArea(");
+        Assertions.assertThat(appJs).contains("function erpStatusBadge(");
+        Assertions.assertThat(appJs).contains("window.gridText = gridText");
+        Assertions.assertThat(appJs).contains("window.gridArea = gridArea");
+        Assertions.assertThat(appJs).contains("window.gridMoney = gridMoney");
+        Assertions.assertThat(appJs).contains("window.erpStatusBadge = erpStatusBadge");
+        Assertions.assertThat(appJs).contains("window.erpGridDefaults = erpGridDefaults");
+        Assertions.assertThat(appJs).contains("locale: \"tr\"");
+        Assertions.assertThat(appJs).contains("first: \"İlk\"");
+        Assertions.assertThat(appJs).contains("minHeight: 180");
+        Assertions.assertThat(appJs).contains("placeholder: \"Kayıt bulunamadı.\"");
+        Assertions.assertThat(appJs).contains("window.erpGridAjaxUrl = erpGridAjaxUrl");
     }
 
     @Test
@@ -72,23 +71,23 @@ class TabulatorGridUndefinedTest {
         int fallbackIndex = layout.indexOf("typeof window.gridText !== \"function\"");
         int pageScriptsIndex = layout.indexOf("layout:fragment=\"scripts\"");
 
-        assertThat(appJsIndex)
+        Assertions.assertThat(appJsIndex)
                 .as("cache-busted app.js must still load before page fragment scripts")
                 .isGreaterThanOrEqualTo(0)
                 .isLessThan(pageScriptsIndex);
-        assertThat(fallbackIndex)
+        Assertions.assertThat(fallbackIndex)
                 .as("inline script must define window.gridText with no network dependency")
                 .isGreaterThan(appJsIndex)
                 .isLessThan(pageScriptsIndex);
 
         String fallbackBlock = layout.substring(fallbackIndex, pageScriptsIndex);
-        assertThat(fallbackBlock).contains("window.gridText = function");
-        assertThat(fallbackBlock).contains("window.gridNumber");
-        assertThat(fallbackBlock).contains("window.gridMoney");
-        assertThat(fallbackBlock).contains("window.gridArea");
-        assertThat(fallbackBlock).contains("window.erpStatusBadge");
-        assertThat(fallbackBlock).contains("window.erpGridDefaults");
-        assertThat(fallbackBlock).contains("window.erpIndexColumn");
+        Assertions.assertThat(fallbackBlock).contains("window.gridText = function");
+        Assertions.assertThat(fallbackBlock).contains("window.gridNumber");
+        Assertions.assertThat(fallbackBlock).contains("window.gridMoney");
+        Assertions.assertThat(fallbackBlock).contains("window.gridArea");
+        Assertions.assertThat(fallbackBlock).contains("window.erpStatusBadge");
+        Assertions.assertThat(fallbackBlock).contains("window.erpGridDefaults");
+        Assertions.assertThat(fallbackBlock).contains("window.erpIndexColumn");
     }
 
     @Test
@@ -97,38 +96,46 @@ class TabulatorGridUndefinedTest {
         String layout = readResource("/templates/layout/base.html");
         String blockForm = readResource("/templates/erp/blocks/form.html");
 
-        assertThat(layout).doesNotContain("unpkg.com/filepond");
-        assertThat(layout).doesNotContain("unpkg.com");
-        assertThat(layout).doesNotContain("filepond.min.js");
-        assertThat(layout).doesNotContain("filepond.min.css");
-        assertThat(layout).doesNotContain("filepond-setup.js");
+        Assertions.assertThat(layout).doesNotContain("unpkg.com/filepond");
+        Assertions.assertThat(layout).doesNotContain("unpkg.com");
+        Assertions.assertThat(layout).doesNotContain("filepond.min.js");
+        Assertions.assertThat(layout).doesNotContain("filepond.min.css");
+        Assertions.assertThat(layout).doesNotContain("filepond-setup.js");
 
-        assertThat(blockForm).doesNotContain("unpkg.com/filepond");
-        assertThat(blockForm).contains("@{/vendor/filepond/filepond.min.js}");
-        assertThat(blockForm).contains("@{/vendor/filepond/filepond-plugin-image-preview.min.js}");
-        assertThat(blockForm).contains("@{/js/filepond-setup.js(v=${assetVersion})}");
+        Assertions.assertThat(blockForm).doesNotContain("unpkg.com/filepond");
+        Assertions.assertThat(blockForm).contains("@{/vendor/filepond/filepond.min.js}");
+        Assertions.assertThat(blockForm).contains("@{/vendor/filepond/filepond-plugin-image-preview.min.js}");
+        Assertions.assertThat(blockForm).contains("@{/js/filepond-setup.js(v=${assetVersion})}");
 
         int filePondJsIndex = blockForm.indexOf("@{/vendor/filepond/filepond.min.js}");
         int initIndex = blockForm.indexOf("initMultiFilePond(");
         if (initIndex < 0) {
             initIndex = blockForm.indexOf("initFilePond(");
         }
-        assertThat(filePondJsIndex).isGreaterThanOrEqualTo(0);
-        assertThat(initIndex)
+        Assertions.assertThat(filePondJsIndex).isGreaterThanOrEqualTo(0);
+        Assertions.assertThat(initIndex)
                 .as("block form must initialize FilePond only after local vendor scripts")
                 .isGreaterThan(filePondJsIndex);
 
         var blockingRemoteScript = Pattern.compile(
                 "<script(?![^>]*\\b(?:async|defer)\\b)[^>]*src=\"https?://[^\"]*\"",
                 Pattern.CASE_INSENSITIVE);
-        assertThat(blockingRemoteScript.matcher(layout).find())
+        Assertions.assertThat(blockingRemoteScript.matcher(layout).find())
                 .as("classic remote scripts without async/defer would stall grid helpers if a CDN hangs")
                 .isFalse();
 
-        assertThat(getClass().getResource("/static/vendor/filepond/filepond.min.js")).isNotNull();
-        assertThat(getClass().getResource("/static/vendor/filepond/filepond.min.css")).isNotNull();
-        assertThat(getClass().getResource("/static/vendor/filepond/filepond-plugin-image-preview.min.js")).isNotNull();
-        assertThat(getClass().getResource("/static/vendor/filepond/filepond-plugin-image-preview.min.css")).isNotNull();
+        Assertions.assertThat(getClass().getResource("/static/vendor/filepond/filepond.min.js")).isNotNull();
+        Assertions.assertThat(getClass().getResource("/static/vendor/filepond/filepond.min.css")).isNotNull();
+        Assertions.assertThat(
+                        getClass()
+                                .getResource(
+                                        "/static/vendor/filepond/filepond-plugin-image-preview.min.js"))
+                .isNotNull();
+        Assertions.assertThat(
+                        getClass()
+                                .getResource(
+                                        "/static/vendor/filepond/filepond-plugin-image-preview.min.css"))
+                .isNotNull();
     }
 
     @Test
@@ -137,24 +144,24 @@ class TabulatorGridUndefinedTest {
         for (String resource : GRID_SOURCES) {
             String source = readResource(resource);
             if (source.contains("fragments/data-grid :: shell")) {
-                assertThat(source)
+                Assertions.assertThat(source)
                         .as("%s server grid must not embed raw Thymeleaf inside Alpine", resource)
                         .doesNotContain("[[${");
                 continue;
             }
-            assertThat(source)
+            Assertions.assertThat(source)
                     .as("%s should build page/size with erpGridAjaxUrl", resource)
                     .contains("erpGridAjaxUrl(");
-            assertThat(source)
+            Assertions.assertThat(source)
                     .as("%s should normalize the AJAX payload with erpGridAjaxResponse", resource)
                     .contains("erpGridAjaxResponse(");
-            assertThat(source)
+            Assertions.assertThat(source)
                     .as("%s should render missing values with gridText", resource)
                     .contains("gridText(");
-            assertThat(source)
+            Assertions.assertThat(source)
                     .as("%s should not interpolate raw cell values that become the word undefined", resource)
                     .doesNotContain("${cell.getValue()}");
-            assertThat(source)
+            Assertions.assertThat(source)
                     .as("%s should not format missing numbers as NaN", resource)
                     .doesNotContain("Number(cell.getValue()).toFixed")
                     .doesNotContain("Number(row.totalAreaM2).toFixed")
@@ -166,11 +173,18 @@ class TabulatorGridUndefinedTest {
     @DisplayName("Asset version is configured, non-empty, and cache-busting all critical assets")
     void assetVersionIsConfiguredAndConsistent() throws Exception {
         String appYml = readResource("/application.yml");
-        assertThat(appYml).contains("asset-version:");
+        Assertions.assertThat(appYml).contains("asset-version: ${app.version}");
+        Assertions.assertThat(appYml).contains("version: \"1.0.7\"");
 
         String layout = readResource("/templates/layout/base.html");
-        assertThat(layout).contains("@{/css/app.css(v=${assetVersion})}");
-        assertThat(layout).contains("@{/js/app.js(v=${assetVersion})}");
+        Assertions.assertThat(layout).contains("@{/css/app.css(v=${assetVersion})}");
+        Assertions.assertThat(layout).contains("@{/js/app.js(v=${assetVersion})}");
+        Assertions.assertThat(layout).contains("admin-app-footer");
+        Assertions.assertThat(readResource("/templates/layout/navbar.html"))
+                .contains("admin-topbar-version")
+                .contains("th:text=\"${appVersion}\"");
+        Assertions.assertThat(readResource("/templates/auth/admin-login.html"))
+                .contains("@{/css/app.css(v=${assetVersion})}");
     }
 
     @Test
@@ -179,7 +193,7 @@ class TabulatorGridUndefinedTest {
         for (String resource : GRID_SOURCES) {
             if (resource.endsWith(".html")) {
                 String source = readResource(resource);
-                assertThat(source)
+                Assertions.assertThat(source)
                         .as("%s should not contain unparsed Thymeleaf inlining inside attributes", resource)
                         .doesNotContain("'[['")
                         .doesNotContain("\"[[\"");
@@ -189,7 +203,7 @@ class TabulatorGridUndefinedTest {
 
     private static String readResource(String resource) throws Exception {
         try (var in = TabulatorGridUndefinedTest.class.getResourceAsStream(resource)) {
-            assertThat(in).as("classpath resource %s", resource).isNotNull();
+            Assertions.assertThat(in).as("classpath resource %s", resource).isNotNull();
             return new String(in.readAllBytes());
         }
     }

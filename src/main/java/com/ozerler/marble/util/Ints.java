@@ -8,7 +8,10 @@ public final class Ints {
     public static int parseOrDefault(String value, int defaultValue) {
         try {
             Integer parsed = parseLenientOrNull(value);
-            return parsed != null ? parsed : defaultValue;
+            if (parsed != null) {
+                return parsed;
+            }
+            return defaultValue;
         } catch (NumberFormatException ex) {
             return defaultValue;
         }

@@ -1,15 +1,15 @@
 package com.ozerler.marble.dto;
 
+import java.time.LocalDate;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.FactoryWorkOrder;
 import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.enums.FactoryWorkOrderStatus;
-
-import java.time.LocalDate;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class FactoryWorkOrderSummaryDtoTest {
 
@@ -28,15 +28,15 @@ class FactoryWorkOrderSummaryDtoTest {
 
         FactoryWorkOrderSummaryDto dto = FactoryWorkOrderSummaryDto.fromEntity(workOrder);
 
-        assertThat(dto.getId()).isEqualTo(4L);
-        assertThat(dto.getOrderNo()).isEqualTo("FWO-4");
-        assertThat(dto.getBlockCode()).isEqualTo("BLK-009");
-        assertThat(dto.getStoneType()).isEqualTo("Afyon Beyaz");
-        assertThat(dto.getMachineName()).isEqualTo("ST-1");
-        assertThat(dto.getAcceptedAt()).isEqualTo("2026-09-17");
-        assertThat(dto.getResponsibleName()).isEqualTo("Ali");
-        assertThat(dto.getStatus()).isEqualTo("ACCEPTED");
-        assertThat(dto.getStatusLabel()).isNotBlank();
+        Assertions.assertThat(dto.getId()).isEqualTo(4L);
+        Assertions.assertThat(dto.getOrderNo()).isEqualTo("FWO-4");
+        Assertions.assertThat(dto.getBlockCode()).isEqualTo("BLK-009");
+        Assertions.assertThat(dto.getStoneType()).isEqualTo("Afyon Beyaz");
+        Assertions.assertThat(dto.getMachineName()).isEqualTo("ST-1");
+        Assertions.assertThat(dto.getAcceptedAt()).isEqualTo("2026-09-17");
+        Assertions.assertThat(dto.getResponsibleName()).isEqualTo("Ali");
+        Assertions.assertThat(dto.getStatus()).isEqualTo("ACCEPTED");
+        Assertions.assertThat(dto.getStatusLabel()).isNotBlank();
     }
 
     @Test
@@ -51,12 +51,12 @@ class FactoryWorkOrderSummaryDtoTest {
 
         FactoryWorkOrderSummaryDto dto = FactoryWorkOrderSummaryDto.fromEntity(workOrder);
 
-        assertThat(dto.getBlockCode()).isEmpty();
-        assertThat(dto.getStoneType()).isEmpty();
-        assertThat(dto.getMachineName()).isEmpty();
-        assertThat(dto.getAcceptedAt()).isEmpty();
-        assertThat(dto.getResponsibleName()).isEmpty();
-        assertThat(dto.getStatus()).isEmpty();
-        assertThat(dto.getStatusLabel()).isEmpty();
+        Assertions.assertThat(dto.getBlockCode()).isEmpty();
+        Assertions.assertThat(dto.getStoneType()).isEmpty();
+        Assertions.assertThat(dto.getMachineName()).isEmpty();
+        Assertions.assertThat(dto.getAcceptedAt()).isEmpty();
+        Assertions.assertThat(dto.getResponsibleName()).isEmpty();
+        Assertions.assertThat(dto.getStatus()).isEmpty();
+        Assertions.assertThat(dto.getStatusLabel()).isEmpty();
     }
 }

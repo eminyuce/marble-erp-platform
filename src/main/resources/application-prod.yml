@@ -5,7 +5,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:marble_erp}}
     username: ${DB_USERNAME:marbleuser}
-    password: ${DB_PASSWORD:marblepass}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: ${DB_POOL_MAX:5}
@@ -59,8 +59,10 @@ app:
     database:
       docker-container: ${PG_DOCKER_CONTAINER:marble-erp-postgres}
   cors:
-    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:81}
-    allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:https://*.onrender.com}
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:}
+    allowed-origin-pattern: ${CORS_ALLOWED_ORIGIN_PATTERN:}
+  security:
+    remember-me-key: ${REMEMBER_ME_KEY}
   deployment:
     enabled: true
   storage:
@@ -69,6 +71,15 @@ app:
       public-endpoint: ${RUSTFS_PUBLIC_ENDPOINT:https://ozerler.naklink.com}
       bucket: ${RUSTFS_BUCKET:erp-files}
       region: ${RUSTFS_REGION:us-east-1}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 # Public endpoint must be https on a public host. Startup fails otherwise.
 # RUSTFS_ENDPOINT stays on the internal Docker DNS name.

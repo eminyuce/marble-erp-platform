@@ -7,15 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -30,7 +28,7 @@ class DefinitionGridApiTest {
     void setUp() {
         this.mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
-                .apply(springSecurity())
+                .apply(SecurityMockMvcConfigurers.springSecurity())
                 .build();
     }
 
@@ -50,15 +48,17 @@ class DefinitionGridApiTest {
     @WithMockUser(roles = "USER")
     @DisplayName("non-admin users cannot read definition grid APIs")
     void userCannotReadDefinitionApis() throws Exception {
-        mockMvc.perform(get("/admin/definitions/suppliers/api/data").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/admin/definitions/suppliers/api/data")
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
     private void assertTabulatorEnvelope(String path) throws Exception {
-        mockMvc.perform(get(path).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.last_page").isNumber())
-                .andExpect(jsonPath("$.total").isNumber());
+        mockMvc.perform(MockMvcRequestBuilders.get(path).accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data").isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.last_page").isNumber())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.total").isNumber());
     }
 }

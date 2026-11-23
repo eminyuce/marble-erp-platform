@@ -1,11 +1,12 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Model for 'USER_WELCOME' email template.
@@ -35,14 +36,14 @@ public class UserWelcomeEmailModel implements BaseEmailModel {
     @Override
     public Map<String, String> toVariables() {
         Map<String, String> vars = new LinkedHashMap<>();
-        vars.put("fullName", fullName != null ? fullName : "");
-        vars.put("username", username != null ? username : "");
-        vars.put("email", email != null ? email : "");
-        vars.put("roleName", roleName != null ? roleName : "Kullanıcı");
-        vars.put("temporaryPassword", temporaryPassword != null ? temporaryPassword : "");
-        vars.put("loginUrl", loginUrl != null ? loginUrl : "http://localhost:81/account/adminlogin/");
-        vars.put("companyName", companyName != null ? companyName : "Özerler Mermer A.Ş.");
-        vars.put("supportContact", supportContact != null ? supportContact : "it-destek@ozerlermermer.com");
+        vars.put("fullName", Objects.requireNonNullElse(fullName, ""));
+        vars.put("username", Objects.requireNonNullElse(username, ""));
+        vars.put("email", Objects.requireNonNullElse(email, ""));
+        vars.put("roleName", Objects.requireNonNullElse(roleName, "Kullanıcı"));
+        vars.put("temporaryPassword", Objects.requireNonNullElse(temporaryPassword, ""));
+        vars.put("loginUrl", Objects.requireNonNullElse(loginUrl, "http://localhost:81/account/adminlogin/"));
+        vars.put("companyName", Objects.requireNonNullElse(companyName, "Özerler Mermer A.Ş."));
+        vars.put("supportContact", Objects.requireNonNullElse(supportContact, "it-destek@ozerlermermer.com"));
         return vars;
     }
 

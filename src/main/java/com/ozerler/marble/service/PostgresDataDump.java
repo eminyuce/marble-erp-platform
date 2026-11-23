@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Writes a restorable SQL script of the public schema when {@code pg_dump} is not installed.
@@ -43,6 +44,7 @@ final class PostgresDataDump {
             WHERE n.nspname = 'public' AND c.relkind = 'S'
             ORDER BY c.relname
             """;
+    private static final int FETCH_SIZE = 500;
 
     long write(Connection connection, Writer writer, String databaseName) throws SQLException, IOException {
         List<String> tables = tableNames(connection);
@@ -53,7 +55,7 @@ final class PostgresDataDump {
         writer.write("-- ========================================================\n");
         writer.write("-- Özerler Mermer ERP Database Backup\n");
         writer.write("-- Timestamp: " + Instant.now() + "\n");
-        writer.write("-- Database: " + (databaseName == null ? "marble_erp" : databaseName) + "\n");
+        writer.write("-- Database: " + Objects.requireNonNullElse(databaseName, "marble_erp") + "\n");
         writer.write("-- Source: PostgreSQL data dump\n");
         writer.write("-- Tables: " + tables.size() + "\n");
         writer.write("-- ========================================================\n");
@@ -82,7 +84,7 @@ final class PostgresDataDump {
     private static List<String> tableNames(Connection connection) throws SQLException {
         List<String> tables = new ArrayList<>();
         try (Statement statement = connection.createStatement();
-             ResultSet rows = statement.executeQuery(TABLE_SQL)) {
+                ResultSet rows = statement.executeQuery(TABLE_SQL)) {
             while (rows.next()) {
                 tables.add(rows.getString(1));
             }
@@ -107,7 +109,7 @@ final class PostgresDataDump {
         String columnList = quotedColumnList(columns);
         long rowsWritten = 0;
         try (Statement statement = connection.createStatement()) {
-            statement.setFetchSize(500);
+            statement.setFetchSize(FETCH_SIZE);
             try (ResultSet rows = statement.executeQuery(select.toString())) {
                 ResultSetMetaData meta = rows.getMetaData();
                 while (rows.next()) {
@@ -157,7 +159,7 @@ final class PostgresDataDump {
     private static void writeSequences(Connection connection, Writer writer) throws SQLException, IOException {
         List<String> sequences = new ArrayList<>();
         try (Statement statement = connection.createStatement();
-             ResultSet rows = statement.executeQuery(SEQUENCE_SQL)) {
+                ResultSet rows = statement.executeQuery(SEQUENCE_SQL)) {
             while (rows.next()) {
                 sequences.add(rows.getString(1));
             }
@@ -165,7 +167,7 @@ final class PostgresDataDump {
         for (String name : sequences) {
             String query = "SELECT last_value, is_called FROM public." + quoteIdentifier(name);
             try (Statement statement = connection.createStatement();
-                 ResultSet rows = statement.executeQuery(query)) {
+                    ResultSet rows = statement.executeQuery(query)) {
                 if (!rows.next()) {
                     continue;
                 }
@@ -177,7 +179,13 @@ final class PostgresDataDump {
                     writer.write("SELECT setval(" + sequence + ", 1, false);\n");
                     continue;
                 }
-                writer.write("SELECT setval(" + sequence + ", " + lastValue + ", " + (called ? "true" : "false") + ");\n");
+                String value;
+                if (called) {
+                    value = "true";
+                } else {
+                    value = "false";
+                }
+                writer.write("SELECT setval(" + sequence + ", " + lastValue + ", " + value + ");\n");
             }
         }
     }
@@ -203,12 +211,18 @@ final class PostgresDataDump {
         }
         int sqlType = meta.getColumnType(column);
         if (sqlType == Types.BOOLEAN || sqlType == Types.BIT || value instanceof Boolean) {
-            return rows.getBoolean(column) ? "TRUE" : "FALSE";
+            if (rows.getBoolean(column)) {
+                return "TRUE";
+            }
+            return "FALSE";
         }
         if (value instanceof BigDecimal decimal) {
             return decimal.toPlainString();
         }
-        if (sqlType == Types.TINYINT || sqlType == Types.SMALLINT || sqlType == Types.INTEGER || sqlType == Types.BIGINT) {
+        if (sqlType == Types.TINYINT
+                || sqlType == Types.SMALLINT
+                || sqlType == Types.INTEGER
+                || sqlType == Types.BIGINT) {
             return Long.toString(rows.getLong(column));
         }
         if (sqlType == Types.FLOAT || sqlType == Types.REAL || sqlType == Types.DOUBLE) {

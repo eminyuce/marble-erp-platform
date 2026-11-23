@@ -1,6 +1,16 @@
 package com.ozerler.marble.service;
 
+import java.util.Optional;
+
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.dto.PassportResult;
+import com.ozerler.marble.mapper.CutOrderMapper;
+import com.ozerler.marble.mapper.ProductionOrderMapper;
+import com.ozerler.marble.mapper.SlabMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CutItem;
 import com.ozerler.marble.model.Pallet;
@@ -9,11 +19,9 @@ import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CutItemRepository;
 import com.ozerler.marble.repository.PalletRepository;
 import com.ozerler.marble.repository.SlabRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.ozerler.marble.util.MessageUtils;
 
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Service managing Digital Stone Passport resolution (BRD Section 7.2)
@@ -26,16 +34,21 @@ public class PassportService {
     private final SlabRepository slabRepository;
     private final BlockRepository blockRepository;
     private final CutItemRepository cutItemRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final ProductionOrderMapper productionOrderMapper;
+    private final SlabMapper slabMapper;
+    private final CutOrderMapper cutOrderMapper;
+    private final BlockViews blockViews;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     @Transactional(readOnly = true)
@@ -55,7 +68,7 @@ public class PassportService {
             return PassportResult.builder()
                     .found(true)
                     .type("PALLET")
-                    .pallet(pallet.get())
+                    .pallet(productionOrderMapper.toPallet(pallet.get()))
                     .title(getMessage("passport.title.pallet", pallet.get().getPalletCode()))
                     .build();
         }
@@ -65,7 +78,7 @@ public class PassportService {
             return PassportResult.builder()
                     .found(true)
                     .type("SLAB")
-                    .slab(slab.get())
+                    .slab(slabMapper.toDto(slab.get()))
                     .title(getMessage("passport.title.slab", slab.get().getSlabCode()))
                     .build();
         }
@@ -75,7 +88,7 @@ public class PassportService {
             return PassportResult.builder()
                     .found(true)
                     .type("ITEM")
-                    .item(item.get())
+                    .item(cutOrderMapper.toItem(item.get()))
                     .title(getMessage("passport.title.item", item.get().getItemCode()))
                     .build();
         }
@@ -85,7 +98,7 @@ public class PassportService {
             return PassportResult.builder()
                     .found(true)
                     .type("BLOCK")
-                    .block(block.get())
+                    .block(blockViews.toView(block.get()))
                     .title(getMessage("passport.title.block", block.get().getBlockCode()))
                     .build();
         }

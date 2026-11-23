@@ -4,9 +4,9 @@
 >
 > **EN:** Do not use `scripts/run_local.sh` or `mvn spring-boot:run` on the production host. Run the packaged JAR under systemd: `./scripts/deploy_production.sh` (or `./scripts/deploy_production.sh -y`)
 
-This runbook is for the **bare-metal JAR** layout already in use on the Linux host (`eyuce`, `/opt/marble-erp/app.jar`). First-time OS hardening, Nginx, and Docker Compose are documented in [DEPLOYMENT_LINUX.md](../DEPLOYMENT_LINUX.md). Production deploys are **manual**: run `./scripts/deploy_production.sh` on the host (there is no GitHub Actions deploy). For an operational runbook, see [`DEPLOYMENT_RUNBOOK.md`](../DEPLOYMENT_RUNBOOK.md).
+This runbook is for the **bare-metal JAR** layout already in use on the Linux host (`eyuce`, `/opt/marble-erp/app.jar`). First-time OS hardening, Nginx, and Docker Compose are documented in [DEPLOYMENT_LINUX.md](DEPLOYMENT_LINUX.md). Production deploys are **manual**: run `./scripts/deploy_production.sh` on the host (there is no GitHub Actions deploy). For an operational runbook, see [`DEPLOYMENT_RUNBOOK.md`](DEPLOYMENT_RUNBOOK.md).
 
-Local development stays in [RUNNING_LOCALLY.md](../RUNNING_LOCALLY.md) and `scripts/run_local.sh`.
+Local development stays in [RUNNING_LOCALLY.md](RUNNING_LOCALLY.md) and `scripts/run_local.sh`.
 
 ---
 
@@ -247,7 +247,7 @@ curl -sf http://127.0.0.1:8080/health/
 
 Replace `app.jar.bak.NEWEST` with the timestamped file you want (`ls -lt /opt/marble-erp/app.jar.bak.*`).
 
-Database: Flyway migrations are **forward**. Rolling back the JAR does not undo SQL. Restore a Postgres dump if a migration is incompatible with the older JAR (see backup notes in [DEPLOYMENT_LINUX.md](../DEPLOYMENT_LINUX.md) §6.1).
+Database: Flyway migrations are **forward**. Rolling back the JAR does not undo SQL. Restore a Postgres dump if a migration is incompatible with the older JAR (see backup notes in [DEPLOYMENT_LINUX.md](DEPLOYMENT_LINUX.md) §6.1).
 
 ---
 

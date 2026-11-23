@@ -57,8 +57,8 @@
 }
 
 .erp-data-grid__op {
-    min-width: 108px !important;
-    width: 108px;
+    min-width: 140px !important;
+    width: 140px;
     text-align: center;
 }
 
@@ -305,4 +305,145 @@
     color: #fff;
     font-weight: 700;
     cursor: pointer;
+}
+
+.erp-data-grid__colfilter {
+    position: relative;
+    display: inline-flex;
+}
+
+.erp-data-grid__colfilter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.85;
+}
+
+.erp-data-grid__colfilter-btn:hover,
+.erp-data-grid__colfilter-btn:focus-visible,
+.erp-data-grid__colfilter.is-active .erp-data-grid__colfilter-btn {
+    background: rgba(255, 255, 255, 0.16);
+    opacity: 1;
+    outline: none;
+}
+
+.erp-data-grid__colfilter.is-active .erp-data-grid__colfilter-btn {
+    box-shadow: inset 0 -2px 0 #7dd3fc;
+}
+
+.erp-data-grid__colfilter-panel {
+    position: fixed;
+    right: auto;
+    z-index: 9999;
+    width: 260px;
+    max-width: calc(100vw - 16px);
+    padding: 12px;
+    background: #fff;
+    color: #0f172a;
+    border: 1px solid #d6deea;
+    border-radius: 8px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.erp-data-grid__colfilter-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.erp-data-grid__colfilter-to.is-hidden {
+    display: none;
+}
+
+.erp-data-grid__filter-msg {
+    margin: 4px 0 0;
+    color: #b45309;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.erp-data-grid__colfilter-panel select,
+.erp-data-grid__colfilter-panel input[type="search"],
+.erp-data-grid__colfilter-panel input[type="date"],
+.erp-data-grid__colfilter-panel input[type="number"] {
+    width: 100%;
+    height: 32px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0 8px;
+    color: #0f172a;
+    background: #fff;
+}
+
+.erp-data-grid__colfilter-values {
+    max-height: 160px;
+    overflow: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    min-height: 36px;
+}
+
+.erp-data-grid__colfilter-values [role="option"] {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 6px 8px;
+    border: 0;
+    background: transparent;
+    color: #0f172a;
+    cursor: pointer;
+}
+
+.erp-data-grid__colfilter-values [role="option"]:hover,
+.erp-data-grid__colfilter-values [role="option"][aria-selected="true"] {
+    background: #e7f0fa;
+}
+
+.erp-data-grid__colfilter-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.erp-data-grid__colfilter-actions button,
+.erp-data-grid__clear-filters {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: 1px solid #0f2744;
+    background: #0f2744;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.erp-data-grid__colfilter-actions a,
+.erp-data-grid__clear-filters {
+    background: #fff;
+    color: #0f2744;
+}
+
+.erp-data-grid__clear-filters {
+    margin-left: 10px;
+    height: 26px;
+    font-size: 11px;
 }

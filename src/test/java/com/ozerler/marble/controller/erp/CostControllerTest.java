@@ -1,33 +1,31 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.dto.CostAnalysisDto;
-import com.ozerler.marble.dto.SiteProfitDto;
-import com.ozerler.marble.model.CostCenter;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.ExpenseCategory;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.service.CostAccountingService;
-import com.ozerler.marble.service.CostAnalysisService;
-import com.ozerler.marble.service.ExpenseService;
-import com.ozerler.marble.service.PricingService;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
 import org.springframework.ui.ConcurrentModel;
 import org.springframework.ui.Model;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import com.ozerler.marble.dto.CostAnalysisDto;
+import com.ozerler.marble.dto.SiteProfitDto;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.ExpenseCategory;
+import com.ozerler.marble.service.CostAccountingService;
+import com.ozerler.marble.service.CostAnalysisService;
+import com.ozerler.marble.service.ExpenseService;
+import com.ozerler.marble.service.FormLookupService;
+import com.ozerler.marble.service.PricingService;
 
 @ExtendWith(MockitoExtension.class)
 class CostControllerTest {
@@ -41,7 +39,7 @@ class CostControllerTest {
     @Mock
     private PricingService pricingService;
     @Mock
-    private ProjectRepository projectRepository;
+    private FormLookupService formLookup;
     @Mock
     private MessageSource messageSource;
 
@@ -50,7 +48,7 @@ class CostControllerTest {
 
     @Test
     @DisplayName("costsIndex computes consolidated totals and safe contribution calculations")
-    void costsIndex_ComputesTotalsAndRenders() {
+    void costsIndexComputesTotalsAndRenders() {
         CostAnalysisDto quarryDto = CostAnalysisDto.builder()
                 .businessUnit(BusinessUnit.QUARRY)
                 .businessUnitLabel("Ocak")
@@ -76,10 +74,22 @@ class CostControllerTest {
                 .expenseByCategory(Map.of())
                 .build();
 
-        when(costAnalysisService.analyze(eq(BusinessUnit.QUARRY), any())).thenReturn(quarryDto);
-        when(costAnalysisService.analyze(eq(BusinessUnit.FACTORY), any())).thenReturn(emptyDto);
-        when(costAnalysisService.analyze(eq(BusinessUnit.WORKSHOP), any())).thenReturn(emptyDto);
-        when(costAnalysisService.analyze(eq(BusinessUnit.SITE), any())).thenReturn(emptyDto);
+        Mockito.when(
+                        costAnalysisService.analyze(
+                                ArgumentMatchers.eq(BusinessUnit.QUARRY), ArgumentMatchers.any()))
+                .thenReturn(quarryDto);
+        Mockito.when(
+                        costAnalysisService.analyze(
+                                ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.any()))
+                .thenReturn(emptyDto);
+        Mockito.when(
+                        costAnalysisService.analyze(
+                                ArgumentMatchers.eq(BusinessUnit.WORKSHOP), ArgumentMatchers.any()))
+                .thenReturn(emptyDto);
+        Mockito.when(
+                        costAnalysisService.analyze(
+                                ArgumentMatchers.eq(BusinessUnit.SITE), ArgumentMatchers.any()))
+                .thenReturn(emptyDto);
 
         SiteProfitDto profitDto = SiteProfitDto.builder()
                 .projectId(1L)
@@ -95,34 +105,34 @@ class CostControllerTest {
                 .netProfitOrLoss(new BigDecimal("170000.00"))
                 .build();
 
-        when(costAnalysisService.siteProfits()).thenReturn(List.of(profitDto));
-        when(costAccountingService.getAllCostCenters()).thenReturn(List.of(
-                CostCenter.builder().id(1L).code("CC-01").name("Ocak").monthlyBudget(new BigDecimal("150000.00")).build()
-        ));
+        Mockito.when(costAnalysisService.siteProfits()).thenReturn(List.of(profitDto));
+        Mockito.when(costAccountingService.getAllCostCenterViews()).thenReturn(List.of());
+        Mockito.when(costAccountingService.totalMonthlyBudget()).thenReturn(new BigDecimal("150000.00"));
 
         Model model = new ConcurrentModel();
         String view = costController.costsIndex("2026-09", model);
 
-        assertThat(view).isEqualTo("erp/costs/index");
-        assertThat(model.getAttribute("totalPeriodExpense")).isEqualTo(new BigDecimal("100000.00"));
-        assertThat(model.getAttribute("totalSiteRevenue")).isEqualTo(new BigDecimal("500000.00"));
-        assertThat(model.getAttribute("totalSiteCost")).isEqualTo(new BigDecimal("330000.00"));
-        assertThat(model.getAttribute("totalSiteNet")).isEqualTo(new BigDecimal("170000.00"));
-        assertThat(model.getAttribute("totalSiteMarginPct")).isEqualTo(new BigDecimal("34.0"));
-        assertThat(model.getAttribute("totalMonthlyBudget")).isEqualTo(new BigDecimal("150000.00"));
+        Assertions.assertThat(view).isEqualTo("erp/costs/index");
+        Assertions.assertThat(model.getAttribute("totalPeriodExpense")).isEqualTo(new BigDecimal("100000.00"));
+        Assertions.assertThat(model.getAttribute("totalSiteRevenue")).isEqualTo(new BigDecimal("500000.00"));
+        Assertions.assertThat(model.getAttribute("totalSiteCost")).isEqualTo(new BigDecimal("330000.00"));
+        Assertions.assertThat(model.getAttribute("totalSiteNet")).isEqualTo(new BigDecimal("170000.00"));
+        Assertions.assertThat(model.getAttribute("totalSiteMarginPct")).isEqualTo(new BigDecimal("34.0"));
+        Assertions.assertThat(model.getAttribute("totalMonthlyBudget")).isEqualTo(new BigDecimal("150000.00"));
 
         // Test safe helper calculations on DTO
         BigDecimal dieselContribution = quarryDto.calculateUnitContribution(new BigDecimal("40000.00"));
-        assertThat(dieselContribution).isEqualTo(new BigDecimal("200.00"));
+        Assertions.assertThat(dieselContribution).isEqualTo(new BigDecimal("200.00"));
 
         BigDecimal dieselShare = quarryDto.calculateCategorySharePct(new BigDecimal("40000.00"));
-        assertThat(dieselShare).isEqualTo(new BigDecimal("40.0"));
+        Assertions.assertThat(dieselShare).isEqualTo(new BigDecimal("40.0"));
 
         // Test safe zero/null handling on empty DTO
-        assertThat(emptyDto.calculateUnitContribution(new BigDecimal("40000.00"))).isNull();
-        assertThat(emptyDto.calculateCategorySharePct(new BigDecimal("40000.00"))).isEqualTo(BigDecimal.ZERO);
+        Assertions.assertThat(emptyDto.calculateUnitContribution(new BigDecimal("40000.00"))).isNull();
+        Assertions.assertThat(emptyDto.calculateCategorySharePct(new BigDecimal("40000.00")))
+                .isEqualTo(BigDecimal.ZERO);
 
         // Test profit margin helper on DTO
-        assertThat(profitDto.getMarginPct()).isEqualTo(new BigDecimal("34.0"));
+        Assertions.assertThat(profitDto.getMarginPct()).isEqualTo(new BigDecimal("34.0"));
     }
 }

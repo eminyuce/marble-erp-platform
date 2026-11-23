@@ -1,15 +1,17 @@
 package com.ozerler.marble.dto;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Generic response wrapper formatted for Tabulator 6 remote pagination.
@@ -24,7 +26,7 @@ public class TabulatorResponse<T> {
 
     @JsonProperty("last_page")
     @JsonAlias("lastPage")
-    private int last_page;
+    private int lastPage;
 
     @JsonProperty("total")
     @JsonAlias("total")
@@ -44,9 +46,15 @@ public class TabulatorResponse<T> {
 
     public static <T> TabulatorResponse<T> of(List<T> data, int totalPages, long totalElements,
                                               Map<String, Object> meta) {
+        int totalPagesValue;
+        if (totalPages > 0) {
+            totalPagesValue = totalPages;
+        } else {
+            totalPagesValue = 1;
+        }
         return TabulatorResponse.<T>builder()
-                .data(data != null ? data : Collections.emptyList())
-                .last_page(totalPages > 0 ? totalPages : 1)
+                .data(Objects.requireNonNullElse(data, Collections.emptyList()))
+                .lastPage(totalPagesValue)
                 .total(totalElements)
                 .meta(meta)
                 .build();

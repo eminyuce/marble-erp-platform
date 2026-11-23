@@ -1,13 +1,36 @@
 package com.ozerler.marble.controller.erp;
 
+import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+
+import org.springframework.context.MessageSource;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.domain.FactoryProcessRouting;
 import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.SlabLabelDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.ProductionOrder;
-import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.dto.view.FactoryOperationView;
+import com.ozerler.marble.dto.view.ProductionOrderView;
+import com.ozerler.marble.dto.view.SlabView;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ChamferStatus;
 import com.ozerler.marble.model.enums.FactoryProcessType;
 import com.ozerler.marble.model.enums.QualityGrade;
@@ -24,22 +47,8 @@ import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.PolishGrid;
 import com.ozerler.marble.web.ProductionOrderGrid;
 import com.ozerler.marble.web.SlabGrid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.repository.StockItemRepository;
-import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/production")
@@ -50,7 +59,6 @@ public class ProductionController {
     private final FactoryProductionService factoryProductionService;
     private final PalletShipmentService palletShipmentService;
     private final QuarryBlockService quarryBlockService;
-    private final StockItemRepository stockItemRepository;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -58,10 +66,21 @@ public class ProductionController {
                                   @RequestParam(value = "status", required = false) String status,
                                   @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", productionService.getProductionSummary());
-        model.addAttribute("selectedStatus", status == null ? "" : status);
-        model.addAttribute("grid", ProductionOrderGrid.view(
-                productionService.getOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
+        model.addAttribute(
+                "grid",
+                ProductionOrderGrid.view(
+                        productionService.getOrdersPaged(
+                                query.pageNumber(),
+                                query.pageSize(),
+                                query.getSearch(),
+                                status,
+                                query.sortKey(),
+                                query.sortDirection()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         return "erp/production/index";
     }
 
@@ -86,34 +105,36 @@ public class ProductionController {
 
     @PostMapping("/create")
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
-    public String recordCutting(@RequestParam("blockId") Long blockId,
-                                @RequestParam(value = "orderNo", required = false) String orderNo,
-                                @RequestParam(value = "processType", defaultValue = "GANGSAW_CUTTING") FactoryProcessType processType,
-                                @RequestParam(value = "machineId", required = false) Long machineId,
-                                @RequestParam("machineName") String machineName,
-                                @RequestParam("durationHours") BigDecimal durationHours,
-                                @RequestParam("electricityKwh") BigDecimal electricityKwh,
-                                @RequestParam("bladeWearMm") BigDecimal bladeWearMm,
-                                @RequestParam("directCuttingExpense") BigDecimal directCuttingExpense,
-                                @RequestParam("operatorName") String operatorName,
-                                @RequestParam(value = "notes", required = false) String notes,
-                                @RequestParam(value = "slabCountGradeExtra", defaultValue = "0") int extraCount,
-                                @RequestParam(value = "slabCountGradeA", defaultValue = "0") int slabCountGradeA,
-                                @RequestParam(value = "slabCountGradeB", defaultValue = "0") int slabCountGradeB,
-                                @RequestParam(value = "slabCountGradeC", defaultValue = "0") int slabCountGradeC,
-                                @RequestParam("slabWidthCm") BigDecimal slabWidthCm,
-                                @RequestParam("slabLengthCm") BigDecimal slabLengthCm,
-                                @RequestParam("thicknessCm") BigDecimal thicknessCm,
-                                @RequestParam(value = "inputQuantity", required = false) BigDecimal inputQuantity,
-                                @RequestParam(value = "outputQuantity", required = false) BigDecimal outputQuantity,
-                                @RequestParam(value = "wasteQuantity", required = false) BigDecimal wasteQuantity,
-                                @RequestParam(value = "wasteUnit", required = false) QuantityUnit wasteUnit,
-                                @RequestParam(value = "scrapReason", required = false) ScrapReasonCode scrapReason,
-                                @RequestParam(value = "scrapWeightKg", required = false) BigDecimal scrapWeightKg,
-                                @RequestParam(value = "scrapNotes", required = false) String scrapNotes,
-                                Locale locale,
-                                Model model,
-                                RedirectAttributes redirectAttributes) {
+    public String recordCutting(
+            @RequestParam("blockId") Long blockId,
+            @RequestParam(value = "orderNo", required = false) String orderNo,
+            @RequestParam(value = "processType", defaultValue = "GANGSAW_CUTTING")
+                    FactoryProcessType processType,
+            @RequestParam(value = "machineId", required = false) Long machineId,
+            @RequestParam("machineName") String machineName,
+            @RequestParam("durationHours") BigDecimal durationHours,
+            @RequestParam("electricityKwh") BigDecimal electricityKwh,
+            @RequestParam("bladeWearMm") BigDecimal bladeWearMm,
+            @RequestParam("directCuttingExpense") BigDecimal directCuttingExpense,
+            @RequestParam("operatorName") String operatorName,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "slabCountGradeExtra", defaultValue = "0") int extraCount,
+            @RequestParam(value = "slabCountGradeA", defaultValue = "0") int slabCountGradeA,
+            @RequestParam(value = "slabCountGradeB", defaultValue = "0") int slabCountGradeB,
+            @RequestParam(value = "slabCountGradeC", defaultValue = "0") int slabCountGradeC,
+            @RequestParam("slabWidthCm") BigDecimal slabWidthCm,
+            @RequestParam("slabLengthCm") BigDecimal slabLengthCm,
+            @RequestParam("thicknessCm") BigDecimal thicknessCm,
+            @RequestParam(value = "inputQuantity", required = false) BigDecimal inputQuantity,
+            @RequestParam(value = "outputQuantity", required = false) BigDecimal outputQuantity,
+            @RequestParam(value = "wasteQuantity", required = false) BigDecimal wasteQuantity,
+            @RequestParam(value = "wasteUnit", required = false) QuantityUnit wasteUnit,
+            @RequestParam(value = "scrapReason", required = false) ScrapReasonCode scrapReason,
+            @RequestParam(value = "scrapWeightKg", required = false) BigDecimal scrapWeightKg,
+            @RequestParam(value = "scrapNotes", required = false) String scrapNotes,
+            Locale locale,
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         try {
             factoryProductionService.recordCutting(new FactoryProductionService.CuttingRequest(
@@ -162,14 +183,13 @@ public class ProductionController {
 
     @GetMapping("/orders/{id}")
     public String orderDetail(@PathVariable("id") Long id, Model model) {
-        ProductionOrder order = productionService.getOrderWithDetails(id);
-        model.addAttribute("order", order);
+        model.addAttribute("order", productionService.getOrderView(id));
         return "erp/production/detail";
     }
 
     @GetMapping("/orders/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
-        ProductionOrder order = productionService.getOrderById(id);
+        ProductionOrderView order = productionService.getOrderView(id);
         populateProductionForm(model, locale);
         model.addAttribute("record", order);
         model.addAttribute("isEdit", true);
@@ -199,10 +219,16 @@ public class ProductionController {
     public String polishForm(@RequestParam(value = "page", required = false) Integer page,
                              @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
-        model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
+        model.addAttribute("factoryMachines", factoryProductionService.factoryMachineViews());
         model.addAttribute("processTypes", FactoryProcessRouting.SURFACE_TYPES.toArray(FactoryProcessType[]::new));
         model.addAttribute("chamferStatuses", ChamferStatus.values());
-        model.addAttribute("grid", PolishGrid.view(factoryProductionService.surfaceOperations(), query.pageNumber(), query.pageSize(), query.getSearch()));
+        model.addAttribute(
+                "grid",
+                PolishGrid.view(
+                        factoryProductionService.surfaceOperationViews(),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.getSearch()));
         return "erp/production/polish";
     }
 
@@ -217,29 +243,7 @@ public class ProductionController {
     @GetMapping("/api/polish-operations")
     @ResponseBody
     public List<Map<String, Object>> polishOperationsApi() {
-        return factoryProductionService.surfaceOperations().stream().map(op -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", op.getId());
-            map.put("orderNo", op.getWorkOrder() != null ? op.getWorkOrder().getOrderNo() : "-");
-            map.put("workOrderId", op.getWorkOrder() != null ? op.getWorkOrder().getId() : null);
-            map.put("blockCode", (op.getWorkOrder() != null && op.getWorkOrder().getBlock() != null)
-                    ? op.getWorkOrder().getBlock().getBlockCode() : "-");
-            map.put("processType", op.getProcessType() != null ? op.getProcessType().name() : "");
-            map.put("processTypeLabel", op.getProcessType() != null ? op.getProcessType().getLabel() : "-");
-            map.put("machineName", op.getMachine() != null ? op.getMachine().getName() : "-");
-            map.put("operatorName", op.getOperatorName() != null ? op.getOperatorName() : "-");
-            map.put("finishedAt", op.getFinishedAt() != null ? op.getFinishedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) : "-");
-            map.put("inputQuantity", op.getInputQuantity());
-            map.put("outputQuantity", op.getOutputQuantity());
-            map.put("wasteQuantity", op.getWasteQuantity());
-            map.put("wastePercent", (op.getInputQuantity() != null && op.getInputQuantity().compareTo(BigDecimal.ZERO) > 0 && op.getWasteQuantity() != null)
-                    ? op.getWasteQuantity().multiply(BigDecimal.valueOf(100)).divide(op.getInputQuantity(), 1, java.math.RoundingMode.HALF_UP)
-                    : BigDecimal.ZERO);
-            map.put("chamferStatus", op.getChamferStatus() != null ? op.getChamferStatus().getLabel() : "-");
-            map.put("totalCost", op.getTotalOperationCost());
-            map.put("notes", op.getNotes() != null ? op.getNotes() : "");
-            return map;
-        }).toList();
+        return factoryProductionService.surfaceOperationRows();
     }
 
     @PostMapping("/polish")
@@ -271,9 +275,9 @@ public class ProductionController {
 
     @GetMapping("/polish/{id}/edit")
     public String editPolishForm(@PathVariable("id") Long id, Model model) {
-        com.ozerler.marble.model.FactoryOperation op = factoryProductionService.getOperation(id);
+        FactoryOperationView op = factoryProductionService.getOperationView(id);
         model.addAttribute("operation", op);
-        model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
+        model.addAttribute("factoryMachines", factoryProductionService.factoryMachineViews());
         model.addAttribute("chamferStatuses", ChamferStatus.values());
         return "erp/production/polish-edit";
     }
@@ -281,16 +285,16 @@ public class ProductionController {
     @PostMapping("/polish/{id}/edit")
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     public String updatePolish(@PathVariable("id") Long id,
-                               @RequestParam(value = "machineId", required = false) Long machineId,
-                               @RequestParam("operatorName") String operatorName,
-                               @RequestParam("inputM2") BigDecimal inputM2,
-                               @RequestParam("outputM2") BigDecimal outputM2,
-                               @RequestParam("wasteM2") BigDecimal wasteM2,
-                               @RequestParam(value = "chamferStatus", required = false) ChamferStatus chamferStatus,
-                               @RequestParam(value = "notes", required = false) String notes,
-                               @RequestParam(value = "laborCost", required = false) BigDecimal laborCost,
-                               @RequestParam(value = "electricityCost", required = false) BigDecimal electricityCost,
-                               @RequestParam(value = "consumableCost", required = false) BigDecimal consumableCost,
+                               @RequestParam(required = false, name = "machineId") Long machineId,
+                               @RequestParam(name = "operatorName") String operatorName,
+                               @RequestParam(name = "inputM2") BigDecimal inputM2,
+                               @RequestParam(name = "outputM2") BigDecimal outputM2,
+                               @RequestParam(name = "wasteM2") BigDecimal wasteM2,
+                               @RequestParam(required = false, name = "chamferStatus") ChamferStatus chamferStatus,
+                               @RequestParam(required = false, name = "notes") String notes,
+                               @RequestParam(required = false, name = "laborCost") BigDecimal laborCost,
+                               @RequestParam(required = false, name = "electricityCost") BigDecimal electricityCost,
+                               @RequestParam(required = false, name = "consumableCost") BigDecimal consumableCost,
                                RedirectAttributes redirectAttributes) {
         try {
             factoryProductionService.updateSurfaceOperation(id, machineId, operatorName,
@@ -311,42 +315,7 @@ public class ProductionController {
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "sortField", required = false) String sortField,
             @RequestParam(value = "sortDir", required = false) String sortDir) {
-        List<com.ozerler.marble.model.Shipment> allShipments = palletShipmentService.shipments();
-        if (search != null && !search.isBlank()) {
-            String q = search.trim().toLowerCase();
-            allShipments = allShipments.stream().filter(s ->
-                (s.getWaybillNo() != null && s.getWaybillNo().toLowerCase().contains(q)) ||
-                (s.getVehiclePlate() != null && s.getVehiclePlate().toLowerCase().contains(q)) ||
-                (s.getDriverName() != null && s.getDriverName().toLowerCase().contains(q)) ||
-                (s.getCustomer() != null && s.getCustomer().getCompanyName().toLowerCase().contains(q)) ||
-                (s.getProject() != null && s.getProject().getName().toLowerCase().contains(q))
-            ).toList();
-        }
-        int totalElements = allShipments.size();
-        int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 1;
-        int fromIndex = Math.min((page - 1) * size, totalElements);
-        int toIndex = Math.min(fromIndex + size, totalElements);
-        List<com.ozerler.marble.model.Shipment> paged = (fromIndex <= toIndex) ? allShipments.subList(fromIndex, toIndex) : List.of();
-
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-        List<Map<String, Object>> list = paged.stream().map(s -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", s.getId());
-            map.put("waybillNo", s.getWaybillNo());
-            map.put("departureTime", s.getDepartureTime() != null ? s.getDepartureTime().format(dtf) : "-");
-            map.put("customerName", s.getCustomer() != null ? s.getCustomer().getCompanyName() : "-");
-            map.put("projectName", s.getProject() != null ? s.getProject().getName() : "-");
-            map.put("target", s.getCustomer() != null ? s.getCustomer().getCompanyName()
-                    : s.getProject() != null ? s.getProject().getName() : "-");
-            map.put("vehiclePlate", s.getVehiclePlate());
-            map.put("driverName", s.getDriverName());
-            map.put("freightCost", s.getFreightCost());
-            map.put("deliveryStatus", s.getDeliveryStatus());
-            map.put("deliveryStatusLabel", s.getDeliveryStatusLabel());
-            return map;
-        }).toList();
-
-        return TabulatorResponse.of(list, totalPages, totalElements);
+        return palletShipmentService.shipmentRows(page, size, search);
     }
 
     @GetMapping("/pallets")
@@ -364,13 +333,24 @@ public class ProductionController {
                                Locale locale,
                                RedirectAttributes redirectAttributes) {
         try {
-            palletShipmentService.createPallet(palletCode, customerId, projectId, warehouseLocation, department != null ? department : BusinessUnit.FACTORY);
+            palletShipmentService.createPallet(
+                    palletCode,
+                    customerId,
+                    projectId,
+                    warehouseLocation,
+                    Objects.requireNonNullElse(department, BusinessUnit.FACTORY));
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.production.pallet.success", null, locale));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+        String valueValue;
+        if (department != null) {
+            valueValue = "?department=" + department.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/production/pallets" + valueValue;
     }
 
     @PostMapping("/pallets/{id}/items")
@@ -387,12 +367,28 @@ public class ProductionController {
                                 @RequestParam(value = "department", required = false) BusinessUnit department,
                                 RedirectAttributes redirectAttributes) {
         try {
-            palletShipmentService.addItem(palletId, materialLotId, stockItemId, null, productName, widthCm, lengthCm, thicknessCm, quantity, areaM2);
+            palletShipmentService.addItem(
+                    palletId,
+                    materialLotId,
+                    stockItemId,
+                    null,
+                    productName,
+                    widthCm,
+                    lengthCm,
+                    thicknessCm,
+                    quantity,
+                    areaM2);
             redirectAttributes.addFlashAttribute("successMessage", "Ürün başarıyla palete eklendi.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+        String valueValue;
+        if (department != null) {
+            valueValue = "?department=" + department.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/production/pallets" + valueValue;
     }
 
     @PostMapping("/pallets/{id}/close")
@@ -406,7 +402,13 @@ public class ProductionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+        String valueValue;
+        if (department != null) {
+            valueValue = "?department=" + department.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/production/pallets" + valueValue;
     }
 
     @PostMapping("/pallets/{id}/reopen")
@@ -420,7 +422,13 @@ public class ProductionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+        String valueValue;
+        if (department != null) {
+            valueValue = "?department=" + department.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/production/pallets" + valueValue;
     }
 
     @PostMapping("/pallets/{id}/sell")
@@ -435,11 +443,21 @@ public class ProductionController {
                                  RedirectAttributes redirectAttributes) {
         try {
             palletShipmentService.sellFromPallet(id, palletItemId, pieces, customerId, unitPrice, notes);
-            redirectAttributes.addFlashAttribute("successMessage", "Paletten " + pieces + " adet satış başarıyla gerçekleştirildi ve stoktan düşüldü.");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Paletten "
+                            + pieces
+                            + " adet satış başarıyla gerçekleştirildi ve stoktan düşüldü.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+        String valueValue;
+        if (department != null) {
+            valueValue = "?department=" + department.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/production/pallets" + valueValue;
     }
 
     @PostMapping("/shipments")
@@ -454,7 +472,14 @@ public class ProductionController {
                                  Locale locale,
                                  RedirectAttributes redirectAttributes) {
         try {
-            palletShipmentService.createShipment(palletId, customerId, projectId, waybillNo, vehiclePlate, driverName, freightCost);
+            palletShipmentService.createShipment(
+                    palletId,
+                    customerId,
+                    projectId,
+                    waybillNo,
+                    vehiclePlate,
+                    driverName,
+                    freightCost);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.production.shipment.success", null, locale));
         } catch (Exception e) {
@@ -465,11 +490,11 @@ public class ProductionController {
 
     @GetMapping("/tablet")
     public String tablet(@RequestParam(value = "operatorName", required = false) String operatorName, Model model) {
-        model.addAttribute("operations", factoryProductionService.tabletQueue(operatorName));
+        model.addAttribute("operations", factoryProductionService.tabletQueueViews(operatorName));
         model.addAttribute("operatorName", operatorName);
         model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
         model.addAttribute("processTypes", FactoryProcessType.values());
-        model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
+        model.addAttribute("factoryMachines", factoryProductionService.factoryMachineViews());
         model.addAttribute("chamferStatuses", ChamferStatus.values());
         model.addAttribute("wasteUnits", QuantityUnit.values());
         return "erp/production/tablet";
@@ -487,7 +512,8 @@ public class ProductionController {
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.production.plan.success", null, locale));
         if (operatorName != null && !operatorName.isBlank()) {
-            return "redirect:/production/tablet?operatorName=" + java.net.URLEncoder.encode(operatorName, java.nio.charset.StandardCharsets.UTF_8);
+            return "redirect:/production/tablet?operatorName="
+                    + URLEncoder.encode(operatorName, StandardCharsets.UTF_8);
         }
         return "redirect:/production/tablet";
     }
@@ -502,7 +528,8 @@ public class ProductionController {
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.production.tablet.start.success", null, locale));
         if (operatorName != null && !operatorName.isBlank()) {
-            return "redirect:/production/tablet?operatorName=" + java.net.URLEncoder.encode(operatorName, java.nio.charset.StandardCharsets.UTF_8);
+            return "redirect:/production/tablet?operatorName="
+                    + URLEncoder.encode(operatorName, StandardCharsets.UTF_8);
         }
         return "redirect:/production/tablet";
     }
@@ -522,7 +549,8 @@ public class ProductionController {
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.production.tablet.finish.success", null, locale));
         if (operatorName != null && !operatorName.isBlank()) {
-            return "redirect:/production/tablet?operatorName=" + java.net.URLEncoder.encode(operatorName, java.nio.charset.StandardCharsets.UTF_8);
+            return "redirect:/production/tablet?operatorName="
+                    + URLEncoder.encode(operatorName, StandardCharsets.UTF_8);
         }
         return "redirect:/production/tablet";
     }
@@ -533,10 +561,22 @@ public class ProductionController {
                             @RequestParam(value = "quality", required = false) String quality,
                             @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", productionService.getSlabSummary());
-        model.addAttribute("selectedStatus", status == null ? "" : status);
-        model.addAttribute("grid", SlabGrid.view(
-                productionService.getSlabsPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, quality, query.sortKey(), query.sortDirection()),
-                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
+        model.addAttribute(
+                "grid",
+                SlabGrid.view(
+                        productionService.getSlabsPaged(
+                                query.pageNumber(),
+                                query.pageSize(),
+                                query.getSearch(),
+                                status,
+                                quality,
+                                query.sortKey(),
+                                query.sortDirection()),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.sortKey(),
+                        query.sortDirection()));
         return "erp/production/slabs";
     }
 
@@ -556,13 +596,13 @@ public class ProductionController {
 
     @GetMapping("/slabs/{id}")
     public String slabDetail(@PathVariable("id") Long id, Model model) {
-        model.addAttribute("slab", productionService.getSlabWithDetails(id));
+        model.addAttribute("slab", productionService.getSlabView(id));
         return "erp/production/slab-detail";
     }
 
     @GetMapping("/slabs/{id}/edit")
     public String showSlabEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
-        populateSlabEditForm(model, productionService.getSlabWithDetails(id), locale);
+        populateSlabEditForm(model, productionService.getSlabView(id), locale);
         return "erp/production/slab-form";
     }
 
@@ -591,7 +631,7 @@ public class ProductionController {
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
             try {
-                populateSlabEditForm(model, productionService.getSlabWithDetails(id), locale);
+                populateSlabEditForm(model, productionService.getSlabView(id), locale);
             } catch (Exception ignored) {
                 model.addAttribute("pageTitle", messageSource.getMessage("erp.slab.title.edit", null, locale));
             }
@@ -613,23 +653,28 @@ public class ProductionController {
     }
 
     private void populateAcceptPage(Model model, ListQuery query) {
-        model.addAttribute("grid", FactoryAcceptGrid.view(
-                factoryProductionService.listWorkOrderSummaries(), query.pageNumber(), query.pageSize(), query.getSearch()));
-        model.addAttribute("dispatchedBlocks", quarryBlockService.getDispatchedBlocks());
-        model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
+        model.addAttribute(
+                "grid",
+                FactoryAcceptGrid.view(
+                        factoryProductionService.listWorkOrderSummaries(),
+                        query.pageNumber(),
+                        query.pageSize(),
+                        query.getSearch()));
+        model.addAttribute("dispatchedBlocks", quarryBlockService.getDispatchedBlockViews());
+        model.addAttribute("factoryMachines", factoryProductionService.factoryMachineViews());
     }
 
     private void populateProductionForm(Model model, Locale locale) {
-        model.addAttribute("availableBlocks", quarryBlockService.getAvailableBlocksForProduction());
+        model.addAttribute("availableBlocks", quarryBlockService.getAvailableBlockViewsForProduction());
         model.addAttribute("scrapReasons", ScrapReasonCode.values());
-        model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
+        model.addAttribute("factoryMachines", factoryProductionService.factoryMachineViews());
         model.addAttribute("cuttingTypes", new FactoryProcessType[]{
                 FactoryProcessType.GANGSAW_CUTTING, FactoryProcessType.ST_CUTTING});
         model.addAttribute("wasteUnits", QuantityUnit.values());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.production.title.create", null, locale));
     }
 
-    private void populateSlabEditForm(Model model, Slab slab, Locale locale) {
+    private void populateSlabEditForm(Model model, SlabView slab, Locale locale) {
         model.addAttribute("record", slab);
         model.addAttribute("slab", slab);
         model.addAttribute("qualityGrades", QualityGrade.values());

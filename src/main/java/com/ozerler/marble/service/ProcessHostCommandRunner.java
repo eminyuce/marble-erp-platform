@@ -1,18 +1,22 @@
 package com.ozerler.marble.service;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 public class ProcessHostCommandRunner implements HostCommandRunner {
+
+    private static final long DEFAULT_TIMEOUT_MILLIS = 15_000L;
 
     @Override
     public HostCommandResult run(HostCommand command) {
@@ -36,7 +40,12 @@ public class ProcessHostCommandRunner implements HostCommandRunner {
                     return "";
                 }
             });
-            long timeoutMillis = command.timeout() != null ? command.timeout().toMillis() : 15_000L;
+            long timeoutMillis;
+            if (command.timeout() != null) {
+                timeoutMillis = command.timeout().toMillis();
+            } else {
+                timeoutMillis = DEFAULT_TIMEOUT_MILLIS;
+            }
             boolean finished = process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS);
             if (!finished) {
                 process.destroyForcibly();
@@ -51,10 +60,16 @@ public class ProcessHostCommandRunner implements HostCommandRunner {
             return new HostCommandResult(-1, "interrupted");
         } catch (IOException ex) {
             log.warn("Host command failed: {} — {}", command.argv(), ex.getMessage());
-            return new HostCommandResult(-1, ex.getMessage() == null ? "" : ex.getMessage());
+            return new HostCommandResult(-1, Objects.requireNonNullElse(ex.getMessage(), ""));
         } catch (Exception ex) {
             log.warn("Host command output read failed: {} — {}", command.argv(), ex.getMessage());
-            return new HostCommandResult(process != null && !process.isAlive() ? process.exitValue() : -1, "");
+            int value;
+            if (process != null && !process.isAlive()) {
+                value = process.exitValue();
+            } else {
+                value = -1;
+            }
+            return new HostCommandResult(value, "");
         } finally {
             if (process != null && process.isAlive()) {
                 process.destroyForcibly();

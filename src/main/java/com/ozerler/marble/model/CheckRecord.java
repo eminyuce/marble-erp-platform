@@ -1,13 +1,32 @@
 package com.ozerler.marble.model;
 
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.CheckStatus;
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.CheckStatus;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "checks")
@@ -18,6 +37,8 @@ import java.time.temporal.ChronoUnit;
 @Builder
 @EqualsAndHashCode(callSuper = false, of = "id")
 public class CheckRecord extends AuditableEntity {
+
+    private static final int APPROACHING_DAYS = 15;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -67,7 +88,10 @@ public class CheckRecord extends AuditableEntity {
         if (businessUnit != null) {
             return businessUnit;
         }
-        return customer != null ? customer.getBusinessUnit() : BusinessUnit.FACTORY;
+        if (customer != null) {
+            return customer.getBusinessUnit();
+        }
+        return BusinessUnit.FACTORY;
     }
 
     @Transient
@@ -77,14 +101,18 @@ public class CheckRecord extends AuditableEntity {
 
     @Transient
     public boolean isApproaching() {
-        if (status != CheckStatus.PORTFOLIO || dueDate == null) return false;
+        if (status != CheckStatus.PORTFOLIO || dueDate == null) {
+            return false;
+        }
         long days = ChronoUnit.DAYS.between(LocalDate.now(), dueDate);
-        return days >= 0 && days <= 15;
+        return days >= 0 && days <= APPROACHING_DAYS;
     }
 
     @Transient
     public long getDaysRemaining() {
-        if (dueDate == null) return 0;
+        if (dueDate == null) {
+            return 0;
+        }
         return ChronoUnit.DAYS.between(LocalDate.now(), dueDate);
     }
 

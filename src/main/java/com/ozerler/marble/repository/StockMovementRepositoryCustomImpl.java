@@ -1,8 +1,9 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.StockMovement;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.StockMovementType;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -11,14 +12,15 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import com.ozerler.marble.model.StockMovement;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.StockMovementType;
 
 public class StockMovementRepositoryCustomImpl implements StockMovementRepositoryCustom {
 
@@ -59,7 +61,7 @@ public class StockMovementRepositoryCustomImpl implements StockMovementRepositor
 
     private EntityGraph<StockMovement> movementGraph() {
         EntityGraph<StockMovement> graph = entityManager.createEntityGraph(StockMovement.class);
-        graph.addAttributeNodes("block", "slab", "stockItem", "fromLocation", "toLocation", "customer");
+        graph.addAttributeNodes("block", "slab", "stockItem", "fromLocation", "toLocation", "customer", "invoice");
         return graph;
     }
 
@@ -90,9 +92,13 @@ public class StockMovementRepositoryCustomImpl implements StockMovementRepositor
         List<Order> orders = new ArrayList<>();
         if (sort != null) {
             for (Sort.Order order : sort) {
-                orders.add(order.isAscending()
-                        ? builder.asc(root.get(order.getProperty()))
-                        : builder.desc(root.get(order.getProperty())));
+                Order value;
+                if (order.isAscending()) {
+                    value = builder.asc(root.get(order.getProperty()));
+                } else {
+                    value = builder.desc(root.get(order.getProperty()));
+                }
+                orders.add(value);
             }
         }
         if (orders.isEmpty()) {

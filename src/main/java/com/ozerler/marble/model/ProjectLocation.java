@@ -1,12 +1,31 @@
 package com.ozerler.marble.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+import com.ozerler.marble.model.enums.OperationStatus;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "project_locations")
@@ -43,11 +62,11 @@ public class ProjectLocation extends AuditableEntity {
     @Column(name = "stone_spec", length = 150)
     private String stoneSpec;
 
-    @Column(name = "planned_area_m2", nullable = false, precision = 12, scale = 2)
+    @Column(name = "planned_area_m2", nullable = false, precision = 14, scale = 4)
     @Builder.Default
     private BigDecimal plannedAreaM2 = BigDecimal.ZERO;
 
-    @Column(name = "installed_area_m2", nullable = false, precision = 12, scale = 2)
+    @Column(name = "installed_area_m2", nullable = false, precision = 14, scale = 4)
     @Builder.Default
     private BigDecimal installedAreaM2 = BigDecimal.ZERO;
 
@@ -57,7 +76,7 @@ public class ProjectLocation extends AuditableEntity {
 
     @Transient
     public String getStatusLabel() {
-        return com.ozerler.marble.model.enums.OperationStatus.labelOf(status);
+        return OperationStatus.labelOf(status);
     }
 
     public BigDecimal getProgressPercentage() {

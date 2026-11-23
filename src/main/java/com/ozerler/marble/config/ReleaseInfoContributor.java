@@ -1,5 +1,12 @@
 package com.ozerler.marble.config;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+
 import org.springframework.boot.SpringBootVersion;
 import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.info.InfoContributor;
@@ -7,13 +14,6 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.core.SpringVersion;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
 
 /**
  * Publishes the pom.xml version and runtime facts on {@code /actuator/info}.
@@ -23,6 +23,7 @@ import java.util.Properties;
 public class ReleaseInfoContributor implements InfoContributor {
 
     static final String SESSION_STORE = "JDBC";
+    private static final int SHORT_COMMIT_LENGTH = 12;
 
     private final Optional<BuildProperties> buildProperties;
     private final Environment environment;
@@ -103,10 +104,10 @@ public class ReleaseInfoContributor implements InfoContributor {
             return "unknown";
         }
         String trimmed = sha.trim();
-        if (trimmed.length() <= 12) {
+        if (trimmed.length() <= SHORT_COMMIT_LENGTH) {
             return trimmed;
         }
-        return trimmed.substring(0, 12);
+        return trimmed.substring(0, SHORT_COMMIT_LENGTH);
     }
 
     private static String blankToUnknown(String value) {

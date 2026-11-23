@@ -8,7 +8,9 @@ spring:
     password: ""
     driver-class-name: org.h2.Driver
   jpa:
+    open-in-view: false
     hibernate:
+      # H2 file profile does not run the PostgreSQL Flyway scripts.
       ddl-auto: update
     show-sql: false
     properties:
@@ -44,13 +46,13 @@ app:
 
 rate-limiting:
   login:
-    max-requests: 1000
+    max-requests: 30
     window-seconds: 60
   form:
-    max-requests: 2000
+    max-requests: 60
     window-seconds: 60
   general:
-    max-requests: 10000
+    max-requests: 120
     window-seconds: 60
 
 # H2 profile does not open RustFS. These values keep the shared properties valid

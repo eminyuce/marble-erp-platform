@@ -1,9 +1,9 @@
 package com.ozerler.marble.dto;
 
-import com.ozerler.marble.model.WorkshopMaterialReceipt;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import com.ozerler.marble.model.WorkshopMaterialReceipt;
 
 public record WorkshopReceiptDto(
         String receiptNo,
@@ -17,10 +17,31 @@ public record WorkshopReceiptDto(
         String notes
 ) {
     public static WorkshopReceiptDto from(WorkshopMaterialReceipt receipt) {
-        String stoneType = receipt.getMaterialLot() != null ? receipt.getMaterialLot().getStoneType() : "";
-        String supplierName = receipt.getSupplier() != null ? receipt.getSupplier().getCompanyName() : "";
-        String sourceLabel = receipt.getSource() != null ? receipt.getSource().getLabel() : "";
+        String stoneType;
+        if (receipt.getMaterialLot() != null) {
+            stoneType = receipt.getMaterialLot().getStoneType();
+        } else {
+            stoneType = "";
+        }
+        String supplierName;
+        if (receipt.getSupplier() != null) {
+            supplierName = receipt.getSupplier().getCompanyName();
+        } else {
+            supplierName = "";
+        }
+        String sourceLabel;
+        if (receipt.getSource() != null) {
+            sourceLabel = receipt.getSource().getLabel();
+        } else {
+            sourceLabel = "";
+        }
         LocalDate receivedAt = receipt.getReceivedAt();
+        String value;
+        if (receivedAt != null) {
+            value = receivedAt.toString();
+        } else {
+            value = "";
+        }
         return new WorkshopReceiptDto(
                 receipt.getReceiptNo(),
                 sourceLabel,
@@ -29,7 +50,7 @@ public record WorkshopReceiptDto(
                 receipt.getQuantity(),
                 receipt.getAreaM2(),
                 receipt.getPurchaseCost(),
-                receivedAt != null ? receivedAt.toString() : "",
+                value,
                 receipt.getNotes()
         );
     }

@@ -1,15 +1,15 @@
 package com.ozerler.marble.config;
 
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.boot.EnvironmentPostProcessor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
-
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Normalizes cloud provider database URLs (e.g., Render, Heroku) formatted as:
@@ -18,6 +18,8 @@ import java.util.Map;
  */
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProcessor {
+
+    private static final int DEFAULT_POSTGRES_PORT = 5432;
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
@@ -35,8 +37,18 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
                 URI uri = new URI(uriString);
                 String host = uri.getHost();
-                int port = uri.getPort() > 0 ? uri.getPort() : 5432;
-                String path = uri.getPath() != null ? uri.getPath() : "/marble_erp";
+                int port;
+                if (uri.getPort() > 0) {
+                    port = uri.getPort();
+                } else {
+                    port = DEFAULT_POSTGRES_PORT;
+                }
+                String path;
+                if (uri.getPath() != null) {
+                    path = uri.getPath();
+                } else {
+                    path = "/marble_erp";
+                }
 
                 String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + path;
                 Map<String, Object> properties = new HashMap<>();
@@ -50,7 +62,9 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
                     }
                 }
 
-                environment.getPropertySources().addFirst(new MapPropertySource("renderDatabaseUrlProperties", properties));
+                environment
+                        .getPropertySources()
+                        .addFirst(new MapPropertySource("renderDatabaseUrlProperties", properties));
             } catch (Exception ignored) {
                 // If parsing fails, fall back to standard Spring datasource configuration
             }

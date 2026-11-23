@@ -1,12 +1,11 @@
 package com.ozerler.marble.web;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class AlpinePageScriptTest {
 
@@ -19,12 +18,12 @@ class AlpinePageScriptTest {
         String transactions = Files.readString(Path.of(
                 "src/main/resources/templates/admin/definitions/customer-transactions.html"));
 
-        assertThat(layout).contains("defer th:src=\"@{/vendor/alpine-collapse.min.js}\"");
-        assertThat(layout).contains("defer th:src=\"@{/vendor/alpine.min.js}\"");
-        assertThat(projects).doesNotContain("[[${");
-        assertThat(form).doesNotContain("[[${");
-        assertThat(transactions).doesNotContain("[[${");
-        assertThat(projects).contains("data-customer-filter");
-        assertThat(form).contains("data-cari-mode");
+        Assertions.assertThat(layout).contains("defer th:src=\"@{/vendor/alpine-collapse.min.js}\"");
+        Assertions.assertThat(layout).contains("defer th:src=\"@{/vendor/alpine.min.js}\"");
+        Assertions.assertThat(projects).doesNotContain("[[${");
+        Assertions.assertThat(form).doesNotContain("[[${");
+        Assertions.assertThat(transactions).doesNotContain("[[${");
+        Assertions.assertThat(projects).contains("data-customer-filter");
+        Assertions.assertThat(form).contains("data-cari-mode");
     }
 }

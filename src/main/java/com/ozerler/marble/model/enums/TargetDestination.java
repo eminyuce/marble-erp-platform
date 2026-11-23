@@ -23,7 +23,9 @@ public enum TargetDestination {
             if (msg != null && !msg.equals(messageKey) && !msg.isBlank()) {
                 return msg;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+            // best effort: fall back to the default below
+        }
         return defaultLabel;
     }
 

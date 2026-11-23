@@ -1,14 +1,15 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.SiteConsumption;
-import com.ozerler.marble.model.enums.ConsumptionType;
+import java.math.BigDecimal;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
+import com.ozerler.marble.model.SiteConsumption;
+import com.ozerler.marble.model.enums.ConsumptionType;
 
 @Repository
 public interface SiteConsumptionRepository extends JpaRepository<SiteConsumption, Long> {

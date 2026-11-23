@@ -1,17 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import com.ozerler.marble.model.FileStorage;
-import com.ozerler.marble.repository.FileStorageRepository;
-import com.ozerler.marble.storage.FileObjectKeyFactory;
-import com.ozerler.marble.storage.ObjectStorageService;
-import com.ozerler.marble.util.Filenames;
-import com.ozerler.marble.validation.FileUploadValidator;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -21,6 +9,21 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.model.FileStorage;
+import com.ozerler.marble.repository.FileStorageRepository;
+import com.ozerler.marble.storage.FileObjectKeyFactory;
+import com.ozerler.marble.storage.ObjectStorageService;
+import com.ozerler.marble.util.Filenames;
+import com.ozerler.marble.validation.FileUploadValidator;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Idempotent migration of leftover local-disk files into RustFS.
@@ -94,7 +97,7 @@ public class FileStorageMigrationService {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             long size = Files.size(source);
             try (InputStream raw = Files.newInputStream(source);
-                 DigestInputStream digestStream = new DigestInputStream(raw, digest)) {
+                    DigestInputStream digestStream = new DigestInputStream(raw, digest)) {
                 String mime = storedOrDetectedMime(record, source);
                 objectStorageService.upload(objectKey, digestStream, size, mime);
             }
@@ -106,7 +109,7 @@ public class FileStorageMigrationService {
 
         record.setObjectKey(objectKey);
         record.setBucketName(objectStorageService.getBucketName());
-        record.setFilePath(com.ozerler.marble.common.Constants.FILE_VIEW_URL_PREFIX + record.getId());
+        record.setFilePath(Constants.FILE_VIEW_URL_PREFIX + record.getId());
         fileStorageRepository.save(record);
         log.info("Migrated filesystem file to object storage fileId={} objectKey={} source={}",
                 record.getId(), objectKey, source);
@@ -158,7 +161,8 @@ public class FileStorageMigrationService {
             filename = record.getFileName();
         }
         try (InputStream in = Files.newInputStream(source)) {
-            return FileUploadValidator.detectMimeType(filename, in.readNBytes(FileUploadValidator.MEDIA_TYPE_PREFIX_BYTES));
+            return FileUploadValidator.detectMimeType(
+                    filename, in.readNBytes(FileUploadValidator.MEDIA_TYPE_PREFIX_BYTES));
         }
     }
 

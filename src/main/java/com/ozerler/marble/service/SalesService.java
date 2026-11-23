@@ -1,53 +1,86 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.SalesOrderDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.*;
-import com.ozerler.marble.model.enums.SalesOrderStatus;
-import com.ozerler.marble.repository.BlockRepository;
-import com.ozerler.marble.repository.CustomerRepository;
-import com.ozerler.marble.repository.SalesOrderRepository;
-import com.ozerler.marble.repository.SlabRepository;
-import com.ozerler.marble.util.GridPages;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.dto.SalesOrderDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.PartyView;
+import com.ozerler.marble.dto.view.SalesOrderView;
+import com.ozerler.marble.exception.SalesOrderNotFoundException;
+import com.ozerler.marble.mapper.CustomerMapper;
+import com.ozerler.marble.mapper.SalesOrderMapper;
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.SalesOrder;
+import com.ozerler.marble.model.SalesOrderItem;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.enums.SalesOrderStatus;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.SalesOrderRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
+
+import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
 public class SalesService {
+
+    private static final int ORDER_NO_RANGE = 99999;
 
     private final SalesOrderRepository salesOrderRepository;
     private final CustomerRepository customerRepository;
     private final SlabRepository slabRepository;
     private final BlockRepository blockRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
+    private final SalesOrderMapper salesOrderMapper;
+    private final CustomerMapper customerMapper;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
-    public record SalesSummaryDto(long totalOrders, BigDecimal totalAmount, BigDecimal paidAmount, BigDecimal remainingBalance) {}
+    public record SalesSummaryDto(
+            long totalOrders,
+            BigDecimal totalAmount,
+            BigDecimal paidAmount,
+            BigDecimal remainingBalance) {
+    }
 
     @Transactional(readOnly = true)
     public SalesSummaryDto getSalesSummary() {
-        List<SalesOrder> all = salesOrderRepository.findAll();
+        List<SalesOrder> all = BoundedReads.all(salesOrderRepository);
         long total = all.size();
-        BigDecimal totalAmt = all.stream().map(order -> order.getTotalAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        BigDecimal paidAmt = all.stream().map(order -> order.getPaidAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal totalAmt =
+                all.stream()
+                        .map(order -> order.getTotalAmount())
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal paidAmt =
+                all.stream()
+                        .map(order -> order.getPaidAmount())
+                        .filter(Objects::nonNull)
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal remaining = totalAmt.subtract(paidAmt);
         return new SalesSummaryDto(total, totalAmt, paidAmt, remaining);
     }
@@ -59,13 +92,21 @@ public class SalesService {
     }
 
     @Transactional(readOnly = true)
-    public TabulatorResponse<SalesOrderDto> getSalesOrdersPaged(int page, int size,
-                                                                String search, String status, String sortField, String sortDir) {
+    public TabulatorResponse<SalesOrderDto> getSalesOrdersPaged(
+            int page, int size, String search, String status, String sortField, String sortDir) {
         Page<SalesOrder> orderPage = GridPages.execute(page, size, sortField, sortDir, GridPages.SALES_ORDER_SORTS,
                 pageable -> salesOrderRepository.searchSalesOrders(GridPages.normalizeSearch(search), pageable));
         List<SalesOrder> orders = orderPage.getContent();
         if (status != null && !status.isBlank()) {
-            orders = orders.stream().filter(o -> o.getStatus() != null && o.getStatus().name().equalsIgnoreCase(status)).toList();
+            orders =
+                    orders.stream()
+                            .filter(
+                                    o ->
+                                            o.getStatus() != null
+                                                    && o.getStatus()
+                                                            .name()
+                                                            .equalsIgnoreCase(status))
+                            .toList();
         }
         List<SalesOrderDto> dtos = orders.stream()
                 .map(SalesOrderDto::fromEntity)
@@ -75,8 +116,24 @@ public class SalesService {
     }
 
     @Transactional(readOnly = true)
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAllByOrderByCompanyNameAsc();
+    public List<PartyView> getAllCustomers() {
+        return BoundedReads.all(customerRepository, Sort.by("companyName")).stream()
+                .map(customerMapper::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SalesOrderView getOrder(Long id) {
+        try {
+            return salesOrderMapper.toDto(getOrderById(id));
+        } catch (IllegalArgumentException ex) {
+            throw new SalesOrderNotFoundException(id);
+        }
+    }
+
+    @Transactional
+    public String createOrderNo(String orderNo, Long customerId, LocalDate deliveryDate, String notes) {
+        return createSalesOrder(orderNo, customerId, deliveryDate, notes).getOrderNo();
     }
 
     @Transactional(readOnly = true)
@@ -93,8 +150,14 @@ public class SalesService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.customer.not_found", customerId)));
 
+        String orderNoValue;
+        if (orderNo != null) {
+            orderNoValue = orderNo.trim();
+        } else {
+            orderNoValue = "SAT-" + System.currentTimeMillis();
+        }
         SalesOrder order = SalesOrder.builder()
-                .orderNo(orderNo != null ? orderNo.trim() : "SAT-" + System.currentTimeMillis())
+                .orderNo(orderNoValue)
                 .customer(customer)
                 .orderDate(LocalDate.now())
                 .deliveryDate(deliveryDate)
@@ -113,9 +176,9 @@ public class SalesService {
         SalesOrderItem item = SalesOrderItem.builder()
                 .salesOrder(order)
                 .description(description)
-                .quantity(quantity != null ? quantity : BigDecimal.ONE)
-                .unit(unit != null ? unit : "m2")
-                .unitPrice(unitPrice != null ? unitPrice : BigDecimal.ZERO)
+                .quantity(Objects.requireNonNullElse(quantity, BigDecimal.ONE))
+                .unit(Objects.requireNonNullElse(unit, "m2"))
+                .unitPrice(Objects.requireNonNullElse(unitPrice, BigDecimal.ZERO))
                 .build();
 
         if (slabId != null) {
@@ -143,6 +206,6 @@ public class SalesService {
     }
 
     public String generateOrderNo() {
-        return "SAT-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999));
+        return "SAT-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * ORDER_NO_RANGE));
     }
 }

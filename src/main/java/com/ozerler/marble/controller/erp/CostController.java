@@ -1,15 +1,14 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.model.Project;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.ExpenseType;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.service.CostAccountingService;
-import com.ozerler.marble.service.CostAnalysisService;
-import com.ozerler.marble.service.ExpenseService;
-import com.ozerler.marble.service.PricingService;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
+
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,27 +20,38 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.Locale;
-import java.util.Map;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.ExpenseType;
+import com.ozerler.marble.service.CostAccountingService;
+import com.ozerler.marble.service.CostAnalysisService;
+import com.ozerler.marble.service.ExpenseService;
+import com.ozerler.marble.service.FormLookupService;
+import com.ozerler.marble.service.PricingService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/costs")
 @RequiredArgsConstructor
 public class CostController {
 
+    private final FormLookupService formLookup;
+
     private final CostAccountingService costAccountingService;
     private final CostAnalysisService costAnalysisService;
     private final ExpenseService expenseService;
     private final PricingService pricingService;
-    private final ProjectRepository projectRepository;
     private final MessageSource messageSource;
 
     @GetMapping
     public String costsIndex(@RequestParam(value = "period", required = false) String period, Model model) {
-        String current = period != null && !period.isBlank() ? period : YearMonth.now().toString();
+        String current;
+        if (period != null && !period.isBlank()) {
+            current = period;
+        } else {
+            current = YearMonth.now().toString();
+        }
         model.addAttribute("period", current);
         var quarry = costAnalysisService.analyze(BusinessUnit.QUARRY, current);
         var factory = costAnalysisService.analyze(BusinessUnit.FACTORY, current);
@@ -54,43 +64,43 @@ public class CostController {
         model.addAttribute("workshopAnalysis", workshop);
         model.addAttribute("siteAnalysis", site);
         model.addAttribute("siteProfits", siteProfits);
-        model.addAttribute("costCenters", costAccountingService.getAllCostCenters());
+        model.addAttribute("costCenters", costAccountingService.getAllCostCenterViews());
         model.addAttribute("expenseTypes", ExpenseType.values());
         model.addAttribute("businessUnits", BusinessUnit.values());
-        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("projects", formLookup.projects());
         model.addAttribute("totalExpenses", costAccountingService.getTotalExpenses());
 
-        BigDecimal totalPeriodExpense = java.util.stream.Stream.of(
+        BigDecimal totalPeriodExpense = Stream.of(
                         quarry.getTotalExpense(), factory.getTotalExpense(),
                         workshop.getTotalExpense(), site.getTotalExpense())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         model.addAttribute("totalPeriodExpense", totalPeriodExpense);
 
         BigDecimal totalSiteRevenue = siteProfits.stream()
                 .map(dto -> dto.getRealizedRevenue())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalMaterialCost = siteProfits.stream()
                 .map(dto -> dto.getMaterialCost())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalLaborCost = siteProfits.stream()
                 .map(dto -> dto.getLaborCost())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalOtherCost = siteProfits.stream()
-                .map(p -> (p.getTransportationCost() != null ? p.getTransportationCost() : BigDecimal.ZERO)
-                        .add(p.getConsumableCost() != null ? p.getConsumableCost() : BigDecimal.ZERO)
-                        .add(p.getOtherCost() != null ? p.getOtherCost() : BigDecimal.ZERO))
+                .map(p -> Objects.requireNonNullElse(p.getTransportationCost(), BigDecimal.ZERO)
+                        .add(Objects.requireNonNullElse(p.getConsumableCost(), BigDecimal.ZERO))
+                        .add(Objects.requireNonNullElse(p.getOtherCost(), BigDecimal.ZERO)))
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalSiteCost = siteProfits.stream()
                 .map(dto -> dto.getTotalCost())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalSiteNet = siteProfits.stream()
                 .map(dto -> dto.getNetProfitOrLoss())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         model.addAttribute("totalSiteRevenue", totalSiteRevenue);
@@ -100,20 +110,24 @@ public class CostController {
         model.addAttribute("totalSiteCost", totalSiteCost);
         model.addAttribute("totalSiteNet", totalSiteNet);
 
-        BigDecimal totalSiteMarginPct = (totalSiteRevenue != null && totalSiteRevenue.compareTo(BigDecimal.ZERO) > 0 && totalSiteNet != null)
-                ? totalSiteNet.multiply(BigDecimal.valueOf(100)).divide(totalSiteRevenue, 1, java.math.RoundingMode.HALF_UP)
-                : null;
+        BigDecimal totalSiteMarginPct;
+        if (totalSiteRevenue != null && totalSiteRevenue.compareTo(BigDecimal.ZERO) > 0 && totalSiteNet != null) {
+            totalSiteMarginPct =
+                    totalSiteNet
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(totalSiteRevenue, 1, RoundingMode.HALF_UP);
+        } else {
+            totalSiteMarginPct = null;
+        }
         model.addAttribute("totalSiteMarginPct", totalSiteMarginPct);
 
-        BigDecimal totalMonthlyBudget = costAccountingService.getAllCostCenters().stream()
-                .map(cc -> cc.getMonthlyBudget())
-                .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal totalMonthlyBudget = costAccountingService.totalMonthlyBudget();
         model.addAttribute("totalMonthlyBudget", totalMonthlyBudget);
 
         return "erp/costs/index";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/simulate-pricing")
     public String simulatePricing(@RequestParam("unitCost") BigDecimal unitCost,
                                   @RequestParam("targetMarginPct") BigDecimal targetMarginPct,
@@ -127,28 +141,25 @@ public class CostController {
 
     @PostMapping("/expenses")
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
-    public String recordExpense(@RequestParam("centerId") Long centerId,
-                                @RequestParam("expenseType") ExpenseType expenseType,
-                                @RequestParam("businessUnit") BusinessUnit businessUnit,
-                                @RequestParam("amount") BigDecimal amount,
-                                @RequestParam(value = "projectId", required = false) Long projectId,
-                                @RequestParam(value = "documentNo", required = false) String documentNo,
-                                @RequestParam(value = "invoiceDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate invoiceDate,
-                                @RequestParam(value = "expensePeriod", required = false) String expensePeriod,
-                                @RequestParam(value = "description", required = false) String description,
-                                Locale locale,
-                                RedirectAttributes redirectAttributes) {
+    public String recordExpense(
+            @RequestParam("centerId") Long centerId,
+            @RequestParam("expenseType") ExpenseType expenseType,
+            @RequestParam("businessUnit") BusinessUnit businessUnit,
+            @RequestParam("amount") BigDecimal amount,
+            @RequestParam(value = "projectId", required = false) Long projectId,
+            @RequestParam(value = "documentNo", required = false) String documentNo,
+            @RequestParam(value = "invoiceDate", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate invoiceDate,
+            @RequestParam(value = "expensePeriod", required = false) String expensePeriod,
+            @RequestParam(value = "description", required = false) String description,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
         try {
-            Project project = null;
-            if (projectId != null) {
-                project = projectRepository.findById(projectId)
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                messageSource.getMessage("error.project.not_found", new Object[]{projectId}, locale)));
-            }
-            expenseService.recordExpense(new ExpenseService.ExpenseDraft(
+            expenseService.recordForScreen(new ExpenseService.ExpenseDraft(
                     centerId, expenseType, null, businessUnit, amount, Constants.CURRENCY_TRY,
                     documentNo, invoiceDate, LocalDate.now(), expensePeriod, YearMonth.now().toString(),
-                    null, null, null, project, null, null, null, null, description));
+                    null, null, null, null, null, null, null, null, description), projectId, null);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.cost.expense.success", null, locale));
         } catch (Exception e) {

@@ -1,23 +1,39 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.*;
-import com.ozerler.marble.model.Role;
-import com.ozerler.marble.model.User;
-import com.ozerler.marble.repository.RoleRepository;
-import com.ozerler.marble.repository.UserRepository;
-import com.ozerler.marble.util.GridPages;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.PasswordResetRequest;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.UserCreateRequest;
+import com.ozerler.marble.dto.UserDto;
+import com.ozerler.marble.dto.UserUpdateRequest;
+import com.ozerler.marble.dto.view.RoleView;
+import com.ozerler.marble.mapper.RoleMapper;
+import com.ozerler.marble.model.Role;
+import com.ozerler.marble.model.User;
+import com.ozerler.marble.repository.RoleRepository;
+import com.ozerler.marble.repository.UserRepository;
+import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service managing user lifecycle, authentication credentials, and role assignments.
@@ -28,30 +44,45 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RoleMapper roleMapper;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
+                // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
-    public record UserSummaryDto(long totalUsers, long activeUsers, long suspendedUsers, long adminCount) {}
+    public record UserSummaryDto(long totalUsers, long activeUsers, long suspendedUsers, long adminCount) {
+    }
 
     @Transactional(readOnly = true)
     public UserSummaryDto getUserSummary() {
-        List<User> all = userRepository.findAll();
+        List<User> all = BoundedReads.all(userRepository);
         long total = all.size();
         long active = all.stream().filter(user -> user.isEnabled()).count();
         long suspended = total - active;
-        long admins = all.stream().filter(u -> u.getRoles() != null && u.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equalsIgnoreCase(r.getName()))).count();
+        long admins =
+                all.stream()
+                        .filter(
+                                u ->
+                                        u.getRoles() != null
+                                                && u.getRoles().stream()
+                                                        .anyMatch(
+                                                                r ->
+                                                                        "ROLE_ADMIN"
+                                                                                .equalsIgnoreCase(
+                                                                                        r
+                                                                                                .getName())))
+                        .count();
         return new UserSummaryDto(total, active, suspended, admins);
     }
 
@@ -60,10 +91,21 @@ public class UserService {
                                                     Collection<String> roleNames, Boolean enabled) {
         String normalizedSearch = GridPages.normalizeSearch(search);
         List<String> selectedRoles = normalizeRoleNames(roleNames);
-        Page<User> userPage = GridPages.execute(page, size, sortField, sortDir, GridPages.USER_SORTS,
-                pageable -> selectedRoles.isEmpty()
-                        ? userRepository.searchActiveUsers(normalizedSearch, null, enabled, pageable)
-                        : userRepository.searchActiveUsersByAnyRole(normalizedSearch, selectedRoles, enabled, pageable));
+        Page<User> userPage =
+                GridPages.execute(
+                        page,
+                        size,
+                        sortField,
+                        sortDir,
+                        GridPages.USER_SORTS,
+                        pageable -> {
+                            if (selectedRoles.isEmpty()) {
+                                return userRepository.searchActiveUsers(
+                                        normalizedSearch, null, enabled, pageable);
+                            }
+                            return userRepository.searchActiveUsersByAnyRole(
+                                    normalizedSearch, selectedRoles, enabled, pageable);
+                        });
         List<UserDto> dtos = userPage.getContent().stream()
                 .map(UserDto::fromEntity)
                 .collect(Collectors.toList());
@@ -164,8 +206,15 @@ public class UserService {
 
     @Transactional
     public void resetPassword(PasswordResetRequest request) {
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.user.not_found", request.getUserId())));
+        User user =
+                userRepository
+                        .findById(request.getUserId())
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                getMessage(
+                                                        "error.user.not_found",
+                                                        request.getUserId())));
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
@@ -206,7 +255,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<Role> getAllRoles() {
-        return roleRepository.findAll();
+        return BoundedReads.all(roleRepository);
     }
 
     private List<String> normalizeRoleNames(Collection<String> roleNames) {
@@ -226,5 +275,15 @@ public class UserService {
             }
         }
         return List.copyOf(normalized);
+    }
+
+    /**
+     * Same as {@code getAllRoles}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<RoleView> getAllRoleViews() {
+        return getAllRoles().stream().map(roleMapper::toDto).toList();
     }
 }

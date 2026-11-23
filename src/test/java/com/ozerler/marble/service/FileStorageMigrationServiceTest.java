@@ -1,31 +1,26 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import com.ozerler.marble.model.FileStorage;
-import com.ozerler.marble.repository.FileStorageRepository;
-import com.ozerler.marble.storage.FileObjectKeyFactory;
-import com.ozerler.marble.storage.ObjectStorageService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.model.FileStorage;
+import com.ozerler.marble.repository.FileStorageRepository;
+import com.ozerler.marble.storage.FileObjectKeyFactory;
+import com.ozerler.marble.storage.ObjectStorageService;
 
 @ExtendWith(MockitoExtension.class)
 class FileStorageMigrationServiceTest {
@@ -37,7 +32,7 @@ class FileStorageMigrationServiceTest {
     private ObjectStorageService objectStorageService;
 
     @TempDir
-    Path tempDir;
+    private Path tempDir;
 
     private ObjectStorageProperties properties;
     private FileStorageMigrationService migrationService;
@@ -66,14 +61,19 @@ class FileStorageMigrationServiceTest {
                 .entityType("BLOCK")
                 .entityId(3L)
                 .build();
-        when(fileStorageRepository.findByDeletedFalse()).thenReturn(List.of(record));
+        Mockito.when(fileStorageRepository.findByDeletedFalse()).thenReturn(List.of(record));
 
         FileStorageMigrationService.MigrationResult result = migrationService.migrate(true);
 
-        assertThat(result.dryRun()).isTrue();
-        assertThat(result.migrated()).isEqualTo(1);
-        verify(objectStorageService, never()).upload(anyString(), any(InputStream.class), anyLong(), anyString());
-        verify(fileStorageRepository, never()).save(any());
+        Assertions.assertThat(result.dryRun()).isTrue();
+        Assertions.assertThat(result.migrated()).isEqualTo(1);
+        Mockito.verify(objectStorageService, Mockito.never())
+                .upload(
+                        ArgumentMatchers.anyString(),
+                        ArgumentMatchers.any(InputStream.class),
+                        ArgumentMatchers.anyLong(),
+                        ArgumentMatchers.anyString());
+        Mockito.verify(fileStorageRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test
@@ -90,13 +90,18 @@ class FileStorageMigrationServiceTest {
                 .entityType("BLOCK")
                 .entityId(1L)
                 .build();
-        when(fileStorageRepository.findByDeletedFalse()).thenReturn(List.of(record));
-        when(objectStorageService.exists("images/block/1/done.jpg")).thenReturn(true);
+        Mockito.when(fileStorageRepository.findByDeletedFalse()).thenReturn(List.of(record));
+        Mockito.when(objectStorageService.exists("images/block/1/done.jpg")).thenReturn(true);
 
         FileStorageMigrationService.MigrationResult result = migrationService.migrate(false);
 
-        assertThat(result.skipped()).isEqualTo(1);
-        verify(objectStorageService, never()).upload(anyString(), any(InputStream.class), anyLong(), anyString());
+        Assertions.assertThat(result.skipped()).isEqualTo(1);
+        Mockito.verify(objectStorageService, Mockito.never())
+                .upload(
+                        ArgumentMatchers.anyString(),
+                        ArgumentMatchers.any(InputStream.class),
+                        ArgumentMatchers.anyLong(),
+                        ArgumentMatchers.anyString());
     }
 
     @Test
@@ -114,19 +119,25 @@ class FileStorageMigrationServiceTest {
                 .entityType("BLOCK")
                 .entityId(3L)
                 .build();
-        when(fileStorageRepository.findByDeletedFalse()).thenReturn(List.of(record));
-        when(objectStorageService.getBucketName()).thenReturn("erp-files");
-        when(objectStorageService.exists(anyString())).thenReturn(false, true);
-        when(fileStorageRepository.save(any(FileStorage.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(fileStorageRepository.findByDeletedFalse()).thenReturn(List.of(record));
+        Mockito.when(objectStorageService.getBucketName()).thenReturn("erp-files");
+        Mockito.when(objectStorageService.exists(ArgumentMatchers.anyString())).thenReturn(false, true);
+        Mockito.when(fileStorageRepository.save(ArgumentMatchers.any(FileStorage.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         FileStorageMigrationService.MigrationResult result = migrationService.migrate(false);
 
-        assertThat(result.migrated()).isEqualTo(1);
-        assertThat(record.getObjectKey()).startsWith("images/block/3/");
-        assertThat(record.getFilePath()).isEqualTo("/api/upload/view/9");
-        assertThat(record.getBucketName()).isEqualTo("erp-files");
-        assertThat(Files.exists(images.resolve("legacy.jpg"))).isTrue();
-        verify(objectStorageService).upload(anyString(), any(InputStream.class), anyLong(), anyString());
+        Assertions.assertThat(result.migrated()).isEqualTo(1);
+        Assertions.assertThat(record.getObjectKey()).startsWith("images/block/3/");
+        Assertions.assertThat(record.getFilePath()).isEqualTo("/api/upload/view/9");
+        Assertions.assertThat(record.getBucketName()).isEqualTo("erp-files");
+        Assertions.assertThat(Files.exists(images.resolve("legacy.jpg"))).isTrue();
+        Mockito.verify(objectStorageService)
+                .upload(
+                        ArgumentMatchers.anyString(),
+                        ArgumentMatchers.any(InputStream.class),
+                        ArgumentMatchers.anyLong(),
+                        ArgumentMatchers.anyString());
     }
 
     @Test
@@ -143,14 +154,20 @@ class FileStorageMigrationServiceTest {
                 .entityType("BLOCK")
                 .entityId(4L)
                 .build();
-        when(fileStorageRepository.findByDeletedFalse()).thenReturn(List.of(record));
-        when(objectStorageService.getBucketName()).thenReturn("erp-files");
-        when(objectStorageService.exists(anyString())).thenReturn(false, true);
-        when(fileStorageRepository.save(any(FileStorage.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(fileStorageRepository.findByDeletedFalse()).thenReturn(List.of(record));
+        Mockito.when(objectStorageService.getBucketName()).thenReturn("erp-files");
+        Mockito.when(objectStorageService.exists(ArgumentMatchers.anyString())).thenReturn(false, true);
+        Mockito.when(fileStorageRepository.save(ArgumentMatchers.any(FileStorage.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         FileStorageMigrationService.MigrationResult result = migrationService.migrate(false);
 
-        assertThat(result.migrated()).isEqualTo(1);
-        verify(objectStorageService).upload(anyString(), any(InputStream.class), anyLong(), eq("text/plain"));
+        Assertions.assertThat(result.migrated()).isEqualTo(1);
+        Mockito.verify(objectStorageService)
+                .upload(
+                        ArgumentMatchers.anyString(),
+                        ArgumentMatchers.any(InputStream.class),
+                        ArgumentMatchers.anyLong(),
+                        ArgumentMatchers.eq("text/plain"));
     }
 }
