@@ -6,9 +6,10 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
+     th:data-customer-filter="${selectedCustomerId != null ? selectedCustomerId : ''}"
      x-data="{
         statusFilter: '',
-        customerFilter: '[[${selectedCustomerId ?: ''}]]',
+        customerFilter: '',
         deleteModalOpen: false,
         deleteId: null,
         deleteName: '',
@@ -32,7 +33,7 @@
             return q;
         }
      }"
-     x-init="window.projectsPageState = $data">
+     x-init="customerFilter = $el.dataset.customerFilter || ''; window.projectsPageState = $data">
 
     <!-- Header Section -->
     <div class="erp-list-header">

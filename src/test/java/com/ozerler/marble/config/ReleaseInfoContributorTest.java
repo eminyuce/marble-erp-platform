@@ -66,6 +66,16 @@ class ReleaseInfoContributorTest {
         assertThat(ReleaseInfoContributor.shortSha(null)).isEqualTo("unknown");
     }
 
+    @Test
+    @DisplayName("a baked git.properties value is used when the image env sha is missing")
+    void gitCommit_UsesPropertiesWhenEnvIsUnknown() {
+        Properties file = new Properties();
+        file.setProperty("git.commit.id", "abcdef1234567890ffff");
+        assertThat(ReleaseInfoContributor.gitCommit("unknown", file)).isEqualTo("abcdef123456");
+        assertThat(ReleaseInfoContributor.gitCommit("1234567890abcdef", file)).isEqualTo("1234567890ab");
+        assertThat(ReleaseInfoContributor.gitCommit(null, null)).isEqualTo("unknown");
+    }
+
     private static BuildProperties buildProperties() {
         Properties entries = new Properties();
         entries.setProperty("name", "Özerler Mermer ERP");

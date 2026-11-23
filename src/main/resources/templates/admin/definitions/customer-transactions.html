@@ -431,7 +431,9 @@
                     </button>
                 </div>
 
-                <form :action="'/admin/definitions/customers/' + [[${customer.id}]] + '/transactions/' + editId + '/edit'" method="post" class="mt-4 space-y-4">
+                <form th:data-customer-id="${customer.id}"
+                      :action="'/admin/definitions/customers/' + $el.dataset.customerId + '/transactions/' + editId + '/edit'"
+                      method="post" class="mt-4 space-y-4">
                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
                     <div class="grid grid-cols-2 gap-3">
@@ -509,7 +511,9 @@
                 <p class="text-xs text-slate-600 my-4">
                     <strong x-text="deleteDesc"></strong> kaydını silmek istediğinize emin misiniz? Bu işlem bakiye ve ekstre tutarlarını doğrudan etkileyecektir.
                 </p>
-                <form :action="'/admin/definitions/customers/' + [[${customer.id}]] + '/transactions/' + deleteId + '/delete'" method="post" class="flex items-center justify-end gap-3 pt-2">
+                <form th:data-customer-id="${customer.id}"
+                      :action="'/admin/definitions/customers/' + $el.dataset.customerId + '/transactions/' + deleteId + '/delete'"
+                      method="post" class="flex items-center justify-end gap-3 pt-2">
                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <button type="button" @click="deleteModalOpen = false" class="erp-btn-secondary">Vazgeç</button>
                     <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">

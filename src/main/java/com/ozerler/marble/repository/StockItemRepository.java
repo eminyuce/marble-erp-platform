@@ -25,7 +25,12 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     boolean existsByItemCode(String itemCode);
 
+    @EntityGraph(attributePaths = {"customer"})
     List<StockItem> findByProductTypeAndStatus(StockProductType productType, String status);
+
+    @EntityGraph(attributePaths = {"customer"})
+    @Query("SELECT s FROM StockItem s WHERE s.id = :id")
+    Optional<StockItem> findByIdWithCustomer(@Param("id") Long id);
 
     List<StockItem> findByCustomerIdAndStatus(Long customerId, String status);
 

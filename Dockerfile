@@ -31,6 +31,9 @@ COPY pom.xml .
 RUN mvn -B -DskipTests dependency:resolve
 COPY src ./src
 COPY --from=frontend /src/src/main/resources/static/css/app.css src/main/resources/static/css/app.css
+# .git is not in the image context. The publish workflow passes GIT_COMMIT_SHA.
+ARG GIT_COMMIT_SHA=unknown
+RUN printf 'git.commit.id=%s\n' "$GIT_COMMIT_SHA" > src/main/resources/git.properties
 RUN mvn -B -DskipTests package
 
 FROM eclipse-temurin:24-jre-noble AS runtime

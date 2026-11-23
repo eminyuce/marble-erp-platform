@@ -29,11 +29,15 @@
                                    placeholder="PROJ-2026-0043">
                         </div>
                         <div class="erp-form-field erp-form-field--full"
+                             th:data-cari-mode="${(record != null and record.customer != null) ? 'existing' : ((record != null and record.customerName != null and record.customerName != '') ? 'existing' : 'existing')}"
+                             th:data-selected-customer-id="${record != null and record.customer != null ? record.customer.id : (selectedCustomerId != null ? selectedCustomerId : '')}"
+                             th:data-custom-name="${record != null and record.customerName != null ? record.customerName : ''}"
                              x-data="{
-                                 cariMode: '[[${(record != null and record.customer != null) ? 'existing' : ((record != null and record.customerName != null and record.customerName != '') ? 'existing' : 'existing')}]]',
-                                 selectedCustomerId: '[[${record != null and record.customer != null ? record.customer.id : (selectedCustomerId != null ? selectedCustomerId : '')}]]',
-                                 customName: '[[${record != null ? record.customerName : ''}]]'
-                             }">
+                                 cariMode: 'existing',
+                                 selectedCustomerId: '',
+                                 customName: ''
+                             }"
+                             x-init="cariMode = $el.dataset.cariMode || 'existing'; selectedCustomerId = $el.dataset.selectedCustomerId || ''; customName = $el.dataset.customName || ''">
                             <div class="flex items-center justify-between mb-1.5">
                                 <label class="erp-form-label mb-0" for="customerSelect">Müşteri / Cari (İşveren) <span class="req">*</span></label>
                                 <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-xs">
