@@ -14,7 +14,9 @@ import java.util.Optional;
 @Repository
 public interface CariTransactionRepository extends JpaRepository<CariTransaction, Long> {
 
-    List<CariTransaction> findByCustomerIdOrderByTransactionDateAscIdAsc(Long customerId);
+    @Query("SELECT t FROM CariTransaction t JOIN FETCH t.customer "
+            + "WHERE t.customer.id = :customerId ORDER BY t.transactionDate ASC, t.id ASC")
+    List<CariTransaction> findByCustomerIdOrderByTransactionDateAscIdAsc(@Param("customerId") Long customerId);
 
     List<CariTransaction> findByCustomerIdOrderByTransactionDateDescIdDesc(Long customerId);
 

@@ -22,6 +22,11 @@ public class FactoryWorkOrder extends AuditableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 0;
+
     @Column(name = "order_no", nullable = false, unique = true, length = 50)
     private String orderNo;
 

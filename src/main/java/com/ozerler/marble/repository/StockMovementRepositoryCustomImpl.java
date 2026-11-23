@@ -59,7 +59,7 @@ public class StockMovementRepositoryCustomImpl implements StockMovementRepositor
 
     private EntityGraph<StockMovement> movementGraph() {
         EntityGraph<StockMovement> graph = entityManager.createEntityGraph(StockMovement.class);
-        graph.addAttributeNodes("block", "slab", "stockItem", "fromLocation", "toLocation", "customer");
+        graph.addAttributeNodes("block", "slab", "stockItem", "fromLocation", "toLocation", "customer", "invoice");
         return graph;
     }
 

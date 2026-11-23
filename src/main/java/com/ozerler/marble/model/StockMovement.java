@@ -23,6 +23,11 @@ public class StockMovement extends AuditableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 0;
+
     @Column(name = "movement_code", nullable = false, unique = true, length = 60)
     private String movementCode;
 

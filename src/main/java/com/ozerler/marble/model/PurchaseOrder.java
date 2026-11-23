@@ -24,6 +24,11 @@ public class PurchaseOrder extends AuditableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 0;
+
     @Column(name = "po_number", nullable = false, unique = true, length = 50)
     private String poNumber;
 

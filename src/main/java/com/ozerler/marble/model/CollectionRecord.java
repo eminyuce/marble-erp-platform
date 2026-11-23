@@ -22,6 +22,11 @@ public class CollectionRecord extends AuditableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 0;
+
     @Column(name = "collection_no", nullable = false, unique = true, length = 60)
     private String collectionNo;
 

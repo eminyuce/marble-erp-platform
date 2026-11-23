@@ -5,8 +5,10 @@ import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.StockMovementType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -19,6 +21,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
@@ -42,6 +45,9 @@ class StockMovementRepositoryPostgresTest {
 
     @Autowired
     private StockMovementRepository repository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Test
     @DisplayName("all-null filters do not send untyped parameters to PostgreSQL")
@@ -82,5 +88,26 @@ class StockMovementRepositoryPostgresTest {
                 .contains("MV-QUARRY-ONLY");
         assertThat(page.getContent())
                 .allMatch(movement -> movement.getSourceDepartment() == BusinessUnit.QUARRY);
+    }
+
+    @Test
+    @DisplayName("a second update of a stock movement with a stale version is rejected")
+    void secondUpdateWithStaleVersionIsRejected() {
+        StockMovement saved = repository.saveAndFlush(StockMovement.builder()
+                .movementCode("MV-LOCK")
+                .movementDate(LocalDateTime.of(2026, 11, 23, 11, 0))
+                .movementType(StockMovementType.TRANSFER)
+                .sourceDepartment(BusinessUnit.FACTORY)
+                .itemDescription("lock probe")
+                .build());
+        StockMovement first = repository.findById(saved.getId()).orElseThrow();
+        entityManager.detach(first);
+        StockMovement second = repository.findById(saved.getId()).orElseThrow();
+        entityManager.detach(second);
+        first.setItemDescription("first clerk");
+        repository.saveAndFlush(first);
+        second.setItemDescription("second clerk");
+        assertThatThrownBy(() -> repository.saveAndFlush(second))
+                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
     }
 }
