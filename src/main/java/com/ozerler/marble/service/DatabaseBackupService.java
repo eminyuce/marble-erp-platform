@@ -635,8 +635,12 @@ public class DatabaseBackupService {
             if (url.startsWith("jdbc:postgresql://")) {
                 String clean = url.substring("jdbc:".length());
                 URI uri = URI.create(clean);
-                if (uri.getHost() != null) host = uri.getHost();
-                if (uri.getPort() > 0) port = uri.getPort();
+                if (uri.getHost() != null) {
+                    host = uri.getHost();
+                }
+                if (uri.getPort() > 0) {
+                    port = uri.getPort();
+                }
                 if (uri.getPath() != null && uri.getPath().length() > 1) {
                     database = uri.getPath().substring(1);
                     if (database.contains("?")) {
@@ -719,7 +723,9 @@ public class DatabaseBackupService {
     }
 
     private String formatFileSize(long bytes) {
-        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024) {
+            return bytes + " B";
+        }
         int exp = (int) (Math.log(bytes) / Math.log(1024));
         char pre = "KMGTPE".charAt(exp - 1);
         return String.format(Locale.US, "%.1f %cB", bytes / Math.pow(1024, exp), pre);

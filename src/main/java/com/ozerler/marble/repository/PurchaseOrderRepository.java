@@ -16,9 +16,9 @@ import com.ozerler.marble.model.PurchaseOrder;
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
 
     @EntityGraph(attributePaths = {"supplier", "project"})
-    @Query("SELECT po FROM PurchaseOrder po WHERE " +
-            "(:search IS NULL OR LOWER(po.poNumber) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(po.supplier.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query("SELECT po FROM PurchaseOrder po WHERE "
+            + "(:search IS NULL OR LOWER(po.poNumber) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(po.supplier.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<PurchaseOrder> searchPurchaseOrders(@Param("search") String search, Pageable pageable);
 
     @EntityGraph(attributePaths = {"supplier", "project", "items", "costCenter"})

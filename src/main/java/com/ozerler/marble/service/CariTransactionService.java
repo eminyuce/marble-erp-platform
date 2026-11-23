@@ -139,14 +139,28 @@ public class CariTransactionService {
         CariTransaction tx = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("Cari hareket bulunamadı: " + transactionId));
 
-        if (date != null) tx.setTransactionDate(date);
-        if (type != null) tx.setTransactionType(type);
-        if (documentNo != null) tx.setDocumentNo(documentNo.trim());
-        if (description != null) tx.setDescription(description.trim());
+        if (date != null) {
+            tx.setTransactionDate(date);
+        }
+        if (type != null) {
+            tx.setTransactionType(type);
+        }
+        if (documentNo != null) {
+            tx.setDocumentNo(documentNo.trim());
+        }
+        if (description != null) {
+            tx.setDescription(description.trim());
+        }
 
-        if (debitAmount != null) tx.setDebitAmount(debitAmount.compareTo(BigDecimal.ZERO) > 0 ? debitAmount : BigDecimal.ZERO);
-        if (creditAmount != null) tx.setCreditAmount(creditAmount.compareTo(BigDecimal.ZERO) > 0 ? creditAmount : BigDecimal.ZERO);
-        if (notes != null) tx.setNotes(notes.trim());
+        if (debitAmount != null) {
+            tx.setDebitAmount(debitAmount.compareTo(BigDecimal.ZERO) > 0 ? debitAmount : BigDecimal.ZERO);
+        }
+        if (creditAmount != null) {
+            tx.setCreditAmount(creditAmount.compareTo(BigDecimal.ZERO) > 0 ? creditAmount : BigDecimal.ZERO);
+        }
+        if (notes != null) {
+            tx.setNotes(notes.trim());
+        }
 
         return transactionRepository.save(tx);
     }
@@ -166,7 +180,9 @@ public class CariTransactionService {
 
     @Transactional
     public void syncInvoice(Invoice invoice) {
-        if (invoice == null || invoice.getCustomer() == null) return;
+        if (invoice == null || invoice.getCustomer() == null) {
+            return;
+        }
 
         Optional<CariTransaction> opt = transactionRepository.findByInvoiceId(invoice.getId());
         CariTransactionType type = invoice.getInvoiceType() == InvoiceType.SALES ? CariTransactionType.SATIS_FATURASI : CariTransactionType.ALIS_FATURASI;
@@ -191,13 +207,17 @@ public class CariTransactionService {
 
     @Transactional
     public void removeInvoiceSync(Long invoiceId) {
-        if (invoiceId == null) return;
+        if (invoiceId == null) {
+            return;
+        }
         transactionRepository.findByInvoiceId(invoiceId).ifPresent(transactionRepository::delete);
     }
 
     @Transactional
     public void syncCollection(CollectionRecord collection) {
-        if (collection == null || collection.getCustomer() == null) return;
+        if (collection == null || collection.getCustomer() == null) {
+            return;
+        }
 
         Optional<CariTransaction> opt = transactionRepository.findByCollectionId(collection.getId());
         BigDecimal amount = collection.getAmount() != null ? collection.getAmount() : BigDecimal.ZERO;

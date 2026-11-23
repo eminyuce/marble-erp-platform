@@ -103,8 +103,12 @@ public class InvoiceScreenService {
                         if (customerId != null) {
                             boolean m1 = b1.getAssignedCustomer() != null && b1.getAssignedCustomer().getId().equals(customerId);
                             boolean m2 = b2.getAssignedCustomer() != null && b2.getAssignedCustomer().getId().equals(customerId);
-                            if (m1 && !m2) return -1;
-                            if (!m1 && m2) return 1;
+                            if (m1 && !m2) {
+                                return -1;
+                            }
+                            if (!m1 && m2) {
+                                return 1;
+                            }
                         }
                         return b2.getId().compareTo(b1.getId());
                     })
@@ -253,7 +257,9 @@ public class InvoiceScreenService {
     }
 
     private BigDecimal scaleQuantity(BigDecimal qty) {
-        if (qty == null) return BigDecimal.ZERO;
+        if (qty == null) {
+            return BigDecimal.ZERO;
+        }
         return qty.setScale(2, RoundingMode.HALF_UP);
     }
 }

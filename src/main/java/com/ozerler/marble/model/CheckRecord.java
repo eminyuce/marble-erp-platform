@@ -96,14 +96,18 @@ public class CheckRecord extends AuditableEntity {
 
     @Transient
     public boolean isApproaching() {
-        if (status != CheckStatus.PORTFOLIO || dueDate == null) return false;
+        if (status != CheckStatus.PORTFOLIO || dueDate == null) {
+            return false;
+        }
         long days = ChronoUnit.DAYS.between(LocalDate.now(), dueDate);
         return days >= 0 && days <= 15;
     }
 
     @Transient
     public long getDaysRemaining() {
-        if (dueDate == null) return 0;
+        if (dueDate == null) {
+            return 0;
+        }
         return ChronoUnit.DAYS.between(LocalDate.now(), dueDate);
     }
 

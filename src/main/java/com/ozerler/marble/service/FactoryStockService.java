@@ -307,7 +307,9 @@ public class FactoryStockService {
                 .build());
 
         List<Slab> createdSlabs = new ArrayList<>();
-        if (widths == null || widths.isEmpty()) return createdSlabs;
+        if (widths == null || widths.isEmpty()) {
+            return createdSlabs;
+        }
 
         for (int i = 0; i < widths.size(); i++) {
             RowDimensions.Row row = RowDimensions.positiveWidth(
@@ -349,7 +351,9 @@ public class FactoryStockService {
 
     @Transactional(readOnly = true)
     public BigDecimal getCustomerSlabAreaTotal(Long customerId) {
-        if (customerId == null) return BigDecimal.ZERO;
+        if (customerId == null) {
+            return BigDecimal.ZERO;
+        }
         return slabRepository.getTotalAreaByCustomer(customerId);
     }
 
@@ -488,7 +492,9 @@ public class FactoryStockService {
                                                  List<Integer> pieceCounts, List<BigDecimal> quantities,
                                                  List<String> rowSurfaceFinishes, List<String> rowEdgeFinishes) {
         List<StockItem> created = new ArrayList<>();
-        if (widths == null || widths.isEmpty()) return created;
+        if (widths == null || widths.isEmpty()) {
+            return created;
+        }
 
         RowDimensions.eachPositiveSizedRow(widths, lengths, thicknesses, pieceCounts, quantities, new BigDecimal("2.0"),
                 (index, width, length, thickness, count, quantity) -> {

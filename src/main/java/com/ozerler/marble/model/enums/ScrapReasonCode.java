@@ -36,7 +36,9 @@ public enum ScrapReasonCode {
     }
 
     public static ScrapReasonCode fromCode(String code) {
-        if (code == null) return null;
+        if (code == null) {
+            return null;
+        }
         for (ScrapReasonCode r : values()) {
             if (r.getCode().equalsIgnoreCase(code) || r.name().equalsIgnoreCase(code)) {
                 return r;

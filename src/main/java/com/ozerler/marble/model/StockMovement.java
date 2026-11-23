@@ -121,29 +121,43 @@ public class StockMovement extends AuditableEntity {
 
     @Transient
     public String getItemDisplayName() {
-        if (block != null) return "Blok: " + block.getBlockCode();
-        if (slab != null) return "Plaka: " + slab.getSlabCode();
-        if (stockItem != null) return "Ürün: " + stockItem.getItemCode();
+        if (block != null) {
+            return "Blok: " + block.getBlockCode();
+        }
+        if (slab != null) {
+            return "Plaka: " + slab.getSlabCode();
+        }
+        if (stockItem != null) {
+            return "Ürün: " + stockItem.getItemCode();
+        }
         return itemDescription != null ? itemDescription : "—";
     }
 
     @Transient
     public String getSourceDisplayName() {
-        if (fromLocation != null) return fromLocation.getName();
-        if (sourceDepartment != null) return sourceDepartment.getLabel();
+        if (fromLocation != null) {
+            return fromLocation.getName();
+        }
+        if (sourceDepartment != null) {
+            return sourceDepartment.getLabel();
+        }
         return "—";
     }
 
     @Transient
     public String getTargetDisplayName() {
-        if (toLocation != null) return toLocation.getName();
+        if (toLocation != null) {
+            return toLocation.getName();
+        }
         if (targetDestination != null) {
             if (targetDestination == TargetDestination.CUSTOMER && customer != null) {
                 return "Müşteri: " + customer.getCompanyName();
             }
             return targetDestination.getLabel();
         }
-        if (targetDepartment != null) return targetDepartment.getLabel();
+        if (targetDepartment != null) {
+            return targetDepartment.getLabel();
+        }
         return "—";
     }
 }

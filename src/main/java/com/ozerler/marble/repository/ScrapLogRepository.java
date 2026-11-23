@@ -31,8 +31,8 @@ public interface ScrapLogRepository extends JpaRepository<ScrapLog, Long> {
     @Query("SELECT s FROM ScrapLog s ORDER BY s.loggedAt DESC")
     List<ScrapLog> findAllWithBlock();
 
-    @Query("SELECT s.reasonCode, COUNT(s), COALESCE(SUM(s.scrapWeightKg), 0), COALESCE(SUM(s.costImpact), 0) " +
-            "FROM ScrapLog s GROUP BY s.reasonCode")
+    @Query("SELECT s.reasonCode, COUNT(s), COALESCE(SUM(s.scrapWeightKg), 0), COALESCE(SUM(s.costImpact), 0) "
+            + "FROM ScrapLog s GROUP BY s.reasonCode")
     List<Object[]> getScrapSummaryByReason();
 
     @Query("SELECT COALESCE(SUM(s.costImpact), 0) FROM ScrapLog s")

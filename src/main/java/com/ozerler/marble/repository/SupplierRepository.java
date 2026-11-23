@@ -20,8 +20,8 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 
     List<Supplier> findAllByOrderByCompanyNameAsc();
 
-    @Query("SELECT s FROM Supplier s WHERE LOWER(s.supplierCode) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(s.companyName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @Query("SELECT s FROM Supplier s WHERE LOWER(s.supplierCode) LIKE LOWER(CONCAT('%', :query, '%')) "
+            + "OR LOWER(s.companyName) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Supplier> searchByCodeOrName(@Param("query") String query, Pageable pageable);
 
     @Query("SELECT s FROM Supplier s WHERE (:search IS NULL "

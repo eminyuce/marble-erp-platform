@@ -98,7 +98,9 @@ public class InvoiceItem extends AuditableEntity {
     private BigDecimal wasteQuantity = BigDecimal.ZERO;
 
     public static boolean isRunningMeterUnit(String unit) {
-        if (unit == null) return false;
+        if (unit == null) {
+            return false;
+        }
         String u = unit.trim().toLowerCase();
         return u.equals("m.t.") || u.equals("mt") || u.equals("m.t") || u.equals("m.tül") || u.equals("m.tul")
                 || u.equals("metretül") || u.equals("metretul") || u.equals("metre tül") || u.equals("metre tul")

@@ -32,10 +32,10 @@ public interface CutOrderRepository extends JpaRepository<CutOrder, Long> {
     List<CutOrder> findAllWithProject();
 
     @EntityGraph(attributePaths = {"project", "location"})
-    @Query("SELECT c FROM CutOrder c WHERE " +
-            "(:search IS NULL OR LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(c.machineName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(c.project.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query("SELECT c FROM CutOrder c WHERE "
+            + "(:search IS NULL OR LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(c.machineName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(c.project.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<CutOrder> searchCutOrders(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT c FROM CutOrder c LEFT JOIN FETCH c.project WHERE LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', :query, '%'))")

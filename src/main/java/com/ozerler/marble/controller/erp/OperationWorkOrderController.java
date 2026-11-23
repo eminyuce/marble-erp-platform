@@ -221,7 +221,9 @@ public class OperationWorkOrderController extends AbstractController {
     }
 
     private LocalDate parseDateSafely(String val, LocalDate fallback) {
-        if (val == null || val.isBlank()) return fallback;
+        if (val == null || val.isBlank()) {
+            return fallback;
+        }
         try {
             return LocalDate.parse(val.trim());
         } catch (Exception e) {

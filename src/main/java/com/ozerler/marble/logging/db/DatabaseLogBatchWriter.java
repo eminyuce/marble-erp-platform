@@ -28,10 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 public class DatabaseLogBatchWriter {
 
     private static final String INSERT_SQL =
-            "INSERT INTO application_logs (" +
-                    "timestamp, level, logger_name, message, exception_class, exception_message, " +
-                    "stack_trace, username, client_ip, http_method, request_uri, correlation_id, thread_name" +
-                    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "INSERT INTO application_logs ("
+                    + "timestamp, level, logger_name, message, exception_class, exception_message, "
+                    + "stack_trace, username, client_ip, http_method, request_uri, correlation_id, thread_name"
+                    + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final int BATCH_SIZE = 250;
 

@@ -80,12 +80,12 @@ public class CostBreakdownDto {
         BigDecimal marginDecimal = margin.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
         BigDecimal divisor = BigDecimal.ONE.subtract(marginDecimal);
 
-        BigDecimal suggestedPrice = divisor.compareTo(BigDecimal.ZERO) > 0 ?
-                total.divide(divisor, 2, RoundingMode.HALF_UP) : total;
+        BigDecimal suggestedPrice = divisor.compareTo(BigDecimal.ZERO) > 0
+                ? total.divide(divisor, 2, RoundingMode.HALF_UP) : total;
 
         BigDecimal minDivisor = BigDecimal.ONE.subtract(new BigDecimal("0.20"));
-        BigDecimal floorPrice = minDivisor.compareTo(BigDecimal.ZERO) > 0 ?
-                total.divide(minDivisor, 2, RoundingMode.HALF_UP) : total;
+        BigDecimal floorPrice = minDivisor.compareTo(BigDecimal.ZERO) > 0
+                ? total.divide(minDivisor, 2, RoundingMode.HALF_UP) : total;
 
         return CostBreakdownDto.builder()
                 .itemIdentifier(identifier)

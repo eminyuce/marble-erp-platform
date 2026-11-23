@@ -528,9 +528,9 @@ public class EmailService {
             return sendTemplatedEmail(testEmail, templateKey.trim(), sampleVars);
         } else {
             String defaultSubject = getMessage("admin.settings.email.test.subject");
-            String defaultHtml = "<h2 style='color:#0284c7;'>" + getMessage("admin.settings.email.test.heading") + "</h2>" +
-                    "<p>" + getMessage("admin.settings.email.test.body") + "</p>" +
-                    "<p style='color:#64748b; font-size:12px;'>" + getMessage("admin.settings.email.test.timestamp", LocalDateTime.now()) + "</p>";
+            String defaultHtml = "<h2 style='color:#0284c7;'>" + getMessage("admin.settings.email.test.heading") + "</h2>"
+                    + "<p>" + getMessage("admin.settings.email.test.body") + "</p>"
+                    + "<p style='color:#64748b; font-size:12px;'>" + getMessage("admin.settings.email.test.timestamp", LocalDateTime.now()) + "</p>";
             return sendEmail(testEmail, defaultSubject, defaultHtml);
         }
     }

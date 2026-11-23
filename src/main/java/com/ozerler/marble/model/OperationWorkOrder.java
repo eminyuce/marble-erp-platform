@@ -184,9 +184,15 @@ public class OperationWorkOrder extends AuditableEntity {
 
     @Transient
     public String getDepartmentDisplayName() {
-        if (department == BusinessUnit.FACTORY) return "Fabrika";
-        if (department == BusinessUnit.WORKSHOP) return "Atölye";
-        if (department == BusinessUnit.SITE) return "Şantiye";
+        if (department == BusinessUnit.FACTORY) {
+            return "Fabrika";
+        }
+        if (department == BusinessUnit.WORKSHOP) {
+            return "Atölye";
+        }
+        if (department == BusinessUnit.SITE) {
+            return "Şantiye";
+        }
         return department.name();
     }
 

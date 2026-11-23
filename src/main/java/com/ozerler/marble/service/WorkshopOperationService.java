@@ -263,7 +263,9 @@ public class WorkshopOperationService {
             List<String> rowEdgeFinishes
     ) {
         List<StockItem> created = new ArrayList<>();
-        if (widths == null || widths.isEmpty()) return created;
+        if (widths == null || widths.isEmpty()) {
+            return created;
+        }
 
         Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
         Project project = projectId != null ? projectRepository.findById(projectId).orElse(null) : null;

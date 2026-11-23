@@ -155,13 +155,17 @@ public class OperationWorkOrderService {
                     form.usedQuantity() != null ? form.usedQuantity() : ton, "ton");
         } else if (slab != null) {
             slab.setStatus(SlabStatus.RESERVED);
-            if (customer != null) slab.setCustomer(customer);
+            if (customer != null) {
+                slab.setCustomer(customer);
+            }
             slabRepository.save(slab);
             stockMovementService.recordWorkOrderConsumption(saved, null, slab, null,
                     form.usedQuantity() != null ? form.usedQuantity() : slab.getSurfaceAreaM2(), "m2");
         } else if (stockItem != null && form.usedQuantity() != null) {
             BigDecimal remaining = stockItem.getQuantity().subtract(form.usedQuantity());
-            if (remaining.compareTo(BigDecimal.ZERO) < 0) remaining = BigDecimal.ZERO;
+            if (remaining.compareTo(BigDecimal.ZERO) < 0) {
+                remaining = BigDecimal.ZERO;
+            }
             stockItem.setQuantity(remaining);
             if (remaining.compareTo(BigDecimal.ZERO) == 0) {
                 stockItem.setStatus("USED_IN_PRODUCTION");
@@ -237,7 +241,9 @@ public class OperationWorkOrderService {
     }
 
     private void initializeDetails(OperationWorkOrder order) {
-        if (order == null) return;
+        if (order == null) {
+            return;
+        }
         if (order.getCustomer() != null) {
             order.rememberCustomerName(order.getCustomer().getCompanyName());
         } else {
@@ -328,7 +334,9 @@ public class OperationWorkOrderService {
             int totalPieces = 0;
             for (int i = 0; i < dimWidths.size(); i++) {
                 BigDecimal w = dimWidths.get(i);
-                if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) continue;
+                if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) {
+                    continue;
+                }
                 BigDecimal l = (dimLengths != null && i < dimLengths.size()) ? dimLengths.get(i) : BigDecimal.ZERO;
                 BigDecimal t = (dimThicknesses != null && i < dimThicknesses.size()) ? dimThicknesses.get(i) : new BigDecimal("2.0");
                 int pcs = (dimPieceCounts != null && i < dimPieceCounts.size() && dimPieceCounts.get(i) != null) ? dimPieceCounts.get(i) : 1;
@@ -348,9 +356,15 @@ public class OperationWorkOrderService {
                 sumMt = sumMt.add(rowMt);
                 totalPieces += pcs;
 
-                if (effectiveWidth == null) effectiveWidth = w;
-                if (effectiveLength == null) effectiveLength = l;
-                if (effectiveThickness == null) effectiveThickness = t;
+                if (effectiveWidth == null) {
+                    effectiveWidth = w;
+                }
+                if (effectiveLength == null) {
+                    effectiveLength = l;
+                }
+                if (effectiveThickness == null) {
+                    effectiveThickness = t;
+                }
 
                 OperationWorkOrderItem item = OperationWorkOrderItem.builder()
                         .thicknessCm(t)

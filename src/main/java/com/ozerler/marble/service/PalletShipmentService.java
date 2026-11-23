@@ -112,23 +112,41 @@ public class PalletShipmentService {
 
         if (lot != null) {
             lot.setStatus(MaterialLotStatus.PALLETIZED);
-            if (widthCm == null) widthCm = lot.getWidthCm();
-            if (lengthCm == null) lengthCm = lot.getLengthCm();
-            if (thicknessCm == null) thicknessCm = lot.getThicknessCm();
+            if (widthCm == null) {
+                widthCm = lot.getWidthCm();
+            }
+            if (lengthCm == null) {
+                lengthCm = lot.getLengthCm();
+            }
+            if (thicknessCm == null) {
+                thicknessCm = lot.getThicknessCm();
+            }
             if (productName == null || productName.isBlank()) {
                 productName = lot.getLotCode() + (lot.getProductForm() != null ? " — " + lot.getProductForm().getLabel() : "");
             }
         } else if (stockItem != null) {
-            if (widthCm == null) widthCm = stockItem.getWidthCm();
-            if (lengthCm == null) lengthCm = stockItem.getLengthCm();
-            if (thicknessCm == null) thicknessCm = stockItem.getThicknessCm();
+            if (widthCm == null) {
+                widthCm = stockItem.getWidthCm();
+            }
+            if (lengthCm == null) {
+                lengthCm = stockItem.getLengthCm();
+            }
+            if (thicknessCm == null) {
+                thicknessCm = stockItem.getThicknessCm();
+            }
             if (productName == null || productName.isBlank()) {
                 productName = stockItem.getItemCode() + " (" + (stockItem.getStoneType() != null ? stockItem.getStoneType() : "Ebatlı") + ")";
             }
         } else if (slab != null) {
-            if (widthCm == null) widthCm = slab.getWidthCm();
-            if (lengthCm == null) lengthCm = slab.getLengthCm();
-            if (thicknessCm == null) thicknessCm = slab.getThicknessCm();
+            if (widthCm == null) {
+                widthCm = slab.getWidthCm();
+            }
+            if (lengthCm == null) {
+                lengthCm = slab.getLengthCm();
+            }
+            if (thicknessCm == null) {
+                thicknessCm = slab.getThicknessCm();
+            }
             if (productName == null || productName.isBlank()) {
                 productName = slab.getSlabCode() + " (Plaka)";
             }
@@ -406,11 +424,11 @@ public class PalletShipmentService {
         if (search != null && !search.isBlank()) {
             String q = search.trim().toLowerCase();
             allShipments = allShipments.stream().filter(s ->
-                (s.getWaybillNo() != null && s.getWaybillNo().toLowerCase().contains(q)) ||
-                (s.getVehiclePlate() != null && s.getVehiclePlate().toLowerCase().contains(q)) ||
-                (s.getDriverName() != null && s.getDriverName().toLowerCase().contains(q)) ||
-                (s.getCustomer() != null && s.getCustomer().getCompanyName().toLowerCase().contains(q)) ||
-                (s.getProject() != null && s.getProject().getName().toLowerCase().contains(q))
+                (s.getWaybillNo() != null && s.getWaybillNo().toLowerCase().contains(q))
+                || (s.getVehiclePlate() != null && s.getVehiclePlate().toLowerCase().contains(q))
+                || (s.getDriverName() != null && s.getDriverName().toLowerCase().contains(q))
+                || (s.getCustomer() != null && s.getCustomer().getCompanyName().toLowerCase().contains(q))
+                || (s.getProject() != null && s.getProject().getName().toLowerCase().contains(q))
             ).toList();
         }
         int totalElements = allShipments.size();

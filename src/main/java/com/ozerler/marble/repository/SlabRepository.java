@@ -47,10 +47,10 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
     List<Slab> findAllWithBlock();
 
     @EntityGraph(attributePaths = {"block", "productionOrder", "pallet"})
-    @Query("SELECT s FROM Slab s WHERE " +
-            "(:search IS NULL OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(s.block.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(s.block.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query("SELECT s FROM Slab s WHERE "
+            + "(:search IS NULL OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(s.block.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(s.block.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<Slab> searchSlabs(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT s FROM Slab s WHERE LOWER(s.slabCode) LIKE LOWER(CONCAT('%', :query, '%'))")
@@ -65,18 +65,18 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
     long countByStatus(SlabStatus status);
 
     @EntityGraph(attributePaths = {"block", "block.quarry", "customer", "productionOrder", "pallet"})
-    @Query("SELECT s FROM Slab s " +
-           "LEFT JOIN s.customer c " +
-           "LEFT JOIN s.block b " +
-           "WHERE (:status IS NULL OR s.status = :status) " +
-           "AND (:customerId IS NULL OR c.id = :customerId) " +
-           "AND (:generalStockOnly = false OR c IS NULL) " +
-           "AND (:search IS NULL OR :search = '' " +
-           "OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
-           "OR LOWER(COALESCE(c.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
-           "ORDER BY s.id DESC")
+    @Query("SELECT s FROM Slab s "
+           + "LEFT JOIN s.customer c "
+           + "LEFT JOIN s.block b "
+           + "WHERE (:status IS NULL OR s.status = :status) "
+           + "AND (:customerId IS NULL OR c.id = :customerId) "
+           + "AND (:generalStockOnly = false OR c IS NULL) "
+           + "AND (:search IS NULL OR :search = '' "
+           + "OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+           + "OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+           + "OR LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
+           + "OR LOWER(COALESCE(c.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
+           + "ORDER BY s.id DESC")
     Page<Slab> searchSlabsWithCustomer(@Param("status") SlabStatus status,
                                        @Param("customerId") Long customerId,
                                        @Param("generalStockOnly") boolean generalStockOnly,

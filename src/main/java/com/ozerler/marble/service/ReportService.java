@@ -332,8 +332,8 @@ public class ReportService {
                 for (OperationWorkOrder wo : workOrders) {
                     String cust = wo.getCustomer() != null ? wo.getCustomer().getCompanyName() : "-";
                     String stone = (wo.getStoneType() != null ? wo.getStoneType() : "-") + (wo.getStoneColorQuality() != null ? " / " + wo.getStoneColorQuality() : "");
-                    String dims = (wo.getStoneThicknessCm() != null ? wo.getStoneThicknessCm() + "cm " : "") +
-                            (wo.getWidthCm() != null ? wo.getWidthCm() : 0) + "x" + (wo.getLengthCm() != null ? wo.getLengthCm() : 0) + " cm";
+                    String dims = (wo.getStoneThicknessCm() != null ? wo.getStoneThicknessCm() + "cm " : "")
+                            + (wo.getWidthCm() != null ? wo.getWidthCm() : 0) + "x" + (wo.getLengthCm() != null ? wo.getLengthCm() : 0) + " cm";
                     String qty = (wo.getPlannedQuantity() != null ? wo.getPlannedQuantity().toString() : "0") + " " + (wo.getUnit() != null ? wo.getUnit() : "m2");
                     data.rows.add(new String[]{
                             wo.getWorkOrderNo() != null ? wo.getWorkOrderNo() : "-",
@@ -562,7 +562,9 @@ public class ReportService {
         // Header line
         for (int i = 0; i < data.headers.length; i++) {
             pw.print(Csvs.escapeField(data.headers[i]));
-            if (i < data.headers.length - 1) pw.print(";");
+            if (i < data.headers.length - 1) {
+                pw.print(";");
+            }
         }
         pw.println();
 
@@ -570,7 +572,9 @@ public class ReportService {
         for (String[] row : data.rows) {
             for (int i = 0; i < row.length; i++) {
                 pw.print(Csvs.escapeField(row[i]));
-                if (i < row.length - 1) pw.print(";");
+                if (i < row.length - 1) {
+                    pw.print(";");
+                }
             }
             pw.println();
         }

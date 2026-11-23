@@ -17,9 +17,9 @@ import com.ozerler.marble.model.SalesOrder;
 public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
 
     @EntityGraph(attributePaths = {"customer"})
-    @Query("SELECT so FROM SalesOrder so WHERE " +
-            "(:search IS NULL OR LOWER(so.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(so.customer.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query("SELECT so FROM SalesOrder so WHERE "
+            + "(:search IS NULL OR LOWER(so.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(so.customer.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<SalesOrder> searchSalesOrders(@Param("search") String search, Pageable pageable);
 
     @EntityGraph(attributePaths = {"customer", "items"})

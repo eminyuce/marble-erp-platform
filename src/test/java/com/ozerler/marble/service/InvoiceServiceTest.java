@@ -535,7 +535,9 @@ class InvoiceServiceTest {
         Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.SITE_STOCK)).thenReturn(Optional.of(siteYard));
         Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> {
             Invoice invObj = inv.getArgument(0);
-            if (invObj.getId() == null) invObj.setId(999L);
+            if (invObj.getId() == null) {
+                invObj.setId(999L);
+            }
             return invObj;
         });
 

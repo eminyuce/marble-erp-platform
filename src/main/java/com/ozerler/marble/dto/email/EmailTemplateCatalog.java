@@ -468,7 +468,9 @@ public final class EmailTemplateCatalog {
     }
 
     public static Optional<TemplateMeta> getByKey(String key) {
-        if (key == null) return Optional.empty();
+        if (key == null) {
+            return Optional.empty();
+        }
         return Optional.ofNullable(REGISTRY.get(key.trim().toUpperCase()));
     }
 

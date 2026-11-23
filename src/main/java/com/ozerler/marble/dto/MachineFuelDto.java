@@ -32,7 +32,9 @@ public class MachineFuelDto {
     private String notes;
 
     public static MachineFuelDto fromEntity(MachineFuelEntry entry) {
-        if (entry == null) return null;
+        if (entry == null) {
+            return null;
+        }
         return MachineFuelDto.builder()
                 .id(entry.getId())
                 .entryDate(entry.getEntryDate())

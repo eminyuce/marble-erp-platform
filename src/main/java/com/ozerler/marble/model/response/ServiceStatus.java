@@ -41,8 +41,12 @@ public class ServiceStatus implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
         ServiceStatus other = (ServiceStatus) obj;
         return httpStatus == other.httpStatus && Objects.equals(status, other.status);
     }

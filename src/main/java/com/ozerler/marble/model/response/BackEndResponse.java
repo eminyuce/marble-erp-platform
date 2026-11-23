@@ -47,11 +47,15 @@ public class BackEndResponse implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
         BackEndResponse other = (BackEndResponse) obj;
-        return Objects.equals(response, other.response) &&
-                Objects.equals(serviceStatus, other.serviceStatus);
+        return Objects.equals(response, other.response)
+                && Objects.equals(serviceStatus, other.serviceStatus);
     }
 
     @Override

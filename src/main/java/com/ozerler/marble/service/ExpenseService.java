@@ -274,12 +274,18 @@ public class ExpenseService {
         tx.setExpenseType(draft.expenseType());
         tx.setExpenseCategory(category);
         tx.setAmount(draft.amount());
-        if (draft.currency() != null) tx.setCurrency(draft.currency());
+        if (draft.currency() != null) {
+            tx.setCurrency(draft.currency());
+        }
         tx.setDocumentNo(draft.documentNo());
         tx.setInvoiceDate(draft.invoiceDate());
-        if (draft.entryDate() != null) tx.setEntryDate(draft.entryDate());
+        if (draft.entryDate() != null) {
+            tx.setEntryDate(draft.entryDate());
+        }
         tx.setExpensePeriod(expensePeriod);
-        if (draft.postingPeriod() != null) tx.setPostingPeriod(ExpensePeriods.normalize(draft.postingPeriod()));
+        if (draft.postingPeriod() != null) {
+            tx.setPostingPeriod(ExpensePeriods.normalize(draft.postingPeriod()));
+        }
         tx.setQuarry(draft.quarry());
         tx.setProject(draft.project());
         tx.setConstructionSite(draft.project());

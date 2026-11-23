@@ -174,7 +174,9 @@ public class InvoiceService {
 
         if (itemForms != null && !itemForms.isEmpty()) {
             for (InvoiceItemForm f : itemForms) {
-                if (f.productName() == null || f.productName().isBlank()) continue;
+                if (f.productName() == null || f.productName().isBlank()) {
+                    continue;
+                }
                 BigDecimal qty = f.quantity() != null
                         ? f.quantity().setScale(2, RoundingMode.HALF_UP)
                         : BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
@@ -333,7 +335,9 @@ public class InvoiceService {
     }
 
     private BigDecimal getEffectiveStockQuantity(InvoiceItem item, StockItem st) {
-        if (item == null) return BigDecimal.ZERO;
+        if (item == null) {
+            return BigDecimal.ZERO;
+        }
         if (item.getCalculatedM2() != null && item.getCalculatedM2().compareTo(BigDecimal.ZERO) > 0) {
             return item.getCalculatedM2().setScale(2, RoundingMode.HALF_UP);
         }
@@ -480,7 +484,9 @@ public class InvoiceService {
                         Block b = item.getBlock();
                         StockLocation prevLoc = b.getCurrentLocation();
                         b.setStatus(BlockStatus.SOLD);
-                        if (customer != null) b.setSoldCustomer(customer);
+                        if (customer != null) {
+                            b.setSoldCustomer(customer);
+                        }
                         recordBlockMovement(b, prevLoc, null, "Satış Faturası (" + saved.getInvoiceNo() + ") ile satıldı");
                         blockRepository.save(b);
 
@@ -509,7 +515,9 @@ public class InvoiceService {
                     if (item.getSlab() != null) {
                         Slab s = item.getSlab();
                         s.setStatus(SlabStatus.SOLD);
-                        if (customer != null) s.setCustomer(customer);
+                        if (customer != null) {
+                            s.setCustomer(customer);
+                        }
                         slabRepository.save(s);
 
                         String movCode = UniqueCodes.yearly("MOV-SLS", stockMovementRepository::existsByMovementCode);
@@ -906,7 +914,9 @@ public class InvoiceService {
                     if (item.getStockItem() != null) {
                         StockItem st = item.getStockItem();
                         BigDecimal deduction = getEffectiveStockQuantity(item, st);
-                        if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
+                        if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
+                            deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
+                        }
                         BigDecimal current = st.getQuantity() != null ? st.getQuantity() : BigDecimal.ZERO;
                         st.setQuantity(current.add(deduction).setScale(2, RoundingMode.HALF_UP));
                         st.setStatus("AVAILABLE");

@@ -611,8 +611,8 @@ public class LocalDataInitializer implements CommandLineRunner {
         for (String table : List.of("STOCK_LOCATIONS", "STOCK_ITEMS", "INVOICES", "EXPENSES")) {
             try {
                 List<String> constraintNames = jdbcTemplate.queryForList(
-                        "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
-                        "WHERE TABLE_NAME = ? AND CONSTRAINT_TYPE = 'CHECK'",
+                        "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS "
+                        + "WHERE TABLE_NAME = ? AND CONSTRAINT_TYPE = 'CHECK'",
                         String.class, table
                 );
                 for (String cName : constraintNames) {

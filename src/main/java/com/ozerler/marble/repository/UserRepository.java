@@ -25,26 +25,26 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     @EntityGraph(attributePaths = {"roles"})
-    @Query("SELECT u FROM User u WHERE u.deleted = false AND " +
-            "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND " +
-            "(:roleName IS NULL OR EXISTS (SELECT 1 FROM u.roles r WHERE r.name = :roleName)) AND " +
-            "(:enabled IS NULL OR u.enabled = :enabled)")
+    @Query("SELECT u FROM User u WHERE u.deleted = false AND "
+            + "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+            + "(:roleName IS NULL OR EXISTS (SELECT 1 FROM u.roles r WHERE r.name = :roleName)) AND "
+            + "(:enabled IS NULL OR u.enabled = :enabled)")
     Page<User> searchActiveUsers(@Param("search") String search,
                                  @Param("roleName") String roleName,
                                  @Param("enabled") Boolean enabled,
                                  Pageable pageable);
 
     @EntityGraph(attributePaths = {"roles"})
-    @Query("SELECT u FROM User u WHERE u.deleted = false AND " +
-            "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND " +
-            "EXISTS (SELECT 1 FROM u.roles r WHERE r.name IN :roleNames) AND " +
-            "(:enabled IS NULL OR u.enabled = :enabled)")
+    @Query("SELECT u FROM User u WHERE u.deleted = false AND "
+            + "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.firstName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(u.lastName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) AND "
+            + "EXISTS (SELECT 1 FROM u.roles r WHERE r.name IN :roleNames) AND "
+            + "(:enabled IS NULL OR u.enabled = :enabled)")
     Page<User> searchActiveUsersByAnyRole(@Param("search") String search,
                                           @Param("roleNames") Collection<String> roleNames,
                                           @Param("enabled") Boolean enabled,

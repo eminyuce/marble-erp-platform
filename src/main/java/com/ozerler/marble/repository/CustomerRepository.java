@@ -22,8 +22,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     List<Customer> findAllByOrderByCompanyNameAsc();
 
-    @Query("SELECT c FROM Customer c WHERE LOWER(c.customerCode) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(c.companyName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @Query("SELECT c FROM Customer c WHERE LOWER(c.customerCode) LIKE LOWER(CONCAT('%', :query, '%')) "
+            + "OR LOWER(c.companyName) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Customer> searchByCodeOrName(@Param("query") String query, Pageable pageable);
 
     @Query("SELECT c FROM Customer c WHERE (:search IS NULL "

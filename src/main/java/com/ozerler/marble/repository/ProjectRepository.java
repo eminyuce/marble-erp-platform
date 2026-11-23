@@ -29,25 +29,25 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     long countByCustomerId(Long customerId);
 
-    @Query("SELECT p FROM Project p WHERE " +
-            "(:customerId IS NULL OR (p.customer IS NOT NULL AND p.customer.id = :customerId)) AND " +
-            "(:status IS NULL OR p.status = :status) AND " +
-            "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query("SELECT p FROM Project p WHERE "
+            + "(:customerId IS NULL OR (p.customer IS NOT NULL AND p.customer.id = :customerId)) AND "
+            + "(:status IS NULL OR p.status = :status) AND "
+            + "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<Project> searchProjectsFiltered(@Param("search") String search,
                                          @Param("status") ProjectStatus status,
                                          @Param("customerId") Long customerId,
                                          Pageable pageable);
 
-    @Query("SELECT p FROM Project p WHERE " +
-            "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR " +
-            "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query("SELECT p FROM Project p WHERE "
+            + "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+            + "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
     Page<Project> searchProjects(@Param("search") String search, Pageable pageable);
 
-    @Query("SELECT p FROM Project p WHERE LOWER(p.projectCode) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @Query("SELECT p FROM Project p WHERE LOWER(p.projectCode) LIKE LOWER(CONCAT('%', :query, '%')) "
+            + "OR LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Project> searchByCodeOrName(@Param("query") String query, Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(p.contractValue), 0) FROM Project p")

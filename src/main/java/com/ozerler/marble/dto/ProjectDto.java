@@ -96,18 +96,18 @@ public class ProjectDto {
 
     public static ProjectDto fromEntity(Project p) {
         BigDecimal variance = p.getActualCost().subtract(p.getEstimatedCost());
-        BigDecimal varPct = p.getEstimatedCost().compareTo(BigDecimal.ZERO) > 0 ?
-                variance.divide(p.getEstimatedCost(), 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")).setScale(1, RoundingMode.HALF_UP)
+        BigDecimal varPct = p.getEstimatedCost().compareTo(BigDecimal.ZERO) > 0
+                ? variance.divide(p.getEstimatedCost(), 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")).setScale(1, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
-        BigDecimal plannedArea = p.getLocations() != null ?
-                p.getLocations().stream()
+        BigDecimal plannedArea = p.getLocations() != null
+                ? p.getLocations().stream()
                         .map(l -> l.getPlannedAreaM2() != null ? l.getPlannedAreaM2() : BigDecimal.ZERO)
                         .reduce(BigDecimal.ZERO, (a, b) -> a.add(b))
                 : BigDecimal.ZERO;
 
-        BigDecimal installedArea = p.getLocations() != null ?
-                p.getLocations().stream()
+        BigDecimal installedArea = p.getLocations() != null
+                ? p.getLocations().stream()
                         .map(l -> l.getInstalledAreaM2() != null ? l.getInstalledAreaM2() : BigDecimal.ZERO)
                         .reduce(BigDecimal.ZERO, (a, b) -> a.add(b))
                 : BigDecimal.ZERO;

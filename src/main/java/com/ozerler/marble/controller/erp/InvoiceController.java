@@ -179,7 +179,9 @@ public class InvoiceController extends AbstractController {
             if (productNames != null) {
                 for (int i = 0; i < productNames.size(); i++) {
                     String pName = productNames.get(i);
-                    if (pName == null || pName.isBlank()) continue;
+                    if (pName == null || pName.isBlank()) {
+                        continue;
+                    }
                     String desc = (descriptions != null && i < descriptions.size()) ? descriptions.get(i) : null;
                     BigDecimal qty = (quantities != null && i < quantities.size()) ? quantities.get(i) : BigDecimal.ONE;
                     String unit = (units != null && i < units.size()) ? units.get(i) : "m2";
