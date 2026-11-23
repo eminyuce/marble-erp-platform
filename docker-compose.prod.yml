@@ -26,7 +26,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-marble_erp}
       POSTGRES_USER: ${DB_USERNAME:-marbleuser}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-marblepass}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     ports:
       - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
@@ -126,7 +126,7 @@ services:
       DB_PORT: "5432"
       DB_NAME: ${DB_NAME:-marble_erp}
       DB_USERNAME: ${DB_USERNAME:-marbleuser}
-      DB_PASSWORD: ${DB_PASSWORD:-marblepass}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-marble_erp}
       APP_UPLOAD_DIR: /app/uploads
       APP_MEDIA_DIR: /app/media
@@ -140,7 +140,7 @@ services:
       RUSTFS_REGION: ${RUSTFS_REGION:-us-east-1}
       PRESIGNED_IMAGE_EXPIRY_MINUTES: ${PRESIGNED_IMAGE_EXPIRY_MINUTES:-30}
       PRESIGNED_DOCUMENT_EXPIRY_MINUTES: ${PRESIGNED_DOCUMENT_EXPIRY_MINUTES:-5}
-      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:81}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-}
       SESSION_STORE_TYPE: ${SESSION_STORE_TYPE:-jdbc}
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
       # Session cookie Secure=true comes from application-prod.yml.

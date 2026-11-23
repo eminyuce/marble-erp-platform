@@ -185,6 +185,10 @@ EOF
 }
 
 write_env_template() {
+    if [ -z "${DB_PASSWORD:-}" ]; then
+        echo "DB_PASSWORD is required. Refusing to write a default database password." >&2
+        exit 1
+    fi
     sudo_cmd tee "$ENV_FILE" >/dev/null <<'EOF'
 # Production environment for Özerler Mermer ERP
 # Loaded by systemd (EnvironmentFile). Do not commit this file.
@@ -199,7 +203,7 @@ DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_NAME=marble_erp
 DB_USERNAME=marbleuser
-DB_PASSWORD=marblepass
+DB_PASSWORD=__DB_PASSWORD__
 DB_URL=jdbc:postgresql://127.0.0.1:5432/marble_erp
 
 # Database Connection Pool Settings
@@ -237,6 +241,7 @@ RATE_LIMIT_FORM_WINDOW=60
 RATE_LIMIT_GENERAL_MAX=120
 RATE_LIMIT_GENERAL_WINDOW=60
 EOF
+    sudo_cmd sed -i "s|__DB_PASSWORD__|${DB_PASSWORD}|g" "$ENV_FILE"
     sudo_cmd chmod 640 "$ENV_FILE"
     sudo_cmd chown "${SERVICE_USER}:${SERVICE_GROUP}" "$ENV_FILE" || true
 }
