@@ -40,6 +40,9 @@ import lombok.extern.slf4j.Slf4j;
 public class SystemHealthService {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final int BYTES_PER_KIB = 1024;
+    private static final int DEFAULT_SERVER_PORT = 81;
+    private static final int UNREACHABLE_LATENCY_MS = 999;
 
     private final DataSource dataSource;
     private final Environment environment;
@@ -70,7 +73,7 @@ public class SystemHealthService {
         } else {
             activeProfiles = new String[]{"default"};
         }
-        int port = 81;
+        int port = DEFAULT_SERVER_PORT;
 
         RuntimeMXBean runtimeMX = ManagementFactory.getRuntimeMXBean();
         String formattedUptime = DateTimes.formatUptime(Duration.ofMillis(runtimeMX.getUptime()));
@@ -89,9 +92,9 @@ public class SystemHealthService {
         long freeMemBytes = runtime.freeMemory();
         long usedMemBytes = totalMemBytes - freeMemBytes;
 
-        long usedMemMb = usedMemBytes / (1024 * 1024);
-        long totalMemMb = totalMemBytes / (1024 * 1024);
-        long maxMemMb = maxMemBytes / (1024 * 1024);
+        long usedMemMb = usedMemBytes / (BYTES_PER_KIB * BYTES_PER_KIB);
+        long totalMemMb = totalMemBytes / (BYTES_PER_KIB * BYTES_PER_KIB);
+        long maxMemMb = maxMemBytes / (BYTES_PER_KIB * BYTES_PER_KIB);
         int memPercent = (int) Math.round((double) usedMemBytes / totalMemBytes * 100);
 
         metrics.put("javaVersion", System.getProperty("java.version", "24"));
@@ -123,7 +126,7 @@ public class SystemHealthService {
         } catch (Exception ex) {
             log.error("Database health check ping failed: {}", ex.getMessage());
             dbStatus = "DOWN";
-            dbLatencyMs = 999;
+            dbLatencyMs = UNREACHABLE_LATENCY_MS;
         }
 
         metrics.put("dbStatus", dbStatus);
@@ -144,8 +147,8 @@ public class SystemHealthService {
         long usableDiskBytes = rootPartition.getUsableSpace();
         long usedDiskBytes = totalDiskBytes - freeDiskBytes;
 
-        long totalDiskGb = totalDiskBytes / (1024 * 1024 * 1024);
-        long usableDiskGb = usableDiskBytes / (1024 * 1024 * 1024);
+        long totalDiskGb = totalDiskBytes / (BYTES_PER_KIB * BYTES_PER_KIB * BYTES_PER_KIB);
+        long usableDiskGb = usableDiskBytes / (BYTES_PER_KIB * BYTES_PER_KIB * BYTES_PER_KIB);
         int diskPercent;
         if (totalDiskBytes > 0) {
             diskPercent = (int) Math.round((double) usedDiskBytes / totalDiskBytes * 100);

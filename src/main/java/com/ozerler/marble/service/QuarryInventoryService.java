@@ -43,6 +43,7 @@ public class QuarryInventoryService {
     public static final String FUEL_TANK_ITEM_CODE = "OCAK-MAZOT-DEPO";
     public static final String FUEL_TANK_LOCATION_CODE = "OCK-MZ-01";
     public static final String CONSUMABLES_LOCATION_CODE = "OCK-SRF-01";
+    private static final int RECENT_DAYS = 30;
 
     private final StockItemRepository stockItemRepository;
     private final com.ozerler.marble.mapper.MachineFuelMapper machineFuelMapper;
@@ -575,7 +576,7 @@ public class QuarryInventoryService {
 
     @Transactional(readOnly = true)
     public List<StockMovement> getRecentQuarryMovements() {
-        return stockMovementRepository.findRecentBySourceDepartment(BusinessUnit.QUARRY, LocalDateTime.now().minusDays(30));
+        return stockMovementRepository.findRecentBySourceDepartment(BusinessUnit.QUARRY, LocalDateTime.now().minusDays(RECENT_DAYS));
     }
 
     // ─────────────────────────────────────────────────────────────

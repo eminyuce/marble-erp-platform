@@ -9,6 +9,8 @@ import java.util.List;
  */
 final class RowDimensions {
 
+    private static final int CM2_PER_M2 = 10000;
+
     private RowDimensions() {
     }
 
@@ -51,7 +53,7 @@ final class RowDimensions {
                 quantity = quantities.get(i);
             } else {
                 quantity = row.width().multiply(row.length()).multiply(BigDecimal.valueOf(count))
-                            .divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+                            .divide(BigDecimal.valueOf(CM2_PER_M2), 4, RoundingMode.HALF_UP);
             }
             piece.accept(i, row.width(), row.length(), row.thickness(), count, quantity);
         }

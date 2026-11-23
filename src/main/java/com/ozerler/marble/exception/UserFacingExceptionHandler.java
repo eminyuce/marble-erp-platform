@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserFacingExceptionHandler {
 
     static final String ERROR_VIEW = "error/user-message";
+    private static final int MAX_MESSAGE_LENGTH = 400;
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public Object handleNotFound(ResourceNotFoundException ex,
@@ -87,7 +88,7 @@ public class UserFacingExceptionHandler {
             return MessageUtils.getMessage("notice.fallback");
         }
         String trimmed = message.trim();
-        if (trimmed.indexOf('\n') >= 0 || trimmed.indexOf('\r') >= 0 || trimmed.length() > 400) {
+        if (trimmed.indexOf('\n') >= 0 || trimmed.indexOf('\r') >= 0 || trimmed.length() > MAX_MESSAGE_LENGTH) {
             return MessageUtils.getMessage("notice.fallback");
         }
         return trimmed;

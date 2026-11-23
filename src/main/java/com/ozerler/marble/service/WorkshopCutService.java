@@ -46,6 +46,8 @@ import lombok.RequiredArgsConstructor;
 public class WorkshopCutService {
 
     private static final Logger LOG = LoggerFactory.getLogger(WorkshopCutService.class);
+    private static final int ITEM_CODE_RANGE = 10_000;
+    private static final int SCRAP_SUFFIX_MODULUS = 10000;
 
     private final CutOrderRepository cutOrderRepository;
     private final com.ozerler.marble.mapper.CutOrderMapper cutOrderMapper;
@@ -325,7 +327,7 @@ public class WorkshopCutService {
 
         List<CutItem> items = new ArrayList<>(piecesCount);
         for (int i = 1; i <= piecesCount; i++) {
-            String itemCode = UniqueCodes.yearly("ITM", 10_000, cutItemRepository::existsByItemCode);
+            String itemCode = UniqueCodes.yearly("ITM", ITEM_CODE_RANGE, cutItemRepository::existsByItemCode);
             CutItem item = CutItem.builder()
                     .itemCode(itemCode)
                     .cutOrder(order)
@@ -351,7 +353,7 @@ public class WorkshopCutService {
 
             ScrapLog scrap = ScrapLog.builder()
                     .scrapCode(UniqueCodes.allocate(
-                            () -> "SCRAP-W-" + (System.nanoTime() % 10000),
+                            () -> "SCRAP-W-" + (System.nanoTime() % SCRAP_SUFFIX_MODULUS),
                             scrapLogRepository::existsByScrapCode))
                     .cutOrder(order)
                     .slab(sourceSlab)

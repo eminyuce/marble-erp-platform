@@ -46,7 +46,7 @@ public final class WorkshopSlabGrid {
                 SlabGridCells.thicknessColumn(),
                 SlabGridCells.dimensionsColumn(),
                 SlabGridCells.areaColumn(),
-                GridColumn.text("customerName", "Müşteri Durumu", false, 180)
+                GridColumn.text("customerName", "Müşteri Durumu", false, GridWidth.PX_180)
         );
     }
 }

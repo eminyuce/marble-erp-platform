@@ -46,14 +46,14 @@ public final class FactoryAcceptGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("", "Durum", false, 150),
-                GridColumn.text("", "Id", false, 110),
-                GridColumn.text("", "İş Emri No", false, 160),
-                GridColumn.text("", "Taş cinsi", false, 140),
-                GridColumn.text("", "Blok", false, 140),
-                GridColumn.text("", "Makine", false, 150),
-                GridColumn.text("", "Sorumlu", false, 150),
-                GridColumn.text("", "Tarih", false, 130)
+                GridColumn.text("", "Durum", false, GridWidth.PX_150),
+                GridColumn.text("", "Id", false, GridWidth.PX_110),
+                GridColumn.text("", "İş Emri No", false, GridWidth.PX_160),
+                GridColumn.text("", "Taş cinsi", false, GridWidth.PX_140),
+                GridColumn.text("", "Blok", false, GridWidth.PX_140),
+                GridColumn.text("", "Makine", false, GridWidth.PX_150),
+                GridColumn.text("", "Sorumlu", false, GridWidth.PX_150),
+                GridColumn.text("", "Tarih", false, GridWidth.PX_130)
         );
     }
 }

@@ -29,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BlockCustomerMarkService {
 
+    private static final int ORDER_SUFFIX_MODULUS = 100000;
+
     private final BlockCustomerMarkRepository markRepository;
     private final com.ozerler.marble.mapper.BlockMapper blockMapper;
     private final com.ozerler.marble.mapper.CustomerMapper customerMapper;
@@ -84,7 +86,7 @@ public class BlockCustomerMarkService {
         }
         Block block = mark.getBlock();
         SalesOrder order = SalesOrder.builder()
-                .orderNo(String.format("SO-%d-%d", Year.now().getValue(), System.currentTimeMillis() % 100000))
+                .orderNo(String.format("SO-%d-%d", Year.now().getValue(), System.currentTimeMillis() % ORDER_SUFFIX_MODULUS))
                 .customer(mark.getCustomer())
                 .orderDate(LocalDate.now())
                 .status(SalesOrderStatus.CONFIRMED)

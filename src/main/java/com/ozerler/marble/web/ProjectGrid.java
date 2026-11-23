@@ -62,14 +62,14 @@ public final class ProjectGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", true, 180, "status", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("projectCode", "Şantiye Kodu", true, 160),
-                GridColumn.text("name", "Şantiye Adı", true, 240),
-                GridColumn.text("customerName", "Müşteri", true, 200),
-                GridColumn.text("contractValue", "Sözleşme Bedeli", true, 170),
-                GridColumn.text("actualCost", "Gerçekleşen Maliyet", true, 180),
-                GridColumn.text("", "Montaj İlerlemesi", false, 160)
+                GridColumn.filtered("status", "Durum", true, GridWidth.PX_180, "status", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("projectCode", "Şantiye Kodu", true, GridWidth.PX_160),
+                GridColumn.text("name", "Şantiye Adı", true, GridWidth.PX_240),
+                GridColumn.text("customerName", "Müşteri", true, GridWidth.PX_200),
+                GridColumn.text("contractValue", "Sözleşme Bedeli", true, GridWidth.PX_170),
+                GridColumn.text("actualCost", "Gerçekleşen Maliyet", true, GridWidth.PX_180),
+                GridColumn.text("", "Montaj İlerlemesi", false, GridWidth.PX_160)
         );
     }
 

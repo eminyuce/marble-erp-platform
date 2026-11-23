@@ -34,6 +34,9 @@ public class DatabaseLogBatchWriter {
                     + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final int BATCH_SIZE = 250;
+    private static final int CORRELATION_ID_PARAM = 12;
+    private static final int REQUEST_URI_PARAM = 11;
+    private static final int THREAD_NAME_PARAM = 13;
 
     private final JdbcTemplate jdbcTemplate;
     private final DatabaseLogQueue databaseLogQueue;
@@ -110,9 +113,9 @@ public class DatabaseLogBatchWriter {
                     ps.setString(8, entry.username());
                     ps.setString(9, entry.clientIp());
                     ps.setString(10, entry.httpMethod());
-                    ps.setString(11, entry.requestUri());
-                    ps.setString(12, entry.correlationId());
-                    ps.setString(13, entry.threadName());
+                    ps.setString(REQUEST_URI_PARAM, entry.requestUri());
+                    ps.setString(CORRELATION_ID_PARAM, entry.correlationId());
+                    ps.setString(THREAD_NAME_PARAM, entry.threadName());
                 }
 
                 @Override

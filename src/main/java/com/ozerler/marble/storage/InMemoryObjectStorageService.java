@@ -30,6 +30,7 @@ import com.ozerler.marble.exception.StoredFileNotFoundException;
 public class InMemoryObjectStorageService implements ObjectStorageService {
 
     private static final String BUCKET = "erp-files-test";
+    private static final int DEFAULT_PRESIGN_SECONDS = 900;
 
     private final Map<String, StoredObject> objects = new ConcurrentHashMap<>();
     private final PresignedUrlProperties presignedUrlProperties;
@@ -91,7 +92,7 @@ public class InMemoryObjectStorageService implements ObjectStorageService {
         if (expiration != null) {
             seconds = expiration.toSeconds();
         } else {
-            seconds = 900;
+            seconds = DEFAULT_PRESIGN_SECONDS;
         }
         return "memory://" + BUCKET + "/" + objectKey + "?expires=" + seconds;
     }

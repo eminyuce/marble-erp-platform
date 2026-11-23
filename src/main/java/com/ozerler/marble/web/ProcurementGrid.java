@@ -49,14 +49,14 @@ public final class ProcurementGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", true, 150, "status", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("poNumber", "Sipariş No", true, 160),
-                GridColumn.text("supplierName", "Tedarikçi", true, 220),
-                GridColumn.text("projectName", "Proje / Birim", true, 180),
-                GridColumn.text("orderDate", "Sipariş Tarihi", true, 140),
-                GridColumn.text("totalAmount", "Toplam Tutar", true, 150),
-                GridColumn.text("", "Fatura", false, 140)
+                GridColumn.filtered("status", "Durum", true, GridWidth.PX_150, "status", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("poNumber", "Sipariş No", true, GridWidth.PX_160),
+                GridColumn.text("supplierName", "Tedarikçi", true, GridWidth.PX_220),
+                GridColumn.text("projectName", "Proje / Birim", true, GridWidth.PX_180),
+                GridColumn.text("orderDate", "Sipariş Tarihi", true, GridWidth.PX_140),
+                GridColumn.text("totalAmount", "Toplam Tutar", true, GridWidth.PX_150),
+                GridColumn.text("", "Fatura", false, GridWidth.PX_140)
         );
     }
 

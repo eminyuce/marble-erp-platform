@@ -30,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProjectSiteService {
 
+    private static final int CODE_SUFFIX_MODULUS = 100000;
+
     private final ProjectRepository projectRepository;
     private final com.ozerler.marble.mapper.SiteMapper siteMapper;
     private final ProjectLocationRepository projectLocationRepository;
@@ -120,7 +122,7 @@ public class ProjectSiteService {
             final String finalCustName = customerName.trim();
             customer = customerRepository.findByCompanyNameIgnoreCase(finalCustName)
                     .orElseGet(() -> {
-                        String generatedCode = "CARI-" + (System.currentTimeMillis() % 100000);
+                        String generatedCode = "CARI-" + (System.currentTimeMillis() % CODE_SUFFIX_MODULUS);
                         com.ozerler.marble.model.Customer newCust = com.ozerler.marble.model.Customer.builder()
                                 .customerCode(generatedCode)
                                 .companyName(finalCustName)

@@ -42,6 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OperationWorkOrderController extends AbstractController {
 
+    private static final int DEFAULT_DUE_DAYS = 14;
+
     private final com.ozerler.marble.service.FormLookupService formLookup;
 
     private final OperationWorkOrderService workOrderService;
@@ -198,7 +200,7 @@ public class OperationWorkOrderController extends AbstractController {
 
         try {
             LocalDate orderDate = parseDateSafely(orderDateStr, LocalDate.now());
-            LocalDate dueDate = parseDateSafely(dueDateStr, LocalDate.now().plusDays(14));
+            LocalDate dueDate = parseDateSafely(dueDateStr, LocalDate.now().plusDays(DEFAULT_DUE_DAYS));
 
             WorkOrderRequest request = new WorkOrderRequest(orderNo, customerId, orderDate, dueDate, department,
                     responsiblePerson, stoneType, colorQuality, thicknessCm, widthCm, lengthCm, quantity, quantityUnit,

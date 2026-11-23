@@ -33,6 +33,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SalesService {
 
+    private static final int ORDER_NO_RANGE = 99999;
+
     private final SalesOrderRepository salesOrderRepository;
     private final CustomerRepository customerRepository;
     private final SlabRepository slabRepository;
@@ -178,6 +180,6 @@ public class SalesService {
     }
 
     public String generateOrderNo() {
-        return "SAT-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999));
+        return "SAT-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * ORDER_NO_RANGE));
     }
 }

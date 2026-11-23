@@ -76,40 +76,40 @@ final class SlabGridCells {
     }
 
     static GridColumn statusColumn() {
-        return GridColumn.filtered("status", "Durum", false, 140, "status",
+        return GridColumn.filtered("status", "Durum", false, GridWidth.PX_140, "status",
                 OperationGridSupport.choices(SlabStatus.values(), SlabStatus::getDisplayName));
     }
 
     static GridColumn idColumn() {
-        return GridColumn.text("id", "Id", false, 110);
+        return GridColumn.text("id", "Id", false, GridWidth.PX_110);
     }
 
     static GridColumn codeColumn() {
-        return GridColumn.text("slabCode", "Plaka No", false, 140);
+        return GridColumn.text("slabCode", "Plaka No", false, GridWidth.PX_140);
     }
 
     static GridColumn blockColumn() {
-        return GridColumn.text("sourceBlockCode", "Kaynak Blok", false, 140);
+        return GridColumn.text("sourceBlockCode", "Kaynak Blok", false, GridWidth.PX_140);
     }
 
     static GridColumn stoneColumn() {
-        return GridColumn.text("stoneType", "Taş Türü", false, 140);
+        return GridColumn.text("stoneType", "Taş Türü", false, GridWidth.PX_140);
     }
 
     static GridColumn finishColumn() {
-        return GridColumn.text("qualityGrade", "Kalite / Yüzey", false, 160);
+        return GridColumn.text("qualityGrade", "Kalite / Yüzey", false, GridWidth.PX_160);
     }
 
     static GridColumn thicknessColumn() {
-        return GridColumn.text("thicknessCm", "Kalınlık", false, 110);
+        return GridColumn.text("thicknessCm", "Kalınlık", false, GridWidth.PX_110);
     }
 
     static GridColumn dimensionsColumn() {
-        return GridColumn.text("dimensions", "Ölçü (En×Boy)", false, 150);
+        return GridColumn.text("dimensions", "Ölçü (En×Boy)", false, GridWidth.PX_150);
     }
 
     static GridColumn areaColumn() {
-        return GridColumn.text("surfaceAreaM2", "M²", false, 120);
+        return GridColumn.text("surfaceAreaM2", "M²", false, GridWidth.PX_120);
     }
 
     private static String quality(SlabView slab) {

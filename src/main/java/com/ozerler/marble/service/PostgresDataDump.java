@@ -44,6 +44,7 @@ final class PostgresDataDump {
             WHERE n.nspname = 'public' AND c.relkind = 'S'
             ORDER BY c.relname
             """;
+    private static final int FETCH_SIZE = 500;
 
     long write(Connection connection, Writer writer, String databaseName) throws SQLException, IOException {
         List<String> tables = tableNames(connection);
@@ -108,7 +109,7 @@ final class PostgresDataDump {
         String columnList = quotedColumnList(columns);
         long rowsWritten = 0;
         try (Statement statement = connection.createStatement()) {
-            statement.setFetchSize(500);
+            statement.setFetchSize(FETCH_SIZE);
             try (ResultSet rows = statement.executeQuery(select.toString())) {
                 ResultSetMetaData meta = rows.getMetaData();
                 while (rows.next()) {

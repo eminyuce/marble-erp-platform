@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RustFsEndpointProbe implements RustFsBrowserAccess.Probe {
 
     static final Duration TIMEOUT = Duration.ofMillis(800);
+    private static final int HTTP_SERVER_ERROR = 500;
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(TIMEOUT)
@@ -42,7 +43,7 @@ public class RustFsEndpointProbe implements RustFsBrowserAccess.Probe {
                 .build();
         try {
             HttpResponse<Void> response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
-            boolean reachable = response.statusCode() < 500;
+            boolean reachable = response.statusCode() < HTTP_SERVER_ERROR;
             if (!reachable) {
                 log.debug("RustFS endpoint probe failed host={} status={}", endpoint.getHost(), response.statusCode());
             }

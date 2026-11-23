@@ -47,15 +47,15 @@ public final class WorkshopReceiptGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("", "Kabul No", false, 150),
-                GridColumn.text("", "Tedarikçi", false, 160),
-                GridColumn.text("", "Kaynak", false, 140),
-                GridColumn.text("", "Taş cinsi", false, 140),
-                GridColumn.text("", "Miktar", false, 110),
-                GridColumn.text("", "m²", false, 110),
-                GridColumn.text("", "Alış maliyeti", false, 140),
-                GridColumn.text("", "Tarih", false, 130),
-                GridColumn.text("", "Not", false, 180)
+                GridColumn.text("", "Kabul No", false, GridWidth.PX_150),
+                GridColumn.text("", "Tedarikçi", false, GridWidth.PX_160),
+                GridColumn.text("", "Kaynak", false, GridWidth.PX_140),
+                GridColumn.text("", "Taş cinsi", false, GridWidth.PX_140),
+                GridColumn.text("", "Miktar", false, GridWidth.PX_110),
+                GridColumn.text("", "m²", false, GridWidth.PX_110),
+                GridColumn.text("", "Alış maliyeti", false, GridWidth.PX_140),
+                GridColumn.text("", "Tarih", false, GridWidth.PX_130),
+                GridColumn.text("", "Not", false, GridWidth.PX_180)
         );
     }
 }

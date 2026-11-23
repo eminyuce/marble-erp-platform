@@ -60,12 +60,12 @@ public final class StockLocationGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("active", "Durum", true, 120),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("code", "Kod", true, 150),
-                GridColumn.text("name", "Saha / Depo Adı", true, 200),
-                GridColumn.filtered("businessUnitLabel", "İş Birimi", true, 140, "unit", units()),
-                GridColumn.text("locationTypeLabel", "Lokasyon Tipi", true, 160)
+                GridColumn.text("active", "Durum", true, GridWidth.PX_120),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("code", "Kod", true, GridWidth.PX_150),
+                GridColumn.text("name", "Saha / Depo Adı", true, GridWidth.PX_200),
+                GridColumn.filtered("businessUnitLabel", "İş Birimi", true, GridWidth.PX_140, "unit", units()),
+                GridColumn.text("locationTypeLabel", "Lokasyon Tipi", true, GridWidth.PX_160)
         );
     }
 

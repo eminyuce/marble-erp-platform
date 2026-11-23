@@ -55,18 +55,18 @@ public final class OperationFactoryBlockGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("status", "Durum", false, 160),
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("blockCode", "Blok No", false, 140),
-                GridColumn.text("stoneType", "Taş Türü", false, 130),
-                GridColumn.text("quarryName", "Kaynak Ocak", false, 140),
-                GridColumn.text("arrivalDate", "Geliş Tarihi", false, 130),
-                GridColumn.text("estimatedTonnage", "Tahmini Tonaj", false, 140),
-                GridColumn.text("actualTonnage", "Gerçek Tonaj", false, 140),
-                GridColumn.text("dimensions", "Ölçüler", false, 140),
-                GridColumn.text("customerName", "Müşteri Durumu", false, 180),
-                GridColumn.text("totalCost", "Maliyet Değeri", false, 150),
-                GridColumn.text("salePrice", "Satış / Değer", false, 150)
+                GridColumn.text("status", "Durum", false, GridWidth.PX_160),
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("blockCode", "Blok No", false, GridWidth.PX_140),
+                GridColumn.text("stoneType", "Taş Türü", false, GridWidth.PX_130),
+                GridColumn.text("quarryName", "Kaynak Ocak", false, GridWidth.PX_140),
+                GridColumn.text("arrivalDate", "Geliş Tarihi", false, GridWidth.PX_130),
+                GridColumn.text("estimatedTonnage", "Tahmini Tonaj", false, GridWidth.PX_140),
+                GridColumn.text("actualTonnage", "Gerçek Tonaj", false, GridWidth.PX_140),
+                GridColumn.text("dimensions", "Ölçüler", false, GridWidth.PX_140),
+                GridColumn.text("customerName", "Müşteri Durumu", false, GridWidth.PX_180),
+                GridColumn.text("totalCost", "Maliyet Değeri", false, GridWidth.PX_150),
+                GridColumn.text("salePrice", "Satış / Değer", false, GridWidth.PX_150)
         );
     }
 

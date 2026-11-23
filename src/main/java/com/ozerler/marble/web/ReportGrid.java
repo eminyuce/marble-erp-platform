@@ -58,7 +58,7 @@ public final class ReportGrid {
             } else {
                 value = headers[index];
             }
-            columns.add(GridColumn.text("", value, false, 140));
+            columns.add(GridColumn.text("", value, false, GridWidth.PX_140));
         }
         return columns;
     }

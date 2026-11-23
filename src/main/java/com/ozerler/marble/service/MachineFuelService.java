@@ -25,6 +25,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MachineFuelService {
 
+    private static final int DEFAULT_PAGE_SIZE = 25;
+
     private final MachineFuelEntryRepository fuelEntryRepository;
     private final com.ozerler.marble.mapper.MachineMapper machineMapper;
     private final com.ozerler.marble.mapper.MachineFuelMapper machineFuelMapper;
@@ -239,7 +241,7 @@ public class MachineFuelService {
         if (size > 0) {
             safeSize = size;
         } else {
-            safeSize = 25;
+            safeSize = DEFAULT_PAGE_SIZE;
         }
         int safePage = Math.max(1, page);
         int totalPages = (int) Math.ceil((double) totalElements / safeSize);

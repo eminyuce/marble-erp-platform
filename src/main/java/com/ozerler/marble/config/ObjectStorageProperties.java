@@ -14,6 +14,9 @@ import lombok.Setter;
 @Setter
 public class ObjectStorageProperties {
 
+    private static final int DEFAULT_PRESIGN_MINUTES = 15;
+    private static final long DEFAULT_MAX_FILE_SIZE_BYTES = 50L * 1024 * 1024;
+
     /**
      * {@code rustfs} for production and local Docker; {@code memory} for automated tests.
      */
@@ -29,9 +32,9 @@ public class ObjectStorageProperties {
      */
     private String uploadDir = "media";
 
-    private Duration presignedUrlExpiry = Duration.ofMinutes(15);
+    private Duration presignedUrlExpiry = Duration.ofMinutes(DEFAULT_PRESIGN_MINUTES);
 
-    private long maxFileSizeBytes = 50L * 1024 * 1024;
+    private long maxFileSizeBytes = DEFAULT_MAX_FILE_SIZE_BYTES;
 
     private RustFs rustfs = new RustFs();
 

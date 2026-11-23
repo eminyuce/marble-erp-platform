@@ -12,6 +12,8 @@ import lombok.Setter;
 @Setter
 public class BackupProperties {
 
+    private static final int DEFAULT_PRESIGN_MINUTES = 30;
+
     private boolean enabled = true;
     private String tempDir = "";
     private RustFsProperties rustfs = new RustFsProperties();
@@ -22,7 +24,7 @@ public class BackupProperties {
     @Setter
     public static class RustFsProperties {
         private String prefix = "backups/";
-        private int presignedUrlDurationMinutes = 30;
+        private int presignedUrlDurationMinutes = DEFAULT_PRESIGN_MINUTES;
     }
 
     @Getter

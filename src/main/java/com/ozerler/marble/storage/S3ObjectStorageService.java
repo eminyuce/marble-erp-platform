@@ -45,6 +45,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 public class S3ObjectStorageService implements ObjectStorageService {
 
     private static final String HEALTH_PROBE_PREFIX = ".health-probe/";
+    private static final int HTTP_NOT_FOUND = 404;
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
@@ -65,7 +66,7 @@ public class S3ObjectStorageService implements ObjectStorageService {
         } catch (NoSuchBucketException notFound) {
             createPrivateBucket(bucket);
         } catch (S3Exception e) {
-            if (e.statusCode() == 404) {
+            if (e.statusCode() == HTTP_NOT_FOUND) {
                 createPrivateBucket(bucket);
                 return;
             }
@@ -104,7 +105,7 @@ public class S3ObjectStorageService implements ObjectStorageService {
         } catch (NoSuchKeyException e) {
             throw new StoredFileNotFoundException("Stored object was not found: " + objectKey);
         } catch (S3Exception e) {
-            if (e.statusCode() == 404) {
+            if (e.statusCode() == HTTP_NOT_FOUND) {
                 throw new StoredFileNotFoundException("Stored object was not found: " + objectKey);
             }
             log.error("Object download failed objectKey={}", objectKey, e);
@@ -139,7 +140,7 @@ public class S3ObjectStorageService implements ObjectStorageService {
         } catch (NoSuchKeyException e) {
             return false;
         } catch (S3Exception e) {
-            if (e.statusCode() == 404) {
+            if (e.statusCode() == HTTP_NOT_FOUND) {
                 return false;
             }
             throw new StorageException("Unable to check whether the stored file exists", e);

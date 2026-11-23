@@ -57,15 +57,15 @@ public final class CheckGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", false, 150, "status",
+                GridColumn.filtered("status", "Durum", false, GridWidth.PX_150, "status",
                         OperationGridSupport.choices(CheckStatus.values(), CheckStatus::getLabel)),
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("checkNo", "Çek No", false, 160),
-                GridColumn.text("customerName", "Müşteri (Keşideci)", false, 200),
-                GridColumn.text("businessUnitLabel", "İşletme Birimi", false, 150),
-                GridColumn.text("bankName", "Banka", false, 160),
-                GridColumn.text("dueDate", "Vade Tarihi", false, 140),
-                GridColumn.text("amount", "Tutar", false, 140)
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("checkNo", "Çek No", false, GridWidth.PX_160),
+                GridColumn.text("customerName", "Müşteri (Keşideci)", false, GridWidth.PX_200),
+                GridColumn.text("businessUnitLabel", "İşletme Birimi", false, GridWidth.PX_150),
+                GridColumn.text("bankName", "Banka", false, GridWidth.PX_160),
+                GridColumn.text("dueDate", "Vade Tarihi", false, GridWidth.PX_140),
+                GridColumn.text("amount", "Tutar", false, GridWidth.PX_140)
         );
     }
 }

@@ -72,6 +72,28 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class LocalDataInitializer implements CommandLineRunner {
 
+    private static final int DEMO_BLOCK1_AGE_DAYS = 20;
+    private static final int DEMO_BLOCK1_HEIGHT_CM = 150;
+    private static final int DEMO_BLOCK1_LENGTH_CM = 290;
+    private static final int DEMO_BLOCK1_WIDTH_CM = 180;
+    private static final int DEMO_BLOCK2_AGE_DAYS = 15;
+    private static final int DEMO_BLOCK2_HEIGHT_CM = 140;
+    private static final int DEMO_BLOCK2_LENGTH_CM = 280;
+    private static final int DEMO_BLOCK2_WIDTH_CM = 170;
+    private static final int DEMO_BLOCK3_HEIGHT_CM = 160;
+    private static final int DEMO_BLOCK3_LENGTH_CM = 310;
+    private static final int DEMO_BLOCK3_WIDTH_CM = 190;
+    private static final double DEMO_LOT1_AREA_M2 = 45.50;
+    private static final int DEMO_LOT1_QUANTITY = 20;
+    private static final double DEMO_LOT1_TOTAL_COST = 34125.00;
+    private static final double DEMO_LOT1_UNIT_COST = 750.00;
+    private static final double DEMO_LOT2_AREA_M2 = 32.00;
+    private static final int DEMO_LOT2_QUANTITY = 50;
+    private static final double DEMO_LOT2_TOTAL_COST = 29440.00;
+    private static final double DEMO_LOT2_UNIT_COST = 920.00;
+    private static final double DEMO_SHIPMENT1_FREIGHT = 4500.00;
+    private static final double DEMO_SHIPMENT2_FREIGHT = 6200.00;
+
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final CostCenterRepository costCenterRepository;
@@ -279,10 +301,10 @@ public class LocalDataInitializer implements CommandLineRunner {
         Block b1 = Block.builder()
                 .quarry(q1)
                 .blockCode("BLK-2026-00125")
-                .extractionDate(LocalDate.now().minusDays(20))
-                .widthCm(180)
-                .lengthCm(290)
-                .heightCm(150)
+                .extractionDate(LocalDate.now().minusDays(DEMO_BLOCK1_AGE_DAYS))
+                .widthCm(DEMO_BLOCK1_WIDTH_CM)
+                .lengthCm(DEMO_BLOCK1_LENGTH_CM)
+                .heightCm(DEMO_BLOCK1_HEIGHT_CM)
                 .volumeM3(new BigDecimal("7.830"))
                 .theoreticalWeightKg(new BigDecimal("21141.00"))
                 .actualWeightKg(new BigDecimal("20850.00"))
@@ -301,10 +323,10 @@ public class LocalDataInitializer implements CommandLineRunner {
         Block b2 = Block.builder()
                 .quarry(q2)
                 .blockCode("BLK-2026-00126")
-                .extractionDate(LocalDate.now().minusDays(15))
-                .widthCm(170)
-                .lengthCm(280)
-                .heightCm(140)
+                .extractionDate(LocalDate.now().minusDays(DEMO_BLOCK2_AGE_DAYS))
+                .widthCm(DEMO_BLOCK2_WIDTH_CM)
+                .lengthCm(DEMO_BLOCK2_LENGTH_CM)
+                .heightCm(DEMO_BLOCK2_HEIGHT_CM)
                 .volumeM3(new BigDecimal("6.664"))
                 .theoreticalWeightKg(new BigDecimal("18126.00"))
                 .actualWeightKg(new BigDecimal("18400.00"))
@@ -324,9 +346,9 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .quarry(q3)
                 .blockCode("BLK-2026-00127")
                 .extractionDate(LocalDate.now().minusDays(5))
-                .widthCm(190)
-                .lengthCm(310)
-                .heightCm(160)
+                .widthCm(DEMO_BLOCK3_WIDTH_CM)
+                .lengthCm(DEMO_BLOCK3_LENGTH_CM)
+                .heightCm(DEMO_BLOCK3_HEIGHT_CM)
                 .volumeM3(new BigDecimal("9.424"))
                 .theoreticalWeightKg(new BigDecimal("25256.00"))
                 .actualWeightKg(new BigDecimal("25100.00"))
@@ -529,10 +551,10 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .lotCode("LOT-2026-001")
                 .productForm(ProductForm.SLAB)
                 .stoneType("Muğla Beyaz")
-                .quantity(20)
-                .totalAreaM2(BigDecimal.valueOf(45.50))
-                .unitCost(BigDecimal.valueOf(750.00))
-                .totalCost(BigDecimal.valueOf(34125.00))
+                .quantity(DEMO_LOT1_QUANTITY)
+                .totalAreaM2(BigDecimal.valueOf(DEMO_LOT1_AREA_M2))
+                .unitCost(BigDecimal.valueOf(DEMO_LOT1_UNIT_COST))
+                .totalCost(BigDecimal.valueOf(DEMO_LOT1_TOTAL_COST))
                 .status(MaterialLotStatus.AVAILABLE)
                 .build());
 
@@ -540,10 +562,10 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .lotCode("LOT-2026-002")
                 .productForm(ProductForm.SIZED_PRODUCT)
                 .stoneType("Afyon Bal")
-                .quantity(50)
-                .totalAreaM2(BigDecimal.valueOf(32.00))
-                .unitCost(BigDecimal.valueOf(920.00))
-                .totalCost(BigDecimal.valueOf(29440.00))
+                .quantity(DEMO_LOT2_QUANTITY)
+                .totalAreaM2(BigDecimal.valueOf(DEMO_LOT2_AREA_M2))
+                .unitCost(BigDecimal.valueOf(DEMO_LOT2_UNIT_COST))
+                .totalCost(BigDecimal.valueOf(DEMO_LOT2_TOTAL_COST))
                 .status(MaterialLotStatus.PALLETIZED)
                 .build());
 
@@ -559,8 +581,8 @@ public class LocalDataInitializer implements CommandLineRunner {
         palletItemRepository.save(PalletItem.builder()
                 .pallet(p1)
                 .materialLot(lot2)
-                .quantity(50)
-                .areaM2(BigDecimal.valueOf(32.00))
+                .quantity(DEMO_LOT2_QUANTITY)
+                .areaM2(BigDecimal.valueOf(DEMO_LOT2_AREA_M2))
                 .build());
 
         palletRepository.save(Pallet.builder()
@@ -578,7 +600,7 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .vehiclePlate("34 OZR 101")
                 .driverName("Mehmet Yılmaz")
                 .departureTime(LocalDateTime.now().minusHours(3))
-                .freightCost(BigDecimal.valueOf(4500.00))
+                .freightCost(BigDecimal.valueOf(DEMO_SHIPMENT1_FREIGHT))
                 .deliveryStatus("IN_TRANSIT")
                 .build());
 
@@ -588,7 +610,7 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .vehiclePlate("06 MRB 450")
                 .driverName("Ali Çelik")
                 .departureTime(LocalDateTime.now().minusDays(1))
-                .freightCost(BigDecimal.valueOf(6200.00))
+                .freightCost(BigDecimal.valueOf(DEMO_SHIPMENT2_FREIGHT))
                 .deliveryStatus("DELIVERED")
                 .build());
     }

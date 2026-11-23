@@ -45,6 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OperationWorkOrderService {
 
+    private static final int CM2_PER_M2 = 10000;
+
     private final OperationWorkOrderRepository workOrderRepository;
     private final com.ozerler.marble.mapper.WorkOrderMapper workOrderMapper;
     private final WorkOrderStatusHistoryRepository historyRepository;
@@ -454,7 +456,7 @@ public class OperationWorkOrderService {
                     dNote = "";
                 }
 
-                BigDecimal rowM2 = w.multiply(l).multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(10000), 2, java.math.RoundingMode.HALF_UP);
+                BigDecimal rowM2 = w.multiply(l).multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(CM2_PER_M2), 2, java.math.RoundingMode.HALF_UP);
                 BigDecimal rowMt = l.multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
                 sumM2 = sumM2.add(rowM2);
                 sumMt = sumMt.add(rowMt);

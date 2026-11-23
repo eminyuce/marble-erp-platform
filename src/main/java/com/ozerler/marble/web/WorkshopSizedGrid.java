@@ -63,16 +63,16 @@ public final class WorkshopSizedGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("status", "Durum", false, 130),
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("itemCode", "Stok Kodu", false, 140),
-                GridColumn.text("sourceBlockCode", "Kaynak Blok", false, 140),
-                GridColumn.text("description", "Taş Türü & Tanım", false, 200),
-                GridColumn.text("thicknessCm", "Kalınlık", false, 110),
-                GridColumn.text("dimensions", "Ölçü", false, 140),
-                GridColumn.text("quantity", "Miktar (M²)", false, 130),
-                GridColumn.text("pieceCount", "Adet", false, 90),
-                GridColumn.text("customerName", "Müşteri", false, 180)
+                GridColumn.text("status", "Durum", false, GridWidth.PX_130),
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("itemCode", "Stok Kodu", false, GridWidth.PX_140),
+                GridColumn.text("sourceBlockCode", "Kaynak Blok", false, GridWidth.PX_140),
+                GridColumn.text("description", "Taş Türü & Tanım", false, GridWidth.PX_200),
+                GridColumn.text("thicknessCm", "Kalınlık", false, GridWidth.PX_110),
+                GridColumn.text("dimensions", "Ölçü", false, GridWidth.PX_140),
+                GridColumn.text("quantity", "Miktar (M²)", false, GridWidth.PX_130),
+                GridColumn.text("pieceCount", "Adet", false, GridWidth.PX_90),
+                GridColumn.text("customerName", "Müşteri", false, GridWidth.PX_180)
         );
     }
 }

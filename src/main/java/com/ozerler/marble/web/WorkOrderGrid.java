@@ -21,15 +21,15 @@ public final class WorkOrderGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", false, 160, "status", WorkOrderGridRows.statuses()),
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("orderNo", "İş Emri No", false, 170),
-                GridColumn.text("departmentLabel", "Departman", false, 140),
-                GridColumn.text("customerName", "Müşteri", false, 180),
-                GridColumn.text("stoneType", "Taş Türü", false, 150),
-                GridColumn.text("quantity", "Miktar", false, 130),
-                GridColumn.text("targetDeliveryDate", "Termin Tarihi", false, 140),
-                GridColumn.text("responsiblePerson", "Sorumlu", false, 150)
+                GridColumn.filtered("status", "Durum", false, GridWidth.PX_160, "status", WorkOrderGridRows.statuses()),
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("orderNo", "İş Emri No", false, GridWidth.PX_170),
+                GridColumn.text("departmentLabel", "Departman", false, GridWidth.PX_140),
+                GridColumn.text("customerName", "Müşteri", false, GridWidth.PX_180),
+                GridColumn.text("stoneType", "Taş Türü", false, GridWidth.PX_150),
+                GridColumn.text("quantity", "Miktar", false, GridWidth.PX_130),
+                GridColumn.text("targetDeliveryDate", "Termin Tarihi", false, GridWidth.PX_140),
+                GridColumn.text("responsiblePerson", "Sorumlu", false, GridWidth.PX_150)
         );
     }
 }

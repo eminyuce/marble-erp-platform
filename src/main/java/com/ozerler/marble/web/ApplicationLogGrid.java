@@ -54,13 +54,13 @@ public final class ApplicationLogGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("level", "Seviye", true, 120, "levels", levels()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("timestamp", "Tarih & Saat", true, 170),
-                GridColumn.text("shortLoggerName", "Kaynak (Logger)", true, 180),
-                GridColumn.text("message", "Mesaj", false, 280),
-                GridColumn.text("username", "Kullanıcı", true, 140),
-                GridColumn.text("clientIp", "İstemci IP", true, 130)
+                GridColumn.filtered("level", "Seviye", true, GridWidth.PX_120, "levels", levels()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("timestamp", "Tarih & Saat", true, GridWidth.PX_170),
+                GridColumn.text("shortLoggerName", "Kaynak (Logger)", true, GridWidth.PX_180),
+                GridColumn.text("message", "Mesaj", false, GridWidth.PX_280),
+                GridColumn.text("username", "Kullanıcı", true, GridWidth.PX_140),
+                GridColumn.text("clientIp", "İstemci IP", true, GridWidth.PX_130)
         );
     }
 

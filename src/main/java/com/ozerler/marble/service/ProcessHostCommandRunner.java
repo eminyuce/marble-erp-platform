@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class ProcessHostCommandRunner implements HostCommandRunner {
 
+    private static final long DEFAULT_TIMEOUT_MILLIS = 15_000L;
+
     @Override
     public HostCommandResult run(HostCommand command) {
         ProcessBuilder processBuilder = new ProcessBuilder(command.argv());
@@ -42,7 +44,7 @@ public class ProcessHostCommandRunner implements HostCommandRunner {
             if (command.timeout() != null) {
                 timeoutMillis = command.timeout().toMillis();
             } else {
-                timeoutMillis = 15_000L;
+                timeoutMillis = DEFAULT_TIMEOUT_MILLIS;
             }
             boolean finished = process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS);
             if (!finished) {

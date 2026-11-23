@@ -33,6 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CollectionService {
 
+    private static final int CHECK_WARNING_DAYS = 15;
+
     private final CollectionRecordRepository collectionRepository;
     private final com.ozerler.marble.mapper.CollectionMapper collectionMapper;
     private final CheckRecordRepository checkRepository;
@@ -167,7 +169,7 @@ public class CollectionService {
     @Transactional(readOnly = true)
     public List<CheckRecord> getApproachingChecks(BusinessUnit unit) {
         LocalDate today = LocalDate.now();
-        LocalDate until = today.plusDays(15);
+        LocalDate until = today.plusDays(CHECK_WARNING_DAYS);
         if (unit == null) {
             return checkRepository.findApproachingChecks(today, until);
         }
@@ -196,7 +198,7 @@ public class CollectionService {
     @Transactional(readOnly = true)
     public long getApproachingChecksCount() {
         LocalDate today = LocalDate.now();
-        return checkRepository.countApproachingChecks(today, today.plusDays(15));
+        return checkRepository.countApproachingChecks(today, today.plusDays(CHECK_WARNING_DAYS));
     }
 
     @Transactional(readOnly = true)

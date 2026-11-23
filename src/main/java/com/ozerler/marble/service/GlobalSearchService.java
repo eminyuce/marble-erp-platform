@@ -40,6 +40,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GlobalSearchService {
 
+    private static final int PREFIX_MATCH_SCORE = 80;
+    private static final int SUBTITLE_MATCH_SCORE = 40;
+    private static final int TITLE_MATCH_SCORE = 60;
+
     private final BlockRepository blockRepository;
     private final ProjectRepository projectRepository;
     private final SlabRepository slabRepository;
@@ -293,13 +297,13 @@ public class GlobalSearchService {
             return 100;
         }
         if (t.startsWith(q)) {
-            return 80;
+            return PREFIX_MATCH_SCORE;
         }
         if (t.contains(q)) {
-            return 60;
+            return TITLE_MATCH_SCORE;
         }
         if (s.contains(q)) {
-            return 40;
+            return SUBTITLE_MATCH_SCORE;
         }
         return 10;
     }

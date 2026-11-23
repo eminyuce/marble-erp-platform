@@ -24,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 public class RustFsBrowserAccess {
 
     static final Duration PROBE_CACHE_TTL = Duration.ofSeconds(15);
+    private static final int HTTPS_DEFAULT_PORT = 443;
+    private static final int HTTP_DEFAULT_PORT = 80;
 
     private final ObjectStorageProperties storageProperties;
     private final Probe probe;
@@ -131,9 +133,9 @@ public class RustFsBrowserAccess {
             return endpoint.getPort();
         }
         if ("https".equalsIgnoreCase(endpoint.getScheme())) {
-            return 443;
+            return HTTPS_DEFAULT_PORT;
         }
-        return 80;
+        return HTTP_DEFAULT_PORT;
     }
 
     private static boolean isHttp(URI uri) {

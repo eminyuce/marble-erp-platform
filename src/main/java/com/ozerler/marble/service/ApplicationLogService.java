@@ -36,6 +36,9 @@ public class ApplicationLogService {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
     private static final int DEFAULT_RETENTION_DAYS = 30;
+    private static final int DEFAULT_PAGE_SIZE = 50;
+    private static final int MAX_PAGE_SIZE = 500;
+    private static final int RECENT_HOURS = 24;
 
     private final ApplicationLogRepository applicationLogRepository;
 
@@ -52,10 +55,10 @@ public class ApplicationLogService {
 
         int pageIndex = Math.max(0, page - 1);
         int pageSize;
-        if (size > 0 && size <= 500) {
+        if (size > 0 && size <= MAX_PAGE_SIZE) {
             pageSize = size;
         } else {
-            pageSize = 50;
+            pageSize = DEFAULT_PAGE_SIZE;
         }
 
         String safeSortField = resolveSortField(sortField);
@@ -120,7 +123,7 @@ public class ApplicationLogService {
 
     @Transactional(readOnly = true)
     public ApplicationLogKpiDto getKpiMetrics() {
-        LocalDateTime since = LocalDateTime.now().minusHours(24);
+        LocalDateTime since = LocalDateTime.now().minusHours(RECENT_HOURS);
         long total = applicationLogRepository.countByTimestampAfter(since);
         long errors = applicationLogRepository.countByLevelAndTimestampAfter("ERROR", since);
         long warns = applicationLogRepository.countByLevelAndTimestampAfter("WARN", since);

@@ -67,16 +67,16 @@ public final class ExpenseGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("documentNo", "Belge / Fatura", true, 160),
-                GridColumn.text("costCenterName", "Masraf Merkezi", true, 180),
-                GridColumn.text("entryDate", "Tarih", true, 120),
-                GridColumn.text("businessUnit", "Birim", true, 130),
-                GridColumn.text("", "İlgili Yer", false, 150),
-                GridColumn.filtered("expenseType", "Gider Kalemi", true, 160, "expenseType", types()),
-                GridColumn.text("expensePeriod", "Dönem", true, 110),
-                GridColumn.text("amount", "Tutar", true, 150),
-                GridColumn.text("", "Açıklama", false, 200)
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("documentNo", "Belge / Fatura", true, GridWidth.PX_160),
+                GridColumn.text("costCenterName", "Masraf Merkezi", true, GridWidth.PX_180),
+                GridColumn.text("entryDate", "Tarih", true, GridWidth.PX_120),
+                GridColumn.text("businessUnit", "Birim", true, GridWidth.PX_130),
+                GridColumn.text("", "İlgili Yer", false, GridWidth.PX_150),
+                GridColumn.filtered("expenseType", "Gider Kalemi", true, GridWidth.PX_160, "expenseType", types()),
+                GridColumn.text("expensePeriod", "Dönem", true, GridWidth.PX_110),
+                GridColumn.text("amount", "Tutar", true, GridWidth.PX_150),
+                GridColumn.text("", "Açıklama", false, GridWidth.PX_200)
         );
     }
 

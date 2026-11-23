@@ -43,6 +43,10 @@ public class FileUploadValidator {
     public static final int MEDIA_TYPE_PREFIX_BYTES = 64 * 1024;
 
     private static final Set<String> ALLOWED_EXTENSIONS;
+    private static final int WEBP_HEADER_LENGTH = 12;
+    private static final byte[] JPEG_MAGIC = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF};
+    private static final byte[] PNG_MAGIC = {(byte) 0x89, 0x50, 0x4E, 0x47};
+    private static final byte[] ZIP_MAGIC = {0x50, 0x4B};
 
     static {
         Set<String> extensions = new HashSet<>();
@@ -174,13 +178,13 @@ public class FileUploadValidator {
             throw new FileValidationException("Cannot save empty file");
         }
         switch (extension) {
-            case "jpg", "jpeg" -> requireMagic(header, new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF}, "JPEG");
-            case "png" -> requireMagic(header, new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47}, "PNG");
+            case "jpg", "jpeg" -> requireMagic(header, JPEG_MAGIC, "JPEG");
+            case "png" -> requireMagic(header, PNG_MAGIC, "PNG");
             case "gif" -> requireAsciiPrefix(header, "GIF8", "GIF");
             case "bmp" -> requireAsciiPrefix(header, "BM", "BMP");
             case "webp" -> {
                 requireAsciiPrefix(header, "RIFF", "WEBP");
-                if (header.length >= 12) {
+                if (header.length >= WEBP_HEADER_LENGTH) {
                     String webp = new String(header, 8, 4, java.nio.charset.StandardCharsets.US_ASCII);
                     if (!"WEBP".equals(webp)) {
                         throw new FileValidationException("File content does not match the WEBP type");
@@ -188,7 +192,7 @@ public class FileUploadValidator {
                 }
             }
             case "pdf" -> requireAsciiPrefix(header, "%PDF", "PDF");
-            case "docx", "xlsx" -> requireMagic(header, new byte[]{0x50, 0x4B}, "Office Open XML");
+            case "docx", "xlsx" -> requireMagic(header, ZIP_MAGIC, "Office Open XML");
             case "svg", "txt", "md", "csv", "doc", "xls" -> {
                 // SVG is checked by SvgContentValidator. Text and legacy OLE
                 // documents have no short magic header beyond Tika's detection.

@@ -63,6 +63,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FactoryProductionService {
 
+    private static final int SCRAP_CODE_RANGE = 10_000;
+    private static final int SEQUENCE_MODULUS = 10000;
+
     private final BlockRepository blockRepository;
     private final com.ozerler.marble.mapper.MachineMapper machineMapper;
     private final com.ozerler.marble.mapper.FactoryOperationMapper factoryOperationMapper;
@@ -556,7 +559,7 @@ public class FactoryProductionService {
         }
 
         List<Slab> slabs = new ArrayList<>();
-        long sequence = System.nanoTime() % 10000;
+        long sequence = System.nanoTime() % SEQUENCE_MODULUS;
         sequence = addGrade(slabs, order, block, extra, QualityGrade.EXTRA, thickness, width, length, singleArea, base, sequence);
         sequence = addGrade(slabs, order, block, countA, QualityGrade.A, thickness, width, length, singleArea, base, sequence);
         sequence = addGrade(slabs, order, block, countB, QualityGrade.B, thickness, width, length, singleArea, base, sequence);
@@ -633,7 +636,7 @@ public class FactoryProductionService {
             description = request.scrapReason().getDescription();
         }
         scrapLogRepository.save(ScrapLog.builder()
-                .scrapCode(UniqueCodes.yearly("SCRAP", 10_000, scrapLogRepository::existsByScrapCode))
+                .scrapCode(UniqueCodes.yearly("SCRAP", SCRAP_CODE_RANGE, scrapLogRepository::existsByScrapCode))
                 .productionOrder(order)
                 .block(block)
                 .reasonCode(request.scrapReason())

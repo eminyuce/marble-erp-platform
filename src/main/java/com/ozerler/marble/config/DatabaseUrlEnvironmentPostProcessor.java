@@ -19,6 +19,8 @@ import org.springframework.core.env.MapPropertySource;
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
+    private static final int DEFAULT_POSTGRES_PORT = 5432;
+
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         String databaseUrl = environment.getProperty("DATABASE_URL");
@@ -39,7 +41,7 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
                 if (uri.getPort() > 0) {
                     port = uri.getPort();
                 } else {
-                    port = 5432;
+                    port = DEFAULT_POSTGRES_PORT;
                 }
                 String path;
                 if (uri.getPath() != null) {

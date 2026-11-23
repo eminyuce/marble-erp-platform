@@ -36,6 +36,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProcurementService {
 
+    private static final int ORDER_NO_RANGE = 99999;
+
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final com.ozerler.marble.mapper.CostCenterMapper costCenterMapper;
     private final com.ozerler.marble.mapper.PurchaseOrderMapper purchaseOrderMapper;
@@ -198,7 +200,7 @@ public class ProcurementService {
     }
 
     public String generatePoNumber() {
-        return "SIP-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * 99999));
+        return "SIP-" + LocalDate.now().getYear() + "-" + String.format("%05d", (int) (Math.random() * ORDER_NO_RANGE));
     }
 
     private CostCenter resolveCostCenter(BusinessUnit unit, Long costCenterId) {

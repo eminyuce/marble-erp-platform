@@ -65,15 +65,15 @@ public final class QuarryDispatchGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("productName", "Ürün / Blok", false, 160),
-                GridColumn.text("movementDate", "Tarih", false, 160),
-                GridColumn.text("tonnage", "Tonaj / Miktar", false, 150),
-                GridColumn.text("source", "Kaynak", false, 110),
-                GridColumn.text("targetDestination", "Hedef", false, 140),
-                GridColumn.text("customerName", "Müşteri", false, 180),
-                GridColumn.text("invoiceNo", "Fatura", false, 140),
-                GridColumn.text("notes", "Açıklama", false, 200)
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("productName", "Ürün / Blok", false, GridWidth.PX_160),
+                GridColumn.text("movementDate", "Tarih", false, GridWidth.PX_160),
+                GridColumn.text("tonnage", "Tonaj / Miktar", false, GridWidth.PX_150),
+                GridColumn.text("source", "Kaynak", false, GridWidth.PX_110),
+                GridColumn.text("targetDestination", "Hedef", false, GridWidth.PX_140),
+                GridColumn.text("customerName", "Müşteri", false, GridWidth.PX_180),
+                GridColumn.text("invoiceNo", "Fatura", false, GridWidth.PX_140),
+                GridColumn.text("notes", "Açıklama", false, GridWidth.PX_200)
         );
     }
 

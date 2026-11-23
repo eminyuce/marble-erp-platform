@@ -31,6 +31,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class InvoiceScreenService {
 
+    private static final int MAX_ROWS = 500;
+
     private final InvoiceService invoiceService;
     private final FormLookupService formLookup;
     private final QuarryInventoryService quarryInventoryService;
@@ -188,7 +190,7 @@ public class InvoiceScreenService {
                         }
                         return b2.getId().compareTo(b1.getId());
                     })
-                    .limit(500)
+                    .limit(MAX_ROWS)
                     .toList();
             for (Block b : blocks) {
                 Map<String, Object> m = new HashMap<>();
@@ -345,7 +347,7 @@ public class InvoiceScreenService {
                 && (stockType == null || stockType.isBlank() || "SLAB".equalsIgnoreCase(stockType))) {
                 List<Slab> slabs = formLookup.slabsByStatusEntities(SlabStatus.AVAILABLE).stream()
                         .filter(sl -> s.isEmpty() || sl.getSlabCode().toLowerCase().contains(s))
-                        .limit(500)
+                        .limit(MAX_ROWS)
                         .toList();
                 for (Slab sl : slabs) {
                     Map<String, Object> m = new HashMap<>();
@@ -374,7 +376,7 @@ public class InvoiceScreenService {
                             return true;
                         })
                         .filter(st -> s.isEmpty() || (st.getProductCode() != null && st.getProductCode().toLowerCase().contains(s)) || (st.getStoneType() != null && st.getStoneType().toLowerCase().contains(s)))
-                        .limit(500)
+                        .limit(MAX_ROWS)
                         .toList();
                 for (StockItem st : stockItems) {
                     Map<String, Object> m = new HashMap<>();

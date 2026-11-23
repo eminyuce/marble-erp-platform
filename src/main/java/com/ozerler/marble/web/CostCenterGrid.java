@@ -57,12 +57,12 @@ public final class CostCenterGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("code", "Merkez Kodu", true, 140),
-                GridColumn.text("name", "Masraf Merkezi Adı", true, 200),
-                GridColumn.filtered("businessUnitLabel", "İş Birimi", true, 140, "unit", units()),
-                GridColumn.text("monthlyBudget", "Aylık Bütçe", true, 150),
-                GridColumn.text("description", "Açıklama", false, 180)
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("code", "Merkez Kodu", true, GridWidth.PX_140),
+                GridColumn.text("name", "Masraf Merkezi Adı", true, GridWidth.PX_200),
+                GridColumn.filtered("businessUnitLabel", "İş Birimi", true, GridWidth.PX_140, "unit", units()),
+                GridColumn.text("monthlyBudget", "Aylık Bütçe", true, GridWidth.PX_150),
+                GridColumn.text("description", "Açıklama", false, GridWidth.PX_180)
         );
     }
 

@@ -58,16 +58,16 @@ public final class SlabGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", true, 150, "status", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("slabCode", "Plaka Kodu", true, 160),
-                GridColumn.text("", "Ebatlar (cm)", false, 180),
-                GridColumn.text("surfaceAreaM2", "Net Alan", true, 120),
-                GridColumn.text("surfaceFinish", "Yüzey", true, 150),
-                GridColumn.text("qualityGrade", "Kalite", true, 120),
-                GridColumn.text("costPerM2", "Birim Maliyet (m²)", true, 160),
-                GridColumn.text("", "Pasaport", false, 120),
-                GridColumn.text("", "Barkod", false, 120)
+                GridColumn.filtered("status", "Durum", true, GridWidth.PX_150, "status", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("slabCode", "Plaka Kodu", true, GridWidth.PX_160),
+                GridColumn.text("", "Ebatlar (cm)", false, GridWidth.PX_180),
+                GridColumn.text("surfaceAreaM2", "Net Alan", true, GridWidth.PX_120),
+                GridColumn.text("surfaceFinish", "Yüzey", true, GridWidth.PX_150),
+                GridColumn.text("qualityGrade", "Kalite", true, GridWidth.PX_120),
+                GridColumn.text("costPerM2", "Birim Maliyet (m²)", true, GridWidth.PX_160),
+                GridColumn.text("", "Pasaport", false, GridWidth.PX_120),
+                GridColumn.text("", "Barkod", false, GridWidth.PX_120)
         );
     }
 

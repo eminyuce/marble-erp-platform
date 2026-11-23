@@ -68,6 +68,9 @@ public class DatabaseBackupService {
     private static final Pattern SAFE_BACKUP_FILE_NAME =
             Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,180}\\.sql\\.gz");
     private static final String BACKUP_CONTENT_TYPE = "application/gzip";
+    private static final int BYTES_PER_UNIT = 1024;
+    private static final int DEFAULT_POSTGRES_PORT = 5432;
+    private static final int ERROR_READER_JOIN_MILLIS = 2000;
 
     private final ObjectStorageService objectStorageService;
     private final BackupProperties properties;
@@ -588,7 +591,7 @@ public class DatabaseBackupService {
                 bytes = stdout.transferTo(gzip);
             }
             int exitCode = process.waitFor();
-            errorReader.join(2000);
+            errorReader.join(ERROR_READER_JOIN_MILLIS);
             if (exitCode == 0 && bytes > 0) {
                 log.info("{} ile yedekleme tamamlandı: {} ({} bayt)", source, fileName, bytes);
                 return true;
@@ -689,7 +692,7 @@ public class DatabaseBackupService {
         boolean isH2 = url.contains(":h2:");
 
         String host = "localhost";
-        int port = 5432;
+        int port = DEFAULT_POSTGRES_PORT;
         String database = "marble_erp";
 
         try {
@@ -784,12 +787,12 @@ public class DatabaseBackupService {
     }
 
     private String formatFileSize(long bytes) {
-        if (bytes < 1024) {
+        if (bytes < BYTES_PER_UNIT) {
             return bytes + " B";
         }
-        int exp = (int) (Math.log(bytes) / Math.log(1024));
+        int exp = (int) (Math.log(bytes) / Math.log(BYTES_PER_UNIT));
         char pre = "KMGTPE".charAt(exp - 1);
-        return String.format(Locale.US, "%.1f %cB", bytes / Math.pow(1024, exp), pre);
+        return String.format(Locale.US, "%.1f %cB", bytes / Math.pow(BYTES_PER_UNIT, exp), pre);
     }
 
     private record DbConnectionInfo(String host, int port, String database, String username, String password, boolean isH2) {

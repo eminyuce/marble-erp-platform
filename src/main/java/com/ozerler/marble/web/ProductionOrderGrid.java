@@ -64,14 +64,14 @@ public final class ProductionOrderGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", true, 150, "status", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("orderNo", "İş Emri No", true, 170),
-                GridColumn.text("machineName", "Makine / Hat", true, 170),
-                GridColumn.text("", "Kaynak Blok", false, 160),
-                GridColumn.text("", "Süre / Tüketim", false, 160),
-                GridColumn.text("", "Çıkan Plakalar", false, 150),
-                GridColumn.text("operatorName", "Operatör", true, 150)
+                GridColumn.filtered("status", "Durum", true, GridWidth.PX_150, "status", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("orderNo", "İş Emri No", true, GridWidth.PX_170),
+                GridColumn.text("machineName", "Makine / Hat", true, GridWidth.PX_170),
+                GridColumn.text("", "Kaynak Blok", false, GridWidth.PX_160),
+                GridColumn.text("", "Süre / Tüketim", false, GridWidth.PX_160),
+                GridColumn.text("", "Çıkan Plakalar", false, GridWidth.PX_150),
+                GridColumn.text("operatorName", "Operatör", true, GridWidth.PX_150)
         );
     }
 

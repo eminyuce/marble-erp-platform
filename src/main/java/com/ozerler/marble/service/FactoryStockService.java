@@ -48,6 +48,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FactoryStockService {
 
+    private static final int CM2_PER_M2 = 10000;
+
     private final BlockRepository blockRepository;
     private final BlockViews blockViews;
     private final com.ozerler.marble.mapper.StockItemMapper stockItemMapper;
@@ -355,7 +357,7 @@ public class FactoryStockService {
         } else {
             length = BigDecimal.valueOf(block.getLengthCm());
         }
-        BigDecimal area = width.multiply(length).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+        BigDecimal area = width.multiply(length).divide(BigDecimal.valueOf(CM2_PER_M2), 4, RoundingMode.HALF_UP);
 
         String orderNo = UniqueCodes.yearly("PRD", productionOrderRepository::existsByOrderNo);
         ProductionOrder order = productionOrderRepository.save(ProductionOrder.builder()
@@ -444,7 +446,7 @@ public class FactoryStockService {
             } else {
                 count = 1;
             }
-            BigDecimal area = w.multiply(l).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+            BigDecimal area = w.multiply(l).divide(BigDecimal.valueOf(CM2_PER_M2), 4, RoundingMode.HALF_UP);
 
             for (int k = 0; k < count; k++) {
                 String slabCode = UniqueCodes.yearly("SLB", slabRepository::existsBySlabCode);
@@ -585,7 +587,7 @@ public class FactoryStockService {
         if (quantity != null) {
             qty = quantity.setScale(2, RoundingMode.HALF_UP);
         } else {
-            qty = w.multiply(l).multiply(BigDecimal.valueOf(pieceCount)).divide(BigDecimal.valueOf(10000), 2, RoundingMode.HALF_UP);
+            qty = w.multiply(l).multiply(BigDecimal.valueOf(pieceCount)).divide(BigDecimal.valueOf(CM2_PER_M2), 2, RoundingMode.HALF_UP);
         }
 
         QualityGrade grade = QualityGrade.A;

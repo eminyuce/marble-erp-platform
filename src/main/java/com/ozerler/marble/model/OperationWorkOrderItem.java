@@ -32,6 +32,8 @@ import lombok.Setter;
 @EqualsAndHashCode(callSuper = false, of = "id")
 public class OperationWorkOrderItem extends AuditableEntity {
 
+    private static final int CM2_PER_M2 = 10000;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -92,7 +94,7 @@ public class OperationWorkOrderItem extends AuditableEntity {
         if (widthCm != null && lengthCm != null) {
             this.calculatedM2 = widthCm.multiply(lengthCm)
                     .multiply(BigDecimal.valueOf(count))
-                    .divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+                    .divide(BigDecimal.valueOf(CM2_PER_M2), 4, RoundingMode.HALF_UP);
         }
         if (lengthCm != null) {
             this.calculatedMt = lengthCm.multiply(BigDecimal.valueOf(count))

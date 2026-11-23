@@ -16,9 +16,12 @@ import lombok.Setter;
 @Setter
 public class RateLimitProperties {
 
-    private TierConfig login = new TierConfig(5, 60);
-    private TierConfig form = new TierConfig(10, 60);
-    private TierConfig general = new TierConfig(60, 60);
+    private static final int WINDOW_SECONDS = 60;
+    private static final int GENERAL_REQUESTS_PER_WINDOW = 60;
+
+    private TierConfig login = new TierConfig(5, WINDOW_SECONDS);
+    private TierConfig form = new TierConfig(10, WINDOW_SECONDS);
+    private TierConfig general = new TierConfig(GENERAL_REQUESTS_PER_WINDOW, WINDOW_SECONDS);
 
     @Getter
     @Setter

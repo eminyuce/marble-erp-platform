@@ -32,6 +32,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DashboardService {
 
+    private static final int CHECK_WARNING_DAYS = 15;
+
     private final BlockRepository blockRepository;
     private final SlabRepository slabRepository;
     private final ProjectRepository projectRepository;
@@ -100,8 +102,8 @@ public class DashboardService {
         BigDecimal monthlyCollections = collectionRepository.sumAmountByMethodAndDateRange(null, monthStart, monthEnd);
 
         java.time.LocalDate today = java.time.LocalDate.now();
-        long approachingChecksCount = checkRepository.countApproachingChecks(today, today.plusDays(15));
-        BigDecimal approachingChecksTotal = checkRepository.sumApproachingChecksAmount(today, today.plusDays(15));
+        long approachingChecksCount = checkRepository.countApproachingChecks(today, today.plusDays(CHECK_WARNING_DAYS));
+        BigDecimal approachingChecksTotal = checkRepository.sumApproachingChecksAmount(today, today.plusDays(CHECK_WARNING_DAYS));
 
         return DashboardKpiDto.builder()
                 .totalSlabArea(totalSlabArea)

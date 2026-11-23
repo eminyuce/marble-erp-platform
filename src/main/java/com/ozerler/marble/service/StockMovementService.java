@@ -34,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StockMovementService {
 
+    private static final int RECENT_DAYS = 30;
+
     private final StockMovementRepository movementRepository;
     private final com.ozerler.marble.mapper.StockMovementMapper stockMovementMapper;
     private final com.ozerler.marble.mapper.InvoiceMapper invoiceMapper;
@@ -427,7 +429,7 @@ public class StockMovementService {
 
     @Transactional(readOnly = true)
     public List<StockMovement> getRecentQuarryDispatches() {
-        return movementRepository.findRecentBySourceDepartment(BusinessUnit.QUARRY, LocalDateTime.now().minusDays(30));
+        return movementRepository.findRecentBySourceDepartment(BusinessUnit.QUARRY, LocalDateTime.now().minusDays(RECENT_DAYS));
     }
 
     /**

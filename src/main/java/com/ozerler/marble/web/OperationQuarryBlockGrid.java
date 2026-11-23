@@ -64,15 +64,15 @@ public final class OperationQuarryBlockGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", false, 160, "status",
+                GridColumn.filtered("status", "Durum", false, GridWidth.PX_160, "status",
                         OperationGridSupport.choices(BlockStatus.values(), BlockStatus::getDisplayName)),
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("blockCode", "Blok No", false, 160),
-                GridColumn.text("quarryName", "Ocak & Lokasyon", false, 180),
-                GridColumn.text("stoneType", "Taş Türü", false, 140),
-                GridColumn.text("dimensions", "Ölçüler", false, 140),
-                GridColumn.text("approximateTonnage", "Tahmini Tonaj", false, 140),
-                GridColumn.text("actualTonnage", "Gerçek Tonaj", false, 140)
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("blockCode", "Blok No", false, GridWidth.PX_160),
+                GridColumn.text("quarryName", "Ocak & Lokasyon", false, GridWidth.PX_180),
+                GridColumn.text("stoneType", "Taş Türü", false, GridWidth.PX_140),
+                GridColumn.text("dimensions", "Ölçüler", false, GridWidth.PX_140),
+                GridColumn.text("approximateTonnage", "Tahmini Tonaj", false, GridWidth.PX_140),
+                GridColumn.text("actualTonnage", "Gerçek Tonaj", false, GridWidth.PX_140)
         );
     }
 }

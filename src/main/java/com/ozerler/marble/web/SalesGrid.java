@@ -47,13 +47,13 @@ public final class SalesGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", true, 150, "status", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("orderNo", "Sipariş No", true, 160),
-                GridColumn.text("customerName", "Müşteri", true, 220),
-                GridColumn.text("orderDate", "Sipariş Tarihi", true, 140),
-                GridColumn.text("totalAmount", "Toplam Tutar", true, 150),
-                GridColumn.text("paidAmount", "Ödenen", true, 140)
+                GridColumn.filtered("status", "Durum", true, GridWidth.PX_150, "status", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("orderNo", "Sipariş No", true, GridWidth.PX_160),
+                GridColumn.text("customerName", "Müşteri", true, GridWidth.PX_220),
+                GridColumn.text("orderDate", "Sipariş Tarihi", true, GridWidth.PX_140),
+                GridColumn.text("totalAmount", "Toplam Tutar", true, GridWidth.PX_150),
+                GridColumn.text("paidAmount", "Ödenen", true, GridWidth.PX_140)
         );
     }
 

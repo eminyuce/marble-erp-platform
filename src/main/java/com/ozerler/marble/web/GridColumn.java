@@ -7,6 +7,9 @@ import java.util.List;
  */
 public final class GridColumn {
 
+    private static final int DEFAULT_WIDTH_PX = 160;
+    private static final int MIN_WIDTH_PX = 72;
+
     private final String key;
     private final String label;
     private final boolean sortable;
@@ -31,8 +34,8 @@ public final class GridColumn {
             this.label = label;
         }
         this.sortable = sortable && !this.key.isBlank();
-        if (minWidth < 72) {
-            this.minWidth = 72;
+        if (minWidth < MIN_WIDTH_PX) {
+            this.minWidth = MIN_WIDTH_PX;
         } else {
             this.minWidth = minWidth;
         }
@@ -49,7 +52,7 @@ public final class GridColumn {
     }
 
     public static GridColumn text(String key, String label, boolean sortable) {
-        return new GridColumn(key, label, sortable, 160);
+        return new GridColumn(key, label, sortable, DEFAULT_WIDTH_PX);
     }
 
     public static GridColumn text(String key, String label, boolean sortable, int minWidth) {

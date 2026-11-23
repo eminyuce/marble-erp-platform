@@ -6,6 +6,7 @@ package com.ozerler.marble.web;
 public final class GridRequests {
 
     public static final int DEFAULT_SIZE = 20;
+    private static final int MEDIUM_SIZE = 50;
 
     private GridRequests() {
     }
@@ -21,7 +22,7 @@ public final class GridRequests {
         if (size == null) {
             return DEFAULT_SIZE;
         }
-        if (size == DEFAULT_SIZE || size == 50 || size == 100) {
+        if (size == DEFAULT_SIZE || size == MEDIUM_SIZE || size == 100) {
             return size;
         }
         return DEFAULT_SIZE;

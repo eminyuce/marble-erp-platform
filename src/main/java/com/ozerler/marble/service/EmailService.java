@@ -56,6 +56,8 @@ public class EmailService {
 
     private static final Pattern PLACEHOLDER_TOKEN = Pattern.compile(
             "\\{\\{\\s*([A-Za-z0-9_]+)\\s*\\}\\}|\\$\\{\\s*([A-Za-z0-9_]+)\\s*\\}");
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int DEFAULT_SMTP_PORT = 587;
 
     private final EmailTemplateRepository templateRepository;
     private final com.ozerler.marble.mapper.EmailTemplateMapper emailTemplateMapper;
@@ -128,7 +130,7 @@ public class EmailService {
         if (size > 0) {
             pageSize = size;
         } else {
-            pageSize = 20;
+            pageSize = DEFAULT_PAGE_SIZE;
         }
         Sort order = Sort.by(Sort.Order.asc("category"), Sort.Order.asc("templateName"));
         return templateRepository.searchTemplates(
@@ -576,7 +578,7 @@ public class EmailService {
     public JavaMailSender buildDynamicMailSender() {
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
         String host = settingService.getSetting("smtp.host", settingService.getSetting("mail.smtp.host", "smtp.office365.com"));
-        int port = Ints.parseOrDefault(settingService.getSetting("smtp.port", settingService.getSetting("mail.smtp.port", "587")), 587);
+        int port = Ints.parseOrDefault(settingService.getSetting("smtp.port", settingService.getSetting("mail.smtp.port", "587")), DEFAULT_SMTP_PORT);
         String username = settingService.getSetting("smtp.username", settingService.getSetting("mail.smtp.username", ""));
         String password = settingService.getSetting("smtp.password", settingService.getSetting("mail.smtp.password", ""));
         String auth = settingService.getSetting("smtp.auth", settingService.getSetting("mail.smtp.auth", "true"));

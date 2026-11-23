@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 public class ReleaseInfoContributor implements InfoContributor {
 
     static final String SESSION_STORE = "JDBC";
+    private static final int SHORT_COMMIT_LENGTH = 12;
 
     private final Optional<BuildProperties> buildProperties;
     private final Environment environment;
@@ -103,10 +104,10 @@ public class ReleaseInfoContributor implements InfoContributor {
             return "unknown";
         }
         String trimmed = sha.trim();
-        if (trimmed.length() <= 12) {
+        if (trimmed.length() <= SHORT_COMMIT_LENGTH) {
             return trimmed;
         }
-        return trimmed.substring(0, 12);
+        return trimmed.substring(0, SHORT_COMMIT_LENGTH);
     }
 
     private static String blankToUnknown(String value) {

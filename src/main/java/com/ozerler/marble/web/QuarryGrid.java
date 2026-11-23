@@ -56,12 +56,12 @@ public final class QuarryGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("code", "Ocak Kodu", true, 140),
-                GridColumn.text("name", "Ocak Adı", true, 180),
-                GridColumn.text("location", "Lokasyon / Mevkii", true, 180),
-                GridColumn.text("specificGravity", "Özgül Ağırlık", true, 140),
-                GridColumn.text("licenseNo", "Ruhsat No", true, 140)
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("code", "Ocak Kodu", true, GridWidth.PX_140),
+                GridColumn.text("name", "Ocak Adı", true, GridWidth.PX_180),
+                GridColumn.text("location", "Lokasyon / Mevkii", true, GridWidth.PX_180),
+                GridColumn.text("specificGravity", "Özgül Ağırlık", true, GridWidth.PX_140),
+                GridColumn.text("licenseNo", "Ruhsat No", true, GridWidth.PX_140)
         );
     }
 }

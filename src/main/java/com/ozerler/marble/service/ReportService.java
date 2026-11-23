@@ -56,6 +56,11 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class ReportService {
 
+    private static final int COLUMN_PADDING = 1200;
+    private static final int MAX_COLUMN_WIDTH = 20000;
+    private static final double TARGET_COST_RATIO = 0.65;
+    private static final int TITLE_FONT_POINTS = 14;
+
     private final BlockRepository blockRepository;
     private final ScrapLogRepository scrapLogRepository;
     private final CutOrderRepository cutOrderRepository;
@@ -732,7 +737,7 @@ public class ReportService {
                 var centers = costAccountingService.getAllCostCenters();
                 for (var cc : centers) {
                     BigDecimal unitCost = new BigDecimal("1365.00");
-                    BigDecimal recPrice = unitCost.divide(BigDecimal.valueOf(0.65), 2, RoundingMode.HALF_UP);
+                    BigDecimal recPrice = unitCost.divide(BigDecimal.valueOf(TARGET_COST_RATIO), 2, RoundingMode.HALF_UP);
                     String valueValue17;
                     if (cc.getMonthlyBudget() != null) {
                         valueValue17 = cc.getMonthlyBudget().toString() + " ₺";
@@ -829,7 +834,7 @@ public class ReportService {
             // Title row styling
             Font titleFont = workbook.createFont();
             titleFont.setBold(true);
-            titleFont.setFontHeightInPoints((short) 14);
+            titleFont.setFontHeightInPoints((short) TITLE_FONT_POINTS);
             titleFont.setColor(IndexedColors.DARK_BLUE.getIndex());
 
             CellStyle titleStyle = workbook.createCellStyle();
@@ -884,7 +889,7 @@ public class ReportService {
             // Auto-size columns
             for (int i = 0; i < data.headers.length; i++) {
                 sheet.autoSizeColumn(i);
-                sheet.setColumnWidth(i, Math.min(sheet.getColumnWidth(i) + 1200, 20000));
+                sheet.setColumnWidth(i, Math.min(sheet.getColumnWidth(i) + COLUMN_PADDING, MAX_COLUMN_WIDTH));
             }
 
             workbook.write(out);

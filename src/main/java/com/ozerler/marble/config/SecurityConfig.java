@@ -25,6 +25,7 @@ public class SecurityConfig {
 
     private static final String LEGACY_CONTAINER_SESSION_COOKIE = "JSESSIONID";
     private static final String REMEMBER_ME_COOKIE = "remember-me";
+    private static final int REMEMBER_ME_SECONDS = 14 * 24 * 60 * 60;
 
     private final CustomUserDetailsService customUserDetailsService;
     private final RateLimitFilter rateLimitFilter;
@@ -135,7 +136,7 @@ public class SecurityConfig {
                 )
                 .rememberMe(remember -> remember
                         .key(rememberMeKey)
-                        .tokenValiditySeconds(86400 * 14) // 14 days
+                        .tokenValiditySeconds(REMEMBER_ME_SECONDS)
                         .userDetailsService(customUserDetailsService)
                 )
                 .exceptionHandling(ex -> ex

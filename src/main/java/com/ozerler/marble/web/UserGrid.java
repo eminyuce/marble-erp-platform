@@ -72,13 +72,13 @@ public final class UserGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("enabled", "Durum", true, 120, "enabled", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("username", "Kullanıcı Adı", true, 160),
-                GridColumn.text("fullName", "Ad Soyad", false, 180),
-                GridColumn.text("email", "E-Posta", true, 220),
-                GridColumn.text("roles", "Roller", false, 220),
-                GridColumn.text("createdAt", "Kayıt Tarihi", true, 140)
+                GridColumn.filtered("enabled", "Durum", true, GridWidth.PX_120, "enabled", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("username", "Kullanıcı Adı", true, GridWidth.PX_160),
+                GridColumn.text("fullName", "Ad Soyad", false, GridWidth.PX_180),
+                GridColumn.text("email", "E-Posta", true, GridWidth.PX_220),
+                GridColumn.text("roles", "Roller", false, GridWidth.PX_220),
+                GridColumn.text("createdAt", "Kayıt Tarihi", true, GridWidth.PX_140)
         );
     }
 

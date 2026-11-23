@@ -55,13 +55,13 @@ public final class SupplierGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("supplierCode", "Tedarikçi Kodu", true, 150),
-                GridColumn.text("companyName", "Firma / Ünvan", true, 220),
-                GridColumn.filtered("businessUnitLabel", "İşletme Birimi", false, 150, "unit", unitChoices()),
-                GridColumn.filtered("supplierTypeLabel", "Tedarik Tipi", true, 150, "type", typeChoices()),
-                GridColumn.text("contactPerson", "Yetkili / İletişim", true, 200),
-                GridColumn.text("", "Vergi Dairesi / No", false, 170)
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("supplierCode", "Tedarikçi Kodu", true, GridWidth.PX_150),
+                GridColumn.text("companyName", "Firma / Ünvan", true, GridWidth.PX_220),
+                GridColumn.filtered("businessUnitLabel", "İşletme Birimi", false, GridWidth.PX_150, "unit", unitChoices()),
+                GridColumn.filtered("supplierTypeLabel", "Tedarik Tipi", true, GridWidth.PX_150, "type", typeChoices()),
+                GridColumn.text("contactPerson", "Yetkili / İletişim", true, GridWidth.PX_200),
+                GridColumn.text("", "Vergi Dairesi / No", false, GridWidth.PX_170)
         );
     }
 

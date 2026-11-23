@@ -56,16 +56,16 @@ public final class FuelGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("", "Id", false, 110),
-                GridColumn.text("", "Fiş No", false, 120),
-                GridColumn.text("machineName", "Makine", true, 180),
-                GridColumn.text("entryDate", "Tarih", true, 120),
-                GridColumn.text("", "Birim", false, 130),
-                GridColumn.text("litres", "Litre (L)", true, 120),
-                GridColumn.text("", "Litre Fiyatı", false, 130),
-                GridColumn.text("totalAmount", "Toplam Tutar", true, 140),
-                GridColumn.text("workingHoursOrKm", "Çalışma Saati / Km", true, 160),
-                GridColumn.text("", "Teslim Alan / Veren", false, 180)
+                GridColumn.text("", "Id", false, GridWidth.PX_110),
+                GridColumn.text("", "Fiş No", false, GridWidth.PX_120),
+                GridColumn.text("machineName", "Makine", true, GridWidth.PX_180),
+                GridColumn.text("entryDate", "Tarih", true, GridWidth.PX_120),
+                GridColumn.text("", "Birim", false, GridWidth.PX_130),
+                GridColumn.text("litres", "Litre (L)", true, GridWidth.PX_120),
+                GridColumn.text("", "Litre Fiyatı", false, GridWidth.PX_130),
+                GridColumn.text("totalAmount", "Toplam Tutar", true, GridWidth.PX_140),
+                GridColumn.text("workingHoursOrKm", "Çalışma Saati / Km", true, GridWidth.PX_160),
+                GridColumn.text("", "Teslim Alan / Veren", false, GridWidth.PX_180)
         );
     }
 

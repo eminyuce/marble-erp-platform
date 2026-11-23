@@ -68,16 +68,16 @@ public final class CollectionGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("method", "Yöntem", false, 150, "method",
+                GridColumn.filtered("method", "Yöntem", false, GridWidth.PX_150, "method",
                         OperationGridSupport.choices(CollectionMethod.values(), CollectionMethod::getDisplayName)),
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("collectionNo", "Makbuz / Belge No", false, 180),
-                GridColumn.text("collectionDate", "Tarih", false, 130),
-                GridColumn.text("customerName", "Müşteri / Cari", false, 200),
-                GridColumn.text("bankName", "Banka / Kasa", false, 160),
-                GridColumn.text("invoiceNo", "İlişkili Fatura", false, 160),
-                GridColumn.text("amount", "Tahsilat Tutarı", false, 150),
-                GridColumn.text("notes", "Açıklama", false, 200)
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("collectionNo", "Makbuz / Belge No", false, GridWidth.PX_180),
+                GridColumn.text("collectionDate", "Tarih", false, GridWidth.PX_130),
+                GridColumn.text("customerName", "Müşteri / Cari", false, GridWidth.PX_200),
+                GridColumn.text("bankName", "Banka / Kasa", false, GridWidth.PX_160),
+                GridColumn.text("invoiceNo", "İlişkili Fatura", false, GridWidth.PX_160),
+                GridColumn.text("amount", "Tahsilat Tutarı", false, GridWidth.PX_150),
+                GridColumn.text("notes", "Açıklama", false, GridWidth.PX_200)
         );
     }
 }

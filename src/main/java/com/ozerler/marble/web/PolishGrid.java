@@ -60,17 +60,17 @@ public final class PolishGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("", "İşlem No", false, 110),
-                GridColumn.text("", "İş Emri", false, 140),
-                GridColumn.text("", "Makine / Operatör", false, 180),
-                GridColumn.text("", "Blok Kodu", false, 140),
-                GridColumn.text("", "Operasyon Türü", false, 160),
-                GridColumn.text("", "Giriş (m²)", false, 120),
-                GridColumn.text("", "Çıkış (m²)", false, 120),
-                GridColumn.text("", "Fire (m² / %)", false, 140),
-                GridColumn.text("", "Pah Durumu", false, 130),
-                GridColumn.text("", "Toplam Gider", false, 140),
-                GridColumn.text("", "Tarih", false, 150)
+                GridColumn.text("", "İşlem No", false, GridWidth.PX_110),
+                GridColumn.text("", "İş Emri", false, GridWidth.PX_140),
+                GridColumn.text("", "Makine / Operatör", false, GridWidth.PX_180),
+                GridColumn.text("", "Blok Kodu", false, GridWidth.PX_140),
+                GridColumn.text("", "Operasyon Türü", false, GridWidth.PX_160),
+                GridColumn.text("", "Giriş (m²)", false, GridWidth.PX_120),
+                GridColumn.text("", "Çıkış (m²)", false, GridWidth.PX_120),
+                GridColumn.text("", "Fire (m² / %)", false, GridWidth.PX_140),
+                GridColumn.text("", "Pah Durumu", false, GridWidth.PX_130),
+                GridColumn.text("", "Toplam Gider", false, GridWidth.PX_140),
+                GridColumn.text("", "Tarih", false, GridWidth.PX_150)
         );
     }
 

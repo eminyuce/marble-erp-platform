@@ -75,21 +75,21 @@ public final class BlockGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", true, 150, "status", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("blockCode", "Blok Kodu", true, 160),
-                GridColumn.text("quarryName", "Ocak", true, 140),
-                GridColumn.text("", "Oluşturma Tarihi", false, 140),
-                GridColumn.text("", "Saha", false, 140),
-                GridColumn.text("", "Müşteri", false, 180),
-                GridColumn.text("", "Ocak Bölgesi", false, 130),
-                GridColumn.text("stoneType", "Taş Cinsi", true, 130),
-                GridColumn.text("", "Seleksiyon", false, 120),
-                GridColumn.text("", "Tonaj", false, 150),
-                GridColumn.text("", "m²", false, 110),
-                GridColumn.text("", "Piyasa Değeri", false, 150),
-                GridColumn.text("", "Çıkarma Maliyeti", false, 150),
-                GridColumn.text("totalCost", "Toplam Maliyet", true, 150)
+                GridColumn.filtered("status", "Durum", true, GridWidth.PX_150, "status", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("blockCode", "Blok Kodu", true, GridWidth.PX_160),
+                GridColumn.text("quarryName", "Ocak", true, GridWidth.PX_140),
+                GridColumn.text("", "Oluşturma Tarihi", false, GridWidth.PX_140),
+                GridColumn.text("", "Saha", false, GridWidth.PX_140),
+                GridColumn.text("", "Müşteri", false, GridWidth.PX_180),
+                GridColumn.text("", "Ocak Bölgesi", false, GridWidth.PX_130),
+                GridColumn.text("stoneType", "Taş Cinsi", true, GridWidth.PX_130),
+                GridColumn.text("", "Seleksiyon", false, GridWidth.PX_120),
+                GridColumn.text("", "Tonaj", false, GridWidth.PX_150),
+                GridColumn.text("", "m²", false, GridWidth.PX_110),
+                GridColumn.text("", "Piyasa Değeri", false, GridWidth.PX_150),
+                GridColumn.text("", "Çıkarma Maliyeti", false, GridWidth.PX_150),
+                GridColumn.text("totalCost", "Toplam Maliyet", true, GridWidth.PX_150)
         );
     }
 

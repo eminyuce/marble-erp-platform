@@ -64,17 +64,17 @@ public final class InvoiceGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", false, 160, "status",
+                GridColumn.filtered("status", "Durum", false, GridWidth.PX_160, "status",
                         OperationGridSupport.choices(InvoiceStatus.values(), InvoiceStatus::getDisplayName)),
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("invoiceNumber", "Fatura No", false, 160),
-                GridColumn.text("invoiceDate", "Tarih", false, 130),
-                GridColumn.text("invoiceTypeLabel", "Tür", false, 120),
-                GridColumn.text("partyName", "Cari / Hedef Birim", false, 220),
-                GridColumn.text("departmentLabel", "Çıkış Birimi", false, 140),
-                GridColumn.text("subtotalAmount", "Ara Toplam", false, 140),
-                GridColumn.text("taxAmount", "KDV", false, 140),
-                GridColumn.text("totalAmount", "Genel Toplam", false, 150)
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("invoiceNumber", "Fatura No", false, GridWidth.PX_160),
+                GridColumn.text("invoiceDate", "Tarih", false, GridWidth.PX_130),
+                GridColumn.text("invoiceTypeLabel", "Tür", false, GridWidth.PX_120),
+                GridColumn.text("partyName", "Cari / Hedef Birim", false, GridWidth.PX_220),
+                GridColumn.text("departmentLabel", "Çıkış Birimi", false, GridWidth.PX_140),
+                GridColumn.text("subtotalAmount", "Ara Toplam", false, GridWidth.PX_140),
+                GridColumn.text("taxAmount", "KDV", false, GridWidth.PX_140),
+                GridColumn.text("totalAmount", "Genel Toplam", false, GridWidth.PX_150)
         );
     }
 

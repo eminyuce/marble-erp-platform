@@ -42,6 +42,7 @@ public class FactoryInventoryService {
     public static final String FACTORY_FUEL_TANK_LOCATION_CODE = "FB-MZ-01";
     public static final String FACTORY_FUEL_TANK_ITEM_CODE = "FABRIKA-MAZOT-DEPO";
     public static final String FACTORY_CONSUMABLES_LOCATION_CODE = "FB-SRF-01";
+    private static final int RECENT_LIMIT = 50;
 
     private final StockItemRepository stockItemRepository;
     private final com.ozerler.marble.mapper.MachineFuelMapper machineFuelMapper;
@@ -246,7 +247,7 @@ public class FactoryInventoryService {
     public List<MachineFuelEntry> getRecentFuelEntries() {
         return fuelEntryRepository.findAllByOrderByEntryDateDesc().stream()
                 .filter(e -> e.getMachine() != null && e.getMachine().getBusinessUnit() == BusinessUnit.FACTORY)
-                .limit(50)
+                .limit(RECENT_LIMIT)
                 .toList();
     }
 

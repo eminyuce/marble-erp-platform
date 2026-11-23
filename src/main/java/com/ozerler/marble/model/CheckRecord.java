@@ -38,6 +38,8 @@ import lombok.Setter;
 @EqualsAndHashCode(callSuper = false, of = "id")
 public class CheckRecord extends AuditableEntity {
 
+    private static final int APPROACHING_DAYS = 15;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -103,7 +105,7 @@ public class CheckRecord extends AuditableEntity {
             return false;
         }
         long days = ChronoUnit.DAYS.between(LocalDate.now(), dueDate);
-        return days >= 0 && days <= 15;
+        return days >= 0 && days <= APPROACHING_DAYS;
     }
 
     @Transient

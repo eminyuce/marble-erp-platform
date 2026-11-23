@@ -41,15 +41,15 @@ public final class FactorySlabGrid {
                 SlabGridCells.statusColumn(),
                 SlabGridCells.idColumn(),
                 SlabGridCells.codeColumn(),
-                GridColumn.text("createdDate", "Oluşturma Tarihi", false, 150),
+                GridColumn.text("createdDate", "Oluşturma Tarihi", false, GridWidth.PX_150),
                 SlabGridCells.blockColumn(),
                 SlabGridCells.stoneColumn(),
                 SlabGridCells.finishColumn(),
                 SlabGridCells.thicknessColumn(),
                 SlabGridCells.dimensionsColumn(),
                 SlabGridCells.areaColumn(),
-                GridColumn.text("pieceCount", "Adet", false, 90),
-                GridColumn.text("customerName", "Müşteri", false, 180)
+                GridColumn.text("pieceCount", "Adet", false, GridWidth.PX_90),
+                GridColumn.text("customerName", "Müşteri", false, GridWidth.PX_180)
         );
     }
 }

@@ -31,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 public class DeploymentService {
 
     static final String PING_TOKEN = "READY";
+    private static final int COMMAND_TIMEOUT_SECONDS = 60;
+    private static final int PROBE_CACHE_SECONDS = 20;
 
     private final DeploymentProperties properties;
     private final HostCommandRunner hostCommandRunner;
@@ -111,7 +113,7 @@ public class DeploymentService {
         List<String> argv = buildWrapperArgv();
         Path repoDir = Path.of(properties.getRepoDir());
         HostCommandRunner.HostCommandResult result = hostCommandRunner.run(
-                new HostCommandRunner.HostCommand(argv, repoDir, Duration.ofSeconds(60)));
+                new HostCommandRunner.HostCommand(argv, repoDir, Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS)));
 
         if (!result.isSuccess()) {
             return DeploymentStartResult.builder()
@@ -230,7 +232,7 @@ public class DeploymentService {
             boolean sudoReady = commandAvailable && pingWrapper();
             GitHead gitHead = readGitHead();
             ProbeSnapshot fresh = new ProbeSnapshot(
-                    Instant.now().plusSeconds(20),
+                    Instant.now().plusSeconds(PROBE_CACHE_SECONDS),
                     commandAvailable,
                     sudoReady,
                     gitHead

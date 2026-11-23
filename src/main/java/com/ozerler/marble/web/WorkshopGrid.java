@@ -51,15 +51,15 @@ public final class WorkshopGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.filtered("status", "Durum", true, 150, "status", statuses()),
-                GridColumn.text("id", "Id", true, 110),
-                GridColumn.text("cutOrderNo", "İş Emri No", true, 170),
-                GridColumn.text("projectName", "Şantiye / Müşteri", true, 180),
-                GridColumn.text("", "Amaç", false, 150),
-                GridColumn.text("locationName", "Hedef Mahal", true, 150),
-                GridColumn.text("machineName", "Makine", true, 150),
-                GridColumn.text("operatorName", "Operatör", true, 140),
-                GridColumn.text("", "Üretilen Mamul", false, 160)
+                GridColumn.filtered("status", "Durum", true, GridWidth.PX_150, "status", statuses()),
+                GridColumn.text("id", "Id", true, GridWidth.PX_110),
+                GridColumn.text("cutOrderNo", "İş Emri No", true, GridWidth.PX_170),
+                GridColumn.text("projectName", "Şantiye / Müşteri", true, GridWidth.PX_180),
+                GridColumn.text("", "Amaç", false, GridWidth.PX_150),
+                GridColumn.text("locationName", "Hedef Mahal", true, GridWidth.PX_150),
+                GridColumn.text("machineName", "Makine", true, GridWidth.PX_150),
+                GridColumn.text("operatorName", "Operatör", true, GridWidth.PX_140),
+                GridColumn.text("", "Üretilen Mamul", false, GridWidth.PX_160)
         );
     }
 

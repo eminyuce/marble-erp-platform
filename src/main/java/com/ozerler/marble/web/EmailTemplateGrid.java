@@ -90,13 +90,13 @@ public final class EmailTemplateGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("active", "Durum", false, 110),
-                GridColumn.text("id", "Id", false, 110),
-                GridColumn.text("key", "Şablon Anahtarı", false, 190),
-                GridColumn.text("name", "Şablon Başlığı", false, 260),
-                GridColumn.text("category", "Kategori", false, 160),
-                GridColumn.text("subject", "E-Posta Konusu", false, 260),
-                GridColumn.text("placeholderCount", "Parametreler", false, 130)
+                GridColumn.text("active", "Durum", false, GridWidth.PX_110),
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("key", "Şablon Anahtarı", false, GridWidth.PX_190),
+                GridColumn.text("name", "Şablon Başlığı", false, GridWidth.PX_260),
+                GridColumn.text("category", "Kategori", false, GridWidth.PX_160),
+                GridColumn.text("subject", "E-Posta Konusu", false, GridWidth.PX_260),
+                GridColumn.text("placeholderCount", "Parametreler", false, GridWidth.PX_130)
         );
     }
 
