@@ -9,12 +9,12 @@
          th:data-prefill-slab="${prefillSlabId != null ? prefillSlabId : ''}"
          th:data-prefill-source-item="${prefillSourceStockItemId != null ? prefillSourceStockItemId : ''}"
          th:data-slab-code="${selectedSlab != null ? selectedSlab.slabCode : ''}"
-         th:data-slab-desc="${selectedSlab != null ? (selectedSlab.block != null and selectedSlab.block.stoneType != null ? selectedSlab.block.stoneType : (selectedSlab.stoneType != null ? selectedSlab.stoneType : 'Mermer Plaka')) : ''}"
+         th:data-slab-desc="${selectedSlab != null ? selectedSlab.prefillStoneType : ''}"
          th:data-slab-thickness="${selectedSlab != null and selectedSlab.thicknessCm != null ? selectedSlab.thicknessCm : '2.0'}"
          th:data-slab-width="${selectedSlab != null and selectedSlab.widthCm != null ? selectedSlab.widthCm : '60'}"
          th:data-slab-length="${selectedSlab != null and selectedSlab.lengthCm != null ? selectedSlab.lengthCm : '60'}"
          th:data-slab-surface="${selectedSlab != null and selectedSlab.surfaceFinish != null ? selectedSlab.surfaceFinish.displayName : 'Cilalı'}"
-         th:data-slab-customer-id="${selectedSlab != null and selectedSlab.customer != null ? selectedSlab.customer.id : ''}"
+         th:data-slab-customer-id="${selectedSlab != null and selectedSlab.customerId != null ? selectedSlab.customerId : ''}"
          th:data-source-item-desc="${selectedSourceItem != null ? selectedSourceItem.description : ''}"
          th:data-source-item-thickness="${selectedSourceItem != null and selectedSourceItem.thicknessCm != null ? selectedSourceItem.thicknessCm : '2.0'}"
          x-data="workshopSizedFormState($el)">
@@ -116,7 +116,7 @@
                     <option value="">-- Stoktaki Plakalardan Seçiniz --</option>
                     <option th:each="s : ${slabs}" th:value="${s.id}"
                             th:selected="${prefillSlabId != null and prefillSlabId == s.id}"
-                            th:text="${s.slabCode + ' | ' + (s.stoneType != null ? s.stoneType : (s.block != null ? s.block.stoneType : 'Mermer')) + ' | ' + s.thicknessCm + ' cm (' + s.widthCm + 'x' + s.lengthCm + ' cm) | Alan: ' + s.surfaceAreaM2 + ' m² | ' + (s.customer != null ? s.customer.companyName : 'Genel Stok')}"></option>
+                            th:text="${s.workshopSizedOptionLabel}"></option>
                 </select>
                 <p class="text-[11px] text-slate-500">Seçilen plaka kesim sonucu üretilen m² ve fire kadar stoktan düşülecektir.</p>
             </div>
@@ -129,7 +129,7 @@
                     <option value="">-- Stoktaki Ebatlı Ürünlerden Seçiniz --</option>
                     <option th:each="it : ${sourceSizedItems}" th:value="${it.id}"
                             th:selected="${prefillSourceStockItemId != null and prefillSourceStockItemId == it.id}"
-                            th:text="${it.itemCode + ' | ' + it.description + ' | ' + it.thicknessCm + 'x' + it.widthCm + 'x' + it.lengthCm + ' cm | Stok: ' + it.quantity + ' ' + it.unit + ' (' + (it.pieceCount != null ? it.pieceCount : 1) + ' adet) | ' + (it.customer != null ? it.customer.companyName : 'Genel Stok')}"></option>
+                            th:text="${it.workshopSizedOptionLabel}"></option>
                 </select>
                 <p class="text-[11px] text-amber-800">Yeniden ebatlanan miktar kaynak ürünün mevcut stoğundan otomatik düşülür.</p>
             </div>

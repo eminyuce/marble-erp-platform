@@ -32,7 +32,7 @@
                 <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">Sevk Edilecek Blok:</span>
                 <span class="text-xl font-mono font-black text-amber-400" th:text="${block.blockCode}">BLK-001</span>
             </div>
-            <div class="text-xs font-semibold text-slate-300" th:text="${block.quarry != null ? block.quarry.name : 'Merkez Ocak'}">Merkez Ocak</div>
+            <div class="text-xs font-semibold text-slate-300" th:text="${block.displayQuarryName != null and !block.displayQuarryName.isEmpty() ? block.displayQuarryName : 'Merkez Ocak'}">Merkez Ocak</div>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs">
             <div>
@@ -103,7 +103,7 @@
                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 <option value="">-- Faturasız / Sonra Bağlanacak --</option>
                 <option th:each="inv : ${invoices}" th:value="${inv.id}"
-                        th:text="${inv.invoiceNumber} + ' | ' + ${inv.invoiceType != null ? inv.invoiceType.displayName : ''} + ' | ' + ${inv.customer != null ? inv.customer.companyName : ''} + ' | ' + ${#numbers.formatDecimal(inv.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' TL'"></option>
+                        th:text="${inv.invoiceNumber} + ' | ' + ${inv.invoiceType != null ? inv.invoiceType.displayName : ''} + ' | ' + ${inv.customerName} + ' | ' + ${#numbers.formatDecimal(inv.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' TL'"></option>
             </select>
             <p class="text-[11px] text-slate-400 mt-1">Ocaktan fabrikaya veya müşteriye sevk edilen blok bu faturayla eşleştirilir.</p>
         </div>

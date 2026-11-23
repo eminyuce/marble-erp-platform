@@ -51,6 +51,28 @@ public class BlockView extends AuditView {
     private PartyView soldCustomer;
     private LocationView currentLocation;
 
+    public String getDisplayStoneType() {
+        if (ViewLabels.hasText(stoneType)) {
+            return stoneType;
+        }
+        return ViewLabels.DEFAULT_BLOCK_STONE_TYPE;
+    }
+
+    public String getDisplayQuarryName() {
+        return ViewLabels.displayQuarryName(this);
+    }
+
+    public String getFactorySizedOptionLabel() {
+        return nullSafe(blockCode) + " | " + getDisplayStoneType() + " | " + getDisplayQuarryName();
+    }
+
+    private static String nullSafe(Object value) {
+        if (value == null) {
+            return "";
+        }
+        return String.valueOf(value);
+    }
+
     @Getter
     @Setter
     public static class LocationView {

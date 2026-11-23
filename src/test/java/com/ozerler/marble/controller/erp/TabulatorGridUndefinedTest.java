@@ -174,7 +174,7 @@ class TabulatorGridUndefinedTest {
     void assetVersionIsConfiguredAndConsistent() throws Exception {
         String appYml = readResource("/application.yml");
         Assertions.assertThat(appYml).contains("asset-version: ${app.version}");
-        Assertions.assertThat(appYml).contains("version: \"1.0.7\"");
+        Assertions.assertThat(appYml).contains("version: \"1.0.9\"");
 
         String layout = readResource("/templates/layout/base.html");
         Assertions.assertThat(layout).contains("@{/css/app.css(v=${assetVersion})}");

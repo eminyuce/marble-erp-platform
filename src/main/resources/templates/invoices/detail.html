@@ -100,7 +100,7 @@
                         <i data-lucide="arrow-right-left" class="w-4 h-4 text-amber-600"></i>
                         <span th:text="${'Dahili Transfer: ' + (invoice.targetDepartment != null ? (invoice.targetDepartment.name() == 'QUARRY' ? 'Ocaklar' : invoice.targetDepartment.displayName) : 'Depo')}">Dahili: Fabrika</span>
                     </span>
-                    <span th:if="${!invoice.internalTransfer and invoice.customer != null}" th:text="${invoice.customer.companyName}">ABC Marble Ltd.</span>
+                    <span th:if="${!invoice.internalTransfer and invoice.customerName != null and !invoice.customerName.isEmpty()}" th:text="${invoice.customerName}">ABC Marble Ltd.</span>
                     <span th:if="${!invoice.internalTransfer and invoice.supplier != null}" th:text="${invoice.supplier.companyName}">XYZ Tedarik A.Ş.</span>
                     <span th:if="${!invoice.internalTransfer and invoice.customer == null and invoice.supplier == null}" th:text="${invoice.partyName != null ? invoice.partyName : '—'}">—</span>
                 </div>

@@ -21,4 +21,8 @@ public class BlockMarkView {
     private BigDecimal offerPrice;
     private String currency;
     private BlockMarkStatus status;
+
+    public String getCustomerName() {
+        return ViewLabels.companyName(customer, "Müşteri");
+    }
 }

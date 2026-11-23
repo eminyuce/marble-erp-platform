@@ -3,7 +3,12 @@ package com.ozerler.marble.storage;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.assertj.core.api.Assertions;
@@ -16,10 +21,15 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 
 import com.ozerler.marble.config.ObjectStorageProperties;
 import com.ozerler.marble.config.PresignedUrlProperties;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -228,5 +238,134 @@ class S3ObjectStorageServiceTest {
         ArgumentCaptor<GetObjectPresignRequest> captor = ArgumentCaptor.forClass(GetObjectPresignRequest.class);
         Mockito.verify(s3Presigner).presignGetObject(captor.capture());
         return captor.getValue();
+    }
+
+    @Test
+    @DisplayName("checkHealth logs exception class and message once, then throttles repeats")
+    void checkHealthLogsCauseOnceAndThrottlesRepeats() {
+        Mockito.when(s3Client.headBucket(ArgumentMatchers.any(HeadBucketRequest.class)))
+                .thenThrow(new RuntimeException("Connection refused"));
+
+        MutableClock healthClock = new MutableClock();
+        storage.setClock(healthClock);
+        storage.setHealthFailureLogInterval(Duration.ofMinutes(5));
+
+        LoggerProbe probe = LoggerProbe.attach();
+        try {
+            Assertions.assertThat(storage.checkHealth().getStatus()).isEqualTo("DOWN");
+            Assertions.assertThat(storage.checkHealth().getStatus()).isEqualTo("DOWN");
+
+            List<String> errors = probe.messages(Level.ERROR);
+            Assertions.assertThat(errors).hasSize(1);
+            Assertions.assertThat(errors.get(0))
+                    .contains("bucket=erp-files")
+                    .contains("java.lang.RuntimeException")
+                    .contains("Connection refused");
+
+            healthClock.advance(Duration.ofMinutes(5));
+            Assertions.assertThat(storage.checkHealth().getStatus()).isEqualTo("DOWN");
+            Assertions.assertThat(probe.messages(Level.ERROR)).hasSize(2);
+        } finally {
+            probe.detach();
+        }
+    }
+
+    @Test
+    @DisplayName("checkHealth recovery resets throttling so the next outage is logged again")
+    void checkHealthRecoveryAllowsAFreshFailureLog() {
+        LoggerProbe probe = LoggerProbe.attach();
+        try {
+            Mockito.when(s3Client.headBucket(ArgumentMatchers.any(HeadBucketRequest.class)))
+                    .thenThrow(new RuntimeException("Connection refused"));
+            storage.checkHealth();
+
+            Mockito.reset(s3Client);
+            Mockito.when(
+                            s3Client.putObject(
+                                    ArgumentMatchers.any(PutObjectRequest.class),
+                                    ArgumentMatchers.any(RequestBody.class)))
+                    .thenReturn(PutObjectResponse.builder().build());
+            Assertions.assertThat(storage.checkHealth().getStatus()).isEqualTo("UP");
+            Assertions.assertThat(probe.messages(Level.INFO))
+                    .anyMatch(message -> message.contains("recovered") && message.contains("erp-files"));
+
+            Mockito.when(s3Client.headBucket(ArgumentMatchers.any(HeadBucketRequest.class)))
+                    .thenThrow(new RuntimeException("Connection refused"));
+            storage.checkHealth();
+            Assertions.assertThat(probe.messages(Level.ERROR)).hasSize(2);
+        } finally {
+            probe.detach();
+        }
+    }
+
+    @Test
+    @DisplayName("health failure messages redact credential-like values")
+    void sanitizeHealthMessageRedactsSecrets() {
+        String raw = "Unable to execute token=super-secret&X-Amz-Signature=abcd1234 AWSAccessKeyId=AKIAEXAMPLE";
+        String sanitized = S3ObjectStorageService.sanitizeHealthMessage(raw);
+        Assertions.assertThat(sanitized)
+                .doesNotContain("super-secret")
+                .doesNotContain("abcd1234")
+                .doesNotContain("AKIAEXAMPLE")
+                .contains("***");
+    }
+
+    private static final class LoggerProbe {
+        private final Logger logger;
+        private final Level previousLevel;
+        private final ListAppender<ILoggingEvent> appender = new ListAppender<>();
+
+        private LoggerProbe(Logger logger) {
+            this.logger = logger;
+            this.previousLevel = logger.getLevel();
+        }
+
+        static LoggerProbe attach() {
+            Logger logger = (Logger) LoggerFactory.getLogger(S3ObjectStorageService.class);
+            LoggerProbe probe = new LoggerProbe(logger);
+            probe.appender.start();
+            logger.addAppender(probe.appender);
+            logger.setLevel(Level.DEBUG);
+            return probe;
+        }
+
+        void detach() {
+            logger.detachAppender(appender);
+            logger.setLevel(previousLevel);
+            appender.stop();
+        }
+
+        List<String> messages(Level level) {
+            List<String> result = new ArrayList<>();
+            for (ILoggingEvent event : appender.list) {
+                if (event.getLevel().equals(level)) {
+                    result.add(event.getFormattedMessage());
+                }
+            }
+            return result;
+        }
+    }
+
+    private static final class MutableClock extends java.time.Clock {
+        private Instant instant = Instant.parse("2026-11-17T00:22:00Z");
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public java.time.Clock withZone(ZoneId zone) {
+            return java.time.Clock.fixed(instant, zone);
+        }
+
+        @Override
+        public Instant instant() {
+            return instant;
+        }
+
+        void advance(Duration duration) {
+            instant = instant.plus(duration);
+        }
     }
 }

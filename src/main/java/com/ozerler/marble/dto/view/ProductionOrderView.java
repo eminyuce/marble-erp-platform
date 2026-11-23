@@ -33,6 +33,14 @@ public class ProductionOrderView extends AuditView {
     private List<SlabLine> slabs;
     private List<ScrapLine> scrapLogs;
 
+    public String getBlockStoneType() {
+        if (block != null && ViewLabels.hasText(block.getStoneType())) {
+            return block.getStoneType();
+        }
+        return "—";
+    }
+
+
     @Getter
     @Setter
     public static class SlabLine {

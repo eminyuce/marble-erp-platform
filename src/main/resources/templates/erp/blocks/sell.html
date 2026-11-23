@@ -28,7 +28,7 @@
                               th:text="${block.status != null ? block.status.label : 'Üretildi'}">Durum</span>
                     </div>
                     <p class="text-xs text-slate-500 mt-0.5"
-                       th:text="${(block.quarry != null ? block.quarry.name : 'Ocak') + ' · ' + (block.stoneType != null ? block.stoneType : 'Doğal Mermer')}">Ocak ve Taş Cinsi</p>
+                       th:text="${(block.displayQuarryName != null and !block.displayQuarryName.isEmpty() ? block.displayQuarryName : 'Ocak') + ' · ' + (block.stoneType != null ? block.stoneType : 'Doğal Mermer')}">Ocak ve Taş Cinsi</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
@@ -99,7 +99,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div th:each="m : ${marks}" class="bg-white p-3 rounded-xl border border-amber-200/80 shadow-2xs flex items-center justify-between gap-3">
                 <div class="min-w-0">
-                    <p class="text-sm font-bold text-slate-900 truncate" th:text="${m.customer.companyName}">Müşteri Adı</p>
+                    <p class="text-sm font-bold text-slate-900 truncate" th:text="${m.customerName}">Müşteri Adı</p>
                     <p class="text-xs text-slate-500"
                        th:text="${(m.offerPrice != null ? m.offerPrice + ' ' + m.currency : 'Fiyat girilmedi') + ' · ' + (m.status != null ? m.status.label : '')}">Teklif Bilgisi</p>
                 </div>
