@@ -300,7 +300,7 @@ There is no `.env` file. Defaults live in the YAML files and in the Compose `env
 
 | Variable | dev / local HTTP | prod |
 | :--- | :--- | :--- |
-| `RUSTFS_ENDPOINT` | `http://localhost:9000` when the JVM runs on the host. `http://rustfs:9000` inside Compose (the dev profile default). | `http://rustfs:9000` (app only, Docker DNS) or `http://127.0.0.1:9000` for a host-side JAR |
+| `RUSTFS_ENDPOINT` | `http://localhost:9000` when unset, including `./mvnw spring-boot:run`. Compose sets `http://rustfs:9000`. | `http://rustfs:9000` in Compose, or `http://127.0.0.1:9000` for a host-side JAR |
 | `RUSTFS_PUBLIC_ENDPOINT` | `http://localhost:9000` | `https://files.example.com` — must be **https** behind Nginx or another reverse proxy. Startup fails for plain http or an internal host (`rustfs`, `localhost`). |
 | `RUSTFS_BUCKET` | `erp-files` | `erp-files` (private; no permanent public URL) |
 | `RUSTFS_REGION` | `us-east-1` | `us-east-1` |

@@ -118,8 +118,7 @@ echo "Email:       admin@eimece.test"
 echo "Pass:        B2u5c8JB"
 echo ""
 echo "[APP] Starting Spring Boot (dev profile)..."
-echo "Dev profile defaults RUSTFS_ENDPOINT to http://rustfs:9000 (Compose DNS)."
-echo "This host-side run overrides it to http://localhost:9000."
+echo "Host-side RustFS API and presigned links use http://localhost:9000."
 
 # The dev profile default is the Docker DNS name. The JVM on the host must use localhost.
 export RUSTFS_ENDPOINT="${RUSTFS_ENDPOINT:-http://localhost:9000}"

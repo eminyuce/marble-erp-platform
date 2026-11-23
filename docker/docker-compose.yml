@@ -88,7 +88,7 @@ services:
       app-perms:
         condition: service_completed_successfully
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       PORT: "81"
       SERVER_PORT: "81"
       DB_HOST: postgres
@@ -98,10 +98,11 @@ services:
       APP_UPLOAD_DIR: /app/uploads
       APP_MEDIA_DIR: /app/media
       STORAGE_TYPE: rustfs
-      # This service uses the prod profile, so the public endpoint must be https.
-      # Host-side dev (scripts/run_local.sh) uses http://localhost:9000 instead.
+      # Inside this stack the API is the Compose DNS name. The browser on the
+      # host reaches RustFS through the published port. Production compose
+      # (docker-compose.prod.yml) requires an https public host instead.
       RUSTFS_ENDPOINT: ${RUSTFS_ENDPOINT:-http://rustfs:9000}
-      RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-https://files.example.com}
+      RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-http://localhost:9000}
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
       RUSTFS_BUCKET: ${RUSTFS_BUCKET:-erp-files}
@@ -110,8 +111,8 @@ services:
       PRESIGNED_DOCUMENT_EXPIRY_MINUTES: ${PRESIGNED_DOCUMENT_EXPIRY_MINUTES:-5}
       SESSION_STORE_TYPE: ${SESSION_STORE_TYPE:-jdbc}
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
-      # This local stack publishes plain HTTP. The prod profile would otherwise
-      # mark the session cookie Secure, which browsers drop on http://localhost.
+      # This local stack publishes plain HTTP. Exporting SPRING_PROFILES_ACTIVE=prod
+      # would mark the session cookie Secure, which browsers drop on http://localhost.
       SESSION_COOKIE_SECURE: "false"
       SESSION_CLEANUP_CRON: "${SESSION_CLEANUP_CRON:-0 * * * * *}"
     ports:

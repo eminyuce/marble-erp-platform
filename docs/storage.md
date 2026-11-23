@@ -48,7 +48,7 @@ Clock skew between this process and RustFS can expire a new URL immediately. An 
 
 | How Spring Boot runs | `RUSTFS_ENDPOINT` |
 | :--- | :--- |
-| From the IDE / `./mvnw spring-boot:run` | `http://localhost:9000` (export it; the dev profile default is `http://rustfs:9000`) |
+| From the IDE / `./mvnw spring-boot:run` | `http://localhost:9000` (the dev default when `RUSTFS_ENDPOINT` is unset) |
 | Inside Docker Compose (`app` service) | `http://rustfs:9000` |
 
 Do not hardcode either value in Java. Use environment variables.

@@ -91,7 +91,7 @@ Override a placeholder by exporting the variable before startup. Do not commit p
 | `DB_NAME` | Database name | `marble_erp` |
 | `DB_USERNAME` | Database username | `marbleuser` |
 | `DB_PASSWORD` | Database password | `marblepass` (change this in production) |
-| `RUSTFS_ENDPOINT` | Internal S3 API used by Spring Boot | `http://localhost:9000` on the host; `http://rustfs:9000` in Compose (dev profile default) |
+| `RUSTFS_ENDPOINT` | Internal S3 API used by Spring Boot | `http://localhost:9000` when unset (host JVM). Compose sets `http://rustfs:9000` |
 | `RUSTFS_PUBLIC_ENDPOINT` | Browser host written into presigned URLs | `http://localhost:9000` in dev. Prod must be `https://` on a public host (Nginx); `https://files.example.com` is the prod default |
 | `RUSTFS_ACCESS_KEY` | RustFS access key | `marblerustfs` in dev; empty in the shared file (prod startup fails if empty) |
 | `RUSTFS_SECRET_KEY` | RustFS secret key | `marblerustfs_change_me` in dev; empty in the shared file. Never log it |
@@ -134,7 +134,7 @@ Override a placeholder by exporting the variable before startup. Do not commit p
    ```
    *Access the web application at `http://localhost:81` (or `http://localhost:8080` with the local run scripts).*
 
-The `dev` profile talks to RustFS on `localhost:9000`. When the Spring Boot `app` container runs inside Compose, set `RUSTFS_ENDPOINT=http://rustfs:9000`.
+With `RUSTFS_ENDPOINT` unset, the dev profile uses `http://localhost:9000`, which matches `./mvnw spring-boot:run` beside the published RustFS port. `docker/docker-compose.yml` sets `RUSTFS_ENDPOINT=http://rustfs:9000` and `RUSTFS_PUBLIC_ENDPOINT=http://localhost:9000` for the app container.
 
 Full object-storage, backup, and filesystem-migration notes: [docs/storage.md](docs/storage.md).
 
