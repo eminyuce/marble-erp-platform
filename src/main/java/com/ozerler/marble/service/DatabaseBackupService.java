@@ -9,8 +9,8 @@ import com.ozerler.marble.exception.StoredFileNotFoundException;
 import com.ozerler.marble.storage.ObjectStorageService;
 import com.ozerler.marble.storage.RustFsBrowserAccess;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -44,7 +44,6 @@ import java.util.zip.GZIPOutputStream;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class DatabaseBackupService {
 
     private static final Pattern SAFE_BACKUP_FILE_NAME =
@@ -54,24 +53,52 @@ public class DatabaseBackupService {
     private final ObjectStorageService objectStorageService;
     private final BackupProperties properties;
     private final RustFsBrowserAccess browserAccess;
-
-    @Autowired(required = false)
-    private S3Client s3Client;
-
-    @Value("${spring.datasource.url:}")
-    private String datasourceUrl;
-
-    @Value("${spring.datasource.username:}")
-    private String datasourceUsername;
-
-    @Value("${spring.datasource.password:}")
-    private String datasourcePassword;
-
-    @Autowired(required = false)
-    private DataSource dataSource;
+    private final S3Client s3Client;
+    private final DataSource dataSource;
+    private final String datasourceUrl;
+    private final String datasourceUsername;
+    private final String datasourcePassword;
 
     private static final DateTimeFormatter FILE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     private final BackupOperationStatus operationStatus = new BackupOperationStatus();
+
+    public DatabaseBackupService(
+            ObjectStorageService objectStorageService,
+            BackupProperties properties,
+            RustFsBrowserAccess browserAccess) {
+        this(objectStorageService, properties, browserAccess, "", "", "");
+    }
+
+    public DatabaseBackupService(
+            ObjectStorageService objectStorageService,
+            BackupProperties properties,
+            RustFsBrowserAccess browserAccess,
+            String datasourceUrl,
+            String datasourceUsername,
+            String datasourcePassword) {
+        this(objectStorageService, properties, browserAccess, null, null,
+                datasourceUrl, datasourceUsername, datasourcePassword);
+    }
+
+    @Autowired
+    public DatabaseBackupService(
+            ObjectStorageService objectStorageService,
+            BackupProperties properties,
+            RustFsBrowserAccess browserAccess,
+            ObjectProvider<S3Client> s3Clients,
+            ObjectProvider<DataSource> dataSources,
+            @Value("${spring.datasource.url:}") String datasourceUrl,
+            @Value("${spring.datasource.username:}") String datasourceUsername,
+            @Value("${spring.datasource.password:}") String datasourcePassword) {
+        this.objectStorageService = objectStorageService;
+        this.properties = properties;
+        this.browserAccess = browserAccess;
+        this.s3Client = s3Clients == null ? null : s3Clients.getIfAvailable();
+        this.dataSource = dataSources == null ? null : dataSources.getIfAvailable();
+        this.datasourceUrl = datasourceUrl == null ? "" : datasourceUrl;
+        this.datasourceUsername = datasourceUsername == null ? "" : datasourceUsername;
+        this.datasourcePassword = datasourcePassword == null ? "" : datasourcePassword;
+    }
 
     @PostConstruct
     public void init() {

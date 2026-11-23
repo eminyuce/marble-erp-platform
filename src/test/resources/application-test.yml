@@ -1,4 +1,7 @@
 spring:
+  threads:
+    virtual:
+      enabled: false
   datasource:
     url: jdbc:h2:mem:marble_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
     username: sa

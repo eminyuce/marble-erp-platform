@@ -1,6 +1,9 @@
 spring:
   application:
     name: marble-erp-platform
+  threads:
+    virtual:
+      enabled: true
   profiles:
     active: dev
   messages:
