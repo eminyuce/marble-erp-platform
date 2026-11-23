@@ -1,7 +1,7 @@
 package com.ozerler.marble.config;
 
 import com.ozerler.marble.security.CustomUserDetailsService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,11 +20,22 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private static final String LEGACY_CONTAINER_SESSION_COOKIE = "JSESSIONID";
+    private static final String REMEMBER_ME_COOKIE = "remember-me";
 
     private final CustomUserDetailsService customUserDetailsService;
     private final RateLimitFilter rateLimitFilter;
+    private final String sessionCookieName;
+
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService,
+                          RateLimitFilter rateLimitFilter,
+                          @Value("${server.servlet.session.cookie.name:SESSION}") String sessionCookieName) {
+        this.customUserDetailsService = customUserDetailsService;
+        this.rateLimitFilter = rateLimitFilter;
+        this.sessionCookieName = sessionCookieName;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -109,7 +120,7 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/account/adminlogin/?logout=true")
-                        .deleteCookies("JSESSIONID", "remember-me")
+                        .deleteCookies(sessionCookieName, LEGACY_CONTAINER_SESSION_COOKIE, REMEMBER_ME_COOKIE)
                         .invalidateHttpSession(true)
                         .permitAll()
                 )

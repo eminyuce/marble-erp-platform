@@ -93,6 +93,22 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!--
+            HTTP sessions are stored by Spring Session, not by Tomcat.
+            This Boot 4 starter pulls spring-session-jdbc and selects the JDBC
+            repository by classpath. Business code must keep using
+            jakarta.servlet.http.HttpSession and org.springframework.session.SessionRepository.
+            To move to Redis later, replace this starter with
+            spring-boot-starter-session-data-redis (it already includes
+            spring-boot-starter-data-redis) and set SPRING_DATA_REDIS_HOST,
+            SPRING_DATA_REDIS_PORT, and SPRING_DATA_REDIS_PASSWORD.
+            Do not add the Redis starter until that switch.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-session-jdbc</artifactId>
+        </dependency>
+
         <!-- Database Migrations -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -212,6 +228,11 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

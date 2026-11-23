@@ -126,6 +126,10 @@ services:
       RUSTFS_BUCKET: ${RUSTFS_BUCKET:-erp-files}
       RUSTFS_REGION: ${RUSTFS_REGION:-us-east-1}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:81}
+      SESSION_STORE_TYPE: ${SESSION_STORE_TYPE:-jdbc}
+      SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      SESSION_CLEANUP_CRON: "${SESSION_CLEANUP_CRON:-0 * * * * *}"
       PG_DUMP_PATH: pg_dump
     ports:
       - "${APP_PORT:-81}:81"

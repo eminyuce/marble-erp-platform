@@ -37,6 +37,30 @@ spring:
     baseline-on-migrate: true
     encoding: UTF-8
     locations: classpath:db/migration
+  session:
+    # Spring Boot 4 removed spring.session.store-type. The property is kept so
+    # SESSION_STORE_TYPE remains a documented environment variable for operators.
+    # Boot ignores the value. The store is chosen only by the classpath starter
+    # (spring-boot-starter-session-jdbc). There is no application switch.
+    # Redis later, with no business-code change:
+    #   1. Replace spring-boot-starter-session-jdbc with spring-boot-starter-session-data-redis
+    #      (that starter already includes spring-boot-starter-data-redis).
+    #   2. Set SESSION_STORE_TYPE=redis (documentation only on Boot 4).
+    #   3. Set SPRING_DATA_REDIS_HOST, SPRING_DATA_REDIS_PORT, and SPRING_DATA_REDIS_PASSWORD.
+    store-type: ${SESSION_STORE_TYPE:jdbc}
+    timeout: ${SESSION_TIMEOUT:30m}
+    jdbc:
+      # Flyway owns SPRING_SESSION. Never use always here: prod must not race Flyway.
+      initialize-schema: never
+      table-name: SPRING_SESSION
+      # Spring Session schedules this itself; expired rows are deleted every minute.
+      cleanup-cron: ${SESSION_CLEANUP_CRON:0 * * * * *}
+      # Persist only when an attribute is added, replaced, or removed.
+      # The security context and flash attributes are replaced, not edited in place.
+      save-mode: on-set-attribute
+      # One write after the request finishes, so a rolled-back service transaction
+      # does not roll the login back with it, and the next replica reads a committed row.
+      flush-mode: on-save
 
 server:
   port: ${SERVER_PORT:8080}
@@ -65,9 +89,14 @@ server:
       enabled: true
       force: true
     session:
+      timeout: ${SESSION_TIMEOUT:30m}
       cookie:
+        # Spring Session's cookie. Distinct from Tomcat's old JSESSIONID.
+        name: ${SESSION_COOKIE_NAME:SESSION}
         http-only: true
         same-site: lax
+        # false for local HTTP. Set SESSION_COOKIE_SECURE=true behind HTTPS.
+        secure: ${SESSION_COOKIE_SECURE:false}
         max-age: 86400
 
 management:

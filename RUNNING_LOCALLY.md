@@ -191,6 +191,9 @@ services:
       RUSTFS_SECRET_KEY: marblerustfs_change_me
       RUSTFS_BUCKET: erp-files
       RUSTFS_REGION: us-east-1
+      SESSION_STORE_TYPE: jdbc
+      SESSION_TIMEOUT: 30m
+      SESSION_COOKIE_SECURE: "false"
     volumes:
       - uploads_data:/app/uploads
       - media_data:/app/media
@@ -310,3 +313,64 @@ $env:SERVER_PORT="8085"
 - Ensure Docker Desktop is running.
 - Verify container status with `docker ps` and ensure `marble-erp-postgres` is listed as `healthy`.
 - Check database logs: `docker logs marble-erp-postgres`.
+
+---
+
+## 7. Shared sessions across replicas
+
+Tomcat no longer keeps the login in memory. Spring Session JDBC writes it to PostgreSQL (`SPRING_SESSION` / `SPRING_SESSION_ATTRIBUTES`). Flyway migration `V33` creates those tables. `spring.session.jdbc.initialize-schema` stays `never` so production does not create them beside Flyway.
+
+The browser cookie is `SESSION` (HttpOnly, SameSite=Lax). Leave `SESSION_COOKIE_SECURE=false` for HTTP on localhost. Set `SESSION_COOKIE_SECURE=true` only when the site is served over HTTPS. Idle timeout is `SESSION_TIMEOUT` (default `30m`). Expired rows are deleted every minute (`SESSION_CLEANUP_CRON`, default `0 * * * * *`).
+
+`SESSION_STORE_TYPE` is kept for operators. Spring Boot 4 no longer reads `spring.session.store-type`; the JDBC starter on the classpath is what selects the store.
+
+### Two local processes, one database
+
+`docker/docker-compose.yml` sets `container_name` on the app service, so `docker compose up --scale app=2` will not start a second container. Run two JVM processes against the same Postgres instead:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d postgres
+
+export DB_URL=jdbc:postgresql://localhost:5432/marble_erp
+export DB_USERNAME=marbleuser
+export DB_PASSWORD=marblepass
+export SESSION_STORE_TYPE=jdbc
+export SESSION_TIMEOUT=30m
+export SESSION_COOKIE_SECURE=false
+
+SERVER_PORT=8080 ./mvnw spring-boot:run
+# second terminal, same exports
+SERVER_PORT=8081 ./mvnw spring-boot:run
+```
+
+1. Open `http://localhost:8080/account/adminlogin/` and sign in (for example `admin@eimece.test` / `B2u5c8JB`).
+2. In the browser devtools, copy the `SESSION` cookie value.
+3. Call the other port with that cookie. The dashboard must load. A redirect to the login page means the session did not survive the replica change.
+
+```bash
+curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" \
+  -H "Cookie: SESSION=<paste>" \
+  http://localhost:8081/admin/dashboard
+```
+
+Expect `200` (or a redirect that stays inside the app, not `/account/adminlogin/`). Repeat a POST that sends the `XSRF-TOKEN` cookie and the `_csrf` field (HTMX does this). It must not fail with a CSRF error.
+
+4. Stop the process that served the login (`Ctrl+C` on port 8080, or kill that JVM) and request port 8081 again with the same cookie. The user must still be authenticated.
+5. Confirm a row exists, then that an expired row disappears after the cleanup minute:
+
+```bash
+docker exec -it marble-erp-postgres psql -U marbleuser -d marble_erp \
+  -c "SELECT SESSION_ID, PRINCIPAL_NAME, TO_TIMESTAMP(EXPIRY_TIME/1000) FROM SPRING_SESSION;"
+```
+
+### Swarm (production)
+
+With 2 or 3 app replicas and one Postgres service:
+
+1. Log in through the load balancer.
+2. Note the replica that handled the request (`docker service ps <stack>_app`).
+3. Stop that task (`docker kill <container>` or scale `2 -> 1` and back to `2`).
+4. Reload the dashboard and submit a normal form. The user stays logged in, the browser is not sent to `/account/adminlogin/`, and CSRF does not fail.
+5. Roll the service (`docker service update --force <stack>_app`). Existing `SESSION` cookies must still open the dashboard after the new tasks are healthy.
+
+Remember-me stays a signed cookie (`remember-me`), independent of the JDBC store. Every replica already uses the same key, so that cookie still works after a replica switch. Logout clears `SESSION`, the old `JSESSIONID` name, and `remember-me`.
