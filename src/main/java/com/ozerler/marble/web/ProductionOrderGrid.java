@@ -81,8 +81,8 @@ public final class ProductionOrderGrid {
                 GridColumn.text("id", "Id", true, GridWidth.PX_110),
                 GridColumn.text("orderNo", "İş Emri No", true, GridWidth.PX_170),
                 GridColumn.text("machineName", "Makine / Hat", true, GridWidth.PX_170),
-                GridColumn.text("", "Kaynak Blok", false, GridWidth.PX_160),
-                GridColumn.text("", "Süre / Tüketim", false, GridWidth.PX_160),
+                GridColumn.text("sourceBlockCode", "Kaynak Blok", false, GridWidth.PX_160),
+                GridColumn.text("durationHours", "Süre / Tüketim", false, GridWidth.PX_160),
                 GridColumn.text("", "Çıkan Plakalar", false, GridWidth.PX_150),
                 GridColumn.text("operatorName", "Operatör", true, GridWidth.PX_150)
         );

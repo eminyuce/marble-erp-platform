@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.util.GridPages;
+
 class GridColumnFilterLogicTest {
 
     private static final Map<String, String> ALIASES = Map.of(
@@ -136,5 +139,100 @@ class GridColumnFilterLogicTest {
         Assertions.assertThat(GridFilterCatalog.allows("blocks-table", "blockCode")).isTrue();
         Assertions.assertThat(GridFilterCatalog.allows("blocks-table", "notAColumn")).isFalse();
         Assertions.assertThat(GridFilterCatalog.allows("reports-table", "id")).isFalse();
+    }
+
+    @Test
+    @DisplayName("Date and number filters validate input and render typed JPQL")
+    void dateAndNumberFiltersValidateAndRenderJpql() {
+        Map<String, String> aliases = Map.of(
+                "extractionDate", "extractionDate",
+                "totalCost", "totalCost"
+        );
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("cf.extractionDate", "2026-11-01");
+        request.setParameter("ct.extractionDate", "2026-11-02");
+        request.setParameter("co.extractionDate", "between");
+        request.setParameter("cf.totalCost", "10");
+        request.setParameter("ct.totalCost", "20");
+        request.setParameter("co.totalCost", "between");
+        GridColumnFilters filters = GridColumnFilters.from(request, aliases, Block.class);
+        Assertions.assertThat(filters.getMessages()).isEmpty();
+        String sql = GridColumnFilterJpql.predicate("b", aliases, filters, Block.class);
+        Assertions.assertThat(sql).contains("b.extractionDate >= cast('2026-11-01' as date)");
+        Assertions.assertThat(sql).contains("b.extractionDate <= cast('2026-11-02' as date)");
+        Assertions.assertThat(sql).contains("b.totalCost >= 10");
+        Assertions.assertThat(sql).contains("b.totalCost <= 20");
+        Assertions.assertThat(sql).doesNotContain("LOWER(CAST(b.extractionDate");
+        Assertions.assertThat(sql).doesNotContain("LOWER(CAST(b.totalCost");
+    }
+
+    @Test
+    @DisplayName("Invalid dates are ignored with feedback and from>to is rejected")
+    void invalidAndInvertedDateRangesAreRejected() {
+        Map<String, String> aliases = Map.of("extractionDate", "extractionDate");
+        MockHttpServletRequest invalid = new MockHttpServletRequest();
+        invalid.setParameter("cf.extractionDate", "32.13.2026");
+        invalid.setParameter("co.extractionDate", "equals");
+        GridColumnFilters ignored = GridColumnFilters.from(invalid, aliases, Block.class);
+        Assertions.assertThat(ignored.isEmpty()).isTrue();
+        Assertions.assertThat(ignored.getMessages()).anyMatch(message -> message.contains("Geçersiz tarih"));
+
+        MockHttpServletRequest inverted = new MockHttpServletRequest();
+        inverted.setParameter("cf.extractionDate", "2026-11-10");
+        inverted.setParameter("ct.extractionDate", "2026-11-01");
+        inverted.setParameter("co.extractionDate", "between");
+        GridColumnFilters rejected = GridColumnFilters.from(inverted, aliases, Block.class);
+        Assertions.assertThat(rejected.isEmpty()).isTrue();
+        Assertions.assertThat(rejected.getMessages())
+                .contains("Başlangıç tarihi bitiş tarihinden sonra olamaz.");
+    }
+
+    @Test
+    @DisplayName("In-memory matcher includes date and number range boundaries")
+    void matcherIncludesBetweenBoundaries() {
+        GridColumnFilter dates = new GridColumnFilter(
+                "extractionDate", GridFilterOperator.BETWEEN, "2026-11-01", "2026-11-02");
+        Assertions.assertThat(GridColumnFilterMatcher.matchesValue("2026-11-01", dates)).isTrue();
+        Assertions.assertThat(GridColumnFilterMatcher.matchesValue("2026-11-02", dates)).isTrue();
+        Assertions.assertThat(GridColumnFilterMatcher.matchesValue("2026-11-03", dates)).isFalse();
+        GridColumnFilter numbers = new GridColumnFilter(
+                "totalCost", GridFilterOperator.BETWEEN, "10", "20");
+        Assertions.assertThat(GridColumnFilterMatcher.matchesValue("10", numbers)).isTrue();
+        Assertions.assertThat(GridColumnFilterMatcher.matchesValue("20", numbers)).isTrue();
+        Assertions.assertThat(GridColumnFilterMatcher.matchesValue("20.01", numbers)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Opening a sort-alias context expands catalog keys such as extractionDate")
+    void contextExpandsCatalogAliases() {
+        Assertions.assertThat(GridFilterCatalog.expandAliases(GridPages.BLOCK_SORTS))
+                .containsKeys("extractionDate", "locationName", "totalCost", "blockCode");
+        Assertions.assertThat(GridFilterCatalog.kind("blocks-table", "extractionDate"))
+                .isEqualTo(GridFilterKind.DATE);
+        Assertions.assertThat(GridFilterCatalog.kind("blocks-table", "totalCost"))
+                .isEqualTo(GridFilterKind.NUMBER);
+        Assertions.assertThat(GridFilterCatalog.kind("blocks-table", "blockCode"))
+                .isEqualTo(GridFilterKind.TEXT);
+        try (GridColumnFilterContext context = GridColumnFilterContext.open(GridPages.BLOCK_SORTS)) {
+            Assertions.assertThat(context.getAliases()).containsKey("extractionDate");
+        }
+    }
+
+    @Test
+    @DisplayName("Grid links clear the range end parameter with the column filter")
+    void gridLinksClearRangeEnd() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/blocks");
+        request.setParameter("cf.extractionDate", "2026-11-01");
+        request.setParameter("ct.extractionDate", "2026-11-02");
+        request.setParameter("co.extractionDate", "between");
+        GridLinks links = new GridLinks(request);
+        Assertions.assertThat(links.filtered("extractionDate")).isTrue();
+        Assertions.assertThat(links.operator("extractionDate", "date")).isEqualTo("between");
+        Assertions.assertThat(links.toValue("extractionDate")).isEqualTo("2026-11-02");
+        Assertions.assertThat(links.clearFilter("extractionDate"))
+                .doesNotContain("cf.extractionDate")
+                .doesNotContain("ct.extractionDate")
+                .doesNotContain("co.extractionDate");
     }
 }

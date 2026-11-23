@@ -27,7 +27,8 @@ public final class GridColumnFilterContext implements AutoCloseable {
         } else {
             safe = aliases;
         }
-        return open(safe, GridColumnFilters.fromCurrentRequest(safe));
+        Map<String, String> expanded = GridFilterCatalog.expandAliases(safe);
+        return open(expanded, GridColumnFilters.fromCurrentRequest(expanded));
     }
 
     public static GridColumnFilterContext open(Map<String, String> aliases, GridColumnFilters filters) {
@@ -35,7 +36,7 @@ public final class GridColumnFilterContext implements AutoCloseable {
         if (aliases == null) {
             safeAliases = Map.of();
         } else {
-            safeAliases = aliases;
+            safeAliases = GridFilterCatalog.expandAliases(aliases);
         }
         GridColumnFilters safeFilters;
         if (filters == null) {

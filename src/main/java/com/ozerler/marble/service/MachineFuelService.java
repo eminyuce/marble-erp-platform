@@ -448,6 +448,12 @@ public class MachineFuelService {
         if ("workingHoursOrKm".equals(key) && dto.getWorkingHoursOrKm() != null) {
             return dto.getWorkingHoursOrKm().toPlainString();
         }
+        if ("businessUnitLabel".equals(key)) {
+            return dto.getBusinessUnitLabel();
+        }
+        if ("pricePerLitre".equals(key) && dto.getPricePerLitre() != null) {
+            return dto.getPricePerLitre().toPlainString();
+        }
         return "";
     }
 

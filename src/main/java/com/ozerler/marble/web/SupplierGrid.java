@@ -74,7 +74,7 @@ public final class SupplierGrid {
                         "type",
                         typeChoices()),
                 GridColumn.text("contactPerson", "Yetkili / İletişim", true, GridWidth.PX_200),
-                GridColumn.text("", "Vergi Dairesi / No", false, GridWidth.PX_170));
+                GridColumn.text("taxNumber", "Vergi Dairesi / No", false, GridWidth.PX_170));
     }
 
     private static GridCell company(String name, String address) {

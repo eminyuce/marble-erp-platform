@@ -14,10 +14,12 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 public final class GridLinks {
 
+    private final HttpServletRequest request;
     private final String path;
     private final Map<String, String[]> parameters;
 
     public GridLinks(HttpServletRequest request) {
+        this.request = request;
         this.path = request.getRequestURI();
         this.parameters = request.getParameterMap();
     }
@@ -64,7 +66,8 @@ public final class GridLinks {
 
 
     public boolean filtered(String key) {
-        return !first(GridColumnFilters.VALUE_PREFIX + key).isBlank();
+        return !first(GridColumnFilters.VALUE_PREFIX + key).isBlank()
+                || !first(GridColumnFilters.TO_PREFIX + key).isBlank();
     }
 
     public boolean hasColumnFilters() {
@@ -77,18 +80,27 @@ public final class GridLinks {
     }
 
     public String operator(String key) {
+        return operator(key, GridFilterKind.TEXT.getCode());
+    }
+
+    public String operator(String key, String kind) {
         String current = first(GridColumnFilters.OPERATOR_PREFIX + key);
-        return GridFilterOperator.parse(current).getCode();
+        return GridFilterOperator.parse(current, GridFilterKind.parse(kind)).getCode();
     }
 
     public String value(String key) {
         return first(GridColumnFilters.VALUE_PREFIX + key);
     }
 
+    public String toValue(String key) {
+        return first(GridColumnFilters.TO_PREFIX + key);
+    }
+
     public String clearFilter(String key) {
         return url(query()
                 .remove(GridColumnFilters.VALUE_PREFIX + key)
                 .remove(GridColumnFilters.OPERATOR_PREFIX + key)
+                .remove(GridColumnFilters.TO_PREFIX + key)
                 .put("page", "1"));
     }
 
@@ -102,6 +114,23 @@ public final class GridLinks {
         return url(next.put("page", "1"));
     }
 
+    public List<String> getFilterMessages() {
+        if (request == null) {
+            return List.of();
+        }
+        Object value = request.getAttribute(GridColumnFilters.MESSAGES_ATTRIBUTE);
+        if (!(value instanceof List<?> items)) {
+            return List.of();
+        }
+        List<String> messages = new ArrayList<>();
+        for (Object item : items) {
+            if (item != null) {
+                messages.add(item.toString());
+            }
+        }
+        return List.copyOf(messages);
+    }
+
     public String filterValues(String tableId, String columnKey) {
         return "/grid-filter-values?grid=" + encode(tableId) + "&column=" + encode(columnKey);
     }
@@ -110,10 +139,12 @@ public final class GridLinks {
         List<GridParameter> hidden = new ArrayList<>();
         String valueName = GridColumnFilters.VALUE_PREFIX + columnKey;
         String operatorName = GridColumnFilters.OPERATOR_PREFIX + columnKey;
+        String toName = GridColumnFilters.TO_PREFIX + columnKey;
         Query current = query();
         for (int index = 0; index < current.names.size(); index++) {
             String name = current.names.get(index);
-            if ("page".equals(name) || name.equals(valueName) || name.equals(operatorName)) {
+            if ("page".equals(name) || name.equals(valueName) || name.equals(operatorName)
+                    || name.equals(toName)) {
                 continue;
             }
             hidden.add(new GridParameter(name, current.values.get(index)));

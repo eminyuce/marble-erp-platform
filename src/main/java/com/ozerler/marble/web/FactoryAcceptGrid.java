@@ -15,10 +15,13 @@ public final class FactoryAcceptGrid {
 
     public static DataGridView view(List<FactoryWorkOrderSummaryDto> orders, int page, int size, String search) {
         List<FactoryWorkOrderSummaryDto> matched = new ArrayList<>();
+        GridColumnFilters filters = GridColumnFilters.fromCurrentRequest(
+                GridFilterCatalog.aliases("factory-accept-table"));
         if (orders != null) {
             for (FactoryWorkOrderSummaryDto order : orders) {
                 if (GridWindow.matches(search, order.getOrderNo(), order.getBlockCode(), order.getStoneType(),
-                        order.getMachineName(), order.getResponsibleName(), order.getStatusLabel())) {
+                        order.getMachineName(), order.getResponsibleName(), order.getStatusLabel())
+                        && GridColumnFilterMatcher.matches(filters, key -> columnValue(order, key))) {
                     matched.add(order);
                 }
             }
@@ -44,16 +47,40 @@ public final class FactoryAcceptGrid {
         ));
     }
 
+    private static String columnValue(FactoryWorkOrderSummaryDto order, String key) {
+        if (order == null || key == null) {
+            return "";
+        }
+        return switch (key) {
+            case "status" -> order.getStatusLabel();
+            case "id" -> idValue(order.getId());
+            case "orderNo" -> order.getOrderNo();
+            case "stoneType" -> order.getStoneType();
+            case "blockCode" -> order.getBlockCode();
+            case "machineName" -> order.getMachineName();
+            case "responsibleName" -> order.getResponsibleName();
+            case "acceptedAt" -> order.getAcceptedAt();
+            default -> "";
+        };
+    }
+
+    private static String idValue(Long id) {
+        if (id == null) {
+            return "";
+        }
+        return id.toString();
+    }
+
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("", "Durum", false, GridWidth.PX_150),
-                GridColumn.text("", "Id", false, GridWidth.PX_110),
-                GridColumn.text("", "İş Emri No", false, GridWidth.PX_160),
-                GridColumn.text("", "Taş cinsi", false, GridWidth.PX_140),
-                GridColumn.text("", "Blok", false, GridWidth.PX_140),
-                GridColumn.text("", "Makine", false, GridWidth.PX_150),
-                GridColumn.text("", "Sorumlu", false, GridWidth.PX_150),
-                GridColumn.text("", "Tarih", false, GridWidth.PX_130)
+                GridColumn.text("status", "Durum", false, GridWidth.PX_150),
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("orderNo", "İş Emri No", false, GridWidth.PX_160),
+                GridColumn.text("stoneType", "Taş cinsi", false, GridWidth.PX_140),
+                GridColumn.text("blockCode", "Blok", false, GridWidth.PX_140),
+                GridColumn.text("machineName", "Makine", false, GridWidth.PX_150),
+                GridColumn.text("responsibleName", "Sorumlu", false, GridWidth.PX_150),
+                GridColumn.text("acceptedAt", "Tarih", false, GridWidth.PX_130)
         );
     }
 }

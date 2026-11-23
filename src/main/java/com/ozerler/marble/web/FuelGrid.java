@@ -61,9 +61,9 @@ public final class FuelGrid {
                 GridColumn.text("receiptNo", "Fiş No", false, GridWidth.PX_120),
                 GridColumn.text("machineName", "Makine", true, GridWidth.PX_180),
                 GridColumn.text("entryDate", "Tarih", true, GridWidth.PX_120),
-                GridColumn.text("", "Birim", false, GridWidth.PX_130),
+                GridColumn.text("businessUnitLabel", "Birim", false, GridWidth.PX_130),
                 GridColumn.text("litres", "Litre (L)", true, GridWidth.PX_120),
-                GridColumn.text("", "Litre Fiyatı", false, GridWidth.PX_130),
+                GridColumn.text("pricePerLitre", "Litre Fiyatı", false, GridWidth.PX_130),
                 GridColumn.text("totalAmount", "Toplam Tutar", true, GridWidth.PX_140),
                 GridColumn.text("workingHoursOrKm", "Çalışma Saati / Km", true, GridWidth.PX_160),
                 GridColumn.text("", "Teslim Alan / Veren", false, GridWidth.PX_180)

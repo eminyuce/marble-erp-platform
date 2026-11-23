@@ -56,7 +56,7 @@ public final class WorkshopGrid {
                 GridColumn.text("id", "Id", true, GridWidth.PX_110),
                 GridColumn.text("cutOrderNo", "İş Emri No", true, GridWidth.PX_170),
                 GridColumn.text("projectName", "Şantiye / Müşteri", true, GridWidth.PX_180),
-                GridColumn.text("", "Amaç", false, GridWidth.PX_150),
+                GridColumn.text("purpose", "Amaç", false, GridWidth.PX_150),
                 GridColumn.text("locationName", "Hedef Mahal", true, GridWidth.PX_150),
                 GridColumn.text("machineName", "Makine", true, GridWidth.PX_150),
                 GridColumn.text("operatorName", "Operatör", true, GridWidth.PX_140),

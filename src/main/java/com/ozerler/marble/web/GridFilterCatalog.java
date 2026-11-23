@@ -36,18 +36,23 @@ public final class GridFilterCatalog {
 
     private static final Map<String, Map<String, String>> ALIASES = new HashMap<>();
     private static final Map<String, Class<?>> ENTITIES = new HashMap<>();
+    private static final Map<String, Map<String, GridFilterKind>> KINDS = new HashMap<>();
 
     static {
         Map<String, String> blocks = merge(
                 GridPages.BLOCK_SORTS,
                 Map.ofEntries(
-                        Map.entry("locationName", "currentLocation.locationName"),
+                        Map.entry("locationName", "currentLocation.name"),
                         Map.entry("colorTone", "colorTone"),
                         Map.entry("quarrySection", "quarrySection"),
                         Map.entry("customerName", "soldCustomer.companyName"),
-                        Map.entry("arrivalDate", "createdDate"),
-                        Map.entry("estimatedTonnage", "theoreticalWeightKg"),
-                        Map.entry("actualTonnage", "actualWeightKg"),
+                        Map.entry("extractionDate", "extractionDate"),
+                        Map.entry("arrivalDate", "arrivalDate"),
+                        Map.entry("estimatedTonnage", "estimatedTonnage"),
+                        Map.entry("approximateTonnage", "estimatedTonnage"),
+                        Map.entry("actualTonnage", "actualTonnage"),
+                        Map.entry("unitMarketValuePerTon", "unitMarketValuePerTon"),
+                        Map.entry("extractionCost", "extractionCost"),
                         Map.entry("salePrice", "salePrice")
                 ));
         register("blocks-table", Block.class, blocks);
@@ -56,7 +61,11 @@ public final class GridFilterCatalog {
 
         Map<String, String> slabs = merge(
                 GridPages.SLAB_SORTS,
-                Map.of("customerName", "customer.companyName", "sourceBlockCode", "block.blockCode"));
+                Map.of(
+                        "customerName", "customer.companyName",
+                        "sourceBlockCode", "block.blockCode",
+                        "stoneType", "block.stoneType",
+                        "thicknessCm", "thicknessCm"));
         register("slabs-table", Slab.class, slabs);
         register("factory-slabs-table", Slab.class, slabs);
         register("workshop-slabs-table", Slab.class, slabs);
@@ -78,21 +87,35 @@ public final class GridFilterCatalog {
         register("factory-sized-table", StockItem.class, sized);
         register("workshop-sized-table", StockItem.class, sized);
 
-        register("production-table", ProductionOrder.class, GridPages.PRODUCTION_ORDER_SORTS);
-        register("workshop-table", CutOrder.class, GridPages.CUT_ORDER_SORTS);
+        register("production-table", ProductionOrder.class, merge(
+                GridPages.PRODUCTION_ORDER_SORTS,
+                Map.of("sourceBlockCode", "block.blockCode", "durationHours", "durationHours")));
+        register("workshop-table", CutOrder.class, merge(
+                GridPages.CUT_ORDER_SORTS,
+                Map.of("purpose", "purpose")));
         register("projects-table", Project.class, GridPages.PROJECT_SORTS);
         register("sales-table", SalesOrder.class, GridPages.SALES_ORDER_SORTS);
         register("procurement-table", PurchaseOrder.class, GridPages.PURCHASE_ORDER_SORTS);
-        register("users-table", User.class, GridPages.USER_SORTS);
-        register("suppliers-table", Supplier.class, GridPages.SUPPLIER_SORTS);
+        register("users-table", User.class, merge(
+                GridPages.USER_SORTS,
+                Map.of("firstName", "firstName", "lastName", "lastName")));
+        register("suppliers-table", Supplier.class, merge(
+                GridPages.SUPPLIER_SORTS,
+                Map.of("taxNumber", "taxNumber", "businessUnitLabel", "businessUnit")));
         register("customers-table", Customer.class, merge(
                 GridPages.CUSTOMER_SORTS,
-                Map.of()));
-        register("machines-table", Machine.class, GridPages.MACHINE_SORTS);
+                Map.of("businessUnitLabel", "businessUnit")));
+        register("machines-table", Machine.class, merge(
+                GridPages.MACHINE_SORTS,
+                Map.of("notes", "notes")));
         register("stock-locations-table", StockLocation.class, GridPages.STOCK_LOCATION_SORTS);
         register("quarries-table", Quarry.class, GridPages.QUARRY_SORTS);
-        register("cost-centers-table", CostCenter.class, GridPages.COST_CENTER_SORTS);
-        register("expenses-table", CostTransaction.class, GridPages.EXPENSE_SORTS);
+        register("cost-centers-table", CostCenter.class, merge(
+                GridPages.COST_CENTER_SORTS,
+                Map.of("description", "description")));
+        register("expenses-table", CostTransaction.class, merge(
+                GridPages.EXPENSE_SORTS,
+                Map.of("description", "description")));
 
         register("invoices-table", Invoice.class, Map.ofEntries(
                 Map.entry("id", "id"),
@@ -123,6 +146,8 @@ public final class GridFilterCatalog {
                 Map.entry("checkNo", "checkNo"),
                 Map.entry("dueDate", "dueDate"),
                 Map.entry("customerName", "customer.companyName"),
+                Map.entry("bankName", "bankName"),
+                Map.entry("businessUnitLabel", "businessUnit"),
                 Map.entry("amount", "amount")
         ));
         Map<String, String> workOrders = Map.ofEntries(
@@ -133,6 +158,7 @@ public final class GridFilterCatalog {
                 Map.entry("customerName", "customer.companyName"),
                 Map.entry("stoneType", "stoneType"),
                 Map.entry("quantity", "quantity"),
+                Map.entry("orderDate", "orderDate"),
                 Map.entry("targetDeliveryDate", "targetDeliveryDate"),
                 Map.entry("responsiblePerson", "responsiblePerson")
         );
@@ -162,26 +188,69 @@ public final class GridFilterCatalog {
                 Map.entry("receiptNo", "receiptNo"),
                 Map.entry("machineName", "machine.name"),
                 Map.entry("entryDate", "entryDate"),
+                Map.entry("businessUnitLabel", "machine.businessUnit"),
                 Map.entry("litres", "litres"),
+                Map.entry("pricePerLitre", "pricePerLitre"),
                 Map.entry("totalAmount", "totalAmount"),
                 Map.entry("workingHoursOrKm", "workingHoursOrKm")
         ));
         register("quarry-dispatches-table", StockMovement.class, Map.ofEntries(
                 Map.entry("id", "id"),
                 Map.entry("movementDate", "movementDate"),
+                Map.entry("tonnage", "tonnage"),
+                Map.entry("targetDestination", "targetDestination"),
+                Map.entry("customerName", "customer.companyName"),
+                Map.entry("invoiceNo", "invoice.invoiceNo"),
                 Map.entry("notes", "notes")
         ));
-        register("workshop-receipts-table", null, Map.of(
-                "receiptNo", "receiptNo",
-                "supplierName", "supplierName",
-                "stoneType", "stoneType",
-                "notes", "notes"
+        register("workshop-receipts-table", null, Map.ofEntries(
+                Map.entry("receiptNo", "receiptNo"),
+                Map.entry("supplierName", "supplierName"),
+                Map.entry("sourceLabel", "sourceLabel"),
+                Map.entry("stoneType", "stoneType"),
+                Map.entry("quantity", "quantity"),
+                Map.entry("areaM2", "areaM2"),
+                Map.entry("purchaseCost", "purchaseCost"),
+                Map.entry("receivedAt", "receivedAt"),
+                Map.entry("notes", "notes")
+        ), Map.of(
+                "quantity", GridFilterKind.NUMBER,
+                "areaM2", GridFilterKind.NUMBER,
+                "purchaseCost", GridFilterKind.NUMBER,
+                "receivedAt", GridFilterKind.DATE
         ));
-        register("factory-accept-table", null, Map.of(
-                "status", "status",
-                "orderNo", "orderNo",
-                "stoneType", "stoneType",
-                "machineName", "machineName"
+        register("factory-accept-table", null, Map.ofEntries(
+                Map.entry("status", "status"),
+                Map.entry("id", "id"),
+                Map.entry("orderNo", "orderNo"),
+                Map.entry("stoneType", "stoneType"),
+                Map.entry("blockCode", "blockCode"),
+                Map.entry("machineName", "machineName"),
+                Map.entry("responsibleName", "responsibleName"),
+                Map.entry("acceptedAt", "acceptedAt")
+        ), Map.of(
+                "id", GridFilterKind.NUMBER,
+                "acceptedAt", GridFilterKind.DATE
+        ));
+        register("polish-operations-grid", null, Map.ofEntries(
+                Map.entry("id", "id"),
+                Map.entry("orderNo", "orderNo"),
+                Map.entry("operatorName", "operatorName"),
+                Map.entry("blockCode", "blockCode"),
+                Map.entry("processLabel", "processLabel"),
+                Map.entry("inputQuantity", "inputQuantity"),
+                Map.entry("outputQuantity", "outputQuantity"),
+                Map.entry("wasteQuantity", "wasteQuantity"),
+                Map.entry("chamfer", "chamfer"),
+                Map.entry("totalCost", "totalCost"),
+                Map.entry("finishedAt", "finishedAt")
+        ), Map.of(
+                "id", GridFilterKind.NUMBER,
+                "inputQuantity", GridFilterKind.NUMBER,
+                "outputQuantity", GridFilterKind.NUMBER,
+                "wasteQuantity", GridFilterKind.NUMBER,
+                "totalCost", GridFilterKind.NUMBER,
+                "finishedAt", GridFilterKind.DATE
         ));
     }
 
@@ -198,6 +267,36 @@ public final class GridFilterCatalog {
 
     public static Class<?> entityType(String tableId) {
         return ENTITIES.get(tableId);
+    }
+
+    public static GridFilterKind kind(String tableId, String key) {
+        Map<String, GridFilterKind> hints = KINDS.get(tableId);
+        if (hints != null && key != null && hints.containsKey(key)) {
+            return hints.get(key);
+        }
+        return GridFilterTypes.kind(entityType(tableId), aliases(tableId).get(key));
+    }
+
+    public static Map<String, String> expandAliases(Map<String, String> aliases) {
+        if (aliases == null || aliases.isEmpty()) {
+            if (aliases == null) {
+                return Map.of();
+            }
+            return Map.copyOf(aliases);
+        }
+        String tableId = tableIdForAliases(aliases);
+        if (tableId == null) {
+            return Map.copyOf(aliases);
+        }
+        return aliases(tableId);
+    }
+
+    public static Class<?> entityTypeForAliases(Map<String, String> aliases) {
+        String tableId = tableIdForAliases(aliases);
+        if (tableId == null) {
+            return null;
+        }
+        return entityType(tableId);
     }
 
     public static boolean allows(String tableId, String key) {
@@ -219,10 +318,58 @@ public final class GridFilterCatalog {
         return Map.of();
     }
 
+    private static String tableIdForAliases(Map<String, String> aliases) {
+        if (aliases == null || aliases.isEmpty()) {
+            return null;
+        }
+        String best = null;
+        Class<?> entity = null;
+        int bestSize = Integer.MAX_VALUE;
+        boolean ambiguous = false;
+        for (Map.Entry<String, Map<String, String>> entry : ALIASES.entrySet()) {
+            if (!containsAll(entry.getValue(), aliases)) {
+                continue;
+            }
+            Class<?> candidate = ENTITIES.get(entry.getKey());
+            if (best == null) {
+                best = entry.getKey();
+                entity = candidate;
+                bestSize = entry.getValue().size();
+            } else if (candidate != null && entity != null && !candidate.equals(entity)) {
+                ambiguous = true;
+            } else if (entry.getValue().size() < bestSize) {
+                best = entry.getKey();
+                entity = candidate;
+                bestSize = entry.getValue().size();
+            }
+        }
+        if (ambiguous) {
+            return null;
+        }
+        return best;
+    }
+
+    private static boolean containsAll(Map<String, String> catalog, Map<String, String> aliases) {
+        for (Map.Entry<String, String> entry : aliases.entrySet()) {
+            if (!entry.getValue().equals(catalog.get(entry.getKey()))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static void register(String tableId, Class<?> entityType, Map<String, String> aliases) {
+        register(tableId, entityType, aliases, Map.of());
+    }
+
+    private static void register(String tableId, Class<?> entityType, Map<String, String> aliases,
+                                 Map<String, GridFilterKind> kinds) {
         ALIASES.put(tableId, Map.copyOf(aliases));
         if (entityType != null) {
             ENTITIES.put(tableId, entityType);
+        }
+        if (kinds != null && !kinds.isEmpty()) {
+            KINDS.put(tableId, Map.copyOf(kinds));
         }
     }
 

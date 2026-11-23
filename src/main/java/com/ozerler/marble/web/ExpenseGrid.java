@@ -89,7 +89,7 @@ public final class ExpenseGrid {
                 GridColumn.filtered("expenseType", "Gider Kalemi", true, GridWidth.PX_160, "expenseType", types()),
                 GridColumn.text("expensePeriod", "Dönem", true, GridWidth.PX_110),
                 GridColumn.text("amount", "Tutar", true, GridWidth.PX_150),
-                GridColumn.text("", "Açıklama", false, GridWidth.PX_200)
+                GridColumn.text("description", "Açıklama", false, GridWidth.PX_200)
         );
     }
 

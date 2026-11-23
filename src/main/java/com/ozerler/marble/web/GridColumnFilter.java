@@ -1,15 +1,20 @@
 package com.ozerler.marble.web;
 
 /**
- * One active header filter: a whitelisted column key, an operator, and the user value.
+ * One active header filter: a whitelisted column key, an operator, and the user value(s).
  */
 public final class GridColumnFilter {
 
     private final String key;
     private final GridFilterOperator operator;
     private final String value;
+    private final String toValue;
 
     public GridColumnFilter(String key, GridFilterOperator operator, String value) {
+        this(key, operator, value, "");
+    }
+
+    public GridColumnFilter(String key, GridFilterOperator operator, String value, String toValue) {
         if (key == null) {
             this.key = "";
         } else {
@@ -25,6 +30,11 @@ public final class GridColumnFilter {
         } else {
             this.value = value;
         }
+        if (toValue == null) {
+            this.toValue = "";
+        } else {
+            this.toValue = toValue;
+        }
     }
 
     public String getKey() {
@@ -39,7 +49,17 @@ public final class GridColumnFilter {
         return value;
     }
 
+    public String getToValue() {
+        return toValue;
+    }
+
     public boolean isActive() {
-        return !key.isBlank() && !value.isBlank();
+        if (key.isBlank()) {
+            return false;
+        }
+        if (operator == GridFilterOperator.BETWEEN) {
+            return !value.isBlank() && !toValue.isBlank();
+        }
+        return !value.isBlank();
     }
 }

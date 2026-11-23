@@ -19,6 +19,8 @@ public final class PolishGrid {
 
     public static DataGridView view(List<FactoryOperationView> operations, int page, int size, String search) {
         List<OperationView> matched = new ArrayList<>();
+        GridColumnFilters filters = GridColumnFilters.fromCurrentRequest(
+                GridFilterCatalog.aliases("polish-operations-grid"));
         if (operations != null) {
             for (FactoryOperationView operation : operations) {
                 OperationView view = OperationView.from(operation);
@@ -28,7 +30,8 @@ public final class PolishGrid {
                         view.blockCode,
                         view.operatorName,
                         view.machineName,
-                        view.processLabel)) {
+                        view.processLabel)
+                        && GridColumnFilterMatcher.matches(filters, key -> columnValue(view, key))) {
                     matched.add(view);
                 }
             }
@@ -64,19 +67,53 @@ public final class PolishGrid {
         ));
     }
 
+    private static String columnValue(OperationView operation, String key) {
+        if (operation == null || key == null) {
+            return "";
+        }
+        return switch (key) {
+            case "id" -> text(operation.id);
+            case "orderNo" -> operation.orderNo;
+            case "operatorName" -> operation.operatorName + " " + operation.machineName;
+            case "blockCode" -> operation.blockCode;
+            case "processLabel" -> operation.processLabel;
+            case "inputQuantity" -> text(operation.input);
+            case "outputQuantity" -> text(operation.output);
+            case "wasteQuantity" -> text(operation.waste);
+            case "chamfer" -> operation.chamfer;
+            case "totalCost" -> text(operation.totalCost);
+            case "finishedAt" -> text(operation.finishedAt);
+            default -> "";
+        };
+    }
+
+    private static String text(BigDecimal value) {
+        if (value == null) {
+            return "";
+        }
+        return value.toPlainString();
+    }
+
+    private static String text(Object value) {
+        if (value == null) {
+            return "";
+        }
+        return value.toString();
+    }
+
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("", "İşlem No", false, GridWidth.PX_110),
-                GridColumn.text("", "İş Emri", false, GridWidth.PX_140),
-                GridColumn.text("", "Makine / Operatör", false, GridWidth.PX_180),
-                GridColumn.text("", "Blok Kodu", false, GridWidth.PX_140),
-                GridColumn.text("", "Operasyon Türü", false, GridWidth.PX_160),
-                GridColumn.text("", "Giriş (m²)", false, GridWidth.PX_120),
-                GridColumn.text("", "Çıkış (m²)", false, GridWidth.PX_120),
-                GridColumn.text("", "Fire (m² / %)", false, GridWidth.PX_140),
-                GridColumn.text("", "Pah Durumu", false, GridWidth.PX_130),
-                GridColumn.text("", "Toplam Gider", false, GridWidth.PX_140),
-                GridColumn.text("", "Tarih", false, GridWidth.PX_150)
+                GridColumn.text("id", "İşlem No", false, GridWidth.PX_110),
+                GridColumn.text("orderNo", "İş Emri", false, GridWidth.PX_140),
+                GridColumn.text("operatorName", "Makine / Operatör", false, GridWidth.PX_180),
+                GridColumn.text("blockCode", "Blok Kodu", false, GridWidth.PX_140),
+                GridColumn.text("processLabel", "Operasyon Türü", false, GridWidth.PX_160),
+                GridColumn.text("inputQuantity", "Giriş (m²)", false, GridWidth.PX_120),
+                GridColumn.text("outputQuantity", "Çıkış (m²)", false, GridWidth.PX_120),
+                GridColumn.text("wasteQuantity", "Fire (m² / %)", false, GridWidth.PX_140),
+                GridColumn.text("chamfer", "Pah Durumu", false, GridWidth.PX_130),
+                GridColumn.text("totalCost", "Toplam Gider", false, GridWidth.PX_140),
+                GridColumn.text("finishedAt", "Tarih", false, GridWidth.PX_150)
         );
     }
 

@@ -17,18 +17,25 @@ public final class GridColumn {
     private final String filterParam;
     private final List<FilterChoice> filters;
     private final boolean headerFilter;
+    private final GridFilterKind filterKind;
 
     public GridColumn(String key, String label, boolean sortable, int minWidth) {
-        this(key, label, sortable, minWidth, null, List.of(), false);
+        this(key, label, sortable, minWidth, null, List.of(), false, GridFilterKind.TEXT);
     }
 
     public GridColumn(String key, String label, boolean sortable, int minWidth,
                       String filterParam, List<FilterChoice> filters) {
-        this(key, label, sortable, minWidth, filterParam, filters, false);
+        this(key, label, sortable, minWidth, filterParam, filters, false, GridFilterKind.TEXT);
     }
 
     public GridColumn(String key, String label, boolean sortable, int minWidth,
                       String filterParam, List<FilterChoice> filters, boolean headerFilter) {
+        this(key, label, sortable, minWidth, filterParam, filters, headerFilter, GridFilterKind.TEXT);
+    }
+
+    public GridColumn(String key, String label, boolean sortable, int minWidth,
+                      String filterParam, List<FilterChoice> filters, boolean headerFilter,
+                      GridFilterKind filterKind) {
         if (key == null) {
             this.key = "";
         } else {
@@ -56,10 +63,19 @@ public final class GridColumn {
             this.filters = List.copyOf(filters);
         }
         this.headerFilter = headerFilter;
+        if (filterKind == null) {
+            this.filterKind = GridFilterKind.TEXT;
+        } else {
+            this.filterKind = filterKind;
+        }
     }
 
     public GridColumn withHeaderFilter(boolean enabled) {
-        return new GridColumn(key, label, sortable, minWidth, filterParam, filters, enabled);
+        return withHeaderFilter(enabled, filterKind);
+    }
+
+    public GridColumn withHeaderFilter(boolean enabled, GridFilterKind kind) {
+        return new GridColumn(key, label, sortable, minWidth, filterParam, filters, enabled, kind);
     }
 
     public static GridColumn text(String key, String label, boolean sortable) {
@@ -105,6 +121,14 @@ public final class GridColumn {
 
     public boolean isHeaderFilter() {
         return headerFilter && !key.isBlank();
+    }
+
+    public String getFilterKind() {
+        return filterKind.getCode();
+    }
+
+    public List<GridFilterOperator> getFilterOperators() {
+        return filterKind.operators();
     }
 
     public static final class FilterChoice {

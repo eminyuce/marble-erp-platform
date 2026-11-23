@@ -81,6 +81,12 @@ class GridHeaderFilterRenderTest {
         Assertions.assertTrue(html.contains("İle Başlar"), "missing starts-with operator");
         Assertions.assertTrue(html.contains("İçermez"), "missing not-contains operator");
         Assertions.assertTrue(html.contains("name=\"cf.blockCode\""), "missing blockCode filter field");
+        Assertions.assertTrue(html.contains("Aralık"), "missing between operator");
+        Assertions.assertTrue(html.contains("Önce") && html.contains("Sonra"), "missing date comparison operators");
+        Assertions.assertTrue(html.contains("name=\"cf.extractionDate\""), "missing date filter field");
+        Assertions.assertTrue(html.contains("name=\"ct.extractionDate\""), "missing date range end field");
+        Assertions.assertTrue(html.contains("type=\"date\""), "missing date input");
+        Assertions.assertTrue(html.contains("name=\"cf.totalCost\""), "missing numeric filter field");
         Assertions.assertTrue(html.contains("/grid-filter-values?grid=blocks-table"), "missing distinct-values URL");
         Assertions.assertTrue(html.contains("/js/app.js?v=1.0.7"),
                 "app.js should be cache-busted with the app version");

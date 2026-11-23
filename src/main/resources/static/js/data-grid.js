@@ -303,6 +303,28 @@ function loadGridColumnFilterValues(url, list, input, operator, form) {
         .catch(function () { fillGridColumnFilterValues(list, [], input, operator, form); });
 }
 
+function syncGridColumnFilterRange(select) {
+    if (!select) {
+        return;
+    }
+    var form = select.form || select.closest("form");
+    if (!form) {
+        return;
+    }
+    var toField = form.querySelector(".erp-data-grid__colfilter-to");
+    if (!toField) {
+        return;
+    }
+    if (select.value === "between") {
+        toField.classList.remove("is-hidden");
+    } else {
+        toField.classList.add("is-hidden");
+    }
+    if (typeof placeOpenGridColumnFilter === "function") {
+        placeOpenGridColumnFilter();
+    }
+}
+
 function toggleGridColumnFilter(event, button) {
     event.preventDefault();
     event.stopPropagation();
@@ -323,16 +345,25 @@ function toggleGridColumnFilter(event, button) {
     activeGridColumnFilter = { button: button, panel: panel };
     placeOpenGridColumnFilter();
     panel.style.visibility = "visible";
-    var input = panel.querySelector("input[type='search']");
+    var input = panel.querySelector("input[name^='cf.']");
     var operator = panel.querySelector("select");
     var list = panel.querySelector(".erp-data-grid__colfilter-values");
     var form = panel;
-    if (list && button.getAttribute("data-values-url")) {
+    var kind = button.getAttribute("data-filter-kind") || "text";
+    if (operator) {
+        operator.addEventListener("change", function () {
+            syncGridColumnFilterRange(operator);
+        });
+        syncGridColumnFilterRange(operator);
+    }
+    if (list && kind === "text" && button.getAttribute("data-values-url")) {
         loadGridColumnFilterValues(button.getAttribute("data-values-url"), list, input, operator, form);
     }
     if (input) {
         input.focus();
-        input.select();
+        if (typeof input.select === "function") {
+            input.select();
+        }
     }
     bindGridColumnFilterListeners();
     if (window.lucide) {
@@ -342,5 +373,6 @@ function toggleGridColumnFilter(event, button) {
 
 window.positionGridColumnFilterPanel = positionGridColumnFilterPanel;
 window.placeOpenGridColumnFilter = placeOpenGridColumnFilter;
+window.syncGridColumnFilterRange = syncGridColumnFilterRange;
 window.toggleGridColumnFilter = toggleGridColumnFilter;
 window.closeGridColumnFilter = closeGridColumnFilter;

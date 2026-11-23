@@ -45,7 +45,8 @@ public final class GridAssembler {
         }
         List<GridColumn> marked = new ArrayList<>();
         for (GridColumn column : columns) {
-            marked.add(column.withHeaderFilter(GridFilterCatalog.allows(tableId, column.getKey())));
+            boolean allowed = GridFilterCatalog.allows(tableId, column.getKey());
+            marked.add(column.withHeaderFilter(allowed, GridFilterCatalog.kind(tableId, column.getKey())));
         }
         return List.copyOf(marked);
     }
