@@ -92,7 +92,7 @@ Override a placeholder by exporting the variable before startup. Do not commit p
 | `DB_USERNAME` | Database username | `marbleuser` |
 | `DB_PASSWORD` | Database password | `marblepass` (change this in production) |
 | `RUSTFS_ENDPOINT` | Internal S3 API used by Spring Boot | `http://localhost:9000` when unset (host JVM). Compose sets `http://rustfs:9000` |
-| `RUSTFS_PUBLIC_ENDPOINT` | Browser host written into presigned URLs | `http://localhost:9000` in dev. Prod must be `https://` on a public host (Nginx); `https://files.example.com` is the prod default |
+| `RUSTFS_PUBLIC_ENDPOINT` | Browser host written into presigned URLs | `http://localhost:9000` in dev. Prod default is `https://ozerler.naklink.com`; Nginx forwards `/erp-files/` to RustFS |
 | `RUSTFS_ACCESS_KEY` | RustFS access key | `marblerustfs` in dev; empty in the shared file (prod startup fails if empty) |
 | `RUSTFS_SECRET_KEY` | RustFS secret key | `marblerustfs_change_me` in dev; empty in the shared file. Never log it |
 | `RUSTFS_BUCKET` | Private bucket name | `erp-files` |

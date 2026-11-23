@@ -216,7 +216,7 @@ STORAGE_TYPE=rustfs
 RUSTFS_ENDPOINT=http://127.0.0.1:9000
 # Browser-facing URL. Must be https behind Nginx or another reverse proxy.
 # http://127.0.0.1 is only the internal API (RUSTFS_ENDPOINT), never the public URL.
-RUSTFS_PUBLIC_ENDPOINT=https://files.example.com
+RUSTFS_PUBLIC_ENDPOINT=https://ozerler.naklink.com
 PRESIGNED_IMAGE_EXPIRY_MINUTES=30
 PRESIGNED_DOCUMENT_EXPIRY_MINUTES=5
 RUSTFS_ACCESS_KEY=CHANGE_ME
@@ -366,7 +366,7 @@ ensure_rustfs_env_keys() {
         missing_lines+=("RUSTFS_ENDPOINT=http://127.0.0.1:9000")
     fi
     if ! grep -q '^RUSTFS_PUBLIC_ENDPOINT=' "$ENV_FILE"; then
-        missing_lines+=("RUSTFS_PUBLIC_ENDPOINT=https://files.example.com")
+        missing_lines+=("RUSTFS_PUBLIC_ENDPOINT=https://ozerler.naklink.com")
     fi
     if ! grep -q '^RUSTFS_ACCESS_KEY=' "$ENV_FILE"; then
         missing_lines+=("RUSTFS_ACCESS_KEY=${access_key}")

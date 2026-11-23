@@ -158,6 +158,34 @@ class S3ObjectStorageServiceTest {
         }
     }
 
+    @Test
+    @DisplayName("production presigns on the application host under /erp-files/")
+    void realPresigner_UsesApplicationHostAndBucketPath() {
+        String publicEndpoint = "https://ozerler.naklink.com";
+        ObjectStorageProperties properties = new ObjectStorageProperties();
+        properties.getRustfs().setBucket("erp-files");
+        properties.getRustfs().setEndpoint("http://rustfs:9000");
+        properties.getRustfs().setPublicEndpoint(publicEndpoint);
+        PresignedUrlProperties expiry = new PresignedUrlProperties();
+
+        try (S3Presigner presigner = S3Presigner.builder()
+                .endpointOverride(URI.create(publicEndpoint))
+                .region(Region.US_EAST_1)
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create("test-access", "test-secret")))
+                .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
+                .build()) {
+            S3ObjectStorageService realStorage = new S3ObjectStorageService(
+                    s3Client, presigner, properties, expiry);
+            URI image = URI.create(realStorage.presignedImageUrl("images/block/1/photo.jpg"));
+
+            assertThat(image.getScheme()).isEqualTo("https");
+            assertThat(image.getHost()).isEqualTo("ozerler.naklink.com");
+            assertThat(image.getPath()).startsWith("/erp-files/");
+            assertThat(image.getRawQuery()).contains("X-Amz-");
+        }
+    }
+
     private static Map<String, String> queryParams(String url) {
         String query = URI.create(url).getRawQuery();
         Map<String, String> params = new HashMap<>();

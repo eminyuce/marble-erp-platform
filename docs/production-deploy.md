@@ -114,13 +114,14 @@ APP_UPLOAD_DIR=/opt/marble-erp/uploads
 APP_MEDIA_DIR=/opt/marble-erp/media
 STORAGE_TYPE=rustfs
 RUSTFS_ENDPOINT=http://127.0.0.1:9000
-RUSTFS_PUBLIC_ENDPOINT=https://files.example.com
+RUSTFS_PUBLIC_ENDPOINT=https://ozerler.naklink.com
+# Do not set RUSTFS_SERVER_DOMAINS. Path-style /erp-files/ is the default.
 RUSTFS_ACCESS_KEY=CHANGE_ME
 RUSTFS_SECRET_KEY=CHANGE_ME
 RUSTFS_BUCKET=erp-files
 RUSTFS_REGION=us-east-1
 RUSTFS_DATA_DIR=/opt/rustfs/data
-CORS_ALLOWED_ORIGIN=https://YOUR_PUBLIC_HOST
+CORS_ALLOWED_ORIGIN=https://ozerler.naklink.com
 ```
 
 Restrict the file: `sudo chmod 640 /opt/marble-erp/marble-erp.env` and keep it owned by the service user.

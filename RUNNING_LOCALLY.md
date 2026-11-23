@@ -301,7 +301,7 @@ There is no `.env` file. Defaults live in the YAML files and in the Compose `env
 | Variable | dev / local HTTP | prod |
 | :--- | :--- | :--- |
 | `RUSTFS_ENDPOINT` | `http://localhost:9000` when unset, including `./mvnw spring-boot:run`. Compose sets `http://rustfs:9000`. | `http://rustfs:9000` in Compose, or `http://127.0.0.1:9000` for a host-side JAR |
-| `RUSTFS_PUBLIC_ENDPOINT` | `http://localhost:9000` | `https://files.example.com` — must be **https** behind Nginx or another reverse proxy. Startup fails for plain http or an internal host (`rustfs`, `localhost`). |
+| `RUSTFS_PUBLIC_ENDPOINT` | `http://localhost:9000` | `https://ozerler.naklink.com` — the app's own HTTPS host. Nginx forwards `/erp-files/` to RustFS. Startup fails for plain http or an internal host. |
 | `RUSTFS_BUCKET` | `erp-files` | `erp-files` (private; no permanent public URL) |
 | `RUSTFS_REGION` | `us-east-1` | `us-east-1` |
 | `RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY` | dev defaults in `application-dev.yml` | required; empty values abort startup. Never log the secret. |
@@ -309,6 +309,20 @@ There is no `.env` file. Defaults live in the YAML files and in the Compose `env
 | `PRESIGNED_DOCUMENT_EXPIRY_MINUTES` | `5` | `5` |
 
 The S3 client uses the internal endpoint for upload, delete, and head. The presigner uses the public endpoint, so the browser downloads the file directly from RustFS. Presigned URLs are created per page render and per `GET /api/upload/{id}/download-url`. They are not stored in the database.
+
+Production links use the application host, not a separate files hostname:
+
+```text
+https://ozerler.naklink.com/erp-files/<object-key>?X-Amz-...
+```
+
+Host nginx terminates TLS. This repo does not ship a running nginx service. On the server, paste `deploy/nginx/ozerler.naklink.com-erp-files.conf` into the existing `server { listen 443 ... server_name ozerler.naklink.com; }` block, **before** `location /`. Then:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Set `RUSTFS_PUBLIC_ENDPOINT=https://ozerler.naklink.com` in the app environment if an older value such as `https://files.example.com` is already present (the deploy script only adds the line when it is missing). Do **not** set `RUSTFS_SERVER_DOMAINS`. That variable is for virtual-hosted names (`erp-files.ozerler.naklink.com`). Path-style `/erp-files/` works with it unset; setting it would make RustFS look for the bucket in the hostname. Restart the app container or systemd unit so new links are signed with the new host. No application route is mapped to `/erp-files/`.
 
 To change the image expiry from 30 minutes to 15 minutes without a code change:
 
