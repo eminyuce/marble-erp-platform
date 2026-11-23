@@ -76,6 +76,14 @@ docker compose -f docker/docker-compose.yml up -d postgres rustfs
 
 The application will start on **`http://localhost:8080`**.
 
+The compose project name is `ozerler-marble-erp`. Postgres keeps the volume `docker_postgres_data`. Local uploads, media, and the optional RustFS named volume are `ozerler-marble-erp-uploads`, `ozerler-marble-erp-media`, and `ozerler-marble-erp-rustfs`. Copy an old volume once if you still need its files. The script skips a destination that already has files and never deletes the source:
+
+```bash
+./scripts/copy_named_volume.sh docker_uploads_data ozerler-marble-erp-uploads
+./scripts/copy_named_volume.sh docker_media_data ozerler-marble-erp-media
+./scripts/copy_named_volume.sh docker_rustfs_data ozerler-marble-erp-rustfs
+```
+
 ---
 
 ### Option B: Full Stack in Docker Compose (Local Build or Docker Hub Image)
@@ -107,7 +115,7 @@ If you are on Windows PowerShell and want to run the complete stack from Docker 
 
 ```powershell
 # 1. Remove any standalone failed container if present
-docker rm -f marble-erp 2>$null
+docker rm -f ozerler-marble-erp-app 2>$null
 
 # 2. Create and enter a local working directory
 mkdir -Force "$HOME\marble-erp-local"
@@ -118,7 +126,7 @@ cd "$HOME\marble-erp-local"
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: marble-erp-postgres
+    container_name: ozerler-marble-erp-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: marble_erp
@@ -144,7 +152,7 @@ services:
 
   rustfs:
     image: rustfs/rustfs:1.0.1
-    container_name: marble-rustfs
+    container_name: ozerler-marble-erp-rustfs
     restart: unless-stopped
     depends_on:
       rustfs-perms:
@@ -173,7 +181,7 @@ services:
 
   app:
     image: guvenulu/marble-erp-platform:latest
-    container_name: marble-erp
+    container_name: ozerler-marble-erp-app
     restart: unless-stopped
     depends_on:
       postgres:
@@ -224,7 +232,7 @@ docker compose up -d
 
 # 5. Check container status and logs
 docker compose ps
-docker logs -f marble-erp
+docker logs -f ozerler-marble-erp-app
 ```
 
 > [!NOTE]
@@ -380,8 +388,8 @@ $env:SERVER_PORT="8085"
 
 ### PostgreSQL Connection Refused
 - Ensure Docker Desktop is running.
-- Verify container status with `docker ps` and ensure `marble-erp-postgres` is listed as `healthy`.
-- Check database logs: `docker logs marble-erp-postgres`.
+- Verify container status with `docker ps` and ensure `ozerler-marble-erp-postgres` is listed as `healthy`.
+- Check database logs: `docker logs ozerler-marble-erp-postgres`.
 
 ---
 
@@ -428,7 +436,7 @@ Expect `200` (or a redirect that stays inside the app, not `/account/adminlogin/
 5. Confirm a row exists, then that an expired row disappears after the cleanup minute:
 
 ```bash
-docker exec -it marble-erp-postgres psql -U marbleuser -d marble_erp \
+docker exec -it ozerler-marble-erp-postgres psql -U marbleuser -d marble_erp \
   -c "SELECT SESSION_ID, PRINCIPAL_NAME, TO_TIMESTAMP(EXPIRY_TIME/1000) FROM SPRING_SESSION;"
 ```
 

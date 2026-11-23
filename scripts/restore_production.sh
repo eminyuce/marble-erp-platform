@@ -8,7 +8,14 @@
 
 set -euo pipefail
 
-PG_CONTAINER="${PG_DOCKER_CONTAINER:-marble-erp-postgres}"
+# shellcheck source=container_names.sh
+. "$(dirname "$0")/container_names.sh"
+
+if [ -n "${PG_DOCKER_CONTAINER:-}" ]; then
+    PG_CONTAINER="$PG_DOCKER_CONTAINER"
+else
+    PG_CONTAINER="$(resolve_docker_container ozerler-marble-erp-postgres marble-erp-postgres)"
+fi
 DB_NAME="${DB_NAME:-marble_erp}"
 DB_USERNAME="${DB_USERNAME:-marbleuser}"
 RUSTFS_DATA_DIR="${RUSTFS_DATA_DIR:-/opt/rustfs/data}"

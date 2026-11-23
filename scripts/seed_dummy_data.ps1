@@ -22,7 +22,7 @@ if (-not (Test-Path $SqlFile)) {
 }
 
 # 1. Check if Docker container is running
-$dockerContainer = "marble-erp-postgres"
+$dockerContainer = "ozerler-marble-erp-postgres"
 $isDockerRunning = $false
 try {
     $containerStatus = docker inspect -f '{{.State.Running}}' $dockerContainer 2>$null

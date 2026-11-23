@@ -23,6 +23,9 @@
 
 set -euo pipefail
 
+# shellcheck source=container_names.sh
+. "$(dirname "$0")/container_names.sh"
+
 # systemd-run (in-app deploy) starts a clean environment: HOME is unset.
 # Maven (~/.m2) and npm need it, and `set -u` would abort on "$HOME".
 if [ -z "${HOME:-}" ]; then
@@ -126,6 +129,9 @@ install_inapp_deploy_support() {
 
     echo "[INAPP] Installing root-owned $dest"
     sudo_cmd install -m 755 -o root -g root "$src" "$dest"
+    if [ -f "$REPO_ROOT/scripts/container_names.sh" ]; then
+        sudo_cmd install -m 755 -o root -g root "$REPO_ROOT/scripts/container_names.sh" /usr/local/sbin/container_names.sh
+    fi
 
     # Root running git against an eyuce-owned clone (in-app fetch + reset --hard).
     local trusted_dirs
@@ -194,7 +200,7 @@ SPRING_PROFILES_ACTIVE=prod
 SERVER_PORT=8080
 PORT=8080
 
-# Database Configuration (PostgreSQL running in Docker container: marble-erp-postgres)
+# Database Configuration (PostgreSQL running in Docker container: ozerler-marble-erp-postgres)
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_NAME=marble_erp
@@ -279,7 +285,7 @@ esac
 # --- Dry run / interactive confirmation ------------------------------------
 if [ "$DRY_RUN" -eq 1 ]; then
     echo "Dry run preview. Actions that would be executed:"
-    echo "  1. Ensure Docker PostgreSQL (marble-erp-postgres) and RustFS (marble-rustfs) are running"
+    echo "  1. Ensure Docker PostgreSQL (ozerler-marble-erp-postgres) and RustFS (ozerler-marble-erp-rustfs) are running"
     echo "  2. Build frontend (npm install && npm run build) unless --skip-frontend"
     echo "  3. Package backend (./mvnw clean package -DskipTests)"
     echo "  4. Stop systemd service ($SERVICE_NAME)"
@@ -415,38 +421,46 @@ install_inapp_deploy_support
 
 # --- Database health check (Docker PostgreSQL) -----------------------------
 if command -v docker >/dev/null 2>&1; then
-    if docker inspect marble-erp-postgres >/dev/null 2>&1; then
-        if ! docker inspect -f '{{.State.Running}}' marble-erp-postgres 2>/dev/null | grep -q "true"; then
-            echo "[DB] Starting Docker container 'marble-erp-postgres'..."
-            docker start marble-erp-postgres
+    PG_CONTAINER="$(resolve_docker_container ozerler-marble-erp-postgres marble-erp-postgres)"
+    RUSTFS_CONTAINER="$(resolve_docker_container ozerler-marble-erp-rustfs marble-rustfs)"
+    if docker inspect "$PG_CONTAINER" >/dev/null 2>&1; then
+        if ! docker inspect -f '{{.State.Running}}' "$PG_CONTAINER" 2>/dev/null | grep -q "true"; then
+            echo "[DB] Starting Docker container '$PG_CONTAINER'..."
+            docker start "$PG_CONTAINER"
             sleep 2
         fi
-        if docker exec marble-erp-postgres pg_isready -U marbleuser -d marble_erp -q 2>/dev/null; then
-            echo "[DB] Docker container 'marble-erp-postgres' is healthy and ready."
+        if docker exec "$PG_CONTAINER" pg_isready -U marbleuser -d marble_erp -q 2>/dev/null; then
+            echo "[DB] Docker container '$PG_CONTAINER' is healthy and ready."
         fi
     fi
 
     RUSTFS_DATA_DIR_VALUE="$(grep -E '^RUSTFS_DATA_DIR=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
     RUSTFS_DATA_DIR_VALUE="${RUSTFS_DATA_DIR_VALUE:-/opt/rustfs/data}"
     sudo_cmd mkdir -p "$RUSTFS_DATA_DIR_VALUE"
-    if docker inspect marble-rustfs >/dev/null 2>&1 \
-        && docker inspect -f '{{.State.Running}}' marble-rustfs 2>/dev/null | grep -q "true"; then
+    if docker inspect "$RUSTFS_CONTAINER" >/dev/null 2>&1 \
+        && docker inspect -f '{{.State.Running}}' "$RUSTFS_CONTAINER" 2>/dev/null | grep -q "true"; then
         :
     elif [ -f "$REPO_ROOT/docker/docker-compose.yml" ]; then
         echo "[RUSTFS] Removing legacy MinIO container if present..."
         docker stop marble-minio 2>/dev/null || true
         docker rm marble-minio 2>/dev/null || true
         # also clean any half-created rustfs
-        docker rm -f marble-rustfs marble-rustfs-perms 2>/dev/null || true
+        docker rm -f ozerler-marble-erp-rustfs ozerler-marble-erp-rustfs-perms 2>/dev/null || true
 
         # crucial: --remove-orphans
         # `down` also removes the Postgres service in this compose file. The named
         # volume is kept (no -v). Postgres is started again immediately below.
         postgres_was_running=0
-        if docker inspect -f '{{.State.Running}}' marble-erp-postgres 2>/dev/null | grep -q "true"; then
+        if docker inspect marble-erp-postgres >/dev/null 2>&1 || docker inspect ozerler-marble-erp-postgres >/dev/null 2>&1; then
             postgres_was_running=1
         fi
-        (cd "$REPO_ROOT" && docker compose -f docker/docker-compose.yml down --remove-orphans 2>/dev/null || true)
+        # Containers from the old project name "docker". Volumes are not removed.
+        docker rm -f marble-rustfs marble-rustfs-perms marble-erp-postgres >/dev/null 2>&1 || true
+        legacy_ids="$(docker ps -aq --filter label=com.docker.compose.project=docker 2>/dev/null || true)"
+        if [ -n "$legacy_ids" ]; then
+            # shellcheck disable=SC2086
+            docker rm -f $legacy_ids >/dev/null 2>&1 || true
+        fi
 
         echo "[RUSTFS] Creating RustFS container from docker/docker-compose.yml (data: $RUSTFS_DATA_DIR_VALUE)"
         RUSTFS_ACCESS_KEY_VALUE="$(grep -E '^RUSTFS_ACCESS_KEY=' "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d ' "' || true)"
@@ -460,20 +474,16 @@ if command -v docker >/dev/null 2>&1; then
         rustfs_up_status=$?
         set -e
         if [ "$postgres_was_running" -eq 1 ]; then
-            echo "[DB] Restoring Docker container 'marble-erp-postgres' after RustFS cleanup..."
-            if docker inspect marble-erp-postgres >/dev/null 2>&1; then
-                docker start marble-erp-postgres
-            else
-                (cd "$REPO_ROOT" && docker compose -f docker/docker-compose.yml up -d postgres)
-            fi
+            echo "[DB] Restoring Postgres on volume docker_postgres_data..."
+            (cd "$REPO_ROOT" && docker compose -f docker/docker-compose.yml up -d postgres)
             sleep 2
         fi
         if [ "$rustfs_up_status" -ne 0 ]; then
             die "RustFS container create failed (docker compose up --remove-orphans rustfs)."
         fi
     fi
-    if docker inspect marble-rustfs >/dev/null 2>&1; then
-        echo "[RUSTFS] Docker container 'marble-rustfs' is present. Backup this data directory: $RUSTFS_DATA_DIR_VALUE"
+    if docker inspect ozerler-marble-erp-rustfs >/dev/null 2>&1; then
+        echo "[RUSTFS] Docker container 'ozerler-marble-erp-rustfs' is present. Backup this data directory: $RUSTFS_DATA_DIR_VALUE"
     fi
     if docker inspect marble-minio >/dev/null 2>&1; then
         echo "[RUSTFS] Legacy container 'marble-minio' is still present. RustFS does not read MinIO disks. Copy objects with an S3 client, then stop marble-minio."

@@ -62,8 +62,8 @@ Run RustFS as a Docker container with a persistent data directory. The container
 ```text
 Ubuntu Server
 ├── Docker
-│   ├── marble-erp-postgres
-│   └── marble-rustfs   (volume or /opt/rustfs/data)
+│   ├── ozerler-marble-erp-postgres
+│   └── ozerler-marble-erp-rustfs   (volume or /opt/rustfs/data)
 └── marble-erp-platform (JAR or app container)
 ```
 

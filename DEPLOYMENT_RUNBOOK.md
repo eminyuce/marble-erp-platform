@@ -29,7 +29,7 @@ Executing [`scripts/deploy_production.sh`](file:///home/eyuce/marble-erp-platfor
 
 1. **Pre-flight Checks**:
    - Confirms Linux host and OpenJDK 24+ (running OpenJDK 25).
-   - Verifies Docker PostgreSQL container (`marble-erp-postgres`) is healthy and listening on port `5432`. If stopped, it automatically starts it.
+   - Verifies Docker PostgreSQL container (`ozerler-marble-erp-postgres`) is healthy and listening on port `5432`. If stopped, it automatically starts it.
    - Verifies `/opt/marble-erp/marble-erp.env` exists, contains no placeholders, and has strict permissions (`640`).
 2. **Frontend Build**:
    - Executes `npm install && npm run build` inside `frontend/` to compile Tailwind CSS assets into `src/main/resources/static/css/app.css`.
@@ -64,8 +64,9 @@ Executing [`scripts/deploy_production.sh`](file:///home/eyuce/marble-erp-platfor
 | `/opt/marble-erp/uploads` | Legacy upload storage | Kept for RustFS migration; not the live store |
 | `/opt/rustfs/data` | RustFS object data | Must be backed up together with PostgreSQL |
 | `/etc/systemd/system/marble-erp.service` | systemd service unit | Manages the live Java process under `eyuce:eyuce` |
-| `marble-erp-postgres` | Docker container | PostgreSQL 16 on port `5432` (`restart: always`) |
-| `marble-rustfs` | Docker container | RustFS S3 API `9000`, console `9001` |
+| `ozerler-marble-erp-postgres` | Docker container | PostgreSQL 16 on port `5432`. Data volume stays `docker_postgres_data`. |
+| `ozerler-marble-erp-rustfs` | Docker container | RustFS API `9000`. Service DNS name is still `rustfs`. Data path `/opt/rustfs/data`. |
+| Compose project `ozerler-marble-erp` | both compose files | Not the folder name. Prod uploads/media volumes stay `marble-erp_uploads_data` and `marble-erp_media_data`. |
 
 ### Active environment variables
 
@@ -76,7 +77,7 @@ SPRING_PROFILES_ACTIVE=prod
 SERVER_PORT=8080
 PORT=8080
 
-# Database Configuration (Docker container: marble-erp-postgres)
+# Database Configuration (Docker container: ozerler-marble-erp-postgres)
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_NAME=marble_erp
@@ -131,8 +132,8 @@ sudo journalctl -u marble-erp -p err -n 50 --no-pager
 
 ### Check Database Container
 ```bash
-docker ps -f name=marble-erp-postgres
-docker logs --tail 50 marble-erp-postgres
+docker ps -f name=ozerler-marble-erp-postgres
+docker logs --tail 50 ozerler-marble-erp-postgres
 ```
 
 ### Test Health Endpoints Manually

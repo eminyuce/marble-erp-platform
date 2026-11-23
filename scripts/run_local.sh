@@ -29,7 +29,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 COMPOSE_FILE="$REPO_ROOT/docker/docker-compose.yml"
-POSTGRES_CONTAINER="marble-erp-postgres"
+POSTGRES_CONTAINER="ozerler-marble-erp-postgres"
 APP_PORT=8080
 POSTGRES_WAIT_SECONDS=90
 

@@ -14,8 +14,8 @@ Production is actively running under `/opt/marble-erp` managed by Docker Compose
 | Service Role | Container Name | Image | Host -> Container Port | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **ERP Application** | `marble-erp` | `guvenulu/marble-erp-platform:latest` | `0.0.0.0:81->81/tcp` | Running (`healthy`) |
-| **PostgreSQL Database** | `marble-erp-postgres` | `postgres:16-alpine` (PostgreSQL 16.15) | `127.0.0.1:5432->5432/tcp` | Running (`healthy`) |
-| **Object Storage (S3)** | `marble-rustfs` | `rustfs/rustfs:1.0.1` | `127.0.0.1:9000-9001->9000-9001/tcp` | Running (`healthy`) |
+| **PostgreSQL Database** | `ozerler-marble-erp-postgres` | `postgres:16-alpine` (PostgreSQL 16.15) | `127.0.0.1:5432->5432/tcp` | Running (`healthy`) |
+| **Object Storage (S3)** | `ozerler-marble-erp-rustfs` | `rustfs/rustfs:1.0.1` | `127.0.0.1:9000-9001->9000-9001/tcp` | Running (`healthy`) |
 
 One-shot initialization containers in `docker-compose.prod.yml`:
 - `rustfs-perms` (`alpine:3.20`): Ensures `/opt/rustfs/data` is owned by `10001:10001` when initializing the full stack.
@@ -25,7 +25,7 @@ One-shot initialization containers in `docker-compose.prod.yml`:
 
 ## 2. Existing PostgreSQL Container and Volume Information
 
-- **Container Name:** `marble-erp-postgres`
+- **Container Name:** `ozerler-marble-erp-postgres`
 - **Image & Version:** `postgres:16-alpine` (`PostgreSQL 16.15 on x86_64-pc-linux-musl`)
 - **Docker Volume Name:** `docker_postgres_data` (`external: true`)
 - **Host Mountpoint:** `/var/lib/docker/volumes/docker_postgres_data/_data` -> `/var/lib/postgresql/data`
@@ -44,7 +44,7 @@ One-shot initialization containers in `docker-compose.prod.yml`:
 
 ## 3. Existing RustFS Container and Volume Information
 
-- **Container Name:** `marble-rustfs`
+- **Container Name:** `ozerler-marble-erp-rustfs`
 - **Image & Version:** `rustfs/rustfs:1.0.1`
 - **Storage Mount:** Host bind mount `/opt/rustfs/data` -> `/data` (owned by UID/GID `10001:10001`)
 - **Active Bucket:** `erp-files` (`/opt/rustfs/data/erp-files`, plus `.rustfs.sys`)
@@ -60,7 +60,7 @@ One-shot initialization containers in `docker-compose.prod.yml`:
 ## 4. Existing Docker Network Information
 
 - **Primary Production Network:** `marble-erp_default` (`bridge` driver)
-  - Connected containers: `marble-erp`, `marble-erp-postgres` (DNS alias `postgres`), `marble-rustfs` (DNS alias `rustfs`).
+  - Connected containers: `marble-erp`, `ozerler-marble-erp-postgres` (DNS alias `postgres`), `ozerler-marble-erp-rustfs` (DNS alias `rustfs`).
 - **Additional Bridge Networks Present on Host:** `docker_marble-network`, `bridge`, `host`, `none`.
 
 ---
@@ -68,12 +68,12 @@ One-shot initialization containers in `docker-compose.prod.yml`:
 ## 5. Changes Made
 
 1. **Zero-Data-Loss Application-Only Production Rollout (`--no-deps app`):**
-   - Updated `scripts/deploy_from_app.sh` so that when `marble-erp-postgres` and `marble-rustfs` are already running, deployments execute:
+   - Updated `scripts/deploy_from_app.sh` so that when `ozerler-marble-erp-postgres` and `ozerler-marble-erp-rustfs` are already running, deployments execute:
      ```bash
      docker compose --project-directory /opt/marble-erp -f /opt/marble-erp/docker-compose.prod.yml pull app
      docker compose --project-directory /opt/marble-erp -f /opt/marble-erp/docker-compose.prod.yml up -d --no-deps app
      ```
-   - `marble-erp-postgres` and `marble-rustfs` are **never** stopped, recreated, or touched during normal application updates.
+   - `ozerler-marble-erp-postgres` and `ozerler-marble-erp-rustfs` are **never** stopped, recreated, or touched during normal application updates.
 2. **Self-Contained Docker Image (`Dockerfile` + `scripts/docker-entrypoint.sh`):**
    - Installed the `docker-compose` v2 CLI plugin (`/usr/local/lib/docker/cli-plugins/docker-compose`) inside the runtime image.
    - Bundled `/stack/docker-compose.prod.yml`, `/stack/docker-compose.yml`, `/stack/.env.example`, and `/stack/scripts/*.sh` inside `guvenulu/marble-erp-platform`.
@@ -149,7 +149,7 @@ docker ps --filter name=marble
 # 2. Take a verified backup of PostgreSQL and RustFS
 /home/eyuce/marble-erp-platform/scripts/backup_production.sh
 
-# 3. Trigger application-only rollout (leaves marble-erp-postgres and marble-rustfs untouched)
+# 3. Trigger application-only rollout (leaves ozerler-marble-erp-postgres and ozerler-marble-erp-rustfs untouched)
 cd /opt/marble-erp
 docker compose -f docker-compose.prod.yml pull app
 docker compose -f docker-compose.prod.yml up -d --no-deps app
@@ -167,7 +167,7 @@ Alternatively, click **"Sistemi Güncelle"** in the Admin UI at `/settings/deplo
 Executed via `./scripts/backup_production.sh`:
 - **Destination:** `/opt/marble-erp/backups/<YYYYMMDD_HHMMSS>/`
 - **PostgreSQL Backup:**
-  - Custom format dump (`postgres_marble_erp.dump`) via `pg_dump -Fc --no-owner --no-acl` inside `marble-erp-postgres`.
+  - Custom format dump (`postgres_marble_erp.dump`) via `pg_dump -Fc --no-owner --no-acl` inside `ozerler-marble-erp-postgres`.
   - Plain compressed SQL dump (`postgres_marble_erp.sql.gz`).
   - Verified immediately using `pg_restore --list`.
 - **RustFS Backup:**
@@ -189,7 +189,7 @@ Executed via `./scripts/backup_production.sh`:
   ```bash
   ./scripts/rollback_production.sh guvenulu/marble-erp-platform:<git-sha>
   ```
-- Neither automatic nor manual rollback stops or modifies `marble-erp-postgres` or `marble-rustfs`.
+- Neither automatic nor manual rollback stops or modifies `ozerler-marble-erp-postgres` or `ozerler-marble-erp-rustfs`.
 
 ---
 

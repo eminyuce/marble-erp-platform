@@ -61,7 +61,7 @@ The platform adheres to **Layered Clean Architecture** and **Domain-Driven Desig
 
 ### Çalışma zamanı
 
-Üretimde dört parça vardır. Uygulama Spring Boot **4.2.0**’dır. Docker Compose içinde `PORT` ve `SERVER_PORT` **81**’dir ve kapı `${APP_PORT:-81}:81` olarak yayınlanır. PostgreSQL 16 uygulama verisini tutar. RustFS (`marble-rustfs`, servis adı `rustfs`) özel kova `erp-files` içinde dosyaları tutar ve API’yi kapı **9000**’de dinler. HTTPS’i sunucudaki Nginx sonlandırır; bu depo Nginx çalıştırmaz.
+Üretimde dört parça vardır. Uygulama Spring Boot **4.2.0**’dır. Docker Compose içinde `PORT` ve `SERVER_PORT` **81**’dir ve kapı `${APP_PORT:-81}:81` olarak yayınlanır. PostgreSQL 16 uygulama verisini tutar. RustFS (`ozerler-marble-erp-rustfs`, servis adı `rustfs`) özel kova `erp-files` içinde dosyaları tutar ve API’yi kapı **9000**’de dinler. HTTPS’i sunucudaki Nginx sonlandırır; bu depo Nginx çalıştırmaz.
 
 Yerel stack `docker/docker-compose.yml` ile açılır. Üretim stack’i `docker-compose.prod.yml` ve `scripts/deploy_production.sh` ile açılır. systemd ile JAR kurulumu [DEPLOYMENT_LINUX.md](DEPLOYMENT_LINUX.md) içindedir; o örnek `SERVER_PORT=8080` kullanır ve `location /` adresini `127.0.0.1:8080`’e yollar. Nginx’teki `location /` hedefi, uygulamanın gerçekten dinlediği kapı olmalıdır.
 
@@ -231,6 +231,34 @@ Full object-storage, backup, and filesystem-migration notes: [docs/storage.md](d
 
 ---
 
+## Compose project name
+
+Both compose files set `name: ozerler-marble-erp`. The project is not the folder name `docker`. Service DNS names stay `postgres` and `rustfs`, so `DB_HOST=postgres` and `RUSTFS_ENDPOINT=http://rustfs:9000` do not change. Nginx still proxies to `127.0.0.1:9000` and the app port.
+
+Volume names are pinned so a project rename does not create empty disks:
+
+| Compose key | Where | Docker name | Why |
+| :--- | :--- | :--- | :--- |
+| `postgres_data` | both files | `docker_postgres_data` | Live Postgres. Prod marks it `external: true`. |
+| `uploads_data` | prod | `marble-erp_uploads_data` | Already created by the previous prod project name. |
+| `media_data` | prod | `marble-erp_media_data` | Same. |
+| RustFS data | prod | host path `/opt/rustfs/data` | Bind mount, not a named volume. |
+| `uploads_data` | `docker/docker-compose.yml` | `ozerler-marble-erp-uploads` | New local name. |
+| `media_data` | `docker/docker-compose.yml` | `ozerler-marble-erp-media` | New local name. |
+| `rustfs_data` | `docker/docker-compose.yml` | `ozerler-marble-erp-rustfs` | New local name. Used only when `RUSTFS_DATA_DIR` is unset. |
+
+Local one-time copy (the source volume is never deleted; a destination that already has files is skipped):
+
+```bash
+./scripts/copy_named_volume.sh docker_uploads_data ozerler-marble-erp-uploads
+./scripts/copy_named_volume.sh docker_media_data ozerler-marble-erp-media
+./scripts/copy_named_volume.sh docker_rustfs_data ozerler-marble-erp-rustfs
+```
+
+Do not copy `docker_postgres_data`. Both compose files already mount that volume. Do not run `docker compose down -v`.
+
+Containers are `ozerler-marble-erp-postgres`, `ozerler-marble-erp-rustfs`, and `ozerler-marble-erp-app`. Scripts still accept the previous container names until those containers are recreated. The in-app rollout replaces only the app container and attaches the running database containers to the network `ozerler-marble-erp`.
+
 ## 🐳 Docker Hub Deployment & Zero-Data-Loss Production Operations
 
 The application image (`guvenulu/marble-erp-platform`) follows a single-responsibility container architecture (PostgreSQL and RustFS run in their own dedicated containers), while bundling all required Compose definitions (`/stack/docker-compose.yml`, `/stack/docker-compose.prod.yml`), operational scripts (`/stack/scripts/*`), and the `docker compose` v2 CLI plugin inside the image. No `.env` file is bundled or required.
@@ -256,7 +284,7 @@ docker compose -f docker/docker-compose.yml up -d
 
 ### 2. Zero-Data-Loss Production Application Rollouts
 
-In production (`/opt/marble-erp`), PostgreSQL (`marble-erp-postgres`, volume `docker_postgres_data`) and RustFS (`marble-rustfs`, mount `/opt/rustfs/data`, bucket `erp-files`) hold live production data and must **never** be recreated or reset during application updates:
+In production (`/opt/marble-erp`), PostgreSQL (`ozerler-marble-erp-postgres`, volume `docker_postgres_data`) and RustFS (`ozerler-marble-erp-rustfs`, mount `/opt/rustfs/data`, bucket `erp-files`) hold live production data and must **never** be recreated or reset during application updates:
 
 - **In-App One-Click Update (`/settings/deployment`):**
   1. Records the currently running healthy image ID, repo digest, and Git SHA in `/opt/marble-erp/logs/last-known-good.env` and tags it as `guvenulu/marble-erp-platform:rollback-previous`.
@@ -344,7 +372,7 @@ Seeded via Flyway migration ([V4__add_settings_and_admin_eimece.sql](src/main/re
 
 Uploads are stored in **RustFS** (S3 API, Docker). PostgreSQL keeps only metadata in `file_storage`. The RustFS bucket is private.
 
-MinIO has been removed from production. Deploys do not start a MinIO container, and RustFS does not mount a MinIO disk. The only object store is `marble-rustfs`.
+MinIO has been removed from production. Deploys do not start a MinIO container, and RustFS does not mount a MinIO disk. The only object store is `ozerler-marble-erp-rustfs`.
 
 Accepted uploads: images (JPG, PNG, WEBP, GIF, BMP, SVG), PDF, Excel (XLSX, XLS), CSV, Word (DOCX, DOC), TXT, and Markdown (`.md`). After a file is uploaded, click it to open a preview and confirm it is the right image or document.
 
@@ -357,7 +385,7 @@ docker compose -f docker/docker-compose.yml up -d rustfs
 | RustFS API | http://localhost:9000 |
 | RustFS Console | http://localhost:9001 |
 
-Production Ubuntu deploys (`scripts/deploy_production.sh`) start `marble-rustfs` in Docker with persistent data at `RUSTFS_DATA_DIR` (default `/opt/rustfs/data`). Legacy folders `/opt/marble-erp/media` and `/opt/marble-erp/uploads` are kept only so existing files can be migrated; they are no longer the live store.
+Production Ubuntu deploys (`scripts/deploy_production.sh`) start `ozerler-marble-erp-rustfs` in Docker with persistent data at `RUSTFS_DATA_DIR` (default `/opt/rustfs/data`). Legacy folders `/opt/marble-erp/media` and `/opt/marble-erp/uploads` are kept only so existing files can be migrated; they are no longer the live store.
 
 A PostgreSQL backup is not enough — back up the RustFS data directory as well. Details: [docs/storage.md](docs/storage.md).
 
@@ -405,7 +433,7 @@ location ^~ /erp-files/ {
 
 `^~` şarttır. Birçok sitede `location ~* \.(jpg|png|svg|...)$` gibi bir düzenli ifade vardır. `^~` olmazsa `.jpg` ve `.png` anahtarları RustFS yerine uygulamaya gider ve imza boşa düşer.
 
-`proxy_pass http://127.0.0.1:9000;` adresinin sonunda eğik çizgi veya ek yol yoktur. Bu adres, RustFS’in sunucuda yayınlandığı yerle aynı olmalıdır. Üretim Compose dosyası API’yi yalnızca `127.0.0.1:9000` üzerinde yayınlar (`127.0.0.1:9000:9000`). Nginx sunucunun kendisindeyse bu değer doğrudur. Yayınlanan adres farklıysa yalnızca host ve portu değiştirin. Konteyner adı `marble-rustfs`, Compose servis adı `rustfs`, dinlediği port `9000`’dir. Nginx aynı Docker ağındaysa upstream `http://rustfs:9000` olur; yine URI eklemeyin.
+`proxy_pass http://127.0.0.1:9000;` adresinin sonunda eğik çizgi veya ek yol yoktur. Bu adres, RustFS’in sunucuda yayınlandığı yerle aynı olmalıdır. Üretim Compose dosyası API’yi yalnızca `127.0.0.1:9000` üzerinde yayınlar (`127.0.0.1:9000:9000`). Nginx sunucunun kendisindeyse bu değer doğrudur. Yayınlanan adres farklıysa yalnızca host ve portu değiştirin. Konteyner adı `ozerler-marble-erp-rustfs`, Compose servis adı `rustfs`, dinlediği port `9000`’dir. Nginx aynı Docker ağındaysa upstream `http://rustfs:9000` olur; yine URI eklemeyin.
 
 Yapmayın:
 

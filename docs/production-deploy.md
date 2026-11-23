@@ -14,7 +14,7 @@ Local development stays in [RUNNING_LOCALLY.md](../RUNNING_LOCALLY.md) and `scri
 
 | Wrong on production | Why |
 | :--- | :--- |
-| `scripts/run_local.sh` | Starts **dev** profile via `./mvnw spring-boot:run`, waits on a **Docker** Postgres named `marble-erp-postgres`, and binds the Maven process to your SSH session. Killing the shell (or `sudo kill` on a random Java PID) leaves an unmanaged orphan. |
+| `scripts/run_local.sh` | Starts **dev** profile via `./mvnw spring-boot:run`, waits on a **Docker** Postgres named `ozerler-marble-erp-postgres`, and binds the Maven process to your SSH session. Killing the shell (or `sudo kill` on a random Java PID) leaves an unmanaged orphan. |
 | `./mvnw spring-boot:run` / `mvn spring-boot:run` | Same problem: Maven-launched JVM, `dev` defaults, no restart policy, no rollback artifact. |
 | `sudo kill <pid>` | Easy to kill the wrong process. Use `systemctl` so only the ERP service stops. |
 
@@ -263,15 +263,17 @@ GitHub Actions (`.github/workflows/docker-publish.yml`) and GitLab CI (`.gitlab-
 ### Production Data Preservation Rules
 
 The live server at `/opt/marble-erp` already runs this stack:
-- **PostgreSQL (`marble-erp-postgres`):** Uses the external volume `docker_postgres_data`.
-- **RustFS (`marble-rustfs`):** Uses the host directory `/opt/rustfs/data` (bucket `erp-files`).
-- **Application (`marble-erp`):** Uses `guvenulu/marble-erp-platform:${APP_TAG:-latest}` on network `marble-erp_default`.
+- **PostgreSQL (`ozerler-marble-erp-postgres`):** Uses the external volume `docker_postgres_data`. That name is pinned. It is not renamed and it is not copied.
+- **RustFS (`ozerler-marble-erp-rustfs`):** Uses the host directory `/opt/rustfs/data` (bucket `erp-files`). The Compose service name remains `rustfs`.
+- **Uploads / media volumes:** pinned to `marble-erp_uploads_data` and `marble-erp_media_data`.
+- **Application (`ozerler-marble-erp-app`):** image `guvenulu/marble-erp-platform:${APP_TAG:-latest}` on network `ozerler-marble-erp`.
+- **Compose project:** `ozerler-marble-erp` (`name:` in the compose file, not `-p` and not the folder name).
 
 **Never** run `docker compose down -v`, `docker volume rm`, or `docker volume prune` in production, and never replace `docker_postgres_data` or `/opt/rustfs/data` with empty volumes.
 
 ### Application-Only Rollout (`--no-deps app`) & Automatic Rollback
 
-When `marble-erp-postgres` and `marble-rustfs` are already running, production updates (`scripts/deploy_from_app.sh` and the in-app button at `/settings/deployment` or `/admin/deployment`) perform an **application-only** update:
+When `ozerler-marble-erp-postgres` and `ozerler-marble-erp-rustfs` are already running, production updates (`scripts/deploy_from_app.sh` and the in-app button at `/settings/deployment` or `/admin/deployment`) perform an **application-only** update:
 
 1. Records the currently running healthy image ID, digest, and commit SHA in `/opt/marble-erp/logs/last-known-good.env` and tags the image as `guvenulu/marble-erp-platform:rollback-previous`.
 2. Pulls only the application service:

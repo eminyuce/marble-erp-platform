@@ -18,7 +18,7 @@ if ($SkipMysql) {
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
 $ComposeFile = Join-Path $RepoRoot "docker\docker-compose.yml"
-$PostgresContainer = "marble-erp-postgres"
+$PostgresContainer = "ozerler-marble-erp-postgres"
 $AppPort = 8080
 $PostgresWaitSeconds = 90
 

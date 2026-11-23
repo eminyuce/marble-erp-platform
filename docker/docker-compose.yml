@@ -1,7 +1,14 @@
+# Project name is explicit so it is not the folder name "docker".
+# Service DNS names stay "postgres" and "rustfs" (RUSTFS_ENDPOINT=http://rustfs:9000).
+# Postgres data stays in the existing volume docker_postgres_data.
+# Other local volumes use ozerler-marble-erp-* names. See RUNNING_LOCALLY.md
+# for the one-time copy from docker_uploads_data, docker_media_data, and docker_rustfs_data.
+name: ozerler-marble-erp
+
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: marble-erp-postgres
+    container_name: ozerler-marble-erp-postgres
     restart: always
     environment:
       POSTGRES_DB: ${DB_NAME:-marble_erp}
@@ -22,7 +29,7 @@ services:
 
   rustfs-perms:
     image: alpine:3.24.1
-    container_name: marble-rustfs-perms
+    container_name: ozerler-marble-erp-rustfs-perms
     user: root
     restart: "no"
     volumes:
@@ -33,7 +40,7 @@ services:
 
   rustfs:
     image: rustfs/rustfs:1.0.1
-    container_name: marble-rustfs
+    container_name: ozerler-marble-erp-rustfs
     restart: unless-stopped
     depends_on:
       rustfs-perms:
@@ -61,7 +68,7 @@ services:
 
   app-perms:
     image: alpine:3.24.1
-    container_name: marble-app-perms
+    container_name: ozerler-marble-erp-app-perms
     user: root
     restart: "no"
     volumes:
@@ -76,7 +83,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    container_name: marble-erp-app
+    container_name: ozerler-marble-erp-app
     init: true
     stop_grace_period: 30s
     restart: always
@@ -130,15 +137,17 @@ services:
       - marble-network
 
 volumes:
+  # Same volume the production JAR deploy already uses. Do not rename it.
   postgres_data:
-    driver: local
+    name: docker_postgres_data
   uploads_data:
-    driver: local
+    name: ozerler-marble-erp-uploads
   media_data:
-    driver: local
+    name: ozerler-marble-erp-media
   rustfs_data:
-    driver: local
+    name: ozerler-marble-erp-rustfs
 
 networks:
   marble-network:
+    name: ozerler-marble-erp
     driver: bridge

@@ -4,7 +4,7 @@
 #
 # Restores the previous known-good application Docker image and recreates ONLY
 # the Marble ERP application container (`app`).
-# Leaves PostgreSQL (`marble-erp-postgres`) and RustFS (`marble-rustfs`) untouched.
+# Leaves PostgreSQL (`ozerler-marble-erp-postgres`) and RustFS (`ozerler-marble-erp-rustfs`) untouched.
 # ==============================================================================
 
 set -euo pipefail

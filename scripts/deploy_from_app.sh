@@ -193,6 +193,31 @@ LAST_GOOD=/logs/last-known-good.env
 STARTED='${started_at}'
 APP_IMAGE='${app_image}'
 IMAGE_REPO='${DOCKERHUB_USERNAME:-guvenulu}/marble-erp-platform'
+pick_container() {
+    if docker inspect "\$1" >/dev/null 2>&1; then
+        echo "\$1"
+    elif docker inspect "\$2" >/dev/null 2>&1; then
+        echo "\$2"
+    else
+        echo "\$1"
+    fi
+}
+APP_CONTAINER=\$(pick_container ozerler-marble-erp-app marble-erp)
+PG_CONTAINER=\$(pick_container ozerler-marble-erp-postgres marble-erp-postgres)
+RUSTFS_CONTAINER=\$(pick_container ozerler-marble-erp-rustfs marble-rustfs)
+attach_alias() {
+    if ! docker inspect "\$3" >/dev/null 2>&1; then
+        return 0
+    fi
+    docker network create "\$1" >/dev/null 2>&1 || true
+    docker network connect --alias "\$2" "\$1" "\$3" >/dev/null 2>&1 || true
+}
+prepare_app_rollout() {
+    # The previous app container held host port 81. Removing it does not delete volumes.
+    docker rm -f marble-erp >/dev/null 2>&1 || true
+    attach_alias ozerler-marble-erp postgres "\$PG_CONTAINER"
+    attach_alias ozerler-marble-erp rustfs "\$RUSTFS_CONTAINER"
+}
 write_status() {
     finished=""
     if [ "\$1" != "RUNNING" ]; then
@@ -208,13 +233,14 @@ STATUS_EOF
     chmod 664 "\$STATUS" "\$LOG" 2>/dev/null || true
 }
 wait_for_app_health() {
+    APP_CONTAINER=ozerler-marble-erp-app
     echo "Uygulama konteynerinin sağlığı bekleniyor."
     i=0
     while [ "\$i" -lt 60 ]; do
-        health=\$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' marble-erp 2>/dev/null || echo missing)
+        health=\$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \$APP_CONTAINER 2>/dev/null || echo missing)
         echo "health=\$health"
         if [ "\$health" = "healthy" ]; then
-            health_json=\$(docker exec marble-erp curl -fsS http://127.0.0.1:81/health/ 2>/dev/null || true)
+            health_json=\$(docker exec \$APP_CONTAINER curl -fsS http://127.0.0.1:81/health/ 2>/dev/null || true)
             case "\$health_json" in
                 *'"status":"UP"'*)
                     echo "[OK] Spring Boot /health/ doğrulandı (database=UP, rustfs=UP)."
@@ -225,17 +251,17 @@ wait_for_app_health() {
             echo "[OK] Docker Hub imajı yayında."
             return 0
         fi
-        cstate=\$(docker inspect -f '{{.State.Status}}' marble-erp 2>/dev/null || echo missing)
+        cstate=\$(docker inspect -f '{{.State.Status}}' \$APP_CONTAINER 2>/dev/null || echo missing)
         if [ "\$cstate" = "exited" ] || [ "\$cstate" = "dead" ]; then
             echo "[FAIL] Uygulama konteyneri durdu (durum=\$cstate)."
-            docker logs --tail 30 marble-erp 2>&1 || true
+            docker logs --tail 30 \$APP_CONTAINER 2>&1 || true
             return 1
         fi
         i=\$((i + 1))
         sleep 3
     done
     echo "[FAIL] Uygulama konteyneri sağlıklı olmadı."
-    docker logs --tail 30 marble-erp 2>&1 || true
+    docker logs --tail 30 \$APP_CONTAINER 2>&1 || true
     return 1
 }
 istanbul_now() {
@@ -271,13 +297,13 @@ print_release_header() {
     echo "Çalışan imaj kimliği: \${prev_id:-yok}"
     echo "Çalışan imaj özeti: \${prev_digest:-yok}"
     echo "Çalışan git revizyonu: \${prev_rev:-yok}"
-    info=\$(docker exec marble-erp curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)
+    info=\$(docker exec \$APP_CONTAINER curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)
     print_actuator_lines "\$info"
-    pgver=\$(docker exec -u postgres marble-erp-postgres psql -d marble_erp -tAc 'SELECT version();' 2>/dev/null || true)
-    flyway=\$(docker exec -u postgres marble-erp-postgres psql -d marble_erp -tAc 'SELECT version FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 1;' 2>/dev/null || true)
+    pgver=\$(docker exec -u postgres \$PG_CONTAINER psql -d marble_erp -tAc 'SELECT version();' 2>/dev/null || true)
+    flyway=\$(docker exec -u postgres \$PG_CONTAINER psql -d marble_erp -tAc 'SELECT version FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 1;' 2>/dev/null || true)
     echo "PostgreSQL: \${pgver:-okunamadı}"
     echo "Flyway şema sürümü: \${flyway:-okunamadı}"
-    java_ver=\$(docker exec marble-erp java -version 2>&1 | head -n 1 || true)
+    java_ver=\$(docker exec \$APP_CONTAINER java -version 2>&1 | head -n 1 || true)
     echo "Java: \${java_ver:-okunamadı}"
     echo "Parolalar, anahtarlar ve imzalı dosya adresleri yazılmaz."
     echo "==============================================="
@@ -285,7 +311,7 @@ print_release_header() {
 print_release_summary() {
     echo "========== Yayın sonrası — teknik özet =========="
     echo "Bitiş (Europe/Istanbul): \$(istanbul_now)"
-    new_id=\$(docker inspect -f '{{.Image}}' marble-erp 2>/dev/null || true)
+    new_id=\$(docker inspect -f '{{.Image}}' \$APP_CONTAINER 2>/dev/null || true)
     new_digest=\$(docker image inspect -f '{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}' "\$new_id" 2>/dev/null || true)
     new_ver=\$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.version"}}' "\$new_id" 2>/dev/null || true)
     new_rev=\$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "\$new_id" 2>/dev/null || true)
@@ -295,7 +321,7 @@ print_release_summary() {
     echo "Yeni imaj özeti: \${new_digest:-okunamadı}"
     echo "Yeni git revizyonu: \${new_rev:-okunamadı}"
     echo "Önceki imaj kimliği: \${prev_id:-yok}"
-    info=\$(docker exec marble-erp curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)
+    info=\$(docker exec \$APP_CONTAINER curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)
     echo "Yeni konteyner:"
     print_actuator_lines "\$info"
     echo "Önceki imaj özeti: \${prev_digest:-yok}"
@@ -314,8 +340,8 @@ STACK='${host_stack}'
     if [ -d "\$STACK/.env" ]; then
         rmdir "\$STACK/.env" 2>/dev/null || true
     fi
-    prev_id=\$(docker inspect -f '{{.Image}}' marble-erp 2>/dev/null || true)
-    prev_health=\$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' marble-erp 2>/dev/null || true)
+    prev_id=\$(docker inspect -f '{{.Image}}' \$APP_CONTAINER 2>/dev/null || true)
+    prev_health=\$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \$APP_CONTAINER 2>/dev/null || true)
     if [ -n "\$prev_id" ] && [ "\$prev_health" = "healthy" ]; then
         prev_digest=\$(docker image inspect -f '{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}' "\$prev_id" 2>/dev/null || true)
         prev_rev=\$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "\$prev_id" 2>/dev/null || true)
@@ -350,8 +376,9 @@ GOOD_EOF
         echo "Sunucuda compose dosyası yok: \$STACK/docker-compose.prod.yml"
         code=1
     elif [ "\$code" -eq 0 ]; then
-        pg_running=\$(docker inspect -f '{{.State.Running}}' marble-erp-postgres 2>/dev/null || echo false)
-        rustfs_running=\$(docker inspect -f '{{.State.Running}}' marble-rustfs 2>/dev/null || echo false)
+        pg_running=\$(docker inspect -f '{{.State.Running}}' \$PG_CONTAINER 2>/dev/null || echo false)
+        rustfs_running=\$(docker inspect -f '{{.State.Running}}' \$RUSTFS_CONTAINER 2>/dev/null || echo false)
+        prepare_app_rollout
         echo "\$ docker compose -f docker-compose.prod.yml pull app"
         docker compose --project-directory "\$STACK" -f "\$STACK/docker-compose.prod.yml" pull app || code=1
         if [ "\$code" -eq 0 ]; then
@@ -490,7 +517,12 @@ echo "Depolama: ${STORAGE_TYPE:-rustfs} / kova ${RUSTFS_BUCKET:-erp-files}"
 echo "Oturum deposu: JDBC (Spring Session)"
 echo "Aktif profil: ${SPRING_PROFILES_ACTIVE:-prod}"
 echo "Parolalar, anahtarlar ve imzalı dosya adresleri yazılmaz."
-before="$(docker exec marble-erp curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)"
+# shellcheck source=container_names.sh
+. "$(dirname "$0")/container_names.sh"
+APP_CONTAINER="$(resolve_docker_container ozerler-marble-erp-app marble-erp)"
+PG_CONTAINER="$(resolve_docker_container ozerler-marble-erp-postgres marble-erp-postgres)"
+RUSTFS_CONTAINER="$(resolve_docker_container ozerler-marble-erp-rustfs marble-rustfs)"
+before="$(docker exec "$APP_CONTAINER" curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)"
 print_actuator_lines "$before"
 echo "======================================================================"
 echo
@@ -501,8 +533,11 @@ compose_args=(-f "$(compose_file)")
 echo "\$ docker compose -f docker-compose.prod.yml pull app"
 docker compose "${compose_args[@]}" pull app
 
-pg_running="$(docker inspect -f '{{.State.Running}}' marble-erp-postgres 2>/dev/null || echo false)"
-rustfs_running="$(docker inspect -f '{{.State.Running}}' marble-rustfs 2>/dev/null || echo false)"
+pg_running="$(docker inspect -f '{{.State.Running}}' "$PG_CONTAINER" 2>/dev/null || echo false)"
+rustfs_running="$(docker inspect -f '{{.State.Running}}' "$RUSTFS_CONTAINER" 2>/dev/null || echo false)"
+docker rm -f marble-erp >/dev/null 2>&1 || true
+ensure_network_alias ozerler-marble-erp postgres "$PG_CONTAINER"
+ensure_network_alias ozerler-marble-erp rustfs "$RUSTFS_CONTAINER"
 if [ "$pg_running" = "true" ] && [ "$rustfs_running" = "true" ]; then
     echo "\$ docker compose -f docker-compose.prod.yml up -d --no-deps app"
     docker compose "${compose_args[@]}" up -d --no-deps app
@@ -511,20 +546,21 @@ else
     docker compose "${compose_args[@]}" up -d --no-recreate
     docker compose "${compose_args[@]}" up -d --no-deps app
 fi
+APP_CONTAINER="ozerler-marble-erp-app"
 
 if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet marble-erp.service; then
-    echo "NOT: systemd marble-erp hâlâ çalışıyor. Yeni yığın sağlıklıysa eski JAR servisini durdurun."
+    echo "NOT: systemd birimi marble-erp.service hâlâ çalışıyor. Yeni yığın sağlıklıysa eski JAR servisini durdurun."
 fi
 
 echo
 echo "========== Yayın sonrası — teknik özet =========="
 echo "Bitiş (Europe/Istanbul): $(istanbul_now)"
-new_id="$(docker inspect -f '{{.Image}}' marble-erp 2>/dev/null || true)"
+new_id="$(docker inspect -f '{{.Image}}' "$APP_CONTAINER" 2>/dev/null || true)"
 new_ver="$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.version"}}' "$new_id" 2>/dev/null || true)"
 new_rev="$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$new_id" 2>/dev/null || true)"
 echo "Yeni imaj sürümü (pom.xml etiketi): ${new_ver:-okunamadı}"
 echo "Yeni git revizyonu: ${new_rev:-okunamadı}"
-info="$(docker exec marble-erp curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)"
+info="$(docker exec "$APP_CONTAINER" curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)"
 echo "Yeni konteyner:"
 print_actuator_lines "$info"
 echo "SONUÇ: BAŞARILI — yeni imaj yayında."

@@ -14,14 +14,17 @@
 #
 # Open http://localhost:81
 # DB_HOST inside the app container is the service name "postgres", never localhost.
-# The in-app Yayınla button pulls this image and recreates the stack.
+# The in-app Yayınla button pulls this image and recreates the app container.
+# Service DNS names stay "postgres" and "rustfs".
+# Data volumes keep their current Docker names so existing files are reused.
+# Never run "docker compose down -v".
 
-name: marble-erp
+name: ozerler-marble-erp
 
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: marble-erp-postgres
+    container_name: ozerler-marble-erp-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-marble_erp}
@@ -42,6 +45,7 @@ services:
 
   rustfs-perms:
     image: alpine:3.24.1
+    container_name: ozerler-marble-erp-rustfs-perms
     user: root
     restart: "no"
     volumes:
@@ -52,7 +56,7 @@ services:
 
   rustfs:
     image: rustfs/rustfs:1.0.1
-    container_name: marble-rustfs
+    container_name: ozerler-marble-erp-rustfs
     restart: unless-stopped
     depends_on:
       rustfs-perms:
@@ -81,6 +85,7 @@ services:
 
   deploy-log-perms:
     image: alpine:3.24.1
+    container_name: ozerler-marble-erp-deploy-perms
     user: root
     restart: "no"
     volumes:
@@ -93,7 +98,7 @@ services:
 
   app:
     image: ${DOCKERHUB_USERNAME:-guvenulu}/marble-erp-platform:${APP_TAG:-latest}
-    container_name: marble-erp
+    container_name: ozerler-marble-erp-app
     init: true
     stop_grace_period: 30s
     restart: unless-stopped
@@ -164,12 +169,18 @@ services:
       - marble-network
 
 networks:
+  # New network name. deploy_from_app.sh attaches the already-running
+  # Postgres and RustFS containers to it before replacing only the app.
   marble-network:
-    name: marble-erp
+    name: ozerler-marble-erp
 
 volumes:
+  # Live server volume. external so "down -v" cannot delete it.
   postgres_data:
     external: true
     name: ${POSTGRES_VOLUME_NAME:-docker_postgres_data}
+  # Created earlier by project name marble-erp. Pin them; do not copy or delete.
   uploads_data:
+    name: marble-erp_uploads_data
   media_data:
+    name: marble-erp_media_data
