@@ -13,7 +13,7 @@
 
     <groupId>com.ozerler</groupId>
     <artifactId>marble-erp-platform</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>Özerler Mermer ERP</name>
     <description>Enterprise Marble ERP Platform - Physical Traceability, Waste Management &amp; Dynamic Cost Accounting</description>
 
@@ -236,6 +236,13 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
                     <excludes>
                         <exclude>

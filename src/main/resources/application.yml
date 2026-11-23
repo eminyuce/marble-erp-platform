@@ -150,7 +150,7 @@ app:
       cleanup-cron: ${BACKUP_CLEANUP_CRON:0 0 3 * * ?}
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
-  version: "1.0.0"
+  version: "1.0.1"
   asset-version: "20261110-settings-titles"
   deployment:
     enabled: false
