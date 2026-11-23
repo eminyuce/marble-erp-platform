@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.dto.view.SlabView;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -13,12 +13,12 @@ public final class FactorySlabGrid {
     private FactorySlabGrid() {
     }
 
-    public static DataGridView view(Page<Slab> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<SlabView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "factory-slabs-table", columns(), FactorySlabGrid::row);
     }
 
-    static GridRow row(Slab slab) {
+    static GridRow row(SlabView slab) {
         return GridRow.of(null, null, null, null, List.of(
                 SlabGridCells.status(slab),
                 GridCell.chip(slab.getId()),

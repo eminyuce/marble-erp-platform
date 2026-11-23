@@ -10,7 +10,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class CutOrderView {
+public class CutOrderView extends AuditView {
     private Long id;
     private String cutOrderNo;
     private String status;

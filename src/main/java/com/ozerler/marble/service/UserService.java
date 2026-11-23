@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final com.ozerler.marble.mapper.RoleMapper roleMapper;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
@@ -226,5 +227,15 @@ public class UserService {
             }
         }
         return List.copyOf(normalized);
+    }
+
+    /**
+     * Same as {@code getAllRoles}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.RoleView> getAllRoleViews() {
+        return getAllRoles().stream().map(roleMapper::toDto).toList();
     }
 }

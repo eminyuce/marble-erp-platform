@@ -489,4 +489,55 @@ public class FileStorageService {
             return fileStorage.getFileSize() != null ? fileStorage.getFileSize() : -1L;
         }
     }
+
+    /**
+     * Files attached to a record as DTOs, with a presigned image URL where one is available.
+     *
+     * @param entityType owning entity type
+     * @param entityId   owning entity id
+     * @return file DTOs in storage order
+     */
+    @Transactional(readOnly = true)
+    public List<FileStorageDto> getFileViewsForEntity(String entityType, Long entityId) {
+        List<FileStorageDto> views = new java.util.ArrayList<>();
+        for (FileStorage file : getFilesForEntity(entityType, entityId)) {
+            FileStorageDto dto = FileStorageDto.fromEntity(file);
+            if (dto == null) {
+                views.add(null);
+                continue;
+            }
+            String presignedImageUrl = presignedImageUrlFor(file);
+            if (presignedImageUrl != null) {
+                dto.setPresignedImageUrl(presignedImageUrl);
+            }
+            views.add(dto);
+        }
+        return views;
+    }
+
+    /**
+     * Same access check as {@code requireAccessibleFile}, returning the file metadata as a DTO.
+     *
+     * @param id file id
+     * @return file metadata
+     */
+    @Transactional(readOnly = true)
+    public FileStorageDto requireAccessibleFileView(Long id) {
+        return FileStorageDto.fromEntity(requireAccessibleFile(id));
+    }
+
+    /**
+     * Stores an upload and returns its metadata as a DTO.
+     *
+     * @param file       the upload
+     * @param entityType owning entity type
+     * @param entityId   owning entity id
+     * @return file metadata
+     * @throws IOException when the bytes cannot be stored
+     */
+    @Transactional
+    public FileStorageDto storeFileView(MultipartFile file, String entityType, Long entityId)
+            throws IOException {
+        return FileStorageDto.fromEntity(storeFile(file, entityType, entityId));
+    }
 }

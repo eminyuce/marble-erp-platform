@@ -1,7 +1,5 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.model.Machine;
-import com.ozerler.marble.model.MachineFuelEntry;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.service.MachineFuelService;
 import org.junit.jupiter.api.Test;
@@ -39,9 +37,11 @@ class MachineFuelControllerTest {
     @Test
     void index_ReturnsFuelIndexViewWithReport() {
         Model model = new ExtendedModelMap();
-        when(machineFuelService.listByPeriod(any())).thenReturn(List.of());
+        when(machineFuelService.listViewsByPeriod(any())).thenReturn(List.of());
         when(machineFuelService.getMonthlyReport(any())).thenReturn(List.of());
-        when(machineFuelService.quarryAndFactoryMachines()).thenReturn(List.of());
+        when(machineFuelService.quarryAndFactoryMachineViews()).thenReturn(List.of());
+        when(machineFuelService.periodSummary(any())).thenReturn(
+                new com.ozerler.marble.dto.view.FuelPeriodSummary(BigDecimal.ZERO, BigDecimal.ZERO, 0, 0L));
 
         String view = controller.index("2026-09", model);
 
@@ -54,7 +54,7 @@ class MachineFuelControllerTest {
     @Test
     void showCreateForm_ReturnsFuelFormView() {
         Model model = new ExtendedModelMap();
-        when(machineFuelService.quarryAndFactoryMachines()).thenReturn(List.of());
+        when(machineFuelService.quarryAndFactoryMachineViews()).thenReturn(List.of());
 
         String view = controller.showCreateForm(model);
 
@@ -65,10 +65,16 @@ class MachineFuelControllerTest {
 
     @Test
     void createFuelEntry_WhenValid_RedirectsToIndex() {
-        Machine machine = Machine.builder().id(1L).name("CAT 320").businessUnit(BusinessUnit.QUARRY).build();
-        MachineFuelEntry entry = MachineFuelEntry.builder().id(10L).machine(machine).litres(new BigDecimal("450")).build();
+        com.ozerler.marble.dto.view.MachineRef machine = new com.ozerler.marble.dto.view.MachineRef();
+        machine.setId(1L);
+        machine.setName("CAT 320");
+        machine.setBusinessUnit(BusinessUnit.QUARRY);
+        com.ozerler.marble.dto.view.MachineFuelEntryView entry = new com.ozerler.marble.dto.view.MachineFuelEntryView();
+        entry.setId(10L);
+        entry.setMachine(machine);
+        entry.setLitres(new BigDecimal("450"));
 
-        when(machineFuelService.recordFuel(
+        when(machineFuelService.recordFuelView(
                 eq(1L), any(), eq(new BigDecimal("450")), eq(new BigDecimal("42.50")),
                 eq(new BigDecimal("1200.5")), eq("F-01"), eq("Ali"), eq("Veli"), eq("Test note")))
                 .thenReturn(entry);

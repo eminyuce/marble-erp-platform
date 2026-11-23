@@ -2,7 +2,6 @@ package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.PurchaseOrderDto;
-import com.ozerler.marble.dto.option.PartyOption;
 import com.ozerler.marble.dto.option.ProjectOption;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.CostCenter;
@@ -36,6 +35,9 @@ import java.util.stream.Collectors;
 public class ProcurementService {
 
     private final PurchaseOrderRepository purchaseOrderRepository;
+    private final com.ozerler.marble.mapper.CostCenterMapper costCenterMapper;
+    private final com.ozerler.marble.mapper.PurchaseOrderMapper purchaseOrderMapper;
+    private final com.ozerler.marble.mapper.SupplierMapper supplierMapper;
     private final SupplierRepository supplierRepository;
     private final ProjectRepository projectRepository;
     private final org.springframework.context.MessageSource messageSource;
@@ -87,9 +89,9 @@ public class ProcurementService {
     }
 
     @Transactional(readOnly = true)
-    public List<PartyOption> getAllSuppliers() {
+    public List<com.ozerler.marble.dto.view.PartyView> getAllSuppliers() {
         return BoundedReads.all(supplierRepository, org.springframework.data.domain.Sort.by("companyName")).stream()
-                .map(supplier -> new PartyOption(supplier.getId(), supplier.getCompanyName()))
+                .map(supplierMapper::toDto)
                 .toList();
     }
 
@@ -222,5 +224,57 @@ public class ProcurementService {
                 Constants.CURRENCY_TRY, order.getPoNumber(), LocalDate.now(), LocalDate.now(),
                 period, period, null, null, null, order.getProject(), null, null, null, order.getPoNumber(),
                 "Satın alma: " + order.getPoNumber()));
+    }
+
+    /**
+     * Same as {@code getOrderById}, copied into a view inside the transaction.
+     *
+     * @param id see {@code getOrderById}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.view.PurchaseOrderView getOrder(Long id) {
+        return purchaseOrderMapper.toDto(getOrderById(id));
+    }
+
+    /**
+     * Same as {@code createPurchaseOrder}, copied into a view inside the transaction.
+     *
+     * @param poNumber see {@code createPurchaseOrder}
+     * @param supplierId see {@code createPurchaseOrder}
+     * @param projectId see {@code createPurchaseOrder}
+     * @param businessUnit see {@code createPurchaseOrder}
+     * @param costCenterId see {@code createPurchaseOrder}
+     * @param expectedDelivery see {@code createPurchaseOrder}
+     * @param notes see {@code createPurchaseOrder}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.PurchaseOrderView createPurchaseOrderView(String poNumber, Long supplierId, Long projectId,
+                                             BusinessUnit businessUnit, Long costCenterId,
+                                             LocalDate expectedDelivery, String notes) {
+        return purchaseOrderMapper.toDto(createPurchaseOrder(poNumber, supplierId, projectId, businessUnit, costCenterId, expectedDelivery, notes));
+    }
+
+    /**
+     * Same as {@code getCostCentersForUnit}, copied into a view inside the transaction.
+     *
+     * @param businessUnit see {@code getCostCentersForUnit}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.CostCenterRef> getCostCenterViewsForUnit(BusinessUnit businessUnit) {
+        return getCostCentersForUnit(businessUnit).stream().map(costCenterMapper::toDto).toList();
+    }
+
+    /**
+     * Cost centers of a business unit for the JSON lookup endpoint.
+     *
+     * @param businessUnit the unit
+     * @return cost center DTOs
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.CostCenterDto> getCostCenterDtosForUnit(BusinessUnit businessUnit) {
+        return getCostCentersForUnit(businessUnit).stream().map(com.ozerler.marble.dto.CostCenterDto::fromEntity).toList();
     }
 }

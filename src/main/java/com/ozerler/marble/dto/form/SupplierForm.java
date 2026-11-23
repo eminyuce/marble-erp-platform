@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SupplierForm {
+public class SupplierForm extends com.ozerler.marble.dto.view.AuditView {
     private Long id;
     private String supplierCode;
     private SupplierType supplierType = SupplierType.CONSUMABLE;

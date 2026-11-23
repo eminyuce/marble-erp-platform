@@ -21,4 +21,20 @@ public interface BlockMapper {
     BlockView toDto(Block block);
 
     BlockRef toRef(Block block);
+
+    /**
+     * Copies a customer mark.
+     *
+     * @param mark the entity
+     * @return the view
+     */
+    com.ozerler.marble.dto.view.BlockMarkView toMark(com.ozerler.marble.model.BlockCustomerMark mark);
+
+    /**
+     * Copies a location movement.
+     *
+     * @param movement the entity
+     * @return the view
+     */
+    com.ozerler.marble.dto.view.BlockMovementView toMovement(com.ozerler.marble.model.BlockLocationMovement movement);
 }

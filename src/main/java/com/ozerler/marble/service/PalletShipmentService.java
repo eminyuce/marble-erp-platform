@@ -390,4 +390,52 @@ public class PalletShipmentService {
         palletRepository.save(pallet);
         recordPalletMovement(pallet, pallet.getCurrentLocation(), pallet.getCurrentLocation(), "Palet tekrar kullanıma ve düzenlemeye açıldı");
     }
+
+    /**
+     * Filters, pages and flattens shipments for the shipment grid inside the read transaction.
+     *
+     * @param page   one-based page number
+     * @param size   page size
+     * @param search optional free-text filter
+     * @return one page of shipment rows
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.TabulatorResponse<Map<String, Object>> shipmentRows(int page, int size, String search) {
+        List<Shipment> allShipments = shipments();
+        if (search != null && !search.isBlank()) {
+            String q = search.trim().toLowerCase();
+            allShipments = allShipments.stream().filter(s ->
+                (s.getWaybillNo() != null && s.getWaybillNo().toLowerCase().contains(q)) ||
+                (s.getVehiclePlate() != null && s.getVehiclePlate().toLowerCase().contains(q)) ||
+                (s.getDriverName() != null && s.getDriverName().toLowerCase().contains(q)) ||
+                (s.getCustomer() != null && s.getCustomer().getCompanyName().toLowerCase().contains(q)) ||
+                (s.getProject() != null && s.getProject().getName().toLowerCase().contains(q))
+            ).toList();
+        }
+        int totalElements = allShipments.size();
+        int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 1;
+        int fromIndex = Math.min((page - 1) * size, totalElements);
+        int toIndex = Math.min(fromIndex + size, totalElements);
+        List<Shipment> paged = (fromIndex <= toIndex) ? allShipments.subList(fromIndex, toIndex) : List.of();
+
+        java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        List<Map<String, Object>> list = paged.stream().map(s -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", s.getId());
+            map.put("waybillNo", s.getWaybillNo());
+            map.put("departureTime", s.getDepartureTime() != null ? s.getDepartureTime().format(dtf) : "-");
+            map.put("customerName", s.getCustomer() != null ? s.getCustomer().getCompanyName() : "-");
+            map.put("projectName", s.getProject() != null ? s.getProject().getName() : "-");
+            map.put("target", s.getCustomer() != null ? s.getCustomer().getCompanyName()
+                    : s.getProject() != null ? s.getProject().getName() : "-");
+            map.put("vehiclePlate", s.getVehiclePlate());
+            map.put("driverName", s.getDriverName());
+            map.put("freightCost", s.getFreightCost());
+            map.put("deliveryStatus", s.getDeliveryStatus());
+            map.put("deliveryStatusLabel", s.getDeliveryStatusLabel());
+            return map;
+        }).toList();
+
+        return com.ozerler.marble.dto.TabulatorResponse.of(list, totalPages, totalElements);
+    }
 }

@@ -18,6 +18,16 @@ public class StockItemView {
     private String unit;
     private String edgeFinish;
     private BigDecimal quantity;
+    private BigDecimal unitPrice;
+    private BigDecimal actualProducedQuantity;
+    private java.time.LocalDate productionDate;
+    private java.time.LocalDateTime createdDate;
+    private BlockRef sourceBlock;
+    private BlockView.LocationView stockLocation;
+    private String notes;
+    private com.ozerler.marble.model.enums.QuarryCategory quarryCategory;
+    private com.ozerler.marble.model.enums.StockProductType productType;
+    private Boolean directExpense;
     private BigDecimal thicknessCm;
     private BigDecimal widthCm;
     private BigDecimal lengthCm;

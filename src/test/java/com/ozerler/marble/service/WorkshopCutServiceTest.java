@@ -46,7 +46,7 @@ class WorkshopCutServiceTest {
     @BeforeEach
     void setUp() {
         workshopCutService = new WorkshopCutService(
-                cutOrderRepository, cutItemRepository, slabRepository,
+                cutOrderRepository, null, null, null, cutItemRepository, slabRepository,
                 projectRepository, projectLocationRepository, scrapLogRepository, null, null
         );
     }

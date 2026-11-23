@@ -28,6 +28,8 @@ import java.util.Objects;
 public class BlockCustomerMarkService {
 
     private final BlockCustomerMarkRepository markRepository;
+    private final com.ozerler.marble.mapper.BlockMapper blockMapper;
+    private final com.ozerler.marble.mapper.CustomerMapper customerMapper;
     private final BlockRepository blockRepository;
     private final CustomerRepository customerRepository;
     private final QuarryBlockService quarryBlockService;
@@ -113,5 +115,43 @@ public class BlockCustomerMarkService {
     @Transactional(readOnly = true)
     public List<Customer> customers() {
         return BoundedReads.all(customerRepository, org.springframework.data.domain.Sort.by("companyName"));
+    }
+
+    /**
+     * Marks a block for a customer and returns the new mark id.
+     *
+     * @param blockId    block id
+     * @param customerId customer id
+     * @param markedAt   mark date
+     * @param validUntil optional expiry
+     * @param offerPrice offer price
+     * @param currency   currency code
+     * @return id of the new mark
+     */
+    @Transactional
+    public Long markBlockId(Long blockId, Long customerId, LocalDate markedAt, LocalDate validUntil,
+                            BigDecimal offerPrice, String currency) {
+        return markBlock(blockId, customerId, markedAt, validUntil, offerPrice, currency).getId();
+    }
+
+    /**
+     * Same as {@code customers}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.PartyView> customerViews() {
+        return customers().stream().map(customerMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code listForBlock}, copied into a view inside the transaction.
+     *
+     * @param blockId see {@code listForBlock}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.BlockMarkView> listViewsForBlock(Long blockId) {
+        return listForBlock(blockId).stream().map(blockMapper::toMark).toList();
     }
 }

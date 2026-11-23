@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.CheckRecord;
+import com.ozerler.marble.dto.view.CheckRef;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;
 import org.springframework.data.domain.Page;
@@ -16,12 +16,12 @@ public final class CheckGrid {
     private CheckGrid() {
     }
 
-    public static DataGridView view(Page<CheckRecord> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<CheckRef> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "checks-table", columns(), CheckGrid::row);
     }
 
-    static GridRow row(CheckRecord check) {
+    static GridRow row(CheckRef check) {
         BusinessUnit unit = check.getEffectiveBusinessUnit();
         return GridRow.of(null, null, null, null, List.of(
                 GridCell.badge(check.getStatus() == null ? "" : check.getStatus().getLabel()),

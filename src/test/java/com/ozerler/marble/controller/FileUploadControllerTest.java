@@ -49,7 +49,7 @@ class FileUploadControllerTest {
                 .entityType("BLOCK")
                 .build();
 
-        when(fileStorageService.storeFile(eq(file), eq("BLOCK"), isNull())).thenReturn(storage);
+        when(fileStorageService.storeFileView(eq(file), eq("BLOCK"), isNull())).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
 
         BackEndResponse response = fileUploadController.uploadFile(file, "BLOCK", null);
 
@@ -67,8 +67,8 @@ class FileUploadControllerTest {
         FileStorage s1 = FileStorage.builder().id(10L).fileName("s1.png").originalName("img1.png").mimeType("image/png").build();
         FileStorage s2 = FileStorage.builder().id(11L).fileName("s2.pdf").originalName("doc1.pdf").mimeType("application/pdf").build();
 
-        when(fileStorageService.storeFile(eq(f1), eq("BLOCK"), eq(100L))).thenReturn(s1);
-        when(fileStorageService.storeFile(eq(f2), eq("BLOCK"), eq(100L))).thenReturn(s2);
+        when(fileStorageService.storeFileView(eq(f1), eq("BLOCK"), eq(100L))).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(s1));
+        when(fileStorageService.storeFileView(eq(f2), eq("BLOCK"), eq(100L))).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(s2));
 
         BackEndResponse response = fileUploadController.uploadMultipleFiles(List.of(f1, f2), "BLOCK", 100L);
 
@@ -132,7 +132,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("pdf-content".getBytes());
 
-        when(fileStorageService.requireAccessibleFile(5L)).thenReturn(storage);
+        when(fileStorageService.requireAccessibleFileView(5L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
         when(fileStorageService.loadAsResource(5L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(5L);
@@ -154,7 +154,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("fake-docx-data".getBytes());
 
-        when(fileStorageService.requireAccessibleFile(6L)).thenReturn(storage);
+        when(fileStorageService.requireAccessibleFileView(6L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
         when(fileStorageService.loadAsResource(6L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(6L);
@@ -179,7 +179,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("notlar...".getBytes());
 
-        when(fileStorageService.requireAccessibleFile(7L)).thenReturn(storage);
+        when(fileStorageService.requireAccessibleFileView(7L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
         when(fileStorageService.loadAsResource(7L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(7L);
@@ -204,7 +204,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("# Ocak notu".getBytes());
 
-        when(fileStorageService.requireAccessibleFile(11L)).thenReturn(storage);
+        when(fileStorageService.requireAccessibleFileView(11L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
         when(fileStorageService.loadAsResource(11L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.viewFile(11L);
@@ -228,7 +228,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("fake-xlsx-bytes".getBytes());
 
-        when(fileStorageService.requireAccessibleFile(8L)).thenReturn(storage);
+        when(fileStorageService.requireAccessibleFileView(8L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
         when(fileStorageService.loadAsResource(8L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(8L);
@@ -253,7 +253,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("id,code\n11,BLK-11".getBytes());
 
-        when(fileStorageService.requireAccessibleFile(9L)).thenReturn(storage);
+        when(fileStorageService.requireAccessibleFileView(9L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
         when(fileStorageService.loadAsResource(9L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(9L);
@@ -328,7 +328,7 @@ class FileUploadControllerTest {
                 .fileSize(11L)
                 .build();
         ByteArrayResource resource = new ByteArrayResource("image".getBytes());
-        when(fileStorageService.requireAccessibleFile(5L)).thenReturn(storage);
+        when(fileStorageService.requireAccessibleFileView(5L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
         when(fileStorageService.loadAsResource(5L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.viewFile(5L);

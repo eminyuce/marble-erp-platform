@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.CollectionRecord;
+import com.ozerler.marble.dto.view.CollectionRef;
 import com.ozerler.marble.model.enums.CollectionMethod;
 import org.springframework.data.domain.Page;
 
@@ -15,13 +15,13 @@ public final class CollectionGrid {
     private CollectionGrid() {
     }
 
-    public static DataGridView view(Page<CollectionRecord> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<CollectionRef> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "collections-table", columns(), CollectionGrid::row);
     }
 
-    static GridRow row(CollectionRecord record) {
-        String invoiceNo = record.getInvoice() == null ? "" : record.getInvoice().getInvoiceNumber();
+    static GridRow row(CollectionRef record) {
+        String invoiceNo = record.getInvoice() == null ? "" : record.getInvoice().getInvoiceNo();
         String invoiceUrl = record.getInvoice() == null ? null : "/invoices/" + record.getInvoice().getId();
         return GridRow.of(null, null, null, null, List.of(
                 GridCell.badge(record.getCollectionMethod() == null ? "" : record.getCollectionMethod().getDisplayName()),

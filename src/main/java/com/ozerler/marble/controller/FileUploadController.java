@@ -6,7 +6,6 @@ import com.ozerler.marble.dto.PresignedDownload;
 import com.ozerler.marble.exception.FileAccessDeniedException;
 import com.ozerler.marble.exception.FileValidationException;
 import com.ozerler.marble.exception.StoredFileNotFoundException;
-import com.ozerler.marble.model.FileStorage;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
@@ -49,8 +48,7 @@ public class FileUploadController extends AbstractController {
 
         try {
             log.info("Uploading file {} for entityType={} entityId={}", file.getOriginalFilename(), entityType, entityId);
-            FileStorage saved = fileStorageService.storeFile(file, entityType, entityId);
-            FileStorageDto dto = FileStorageDto.fromEntity(saved);
+            FileStorageDto dto = fileStorageService.storeFileView(file, entityType, entityId);
 
             HttpHeaders responseHeaders = new HttpHeaders();
             ResponseEntity<FileStorageDto> resp = new ResponseEntity<>(dto, responseHeaders, HttpStatus.OK);
@@ -88,8 +86,7 @@ public class FileUploadController extends AbstractController {
             List<FileStorageDto> uploadedList = new ArrayList<>();
             for (MultipartFile file : files) {
                 if (!file.isEmpty()) {
-                    FileStorage saved = fileStorageService.storeFile(file, entityType, entityId);
-                    uploadedList.add(FileStorageDto.fromEntity(saved));
+                    uploadedList.add(fileStorageService.storeFileView(file, entityType, entityId));
                 }
             }
 
@@ -238,7 +235,7 @@ public class FileUploadController extends AbstractController {
     }
 
     private ResponseEntity<Resource> serveFile(Long id, boolean attachment) {
-        FileStorage fileStorage = fileStorageService.requireAccessibleFile(id);
+        FileStorageDto fileStorage = fileStorageService.requireAccessibleFileView(id);
         Resource resource = fileStorageService.loadAsResource(id);
 
         String originalName = fileStorage.getOriginalName();

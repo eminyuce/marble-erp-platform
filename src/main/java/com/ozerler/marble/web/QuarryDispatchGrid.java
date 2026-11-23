@@ -1,26 +1,25 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.Invoice;
-import com.ozerler.marble.model.StockMovement;
-import jakarta.persistence.Persistence;
+import com.ozerler.marble.dto.view.InvoiceRef;
+import com.ozerler.marble.dto.view.StockMovementView;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 /**
- * Ocak sevkiyat raporu. The movement query has no search or status filter. Invoice is not fetched.
+ * Ocak sevkiyat raporu. The movement query has no search or status filter. Invoice is not fetched; the service copies it only when it is already loaded.
  */
 public final class QuarryDispatchGrid {
 
     private QuarryDispatchGrid() {
     }
 
-    public static DataGridView view(Page<StockMovement> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<StockMovementView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "quarry-dispatches-table", columns(), QuarryDispatchGrid::row);
     }
 
-    static GridRow row(StockMovement movement) {
+    static GridRow row(StockMovementView movement) {
         String product = productName(movement);
         String blockUrl = movement.getBlock() == null ? null : "/blocks/" + movement.getBlock().getId();
         String target = movement.getTargetDestination() != null
@@ -54,22 +53,22 @@ public final class QuarryDispatchGrid {
         );
     }
 
-    private static GridCell invoice(StockMovement movement) {
-        if (!Persistence.getPersistenceUtil().isLoaded(movement, "invoice") || movement.getInvoice() == null) {
+    private static GridCell invoice(StockMovementView movement) {
+        InvoiceRef invoice = movement.getInvoice();
+        if (invoice == null) {
             return GridCell.text("");
         }
-        Invoice invoice = movement.getInvoice();
-        return GridCell.link(invoice.getInvoiceNumber(), "/invoices/" + invoice.getId());
+        return GridCell.link(invoice.getInvoiceNo(), "/invoices/" + invoice.getId());
     }
 
-    private static String productName(StockMovement movement) {
+    private static String productName(StockMovementView movement) {
         if (movement.getBlock() != null && movement.getBlock().getBlockCode() != null) {
             return movement.getBlock().getBlockCode();
         }
         return OperationGridSupport.named(movement.getItemDescription(), "Mermer Blok");
     }
 
-    private static String measure(StockMovement movement) {
+    private static String measure(StockMovementView movement) {
         if (movement.getTonnage() != null) {
             return OperationGridSupport.amount(movement.getTonnage(), "ton");
         }

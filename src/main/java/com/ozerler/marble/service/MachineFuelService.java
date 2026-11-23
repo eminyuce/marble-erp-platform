@@ -24,6 +24,8 @@ import java.util.Objects;
 public class MachineFuelService {
 
     private final MachineFuelEntryRepository fuelEntryRepository;
+    private final com.ozerler.marble.mapper.MachineMapper machineMapper;
+    private final com.ozerler.marble.mapper.MachineFuelMapper machineFuelMapper;
     private final MachineRepository machineRepository;
     private final CostCenterRepository costCenterRepository;
     private final ExpenseService expenseService;
@@ -199,5 +201,65 @@ public class MachineFuelService {
         );
 
         return com.ozerler.marble.dto.TabulatorResponse.of(pageData, totalPages, totalElements, meta);
+    }
+
+    /**
+     * Same as {@code recordFuel}, copied into a view inside the transaction.
+     *
+     * @param machineId see {@code recordFuel}
+     * @param entryDate see {@code recordFuel}
+     * @param litres see {@code recordFuel}
+     * @param pricePerLitre see {@code recordFuel}
+     * @param workingHoursOrKm see {@code recordFuel}
+     * @param receiptNo see {@code recordFuel}
+     * @param issuedBy see {@code recordFuel}
+     * @param receivedBy see {@code recordFuel}
+     * @param notes see {@code recordFuel}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.MachineFuelEntryView recordFuelView(Long machineId, LocalDate entryDate, BigDecimal litres,
+                                       BigDecimal pricePerLitre, BigDecimal workingHoursOrKm, String receiptNo,
+                                       String issuedBy, String receivedBy, String notes) {
+        return machineFuelMapper.toDto(recordFuel(machineId, entryDate, litres, pricePerLitre, workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes));
+    }
+
+    /**
+     * Same as {@code listByPeriod}, copied into a view inside the transaction.
+     *
+     * @param period see {@code listByPeriod}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.MachineFuelEntryView> listViewsByPeriod(String period) {
+        return listByPeriod(period).stream().map(machineFuelMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code quarryAndFactoryMachines}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.MachineRef> quarryAndFactoryMachineViews() {
+        return quarryAndFactoryMachines().stream().map(machineMapper::toDto).toList();
+    }
+
+    /**
+     * Totals of a period's fuel entries for the summary cards.
+     *
+     * @param period period as {@code yyyy-MM}; blank means all entries
+     * @return litres, amount, entry and machine counts
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.view.FuelPeriodSummary periodSummary(String period) {
+        List<MachineFuelEntry> entries = listByPeriod(period);
+        BigDecimal totalLitres = entries.stream().map(MachineFuelEntry::getLitres)
+                .filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalAmount = entries.stream().map(MachineFuelEntry::getTotalAmount)
+                .filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        long machineCount = entries.stream().filter(entry -> entry.getMachine() != null)
+                .map(entry -> entry.getMachine().getId()).distinct().count();
+        return new com.ozerler.marble.dto.view.FuelPeriodSummary(totalLitres, totalAmount, entries.size(), machineCount);
     }
 }

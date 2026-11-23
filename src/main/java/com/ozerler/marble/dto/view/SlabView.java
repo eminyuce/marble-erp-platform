@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class SlabView {
+public class SlabView extends AuditView {
     private Long id;
     private String slabCode;
     private String stoneType;

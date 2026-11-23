@@ -26,6 +26,9 @@ public class QuarryInventoryService {
     public static final String CONSUMABLES_LOCATION_CODE = "OCK-SRF-01";
 
     private final StockItemRepository stockItemRepository;
+    private final com.ozerler.marble.mapper.MachineFuelMapper machineFuelMapper;
+    private final com.ozerler.marble.mapper.MachineMapper machineMapper;
+    private final com.ozerler.marble.mapper.StockItemMapper stockItemMapper;
     private final StockLocationRepository stockLocationRepository;
     private final MachineRepository machineRepository;
     private final MachineFuelEntryRepository fuelEntryRepository;
@@ -510,5 +513,159 @@ public class QuarryInventoryService {
                         .locationType(type)
                         .active(true)
                         .build()));
+    }
+
+    /**
+     * Same as {@code getOrCreateFuelTankStockItem}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView getOrCreateFuelTankStockItemView() {
+        return stockItemMapper.toDto(getOrCreateFuelTankStockItem());
+    }
+
+    /**
+     * Same as {@code addFuelStock}, copied into a view inside the transaction.
+     *
+     * @param litres see {@code addFuelStock}
+     * @param netUnitPrice see {@code addFuelStock}
+     * @param invoice see {@code addFuelStock}
+     * @param notes see {@code addFuelStock}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView addFuelStockView(BigDecimal litres, BigDecimal netUnitPrice, Invoice invoice, String notes) {
+        return stockItemMapper.toDto(addFuelStock(litres, netUnitPrice, invoice, notes));
+    }
+
+    /**
+     * Same as {@code addFuelStock}, copied into a view inside the transaction.
+     *
+     * @param litres see {@code addFuelStock}
+     * @param netUnitPrice see {@code addFuelStock}
+     * @param invoiceNo see {@code addFuelStock}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView addFuelStockView(BigDecimal litres, BigDecimal netUnitPrice, String invoiceNo) {
+        return stockItemMapper.toDto(addFuelStock(litres, netUnitPrice, invoiceNo));
+    }
+
+    /**
+     * Same as {@code consumeConsumable}, copied into a view inside the transaction.
+     *
+     * @param stockItemId see {@code consumeConsumable}
+     * @param quantity see {@code consumeConsumable}
+     * @param machineId see {@code consumeConsumable}
+     * @param notes see {@code consumeConsumable}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView consumeConsumableView(Long stockItemId, BigDecimal quantity, Long machineId, String notes) {
+        return stockItemMapper.toDto(consumeConsumable(stockItemId, quantity, machineId, notes));
+    }
+
+    /**
+     * Same as {@code createStockCard}, copied into a view inside the transaction.
+     *
+     * @param category see {@code createStockCard}
+     * @param description see {@code createStockCard}
+     * @param unit see {@code createStockCard}
+     * @param initialQuantity see {@code createStockCard}
+     * @param netUnitPrice see {@code createStockCard}
+     * @param itemCode see {@code createStockCard}
+     * @param isExpense see {@code createStockCard}
+     * @param notes see {@code createStockCard}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView createStockCardView(QuarryCategory category, String description, String unit,
+                                     BigDecimal initialQuantity, BigDecimal netUnitPrice,
+                                     String itemCode, Boolean isExpense, String notes) {
+        return stockItemMapper.toDto(createStockCard(category, description, unit, initialQuantity, netUnitPrice, itemCode, isExpense, notes));
+    }
+
+    /**
+     * Same as {@code createStockCard}, copied into a view inside the transaction.
+     *
+     * @param category see {@code createStockCard}
+     * @param description see {@code createStockCard}
+     * @param unit see {@code createStockCard}
+     * @param initialQuantity see {@code createStockCard}
+     * @param netUnitPrice see {@code createStockCard}
+     * @param itemCode see {@code createStockCard}
+     * @param notes see {@code createStockCard}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView createStockCardView(QuarryCategory category, String description, String unit,
+                                     BigDecimal initialQuantity, BigDecimal netUnitPrice,
+                                     String itemCode, String notes) {
+        return stockItemMapper.toDto(createStockCard(category, description, unit, initialQuantity, netUnitPrice, itemCode, notes));
+    }
+
+    /**
+     * Same as {@code getAllQuarryStockCards}, copied into a view inside the transaction.
+     *
+     * @param category see {@code getAllQuarryStockCards}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.StockItemView> getAllQuarryStockCardsViews(QuarryCategory category) {
+        return getAllQuarryStockCards(category).stream().map(stockItemMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getQuarryMachines}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.MachineRef> getQuarryMachinesViews() {
+        return getQuarryMachines().stream().map(machineMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code createQuarryMachine}, copied into a view inside the transaction.
+     *
+     * @param code see {@code createQuarryMachine}
+     * @param name see {@code createQuarryMachine}
+     * @param notes see {@code createQuarryMachine}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.MachineRef createQuarryMachineView(String code, String name, String notes) {
+        return machineMapper.toDto(createQuarryMachine(code, name, notes));
+    }
+
+    /**
+     * Same as {@code getRecentFuelEntries}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.MachineFuelEntryView> getRecentFuelEntryViews() {
+        return getRecentFuelEntries().stream().map(machineFuelMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code dispenseFuel}, copied into a view inside the transaction.
+     *
+     * @param machineId see {@code dispenseFuel}
+     * @param litres see {@code dispenseFuel}
+     * @param entryDate see {@code dispenseFuel}
+     * @param workingHoursOrKm see {@code dispenseFuel}
+     * @param receiptNo see {@code dispenseFuel}
+     * @param issuedBy see {@code dispenseFuel}
+     * @param receivedBy see {@code dispenseFuel}
+     * @param notes see {@code dispenseFuel}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.MachineFuelEntryView dispenseFuelView(Long machineId, BigDecimal litres, LocalDate entryDate,
+                                         BigDecimal workingHoursOrKm, String receiptNo,
+                                         String issuedBy, String receivedBy, String notes) {
+        return machineFuelMapper.toDto(dispenseFuel(machineId, litres, entryDate, workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes));
     }
 }

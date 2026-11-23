@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class StockLocationForm {
+public class StockLocationForm extends com.ozerler.marble.dto.view.AuditView {
     private Long id;
     private String code;
     private String name;

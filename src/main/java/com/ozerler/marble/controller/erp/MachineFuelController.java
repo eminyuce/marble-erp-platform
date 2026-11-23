@@ -1,8 +1,9 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.dto.view.FuelPeriodSummary;
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.model.MachineFuelEntry;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.dto.MachineFuelDto;
 import com.ozerler.marble.service.MachineFuelService;
@@ -46,22 +47,18 @@ public class MachineFuelController extends AbstractController {
         model.addAttribute("period", currentPeriod);
         model.addAttribute("selectedUnit", unit == null ? "" : unit);
         model.addAttribute("selectedMachineId", machineId);
-        model.addAttribute("fuelEntries", machineFuelService.listByPeriod(currentPeriod));
+        model.addAttribute("fuelEntries", machineFuelService.listViewsByPeriod(currentPeriod));
         model.addAttribute("monthlyReport", machineFuelService.getMonthlyReport(currentPeriod));
-        model.addAttribute("machines", machineFuelService.quarryAndFactoryMachines());
+        model.addAttribute("machines", machineFuelService.quarryAndFactoryMachineViews());
         TabulatorResponse<MachineFuelDto> fuel = machineFuelService.getFuelPaged(
                 query.pageNumber(), query.pageSize(), query.getSearch(), currentPeriod, unit, machineId, sortKey, query.sortDirection());
         model.addAttribute("grid", FuelGrid.view(fuel, query.pageNumber(), query.pageSize(), sortKey, query.sortDirection()));
 
-        var entries = machineFuelService.listByPeriod(currentPeriod);
-        BigDecimal totalLitres = entries.stream().map(entry -> entry.getLitres()).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        BigDecimal totalAmount = entries.stream().map(entry -> entry.getTotalAmount()).filter(java.util.Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        long machineCount = entries.stream().map(e -> e.getMachine().getId()).distinct().count();
-
-        model.addAttribute("summaryTotalLitres", totalLitres);
-        model.addAttribute("summaryTotalAmount", totalAmount);
-        model.addAttribute("summaryEntryCount", entries.size());
-        model.addAttribute("summaryMachineCount", machineCount);
+        FuelPeriodSummary summary = machineFuelService.periodSummary(currentPeriod);
+        model.addAttribute("summaryTotalLitres", summary.totalLitres());
+        model.addAttribute("summaryTotalAmount", summary.totalAmount());
+        model.addAttribute("summaryEntryCount", summary.entryCount());
+        model.addAttribute("summaryMachineCount", summary.machineCount());
 
         return "erp/machines/fuel-index";
     }
@@ -82,7 +79,7 @@ public class MachineFuelController extends AbstractController {
 
     @GetMapping("/create")
     public String showCreateForm(Model model) {
-        model.addAttribute("machines", machineFuelService.quarryAndFactoryMachines());
+        model.addAttribute("machines", machineFuelService.quarryAndFactoryMachineViews());
         model.addAttribute("defaultDate", LocalDate.now());
         return "erp/machines/fuel-form";
     }
@@ -101,7 +98,7 @@ public class MachineFuelController extends AbstractController {
                                   Locale locale,
                                   RedirectAttributes redirectAttributes) {
         try {
-            MachineFuelEntry entry = machineFuelService.recordFuel(
+            MachineFuelEntryView entry = machineFuelService.recordFuelView(
                     machineId, entryDate, litres, pricePerLitre, workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Mazot dolum kaydı başarıyla oluşturuldu: " + entry.getMachine().getName() + " (" + litres + " L)");

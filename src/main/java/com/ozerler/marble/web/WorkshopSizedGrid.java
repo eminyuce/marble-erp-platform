@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.dto.view.StockItemView;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -13,12 +13,12 @@ public final class WorkshopSizedGrid {
     private WorkshopSizedGrid() {
     }
 
-    public static DataGridView view(Page<StockItem> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<StockItemView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "workshop-sized-table", columns(), WorkshopSizedGrid::row);
     }
 
-    static GridRow row(StockItem item) {
+    static GridRow row(StockItemView item) {
         String stone = OperationGridSupport.named(item.getStoneType(), "Mermer");
         String surface = item.getSurfaceFinish() == null ? "Cilalı" : item.getSurfaceFinish().getDisplayName();
         String description = OperationGridSupport.named(item.getDescription(), stone);

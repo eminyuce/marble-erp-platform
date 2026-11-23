@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CustomerForm {
+public class CustomerForm extends com.ozerler.marble.dto.view.AuditView {
     private Long id;
     private String customerCode;
     private CustomerType customerType = CustomerType.CONSTRUCTION;

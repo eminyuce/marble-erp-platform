@@ -32,6 +32,9 @@ public class WorkOrderView {
     private BigDecimal usedQuantity;
     private String notes;
     private String customerNameForView;
+    private String customerDisplayName;
+    private BigDecimal quantity;
+    private String unit;
     private OperationWorkOrderStatus status;
     private BlockRef sourceBlock;
     private SlabRef sourceSlab;

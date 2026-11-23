@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.Block;
+import com.ozerler.marble.dto.view.BlockView;
 import com.ozerler.marble.model.enums.BlockStatus;
 import org.springframework.data.domain.Page;
 
@@ -14,12 +14,12 @@ public final class OperationQuarryBlockGrid {
     private OperationQuarryBlockGrid() {
     }
 
-    public static DataGridView view(Page<Block> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<BlockView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "quarry-blocks-table", columns(), OperationQuarryBlockGrid::row);
     }
 
-    static GridRow row(Block block) {
+    static GridRow row(BlockView block) {
         String viewUrl = "/blocks/" + block.getId();
         String dispatchUrl = "/operations/quarry/" + block.getId() + "/dispatch";
         String quarry = block.getQuarry() == null ? "" : OperationGridSupport.named(block.getQuarry().getName(), "");

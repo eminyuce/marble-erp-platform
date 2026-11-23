@@ -89,11 +89,11 @@ class QuarryBlockServiceTest {
     @BeforeEach
     void setUp() {
         quarryBlockService = new QuarryBlockService(
-                blockRepository, quarryRepository, null, stockLocationRepository, movementRepository,
+                blockRepository, null, null, quarryRepository, null, stockLocationRepository, movementRepository,
                 costAnalysisService, blockCostCalculationService, expenseService, costCenterRepository, customerRepository,
                 slabRepository, factoryWorkOrderRepository, productionOrderRepository,
                 blockCustomerMarkRepository, costTransactionRepository, shipmentItemRepository,
-                fileStorageService, quarryInventoryService);
+                fileStorageService, quarryInventoryService, null);
     }
 
     @Test

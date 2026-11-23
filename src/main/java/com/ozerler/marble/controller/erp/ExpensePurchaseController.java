@@ -245,7 +245,7 @@ public class ExpensePurchaseController extends AbstractController {
             var write = expenseWrite(
                     businessUnit, centerId, expenseType, amount, entryDate, quarryId, projectId,
                     documentNo, invoiceDate, expensePeriod, description);
-            expenseService.recordForScreen(toDraft(write, locale), write.projectId(), write.quarryId());
+            expenseService.recordForScreen(toDraft(write), write.projectId(), write.quarryId());
 
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.expense.record.success", null, locale));
@@ -279,7 +279,7 @@ public class ExpensePurchaseController extends AbstractController {
             var write = expenseWrite(
                     businessUnit, centerId, expenseType, amount, entryDate, quarryId, projectId,
                     documentNo, invoiceDate, expensePeriod, description);
-            expenseService.updateForScreen(id, toDraft(write, locale), write.projectId(), write.quarryId());
+            expenseService.updateForScreen(id, toDraft(write), write.projectId(), write.quarryId());
 
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.expense.update.success", null, locale));
@@ -327,7 +327,7 @@ public class ExpensePurchaseController extends AbstractController {
                 documentNo, invoiceDate, expensePeriod, description);
     }
 
-    private ExpenseService.ExpenseDraft toDraft(ExpenseWrite write, Locale locale) {
+    private ExpenseService.ExpenseDraft toDraft(ExpenseWrite write) {
         Long effectiveCenterId = resolveCenterId(write.businessUnit(), write.centerId());
         String period = write.expensePeriod() != null && !write.expensePeriod().isBlank()
                 ? ExpensePeriods.normalize(write.expensePeriod())
@@ -344,7 +344,7 @@ public class ExpensePurchaseController extends AbstractController {
         Status status = new Status();
         status.setErrorCode(Constants.NO_ERR);
         try {
-            ExpenseService.ExpenseDraft draft = toDraft(write, locale);
+            ExpenseService.ExpenseDraft draft = toDraft(write);
             if (action == ExpenseApiAction.CREATE) {
                 expenseService.recordForScreen(draft, write.projectId(), write.quarryId());
                 return expenseApiOk(ber, serviceStatus, status,

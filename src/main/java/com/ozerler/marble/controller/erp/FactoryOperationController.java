@@ -1,11 +1,15 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.dto.view.WorkOrderView;
+import com.ozerler.marble.dto.view.SlabView;
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
+import com.ozerler.marble.dto.view.MachineRef;
+import com.ozerler.marble.dto.view.StockItemView;
 import com.ozerler.marble.web.StockYardResponses;
 
 import com.ozerler.marble.common.Constants;
 
 import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.service.FactoryInventoryService;
 import com.ozerler.marble.service.FactoryStockService;
@@ -26,12 +30,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.ozerler.marble.dto.TabulatorResponse;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/operations/factory")
@@ -69,8 +69,8 @@ public class FactoryOperationController extends AbstractController {
         var figures = factoryStockService.factoryBlockFigures(customerId, generalStockOnly);
         var customers = formLookup.customers();
 
-        model.addAttribute("blocks", factoryStockService.getFactoryUncutBlocks(customerId, generalStockOnly));
-        model.addAttribute("incomingBlocks", factoryStockService.getIncomingBlocksInTransit());
+        model.addAttribute("blocks", factoryStockService.getFactoryUncutBlockViews(customerId, generalStockOnly));
+        model.addAttribute("incomingBlocks", factoryStockService.getIncomingBlockViewsInTransit());
         model.addAttribute("customers", customers);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("generalStockOnly", generalStockOnly);
@@ -79,7 +79,7 @@ public class FactoryOperationController extends AbstractController {
         model.addAttribute("totalCostValue", figures.costValue());
         model.addAttribute("totalSaleValue", figures.saleValue());
         model.addAttribute("grid", OperationFactoryBlockGrid.view(
-                factoryStockService.getFactoryUncutBlocksPaged(customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
+                factoryStockService.getFactoryUncutBlockViewsPaged(customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("activeSection", "factory");
         model.addAttribute("activeSubSection", "blocks");
@@ -143,7 +143,7 @@ public class FactoryOperationController extends AbstractController {
                            @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
                            @ModelAttribute ListQuery query, Model model) {
 
-        Page<Slab> slabsPage = StockYardResponses.slabPage(
+        Page<SlabView> slabsPage = StockYardResponses.slabPage(
                 factoryStockService, status, customerId, generalStockOnly, query);
         var customers = formLookup.customers();
         BigDecimal customerSlabArea = customerId != null ? factoryStockService.getCustomerSlabAreaTotal(customerId) : BigDecimal.ZERO;
@@ -204,7 +204,7 @@ public class FactoryOperationController extends AbstractController {
                              RedirectAttributes redirectAttributes) {
         try {
             if (rowWidths != null && !rowWidths.isEmpty()) {
-                List<Slab> slabs = factoryStockService.createSlabsBatch(
+                List<SlabView> slabs = factoryStockService.createSlabsBatchViews(
                         blockId, thicknessCm, qualityGrade, surfaceFinish, customerId, notes,
                         rowThicknesses, rowWidths, rowLengths, rowPieceCounts
                 );
@@ -215,7 +215,7 @@ public class FactoryOperationController extends AbstractController {
                 return "redirect:/operations/factory/slabs";
             }
 
-            Slab slab = factoryStockService.createSlabDirect(blockId, thicknessCm != null ? thicknessCm : new BigDecimal("2.00"), widthCm, lengthCm, qualityGrade, surfaceFinish, customerId, notes);
+            SlabView slab = factoryStockService.createSlabDirectView(blockId, thicknessCm != null ? thicknessCm : new BigDecimal("2.00"), widthCm, lengthCm, qualityGrade, surfaceFinish, customerId, notes);
             redirectAttributes.addFlashAttribute("successMessage", "Plaka (" + slab.getSlabCode() + ") başarıyla Plaka Stok Sahasına eklendi: " + slab.getSurfaceAreaM2() + " m²");
             return "redirect:/operations/factory/slabs";
         } catch (Exception e) {
@@ -231,7 +231,7 @@ public class FactoryOperationController extends AbstractController {
                                        @RequestParam(value = "customerId", required = false) Long customerId,
                                        RedirectAttributes redirectAttributes) {
         try {
-            Slab slab = factoryStockService.assignCustomerToSlab(id, customerId);
+            SlabView slab = factoryStockService.assignCustomerToSlabView(id, customerId);
             String custName = slab.getCustomer() != null ? slab.getCustomer().getCompanyName() : "Genel Stok";
             redirectAttributes.addFlashAttribute("successMessage", "Plaka (" + slab.getSlabCode() + ") müşterisi güncellendi: " + custName);
         } catch (Exception e) {
@@ -246,7 +246,7 @@ public class FactoryOperationController extends AbstractController {
                             @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
                             @ModelAttribute ListQuery query, Model model) {
 
-        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(
+        Page<StockItemView> itemsPage = factoryStockService.getSizedStockItemViewsPaged(
                 customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         var customers = formLookup.customers();
 
@@ -274,7 +274,7 @@ public class FactoryOperationController extends AbstractController {
             @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly) {
 
         int pageIndex = Math.max(0, page - 1);
-        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(customerId, generalStockOnly, search, pageIndex, size);
+        Page<StockItemView> itemsPage = factoryStockService.getSizedStockItemViewsPaged(customerId, generalStockOnly, search, pageIndex, size);
         return StockYardResponses.factorySized(itemsPage);
     }
 
@@ -317,7 +317,7 @@ public class FactoryOperationController extends AbstractController {
                                   RedirectAttributes redirectAttributes) {
         try {
             if (rowWidths != null && !rowWidths.isEmpty()) {
-                List<StockItem> items = factoryStockService.createSizedItemsBatch(
+                List<StockItemView> items = factoryStockService.createSizedItemsBatchViews(
                         blockId, slabId, customerId, description, qualityGrade, surfaceFinish, edgeFinish, notes,
                         rowDescriptions, rowThicknesses, rowWidths, rowLengths, rowPieceCounts, rowQuantities,
                         rowSurfaceFinishes, rowEdgeFinishes
@@ -327,7 +327,7 @@ public class FactoryOperationController extends AbstractController {
                 return "redirect:/operations/factory/sized";
             }
 
-            StockItem item = factoryStockService.createSizedItem(
+            StockItemView item = factoryStockService.createSizedItemView(
                     blockId, slabId, description, thicknessCm, widthCm, lengthCm, quantity, pieceCount,
                     actualProducedQuantity, customerId, qualityGrade, surfaceFinish, edgeFinish, notes
             );
@@ -346,7 +346,7 @@ public class FactoryOperationController extends AbstractController {
                                             @RequestParam(value = "customerId", required = false) Long customerId,
                                             RedirectAttributes redirectAttributes) {
         try {
-            StockItem item = factoryStockService.assignCustomerToStockItem(id, customerId);
+            StockItemView item = factoryStockService.assignCustomerToStockItemView(id, customerId);
             String custName = item.getCustomer() != null ? item.getCustomer().getCompanyName() : "Genel Stok";
             redirectAttributes.addFlashAttribute("successMessage", "Ebatlı ürün (" + item.getItemCode() + ") müşterisi güncellendi: " + custName);
         } catch (Exception e) {
@@ -360,7 +360,7 @@ public class FactoryOperationController extends AbstractController {
     public String factoryOrders(@RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
                                 @ModelAttribute ListQuery query, Model model) {
 
-        Page<OperationWorkOrder> ordersPage = workOrderService.searchOrders(
+        Page<WorkOrderView> ordersPage = workOrderService.searchOrderRows(
                 BusinessUnit.FACTORY, status, null, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         model.addAttribute("orders", ordersPage.getContent());
         model.addAttribute("page", ordersPage);
@@ -376,10 +376,10 @@ public class FactoryOperationController extends AbstractController {
     // --- 5. FABRİKA MAZOT DEPOSU & ARAÇ TAKİBİ (MADDE 15) ---
     @GetMapping("/fuel")
     public String factoryFuelIndex(Model model) {
-        StockItem tank = factoryInventoryService.getOrCreateFactoryFuelTankStockItem();
+        StockItemView tank = factoryInventoryService.getOrCreateFactoryFuelTankStockItemView();
         BigDecimal currentLiters = tank.getQuantity() != null ? tank.getQuantity() : BigDecimal.ZERO;
-        List<Machine> vehicles = factoryInventoryService.getFactoryVehicles();
-        List<MachineFuelEntry> entries = factoryInventoryService.getRecentFuelEntries();
+        List<MachineRef> vehicles = factoryInventoryService.getFactoryVehiclesViews();
+        List<MachineFuelEntryView> entries = factoryInventoryService.getRecentFuelEntryViews();
 
         model.addAttribute("tank", tank);
         model.addAttribute("currentLiters", currentLiters);
@@ -401,7 +401,7 @@ public class FactoryOperationController extends AbstractController {
                                       @RequestParam(value = "notes", required = false) String notes,
                                       RedirectAttributes redirectAttributes) {
         try {
-            MachineFuelEntry entry = factoryInventoryService.dispenseFuel(
+            MachineFuelEntryView entry = factoryInventoryService.dispenseFuelView(
                     machineId, litres, java.time.LocalDate.now(), workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s aracına %s litre mazot verildi. Tutar (KDV hariç net): %s TL fabrika giderine yazıldı.",
@@ -421,7 +421,7 @@ public class FactoryOperationController extends AbstractController {
                                       @RequestParam(value = "notes", required = false) String notes,
                                       RedirectAttributes redirectAttributes) {
         try {
-            StockItem updated = factoryInventoryService.addFuelStock(litres, netUnitPrice, null,
+            StockItemView updated = factoryInventoryService.addFuelStockView(litres, netUnitPrice, null,
                     notes != null ? notes : invoiceNo != null ? "Fatura: " + invoiceNo : "Doğrudan Depo Girişi");
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s litre mazot fabrika deposuna eklendi. Güncel stok: %s litre.", litres, updated.getQuantity()));
@@ -435,8 +435,8 @@ public class FactoryOperationController extends AbstractController {
     // --- 6. FABRİKA SARF MALZEME DEPOSU (MADDE 16) ---
     @GetMapping("/consumables")
     public String factoryConsumablesIndex(Model model) {
-        List<StockItem> consumables = factoryInventoryService.getAllFactoryConsumables();
-        List<Machine> vehicles = factoryInventoryService.getFactoryVehicles();
+        List<StockItemView> consumables = factoryInventoryService.getAllFactoryConsumablesViews();
+        List<MachineRef> vehicles = factoryInventoryService.getFactoryVehiclesViews();
 
         BigDecimal totalValue = consumables.stream()
                 .filter(item -> item.getQuantity() != null && item.getUnitPrice() != null)
@@ -459,7 +459,7 @@ public class FactoryOperationController extends AbstractController {
                                            @RequestParam(value = "notes", required = false) String notes,
                                            RedirectAttributes redirectAttributes) {
         try {
-            StockItem item = factoryInventoryService.consumeConsumable(stockItemId, quantity, machineId, notes);
+            StockItemView item = factoryInventoryService.consumeConsumableView(stockItemId, quantity, machineId, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s malzemesinden %s %s kullanıldı ve fabrikanın giderine yazıldı. Kalan stok: %s %s.",
                             item.getDescription(), quantity, item.getUnit(), item.getQuantity(), item.getUnit()));
@@ -480,7 +480,7 @@ public class FactoryOperationController extends AbstractController {
                                             @RequestParam(value = "notes", required = false) String notes,
                                             RedirectAttributes redirectAttributes) {
         try {
-            StockItem item = factoryInventoryService.createStockCard(
+            StockItemView item = factoryInventoryService.createStockCardView(
                     description, unit, quantity, netUnitPrice, itemCode, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s (%s %s) fabrika stok kartı ve depo girişi kaydedildi.",
@@ -502,7 +502,7 @@ public class FactoryOperationController extends AbstractController {
                                          @RequestParam(value = "notes", required = false) String notes,
                                          RedirectAttributes redirectAttributes) {
         try {
-            StockItem item = factoryInventoryService.createStockCard(
+            StockItemView item = factoryInventoryService.createStockCardView(
                     description, unit, initialQuantity, netUnitPrice, itemCode, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("Yeni fabrika stok kartı (%s - %s) başarıyla tanımlandı.",

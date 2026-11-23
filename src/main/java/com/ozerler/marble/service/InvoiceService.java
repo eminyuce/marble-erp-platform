@@ -961,7 +961,7 @@ public class InvoiceService {
 
     @Transactional(readOnly = true)
     public com.ozerler.marble.dto.view.InvoiceView getInvoice(Long id) {
-        com.ozerler.marble.model.Invoice invoice;
+        Invoice invoice;
         try {
             invoice = getInvoiceById(id);
         } catch (IllegalArgumentException ex) {
@@ -1057,5 +1057,26 @@ public class InvoiceService {
     @Transactional
     public InvoiceRef cancelInvoiceRef(Long invoiceId, String reason) {
         return invoiceMapper.toRef(cancelInvoice(invoiceId, reason));
+    }
+
+    /**
+     * Same as {@code searchInvoices}, copied into a view inside the transaction.
+     *
+     * @param type see {@code searchInvoices}
+     * @param dept see {@code searchInvoices}
+     * @param status see {@code searchInvoices}
+     * @param customerId see {@code searchInvoices}
+     * @param startDate see {@code searchInvoices}
+     * @param endDate see {@code searchInvoices}
+     * @param search see {@code searchInvoices}
+     * @param page see {@code searchInvoices}
+     * @param size see {@code searchInvoices}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public Page<com.ozerler.marble.dto.view.InvoiceView> searchInvoiceRows(InvoiceType type, BusinessUnit dept, InvoiceStatus status,
+                                        Long customerId, LocalDate startDate, LocalDate endDate,
+                                        String search, int page, int size) {
+        return searchInvoices(type, dept, status, customerId, startDate, endDate, search, page, size).map(invoiceMapper::toRow);
     }
 }

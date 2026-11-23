@@ -5,7 +5,7 @@ import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.CostCenterDto;
 import com.ozerler.marble.dto.PurchaseOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.PurchaseOrder;
+import com.ozerler.marble.dto.view.PurchaseOrderView;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.PurchaseOrderStatus;
 import com.ozerler.marble.service.ProcurementService;
@@ -66,9 +66,7 @@ public class ProcurementController {
     @GetMapping("/api/cost-centers")
     @ResponseBody
     public List<CostCenterDto> costCentersForUnit(@RequestParam("businessUnit") BusinessUnit businessUnit) {
-        return procurementService.getCostCentersForUnit(businessUnit).stream()
-                .map(CostCenterDto::fromEntity)
-                .toList();
+        return procurementService.getCostCenterDtosForUnit(businessUnit);
     }
 
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
@@ -84,7 +82,7 @@ public class ProcurementController {
                               RedirectAttributes redirectAttributes,
                               java.util.Locale locale) {
         try {
-            PurchaseOrder order = procurementService.createPurchaseOrder(
+            PurchaseOrderView order = procurementService.createPurchaseOrderView(
                     poNumber, supplierId, projectId, businessUnit, costCenterId, expectedDelivery, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.procurement.create.success", new Object[]{order.getPoNumber()}, locale));
@@ -99,7 +97,7 @@ public class ProcurementController {
 
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Model model, java.util.Locale locale) {
-        PurchaseOrder order = procurementService.getOrderById(id);
+        PurchaseOrderView order = procurementService.getOrder(id);
         populateProcurementForm(model, locale);
         model.addAttribute("record", order);
         model.addAttribute("isEdit", true);
@@ -109,7 +107,7 @@ public class ProcurementController {
 
     @GetMapping("/{id}")
     public String orderDetail(@PathVariable("id") Long id, Model model) {
-        PurchaseOrder order = procurementService.getOrderById(id);
+        PurchaseOrderView order = procurementService.getOrder(id);
         model.addAttribute("order", order);
         return "erp/procurement/detail";
     }
@@ -147,9 +145,9 @@ public class ProcurementController {
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("generatedPoNumber", procurementService.generatePoNumber());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.procurement.title.create", null, locale));
-        PurchaseOrder record = (PurchaseOrder) model.getAttribute("record");
+        PurchaseOrderView record = (PurchaseOrderView) model.getAttribute("record");
         if (record != null && record.getBusinessUnit() != null) {
-            model.addAttribute("costCenters", procurementService.getCostCentersForUnit(record.getBusinessUnit()));
+            model.addAttribute("costCenters", procurementService.getCostCenterViewsForUnit(record.getBusinessUnit()));
         }
     }
 }

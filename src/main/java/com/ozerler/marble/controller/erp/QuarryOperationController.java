@@ -1,9 +1,10 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.dto.view.StockMovementView;
+import com.ozerler.marble.dto.view.BlockView;
 import com.ozerler.marble.common.Constants;
 
 import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.service.QuarryOperationService;
 import com.ozerler.marble.web.ListQuery;
@@ -21,11 +22,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 import com.ozerler.marble.dto.TabulatorResponse;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.Map;
 
 @Controller
@@ -46,7 +44,7 @@ public class QuarryOperationController extends AbstractController {
         model.addAttribute("totalEstTon", formLookup.estimatedTonnage());
         model.addAttribute("totalActTon", formLookup.actualTonnage());
         model.addAttribute("grid", OperationQuarryBlockGrid.view(
-                quarryOperationService.searchQuarryBlocks(query.getSearch(), status, query.pageNumber() - 1, query.pageSize()),
+                quarryOperationService.searchQuarryBlockViews(query.getSearch(), status, query.pageNumber() - 1, query.pageSize()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("activeSection", "quarry");
         return "operations/quarry/index";
@@ -60,33 +58,12 @@ public class QuarryOperationController extends AbstractController {
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "status", required = false) BlockStatus status) {
 
-        int pageIndex = Math.max(0, page - 1);
-        Page<Block> blockPage = quarryOperationService.searchQuarryBlocks(search, status, pageIndex, size);
-
-        List<Map<String, Object>> data = blockPage.getContent().stream().map(b -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", b.getId());
-            map.put("blockCode", b.getBlockCode());
-            map.put("quarryName", b.getQuarry() != null ? b.getQuarry().getName() : "—");
-            map.put("quarryLocation", b.getQuarrySection() != null ? b.getQuarrySection() : "—");
-            map.put("stoneType", b.getStoneType() != null ? b.getStoneType() : "—");
-            map.put("colorQuality", b.getColorQuality() != null ? b.getColorQuality() : "—");
-            map.put("dimensions", b.getDimensions() != null ? b.getDimensions() : "—");
-            map.put("approximateTonnage", b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO);
-            map.put("actualTonnage", b.getActualTonnage());
-            map.put("extractionDate", b.getExtractionDate() != null ? b.getExtractionDate().toString() : "");
-            map.put("status", b.getStatus() != null ? b.getStatus().name() : "");
-            map.put("statusLabel", b.getStatus() != null ? b.getStatus().getDisplayName() : "");
-            map.put("notes", b.getNotes() != null ? b.getNotes() : "");
-            return map;
-        }).toList();
-
-        return TabulatorResponse.of(data, blockPage.getTotalPages(), blockPage.getTotalElements());
+        return quarryOperationService.quarryBlockRows(search, status, page, size);
     }
 
     @GetMapping({"/new", "/create"})
     public String newBlockForm(Model model) {
-        model.addAttribute("quarries", quarryOperationService.getAllQuarries());
+        model.addAttribute("quarries", quarryOperationService.getAllQuarryViews());
         model.addAttribute("qualityGrades", QualityGrade.values());
         model.addAttribute("activeSection", "quarry");
         return "operations/quarry/form";
@@ -110,7 +87,7 @@ public class QuarryOperationController extends AbstractController {
                               @RequestParam(value = "notes", required = false) String notes,
                               RedirectAttributes redirectAttributes) {
         try {
-            Block block = quarryOperationService.createQuarryBlock(
+            BlockView block = quarryOperationService.createQuarryBlockView(
                     quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm,
                     estimatedTonnage, actualTonnage, stoneType, colorTone, qualityGrade,
                     crackLevel, quarrySection, notes
@@ -130,7 +107,7 @@ public class QuarryOperationController extends AbstractController {
                                       @RequestParam("actualTonnage") BigDecimal actualTonnage,
                                       RedirectAttributes redirectAttributes) {
         try {
-            Block block = quarryOperationService.updateActualTonnage(id, actualTonnage);
+            BlockView block = quarryOperationService.updateActualTonnageView(id, actualTonnage);
             redirectAttributes.addFlashAttribute("successMessage", "Blok (" + block.getBlockCode() + ") gerçek tonajı güncellendi: " + block.getActualTonnage() + " ton (Tahmini tonaj: " + block.getEstimatedTonnage() + " ton korundu).");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
@@ -159,7 +136,7 @@ public class QuarryOperationController extends AbstractController {
                                 @RequestParam(value = "notes", required = false) String notes,
                                 RedirectAttributes redirectAttributes) {
         try {
-            Block block = quarryOperationService.dispatchBlock(id, targetDestination, customerId, invoiceId, notes);
+            BlockView block = quarryOperationService.dispatchBlockView(id, targetDestination, customerId, invoiceId, notes);
             redirectAttributes.addFlashAttribute("successMessage", "Blok (" + block.getBlockCode() + ") başarıyla " + targetDestination.getLabel() + " hedefine sevk edildi. Stok hareketi oluşturuldu.");
             return "redirect:/operations/quarry";
         } catch (Exception e) {
@@ -171,8 +148,8 @@ public class QuarryOperationController extends AbstractController {
     @GetMapping("/dispatches")
     public String dispatchesReport(@RequestParam(value = "page", required = false) Integer page,
                                    @ModelAttribute ListQuery query, Model model) {
-        Page<StockMovement> pageData = stockMovementService.searchMovements(
-                null, BusinessUnit.QUARRY, null, null, null, null, PageRequest.of(query.pageNumber() - 1, query.pageSize()));
+        Page<StockMovementView> pageData = stockMovementService.quarryDispatchViews(
+                PageRequest.of(query.pageNumber() - 1, query.pageSize()));
         model.addAttribute("grid", QuarryDispatchGrid.view(
                 pageData, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("activeSection", "quarry");
@@ -185,31 +162,6 @@ public class QuarryOperationController extends AbstractController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "25") int size) {
 
-        int pageIndex = Math.max(0, page - 1);
-        Page<StockMovement> pageData = stockMovementService.searchMovements(
-                null, BusinessUnit.QUARRY, null, null, null, null,
-                PageRequest.of(pageIndex, size));
-
-        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-
-        List<Map<String, Object>> list = pageData.getContent().stream().map(m -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", m.getId());
-            map.put("movementDate", m.getMovementDate() != null ? m.getMovementDate().format(dateFmt) : "—");
-            map.put("productName", m.getBlock() != null ? m.getBlock().getBlockCode() : m.getItemDescription() != null ? m.getItemDescription() : "Mermer Blok");
-            map.put("blockId", m.getBlock() != null ? m.getBlock().getId() : null);
-            map.put("tonnage", m.getTonnage());
-            map.put("quantity", m.getQuantity());
-            map.put("unit", m.getQuantityUnit() != null ? m.getQuantityUnit() : "ton");
-            map.put("source", "Ocak");
-            map.put("targetDestination", m.getTargetDestination() != null ? m.getTargetDestination().getDisplayName() : m.getTargetDepartment() != null ? m.getTargetDepartment().getDisplayName() : "Fabrika");
-            map.put("customerName", m.getCustomer() != null ? m.getCustomer().getCompanyName() : "—");
-            map.put("invoiceNo", m.getInvoice() != null ? m.getInvoice().getInvoiceNumber() : null);
-            map.put("invoiceId", m.getInvoice() != null ? m.getInvoice().getId() : null);
-            map.put("notes", m.getNotes() != null ? m.getNotes() : "—");
-            return map;
-        }).toList();
-
-        return TabulatorResponse.of(list, pageData.getTotalPages(), pageData.getTotalElements());
+        return stockMovementService.quarryDispatchRows(page, size);
     }
 }

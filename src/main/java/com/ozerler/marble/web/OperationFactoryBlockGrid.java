@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.Block;
+import com.ozerler.marble.dto.view.BlockView;
 import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
@@ -16,12 +16,12 @@ public final class OperationFactoryBlockGrid {
     private OperationFactoryBlockGrid() {
     }
 
-    public static DataGridView view(Page<Block> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<BlockView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "factory-blocks-table", columns(), OperationFactoryBlockGrid::row);
     }
 
-    static GridRow row(Block block) {
+    static GridRow row(BlockView block) {
         String viewUrl = "/blocks/" + block.getId();
         return GridRow.of(viewUrl, null, null, null, List.of(
                 GridCell.badge("Kesilmemiş Blok"),
@@ -56,14 +56,14 @@ public final class OperationFactoryBlockGrid {
         );
     }
 
-    private static String quarry(Block block) {
+    private static String quarry(BlockView block) {
         if (block.getQuarry() != null && block.getQuarry().getName() != null) {
             return block.getQuarry().getName();
         }
         return OperationGridSupport.named(block.getQuarryName(), "Merkez Ocak");
     }
 
-    private static String arrived(Block block) {
+    private static String arrived(BlockView block) {
         LocalDate arrival = block.getArrivalDate();
         if (arrival != null) {
             return GridTexts.date(arrival);
@@ -71,7 +71,7 @@ public final class OperationFactoryBlockGrid {
         return OperationGridSupport.day(block.getCreatedDate());
     }
 
-    private static BigDecimal saleValue(Block block) {
+    private static BigDecimal saleValue(BlockView block) {
         BigDecimal cost = block.getTotalCost() == null ? BigDecimal.ZERO : block.getTotalCost();
         BigDecimal sale = block.getSalePrice();
         if ((sale == null || sale.compareTo(BigDecimal.ZERO) <= 0) && block.getUnitMarketValuePerTon() != null) {

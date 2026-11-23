@@ -38,8 +38,7 @@ class BlockControllerTest {
     @DisplayName("deleteBlockApi should return successful BackEndResponse")
     void shouldReturnSuccessBackEndResponseOnDeleteBlockApi() {
         Long blockId = 100L;
-        com.ozerler.marble.model.Block block = com.ozerler.marble.model.Block.builder().id(blockId).blockCode("BLK-100").build();
-        org.mockito.Mockito.when(quarryBlockService.getBlockById(blockId)).thenReturn(block);
+        org.mockito.Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
         org.mockito.Mockito.when(messageSource.getMessage(org.mockito.ArgumentMatchers.eq("erp.block.delete.success"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn("BLK-100 kodlu blok silindi.");
 
@@ -56,8 +55,7 @@ class BlockControllerTest {
     @DisplayName("deleteBlockApi should return fatal BackEndResponse on exception")
     void shouldReturnFatalBackEndResponseOnDeleteBlockApiError() {
         Long blockId = 100L;
-        com.ozerler.marble.model.Block block = com.ozerler.marble.model.Block.builder().id(blockId).blockCode("BLK-100").build();
-        org.mockito.Mockito.when(quarryBlockService.getBlockById(blockId)).thenReturn(block);
+        org.mockito.Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
         doThrow(new IllegalStateException("Blok silinemez")).when(quarryBlockService).deleteBlock(blockId);
 
         BackEndResponse response = blockController.deleteBlockApi(blockId, java.util.Locale.forLanguageTag("tr"));
@@ -172,8 +170,7 @@ class BlockControllerTest {
     @DisplayName("deleteBlock form action redirects to /blocks on success")
     void shouldRedirectToBlocksOnDeleteBlockFormSuccess() {
         Long blockId = 100L;
-        com.ozerler.marble.model.Block block = com.ozerler.marble.model.Block.builder().id(blockId).blockCode("BLK-100").build();
-        org.mockito.Mockito.when(quarryBlockService.getBlockById(blockId)).thenReturn(block);
+        org.mockito.Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
                 new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
 
@@ -187,8 +184,7 @@ class BlockControllerTest {
     @DisplayName("deleteBlock form action redirects to /blocks/{id} on error")
     void shouldRedirectToBlockDetailOnDeleteBlockFormError() {
         Long blockId = 100L;
-        com.ozerler.marble.model.Block block = com.ozerler.marble.model.Block.builder().id(blockId).blockCode("BLK-100").build();
-        org.mockito.Mockito.when(quarryBlockService.getBlockById(blockId)).thenReturn(block);
+        org.mockito.Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
         doThrow(new IllegalStateException("Kullanımda olan blok silinemez")).when(quarryBlockService).deleteBlock(blockId);
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
                 new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
@@ -263,7 +259,7 @@ class BlockControllerTest {
     @Test
     @DisplayName("showMoveForm opens dedicated page with requested target yard")
     void shouldOpenMoveFormForQuarryBlock() {
-        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L))
+        org.mockito.Mockito.when(quarryBlockService.getBlock(100L))
                 .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
         org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
@@ -280,7 +276,7 @@ class BlockControllerTest {
     @Test
     @DisplayName("showMoveForm defaults target to opposite quarry yard")
     void shouldDefaultMoveTargetToOppositeYard() {
-        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L))
+        org.mockito.Mockito.when(quarryBlockService.getBlock(100L))
                 .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
         org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
@@ -296,7 +292,7 @@ class BlockControllerTest {
     @Test
     @DisplayName("showMoveForm redirects sold blocks to detail")
     void shouldRedirectSoldBlockAwayFromMoveForm() {
-        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L))
+        org.mockito.Mockito.when(quarryBlockService.getBlock(100L))
                 .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.SOLD, StockLocationType.DISPATCH_YARD));
         org.mockito.Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("erp.block.already_sold"),
@@ -336,7 +332,7 @@ class BlockControllerTest {
     @Test
     @DisplayName("showTransferForm opens dedicated page for dispatch-yard blocks")
     void shouldOpenTransferFormForDispatchYardBlock() {
-        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L))
+        org.mockito.Mockito.when(quarryBlockService.getBlock(100L))
                 .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.DISPATCH_YARD));
         org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
@@ -352,7 +348,7 @@ class BlockControllerTest {
     @Test
     @DisplayName("showTransferForm redirects production-yard blocks to detail")
     void shouldRedirectProductionYardBlockAwayFromTransferForm() {
-        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L))
+        org.mockito.Mockito.when(quarryBlockService.getBlock(100L))
                 .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
         org.mockito.Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("error.block.dispatch.not_in_dispatch_yard"),
@@ -463,10 +459,10 @@ class BlockControllerTest {
     @Test
     @DisplayName("blockPhotos redirects to the first image when photos exist")
     void blockPhotosRedirectsToFirstImage() {
-        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L)).thenReturn(quarryBlock(
+        org.mockito.Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
                 com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
-        org.mockito.Mockito.when(fileStorageService.getFilesForEntity("BLOCK", 100L))
-                .thenReturn(java.util.List.of(sampleImage(7L), sampleImage(8L)));
+        org.mockito.Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
+                .thenReturn(java.util.List.of(com.ozerler.marble.dto.FileStorageDto.fromEntity(sampleImage(7L)), com.ozerler.marble.dto.FileStorageDto.fromEntity(sampleImage(8L))));
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
                 new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
 
@@ -478,9 +474,9 @@ class BlockControllerTest {
     @Test
     @DisplayName("blockPhotos redirects to detail when the block has no images")
     void blockPhotosRedirectsWhenEmpty() {
-        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L)).thenReturn(quarryBlock(
+        org.mockito.Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
                 com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
-        org.mockito.Mockito.when(fileStorageService.getFilesForEntity("BLOCK", 100L))
+        org.mockito.Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
                 .thenReturn(java.util.List.of());
         org.mockito.Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("erp.block.photos.empty"),
@@ -499,10 +495,10 @@ class BlockControllerTest {
     @Test
     @DisplayName("blockPhoto renders the dedicated photo page for a matching file")
     void blockPhotoRendersViewer() {
-        org.mockito.Mockito.when(quarryBlockService.getBlockWithDetails(100L)).thenReturn(quarryBlock(
+        org.mockito.Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
                 com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
-        org.mockito.Mockito.when(fileStorageService.getFilesForEntity("BLOCK", 100L))
-                .thenReturn(java.util.List.of(sampleImage(7L), sampleImage(8L)));
+        org.mockito.Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
+                .thenReturn(java.util.List.of(com.ozerler.marble.dto.FileStorageDto.fromEntity(sampleImage(7L)), com.ozerler.marble.dto.FileStorageDto.fromEntity(sampleImage(8L))));
         org.springframework.ui.ExtendedModelMap model = new org.springframework.ui.ExtendedModelMap();
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
                 new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
@@ -532,22 +528,25 @@ class BlockControllerTest {
                 .build();
     }
 
-    private static com.ozerler.marble.model.Block quarryBlock(
+    private static com.ozerler.marble.dto.view.BlockView blockView(Long id, String code) {
+        com.ozerler.marble.dto.view.BlockView view = new com.ozerler.marble.dto.view.BlockView();
+        view.setId(id);
+        view.setBlockCode(code);
+        return view;
+    }
+
+    private static com.ozerler.marble.dto.view.BlockView quarryBlock(
             com.ozerler.marble.model.enums.BlockStatus status,
             StockLocationType locationType) {
-        com.ozerler.marble.model.StockLocation location = locationType == null ? null
-                : com.ozerler.marble.model.StockLocation.builder()
-                .id(1L)
-                .code(locationType.name())
-                .name(locationType.name())
-                .businessUnit(locationType.getBusinessUnit())
-                .locationType(locationType)
-                .build();
-        return com.ozerler.marble.model.Block.builder()
-                .id(100L)
-                .blockCode("BLK-100")
-                .status(status)
-                .currentLocation(location)
-                .build();
+        com.ozerler.marble.dto.view.BlockView view = blockView(100L, "BLK-100");
+        view.setStatus(status);
+        view.setCanonicalStatus(status.canonical());
+        if (locationType != null) {
+            com.ozerler.marble.dto.view.BlockView.LocationView location = new com.ozerler.marble.dto.view.BlockView.LocationView();
+            location.setName(locationType.name());
+            location.setLocationType(locationType);
+            view.setCurrentLocation(location);
+        }
+        return view;
     }
 }

@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.FactoryOperation;
+import com.ozerler.marble.dto.view.FactoryOperationView;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -16,10 +16,10 @@ public final class PolishGrid {
     private PolishGrid() {
     }
 
-    public static DataGridView view(List<FactoryOperation> operations, int page, int size, String search) {
+    public static DataGridView view(List<FactoryOperationView> operations, int page, int size, String search) {
         List<OperationView> matched = new ArrayList<>();
         if (operations != null) {
-            for (FactoryOperation operation : operations) {
+            for (FactoryOperationView operation : operations) {
                 OperationView view = OperationView.from(operation);
                 if (GridWindow.matches(search, view.orderNo, view.blockCode, view.operatorName, view.machineName, view.processLabel)) {
                     matched.add(view);
@@ -81,7 +81,7 @@ public final class PolishGrid {
                                  String operatorName, String machineName, BigDecimal input, BigDecimal output,
                                  BigDecimal waste, String chamfer, BigDecimal totalCost, LocalDateTime finishedAt) {
 
-        private static OperationView from(FactoryOperation operation) {
+        private static OperationView from(FactoryOperationView operation) {
             var workOrder = operation.getWorkOrder();
             var block = workOrder == null ? null : workOrder.getBlock();
             var machine = operation.getMachine();

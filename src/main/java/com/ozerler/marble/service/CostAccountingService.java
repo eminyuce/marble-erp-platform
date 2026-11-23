@@ -20,6 +20,7 @@ import java.util.Objects;
 public class CostAccountingService {
 
     private final CostCenterRepository costCenterRepository;
+    private final com.ozerler.marble.mapper.CostCenterMapper costCenterMapper;
     private final CostTransactionRepository costTransactionRepository;
     private final org.springframework.context.MessageSource messageSource;
 
@@ -37,6 +38,19 @@ public class CostAccountingService {
     @Transactional(readOnly = true)
     public List<CostCenter> getAllCostCenters() {
         return BoundedReads.all(costCenterRepository);
+    }
+
+    /**
+     * Sum of the monthly budgets of all cost centers.
+     *
+     * @return total monthly budget, zero when none is set
+     */
+    @Transactional(readOnly = true)
+    public BigDecimal totalMonthlyBudget() {
+        return BoundedReads.all(costCenterRepository).stream()
+                .map(CostCenter::getMonthlyBudget)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Transactional
@@ -111,5 +125,15 @@ public class CostAccountingService {
     @Transactional(readOnly = true)
     public BigDecimal getTotalExpenses() {
         return costTransactionRepository.getTotalCostAmount();
+    }
+
+    /**
+     * Same as {@code getAllCostCenters}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.CostCenterRef> getAllCostCenterViews() {
+        return getAllCostCenters().stream().map(costCenterMapper::toDto).toList();
     }
 }

@@ -10,7 +10,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class SalesOrderView {
+public class SalesOrderView extends AuditView {
     private Long id;
     private String orderNo;
     private LocalDate orderDate;

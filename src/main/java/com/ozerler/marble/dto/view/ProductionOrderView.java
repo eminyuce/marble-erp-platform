@@ -14,7 +14,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class ProductionOrderView {
+public class ProductionOrderView extends AuditView {
     private Long id;
     private String orderNo;
     private String status;

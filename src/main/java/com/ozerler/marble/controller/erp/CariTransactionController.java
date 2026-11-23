@@ -5,7 +5,6 @@ import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.CariSummaryDto;
 import com.ozerler.marble.dto.CariTransactionDto;
-import com.ozerler.marble.model.CariTransaction;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CariTransactionType;
 import com.ozerler.marble.model.enums.CustomerType;
@@ -72,12 +71,12 @@ public class CariTransactionController extends AbstractController {
         try {
             CariAmounts amounts = CariAmounts.of(direction, amount);
 
-            CariTransaction tx = cariTransactionService.createTransaction(
+            cariTransactionService.createTransaction(
                     customerId, transactionDate != null ? transactionDate : LocalDate.now(),
                     transactionType, documentNo, description, amounts.debit(), amounts.credit(), notes
             );
 
-            redirectAttributes.addFlashAttribute("successMessage", "Cari hareket başarıyla kaydedildi (" + tx.getTransactionType().getLabel() + ": " + amount + " TL)");
+            redirectAttributes.addFlashAttribute("successMessage", "Cari hareket başarıyla kaydedildi (" + transactionType.getLabel() + ": " + amount + " TL)");
         } catch (Exception e) {
             log.error("Cari hareket eklenemedi", e);
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());

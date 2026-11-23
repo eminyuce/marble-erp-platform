@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class ProjectView {
+public class ProjectView extends AuditView {
     private Long id;
     private String name;
     private String projectCode;
@@ -23,8 +23,4 @@ public class ProjectView {
     private LocalDate deliveryDate;
     private ProjectStatus status;
     private PartyView customer;
-    private LocalDateTime createdDate;
-    private LocalDateTime updatedDate;
-    private String addUserId;
-    private String updateUserId;
 }

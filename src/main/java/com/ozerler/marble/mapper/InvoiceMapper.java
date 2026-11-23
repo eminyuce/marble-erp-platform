@@ -18,6 +18,19 @@ public interface InvoiceMapper {
     @Mapping(target = "internalTransfer", ignore = true)
     InvoiceView toDto(Invoice invoice);
 
+    /**
+     * Copies the header fields only, for list rows; lines and collections are left empty.
+     *
+     * @param invoice the entity
+     * @return the header view
+     */
+    @org.mapstruct.Named("row")
+    @Mapping(target = "invoiceNumber", source = "invoiceNo")
+    @Mapping(target = "internalTransfer", ignore = true)
+    @Mapping(target = "items", ignore = true)
+    @Mapping(target = "collections", ignore = true)
+    InvoiceView toRow(Invoice invoice);
+
     InvoiceRef toRef(Invoice invoice);
 
     @Mapping(target = "unitLabel", ignore = true)

@@ -26,6 +26,9 @@ public class FactoryInventoryService {
     public static final String FACTORY_CONSUMABLES_LOCATION_CODE = "FB-SRF-01";
 
     private final StockItemRepository stockItemRepository;
+    private final com.ozerler.marble.mapper.MachineFuelMapper machineFuelMapper;
+    private final com.ozerler.marble.mapper.MachineMapper machineMapper;
+    private final com.ozerler.marble.mapper.StockItemMapper stockItemMapper;
     private final StockLocationRepository stockLocationRepository;
     private final MachineRepository machineRepository;
     private final MachineFuelEntryRepository fuelEntryRepository;
@@ -382,5 +385,110 @@ public class FactoryInventoryService {
                         .locationType(type)
                         .active(true)
                         .build()));
+    }
+
+    /**
+     * Same as {@code getOrCreateFactoryFuelTankStockItem}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView getOrCreateFactoryFuelTankStockItemView() {
+        return stockItemMapper.toDto(getOrCreateFactoryFuelTankStockItem());
+    }
+
+    /**
+     * Same as {@code addFuelStock}, copied into a view inside the transaction.
+     *
+     * @param litres see {@code addFuelStock}
+     * @param netUnitPrice see {@code addFuelStock}
+     * @param invoice see {@code addFuelStock}
+     * @param notes see {@code addFuelStock}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView addFuelStockView(BigDecimal litres, BigDecimal netUnitPrice, Invoice invoice, String notes) {
+        return stockItemMapper.toDto(addFuelStock(litres, netUnitPrice, invoice, notes));
+    }
+
+    /**
+     * Same as {@code consumeConsumable}, copied into a view inside the transaction.
+     *
+     * @param stockItemId see {@code consumeConsumable}
+     * @param quantity see {@code consumeConsumable}
+     * @param machineId see {@code consumeConsumable}
+     * @param notes see {@code consumeConsumable}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView consumeConsumableView(Long stockItemId, BigDecimal quantity, Long machineId, String notes) {
+        return stockItemMapper.toDto(consumeConsumable(stockItemId, quantity, machineId, notes));
+    }
+
+    /**
+     * Same as {@code createStockCard}, copied into a view inside the transaction.
+     *
+     * @param description see {@code createStockCard}
+     * @param unit see {@code createStockCard}
+     * @param initialQuantity see {@code createStockCard}
+     * @param netUnitPrice see {@code createStockCard}
+     * @param itemCode see {@code createStockCard}
+     * @param notes see {@code createStockCard}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView createStockCardView(String description, String unit, BigDecimal initialQuantity,
+                                     BigDecimal netUnitPrice, String itemCode, String notes) {
+        return stockItemMapper.toDto(createStockCard(description, unit, initialQuantity, netUnitPrice, itemCode, notes));
+    }
+
+    /**
+     * Same as {@code getRecentFuelEntries}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.MachineFuelEntryView> getRecentFuelEntryViews() {
+        return getRecentFuelEntries().stream().map(machineFuelMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getAllFactoryConsumables}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.StockItemView> getAllFactoryConsumablesViews() {
+        return getAllFactoryConsumables().stream().map(stockItemMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getFactoryVehicles}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.MachineRef> getFactoryVehiclesViews() {
+        return getFactoryVehicles().stream().map(machineMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code dispenseFuel}, copied into a view inside the transaction.
+     *
+     * @param machineId see {@code dispenseFuel}
+     * @param litres see {@code dispenseFuel}
+     * @param entryDate see {@code dispenseFuel}
+     * @param workingHoursOrKm see {@code dispenseFuel}
+     * @param receiptNo see {@code dispenseFuel}
+     * @param issuedBy see {@code dispenseFuel}
+     * @param receivedBy see {@code dispenseFuel}
+     * @param notes see {@code dispenseFuel}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.MachineFuelEntryView dispenseFuelView(Long machineId, BigDecimal litres, LocalDate entryDate,
+                                         BigDecimal workingHoursOrKm, String receiptNo,
+                                         String issuedBy, String receivedBy, String notes) {
+        return machineFuelMapper.toDto(dispenseFuel(machineId, litres, entryDate, workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes));
     }
 }

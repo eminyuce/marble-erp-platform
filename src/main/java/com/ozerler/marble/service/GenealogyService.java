@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 public class GenealogyService {
 
     private final BlockRepository blockRepository;
+    private final BlockViews blockViews;
     private final ProductionOrderRepository productionOrderRepository;
     private final SlabRepository slabRepository;
     private final CutItemRepository cutItemRepository;
@@ -322,5 +323,15 @@ public class GenealogyService {
     public Optional<GenealogyNodeDto> getDefaultTree() {
         return blockRepository.findTop1ByOrderByIdAsc()
                 .map(block -> buildTreeForBlock(block.getId()));
+    }
+
+    /**
+     * Same as {@code getAllBlocks}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.BlockView> getAllBlockViews() {
+        return getAllBlocks().stream().map(blockViews::toView).toList();
     }
 }

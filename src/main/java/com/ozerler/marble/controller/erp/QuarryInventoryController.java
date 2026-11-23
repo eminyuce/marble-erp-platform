@@ -1,11 +1,11 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
+import com.ozerler.marble.dto.view.MachineRef;
+import com.ozerler.marble.dto.view.StockItemView;
 import com.ozerler.marble.common.Constants;
 
 import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.model.Machine;
-import com.ozerler.marble.model.MachineFuelEntry;
-import com.ozerler.marble.model.StockItem;
 import com.ozerler.marble.model.enums.QuarryCategory;
 import com.ozerler.marble.service.QuarryInventoryService;
 import lombok.RequiredArgsConstructor;
@@ -34,10 +34,10 @@ public class QuarryInventoryController extends AbstractController {
     // ─────────────────────────────────────────────────────────────
     @GetMapping("/fuel")
     public String fuelIndex(Model model) {
-        StockItem tank = quarryInventoryService.getOrCreateFuelTankStockItem();
+        StockItemView tank = quarryInventoryService.getOrCreateFuelTankStockItemView();
         BigDecimal currentLiters = tank.getQuantity() != null ? tank.getQuantity() : BigDecimal.ZERO;
-        List<Machine> machines = quarryInventoryService.getQuarryMachines();
-        List<MachineFuelEntry> entries = quarryInventoryService.getRecentFuelEntries();
+        List<MachineRef> machines = quarryInventoryService.getQuarryMachinesViews();
+        List<MachineFuelEntryView> entries = quarryInventoryService.getRecentFuelEntryViews();
 
         model.addAttribute("tank", tank);
         model.addAttribute("currentLiters", currentLiters);
@@ -65,7 +65,7 @@ public class QuarryInventoryController extends AbstractController {
                                @RequestParam(value = "notes", required = false) String notes,
                                RedirectAttributes redirectAttributes) {
         try {
-            MachineFuelEntry entry = quarryInventoryService.dispenseFuel(
+            MachineFuelEntryView entry = quarryInventoryService.dispenseFuelView(
                     machineId, litres, LocalDate.now(), workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s makinesine %s litre mazot verildi. Tutar (KDV hariç net): %s TL ocağın giderine yazıldı.",
@@ -90,7 +90,7 @@ public class QuarryInventoryController extends AbstractController {
                                @RequestParam(value = "notes", required = false) String notes,
                                RedirectAttributes redirectAttributes) {
         try {
-            StockItem updated = quarryInventoryService.addFuelStock(litres, netUnitPrice, null,
+            StockItemView updated = quarryInventoryService.addFuelStockView(litres, netUnitPrice, null,
                     notes != null ? notes : invoiceNo != null ? "Fatura: " + invoiceNo : "Doğrudan Depo Girişi");
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s litre mazot depoya eklendi. Güncel stok: %s litre.", litres, updated.getQuantity()));
@@ -107,16 +107,15 @@ public class QuarryInventoryController extends AbstractController {
     @GetMapping("/consumables")
     public String consumablesIndex(@RequestParam(value = "category", required = false) QuarryCategory category,
                                    Model model) {
-        List<StockItem> consumables = quarryInventoryService.getAllQuarryStockCards(category);
-        List<Machine> machines = quarryInventoryService.getQuarryMachines();
+        List<StockItemView> consumables = quarryInventoryService.getAllQuarryStockCardsViews(category);
+        List<MachineRef> machines = quarryInventoryService.getQuarryMachinesViews();
 
         BigDecimal totalValue = consumables.stream()
                 .filter(item -> item.getQuantity() != null && item.getUnitPrice() != null)
                 .map(item -> item.getQuantity().multiply(item.getUnitPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalQuantity = consumables.stream()
-                .map(StockItem::getQuantity)
+        BigDecimal totalQuantity = consumables.stream().map(StockItemView::getQuantity)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -140,7 +139,7 @@ public class QuarryInventoryController extends AbstractController {
                                     @RequestParam(value = "notes", required = false) String notes,
                                     RedirectAttributes redirectAttributes) {
         try {
-            StockItem item = quarryInventoryService.consumeConsumable(stockItemId, quantity, machineId, notes);
+            StockItemView item = quarryInventoryService.consumeConsumableView(stockItemId, quantity, machineId, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s malzemesinden %s %s kullanıldı ve ocağın giderine yazıldı. Kalan stok: %s %s.",
                             item.getDescription(), quantity, item.getUnit(), item.getQuantity(), item.getUnit()));
@@ -163,7 +162,7 @@ public class QuarryInventoryController extends AbstractController {
                                      RedirectAttributes redirectAttributes) {
         try {
             QuarryCategory cat = category != null ? category : QuarryCategory.SARF_MALZEME;
-            StockItem item = quarryInventoryService.createStockCard(
+            StockItemView item = quarryInventoryService.createStockCardView(
                     cat, description, unit, quantity, netUnitPrice, itemCode, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s (%s %s) stok kartı ve depo girişi başarıyla kaydedildi.",
@@ -186,7 +185,7 @@ public class QuarryInventoryController extends AbstractController {
                                   @RequestParam(value = "notes", required = false) String notes,
                                   RedirectAttributes redirectAttributes) {
         try {
-            StockItem item = quarryInventoryService.createStockCard(
+            StockItemView item = quarryInventoryService.createStockCardView(
                     category, description, unit, initialQuantity, netUnitPrice, itemCode, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("Yeni stok kartı (%s - %s) başarıyla tanımlandı.",
@@ -203,7 +202,7 @@ public class QuarryInventoryController extends AbstractController {
     // ─────────────────────────────────────────────────────────────
     @GetMapping("/machines")
     public String machinesIndex(Model model) {
-        List<Machine> machines = quarryInventoryService.getQuarryMachines();
+        List<MachineRef> machines = quarryInventoryService.getQuarryMachinesViews();
         model.addAttribute("machines", machines);
         model.addAttribute("activeSection", "quarry");
         model.addAttribute("activeSubSection", "machines");
@@ -217,7 +216,7 @@ public class QuarryInventoryController extends AbstractController {
                                 @RequestParam(value = "notes", required = false) String notes,
                                 RedirectAttributes redirectAttributes) {
         try {
-            Machine m = quarryInventoryService.createQuarryMachine(code, name, notes);
+            MachineRef m = quarryInventoryService.createQuarryMachineView(code, name, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("Makine başarıyla tanımlandı: %s (%s)", m.getName(), m.getCode()));
         } catch (Exception e) {

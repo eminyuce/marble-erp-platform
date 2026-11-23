@@ -4,7 +4,6 @@ import com.ozerler.marble.dto.SalesOrderDto;
 import com.ozerler.marble.dto.view.SalesOrderView;
 import com.ozerler.marble.exception.SalesOrderNotFoundException;
 import com.ozerler.marble.mapper.SalesOrderMapper;
-import com.ozerler.marble.dto.option.PartyOption;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
@@ -34,6 +33,7 @@ public class SalesService {
     private final BlockRepository blockRepository;
     private final org.springframework.context.MessageSource messageSource;
     private final SalesOrderMapper salesOrderMapper;
+    private final com.ozerler.marble.mapper.CustomerMapper customerMapper;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
@@ -80,9 +80,9 @@ public class SalesService {
     }
 
     @Transactional(readOnly = true)
-    public List<PartyOption> getAllCustomers() {
+    public List<com.ozerler.marble.dto.view.PartyView> getAllCustomers() {
         return BoundedReads.all(customerRepository, org.springframework.data.domain.Sort.by("companyName")).stream()
-                .map(customer -> new PartyOption(customer.getId(), customer.getCompanyName()))
+                .map(customerMapper::toDto)
                 .toList();
     }
 

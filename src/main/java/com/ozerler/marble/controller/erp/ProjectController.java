@@ -158,11 +158,11 @@ public class ProjectController {
     public String projectDetail(@PathVariable("id") Long id, Model model) {
         var project = formLookup.getProject(id);
         model.addAttribute("project", project);
-        model.addAttribute("locations", projectSiteService.getLocationsByProject(id));
-        model.addAttribute("consumptions", projectSiteService.getConsumptionsByProject(id));
+        model.addAttribute("locations", projectSiteService.getLocationViewsByProject(id));
+        model.addAttribute("consumptions", projectSiteService.getConsumptionViewsByProject(id));
         model.addAttribute("consumptionTypes", ConsumptionType.values());
-        model.addAttribute("stonePlans", constructionSiteService.plansFor(id));
-        model.addAttribute("installations", constructionSiteService.installationsFor(id));
+        model.addAttribute("stonePlans", constructionSiteService.planViewsFor(id));
+        model.addAttribute("installations", constructionSiteService.installationViewsFor(id));
         model.addAttribute("profit", costAnalysisService.profitFor(id));
         model.addAttribute("supplyRoutes", SupplyRoute.values());
         model.addAttribute("surfaceFinishes", SurfaceFinish.values());

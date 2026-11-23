@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.OperationWorkOrder;
+import com.ozerler.marble.dto.view.WorkOrderView;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -13,7 +13,7 @@ public final class WorkshopOrderGrid {
     private WorkshopOrderGrid() {
     }
 
-    public static DataGridView view(Page<OperationWorkOrder> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<WorkOrderView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "workshop-orders-table", columns(), WorkOrderGridRows::workshop);
     }

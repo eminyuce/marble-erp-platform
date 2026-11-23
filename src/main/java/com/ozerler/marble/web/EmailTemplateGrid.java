@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.EmailTemplate;
+import com.ozerler.marble.dto.EmailTemplateDto;
 import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
@@ -15,11 +15,11 @@ public final class EmailTemplateGrid {
     private EmailTemplateGrid() {
     }
 
-    public static DataGridView view(Page<EmailTemplate> result, int page, int size,
-                                    ToIntFunction<EmailTemplate> placeholderCount) {
+    public static DataGridView view(Page<EmailTemplateDto> result, int page, int size,
+                                    ToIntFunction<EmailTemplateDto> placeholderCount) {
         List<GridRow> rows = new ArrayList<>();
         if (result != null && result.getContent() != null) {
-            for (EmailTemplate template : result.getContent()) {
+            for (EmailTemplateDto template : result.getContent()) {
                 if (template != null) {
                     int count = placeholderCount == null ? 0 : placeholderCount.applyAsInt(template);
                     rows.add(row(template, count));
@@ -32,7 +32,7 @@ public final class EmailTemplateGrid {
                 "email-templates-table", 4, columns(), rows);
     }
 
-    public static GridRow row(EmailTemplate template, int placeholderCount) {
+    public static GridRow row(EmailTemplateDto template, int placeholderCount) {
         String id = template.getId() == null ? "" : template.getId().toString();
         String detailUrl = id.isEmpty() ? "" : "/admin/email-templates/" + id;
         String editUrl = id.isEmpty() ? "" : detailUrl + "/edit";

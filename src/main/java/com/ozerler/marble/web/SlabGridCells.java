@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.dto.view.SlabView;
 import com.ozerler.marble.model.enums.SlabStatus;
 
 /**
@@ -11,43 +11,43 @@ final class SlabGridCells {
     private SlabGridCells() {
     }
 
-    static GridCell status(Slab slab) {
+    static GridCell status(SlabView slab) {
         return GridCell.badge(slab.getStatus() == null ? "Hazır" : slab.getStatus().getDisplayName());
     }
 
-    static GridCell code(Slab slab) {
+    static GridCell code(SlabView slab) {
         return GridCell.text(slab.getSlabCode());
     }
 
-    static GridCell created(Slab slab) {
+    static GridCell created(SlabView slab) {
         return GridCell.text(OperationGridSupport.day(slab.getCreatedDate()));
     }
 
-    static GridCell block(Slab slab) {
+    static GridCell block(SlabView slab) {
         return GridCell.text(slab.getBlock() == null ? "" : slab.getBlock().getBlockCode());
     }
 
-    static GridCell stone(Slab slab) {
+    static GridCell stone(SlabView slab) {
         return GridCell.text(slab.getBlock() == null ? "" : slab.getBlock().getStoneType());
     }
 
-    static GridCell finish(Slab slab) {
+    static GridCell finish(SlabView slab) {
         return GridCell.text(OperationGridSupport.pair(quality(slab), surface(slab)));
     }
 
-    static GridCell thickness(Slab slab) {
+    static GridCell thickness(SlabView slab) {
         return GridCell.text(OperationGridSupport.centimeters(slab.getThicknessCm()));
     }
 
-    static GridCell dimensions(Slab slab) {
+    static GridCell dimensions(SlabView slab) {
         return GridCell.text(OperationGridSupport.rectangle(slab.getWidthCm(), slab.getLengthCm()));
     }
 
-    static GridCell area(Slab slab) {
+    static GridCell area(SlabView slab) {
         return GridCell.text(OperationGridSupport.amount(slab.getSurfaceAreaM2(), "m²"));
     }
 
-    static GridCell customer(Slab slab) {
+    static GridCell customer(SlabView slab) {
         String name = slab.getCustomer() == null ? null : slab.getCustomer().getCompanyName();
         return GridCell.text(OperationGridSupport.customer(name));
     }
@@ -89,11 +89,11 @@ final class SlabGridCells {
         return GridColumn.text("surfaceAreaM2", "M²", false, 120);
     }
 
-    private static String quality(Slab slab) {
+    private static String quality(SlabView slab) {
         return slab.getQualityGrade() == null ? "1. Sınıf" : slab.getQualityGrade().getDisplayName();
     }
 
-    private static String surface(Slab slab) {
+    private static String surface(SlabView slab) {
         return slab.getSurfaceFinish() == null ? "Cilalı" : slab.getSurfaceFinish().getDisplayName();
     }
 }

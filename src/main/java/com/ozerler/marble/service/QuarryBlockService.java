@@ -56,6 +56,8 @@ public class QuarryBlockService {
     private static final int BLOCK_CODE_SEQUENCE_WIDTH = 3;
 
     private final BlockRepository blockRepository;
+    private final com.ozerler.marble.mapper.BlockMapper blockMapper;
+    private final com.ozerler.marble.mapper.QuarryMapper quarryMapper;
     private final QuarryRepository quarryRepository;
     private final org.springframework.context.MessageSource messageSource;
     private final StockLocationRepository stockLocationRepository;
@@ -73,6 +75,7 @@ public class QuarryBlockService {
     private final ShipmentItemRepository shipmentItemRepository;
     private final FileStorageService fileStorageService;
     private final QuarryInventoryService quarryInventoryService;
+    private final BlockViews blockViews;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
@@ -734,5 +737,86 @@ public class QuarryBlockService {
                 .toLocation(to)
                 .description(description)
                 .build());
+    }
+
+    /**
+     * Loads a block with its quarry, location and customers and copies it into a view.
+     *
+     * @param id block id
+     * @return the block view
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.view.BlockView getBlock(Long id) {
+        return blockViews.toView(getBlockWithDetails(id));
+    }
+
+    /**
+     * Loads a block and calculates the cost, value, weight warning and delete flag shown on its detail page.
+     *
+     * @param id block id
+     * @return the detail page figures
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.view.BlockDetailPage getBlockDetailPage(Long id) {
+        Block block = getBlockWithDetails(id);
+        Long quarryId = null;
+        if (block.getQuarry() != null) {
+            quarryId = block.getQuarry().getId();
+        }
+        BigDecimal expensePerTon = null;
+        if (quarryId != null) {
+            var breakdown = blockCostCalculationService.quarryBreakdown(quarryId, YearMonth.now().toString());
+            if (breakdown != null) {
+                expensePerTon = breakdown.getExpensePerTon();
+            }
+        }
+        return new com.ozerler.marble.dto.view.BlockDetailPage(
+                blockViews.toView(block),
+                blockCostCalculationService.calculatedExtractionCost(block, expensePerTon),
+                blockCostCalculationService.calculatedTotalCost(block, expensePerTon),
+                blockCostCalculationService.blockMarketValue(block),
+                isWeightDeviationWarning(block),
+                canDeleteBlock(block));
+    }
+
+    /**
+     * Same as {@code getAllQuarries}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.QuarryRef> getAllQuarryViews() {
+        return getAllQuarries().stream().map(quarryMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getDispatchedBlocks}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.BlockView> getDispatchedBlockViews() {
+        return getDispatchedBlocks().stream().map(blockViews::toView).toList();
+    }
+
+    /**
+     * Same as {@code getAvailableBlocksForProduction}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.BlockView> getAvailableBlockViewsForProduction() {
+        return getAvailableBlocksForProduction().stream().map(blockViews::toView).toList();
+    }
+
+    /**
+     * Same as {@code getMovements}, copied into a view inside the transaction.
+     *
+     * @param blockId see {@code getMovements}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.BlockMovementView> getMovementViews(Long blockId) {
+        return getMovements(blockId).stream().map(blockMapper::toMovement).toList();
     }
 }

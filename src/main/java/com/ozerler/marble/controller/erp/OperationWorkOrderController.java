@@ -1,16 +1,16 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.dto.view.OrderRef;
+import com.ozerler.marble.dto.form.WorkOrderRequest;
 import com.ozerler.marble.common.Constants;
 
 import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.service.OperationWorkOrderService;
 import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.WorkOrderGrid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ozerler.marble.dto.TabulatorResponse;
-import java.util.HashMap;
 import java.util.Map;
 
 @Controller
@@ -43,7 +42,7 @@ public class OperationWorkOrderController extends AbstractController {
                         @ModelAttribute ListQuery query, Model model) {
 
         model.addAttribute("grid", WorkOrderGrid.view(
-                workOrderService.searchOrders(department, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
+                workOrderService.searchOrderRows(department, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("selectedDepartment", department != null ? department.name() : "");
         model.addAttribute("selectedStatus", status != null ? status.name() : "");
@@ -66,28 +65,7 @@ public class OperationWorkOrderController extends AbstractController {
             @RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
             @RequestParam(value = "customerId", required = false) Long customerId) {
 
-        int pageIndex = Math.max(0, page - 1);
-        Page<OperationWorkOrder> ordersPage = workOrderService.searchOrders(department, status, customerId, null, null, search, pageIndex, size);
-
-        List<Map<String, Object>> data = ordersPage.getContent().stream().map(ord -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", ord.getId());
-            map.put("orderNo", ord.getOrderNo());
-            map.put("orderDate", ord.getOrderDate() != null ? ord.getOrderDate().toString() : "");
-            map.put("targetDeliveryDate", ord.getDueDate() != null ? ord.getDueDate().toString() : "");
-            map.put("department", ord.getDepartment() != null ? ord.getDepartment().name() : "");
-            map.put("departmentLabel", ord.getDepartment() != null ? ord.getDepartment().getDisplayName() : "");
-            map.put("customerName", ord.getCustomerDisplayName());
-            map.put("stoneType", ord.getStoneType() != null ? ord.getStoneType() : "—");
-            map.put("quantity", ord.getQuantity() != null ? ord.getQuantity() : BigDecimal.ZERO);
-            map.put("unit", ord.getUnit() != null ? ord.getUnit() : "m²");
-            map.put("responsiblePerson", ord.getResponsiblePerson() != null ? ord.getResponsiblePerson() : "—");
-            map.put("status", ord.getStatus() != null ? ord.getStatus().name() : "");
-            map.put("statusLabel", ord.getStatus() != null ? ord.getStatus().getDisplayName() : "");
-            return map;
-        }).toList();
-
-        return TabulatorResponse.of(data, ordersPage.getTotalPages(), ordersPage.getTotalElements());
+        return workOrderService.orderRows(search, department, status, customerId, page, size);
     }
 
     @GetMapping({"/new", "/create"})
@@ -132,7 +110,7 @@ public class OperationWorkOrderController extends AbstractController {
         var selectedStockItem = formLookup.findStockItem(stockItemId);
         var selectedBlock = formLookup.findBlock(blockId);
 
-        var availableBlocks = new java.util.ArrayList<>(formLookup.blocksInStatus(
+        var availableBlocks = new ArrayList<>(formLookup.blocksInStatus(
                 List.of(BlockStatus.AT_FACTORY, BlockStatus.FACTORY_STOCK, BlockStatus.PRODUCED, BlockStatus.QUARRY, BlockStatus.EXTRACTED, BlockStatus.MARKED)));
         if (selectedBlock != null && availableBlocks.stream().noneMatch(block -> block.getId().equals(selectedBlock.getId()))) {
             availableBlocks.add(0, selectedBlock);
@@ -151,9 +129,6 @@ public class OperationWorkOrderController extends AbstractController {
         model.addAttribute("availableBlocks", availableBlocks);
         model.addAttribute("availableSlabs", formLookup.slabsByStatus(SlabStatus.AVAILABLE));
         model.addAttribute("availableStockItems", formLookup.stockByTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
-        model.addAttribute("surfaceOperations", workOrderService.getSurfaceOperations());
-        model.addAttribute("edgeOperations", workOrderService.getEdgeOperations());
-        model.addAttribute("units", workOrderService.getUnits());
         model.addAttribute("activeNav", "work-orders");
 
         return "workorders/form";
@@ -196,96 +171,12 @@ public class OperationWorkOrderController extends AbstractController {
             LocalDate orderDate = parseDateSafely(orderDateStr, LocalDate.now());
             LocalDate dueDate = parseDateSafely(dueDateStr, LocalDate.now().plusDays(14));
 
-            List<OperationWorkOrderItem> items = new ArrayList<>();
-            BigDecimal effectiveWidth = widthCm;
-            BigDecimal effectiveLength = lengthCm;
-            BigDecimal effectiveThickness = thicknessCm;
-            BigDecimal effectiveQuantity = quantity;
-            StringBuilder breakdownBuilder = new StringBuilder();
-
-            if (dimWidths != null && !dimWidths.isEmpty()) {
-                breakdownBuilder.append("=== SİPARİŞ ÖLÇÜ & İŞLEM LİSTESİ ===\n");
-                BigDecimal sumM2 = BigDecimal.ZERO;
-                BigDecimal sumMt = BigDecimal.ZERO;
-                int totalPieces = 0;
-                for (int i = 0; i < dimWidths.size(); i++) {
-                    BigDecimal w = dimWidths.get(i);
-                    if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) continue;
-                    BigDecimal l = (dimLengths != null && i < dimLengths.size()) ? dimLengths.get(i) : BigDecimal.ZERO;
-                    BigDecimal t = (dimThicknesses != null && i < dimThicknesses.size()) ? dimThicknesses.get(i) : new BigDecimal("2.0");
-                    int pcs = (dimPieceCounts != null && i < dimPieceCounts.size() && dimPieceCounts.get(i) != null) ? dimPieceCounts.get(i) : 1;
-                    String sOp = (dimSurfaceOps != null && i < dimSurfaceOps.size() && dimSurfaceOps.get(i) != null && !dimSurfaceOps.get(i).isBlank())
-                            ? dimSurfaceOps.get(i).trim() : surfaceOperation != null ? surfaceOperation : "Cilalı";
-                    String sUnit = (dimSurfaceUnits != null && i < dimSurfaceUnits.size() && dimSurfaceUnits.get(i) != null && !dimSurfaceUnits.get(i).isBlank())
-                            ? dimSurfaceUnits.get(i).trim() : "m2";
-                    String eOp = (dimEdgeOps != null && i < dimEdgeOps.size() && dimEdgeOps.get(i) != null && !dimEdgeOps.get(i).isBlank())
-                            ? dimEdgeOps.get(i).trim() : edgeOperation != null ? edgeOperation : "Pah";
-                    String eUnit = (dimEdgeUnits != null && i < dimEdgeUnits.size() && dimEdgeUnits.get(i) != null && !dimEdgeUnits.get(i).isBlank())
-                            ? dimEdgeUnits.get(i).trim() : "m.t.";
-                    String dNote = (dimNotes != null && i < dimNotes.size() && dimNotes.get(i) != null) ? dimNotes.get(i).trim() : "";
-
-                    BigDecimal rowM2 = w.multiply(l).multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(10000), 2, java.math.RoundingMode.HALF_UP);
-                    BigDecimal rowMt = l.multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-                    sumM2 = sumM2.add(rowM2);
-                    sumMt = sumMt.add(rowMt);
-                    totalPieces += pcs;
-
-                    if (effectiveWidth == null) effectiveWidth = w;
-                    if (effectiveLength == null) effectiveLength = l;
-                    if (effectiveThickness == null) effectiveThickness = t;
-
-                    OperationWorkOrderItem item = OperationWorkOrderItem.builder()
-                            .thicknessCm(t)
-                            .widthCm(w)
-                            .lengthCm(l)
-                            .pieceCount(pcs)
-                            .calculatedM2(rowM2)
-                            .calculatedMt(rowMt)
-                            .surfaceOperation(sOp)
-                            .surfaceUnit(sUnit)
-                            .edgeOperation(eOp)
-                            .edgeUnit(eUnit)
-                            .notes(dNote)
-                            .itemOrder(i)
-                            .build();
-                    items.add(item);
-
-                    breakdownBuilder.append(String.format("%d. %s x %s x %s cm — %d Adet (%s m² | %s m.t.) [Yüzey: %s (%s), Kenar: %s (%s)]%s\n",
-                            i + 1, w, l, t, pcs, rowM2, rowMt, sOp, sUnit, eOp, eUnit, dNote.isEmpty() ? "" : " {" + dNote + "}"));
-                }
-                breakdownBuilder.append(String.format("-------------------------------------------\nTOPLAM: %d Adet | %s m² | %s m.t.\n", totalPieces, sumM2, sumMt));
-
-                if (effectiveQuantity == null || effectiveQuantity.compareTo(BigDecimal.ZERO) <= 0) {
-                    if ("adet".equalsIgnoreCase(quantityUnit)) {
-                        effectiveQuantity = BigDecimal.valueOf(totalPieces);
-                    } else if ("m.t.".equalsIgnoreCase(quantityUnit) || "mt".equalsIgnoreCase(quantityUnit)) {
-                        effectiveQuantity = sumMt;
-                    } else {
-                        effectiveQuantity = sumM2;
-                    }
-                }
-            }
-
-            String topSurface = (surfaceOperation != null && !surfaceOperation.isBlank())
-                    ? surfaceOperation
-                    : !items.isEmpty() && items.get(0).getSurfaceOperation() != null ? items.get(0).getSurfaceOperation() : "Cilalı";
-            String topEdge = (edgeOperation != null && !edgeOperation.isBlank())
-                    ? edgeOperation
-                    : !items.isEmpty() && items.get(0).getEdgeOperation() != null ? items.get(0).getEdgeOperation() : "Pah";
-
-            String finalNotes = notes != null ? notes.trim() : "";
-            if (breakdownBuilder.length() > 0) {
-                finalNotes = breakdownBuilder.toString() + (finalNotes.isEmpty() ? "" : "\n\nEk Notlar: " + finalNotes);
-            }
-
-            OperationWorkOrderService.WorkOrderCreateForm form = new OperationWorkOrderService.WorkOrderCreateForm(
-                    orderNo, customerId, orderDate, dueDate, department, responsiblePerson,
-                    stoneType, colorQuality, effectiveThickness, effectiveWidth, effectiveLength, effectiveQuantity, quantityUnit,
-                    topSurface, topEdge, sourceStockItemId, sourceSlabId, sourceBlockId,
-                    usedQuantity, finalNotes, items
-            );
-
-            OperationWorkOrder order = workOrderService.createWorkOrder(form);
+            WorkOrderRequest request = new WorkOrderRequest(orderNo, customerId, orderDate, dueDate, department,
+                    responsiblePerson, stoneType, colorQuality, thicknessCm, widthCm, lengthCm, quantity, quantityUnit,
+                    surfaceOperation, edgeOperation, sourceStockItemId, sourceSlabId, sourceBlockId, usedQuantity, notes,
+                    new WorkOrderRequest.Dimensions(dimWidths, dimLengths, dimThicknesses, dimPieceCounts, dimSurfaceOps,
+                            dimSurfaceUnits, dimEdgeOps, dimEdgeUnits, dimNotes));
+            OrderRef order = workOrderService.createWorkOrder(request);
             redirectAttributes.addFlashAttribute("successMessage", "İş Emri (" + order.getOrderNo() + ") başarıyla oluşturuldu. Stok bağlantısı ve tüketim hareketi kaydedildi.");
             return "redirect:/work-orders/" + order.getId();
         } catch (Exception e) {
@@ -297,8 +188,7 @@ public class OperationWorkOrderController extends AbstractController {
 
     @GetMapping("/{id}")
     public String orderDetail(@PathVariable("id") Long id, Model model) {
-        OperationWorkOrder order = workOrderService.getOrderById(id);
-        model.addAttribute("order", order);
+        model.addAttribute("order", workOrderService.getOrderView(id));
         model.addAttribute("statuses", OperationWorkOrderStatus.values());
         model.addAttribute("activeNav", "work-orders");
         return "workorders/detail";
@@ -311,7 +201,7 @@ public class OperationWorkOrderController extends AbstractController {
                                @RequestParam(value = "notes", required = false) String notes,
                                RedirectAttributes redirectAttributes) {
         try {
-            OperationWorkOrder order = workOrderService.updateStatus(id, status, notes);
+            OrderRef order = workOrderService.updateStatusRef(id, status, notes);
             redirectAttributes.addFlashAttribute("successMessage", "İş Emri (" + order.getOrderNo() + ") durumu güncellendi: " + status.getLabel());
         } catch (Exception e) {
             log.error("İş emri durumu güncellenemedi: id={}, status={}", id, status, e);

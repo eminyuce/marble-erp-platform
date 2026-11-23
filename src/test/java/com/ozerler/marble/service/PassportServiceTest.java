@@ -1,6 +1,9 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.dto.PassportResult;
+import com.ozerler.marble.mapper.CutOrderMapper;
+import com.ozerler.marble.mapper.ProductionOrderMapper;
+import com.ozerler.marble.mapper.SlabMapper;
 import com.ozerler.marble.model.Pallet;
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.repository.BlockRepository;
@@ -30,6 +33,14 @@ class PassportServiceTest {
     private BlockRepository blockRepository;
     @Mock
     private CutItemRepository cutItemRepository;
+    @Mock
+    private ProductionOrderMapper productionOrderMapper;
+    @Mock
+    private SlabMapper slabMapper;
+    @Mock
+    private CutOrderMapper cutOrderMapper;
+    @Mock
+    private BlockViews blockViews;
 
     @InjectMocks
     private PassportService passportService;
@@ -39,12 +50,15 @@ class PassportServiceTest {
     void getPassportByCode_ResolvesPallet() {
         Pallet pallet = Pallet.builder().palletCode("PAL-2026-001").build();
         when(palletRepository.findByPalletCode("PAL-2026-001")).thenReturn(Optional.of(pallet));
+        com.ozerler.marble.dto.view.PalletRef palletView = new com.ozerler.marble.dto.view.PalletRef();
+        palletView.setPalletCode("PAL-2026-001");
+        when(productionOrderMapper.toPallet(pallet)).thenReturn(palletView);
 
         PassportResult result = passportService.getPassportByCode("pal-2026-001");
 
         assertThat(result.isFound()).isTrue();
         assertThat(result.getType()).isEqualTo("PALLET");
-        assertThat(result.getPallet()).isEqualTo(pallet);
+        assertThat(result.getPallet().getPalletCode()).isEqualTo("PAL-2026-001");
         assertThat(result.getTitle()).contains("PAL-2026-001");
     }
 
@@ -54,12 +68,15 @@ class PassportServiceTest {
         Slab slab = Slab.builder().slabCode("SLB-2026-002").build();
         when(palletRepository.findByPalletCode("SLB-2026-002")).thenReturn(Optional.empty());
         when(slabRepository.findBySlabCodeWithBlock("SLB-2026-002")).thenReturn(Optional.of(slab));
+        com.ozerler.marble.dto.view.SlabView slabView = new com.ozerler.marble.dto.view.SlabView();
+        slabView.setSlabCode("SLB-2026-002");
+        when(slabMapper.toDto(slab)).thenReturn(slabView);
 
         PassportResult result = passportService.getPassportByCode("SLB-2026-002");
 
         assertThat(result.isFound()).isTrue();
         assertThat(result.getType()).isEqualTo("SLAB");
-        assertThat(result.getSlab()).isEqualTo(slab);
+        assertThat(result.getSlab().getSlabCode()).isEqualTo("SLB-2026-002");
     }
 
     @Test

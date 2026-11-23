@@ -31,7 +31,7 @@ class ProjectSiteServiceTest {
 
     @BeforeEach
     void setUp() {
-        projectSiteService = new ProjectSiteService(projectRepository, projectLocationRepository, siteConsumptionRepository, customerRepository, null);
+        projectSiteService = new ProjectSiteService(projectRepository, null, projectLocationRepository, siteConsumptionRepository, customerRepository, null);
     }
 
     @Test

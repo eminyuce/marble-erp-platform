@@ -3,7 +3,8 @@ package com.ozerler.marble.controller.erp;
 import com.ozerler.marble.common.Constants;
 
 import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.model.*;
+import com.ozerler.marble.dto.view.PurchaseOrderView;
+import com.ozerler.marble.dto.view.StockItemView;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.InvoiceStatus;
 import com.ozerler.marble.model.enums.InvoiceType;
@@ -56,7 +57,7 @@ public class InvoiceController extends AbstractController {
         BigDecimal monthlySales = invoiceService.getMonthlyTotal(InvoiceType.SALES);
 
         model.addAttribute("grid", InvoiceGrid.view(
-                invoiceService.searchInvoices(invoiceType, department, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
+                invoiceService.searchInvoiceRows(invoiceType, department, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("selectedType", invoiceType != null ? invoiceType.name() : "");
         model.addAttribute("selectedDepartment", department != null ? department.name() : "");
@@ -95,7 +96,7 @@ public class InvoiceController extends AbstractController {
 
         if (purchaseOrderId != null) {
             try {
-                PurchaseOrder po = procurementService.getOrderById(purchaseOrderId);
+                PurchaseOrderView po = procurementService.getOrder(purchaseOrderId);
                 if (po != null) {
                     type = InvoiceType.PURCHASE;
                     if (po.getBusinessUnit() != null) {
@@ -269,7 +270,7 @@ public class InvoiceController extends AbstractController {
             @RequestParam(value = "isExpense", required = false, defaultValue = "false") Boolean isExpense,
             @RequestParam(value = "notes", required = false) String notes) {
         try {
-            StockItem item = quarryInventoryService.createStockCard(
+            StockItemView item = quarryInventoryService.createStockCardView(
                     quarryCategory, productName, unit, BigDecimal.ZERO, unitPrice, itemCode, isExpense, notes);
 
             Map<String, Object> resp = new HashMap<>();

@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.Invoice;
+import com.ozerler.marble.dto.view.InvoiceView;
 import com.ozerler.marble.model.enums.InvoiceStatus;
 import com.ozerler.marble.model.enums.InvoiceType;
 import org.springframework.data.domain.Page;
@@ -16,12 +16,12 @@ public final class InvoiceGrid {
     private InvoiceGrid() {
     }
 
-    public static DataGridView view(Page<Invoice> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<InvoiceView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "invoices-table", columns(), InvoiceGrid::row);
     }
 
-    static GridRow row(Invoice invoice) {
+    static GridRow row(InvoiceView invoice) {
         String viewUrl = "/invoices/" + invoice.getId();
         String rate = invoice.getTaxRate() == null ? "" : "%" + GridTexts.quantity(invoice.getTaxRate());
         return GridRow.of(viewUrl, null, null, null, List.of(
@@ -54,7 +54,7 @@ public final class InvoiceGrid {
         );
     }
 
-    private static GridCell party(Invoice invoice) {
+    private static GridCell party(InvoiceView invoice) {
         if (invoice.getTargetDepartment() != null) {
             return GridCell.badge("Dahili: " + invoice.getTargetDepartment().getDisplayName());
         }
@@ -63,7 +63,7 @@ public final class InvoiceGrid {
         return OperationGridSupport.lines(name, project);
     }
 
-    private static String partyName(Invoice invoice) {
+    private static String partyName(InvoiceView invoice) {
         if (invoice.getCustomer() != null) {
             return invoice.getCustomer().getCompanyName();
         }

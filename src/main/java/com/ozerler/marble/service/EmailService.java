@@ -45,6 +45,7 @@ public class EmailService {
             "\\{\\{\\s*([A-Za-z0-9_]+)\\s*\\}\\}|\\$\\{\\s*([A-Za-z0-9_]+)\\s*\\}");
 
     private final EmailTemplateRepository templateRepository;
+    private final com.ozerler.marble.mapper.EmailTemplateMapper emailTemplateMapper;
     private final SettingService settingService;
     private final org.springframework.context.MessageSource messageSource;
 
@@ -385,7 +386,7 @@ public class EmailService {
     /**
      * Ordered placeholder keys declared on the template, plus any tokens found in subject/body.
      */
-    public List<String> placeholderKeys(EmailTemplate template) {
+    public List<String> placeholderKeys(com.ozerler.marble.dto.EmailTemplateDto template) {
         LinkedHashSet<String> keys = new LinkedHashSet<>();
         if (template != null && StringUtils.isNotBlank(template.getPlaceholders())) {
             for (String part : template.getPlaceholders().split("[,;]+")) {
@@ -405,7 +406,7 @@ public class EmailService {
     /**
      * Sample values used to render the live preview, in the same order as {@link #placeholderKeys}.
      */
-    public List<EmailPlaceholderSample> placeholderSamples(EmailTemplate template) {
+    public List<EmailPlaceholderSample> placeholderSamples(com.ozerler.marble.dto.EmailTemplateDto template) {
         Map<String, String> samples = template != null
                 ? getSampleVariablesForTemplate(template.getTemplateKey())
                 : getDefaultSampleVariables();
@@ -422,7 +423,7 @@ public class EmailService {
         return result;
     }
 
-    private static String placeholderLabel(EmailTemplate template, String key) {
+    private static String placeholderLabel(com.ozerler.marble.dto.EmailTemplateDto template, String key) {
         if (template == null || key == null) {
             return key;
         }
@@ -610,5 +611,93 @@ public class EmailService {
             return false;
         }
         return sendTemplatedEmail(to, model.getTemplateKey(), model.toVariables());
+    }
+
+    /**
+     * Same as {@code getAllTemplates}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.EmailTemplateDto> getAllTemplateViews() {
+        return getAllTemplates().stream().map(emailTemplateMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getTemplatesByCategory}, copied into a view inside the transaction.
+     *
+     * @param category see {@code getTemplatesByCategory}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.EmailTemplateDto> getTemplateViewsByCategory(String category) {
+        return getTemplatesByCategory(category).stream().map(emailTemplateMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getTemplateById}, copied into a view inside the transaction.
+     *
+     * @param id see {@code getTemplateById}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.EmailTemplateDto getTemplate(Long id) {
+        return emailTemplateMapper.toDto(getTemplateById(id));
+    }
+
+    /**
+     * Same as {@code createTemplate}, copied into a view inside the transaction.
+     *
+     * @param templateKey see {@code createTemplate}
+     * @param templateName see {@code createTemplate}
+     * @param category see {@code createTemplate}
+     * @param description see {@code createTemplate}
+     * @param subject see {@code createTemplate}
+     * @param bodyHtml see {@code createTemplate}
+     * @param placeholders see {@code createTemplate}
+     * @param isActive see {@code createTemplate}
+     * @return the view
+     */
+    @CacheEvict(value = "emailTemplates", allEntries = true)
+    @Transactional
+    public com.ozerler.marble.dto.EmailTemplateDto createTemplateView(String templateKey, String templateName, String category, String description,
+                                         String subject, String bodyHtml, String placeholders, boolean isActive) {
+        return emailTemplateMapper.toDto(createTemplate(templateKey, templateName, category, description, subject, bodyHtml, placeholders, isActive));
+    }
+
+    /**
+     * One page of templates copied into DTOs.
+     *
+     * @param page     one-based page
+     * @param size     page size
+     * @param category category filter, {@code ALL} or {@code ACTIVE}
+     * @param search   free-text filter
+     * @return the page of DTOs
+     */
+    @Transactional(readOnly = true)
+    public Page<com.ozerler.marble.dto.EmailTemplateDto> getTemplateViewsPaged(int page, int size, String category,
+            String search) {
+        return getTemplatesPaged(page, size, category, search).map(emailTemplateMapper::toDto);
+    }
+
+    /**
+     * Same as the full {@code updateTemplate}, copied into a DTO inside the transaction.
+     *
+     * @param id           template id
+     * @param templateName name
+     * @param category     category
+     * @param description  description
+     * @param subject      subject
+     * @param bodyHtml     body
+     * @param placeholders placeholders
+     * @param isActive     active flag
+     * @return the DTO
+     */
+    @CacheEvict(value = "emailTemplates", allEntries = true)
+    @Transactional
+    public com.ozerler.marble.dto.EmailTemplateDto updateTemplateView(Long id, String templateName, String category,
+            String description, String subject, String bodyHtml, String placeholders, boolean isActive) {
+        return emailTemplateMapper.toDto(updateTemplate(id, templateName, category, description, subject, bodyHtml,
+                placeholders, isActive));
     }
 }

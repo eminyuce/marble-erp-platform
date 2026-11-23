@@ -1,12 +1,11 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.dto.view.CheckRef;
+import com.ozerler.marble.dto.view.CollectionRef;
 import com.ozerler.marble.common.Constants;
 
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.CheckRecord;
-import com.ozerler.marble.model.CollectionRecord;
-import com.ozerler.marble.model.Invoice;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;
 import com.ozerler.marble.model.enums.CollectionMethod;
@@ -31,7 +30,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +52,7 @@ public class CollectionController extends AbstractController {
         long approachingChecksCount = collectionService.getApproachingChecksCount();
 
         model.addAttribute("grid", CollectionGrid.view(
-                collectionService.searchCollections(method, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
+                collectionService.searchCollectionViews(method, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("selectedMethod", method != null ? method.name() : "");
         model.addAttribute("selectedCustomerId", customerId);
@@ -76,26 +74,7 @@ public class CollectionController extends AbstractController {
             @RequestParam(value = "method", required = false) CollectionMethod method,
             @RequestParam(value = "customerId", required = false) Long customerId) {
 
-        int pageIndex = Math.max(0, page - 1);
-        Page<CollectionRecord> collectionPage = collectionService.searchCollections(method, customerId, null, null, search, pageIndex, size);
-
-        List<Map<String, Object>> data = collectionPage.getContent().stream().map(c -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", c.getId());
-            map.put("collectionNo", c.getCollectionNo());
-            map.put("collectionDate", c.getCollectionDate() != null ? c.getCollectionDate().toString() : "");
-            map.put("customerName", c.getCustomer() != null ? c.getCustomer().getCompanyName() : "—");
-            map.put("method", c.getCollectionMethod() != null ? c.getCollectionMethod().name() : "");
-            map.put("methodLabel", c.getCollectionMethod() != null ? c.getCollectionMethod().getDisplayName() : "");
-            map.put("amount", c.getAmount() != null ? c.getAmount() : BigDecimal.ZERO);
-            map.put("bankName", c.getBankName() != null ? c.getBankName() : "—");
-            map.put("invoiceNo", c.getInvoice() != null ? c.getInvoice().getInvoiceNumber() : "—");
-            map.put("invoiceId", c.getInvoice() != null ? c.getInvoice().getId() : null);
-            map.put("notes", c.getNotes() != null ? c.getNotes() : "");
-            return map;
-        }).toList();
-
-        return TabulatorResponse.of(data, collectionPage.getTotalPages(), collectionPage.getTotalElements());
+        return collectionService.collectionRows(search, method, customerId, page, size);
     }
 
     @GetMapping({"/new", "/create"})
@@ -137,7 +116,7 @@ public class CollectionController extends AbstractController {
                 checkData = new CollectionService.CheckFormData(checkNo, checkDate, dueDate, bankName);
             }
 
-            CollectionRecord collection = collectionService.recordCollection(
+            CollectionRef collection = collectionService.recordCollectionRef(
                     customerId, invoiceId, method, amount, bankName, notes, checkData
             );
 
@@ -156,10 +135,10 @@ public class CollectionController extends AbstractController {
                                 @RequestParam(value = "customerId", required = false) Long customerId,
                                 @ModelAttribute ListQuery query, Model model) {
 
-        Page<CheckRecord> checkPage = collectionService.searchChecks(
+        Page<CheckRef> checkPage = collectionService.searchCheckViews(
                 unit, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize());
-        List<CheckRecord> approaching = collectionService.getApproachingChecks(unit);
-        List<CheckRecord> overdue = collectionService.getOverdueChecks(unit);
+        List<CheckRef> approaching = collectionService.getApproachingCheckViews(unit);
+        List<CheckRef> overdue = collectionService.getOverdueCheckViews(unit);
 
         model.addAttribute("checks", checkPage.getContent());
         model.addAttribute("page", checkPage);
@@ -188,27 +167,7 @@ public class CollectionController extends AbstractController {
             @RequestParam(value = "status", required = false) CheckStatus status,
             @RequestParam(value = "customerId", required = false) Long customerId) {
 
-        int pageIndex = Math.max(0, page - 1);
-        Page<CheckRecord> checkPage = collectionService.searchChecks(unit, status, customerId, null, null, search, pageIndex, size);
-
-        List<Map<String, Object>> data = checkPage.getContent().stream().map(ch -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", ch.getId());
-            map.put("checkNo", ch.getCheckNo());
-            map.put("bankName", ch.getBankName() != null ? ch.getBankName() : "—");
-            map.put("customerName", ch.getCustomer() != null ? ch.getCustomer().getCompanyName() : "—");
-            BusinessUnit bu = ch.getEffectiveBusinessUnit();
-            map.put("businessUnit", bu != null ? bu.name() : "");
-            map.put("businessUnitLabel", bu != null ? bu.getDisplayName() : "Genel");
-            map.put("dueDate", ch.getDueDate() != null ? ch.getDueDate().toString() : "");
-            map.put("amount", ch.getAmount() != null ? ch.getAmount() : BigDecimal.ZERO);
-            map.put("status", ch.getStatus() != null ? ch.getStatus().name() : "");
-            map.put("statusLabel", ch.getStatus() != null ? ch.getStatus().getLabel() : "");
-            map.put("notes", ch.getNotes() != null ? ch.getNotes() : "");
-            return map;
-        }).toList();
-
-        return TabulatorResponse.of(data, checkPage.getTotalPages(), checkPage.getTotalElements());
+        return collectionService.checkRows(search, unit, status, customerId, page, size);
     }
 
     @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
@@ -219,7 +178,7 @@ public class CollectionController extends AbstractController {
                                     @RequestParam(value = "unit", required = false) BusinessUnit unit,
                                     RedirectAttributes redirectAttributes) {
         try {
-            CheckRecord check = collectionService.updateCheckStatus(id, status, notes);
+            CheckRef check = collectionService.updateCheckStatusRef(id, status, notes);
             redirectAttributes.addFlashAttribute("successMessage", "Çek (" + check.getCheckNo() + ") durumu güncellendi: " + status.getLabel());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());

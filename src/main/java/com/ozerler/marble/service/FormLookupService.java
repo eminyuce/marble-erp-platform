@@ -1,7 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.option.CostCenterOption;
-import com.ozerler.marble.dto.option.PartyOption;
 import com.ozerler.marble.dto.option.ProjectOption;
 import com.ozerler.marble.dto.option.QuarryOption;
 import com.ozerler.marble.dto.view.BlockView;
@@ -62,6 +60,7 @@ import java.util.Optional;
 public class FormLookupService {
 
     private final CustomerRepository customerRepository;
+    private final BlockViews blockViews;
     private final SupplierRepository supplierRepository;
     private final ProjectRepository projectRepository;
     private final QuarryRepository quarryRepository;
@@ -76,15 +75,18 @@ public class FormLookupService {
     private final StockItemMapper stockItemMapper;
     private final InvoiceMapper invoiceMapper;
     private final CustomerMapper customerMapper;
+    private final com.ozerler.marble.mapper.QuarryMapper quarryMapper;
+    private final com.ozerler.marble.mapper.CostCenterMapper costCenterMapper;
+    private final com.ozerler.marble.mapper.SupplierMapper supplierMapper;
     private final ProjectMapper projectMapper;
     private final SalesOrderMapper salesOrderMapper;
 
-    public List<PartyOption> customers() {
-        return partyOptions(BoundedReads.all(customerRepository));
+    public List<PartyView> customers() {
+        return BoundedReads.all(customerRepository).stream().map(customerMapper::toDto).toList();
     }
 
-    public List<PartyOption> customersByCompanyName() {
-        return partyOptions(BoundedReads.all(customerRepository, Sort.by("companyName")));
+    public List<PartyView> customersByCompanyName() {
+        return BoundedReads.all(customerRepository, Sort.by("companyName")).stream().map(customerMapper::toDto).toList();
     }
 
     public PartyView getCustomer(Long id) {
@@ -96,10 +98,8 @@ public class FormLookupService {
         return id == null ? null : customerRepository.findById(id).map(customerMapper::toDto).orElse(null);
     }
 
-    public List<PartyOption> suppliers() {
-        return BoundedReads.all(supplierRepository).stream()
-                .map(supplier -> new PartyOption(supplier.getId(), supplier.getCompanyName()))
-                .toList();
+    public List<PartyView> suppliers() {
+        return BoundedReads.all(supplierRepository).stream().map(supplierMapper::toDto).toList();
     }
 
     public List<ProjectOption> projects() {
@@ -117,11 +117,8 @@ public class FormLookupService {
                 .map(projectMapper::toDto).toList();
     }
 
-    public List<QuarryOption> quarries() {
-        return BoundedReads.all(quarryRepository).stream()
-                .map(quarry -> new QuarryOption(
-                        quarry.getId(), quarry.getName(), quarry.getLocation(), quarry.getSpecificGravity()))
-                .toList();
+    public List<com.ozerler.marble.dto.view.QuarryRef> quarries() {
+        return BoundedReads.all(quarryRepository).stream().map(quarryMapper::toDto).toList();
     }
 
     public QuarryOption getQuarry(Long id) {
@@ -130,16 +127,12 @@ public class FormLookupService {
                 .orElseThrow(() -> new IllegalArgumentException("Ocak bulunamadı: " + id));
     }
 
-    public List<CostCenterOption> costCenters() {
-        return BoundedReads.all(costCenterRepository).stream()
-                .map(FormLookupService::costCenterOption)
-                .toList();
+    public List<com.ozerler.marble.dto.view.CostCenterRef> costCenters() {
+        return BoundedReads.all(costCenterRepository).stream().map(costCenterMapper::toDto).toList();
     }
 
-    public List<CostCenterOption> costCenters(BusinessUnit unit) {
-        return costCenterRepository.findByBusinessUnit(unit).stream()
-                .map(FormLookupService::costCenterOption)
-                .toList();
+    public List<com.ozerler.marble.dto.view.CostCenterRef> costCenters(BusinessUnit unit) {
+        return costCenterRepository.findByBusinessUnit(unit).stream().map(costCenterMapper::toDto).toList();
     }
 
     public Optional<Long> firstCostCenterId(BusinessUnit unit) {
@@ -271,12 +264,7 @@ public class FormLookupService {
     }
 
     private BlockView blockView(Block block) {
-        BlockView view = blockMapper.toDto(block);
-        view.setDimensions(block.getDimensions());
-        view.setWeightTons(block.getWeightTons());
-        view.setCanonicalStatus(block.getCanonicalStatus());
-        view.setApproximateTonnage(block.getApproximateTonnage());
-        return view;
+        return blockViews.toView(block);
     }
 
     private InvoiceView invoiceView(com.ozerler.marble.model.Invoice invoice) {
@@ -290,13 +278,5 @@ public class FormLookupService {
         return view;
     }
 
-    private static List<PartyOption> partyOptions(List<Customer> customers) {
-        return customers.stream()
-                .map(customer -> new PartyOption(customer.getId(), customer.getCompanyName()))
-                .toList();
-    }
 
-    private static CostCenterOption costCenterOption(CostCenter center) {
-        return new CostCenterOption(center.getId(), center.getCode(), center.getName());
-    }
 }

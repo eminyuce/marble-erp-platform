@@ -54,6 +54,7 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -61,6 +62,9 @@ import java.util.Objects;
 public class FactoryProductionService {
 
     private final BlockRepository blockRepository;
+    private final com.ozerler.marble.mapper.MachineMapper machineMapper;
+    private final com.ozerler.marble.mapper.FactoryOperationMapper factoryOperationMapper;
+    private final BlockViews blockViews;
     private final FactoryWorkOrderRepository workOrderRepository;
     private final FactoryOperationRepository operationRepository;
     private final MachineRepository machineRepository;
@@ -660,5 +664,85 @@ public class FactoryProductionService {
             BigDecimal scrapWeightKg,
             String scrapNotes
     ) {
+    }
+
+    /**
+     * Builds the polish grid rows inside the read transaction so lazy work orders and machines resolve here.
+     *
+     * @return one row per surface operation
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> surfaceOperationRows() {
+        return surfaceOperations().stream().map(op -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", op.getId());
+            map.put("orderNo", op.getWorkOrder() != null ? op.getWorkOrder().getOrderNo() : "-");
+            map.put("workOrderId", op.getWorkOrder() != null ? op.getWorkOrder().getId() : null);
+            map.put("blockCode", (op.getWorkOrder() != null && op.getWorkOrder().getBlock() != null)
+                    ? op.getWorkOrder().getBlock().getBlockCode() : "-");
+            map.put("processType", op.getProcessType() != null ? op.getProcessType().name() : "");
+            map.put("processTypeLabel", op.getProcessType() != null ? op.getProcessType().getLabel() : "-");
+            map.put("machineName", op.getMachine() != null ? op.getMachine().getName() : "-");
+            map.put("operatorName", op.getOperatorName() != null ? op.getOperatorName() : "-");
+            map.put("finishedAt", op.getFinishedAt() != null ? op.getFinishedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) : "-");
+            map.put("inputQuantity", op.getInputQuantity());
+            map.put("outputQuantity", op.getOutputQuantity());
+            map.put("wasteQuantity", op.getWasteQuantity());
+            map.put("wastePercent", (op.getInputQuantity() != null && op.getInputQuantity().compareTo(BigDecimal.ZERO) > 0 && op.getWasteQuantity() != null)
+                    ? op.getWasteQuantity().multiply(BigDecimal.valueOf(100)).divide(op.getInputQuantity(), 1, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO);
+            map.put("chamferStatus", op.getChamferStatus() != null ? op.getChamferStatus().getLabel() : "-");
+            map.put("totalCost", op.getTotalOperationCost());
+            map.put("notes", op.getNotes() != null ? op.getNotes() : "");
+            return map;
+        }).toList();
+    }
+
+    /**
+     * Loads one surface operation and copies it into a view for the edit screen.
+     *
+     * @param id operation id
+     * @return the operation view
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.view.FactoryOperationView getOperationView(Long id) {
+        return factoryOperationMapper.toDto(getOperation(id));
+    }
+
+    /**
+     * Same as {@code factoryMachines}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.MachineRef> factoryMachineViews() {
+        return factoryMachines().stream().map(machineMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code surfaceOperations}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.FactoryOperationView> surfaceOperationViews() {
+        return surfaceOperations().stream().map(factoryOperationMapper::toDto).toList();
+    }
+
+    /**
+     * Tablet queue as views; the block's derived figures come from {@link BlockViews}.
+     *
+     * @param operatorName operator filter
+     * @return queued operations
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.FactoryOperationView> tabletQueueViews(String operatorName) {
+        return tabletQueue(operatorName).stream().map(operation -> {
+            com.ozerler.marble.dto.view.FactoryOperationView view = factoryOperationMapper.toDto(operation);
+            if (view.getWorkOrder() != null && operation.getWorkOrder().getBlock() != null) {
+                view.getWorkOrder().setBlock(blockViews.toView(operation.getWorkOrder().getBlock()));
+            }
+            return view;
+        }).toList();
     }
 }

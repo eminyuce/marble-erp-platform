@@ -33,7 +33,7 @@ class EmailServiceTest {
 
     @BeforeEach
     void setUp() {
-        emailService = new EmailService(templateRepository, settingService, null);
+        emailService = new EmailService(templateRepository, new com.ozerler.marble.mapper.EmailTemplateMapperImpl(), settingService, null);
     }
 
     @Test
@@ -134,7 +134,7 @@ class EmailServiceTest {
     @Test
     @DisplayName("placeholderSamples lists declared keys with sample values")
     void placeholderSamples_UsesDeclaredKeysAndSampleValues() {
-        EmailTemplate template = EmailTemplate.builder()
+        com.ozerler.marble.dto.EmailTemplateDto template = com.ozerler.marble.dto.EmailTemplateDto.builder()
                 .id(1L)
                 .templateKey("USER_WELCOME")
                 .templateName("Hoş Geldiniz")

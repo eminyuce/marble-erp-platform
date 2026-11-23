@@ -47,6 +47,7 @@ class QuarryInventoryServiceTest {
     void setUp() {
         inventoryService = new QuarryInventoryService(
                 stockItemRepository,
+                null, null, null,
                 stockLocationRepository,
                 machineRepository,
                 fuelEntryRepository,

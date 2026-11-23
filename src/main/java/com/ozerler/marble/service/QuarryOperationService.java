@@ -23,6 +23,9 @@ import java.util.Objects;
 public class QuarryOperationService {
 
     private final BlockRepository blockRepository;
+    private final BlockViews blockViews;
+    private final com.ozerler.marble.mapper.QuarryMapper quarryMapper;
+    private final com.ozerler.marble.mapper.BlockMapper blockMapper;
     private final QuarryRepository quarryRepository;
     private final StockLocationRepository stockLocationRepository;
     private final CustomerRepository customerRepository;
@@ -167,5 +170,115 @@ public class QuarryOperationService {
     @Transactional(readOnly = true)
     public List<Quarry> getAllQuarries() {
         return BoundedReads.all(quarryRepository);
+    }
+
+    /**
+     * Same as {@code createQuarryBlock}, copied into a view inside the transaction.
+     *
+     * @param quarryId see {@code createQuarryBlock}
+     * @param blockCode see {@code createQuarryBlock}
+     * @param extractionDate see {@code createQuarryBlock}
+     * @param widthCm see {@code createQuarryBlock}
+     * @param lengthCm see {@code createQuarryBlock}
+     * @param heightCm see {@code createQuarryBlock}
+     * @param estimatedTonnage see {@code createQuarryBlock}
+     * @param actualTonnage see {@code createQuarryBlock}
+     * @param stoneType see {@code createQuarryBlock}
+     * @param colorTone see {@code createQuarryBlock}
+     * @param qualityGrade see {@code createQuarryBlock}
+     * @param crackLevel see {@code createQuarryBlock}
+     * @param quarrySection see {@code createQuarryBlock}
+     * @param notes see {@code createQuarryBlock}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.BlockView createQuarryBlockView(Long quarryId, String blockCode, LocalDate extractionDate,
+                                   int widthCm, int lengthCm, int heightCm,
+                                   BigDecimal estimatedTonnage, BigDecimal actualTonnage,
+                                   String stoneType, String colorTone, QualityGrade qualityGrade,
+                                   int crackLevel, String quarrySection, String notes) {
+        return blockMapper.toDto(createQuarryBlock(quarryId, blockCode, extractionDate, widthCm, lengthCm, heightCm, estimatedTonnage, actualTonnage, stoneType, colorTone, qualityGrade, crackLevel, quarrySection, notes));
+    }
+
+    /**
+     * Same as {@code updateActualTonnage}, copied into a view inside the transaction.
+     *
+     * @param blockId see {@code updateActualTonnage}
+     * @param actualTonnage see {@code updateActualTonnage}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.BlockView updateActualTonnageView(Long blockId, BigDecimal actualTonnage) {
+        return blockMapper.toDto(updateActualTonnage(blockId, actualTonnage));
+    }
+
+    /**
+     * Same as {@code dispatchBlock}, copied into a view inside the transaction.
+     *
+     * @param blockId see {@code dispatchBlock}
+     * @param targetDestination see {@code dispatchBlock}
+     * @param customerId see {@code dispatchBlock}
+     * @param invoiceId see {@code dispatchBlock}
+     * @param notes see {@code dispatchBlock}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.BlockView dispatchBlockView(Long blockId, TargetDestination targetDestination, Long customerId, Long invoiceId, String notes) {
+        return blockMapper.toDto(dispatchBlock(blockId, targetDestination, customerId, invoiceId, notes));
+    }
+
+    /**
+     * Builds grid rows inside the read transaction (moved from the controller unchanged).
+     *
+     * @return grid rows
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.TabulatorResponse<java.util.Map<String, Object>> quarryBlockRows(String search, BlockStatus status, int page, int size) {
+        int pageIndex = Math.max(0, page - 1);
+        Page<Block> blockPage = searchQuarryBlocks(search, status, pageIndex, size);
+
+        List<java.util.Map<String, Object>> data = blockPage.getContent().stream().map(b -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", b.getId());
+            map.put("blockCode", b.getBlockCode());
+            map.put("quarryName", b.getQuarry() != null ? b.getQuarry().getName() : "—");
+            map.put("quarryLocation", b.getQuarrySection() != null ? b.getQuarrySection() : "—");
+            map.put("stoneType", b.getStoneType() != null ? b.getStoneType() : "—");
+            map.put("colorQuality", b.getColorQuality() != null ? b.getColorQuality() : "—");
+            map.put("dimensions", b.getDimensions() != null ? b.getDimensions() : "—");
+            map.put("approximateTonnage", b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO);
+            map.put("actualTonnage", b.getActualTonnage());
+            map.put("extractionDate", b.getExtractionDate() != null ? b.getExtractionDate().toString() : "");
+            map.put("status", b.getStatus() != null ? b.getStatus().name() : "");
+            map.put("statusLabel", b.getStatus() != null ? b.getStatus().getDisplayName() : "");
+            map.put("notes", b.getNotes() != null ? b.getNotes() : "");
+            return map;
+        }).toList();
+
+        return com.ozerler.marble.dto.TabulatorResponse.of(data, blockPage.getTotalPages(), blockPage.getTotalElements());
+    }
+
+    /**
+     * Same as {@code getAllQuarries}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.QuarryRef> getAllQuarryViews() {
+        return getAllQuarries().stream().map(quarryMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code searchQuarryBlocks}, copied into a view inside the transaction.
+     *
+     * @param search see {@code searchQuarryBlocks}
+     * @param status see {@code searchQuarryBlocks}
+     * @param page see {@code searchQuarryBlocks}
+     * @param size see {@code searchQuarryBlocks}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public Page<com.ozerler.marble.dto.view.BlockView> searchQuarryBlockViews(String search, BlockStatus status, int page, int size) {
+        return searchQuarryBlocks(search, status, page, size).map(blockViews::toView);
     }
 }

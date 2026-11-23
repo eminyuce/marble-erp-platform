@@ -24,6 +24,8 @@ import java.util.List;
 public class StockMovementService {
 
     private final StockMovementRepository movementRepository;
+    private final com.ozerler.marble.mapper.StockMovementMapper stockMovementMapper;
+    private final com.ozerler.marble.mapper.InvoiceMapper invoiceMapper;
 
     @Transactional
     public StockMovement recordMovement(StockMovementType type,
@@ -303,5 +305,59 @@ public class StockMovementService {
     @Transactional(readOnly = true)
     public List<StockMovement> getRecentQuarryDispatches() {
         return movementRepository.findRecentBySourceDepartment(BusinessUnit.QUARRY, LocalDateTime.now().minusDays(30));
+    }
+
+    /**
+     * Builds grid rows inside the read transaction (moved from the controller unchanged).
+     *
+     * @return grid rows
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.TabulatorResponse<java.util.Map<String, Object>> quarryDispatchRows(int page, int size) {
+        int pageIndex = Math.max(0, page - 1);
+        Page<StockMovement> pageData = searchMovements(
+                null, BusinessUnit.QUARRY, null, null, null, null,
+                PageRequest.of(pageIndex, size));
+
+        java.time.format.DateTimeFormatter dateFmt = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+        List<java.util.Map<String, Object>> list = pageData.getContent().stream().map(m -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", m.getId());
+            map.put("movementDate", m.getMovementDate() != null ? m.getMovementDate().format(dateFmt) : "—");
+            map.put("productName", m.getBlock() != null ? m.getBlock().getBlockCode() : m.getItemDescription() != null ? m.getItemDescription() : "Mermer Blok");
+            map.put("blockId", m.getBlock() != null ? m.getBlock().getId() : null);
+            map.put("tonnage", m.getTonnage());
+            map.put("quantity", m.getQuantity());
+            map.put("unit", m.getQuantityUnit() != null ? m.getQuantityUnit() : "ton");
+            map.put("source", "Ocak");
+            map.put("targetDestination", m.getTargetDestination() != null ? m.getTargetDestination().getDisplayName() : m.getTargetDepartment() != null ? m.getTargetDepartment().getDisplayName() : "Fabrika");
+            map.put("customerName", m.getCustomer() != null ? m.getCustomer().getCompanyName() : "—");
+            map.put("invoiceNo", m.getInvoice() != null ? m.getInvoice().getInvoiceNumber() : null);
+            map.put("invoiceId", m.getInvoice() != null ? m.getInvoice().getId() : null);
+            map.put("notes", m.getNotes() != null ? m.getNotes() : "—");
+            return map;
+        }).toList();
+
+        return com.ozerler.marble.dto.TabulatorResponse.of(list, pageData.getTotalPages(), pageData.getTotalElements());
+    }
+
+    /**
+     * Quarry dispatch report page as views. The invoice is copied only when the query already loaded it.
+     *
+     * @param pageable page request
+     * @return movement views
+     */
+    @Transactional(readOnly = true)
+    public Page<com.ozerler.marble.dto.view.StockMovementView> quarryDispatchViews(
+            Pageable pageable) {
+        return searchMovements(null, BusinessUnit.QUARRY, null, null, null, null, pageable).map(movement -> {
+            com.ozerler.marble.dto.view.StockMovementView view = stockMovementMapper.toDto(movement);
+            if (jakarta.persistence.Persistence.getPersistenceUtil().isLoaded(movement, "invoice")
+                    && movement.getInvoice() != null) {
+                view.setInvoice(invoiceMapper.toRef(movement.getInvoice()));
+            }
+            return view;
+        });
     }
 }

@@ -25,7 +25,7 @@ public class GenealogyController {
                                  Model model,
                                  java.util.Locale locale) {
 
-        model.addAttribute("allBlocks", genealogyService.getAllBlocks());
+        model.addAttribute("allBlocks", genealogyService.getAllBlockViews());
 
         GenealogyNodeDto tree = null;
         if (code != null && !code.isBlank()) {

@@ -35,6 +35,9 @@ public class WorkshopCutService {
     private static final Logger log = LoggerFactory.getLogger(WorkshopCutService.class);
 
     private final CutOrderRepository cutOrderRepository;
+    private final com.ozerler.marble.mapper.CutOrderMapper cutOrderMapper;
+    private final com.ozerler.marble.mapper.ProjectMapper projectMapper;
+    private final com.ozerler.marble.mapper.SlabMapper slabMapper;
     private final CutItemRepository cutItemRepository;
     private final SlabRepository slabRepository;
     private final ProjectRepository projectRepository;
@@ -319,5 +322,70 @@ public class WorkshopCutService {
     @Transactional(readOnly = true)
     public List<Project> getAllProjects() {
         return BoundedReads.all(projectRepository);
+    }
+
+    /**
+     * Same as {@code getAvailableSlabs}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.SlabView> getAvailableSlabViews() {
+        return getAvailableSlabs().stream().map(slabMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getAllProjects}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.ProjectView> getAllProjectViews() {
+        return getAllProjects().stream().map(projectMapper::toDto).toList();
+    }
+
+    /**
+     * Loads a cut order with project, machine and items and copies it into a view. Status labels come from
+     * the entities and are set here, not in the mapper.
+     *
+     * @param id cut order id
+     * @return the cut order view
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.view.CutOrderView getCutOrder(Long id) {
+        CutOrder order = getCutOrderWithDetails(id);
+        com.ozerler.marble.dto.view.CutOrderView view = cutOrderMapper.toDto(order);
+        view.setStatusLabel(order.getStatusLabel());
+        if (view.getItems() != null && order.getItems() != null) {
+            int count = Math.min(view.getItems().size(), order.getItems().size());
+            for (int i = 0; i < count; i++) {
+                view.getItems().get(i).setStatusLabel(order.getItems().get(i).getStatusLabel());
+            }
+        }
+        return view;
+    }
+
+    /**
+     * Creates a cut order and returns its id.
+     *
+     * @param projectId          optional project
+     * @param locationId         optional project location
+     * @param slabId             source slab
+     * @param machineName        machine name
+     * @param operatorName       operator
+     * @param piecesCount        number of pieces
+     * @param targetWidthCm      piece width
+     * @param targetLengthCm     piece length
+     * @param edgeFinish         edge finish
+     * @param targetLocationDesc target location text
+     * @param notes              notes
+     * @return id of the new cut order
+     */
+    @Transactional
+    public Long createCutOrderId(Long projectId, Long locationId, Long slabId, String machineName, String operatorName,
+                                 int piecesCount, BigDecimal targetWidthCm, BigDecimal targetLengthCm,
+                                 String edgeFinish, String targetLocationDesc, String notes) {
+        return createCutOrder(projectId, locationId, slabId, machineName, operatorName, piecesCount, targetWidthCm,
+                targetLengthCm, edgeFinish, targetLocationDesc, notes).getId();
     }
 }

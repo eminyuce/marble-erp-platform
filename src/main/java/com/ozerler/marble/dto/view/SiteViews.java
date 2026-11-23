@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto.view;
 
+import com.ozerler.marble.model.enums.ConsumptionType;
 import com.ozerler.marble.model.enums.SupplyRoute;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,10 +22,6 @@ public final class SiteViews {
         private BigDecimal installedAreaM2;
         private BigDecimal plannedAreaM2;
         private BigDecimal progressPercentage;
-
-        public BigDecimal getProgressPercentage() {
-            return progressPercentage;
-        }
     }
 
     @Getter
@@ -34,6 +31,9 @@ public final class SiteViews {
         private BigDecimal quantity;
         private String unit;
         private BigDecimal unitCost;
+        private BigDecimal totalCost;
+        private ConsumptionType consumptionType;
+        private LocationView location;
     }
 
     @Getter
@@ -50,5 +50,7 @@ public final class SiteViews {
     @Setter
     public static class InstallationView {
         private LocationView location;
+        private BigDecimal installedAreaM2;
+        private BigDecimal wasteAreaM2;
     }
 }

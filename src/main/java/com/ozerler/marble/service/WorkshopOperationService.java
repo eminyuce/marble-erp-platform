@@ -40,6 +40,10 @@ import java.util.Objects;
 public class WorkshopOperationService {
 
     private final WorkshopMaterialReceiptRepository receiptRepository;
+    private final com.ozerler.marble.mapper.SupplierMapper supplierMapper;
+    private final com.ozerler.marble.mapper.MachineMapper machineMapper;
+    private final com.ozerler.marble.mapper.WorkshopOperationMapper workshopOperationMapper;
+    private final com.ozerler.marble.mapper.StockItemMapper stockItemMapper;
     private final WorkshopOperationRepository operationRepository;
     private final CutOrderRepository cutOrderRepository;
     private final MachineRepository machineRepository;
@@ -406,5 +410,89 @@ public class WorkshopOperationService {
         }
 
         return created;
+    }
+
+    /**
+     * Same as {@code produceWorkshopSizedItemsBatch}, copied into a view inside the transaction.
+     *
+     * @param sourceType see {@code produceWorkshopSizedItemsBatch}
+     * @param "SLAB" see {@code produceWorkshopSizedItemsBatch}
+     * @param "SIZED" see {@code produceWorkshopSizedItemsBatch}
+     * @param slabId see {@code produceWorkshopSizedItemsBatch}
+     * @param sourceStockItemId see {@code produceWorkshopSizedItemsBatch}
+     * @param consumedQuantity see {@code produceWorkshopSizedItemsBatch}
+     * @param wasteQuantity see {@code produceWorkshopSizedItemsBatch}
+     * @param customerId see {@code produceWorkshopSizedItemsBatch}
+     * @param projectId see {@code produceWorkshopSizedItemsBatch}
+     * @param defaultDescription see {@code produceWorkshopSizedItemsBatch}
+     * @param qualityGradeStr see {@code produceWorkshopSizedItemsBatch}
+     * @param surfaceFinishStr see {@code produceWorkshopSizedItemsBatch}
+     * @param edgeFinish see {@code produceWorkshopSizedItemsBatch}
+     * @param notes see {@code produceWorkshopSizedItemsBatch}
+     * @param descriptions see {@code produceWorkshopSizedItemsBatch}
+     * @param thicknesses see {@code produceWorkshopSizedItemsBatch}
+     * @param widths see {@code produceWorkshopSizedItemsBatch}
+     * @param lengths see {@code produceWorkshopSizedItemsBatch}
+     * @param pieceCounts see {@code produceWorkshopSizedItemsBatch}
+     * @param quantities see {@code produceWorkshopSizedItemsBatch}
+     * @param rowSurfaceFinishes see {@code produceWorkshopSizedItemsBatch}
+     * @param rowEdgeFinishes see {@code produceWorkshopSizedItemsBatch}
+     * @return the view
+     */
+    @Transactional
+    public List<com.ozerler.marble.dto.view.StockItemView> produceWorkshopSizedItemsBatchViews(
+            String sourceType, // "SLAB", "SIZED", "NONE"
+            Long slabId,
+            Long sourceStockItemId,
+            BigDecimal consumedQuantity,
+            BigDecimal wasteQuantity,
+            Long customerId,
+            Long projectId,
+            String defaultDescription,
+            String qualityGradeStr,
+            String surfaceFinishStr,
+            String edgeFinish,
+            String notes,
+            List<String> descriptions,
+            List<BigDecimal> thicknesses,
+            List<BigDecimal> widths,
+            List<BigDecimal> lengths,
+            List<Integer> pieceCounts,
+            List<BigDecimal> quantities,
+            List<String> rowSurfaceFinishes,
+            List<String> rowEdgeFinishes
+    ) {
+        return produceWorkshopSizedItemsBatch(sourceType, slabId, sourceStockItemId, consumedQuantity, wasteQuantity, customerId, projectId, defaultDescription, qualityGradeStr, surfaceFinishStr, edgeFinish, notes, descriptions, thicknesses, widths, lengths, pieceCounts, quantities, rowSurfaceFinishes, rowEdgeFinishes).stream().map(stockItemMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code operationsFor}, copied into a view inside the transaction.
+     *
+     * @param cutOrderId see {@code operationsFor}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.WorkshopOperationView> operationViewsFor(Long cutOrderId) {
+        return operationsFor(cutOrderId).stream().map(workshopOperationMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code workshopMachines}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.MachineRef> workshopMachineViews() {
+        return workshopMachines().stream().map(machineMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code suppliers}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.PartyView> supplierViews() {
+        return suppliers().stream().map(supplierMapper::toDto).toList();
     }
 }

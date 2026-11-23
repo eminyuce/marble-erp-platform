@@ -48,6 +48,7 @@ import java.util.Objects;
 public class ConstructionSiteService {
 
     private final ProjectRepository projectRepository;
+    private final com.ozerler.marble.mapper.SiteMapper siteMapper;
     private final ProjectLocationRepository projectLocationRepository;
     private final ConstructionSiteStonePlanRepository stonePlanRepository;
     private final SiteSupplyAllocationRepository allocationRepository;
@@ -247,5 +248,27 @@ public class ConstructionSiteService {
 
     public List<Customer> customers() {
         return BoundedReads.all(customerRepository, org.springframework.data.domain.Sort.by("companyName"));
+    }
+
+    /**
+     * Same as {@code plansFor}, copied into a view inside the transaction.
+     *
+     * @param projectId see {@code plansFor}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.SiteViews.PlanView> planViewsFor(Long projectId) {
+        return plansFor(projectId).stream().map(siteMapper::toPlan).toList();
+    }
+
+    /**
+     * Same as {@code installationsFor}, copied into a view inside the transaction.
+     *
+     * @param projectId see {@code installationsFor}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.SiteViews.InstallationView> installationViewsFor(Long projectId) {
+        return installationsFor(projectId).stream().map(siteMapper::toInstallation).toList();
     }
 }

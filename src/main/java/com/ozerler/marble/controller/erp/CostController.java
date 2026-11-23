@@ -53,7 +53,7 @@ public class CostController {
         model.addAttribute("workshopAnalysis", workshop);
         model.addAttribute("siteAnalysis", site);
         model.addAttribute("siteProfits", siteProfits);
-        model.addAttribute("costCenters", costAccountingService.getAllCostCenters());
+        model.addAttribute("costCenters", costAccountingService.getAllCostCenterViews());
         model.addAttribute("expenseTypes", ExpenseType.values());
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("projects", formLookup.projects());
@@ -104,10 +104,7 @@ public class CostController {
                 : null;
         model.addAttribute("totalSiteMarginPct", totalSiteMarginPct);
 
-        BigDecimal totalMonthlyBudget = costAccountingService.getAllCostCenters().stream()
-                .map(cc -> cc.getMonthlyBudget())
-                .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
+        BigDecimal totalMonthlyBudget = costAccountingService.totalMonthlyBudget();
         model.addAttribute("totalMonthlyBudget", totalMonthlyBudget);
 
         return "erp/costs/index";

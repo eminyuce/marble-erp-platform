@@ -12,10 +12,12 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PurchaseOrderView {
+public class PurchaseOrderView extends AuditView {
     private Long id;
     private String poNumber;
     private LocalDate orderDate;
+    private LocalDate expectedDelivery;
+    private String notes;
     private PurchaseOrderStatus status;
     private BusinessUnit businessUnit;
     private BigDecimal totalAmount;

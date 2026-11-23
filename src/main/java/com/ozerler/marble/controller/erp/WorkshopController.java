@@ -3,7 +3,7 @@ package com.ozerler.marble.controller.erp;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.CutOrder;
+import com.ozerler.marble.dto.view.CutOrderView;
 import com.ozerler.marble.model.enums.WorkshopProcessType;
 import com.ozerler.marble.model.enums.WorkshopReceiptSource;
 import com.ozerler.marble.model.enums.WorkshopWorkPurpose;
@@ -97,9 +97,9 @@ public class WorkshopController {
                                  RedirectAttributes redirectAttributes) {
 
         try {
-            var order = workshopCutService.createCutOrder(projectId, locationId, slabId, machineName, operatorName,
+            Long orderId = workshopCutService.createCutOrderId(projectId, locationId, slabId, machineName, operatorName,
                     piecesCount, targetWidthCm, targetLengthCm, edgeFinish, targetLocationDesc, notes);
-            workshopOperationService.assignPurposeAndMachine(order.getId(), purpose, machineId);
+            workshopOperationService.assignPurposeAndMachine(orderId, purpose, machineId);
 
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.workshop.cut.success", null, locale));
@@ -114,17 +114,17 @@ public class WorkshopController {
 
     @GetMapping("/{id}")
     public String cutOrderDetail(@PathVariable("id") Long id, Model model) {
-        model.addAttribute("order", workshopCutService.getCutOrderWithDetails(id));
-        model.addAttribute("operations", workshopOperationService.operationsFor(id));
+        model.addAttribute("order", workshopCutService.getCutOrder(id));
+        model.addAttribute("operations", workshopOperationService.operationViewsFor(id));
         model.addAttribute("orderCost", workshopOperationService.orderCost(id));
         model.addAttribute("processTypes", WorkshopProcessType.values());
-        model.addAttribute("workshopMachines", workshopOperationService.workshopMachines());
+        model.addAttribute("workshopMachines", workshopOperationService.workshopMachineViews());
         return "erp/workshop/detail";
     }
 
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
-        populateCutEditForm(model, locale, workshopCutService.getCutOrderWithDetails(id));
+        populateCutEditForm(model, locale, workshopCutService.getCutOrder(id));
         return "erp/workshop/cut-order-form";
     }
 
@@ -152,7 +152,7 @@ public class WorkshopController {
         } catch (Exception e) {
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
-            populateCutEditForm(model, locale, workshopCutService.getCutOrderWithDetails(id));
+            populateCutEditForm(model, locale, workshopCutService.getCutOrder(id));
             return "erp/workshop/cut-order-form";
         }
     }
@@ -207,14 +207,14 @@ public class WorkshopController {
     }
 
     private void populateCutForm(Model model, Locale locale) {
-        model.addAttribute("availableSlabs", workshopCutService.getAvailableSlabs());
-        model.addAttribute("projects", workshopCutService.getAllProjects());
-        model.addAttribute("workshopMachines", workshopOperationService.workshopMachines());
+        model.addAttribute("availableSlabs", workshopCutService.getAvailableSlabViews());
+        model.addAttribute("projects", workshopCutService.getAllProjectViews());
+        model.addAttribute("workshopMachines", workshopOperationService.workshopMachineViews());
         model.addAttribute("purposes", WorkshopWorkPurpose.values());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.workshop.title.create", null, locale));
     }
 
-    private void populateCutEditForm(Model model, Locale locale, CutOrder order) {
+    private void populateCutEditForm(Model model, Locale locale, CutOrderView order) {
         populateCutForm(model, locale);
         model.addAttribute("record", order);
         model.addAttribute("isEdit", true);
@@ -226,6 +226,6 @@ public class WorkshopController {
         model.addAttribute("grid", WorkshopReceiptGrid.view(
                 workshopOperationService.listReceipts(), query.pageNumber(), query.pageSize(), query.getSearch()));
         model.addAttribute("receiptSources", WorkshopReceiptSource.values());
-        model.addAttribute("suppliers", workshopOperationService.suppliers());
+        model.addAttribute("suppliers", workshopOperationService.supplierViews());
     }
 }

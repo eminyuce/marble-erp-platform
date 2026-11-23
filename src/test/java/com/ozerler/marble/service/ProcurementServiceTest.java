@@ -48,7 +48,7 @@ class ProcurementServiceTest {
     @BeforeEach
     void setUp() {
         procurementService = new ProcurementService(
-                purchaseOrderRepository, supplierRepository, projectRepository, null,
+                purchaseOrderRepository, null, null, null, supplierRepository, projectRepository, null,
                 expenseService, costCenterRepository);
     }
 

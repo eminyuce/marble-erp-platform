@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
 public class ProductionService {
 
     private final ProductionOrderRepository productionOrderRepository;
+    private final com.ozerler.marble.mapper.ProductionOrderMapper productionOrderMapper;
+    private final com.ozerler.marble.mapper.SlabMapper slabMapper;
     private final SlabRepository slabRepository;
     private final ScrapLogRepository scrapLogRepository;
     private final BarcodeService barcodeService;
@@ -221,7 +223,7 @@ public class ProductionService {
                 ? slab.getBlock().getQuarry().getName() : "—";
 
         return SlabLabelDto.builder()
-                .slab(slab)
+                .slab(slabMapper.toDto(slab))
                 .qrCodeBase64(qrCodeBase64)
                 .blockCode(blockCode)
                 .stoneType(stoneType)
@@ -273,5 +275,30 @@ public class ProductionService {
             slab.setStatus(status);
         }
         return slabRepository.save(slab);
+    }
+
+    /**
+     * Loads a production order with its block, slabs and scrap logs and copies it into a view.
+     *
+     * @param id production order id
+     * @return the production order view
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.view.ProductionOrderView getOrderView(Long id) {
+        ProductionOrder order = getOrderWithDetails(id);
+        com.ozerler.marble.dto.view.ProductionOrderView view = productionOrderMapper.toDto(order);
+        view.setStatusLabel(order.getStatusLabel());
+        return view;
+    }
+
+    /**
+     * Loads a slab with its block, pallet and production order and copies it into a view.
+     *
+     * @param id slab id
+     * @return the slab view
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.view.SlabView getSlabView(Long id) {
+        return slabMapper.toDto(getSlabWithDetails(id));
     }
 }

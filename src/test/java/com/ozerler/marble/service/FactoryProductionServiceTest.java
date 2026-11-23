@@ -41,7 +41,7 @@ class FactoryProductionServiceTest {
     @DisplayName("recordCutting rejects non-cutting process types before touching a block")
     void recordCuttingRejectsSurfaceProcess() {
         FactoryProductionService service = new FactoryProductionService(
-                null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         FactoryProductionService.CuttingRequest request = new FactoryProductionService.CuttingRequest(
                 1L, "PO-1", null, "Katrak-01", FactoryProcessType.SLAB_POLISHING,
                 BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE, "Op", null,
@@ -66,7 +66,7 @@ class FactoryProductionServiceRoutingTest {
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
         service = new FactoryProductionService(
-                null, workOrderRepository, operationRepository, null, null, null, null,
+                null, null, null, null, workOrderRepository, operationRepository, null, null, null, null,
                 null, null, null, null, null);
     }
 

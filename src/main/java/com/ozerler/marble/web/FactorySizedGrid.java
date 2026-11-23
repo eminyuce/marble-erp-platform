@@ -1,6 +1,6 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.dto.view.StockItemView;
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
@@ -14,12 +14,12 @@ public final class FactorySizedGrid {
     private FactorySizedGrid() {
     }
 
-    public static DataGridView view(Page<StockItem> page, int number, int size, String sort, String direction) {
+    public static DataGridView view(Page<StockItemView> page, int number, int size, String sort, String direction) {
         return OperationGridSupport.pageOf(page, number, size, sort, direction,
                 "factory-sized-table", columns(), FactorySizedGrid::row);
     }
 
-    static GridRow row(StockItem item) {
+    static GridRow row(StockItemView item) {
         String description = OperationGridSupport.named(item.getDescription(),
                 OperationGridSupport.named(item.getStoneType(), "Ebatlı Mermer"));
         String stone = OperationGridSupport.named(item.getStoneType(), "Mermer");
@@ -60,7 +60,7 @@ public final class FactorySizedGrid {
         );
     }
 
-    private static String produced(StockItem item) {
+    private static String produced(StockItemView item) {
         LocalDate producedOn = item.getProductionDate();
         if (producedOn != null) {
             return GridTexts.date(producedOn);
@@ -68,7 +68,7 @@ public final class FactorySizedGrid {
         return OperationGridSupport.day(item.getCreatedDate());
     }
 
-    private static String sourceLabel(StockItem item) {
+    private static String sourceLabel(StockItemView item) {
         if (item.getSourceBlock() != null && item.getSourceBlock().getBlockCode() != null
                 && !item.getSourceBlock().getBlockCode().isBlank()) {
             return item.getSourceBlock().getBlockCode();

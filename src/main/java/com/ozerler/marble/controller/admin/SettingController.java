@@ -5,7 +5,7 @@ import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.EmailPlaceholderSample;
 import com.ozerler.marble.dto.EmailPreviewDto;
 import com.ozerler.marble.exception.ResourceNotFoundException;
-import com.ozerler.marble.model.EmailTemplate;
+import com.ozerler.marble.dto.EmailTemplateDto;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
@@ -46,7 +46,7 @@ public class SettingController extends AbstractController {
     @GetMapping
     public String index(Model model, HttpServletRequest request) {
         Map<String, String> settings = settingService.getAllSettingsAsMap();
-        List<EmailTemplate> templates = emailService.getAllTemplates();
+        List<EmailTemplateDto> templates = emailService.getAllTemplateViews();
 
         model.addAttribute("settings", settings);
         model.addAttribute("templates", templates);
@@ -125,7 +125,7 @@ public class SettingController extends AbstractController {
 
     @GetMapping("/templates/{id}/edit")
     public String editTemplate(@PathVariable("id") Long id, Locale locale, Model model) {
-        EmailTemplate template = emailService.getTemplateById(id);
+        EmailTemplateDto template = emailService.getTemplate(id);
         model.addAttribute("template", template);
         model.addAttribute("pageTitle", messageSource.getMessage("admin.settings.template.title.edit", null, locale));
         return "admin/settings/template-form";
@@ -133,11 +133,11 @@ public class SettingController extends AbstractController {
 
     @GetMapping("/templates/{id}/preview")
     public String previewTemplatePage(@PathVariable("id") Long id, Model model) {
-        EmailTemplate template = emailService.getTemplateById(id);
+        EmailTemplateDto template = emailService.getTemplate(id);
         EmailPreviewDto preview = emailService.previewTemplate(template.getTemplateKey())
                 .orElseThrow(() -> new ResourceNotFoundException("EmailTemplate", id));
         List<EmailPlaceholderSample> samples = emailService.placeholderSamples(template);
-        List<EmailTemplate> templates = emailService.getAllTemplates();
+        List<EmailTemplateDto> templates = emailService.getAllTemplateViews();
 
         model.addAttribute("template", template);
         model.addAttribute("preview", preview);

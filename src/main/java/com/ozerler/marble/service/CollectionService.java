@@ -26,6 +26,7 @@ import java.util.Objects;
 public class CollectionService {
 
     private final CollectionRecordRepository collectionRepository;
+    private final com.ozerler.marble.mapper.CollectionMapper collectionMapper;
     private final CheckRecordRepository checkRepository;
     private final CustomerRepository customerRepository;
     private final InvoiceRepository invoiceRepository;
@@ -177,5 +178,157 @@ public class CollectionService {
         LocalDate start = LocalDate.now().withDayOfMonth(1);
         LocalDate end = LocalDate.now().plusMonths(1).withDayOfMonth(1).minusDays(1);
         return collectionRepository.sumAmountByMethodAndDateRange(null, start, end);
+    }
+
+    /**
+     * Same as {@code recordCollection}, copied into a view inside the transaction.
+     *
+     * @param customerId see {@code recordCollection}
+     * @param invoiceId see {@code recordCollection}
+     * @param method see {@code recordCollection}
+     * @param amount see {@code recordCollection}
+     * @param bankName see {@code recordCollection}
+     * @param notes see {@code recordCollection}
+     * @param checkData see {@code recordCollection}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.CollectionRef recordCollectionRef(Long customerId, Long invoiceId, CollectionMethod method,
+                                            BigDecimal amount, String bankName, String notes,
+                                            CheckFormData checkData) {
+        return collectionMapper.toRef(recordCollection(customerId, invoiceId, method, amount, bankName, notes, checkData));
+    }
+
+    /**
+     * Same as {@code updateCheckStatus}, copied into a view inside the transaction.
+     *
+     * @param checkId see {@code updateCheckStatus}
+     * @param newStatus see {@code updateCheckStatus}
+     * @param notes see {@code updateCheckStatus}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.CheckRef updateCheckStatusRef(Long checkId, CheckStatus newStatus, String notes) {
+        return collectionMapper.toRef(updateCheckStatus(checkId, newStatus, notes));
+    }
+
+    /**
+     * Builds grid rows inside the read transaction (moved from the controller unchanged).
+     *
+     * @return grid rows
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.TabulatorResponse<java.util.Map<String, Object>> collectionRows(String search, CollectionMethod method, Long customerId, int page, int size) {
+        int pageIndex = Math.max(0, page - 1);
+        Page<CollectionRecord> collectionPage = searchCollections(method, customerId, null, null, search, pageIndex, size);
+
+        List<java.util.Map<String, Object>> data = collectionPage.getContent().stream().map(c -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", c.getId());
+            map.put("collectionNo", c.getCollectionNo());
+            map.put("collectionDate", c.getCollectionDate() != null ? c.getCollectionDate().toString() : "");
+            map.put("customerName", c.getCustomer() != null ? c.getCustomer().getCompanyName() : "—");
+            map.put("method", c.getCollectionMethod() != null ? c.getCollectionMethod().name() : "");
+            map.put("methodLabel", c.getCollectionMethod() != null ? c.getCollectionMethod().getDisplayName() : "");
+            map.put("amount", c.getAmount() != null ? c.getAmount() : BigDecimal.ZERO);
+            map.put("bankName", c.getBankName() != null ? c.getBankName() : "—");
+            map.put("invoiceNo", c.getInvoice() != null ? c.getInvoice().getInvoiceNumber() : "—");
+            map.put("invoiceId", c.getInvoice() != null ? c.getInvoice().getId() : null);
+            map.put("notes", c.getNotes() != null ? c.getNotes() : "");
+            return map;
+        }).toList();
+
+        return com.ozerler.marble.dto.TabulatorResponse.of(data, collectionPage.getTotalPages(), collectionPage.getTotalElements());
+    }
+
+    /**
+     * Builds grid rows inside the read transaction (moved from the controller unchanged).
+     *
+     * @return grid rows
+     */
+    @Transactional(readOnly = true)
+    public com.ozerler.marble.dto.TabulatorResponse<java.util.Map<String, Object>> checkRows(String search, BusinessUnit unit, CheckStatus status, Long customerId, int page, int size) {
+        int pageIndex = Math.max(0, page - 1);
+        Page<CheckRecord> checkPage = searchChecks(unit, status, customerId, null, null, search, pageIndex, size);
+
+        List<java.util.Map<String, Object>> data = checkPage.getContent().stream().map(ch -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", ch.getId());
+            map.put("checkNo", ch.getCheckNo());
+            map.put("bankName", ch.getBankName() != null ? ch.getBankName() : "—");
+            map.put("customerName", ch.getCustomer() != null ? ch.getCustomer().getCompanyName() : "—");
+            BusinessUnit bu = ch.getEffectiveBusinessUnit();
+            map.put("businessUnit", bu != null ? bu.name() : "");
+            map.put("businessUnitLabel", bu != null ? bu.getDisplayName() : "Genel");
+            map.put("dueDate", ch.getDueDate() != null ? ch.getDueDate().toString() : "");
+            map.put("amount", ch.getAmount() != null ? ch.getAmount() : BigDecimal.ZERO);
+            map.put("status", ch.getStatus() != null ? ch.getStatus().name() : "");
+            map.put("statusLabel", ch.getStatus() != null ? ch.getStatus().getLabel() : "");
+            map.put("notes", ch.getNotes() != null ? ch.getNotes() : "");
+            return map;
+        }).toList();
+
+        return com.ozerler.marble.dto.TabulatorResponse.of(data, checkPage.getTotalPages(), checkPage.getTotalElements());
+    }
+
+    /**
+     * Same as {@code searchCollections}, copied into a view inside the transaction.
+     *
+     * @param method see {@code searchCollections}
+     * @param customerId see {@code searchCollections}
+     * @param startDate see {@code searchCollections}
+     * @param endDate see {@code searchCollections}
+     * @param search see {@code searchCollections}
+     * @param page see {@code searchCollections}
+     * @param size see {@code searchCollections}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public Page<com.ozerler.marble.dto.view.CollectionRef> searchCollectionViews(CollectionMethod method, Long customerId,
+                                                    LocalDate startDate, LocalDate endDate,
+                                                    String search, int page, int size) {
+        return searchCollections(method, customerId, startDate, endDate, search, page, size).map(collectionMapper::toRef);
+    }
+
+    /**
+     * Same as {@code searchChecks}, copied into a view inside the transaction.
+     *
+     * @param unit see {@code searchChecks}
+     * @param status see {@code searchChecks}
+     * @param customerId see {@code searchChecks}
+     * @param startDate see {@code searchChecks}
+     * @param endDate see {@code searchChecks}
+     * @param search see {@code searchChecks}
+     * @param page see {@code searchChecks}
+     * @param size see {@code searchChecks}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public Page<com.ozerler.marble.dto.view.CheckRef> searchCheckViews(BusinessUnit unit, CheckStatus status, Long customerId,
+                                          LocalDate startDate, LocalDate endDate,
+                                          String search, int page, int size) {
+        return searchChecks(unit, status, customerId, startDate, endDate, search, page, size).map(collectionMapper::toRef);
+    }
+
+    /**
+     * Same as {@code getApproachingChecks}, copied into a view inside the transaction.
+     *
+     * @param unit see {@code getApproachingChecks}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.CheckRef> getApproachingCheckViews(BusinessUnit unit) {
+        return getApproachingChecks(unit).stream().map(collectionMapper::toRef).toList();
+    }
+
+    /**
+     * Same as {@code getOverdueChecks}, copied into a view inside the transaction.
+     *
+     * @param unit see {@code getOverdueChecks}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.CheckRef> getOverdueCheckViews(BusinessUnit unit) {
+        return getOverdueChecks(unit).stream().map(collectionMapper::toRef).toList();
     }
 }

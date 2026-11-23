@@ -17,6 +17,28 @@ public interface WorkOrderMapper {
     @Mapping(target = "customerNameForView", ignore = true)
     WorkOrderView toDto(OperationWorkOrder order);
 
+    /**
+     * Copies the id and number of an order.
+     *
+     * @param order the entity
+     * @return the reference
+     */
+    /**
+     * Copies the header fields only, for list rows; items and history are left empty.
+     *
+     * @param order the entity
+     * @return the header view
+     */
+    @org.mapstruct.Named("row")
+    @Mapping(target = "orderNumber", source = "orderNo")
+    @Mapping(target = "plannedQuantity", source = "quantity")
+    @Mapping(target = "customerNameForView", ignore = true)
+    @Mapping(target = "items", ignore = true)
+    @Mapping(target = "statusHistory", ignore = true)
+    WorkOrderView toRow(OperationWorkOrder order);
+
+    com.ozerler.marble.dto.view.OrderRef toRef(OperationWorkOrder order);
+
     WorkOrderView.ItemView toItem(OperationWorkOrderItem item);
 
     WorkOrderView.HistoryView toHistory(WorkOrderStatusHistory history);

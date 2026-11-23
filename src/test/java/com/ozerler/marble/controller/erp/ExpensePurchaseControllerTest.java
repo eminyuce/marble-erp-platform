@@ -171,7 +171,7 @@ class ExpensePurchaseControllerTest {
                 Locale.getDefault(), ra, model);
 
         assertThat(view).isEqualTo("redirect:/expenses");
-        verify(expenseService).recordExpense(any());
+        verify(expenseService).recordForScreen(any(), any(), any());
         assertThat(ra.getFlashAttributes()).containsKey("successMessage");
     }
 
@@ -192,7 +192,7 @@ class ExpensePurchaseControllerTest {
                 Locale.getDefault(), ra, model);
 
         assertThat(view).isEqualTo("redirect:/expenses");
-        verify(expenseService).updateExpense(eq(10L), any());
+        verify(expenseService).updateForScreen(eq(10L), any(), any(), any());
         assertThat(ra.getFlashAttributes()).containsKey("successMessage");
     }
 }

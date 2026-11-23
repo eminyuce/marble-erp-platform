@@ -1,14 +1,14 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.dto.view.WorkOrderView;
+import com.ozerler.marble.dto.view.StockItemView;
+import com.ozerler.marble.dto.view.SlabView;
 import com.ozerler.marble.web.StockYardResponses;
 
 import com.ozerler.marble.common.Constants;
 
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.OperationWorkOrder;
-import com.ozerler.marble.model.Slab;
-import com.ozerler.marble.model.StockItem;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
 import com.ozerler.marble.model.enums.SlabStatus;
@@ -68,7 +68,7 @@ public class WorkshopOperationController extends AbstractController {
     public String index(@RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
                         @ModelAttribute ListQuery query, Model model) {
 
-        Page<OperationWorkOrder> ordersPage = workOrderService.searchOrders(
+        Page<WorkOrderView> ordersPage = workOrderService.searchOrderRows(
                 BusinessUnit.WORKSHOP, status, null, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         model.addAttribute("orders", ordersPage.getContent());
         model.addAttribute("page", ordersPage);
@@ -97,12 +97,12 @@ public class WorkshopOperationController extends AbstractController {
                                 @RequestParam(name = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
                                 @ModelAttribute ListQuery query, Model model) {
 
-        Page<Slab> slabsPage = StockYardResponses.slabPage(
+        Page<SlabView> slabsPage = StockYardResponses.slabPage(
                 factoryStockService, status, customerId, generalStockOnly, query);
         var customers = formLookup.customers();
 
         BigDecimal totalAvailableM2 = slabsPage.getContent().stream()
-                .map(Slab::getSurfaceAreaM2).filter(Objects::nonNull)
+                .map(SlabView::getSurfaceAreaM2).filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         long totalAvailableCount = slabsPage.getTotalElements();
 
@@ -141,12 +141,12 @@ public class WorkshopOperationController extends AbstractController {
                                 @RequestParam(value = "customerOnly", defaultValue = "false") boolean customerOnly,
                                 @ModelAttribute ListQuery query, Model model) {
 
-        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(
+        Page<StockItemView> itemsPage = factoryStockService.getSizedStockItemViewsPaged(
                 customerId, generalStockOnly, customerOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         var customers = formLookup.customers();
 
         BigDecimal totalStockM2 = itemsPage.getContent().stream()
-                .map(StockItem::getQuantity).filter(Objects::nonNull)
+                .map(StockItemView::getQuantity).filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         long totalItemsCount = itemsPage.getTotalElements();
 
@@ -178,7 +178,7 @@ public class WorkshopOperationController extends AbstractController {
             @RequestParam(name = "customerOnly", defaultValue = "false") boolean customerOnly) {
 
         int pageIndex = Math.max(0, page - 1);
-        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(
+        Page<StockItemView> itemsPage = factoryStockService.getSizedStockItemViewsPaged(
                 customerId, generalStockOnly, customerOnly, search, pageIndex, size);
         return StockYardResponses.workshopSized(itemsPage);
     }
@@ -242,7 +242,7 @@ public class WorkshopOperationController extends AbstractController {
             @RequestParam(required = false, name = "rowEdgeFinish") List<String> rowEdgeFinishes,
             RedirectAttributes redirectAttributes) {
         try {
-            List<StockItem> created = workshopOperationService.produceWorkshopSizedItemsBatch(
+            List<StockItemView> created = workshopOperationService.produceWorkshopSizedItemsBatchViews(
                     sourceType, slabId, sourceStockItemId, consumedQuantity, wasteQuantity,
                     customerId, projectId, description, qualityGrade, surfaceFinish, edgeFinish, notes,
                     rowDescriptions, rowThicknesses, rowWidths, rowLengths, rowPieceCounts, rowQuantities,

@@ -263,7 +263,7 @@ public class UserController extends AbstractController {
     private void populateUserForm(Model model, Object form, boolean isEdit,
                                   BindingResult bindingResult, String extraError, Locale locale) {
         model.addAttribute("userForm", form);
-        model.addAttribute("allRoles", userService.getAllRoles());
+        model.addAttribute("allRoles", userService.getAllRoleViews());
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("formErrors", collectFormErrors(bindingResult, extraError, locale));
         String titleKey = isEdit ? "admin.users.title.edit" : "admin.users.title.create";

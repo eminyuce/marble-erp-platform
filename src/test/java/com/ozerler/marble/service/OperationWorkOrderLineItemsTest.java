@@ -49,6 +49,7 @@ class OperationWorkOrderLineItemsTest {
     void setUp() {
         workOrderService = new OperationWorkOrderService(
                 workOrderRepository,
+                new com.ozerler.marble.mapper.WorkOrderMapperImpl(),
                 historyRepository,
                 customerRepository,
                 stockItemRepository,

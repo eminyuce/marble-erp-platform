@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 public class ProjectSiteService {
 
     private final ProjectRepository projectRepository;
+    private final com.ozerler.marble.mapper.SiteMapper siteMapper;
     private final ProjectLocationRepository projectLocationRepository;
     private final SiteConsumptionRepository siteConsumptionRepository;
     private final com.ozerler.marble.repository.CustomerRepository customerRepository;
@@ -256,5 +257,32 @@ public class ProjectSiteService {
         BigDecimal shortfall = grossRequirement.subtract(currentCoverage);
 
         return shortfall.compareTo(BigDecimal.ZERO) > 0 ? shortfall.setScale(Constants.RESULT_SCALE, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+    }
+
+    /**
+     * Same as {@code getConsumptionsByProject}, copied into a view inside the transaction.
+     *
+     * @param projectId see {@code getConsumptionsByProject}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.SiteViews.ConsumptionView> getConsumptionViewsByProject(Long projectId) {
+        return getConsumptionsByProject(projectId).stream().map(siteMapper::toConsumption).toList();
+    }
+
+    /**
+     * Locations of a project as views; status label and progress are computed here, not in the mapper.
+     *
+     * @param projectId project id
+     * @return location views
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.SiteViews.LocationView> getLocationViewsByProject(Long projectId) {
+        return getLocationsByProject(projectId).stream().map(location -> {
+            com.ozerler.marble.dto.view.SiteViews.LocationView view = siteMapper.toDto(location);
+            view.setStatusLabel(location.getStatusLabel());
+            view.setProgressPercentage(location.getProgressPercentage());
+            return view;
+        }).toList();
     }
 }

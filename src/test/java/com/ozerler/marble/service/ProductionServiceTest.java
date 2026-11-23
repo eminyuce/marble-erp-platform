@@ -53,7 +53,7 @@ class ProductionServiceTest {
     @BeforeEach
     void setUp() {
         productionService = new ProductionService(
-                productionOrderRepository, slabRepository, scrapLogRepository, barcodeService, null, null);
+                productionOrderRepository, null, null, slabRepository, scrapLogRepository, barcodeService, null, null);
     }
 
     @Test

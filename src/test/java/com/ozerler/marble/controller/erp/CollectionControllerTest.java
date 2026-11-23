@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
@@ -52,7 +54,7 @@ class CollectionControllerTest {
     void index_DefaultsToEmptyMethodWhenNull() {
         when(collectionService.getMonthlyTotal()).thenReturn(BigDecimal.valueOf(10000));
         when(collectionService.getApproachingChecksCount()).thenReturn(3L);
-        when(collectionService.searchCollections(null, null, null, null, null, 0, 20)).thenReturn(Page.empty());
+        when(collectionService.searchCollectionViews(null, null, null, null, null, 0, 20)).thenReturn(Page.empty());
         when(formLookup.customers()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
@@ -69,7 +71,7 @@ class CollectionControllerTest {
     void index_SetsSelectedMethodWhenProvided() {
         when(collectionService.getMonthlyTotal()).thenReturn(BigDecimal.valueOf(10000));
         when(collectionService.getApproachingChecksCount()).thenReturn(3L);
-        when(collectionService.searchCollections(CollectionMethod.CASH, null, null, null, null, 0, 20)).thenReturn(Page.empty());
+        when(collectionService.searchCollectionViews(CollectionMethod.CASH, null, null, null, null, 0, 20)).thenReturn(Page.empty());
         when(formLookup.customers()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
@@ -99,6 +101,8 @@ class CollectionControllerTest {
         when(collectionService.searchCollections(isNull(), isNull(), isNull(), isNull(), isNull(), eq(0), eq(25)))
                 .thenReturn(pageResult);
 
+        when(collectionService.collectionRows(any(), any(), any(), anyInt(), anyInt())).thenCallRealMethod();
+
         TabulatorResponse<Map<String, Object>> response = controller.getCollectionsData(1, 25, null, null, null);
 
         assertThat(response).isNotNull();
@@ -116,6 +120,8 @@ class CollectionControllerTest {
         when(collectionService.searchCollections(eq(CollectionMethod.BANK_TRANSFER), isNull(), isNull(), isNull(), eq("test"), eq(0), eq(50)))
                 .thenReturn(emptyPage);
 
+        when(collectionService.collectionRows(any(), any(), any(), anyInt(), anyInt())).thenCallRealMethod();
+
         TabulatorResponse<Map<String, Object>> response = controller.getCollectionsData(1, 50, "test", CollectionMethod.BANK_TRANSFER, null);
 
         assertThat(response).isNotNull();
@@ -129,6 +135,8 @@ class CollectionControllerTest {
         Page<CollectionRecord> emptyPage = new PageImpl<>(List.of());
         when(collectionService.searchCollections(isNull(), eq(42L), isNull(), isNull(), isNull(), eq(0), eq(25)))
                 .thenReturn(emptyPage);
+
+        when(collectionService.collectionRows(any(), any(), any(), anyInt(), anyInt())).thenCallRealMethod();
 
         TabulatorResponse<Map<String, Object>> response = controller.getCollectionsData(1, 25, null, null, 42L);
 
@@ -158,6 +166,8 @@ class CollectionControllerTest {
         when(collectionService.searchChecks(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(0), eq(25)))
                 .thenReturn(pageResult);
 
+        when(collectionService.checkRows(any(), any(), any(), any(), anyInt(), anyInt())).thenCallRealMethod();
+
         TabulatorResponse<Map<String, Object>> response = controller.getChecksData(1, 25, null, null, null, null);
 
         assertThat(response).isNotNull();
@@ -175,6 +185,8 @@ class CollectionControllerTest {
         when(collectionService.searchChecks(isNull(), eq(CheckStatus.COLLECTED), isNull(), isNull(), isNull(), eq("vade"), eq(0), eq(25)))
                 .thenReturn(emptyPage);
 
+        when(collectionService.checkRows(any(), any(), any(), any(), anyInt(), anyInt())).thenCallRealMethod();
+
         TabulatorResponse<Map<String, Object>> response = controller.getChecksData(1, 25, "vade", null, CheckStatus.COLLECTED, null);
 
         assertThat(response).isNotNull();
@@ -185,8 +197,10 @@ class CollectionControllerTest {
     @Test
     @DisplayName("updateCheckStatus invokes collection service and redirects to checks list")
     void updateCheckStatus_UpdatesAndRedirects() {
-        CheckRecord updated = CheckRecord.builder().id(50L).checkNo("CHK-50").build();
-        when(collectionService.updateCheckStatus(eq(50L), eq(CheckStatus.BOUNCED), eq("Karşılıksız")))
+        com.ozerler.marble.dto.view.CheckRef updated = new com.ozerler.marble.dto.view.CheckRef();
+        updated.setId(50L);
+        updated.setCheckNo("CHK-50");
+        when(collectionService.updateCheckStatusRef(eq(50L), eq(CheckStatus.BOUNCED), eq("Karşılıksız")))
                 .thenReturn(updated);
 
         RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
@@ -194,7 +208,7 @@ class CollectionControllerTest {
 
         assertThat(view).isEqualTo("redirect:/collections/checks");
         assertThat(redirectAttributes.getFlashAttributes()).containsKey("successMessage");
-        verify(collectionService).updateCheckStatus(50L, CheckStatus.BOUNCED, "Karşılıksız");
+        verify(collectionService).updateCheckStatusRef(50L, CheckStatus.BOUNCED, "Karşılıksız");
     }
 
     @Test

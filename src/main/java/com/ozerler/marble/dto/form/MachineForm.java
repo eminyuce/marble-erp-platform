@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class MachineForm {
+public class MachineForm extends com.ozerler.marble.dto.view.AuditView {
     private Long id;
     private String code;
     private String name;

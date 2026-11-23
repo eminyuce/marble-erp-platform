@@ -28,6 +28,9 @@ import java.util.stream.Collectors;
 public class FactoryStockService {
 
     private final BlockRepository blockRepository;
+    private final BlockViews blockViews;
+    private final com.ozerler.marble.mapper.StockItemMapper stockItemMapper;
+    private final com.ozerler.marble.mapper.SlabMapper slabMapper;
     private final SlabRepository slabRepository;
     private final StockItemRepository stockItemRepository;
     private final StockLocationRepository stockLocationRepository;
@@ -492,5 +495,269 @@ public class FactoryStockService {
         Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
         item.setCustomer(customer);
         return stockItemRepository.save(item);
+    }
+
+    /**
+     * Same as {@code createSlabDirect}, copied into a view inside the transaction.
+     *
+     * @param blockId see {@code createSlabDirect}
+     * @param thicknessCm see {@code createSlabDirect}
+     * @param widthCm see {@code createSlabDirect}
+     * @param lengthCm see {@code createSlabDirect}
+     * @param qualityGrade see {@code createSlabDirect}
+     * @param surfaceFinish see {@code createSlabDirect}
+     * @param customerId see {@code createSlabDirect}
+     * @param notes see {@code createSlabDirect}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.SlabView createSlabDirectView(Long blockId, BigDecimal thicknessCm, BigDecimal widthCm, BigDecimal lengthCm,
+                                QualityGrade qualityGrade, SurfaceFinish surfaceFinish, Long customerId, String notes) {
+        return slabMapper.toDto(createSlabDirect(blockId, thicknessCm, widthCm, lengthCm, qualityGrade, surfaceFinish, customerId, notes));
+    }
+
+    /**
+     * Same as {@code assignCustomerToSlab}, copied into a view inside the transaction.
+     *
+     * @param slabId see {@code assignCustomerToSlab}
+     * @param customerId see {@code assignCustomerToSlab}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.SlabView assignCustomerToSlabView(Long slabId, Long customerId) {
+        return slabMapper.toDto(assignCustomerToSlab(slabId, customerId));
+    }
+
+    /**
+     * Same as {@code createSizedItem}, copied into a view inside the transaction.
+     *
+     * @param blockId see {@code createSizedItem}
+     * @param description see {@code createSizedItem}
+     * @param thicknessCm see {@code createSizedItem}
+     * @param widthCm see {@code createSizedItem}
+     * @param lengthCm see {@code createSizedItem}
+     * @param quantity see {@code createSizedItem}
+     * @param pieceCount see {@code createSizedItem}
+     * @param actualProducedQuantity see {@code createSizedItem}
+     * @param customerId see {@code createSizedItem}
+     * @param qualityGradeStr see {@code createSizedItem}
+     * @param surfaceFinishStr see {@code createSizedItem}
+     * @param edgeFinish see {@code createSizedItem}
+     * @param notes see {@code createSizedItem}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView createSizedItemView(Long blockId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
+                                     BigDecimal lengthCm, BigDecimal quantity, int pieceCount,
+                                     BigDecimal actualProducedQuantity, Long customerId, String qualityGradeStr,
+                                     String surfaceFinishStr, String edgeFinish, String notes) {
+        return stockItemMapper.toDto(createSizedItem(blockId, description, thicknessCm, widthCm, lengthCm, quantity, pieceCount, actualProducedQuantity, customerId, qualityGradeStr, surfaceFinishStr, edgeFinish, notes));
+    }
+
+    /**
+     * Same as {@code createSizedItem}, copied into a view inside the transaction.
+     *
+     * @param blockId see {@code createSizedItem}
+     * @param slabId see {@code createSizedItem}
+     * @param description see {@code createSizedItem}
+     * @param thicknessCm see {@code createSizedItem}
+     * @param widthCm see {@code createSizedItem}
+     * @param lengthCm see {@code createSizedItem}
+     * @param quantity see {@code createSizedItem}
+     * @param pieceCount see {@code createSizedItem}
+     * @param actualProducedQuantity see {@code createSizedItem}
+     * @param customerId see {@code createSizedItem}
+     * @param qualityGradeStr see {@code createSizedItem}
+     * @param surfaceFinishStr see {@code createSizedItem}
+     * @param edgeFinish see {@code createSizedItem}
+     * @param notes see {@code createSizedItem}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView createSizedItemView(Long blockId, Long slabId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
+                                     BigDecimal lengthCm, BigDecimal quantity, int pieceCount,
+                                     BigDecimal actualProducedQuantity, Long customerId, String qualityGradeStr,
+                                     String surfaceFinishStr, String edgeFinish, String notes) {
+        return stockItemMapper.toDto(createSizedItem(blockId, slabId, description, thicknessCm, widthCm, lengthCm, quantity, pieceCount, actualProducedQuantity, customerId, qualityGradeStr, surfaceFinishStr, edgeFinish, notes));
+    }
+
+    /**
+     * Same as {@code assignCustomerToStockItem}, copied into a view inside the transaction.
+     *
+     * @param itemId see {@code assignCustomerToStockItem}
+     * @param customerId see {@code assignCustomerToStockItem}
+     * @return the view
+     */
+    @Transactional
+    public com.ozerler.marble.dto.view.StockItemView assignCustomerToStockItemView(Long itemId, Long customerId) {
+        return stockItemMapper.toDto(assignCustomerToStockItem(itemId, customerId));
+    }
+
+    /**
+     * Same as {@code createSlabsBatch}, copied into a view inside the transaction.
+     *
+     * @param blockId see {@code createSlabsBatch}
+     * @param commonThicknessCm see {@code createSlabsBatch}
+     * @param qualityGrade see {@code createSlabsBatch}
+     * @param surfaceFinish see {@code createSlabsBatch}
+     * @param customerId see {@code createSlabsBatch}
+     * @param notes see {@code createSlabsBatch}
+     * @param thicknesses see {@code createSlabsBatch}
+     * @param widths see {@code createSlabsBatch}
+     * @param lengths see {@code createSlabsBatch}
+     * @param pieceCounts see {@code createSlabsBatch}
+     * @return the view
+     */
+    @Transactional
+    public List<com.ozerler.marble.dto.view.SlabView> createSlabsBatchViews(Long blockId, BigDecimal commonThicknessCm,
+                                       QualityGrade qualityGrade, SurfaceFinish surfaceFinish,
+                                       Long customerId, String notes,
+                                       List<BigDecimal> thicknesses, List<BigDecimal> widths,
+                                       List<BigDecimal> lengths, List<Integer> pieceCounts) {
+        return createSlabsBatch(blockId, commonThicknessCm, qualityGrade, surfaceFinish, customerId, notes, thicknesses, widths, lengths, pieceCounts).stream().map(slabMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code createSizedItemsBatch}, copied into a view inside the transaction.
+     *
+     * @param blockId see {@code createSizedItemsBatch}
+     * @param customerId see {@code createSizedItemsBatch}
+     * @param defaultDescription see {@code createSizedItemsBatch}
+     * @param qualityGradeStr see {@code createSizedItemsBatch}
+     * @param surfaceFinishStr see {@code createSizedItemsBatch}
+     * @param edgeFinish see {@code createSizedItemsBatch}
+     * @param notes see {@code createSizedItemsBatch}
+     * @param descriptions see {@code createSizedItemsBatch}
+     * @param thicknesses see {@code createSizedItemsBatch}
+     * @param widths see {@code createSizedItemsBatch}
+     * @param lengths see {@code createSizedItemsBatch}
+     * @param pieceCounts see {@code createSizedItemsBatch}
+     * @param quantities see {@code createSizedItemsBatch}
+     * @return the view
+     */
+    @Transactional
+    public List<com.ozerler.marble.dto.view.StockItemView> createSizedItemsBatchViews(Long blockId, Long customerId, String defaultDescription,
+                                                 String qualityGradeStr, String surfaceFinishStr, String edgeFinish,
+                                                 String notes,
+                                                 List<String> descriptions, List<BigDecimal> thicknesses,
+                                                 List<BigDecimal> widths, List<BigDecimal> lengths,
+                                                 List<Integer> pieceCounts, List<BigDecimal> quantities) {
+        return createSizedItemsBatch(blockId, customerId, defaultDescription, qualityGradeStr, surfaceFinishStr, edgeFinish, notes, descriptions, thicknesses, widths, lengths, pieceCounts, quantities).stream().map(stockItemMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code createSizedItemsBatch}, copied into a view inside the transaction.
+     *
+     * @param blockId see {@code createSizedItemsBatch}
+     * @param slabId see {@code createSizedItemsBatch}
+     * @param customerId see {@code createSizedItemsBatch}
+     * @param defaultDescription see {@code createSizedItemsBatch}
+     * @param qualityGradeStr see {@code createSizedItemsBatch}
+     * @param surfaceFinishStr see {@code createSizedItemsBatch}
+     * @param edgeFinish see {@code createSizedItemsBatch}
+     * @param notes see {@code createSizedItemsBatch}
+     * @param descriptions see {@code createSizedItemsBatch}
+     * @param thicknesses see {@code createSizedItemsBatch}
+     * @param widths see {@code createSizedItemsBatch}
+     * @param lengths see {@code createSizedItemsBatch}
+     * @param pieceCounts see {@code createSizedItemsBatch}
+     * @param quantities see {@code createSizedItemsBatch}
+     * @param rowSurfaceFinishes see {@code createSizedItemsBatch}
+     * @param rowEdgeFinishes see {@code createSizedItemsBatch}
+     * @return the view
+     */
+    @Transactional
+    public List<com.ozerler.marble.dto.view.StockItemView> createSizedItemsBatchViews(Long blockId, Long slabId, Long customerId, String defaultDescription,
+                                                 String qualityGradeStr, String surfaceFinishStr, String edgeFinish,
+                                                 String notes,
+                                                 List<String> descriptions, List<BigDecimal> thicknesses,
+                                                 List<BigDecimal> widths, List<BigDecimal> lengths,
+                                                 List<Integer> pieceCounts, List<BigDecimal> quantities,
+                                                 List<String> rowSurfaceFinishes, List<String> rowEdgeFinishes) {
+        return createSizedItemsBatch(blockId, slabId, customerId, defaultDescription, qualityGradeStr, surfaceFinishStr, edgeFinish, notes, descriptions, thicknesses, widths, lengths, pieceCounts, quantities, rowSurfaceFinishes, rowEdgeFinishes).stream().map(stockItemMapper::toDto).toList();
+    }
+
+    /**
+     * Same as {@code getFactorySlabsPaged}, copied into a view inside the transaction.
+     *
+     * @param status see {@code getFactorySlabsPaged}
+     * @param customerId see {@code getFactorySlabsPaged}
+     * @param generalStockOnly see {@code getFactorySlabsPaged}
+     * @param search see {@code getFactorySlabsPaged}
+     * @param page see {@code getFactorySlabsPaged}
+     * @param size see {@code getFactorySlabsPaged}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public Page<com.ozerler.marble.dto.view.SlabView> getFactorySlabViewsPaged(SlabStatus status, Long customerId, boolean generalStockOnly, String search, int page, int size) {
+        return getFactorySlabsPaged(status, customerId, generalStockOnly, search, page, size).map(slabMapper::toDto);
+    }
+
+    /**
+     * Same as {@code getSizedStockItemsPaged}, copied into a view inside the transaction.
+     *
+     * @param customerId see {@code getSizedStockItemsPaged}
+     * @param generalStockOnly see {@code getSizedStockItemsPaged}
+     * @param customerOnly see {@code getSizedStockItemsPaged}
+     * @param search see {@code getSizedStockItemsPaged}
+     * @param page see {@code getSizedStockItemsPaged}
+     * @param size see {@code getSizedStockItemsPaged}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public Page<com.ozerler.marble.dto.view.StockItemView> getSizedStockItemViewsPaged(Long customerId, boolean generalStockOnly, boolean customerOnly, String search, int page, int size) {
+        return getSizedStockItemsPaged(customerId, generalStockOnly, customerOnly, search, page, size).map(stockItemMapper::toDto);
+    }
+
+    /**
+     * Same as {@code getSizedStockItemsPaged}, copied into a view inside the transaction.
+     *
+     * @param customerId see {@code getSizedStockItemsPaged}
+     * @param generalStockOnly see {@code getSizedStockItemsPaged}
+     * @param search see {@code getSizedStockItemsPaged}
+     * @param page see {@code getSizedStockItemsPaged}
+     * @param size see {@code getSizedStockItemsPaged}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public Page<com.ozerler.marble.dto.view.StockItemView> getSizedStockItemViewsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+        return getSizedStockItemsPaged(customerId, generalStockOnly, search, page, size).map(stockItemMapper::toDto);
+    }
+
+    /**
+     * Same as {@code getFactoryUncutBlocks}, copied into a view inside the transaction.
+     *
+     * @param customerId see {@code getFactoryUncutBlocks}
+     * @param generalStockOnly see {@code getFactoryUncutBlocks}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.BlockView> getFactoryUncutBlockViews(Long customerId, boolean generalStockOnly) {
+        return getFactoryUncutBlocks(customerId, generalStockOnly).stream().map(blockViews::toView).toList();
+    }
+
+    /**
+     * Same as {@code getIncomingBlocksInTransit}, copied into a view inside the transaction.
+     *
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public List<com.ozerler.marble.dto.view.BlockView> getIncomingBlockViewsInTransit() {
+        return getIncomingBlocksInTransit().stream().map(blockViews::toView).toList();
+    }
+
+    /**
+     * Same as {@code getFactoryUncutBlocksPaged}, copied into a view inside the transaction.
+     *
+     * @param customerId see {@code getFactoryUncutBlocksPaged}
+     * @param generalStockOnly see {@code getFactoryUncutBlocksPaged}
+     * @param search see {@code getFactoryUncutBlocksPaged}
+     * @param page see {@code getFactoryUncutBlocksPaged}
+     * @param size see {@code getFactoryUncutBlocksPaged}
+     * @return the view
+     */
+    @Transactional(readOnly = true)
+    public Page<com.ozerler.marble.dto.view.BlockView> getFactoryUncutBlockViewsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+        return getFactoryUncutBlocksPaged(customerId, generalStockOnly, search, page, size).map(blockViews::toView);
     }
 }

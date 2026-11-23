@@ -26,6 +26,10 @@ public class PassportService {
     private final SlabRepository slabRepository;
     private final BlockRepository blockRepository;
     private final CutItemRepository cutItemRepository;
+    private final com.ozerler.marble.mapper.ProductionOrderMapper productionOrderMapper;
+    private final com.ozerler.marble.mapper.SlabMapper slabMapper;
+    private final com.ozerler.marble.mapper.CutOrderMapper cutOrderMapper;
+    private final BlockViews blockViews;
     private final org.springframework.context.MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
@@ -55,7 +59,7 @@ public class PassportService {
             return PassportResult.builder()
                     .found(true)
                     .type("PALLET")
-                    .pallet(pallet.get())
+                    .pallet(productionOrderMapper.toPallet(pallet.get()))
                     .title(getMessage("passport.title.pallet", pallet.get().getPalletCode()))
                     .build();
         }
@@ -65,7 +69,7 @@ public class PassportService {
             return PassportResult.builder()
                     .found(true)
                     .type("SLAB")
-                    .slab(slab.get())
+                    .slab(slabMapper.toDto(slab.get()))
                     .title(getMessage("passport.title.slab", slab.get().getSlabCode()))
                     .build();
         }
@@ -75,7 +79,7 @@ public class PassportService {
             return PassportResult.builder()
                     .found(true)
                     .type("ITEM")
-                    .item(item.get())
+                    .item(cutOrderMapper.toItem(item.get()))
                     .title(getMessage("passport.title.item", item.get().getItemCode()))
                     .build();
         }
@@ -85,7 +89,7 @@ public class PassportService {
             return PassportResult.builder()
                     .found(true)
                     .type("BLOCK")
-                    .block(block.get())
+                    .block(blockViews.toView(block.get()))
                     .title(getMessage("passport.title.block", block.get().getBlockCode()))
                     .build();
         }

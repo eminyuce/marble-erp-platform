@@ -96,9 +96,8 @@ class CostControllerTest {
                 .build();
 
         when(costAnalysisService.siteProfits()).thenReturn(List.of(profitDto));
-        when(costAccountingService.getAllCostCenters()).thenReturn(List.of(
-                CostCenter.builder().id(1L).code("CC-01").name("Ocak").monthlyBudget(new BigDecimal("150000.00")).build()
-        ));
+        when(costAccountingService.getAllCostCenterViews()).thenReturn(List.of());
+        when(costAccountingService.totalMonthlyBudget()).thenReturn(new BigDecimal("150000.00"));
 
         Model model = new ConcurrentModel();
         String view = costController.costsIndex("2026-09", model);

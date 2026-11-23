@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class CostCenterForm {
+public class CostCenterForm extends com.ozerler.marble.dto.view.AuditView {
     private Long id;
     private String code;
     private String name;

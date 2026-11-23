@@ -1,8 +1,8 @@
 package com.ozerler.marble.web;
 
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.Slab;
-import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.dto.view.SlabView;
+import com.ozerler.marble.dto.view.StockItemView;
 import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.service.FactoryStockService;
 import org.springframework.data.domain.Page;
@@ -24,9 +24,9 @@ public final class StockYardResponses {
     private StockYardResponses() {
     }
 
-    public static Page<Slab> slabPage(FactoryStockService factoryStockService, SlabStatus status, Long customerId,
+    public static Page<SlabView> slabPage(FactoryStockService factoryStockService, SlabStatus status, Long customerId,
                                boolean generalStockOnly, ListQuery query) {
-        return factoryStockService.getFactorySlabsPaged(
+        return factoryStockService.getFactorySlabViewsPaged(
                 status, customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
     }
 
@@ -34,7 +34,7 @@ public final class StockYardResponses {
                                                         String search, SlabStatus status, Long customerId,
                                                         boolean generalStockOnly) {
         int pageIndex = Math.max(0, page - 1);
-        Page<Slab> slabsPage = factoryStockService.getFactorySlabsPaged(
+        Page<SlabView> slabsPage = factoryStockService.getFactorySlabViewsPaged(
                 status, customerId, generalStockOnly, search, pageIndex, size);
         List<Map<String, Object>> data = slabsPage.getContent().stream().map(s -> {
             Map<String, Object> map = new HashMap<>();
@@ -60,23 +60,23 @@ public final class StockYardResponses {
         return TabulatorResponse.of(data, slabsPage.getTotalPages(), slabsPage.getTotalElements());
     }
 
-    public static TabulatorResponse<Map<String, Object>> factorySized(Page<StockItem> itemsPage) {
+    public static TabulatorResponse<Map<String, Object>> factorySized(Page<StockItemView> itemsPage) {
         return respond(itemsPage, item -> factorySizedRow(item));
     }
 
-    public static TabulatorResponse<Map<String, Object>> workshopSized(Page<StockItem> itemsPage) {
+    public static TabulatorResponse<Map<String, Object>> workshopSized(Page<StockItemView> itemsPage) {
         return respond(itemsPage, item -> workshopSizedRow(item));
     }
 
-    private static TabulatorResponse<Map<String, Object>> respond(Page<StockItem> itemsPage,
-                                                                  Function<StockItem, Map<String, Object>> rowMapper) {
+    private static TabulatorResponse<Map<String, Object>> respond(Page<StockItemView> itemsPage,
+                                                                  Function<StockItemView, Map<String, Object>> rowMapper) {
         List<Map<String, Object>> data = itemsPage.getContent().stream()
                 .map(item -> rowMapper.apply(item))
                 .collect(Collectors.toList());
         return TabulatorResponse.of(data, itemsPage.getTotalPages(), itemsPage.getTotalElements());
     }
 
-    private static Map<String, Object> factorySizedRow(StockItem it) {
+    private static Map<String, Object> factorySizedRow(StockItemView it) {
         Map<String, Object> map = new HashMap<>();
         putSizedIdentity(map, it);
         map.put("edgeFinish", it.getEdgeFinish() != null ? it.getEdgeFinish() : "Düz");
@@ -102,7 +102,7 @@ public final class StockYardResponses {
         return map;
     }
 
-    private static Map<String, Object> workshopSizedRow(StockItem it) {
+    private static Map<String, Object> workshopSizedRow(StockItemView it) {
         Map<String, Object> map = new HashMap<>();
         putSizedIdentity(map, it);
         putSizedMeasurements(map, it, "m²");
@@ -124,7 +124,7 @@ public final class StockYardResponses {
         return map;
     }
 
-    private static void putSizedIdentity(Map<String, Object> map, StockItem it) {
+    private static void putSizedIdentity(Map<String, Object> map, StockItemView it) {
         map.put("id", it.getId());
         map.put("itemCode", it.getItemCode());
         String sourceBlockCode = "—";
@@ -141,7 +141,7 @@ public final class StockYardResponses {
         map.put("surfaceFinish", it.getSurfaceFinish() != null ? it.getSurfaceFinish().getDisplayName() : "Cilalı");
     }
 
-    private static void putSizedMeasurements(Map<String, Object> map, StockItem it, String defaultUnit) {
+    private static void putSizedMeasurements(Map<String, Object> map, StockItemView it, String defaultUnit) {
         map.put("thicknessCm", it.getThicknessCm() != null ? it.getThicknessCm() + " cm" : "2 cm");
         map.put("dimensions", (it.getWidthCm() != null && it.getLengthCm() != null) ? (it.getWidthCm() + "×" + it.getLengthCm() + " cm") : "—");
         map.put("quantity", it.getQuantity());
