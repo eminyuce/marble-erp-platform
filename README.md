@@ -63,7 +63,7 @@ The platform adheres to **Layered Clean Architecture** and **Domain-Driven Desig
 
 Üretimde dört parça vardır. Uygulama Spring Boot **4.2.0**’dır. Docker Compose içinde `PORT` ve `SERVER_PORT` **81**’dir ve kapı `${APP_PORT:-81}:81` olarak yayınlanır. PostgreSQL 16 uygulama verisini tutar. RustFS (`marble-rustfs`, servis adı `rustfs`) özel kova `erp-files` içinde dosyaları tutar ve API’yi kapı **9000**’de dinler. HTTPS’i sunucudaki Nginx sonlandırır; bu depo Nginx çalıştırmaz.
 
-Yerel stack `docker/docker-compose.yml` ile açılır. Üretim stack’i `docker-compose.prod.yml` ve `scripts/deploy_production.sh` ile açılır. systemd ile JAR kurulumu [DEPLOYMENT_LINUX.md](DEPLOYMENT_LINUX.md) içindedir; o örnek `SERVER_PORT=8080` kullanır ve `location /` adresini `127.0.0.1:8080`’e yollar. Nginx’teki `location /` hedefi, uygulamanın gerçekten dinlediği kapı olmalıdır.
+Yerel stack `docker/docker-compose.yml` ile açılır. Üretim stack’i `docker-compose.prod.yml` ve `scripts/deploy_production.sh` ile açılır. systemd ile JAR kurulumu [DEPLOYMENT_LINUX.md](docs/DEPLOYMENT_LINUX.md) içindedir; o örnek `SERVER_PORT=8080` kullanır ve `location /` adresini `127.0.0.1:8080`’e yollar. Nginx’teki `location /` hedefi, uygulamanın gerçekten dinlediği kapı olmalıdır.
 
 ```mermaid
 flowchart LR
@@ -288,7 +288,7 @@ In production (`/opt/marble-erp`), PostgreSQL (`marble-erp-postgres`, volume `do
   ```
   *(Refuses to run if `/opt/marble-erp/docker-compose.prod.yml` or volume `docker_postgres_data` already exists.)*
 
-See [`DOCKER_PRODUCTION_DEPLOYMENT_REPORT.md`](DOCKER_PRODUCTION_DEPLOYMENT_REPORT.md) and [`docs/production-deploy.md`](docs/production-deploy.md) for full architecture and operational details.
+See [`docs/DOCKER_PRODUCTION_DEPLOYMENT_REPORT.md`](docs/DOCKER_PRODUCTION_DEPLOYMENT_REPORT.md) and [`docs/production-deploy.md`](docs/production-deploy.md) for full architecture and operational details.
 
 ---
 
@@ -456,9 +456,9 @@ Nginx yenilendikten sonra uygulama konteynerini veya systemd birimini yeniden ba
 | Karışık içerik (mixed content) | Sayfa https, imza http. Üretim profili http kamu adresinde açılmaz. `RUSTFS_PUBLIC_ENDPOINT` `https://ozerler.naklink.com` olmalıdır. |
 | Uygulama açılmıyor | Boş `RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY`, ya da kamu adresi https değil / iç host. Günlükteki `IllegalStateException` metni nedeni yazar. Anahtarın kendisi yazılmaz. |
 
-`location /` hedefi uygulama kapısıdır. Compose üretiminde bu kapı **81**’dir. [DEPLOYMENT_LINUX.md](DEPLOYMENT_LINUX.md) systemd örneği **8080**’dir. Dosya bloğu her iki kurulumda da `127.0.0.1:9000`’e gider.
+`location /` hedefi uygulama kapısıdır. Compose üretiminde bu kapı **81**’dir. [DEPLOYMENT_LINUX.md](docs/DEPLOYMENT_LINUX.md) systemd örneği **8080**’dir. Dosya bloğu her iki kurulumda da `127.0.0.1:9000`’e gider.
 
-Derin notlar: [DEPLOYMENT_LINUX.md](DEPLOYMENT_LINUX.md), [RUNNING_LOCALLY.md](RUNNING_LOCALLY.md), [docs/storage.md](docs/storage.md), [docs/production-deploy.md](docs/production-deploy.md). Bu README, kurmak ve okumak için yeterlidir.
+Derin notlar: [DEPLOYMENT_LINUX.md](docs/DEPLOYMENT_LINUX.md), [RUNNING_LOCALLY.md](docs/RUNNING_LOCALLY.md), [docs/storage.md](docs/storage.md), [docs/production-deploy.md](docs/production-deploy.md). Bu README, kurmak ve okumak için yeterlidir.
 
 ---
 
@@ -471,7 +471,7 @@ docker compose -f docker/docker-compose.yml up -d postgres rustfs
 ./mvnw spring-boot:run
 ```
 
-`./mvnw spring-boot:run` varsayılan profil `dev` ve kapı `8080` (`SERVER_PORT` verilmezse). Compose uygulaması `http://localhost:81` dinler. RustFS API `http://localhost:9000`, konsol `http://localhost:9001`. Ayrıntılı adımlar yukarıdaki Getting Started ve [RUNNING_LOCALLY.md](RUNNING_LOCALLY.md) içindedir.
+`./mvnw spring-boot:run` varsayılan profil `dev` ve kapı `8080` (`SERVER_PORT` verilmezse). Compose uygulaması `http://localhost:81` dinler. RustFS API `http://localhost:9000`, konsol `http://localhost:9001`. Ayrıntılı adımlar yukarıdaki Getting Started ve [RUNNING_LOCALLY.md](docs/RUNNING_LOCALLY.md) içindedir.
 
 `/admin/deployment` yalnızca `ROLE_ADMIN` görür. Ekran Docker Hub imajını ve etiketi gösterir, yayını başlatır ve `docker compose` çıktısını akar. Sunucuda Maven çalışmaz. Düğme imajı çeker ve uygulama konteynerini yeniler. Postgres hacmi `docker_postgres_data` ve RustFS dizini `RUSTFS_DATA_DIR` (varsayılan `/opt/rustfs/data`) bu yenilemede silinmez.
 

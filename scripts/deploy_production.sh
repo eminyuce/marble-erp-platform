@@ -7,7 +7,7 @@
 #   ./scripts/deploy_production.sh -y     # deploys without prompting
 #   ./scripts/deploy_production.sh --yes  # deploys without prompting
 #
-# See docs/production-deploy.md and DEPLOYMENT.md
+# See docs/production-deploy.md and docs/DEPLOYMENT_LINUX.md
 #
 # What this does:
 #   1. Pre-flight checks: Linux host, JDK 25+, Docker DB container running

@@ -1,6 +1,6 @@
 # DOCKER PRODUCTION DEPLOYMENT REPORT
 
-> Historical report. `.env` and `.env.example` are no longer part of the repository. Current startup does not need a `.env` file; see `README.md` and `docs/production-deploy.md`.
+> Historical report. `.env` and `.env.example` are no longer part of the repository. Current startup does not need a `.env` file; see `README.md` and `production-deploy.md`.
 **Project:** Özerler Mermer ERP Platform (`marble-erp-platform`)  
 **Docker Hub Repository:** `guvenulu/marble-erp-platform`  
 **Scope:** Production-Safe Docker Infrastructure, CI/CD & Zero Data Loss Deployment
