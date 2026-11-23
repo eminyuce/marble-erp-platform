@@ -292,14 +292,11 @@ See [`DOCKER_PRODUCTION_DEPLOYMENT_REPORT.md`](DOCKER_PRODUCTION_DEPLOYMENT_REPO
 
 ---
 
-## 🔑 Authentication & Default Credentials
+## 🔑 Authentication
 
-Seeded via Flyway migration ([V4__add_settings_and_admin_eimece.sql](src/main/resources/db/migration/V4__add_settings_and_admin_eimece.sql)):
+The login page is `http://localhost:81/account/adminlogin/`.
 
-- **Admin Login Portal:** `http://localhost:81/account/adminlogin/`
-- **Email:** `admin@eimece.test`
-- **Password:** `B2u5c8JB`
-- **Assigned Roles:** `ROLE_ADMIN`, `ROLE_USER`, `ROLE_EXECUTIVE`
+Flyway `V4` created `admin@eimece.test`. `V34` disables that account when it still has the original password hash and does not write a replacement password. Set a new password in the database and re-enable the account before using it. Do not commit that password.
 
 ---
 
