@@ -73,3 +73,7 @@ Betik eski yedekleri silmez. Yedek şifrelidir.
 ## Sınırlar
 
 RustFS imajı dosya sırrı okumaz. Proje adı `marble-erp` kasıtlıdır; değiştirmek hacim önekini oynatır. Swarm komutu yoktur.
+
+## Not / bilinen sadeleştirme
+
+Uygulamanın `*_FILE` sırlarını okuması `SecretFileEnvironmentPostProcessor` ile olur. Boot 4.2 bu işlemciyi yalnızca `META-INF/spring.factories` üzerinden yükler. Kayıt bu dosyaya alındı; bu kasıtlı olarak en küçük düzeltmedir ve sonra yeniden ele alınacaktır. Ayrıntı: [KNOWN_ISSUES.md](KNOWN_ISSUES.md).

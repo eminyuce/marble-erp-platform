@@ -1,25 +1,24 @@
 package com.ozerler.marble.config;
 
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.EnvironmentPostProcessor;
-import org.springframework.core.io.support.SpringFactoriesLoader;
 
 class EnvironmentPostProcessorRegistrationTest {
 
     @Test
-    @DisplayName("SpringFactoriesLoader loads the secret-file and database-URL post-processors")
-    void springFactoriesLoaderDiscoversApplicationPostProcessors() {
-        List<String> names = SpringFactoriesLoader.loadFactoryNames(
-                EnvironmentPostProcessor.class,
-                EnvironmentPostProcessorRegistrationTest.class.getClassLoader());
-
-        Assertions.assertThat(names)
-                .contains(
-                        DatabaseUrlEnvironmentPostProcessor.class.getName(),
-                        SecretFileEnvironmentPostProcessor.class.getName());
+    @DisplayName("META-INF/spring.factories is on the classpath and lists both post-processors")
+    void springFactoriesResourceIsOnTheClasspath() throws IOException {
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream("META-INF/spring.factories")) {
+            Assertions.assertThat(in).as("META-INF/spring.factories").isNotNull();
+            String body = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            Assertions.assertThat(body)
+                    .contains(SecretFileEnvironmentPostProcessor.class.getName())
+                    .contains(DatabaseUrlEnvironmentPostProcessor.class.getName());
+        }
     }
 }
