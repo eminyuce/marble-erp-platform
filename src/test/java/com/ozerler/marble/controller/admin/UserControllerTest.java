@@ -1,26 +1,27 @@
 package com.ozerler.marble.controller.admin;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.dto.UserDto;
-import com.ozerler.marble.model.response.BackEndResponse;
-import com.ozerler.marble.service.UserService;
+import static org.mockito.Mockito.verify;
+
+import java.util.List;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.*;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.UserDto;
+import com.ozerler.marble.model.response.BackEndResponse;
+import com.ozerler.marble.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
@@ -38,22 +39,22 @@ class UserControllerTest {
 
         BackEndResponse response = userController.toggleStatus(userId);
 
-        verify(userService).toggleUserStatus(userId);
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Toggle status successful");
+        Mockito.verify(userService).toggleUserStatus(userId);
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Toggle status successful");
     }
 
     @Test
     @DisplayName("toggleStatus should return fatal BackEndResponse on error")
     void shouldReturnFatalOnToggleStatusError() {
         Long userId = 5L;
-        doThrow(new RuntimeException("User error")).when(userService).toggleUserStatus(userId);
+        Mockito.doThrow(new RuntimeException("User error")).when(userService).toggleUserStatus(userId);
 
         BackEndResponse response = userController.toggleStatus(userId);
 
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
     }
 
     @Test
@@ -63,22 +64,22 @@ class UserControllerTest {
 
         BackEndResponse response = userController.deleteUser(userId);
 
-        verify(userService).softDeleteUser(userId);
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Delete user successful");
+        Mockito.verify(userService).softDeleteUser(userId);
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Delete user successful");
     }
 
     @Test
     @DisplayName("deleteUser should return fatal BackEndResponse on error")
     void shouldReturnFatalOnDeleteUserError() {
         Long userId = 10L;
-        doThrow(new RuntimeException("Delete error")).when(userService).softDeleteUser(userId);
+        Mockito.doThrow(new RuntimeException("Delete error")).when(userService).softDeleteUser(userId);
 
         BackEndResponse response = userController.deleteUser(userId);
 
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
     }
 
     @Test
@@ -88,40 +89,40 @@ class UserControllerTest {
 
         String view = userController.usersPage(model);
 
-        assertThat(view).isEqualTo("admin/users/index");
-        assertThat(model.getAttribute("filterRoles")).isNotNull();
-        assertThat(model.getAttribute("roleLabelMap")).isInstanceOf(java.util.Map.class);
+        Assertions.assertThat(view).isEqualTo("admin/users/index");
+        Assertions.assertThat(model.getAttribute("filterRoles")).isNotNull();
+        Assertions.assertThat(model.getAttribute("roleLabelMap")).isInstanceOf(java.util.Map.class);
     }
 
     @Test
     @DisplayName("getUsersData forwards selected roles for OR filtering")
     void getUsersData_forwardsRoleFilters() {
         TabulatorResponse<UserDto> expected = TabulatorResponse.of(List.of(), 1, 0);
-        when(userService.getUsersPaged(eq(1), eq(25), eq(""), isNull(), isNull(),
-                eq(List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")), eq(true)))
+        Mockito.when(userService.getUsersPaged(ArgumentMatchers.eq(1), ArgumentMatchers.eq(25), ArgumentMatchers.eq(""), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(),
+                ArgumentMatchers.eq(List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")), ArgumentMatchers.eq(true)))
                 .thenReturn(expected);
 
         TabulatorResponse<UserDto> response = userController.getUsersData(
                 1, 25, "", null, null, "ROLE_USER", List.of("ROLE_ADMIN", "ROLE_SALES"), true);
 
-        assertThat(response).isSameAs(expected);
-        verify(userService).getUsersPaged(eq(1), eq(25), eq(""), isNull(), isNull(),
-                eq(List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")), eq(true));
+        Assertions.assertThat(response).isSameAs(expected);
+        Mockito.verify(userService).getUsersPaged(ArgumentMatchers.eq(1), ArgumentMatchers.eq(25), ArgumentMatchers.eq(""), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(),
+                ArgumentMatchers.eq(List.of("ROLE_ADMIN", "ROLE_SALES", "ROLE_USER")), ArgumentMatchers.eq(true));
     }
 
     @Test
     @DisplayName("getUsersData with no roles still requests the unfiltered page")
     void getUsersData_withoutRoles_passesEmptyList() {
         TabulatorResponse<UserDto> expected = TabulatorResponse.of(List.of(), 1, 0);
-        when(userService.getUsersPaged(eq(1), eq(10), isNull(), isNull(), isNull(),
-                eq(List.of()), isNull()))
+        Mockito.when(userService.getUsersPaged(ArgumentMatchers.eq(1), ArgumentMatchers.eq(10), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(),
+                ArgumentMatchers.eq(List.of()), ArgumentMatchers.isNull()))
                 .thenReturn(expected);
 
         TabulatorResponse<UserDto> response = userController.getUsersData(
                 1, 10, null, null, null, null, null, null);
 
-        assertThat(response).isSameAs(expected);
-        verify(userService).getUsersPaged(eq(1), eq(10), isNull(), isNull(), isNull(),
-                eq(List.of()), isNull());
+        Assertions.assertThat(response).isSameAs(expected);
+        Mockito.verify(userService).getUsersPaged(ArgumentMatchers.eq(1), ArgumentMatchers.eq(10), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.isNull(),
+                ArgumentMatchers.eq(List.of()), ArgumentMatchers.isNull());
     }
 }

@@ -1,10 +1,11 @@
 package com.ozerler.marble.dto.form;
 
+import java.math.BigDecimal;
+
 import com.ozerler.marble.model.enums.BusinessUnit;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.math.BigDecimal;
 
 @Getter
 @Setter

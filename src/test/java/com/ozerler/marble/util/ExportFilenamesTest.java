@@ -1,16 +1,16 @@
 package com.ozerler.marble.util;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.service.ReportService;
+import java.time.LocalDateTime;
+import java.util.regex.Pattern;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import java.time.LocalDateTime;
-import java.util.regex.Pattern;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.service.ReportService;
 
 class ExportFilenamesTest {
 
@@ -23,9 +23,9 @@ class ExportFilenamesTest {
     void buildsTimestampedAsciiFilename() {
         String filename = ExportFilenames.build("bloklar", "xlsx", SAMPLE_TIME);
 
-        assertThat(filename).isEqualTo("bloklar_2026-09-15_12-21-45.xlsx");
-        assertThat(filename).doesNotContain(":");
-        assertThat(filename).matches(EXPORT_FILENAME);
+        Assertions.assertThat(filename).isEqualTo("bloklar_2026-09-15_12-21-45.xlsx");
+        Assertions.assertThat(filename).doesNotContain(":");
+        Assertions.assertThat(filename).matches(EXPORT_FILENAME);
     }
 
     @ParameterizedTest
@@ -43,7 +43,7 @@ class ExportFilenamesTest {
     })
     @DisplayName("Preserves Turkish entity stems and the requested extension")
     void preservesEntityStemAndExtension(String entity, String extension, String expected) {
-        assertThat(ExportFilenames.build(entity, extension, SAMPLE_TIME)).isEqualTo(expected);
+        Assertions.assertThat(ExportFilenames.build(entity, extension, SAMPLE_TIME)).isEqualTo(expected);
     }
 
     @Test
@@ -51,33 +51,33 @@ class ExportFilenamesTest {
     void transliteratesTurkishAndStripsUnsupportedCharacters() {
         String filename = ExportFilenames.build("Şantiye Projeleri!", "XLSX", SAMPLE_TIME);
 
-        assertThat(filename).isEqualTo("santiye_projeleri_2026-09-15_12-21-45.xlsx");
-        assertThat(filename).doesNotContain(":", " ", "ş", "Ş", "!");
-        assertThat(filename).matches(EXPORT_FILENAME);
+        Assertions.assertThat(filename).isEqualTo("santiye_projeleri_2026-09-15_12-21-45.xlsx");
+        Assertions.assertThat(filename).doesNotContain(":", " ", "ş", "Ş", "!");
+        Assertions.assertThat(filename).matches(EXPORT_FILENAME);
     }
 
     @Test
     @DisplayName("Uses 24-hour clock including midnight and late evening")
     void usesTwentyFourHourClock() {
-        assertThat(ExportFilenames.build("siparisler", "csv", LocalDateTime.of(2026, 1, 2, 0, 5, 9)))
+        Assertions.assertThat(ExportFilenames.build("siparisler", "csv", LocalDateTime.of(2026, 1, 2, 0, 5, 9)))
                 .isEqualTo("siparisler_2026-01-02_00-05-09.csv");
-        assertThat(ExportFilenames.build("siparisler", "csv", LocalDateTime.of(2026, 1, 2, 23, 59, 59)))
+        Assertions.assertThat(ExportFilenames.build("siparisler", "csv", LocalDateTime.of(2026, 1, 2, 23, 59, 59)))
                 .isEqualTo("siparisler_2026-01-02_23-59-59.csv");
     }
 
     @Test
     @DisplayName("Normalizes a leading dot on the extension and strips one from the entity")
     void normalizesExistingExtensions() {
-        assertThat(ExportFilenames.build("bloklar.csv", ".xlsx", SAMPLE_TIME))
+        Assertions.assertThat(ExportFilenames.build("bloklar.csv", ".xlsx", SAMPLE_TIME))
                 .isEqualTo("bloklar_2026-09-15_12-21-45.xlsx");
-        assertThat(ExportFilenames.build("indirilen", ".pdf", SAMPLE_TIME))
+        Assertions.assertThat(ExportFilenames.build("indirilen", ".pdf", SAMPLE_TIME))
                 .isEqualTo("indirilen_2026-09-15_12-21-45.pdf");
     }
 
     @Test
     @DisplayName("Falls back to the Turkish default stem when the entity name is blank")
     void fallsBackToDefaultStem() {
-        assertThat(ExportFilenames.build("   ", "csv", SAMPLE_TIME))
+        Assertions.assertThat(ExportFilenames.build("   ", "csv", SAMPLE_TIME))
                 .isEqualTo(Constants.FALLBACK_DOWNLOAD_FILENAME + "_2026-09-15_12-21-45.csv");
     }
 
@@ -88,12 +88,12 @@ class ExportFilenamesTest {
             String csv = ExportFilenames.build(type.getExportFilenameStem(), "csv", SAMPLE_TIME);
             String xlsx = ExportFilenames.build(type.getExportFilenameStem(), "xlsx", SAMPLE_TIME);
 
-            assertThat(csv).startsWith(type.getExportFilenameStem() + "_2026-09-15_12-21-45");
-            assertThat(csv).endsWith(".csv");
-            assertThat(xlsx).endsWith(".xlsx");
-            assertThat(csv).matches(EXPORT_FILENAME);
-            assertThat(xlsx).matches(EXPORT_FILENAME);
-            assertThat(csv).doesNotContain(":");
+            Assertions.assertThat(csv).startsWith(type.getExportFilenameStem() + "_2026-09-15_12-21-45");
+            Assertions.assertThat(csv).endsWith(".csv");
+            Assertions.assertThat(xlsx).endsWith(".xlsx");
+            Assertions.assertThat(csv).matches(EXPORT_FILENAME);
+            Assertions.assertThat(xlsx).matches(EXPORT_FILENAME);
+            Assertions.assertThat(csv).doesNotContain(":");
         }
     }
 
@@ -102,15 +102,15 @@ class ExportFilenamesTest {
     void nowUsesSystemDefaultTimezone() {
         String filename = ExportFilenames.build("bloklar", "csv");
 
-        assertThat(filename).matches(EXPORT_FILENAME);
-        assertThat(filename).startsWith("bloklar_");
-        assertThat(filename).endsWith(".csv");
-        assertThat(filename).doesNotContain(":");
+        Assertions.assertThat(filename).matches(EXPORT_FILENAME);
+        Assertions.assertThat(filename).startsWith("bloklar_");
+        Assertions.assertThat(filename).endsWith(".csv");
+        Assertions.assertThat(filename).doesNotContain(":");
 
         String timestamp = filename.substring("bloklar_".length(), filename.length() - ".csv".length());
         LocalDateTime parsed = LocalDateTime.parse(
                 timestamp,
                 java.time.format.DateTimeFormatter.ofPattern(Constants.DATE_TIME_FORMAT_EXPORT_FILENAME));
-        assertThat(parsed).isBetween(LocalDateTime.now().minusSeconds(2), LocalDateTime.now().plusSeconds(2));
+        Assertions.assertThat(parsed).isBetween(LocalDateTime.now().minusSeconds(2), LocalDateTime.now().plusSeconds(2));
     }
 }

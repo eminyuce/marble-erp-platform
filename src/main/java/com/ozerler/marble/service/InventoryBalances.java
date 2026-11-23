@@ -1,5 +1,10 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.Objects;
+
 import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.MachineFuelEntry;
 import com.ozerler.marble.model.StockItem;
@@ -8,11 +13,6 @@ import com.ozerler.marble.model.enums.StockProductType;
 import com.ozerler.marble.repository.MachineFuelEntryRepository;
 import com.ozerler.marble.repository.MachineRepository;
 import com.ozerler.marble.repository.StockItemRepository;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.util.Objects;
 
 /**
  * Shared stock-balance updates for quarry and factory inventory.

@@ -1,10 +1,11 @@
 package com.ozerler.marble.logging;
 
+import org.springframework.stereotype.Component;
+
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
-import org.springframework.stereotype.Component;
 
 /**
  * Publishes live async-appender gauges and drop counters to the Actuator

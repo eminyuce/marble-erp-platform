@@ -1,9 +1,8 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.repository.CustomerRepository;
-import com.ozerler.marble.repository.ProjectLocationRepository;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.repository.SiteConsumptionRepository;
+import java.math.BigDecimal;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,9 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.ProjectLocationRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.SiteConsumptionRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectSiteServiceTest {
@@ -47,7 +47,7 @@ class ProjectSiteServiceTest {
                 plannedArea, scrapPct, availableStock, inProduction
         );
 
-        assertThat(shortfall).isEqualTo(new BigDecimal("40.00"));
+        Assertions.assertThat(shortfall).isEqualTo(new BigDecimal("40.00"));
     }
 
     @Test
@@ -62,7 +62,7 @@ class ProjectSiteServiceTest {
                 plannedArea, scrapPct, availableStock, inProduction
         );
 
-        assertThat(shortfall).isEqualTo(BigDecimal.ZERO);
+        Assertions.assertThat(shortfall).isEqualTo(BigDecimal.ZERO);
     }
 
     @Test
@@ -70,7 +70,7 @@ class ProjectSiteServiceTest {
     void calculateProductionRequirement_NullInputs_SafeHandling() {
         BigDecimal shortfall = projectSiteService.calculateProductionRequirement(null, null, null, null);
 
-        assertThat(shortfall).isEqualTo(BigDecimal.ZERO);
+        Assertions.assertThat(shortfall).isEqualTo(BigDecimal.ZERO);
     }
 
     @Test
@@ -104,9 +104,9 @@ class ProjectSiteServiceTest {
         com.ozerler.marble.dto.TabulatorResponse<com.ozerler.marble.dto.ProjectDto> response =
                 projectSiteService.getProjectsPaged(1, 10, null, "ACTIVE", 10L, null, null);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getData()).hasSize(1);
-        assertThat(response.getData().get(0).getCustomerId()).isEqualTo(10L);
-        assertThat(response.getData().get(0).getCustomerCode()).isEqualTo("AKD-01");
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getData()).hasSize(1);
+        Assertions.assertThat(response.getData().get(0).getCustomerId()).isEqualTo(10L);
+        Assertions.assertThat(response.getData().get(0).getCustomerCode()).isEqualTo("AKD-01");
     }
 }

@@ -1,12 +1,13 @@
 package com.ozerler.marble.mapper;
 
-import com.ozerler.marble.dto.form.SupplierForm;
-import com.ozerler.marble.dto.view.PartyView;
-import com.ozerler.marble.model.Supplier;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
+
+import com.ozerler.marble.dto.form.SupplierForm;
+import com.ozerler.marble.dto.view.PartyView;
+import com.ozerler.marble.model.Supplier;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface SupplierMapper {

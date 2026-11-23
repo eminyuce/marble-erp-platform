@@ -1,13 +1,13 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.model.enums.ExpenseType;
-import com.ozerler.marble.util.MessageUtils;
-
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
+
+import com.ozerler.marble.model.enums.ExpenseType;
+import com.ozerler.marble.util.MessageUtils;
 
 /**
  * Costing period stored as YYYY-MM. Invoice month and costing month may differ.

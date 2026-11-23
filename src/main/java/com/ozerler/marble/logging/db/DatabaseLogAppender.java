@@ -1,15 +1,16 @@
 package com.ozerler.marble.logging.db;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.IThrowableProxy;
-import ch.qos.logback.classic.spi.ThrowableProxyUtil;
-import ch.qos.logback.core.AppenderBase;
-import com.ozerler.marble.common.Constants;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
+
+import com.ozerler.marble.common.Constants;
+
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.IThrowableProxy;
+import ch.qos.logback.classic.spi.ThrowableProxyUtil;
+import ch.qos.logback.core.AppenderBase;
 
 /**
  * Logback appender that sends logging events to the non-blocking {@link DatabaseLogQueue}.

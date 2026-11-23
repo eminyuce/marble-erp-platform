@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.SalesOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Satış siparişleri. Sort keys match {@code GridPages.SALES_ORDER_SORTS}.

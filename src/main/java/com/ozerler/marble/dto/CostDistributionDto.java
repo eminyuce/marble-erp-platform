@@ -1,9 +1,9 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+
 import lombok.Builder;
 import lombok.Getter;
-
-import java.math.BigDecimal;
 
 /**
  * Strongly typed DTO representing cost distribution metrics grouped by cost center.

@@ -1,5 +1,9 @@
 package com.ozerler.marble.util;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -8,12 +12,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 class GridPagesTest {
 
     @Test
@@ -21,39 +19,39 @@ class GridPagesTest {
     void blankSortFieldUsesCreatedDate() {
         Pageable pageable = GridPages.of(1, 25, "", "desc");
 
-        assertThat(pageable.getPageNumber()).isZero();
-        assertThat(pageable.getPageSize()).isEqualTo(25);
-        assertThat(pageable.getSort()).containsExactly(Sort.Order.desc("createdDate"));
+        Assertions.assertThat(pageable.getPageNumber()).isZero();
+        Assertions.assertThat(pageable.getPageSize()).isEqualTo(25);
+        Assertions.assertThat(pageable.getSort()).containsExactly(Sort.Order.desc("createdDate"));
     }
 
     @Test
     @DisplayName("snake_case sort fields are converted to entity camelCase")
     void snakeCaseSortFieldIsCamelized() {
-        assertThat(GridPages.toEntityProperty("order_no")).isEqualTo("orderNo");
-        assertThat(GridPages.toEntityProperty("blockCode")).isEqualTo("blockCode");
+        Assertions.assertThat(GridPages.toEntityProperty("order_no")).isEqualTo("orderNo");
+        Assertions.assertThat(GridPages.toEntityProperty("blockCode")).isEqualTo("blockCode");
     }
 
     @Test
     @DisplayName("DTO statusLabel and snake_case customer_name map onto entity properties")
     void gridColumnNamesMapToEntityProperties() {
-        assertThat(GridPages.of(1, 25, "statusLabel", "asc").getSort())
+        Assertions.assertThat(GridPages.of(1, 25, "statusLabel", "asc").getSort())
                 .containsExactly(Sort.Order.asc("status"));
-        assertThat(GridPages.of(1, 25, "customer_name", "desc", GridPages.SALES_ORDER_SORTS).getSort())
+        Assertions.assertThat(GridPages.of(1, 25, "customer_name", "desc", GridPages.SALES_ORDER_SORTS).getSort())
                 .containsExactly(Sort.Order.desc("customer.companyName"));
-        assertThat(GridPages.of(1, 25, "quarryName", "asc", GridPages.BLOCK_SORTS).getSort())
+        Assertions.assertThat(GridPages.of(1, 25, "quarryName", "asc", GridPages.BLOCK_SORTS).getSort())
                 .containsExactly(Sort.Order.asc("quarry.name"));
-        assertThat(GridPages.of(1, 25, "supplierTypeLabel", "asc", GridPages.SUPPLIER_SORTS).getSort())
+        Assertions.assertThat(GridPages.of(1, 25, "supplierTypeLabel", "asc", GridPages.SUPPLIER_SORTS).getSort())
                 .containsExactly(Sort.Order.asc("supplierType"));
-        assertThat(GridPages.of(1, 25, "businessUnitLabel", "desc", GridPages.MACHINE_SORTS).getSort())
+        Assertions.assertThat(GridPages.of(1, 25, "businessUnitLabel", "desc", GridPages.MACHINE_SORTS).getSort())
                 .containsExactly(Sort.Order.desc("businessUnit"));
     }
 
     @Test
     @DisplayName("blank search becomes null so JPQL null-checks skip LIKE")
     void blankSearchNormalizesToNull() {
-        assertThat(GridPages.normalizeSearch(null)).isNull();
-        assertThat(GridPages.normalizeSearch("  ")).isNull();
-        assertThat(GridPages.normalizeSearch(" SIP-1 ")).isEqualTo("SIP-1");
+        Assertions.assertThat(GridPages.normalizeSearch(null)).isNull();
+        Assertions.assertThat(GridPages.normalizeSearch("  ")).isNull();
+        Assertions.assertThat(GridPages.normalizeSearch(" SIP-1 ")).isEqualTo("SIP-1");
     }
 
     @Test
@@ -65,21 +63,21 @@ class GridPagesTest {
         Page<String> result = GridPages.execute(1, 10, "notAColumn", "asc", pageable -> {
             int call = calls.incrementAndGet();
             if (call == 1) {
-                assertThat(pageable.getSort()).containsExactly(Sort.Order.asc("notAColumn"));
+                Assertions.assertThat(pageable.getSort()).containsExactly(Sort.Order.asc("notAColumn"));
                 throw new InvalidDataAccessApiUsageException("No property 'notAColumn' found");
             }
-            assertThat(pageable.getSort()).containsExactly(Sort.Order.asc("createdDate"));
+            Assertions.assertThat(pageable.getSort()).containsExactly(Sort.Order.asc("createdDate"));
             return fallbackPage;
         });
 
-        assertThat(result).isSameAs(fallbackPage);
-        assertThat(calls.get()).isEqualTo(2);
+        Assertions.assertThat(result).isSameAs(fallbackPage);
+        Assertions.assertThat(calls.get()).isEqualTo(2);
     }
 
     @Test
     @DisplayName("non-sort failures are not retried")
     void unrelatedFailuresAreNotSwallowed() {
-        assertThatThrownBy(() -> GridPages.execute(1, 10, "orderNo", "asc", pageable -> {
+        Assertions.assertThatThrownBy(() -> GridPages.execute(1, 10, "orderNo", "asc", pageable -> {
             throw new IllegalStateException("database down");
         })).isInstanceOf(IllegalStateException.class)
                 .hasMessage("database down");

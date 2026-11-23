@@ -1,13 +1,14 @@
 package com.ozerler.marble.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
+
 import com.ozerler.marble.dto.view.InvoiceRef;
 import com.ozerler.marble.dto.view.InvoiceView;
 import com.ozerler.marble.model.CollectionRecord;
 import com.ozerler.marble.model.Invoice;
 import com.ozerler.marble.model.InvoiceItem;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR,
         uses = {CustomerMapper.class, SupplierMapper.class, ProjectMapper.class, BlockMapper.class, SlabMapper.class,

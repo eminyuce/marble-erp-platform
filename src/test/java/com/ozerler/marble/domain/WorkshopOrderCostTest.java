@@ -1,12 +1,10 @@
 package com.ozerler.marble.domain;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class WorkshopOrderCostTest {
 
@@ -20,15 +18,15 @@ class WorkshopOrderCostTest {
                 new BigDecimal("50"),
                 new BigDecimal("80"),
                 new BigDecimal("20"));
-        assertThat(total).isEqualByComparingTo("1500.00");
+        Assertions.assertThat(total).isEqualByComparingTo("1500.00");
     }
 
     @Test
     @DisplayName("null components count as zero and negatives are rejected")
     void nullAndNegative() {
-        assertThat(WorkshopOrderCost.total(null, null, null, null, null, null))
+        Assertions.assertThat(WorkshopOrderCost.total(null, null, null, null, null, null))
                 .isEqualByComparingTo("0.00");
-        assertThatThrownBy(() -> WorkshopOrderCost.total(new BigDecimal("-1"), BigDecimal.ZERO, BigDecimal.ZERO,
+        Assertions.assertThatThrownBy(() -> WorkshopOrderCost.total(new BigDecimal("-1"), BigDecimal.ZERO, BigDecimal.ZERO,
                 BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO))
                 .isInstanceOf(IllegalArgumentException.class);
     }

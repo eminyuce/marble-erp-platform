@@ -1,11 +1,11 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Model for 'ORDER_CONFIRMATION' email template.

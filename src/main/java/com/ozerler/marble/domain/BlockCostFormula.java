@@ -1,10 +1,10 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.common.Constants;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
+
+import com.ozerler.marble.common.Constants;
 
 /**
  * Ocak blok çıkarma maliyeti hesapları.

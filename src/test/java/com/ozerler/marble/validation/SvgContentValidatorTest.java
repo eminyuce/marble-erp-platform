@@ -1,11 +1,11 @@
 package com.ozerler.marble.validation;
 
-import com.ozerler.marble.exception.FileValidationException;
-import com.ozerler.marble.support.TestFiles;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.ozerler.marble.exception.FileValidationException;
+import com.ozerler.marble.support.TestFiles;
 
 class SvgContentValidatorTest {
 
@@ -20,7 +20,7 @@ class SvgContentValidatorTest {
     @Test
     @DisplayName("SVG with embedded script is rejected")
     void scriptSvg_Rejected() {
-        assertThatThrownBy(() -> validator.validate(TestFiles.maliciousSvg()))
+        Assertions.assertThatThrownBy(() -> validator.validate(TestFiles.maliciousSvg()))
                 .isInstanceOf(FileValidationException.class)
                 .hasMessageContaining("forbidden element");
     }
@@ -29,7 +29,7 @@ class SvgContentValidatorTest {
     @DisplayName("SVG with onload handler is rejected")
     void eventHandlerSvg_Rejected() {
         byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" onload=\"alert(1)\"></svg>".getBytes();
-        assertThatThrownBy(() -> validator.validate(svg))
+        Assertions.assertThatThrownBy(() -> validator.validate(svg))
                 .isInstanceOf(FileValidationException.class);
     }
 
@@ -41,7 +41,7 @@ class SvgContentValidatorTest {
                   <image xlink:href="https://evil.example/x.png"/>
                 </svg>
                 """.getBytes();
-        assertThatThrownBy(() -> validator.validate(svg))
+        Assertions.assertThatThrownBy(() -> validator.validate(svg))
                 .isInstanceOf(FileValidationException.class);
     }
 
@@ -49,14 +49,14 @@ class SvgContentValidatorTest {
     @DisplayName("SVG with javascript URL is rejected")
     void javascriptUrl_Rejected() {
         byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\"><a href=\"javascript:alert(1)\"/></svg>".getBytes();
-        assertThatThrownBy(() -> validator.validate(svg))
+        Assertions.assertThatThrownBy(() -> validator.validate(svg))
                 .isInstanceOf(FileValidationException.class);
     }
 
     @Test
     @DisplayName("non-XML content is rejected")
     void malformed_Rejected() {
-        assertThatThrownBy(() -> validator.validate("not-xml".getBytes()))
+        Assertions.assertThatThrownBy(() -> validator.validate("not-xml".getBytes()))
                 .isInstanceOf(FileValidationException.class);
     }
 }

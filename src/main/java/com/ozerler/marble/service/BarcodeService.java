@@ -1,5 +1,12 @@
 package com.ozerler.marble.service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Base64;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -8,13 +15,8 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.ozerler.marble.common.Constants;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Base64;
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Generates QR code images as Base64-encoded PNGs using ZXing.

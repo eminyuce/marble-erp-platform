@@ -1,10 +1,12 @@
 package com.ozerler.marble.logging;
 
-import com.ozerler.marble.common.Constants;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import com.ozerler.marble.common.Constants;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Bindable counterpart of the Logback {@link AsyncLoggingAppender} settings.

@@ -1,9 +1,9 @@
 package com.ozerler.marble.controller;
 
-import com.ozerler.marble.dto.ChangePasswordRequest;
-import com.ozerler.marble.service.UserService;
+import java.util.Locale;
+
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.MessageSource;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Locale;
+import com.ozerler.marble.dto.ChangePasswordRequest;
+import com.ozerler.marble.service.UserService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/account")

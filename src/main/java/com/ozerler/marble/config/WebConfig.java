@@ -1,14 +1,15 @@
 package com.ozerler.marble.config;
 
-import com.ozerler.marble.web.FormDraftInterceptor;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import com.ozerler.marble.web.FormDraftInterceptor;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {

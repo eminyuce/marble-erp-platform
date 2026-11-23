@@ -1,15 +1,15 @@
 package com.ozerler.marble.mapper;
 
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
 import com.ozerler.marble.dto.form.CustomerForm;
 import com.ozerler.marble.dto.view.PartyView;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CustomerType;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class CustomerMapperTest {
 
@@ -35,15 +35,15 @@ class CustomerMapperTest {
         customer.setCreatedDate(java.time.LocalDateTime.of(2026, 1, 2, 3, 4));
 
         CustomerForm form = mapper.toForm(customer);
-        assertThat(form.getCompanyName()).isEqualTo("Atlas");
-        assertThat(form.getCustomerType()).isEqualTo(CustomerType.CONSTRUCTION);
+        Assertions.assertThat(form.getCompanyName()).isEqualTo("Atlas");
+        Assertions.assertThat(form.getCustomerType()).isEqualTo(CustomerType.CONSTRUCTION);
 
         Customer target = new Customer();
         target.setCreatedDate(customer.getCreatedDate());
         mapper.updateEntity(form, target);
-        assertThat(target.getCompanyName()).isEqualTo("Atlas");
-        assertThat(target.getEmail()).isEqualTo("keep@example.com");
-        assertThat(target.getCreatedDate()).isEqualTo(customer.getCreatedDate());
+        Assertions.assertThat(target.getCompanyName()).isEqualTo("Atlas");
+        Assertions.assertThat(target.getEmail()).isEqualTo("keep@example.com");
+        Assertions.assertThat(target.getCreatedDate()).isEqualTo(customer.getCreatedDate());
     }
 
     @Test
@@ -52,8 +52,8 @@ class CustomerMapperTest {
         Customer customer = Customer.builder().companyName("Atlas").customerType(CustomerType.CONSTRUCTION).build();
         customer.setId(4L);
         PartyView view = mapper.toDto(customer);
-        assertThat(view.getId()).isEqualTo(4L);
-        assertThat(view.getCompanyName()).isEqualTo("Atlas");
-        assertThat(view.getSupplierType()).isNull();
+        Assertions.assertThat(view.getId()).isEqualTo(4L);
+        Assertions.assertThat(view.getCompanyName()).isEqualTo("Atlas");
+        Assertions.assertThat(view.getSupplierType()).isNull();
     }
 }

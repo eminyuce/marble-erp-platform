@@ -1,9 +1,14 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.*;
 
 /**
  * Enterprise catalog and registry for the 10 corporate Özerler Marble ERP email templates.

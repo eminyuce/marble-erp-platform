@@ -1,9 +1,10 @@
 package com.ozerler.marble.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * In-app production deploy settings. Enabled only on the Linux host (prod profile).

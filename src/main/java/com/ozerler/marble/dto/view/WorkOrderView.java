@@ -1,14 +1,15 @@
 package com.ozerler.marble.dto.view;
 
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter

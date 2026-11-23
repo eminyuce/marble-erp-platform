@@ -1,11 +1,11 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.common.Constants;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.Objects;
+
+import com.ozerler.marble.common.Constants;
 
 /**
  * Palet/plaka kümülatif maliyeti: önceki adımın toplamı + bu adımın gerçek gideri,

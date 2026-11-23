@@ -1,14 +1,15 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.ApplicationLogDto;
-import com.ozerler.marble.dto.ApplicationLogKpiDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.exception.ResourceNotFoundException;
-import com.ozerler.marble.model.ApplicationLog;
-import com.ozerler.marble.repository.ApplicationLogRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import jakarta.persistence.criteria.Predicate;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,13 +19,15 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import com.ozerler.marble.dto.ApplicationLogDto;
+import com.ozerler.marble.dto.ApplicationLogKpiDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.exception.ResourceNotFoundException;
+import com.ozerler.marble.model.ApplicationLog;
+import com.ozerler.marble.repository.ApplicationLogRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service

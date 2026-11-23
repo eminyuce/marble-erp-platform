@@ -1,14 +1,5 @@
 package com.ozerler.marble.config;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.YamlPropertySourceLoader;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.StandardEnvironment;
-import org.springframework.core.io.ClassPathResource;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -17,8 +8,15 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.io.ClassPathResource;
 
 class SecretFileEnvironmentPostProcessorTest {
 
@@ -31,7 +29,7 @@ class SecretFileEnvironmentPostProcessorTest {
         Path file = directory.resolve("db_password.txt");
         Files.writeString(file, "correct-horse\n", StandardCharsets.UTF_8);
 
-        assertThat(SecretFileEnvironmentPostProcessor.readSecret("DB_PASSWORD_FILE", file))
+        Assertions.assertThat(SecretFileEnvironmentPostProcessor.readSecret("DB_PASSWORD_FILE", file))
                 .isEqualTo("correct-horse");
     }
 
@@ -41,7 +39,7 @@ class SecretFileEnvironmentPostProcessorTest {
         Path file = directory.resolve("empty.txt");
         Files.writeString(file, "\n", StandardCharsets.UTF_8);
 
-        assertThatThrownBy(() -> SecretFileEnvironmentPostProcessor.readSecret("DB_PASSWORD_FILE", file))
+        Assertions.assertThatThrownBy(() -> SecretFileEnvironmentPostProcessor.readSecret("DB_PASSWORD_FILE", file))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("empty");
     }
@@ -51,7 +49,7 @@ class SecretFileEnvironmentPostProcessorTest {
     void missingFileIsRejected() {
         Path file = directory.resolve("missing.txt");
 
-        assertThatThrownBy(() -> SecretFileEnvironmentPostProcessor.readSecret("DB_PASSWORD_FILE", file))
+        Assertions.assertThatThrownBy(() -> SecretFileEnvironmentPostProcessor.readSecret("DB_PASSWORD_FILE", file))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("readable");
     }
@@ -72,8 +70,8 @@ class SecretFileEnvironmentPostProcessorTest {
                 .load("application-prod", new ClassPathResource("application-prod.yml"))
                 .forEach(source -> environment.getPropertySources().addLast(source));
 
-        assertThat(environment.getProperty("DB_PASSWORD")).isEqualTo("correct-horse");
-        assertThat(environment.getProperty("spring.datasource.password")).isEqualTo("correct-horse");
+        Assertions.assertThat(environment.getProperty("DB_PASSWORD")).isEqualTo("correct-horse");
+        Assertions.assertThat(environment.getProperty("spring.datasource.password")).isEqualTo("correct-horse");
     }
 
     @Test
@@ -83,7 +81,7 @@ class SecretFileEnvironmentPostProcessorTest {
         Files.writeString(file, "secret\n", StandardCharsets.UTF_8);
         Files.setPosixFilePermissions(file, EnumSet.noneOf(PosixFilePermission.class));
 
-        assertThatThrownBy(() -> SecretFileEnvironmentPostProcessor.readSecret("DB_PASSWORD_FILE", file))
+        Assertions.assertThatThrownBy(() -> SecretFileEnvironmentPostProcessor.readSecret("DB_PASSWORD_FILE", file))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("readable");
     }

@@ -1,9 +1,10 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.view.StockItemView;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 
-import java.util.List;
+import com.ozerler.marble.dto.view.StockItemView;
 
 /**
  * Atölye ebatlı stok. The row action opens yeniden ebatlama for the selected item.

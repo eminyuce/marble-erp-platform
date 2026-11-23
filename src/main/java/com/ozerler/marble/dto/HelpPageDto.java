@@ -1,10 +1,11 @@
 package com.ozerler.marble.dto;
 
+import java.time.LocalDate;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Value;
-
-import java.time.LocalDate;
 
 /**
  * Page-specific help payload served to the slide-over panel.

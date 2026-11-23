@@ -1,5 +1,14 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.Year;
+import java.util.List;
+import java.util.Objects;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.BlockCustomerMark;
 import com.ozerler.marble.model.Customer;
@@ -13,15 +22,8 @@ import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.SalesOrderRepository;
 import com.ozerler.marble.util.MessageUtils;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.Year;
-import java.util.List;
-import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

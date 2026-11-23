@@ -1,14 +1,16 @@
 package com.ozerler.marble.config;
 
+import java.time.Duration;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
 
-import java.time.Duration;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * How long a browser may use a presigned GET. Images stay readable for a

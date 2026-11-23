@@ -1,9 +1,9 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.FactoryWorkOrderSummaryDto;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.FactoryWorkOrderSummaryDto;
 
 /**
  * Fabrika blok kabul listesi. Rows are already loaded and paged in memory. Columns are not sortable.

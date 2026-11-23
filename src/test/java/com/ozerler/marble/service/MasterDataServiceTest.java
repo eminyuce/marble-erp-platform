@@ -1,5 +1,23 @@
 package com.ozerler.marble.service;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.SupplierDto;
 import com.ozerler.marble.dto.TabulatorResponse;
@@ -26,28 +44,6 @@ import com.ozerler.marble.repository.QuarryRepository;
 import com.ozerler.marble.repository.SalesOrderRepository;
 import com.ozerler.marble.repository.StockLocationRepository;
 import com.ozerler.marble.repository.SupplierRepository;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MasterDataServiceTest {
@@ -93,12 +89,12 @@ class MasterDataServiceTest {
                 supplierRepository, costCenterRepository, machineFuelEntryRepository, blockRepository,
                 salesOrderRepository, purchaseOrderRepository, costTransactionRepository,
                 blockCustomerMarkRepository, invoiceRepository, collectionRecordRepository,
-                org.mockito.Mockito.mock(com.ozerler.marble.mapper.CustomerMapper.class),
-                org.mockito.Mockito.mock(com.ozerler.marble.mapper.SupplierMapper.class),
-                org.mockito.Mockito.mock(com.ozerler.marble.mapper.MachineMapper.class),
-                org.mockito.Mockito.mock(com.ozerler.marble.mapper.QuarryMapper.class),
-                org.mockito.Mockito.mock(com.ozerler.marble.mapper.StockLocationMapper.class),
-                org.mockito.Mockito.mock(com.ozerler.marble.mapper.CostCenterMapper.class));
+                Mockito.mock(com.ozerler.marble.mapper.CustomerMapper.class),
+                Mockito.mock(com.ozerler.marble.mapper.SupplierMapper.class),
+                Mockito.mock(com.ozerler.marble.mapper.MachineMapper.class),
+                Mockito.mock(com.ozerler.marble.mapper.QuarryMapper.class),
+                Mockito.mock(com.ozerler.marble.mapper.StockLocationMapper.class),
+                Mockito.mock(com.ozerler.marble.mapper.CostCenterMapper.class));
     }
 
     @AfterEach
@@ -109,8 +105,8 @@ class MasterDataServiceTest {
     @Test
     @DisplayName("machine codes are uppercased with Locale.ROOT so Turkish i stays I")
     void saveMachine_NormalizesCodeWithRootLocale() {
-        when(machineRepository.findByCode("MAK-I1")).thenReturn(Optional.empty());
-        when(machineRepository.save(any(Machine.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(machineRepository.findByCode("MAK-I1")).thenReturn(Optional.empty());
+        Mockito.when(machineRepository.save(ArgumentMatchers.any(Machine.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Machine saved = masterDataService.saveMachine(Machine.builder()
                 .code("mak-i1")
@@ -119,16 +115,16 @@ class MasterDataServiceTest {
                 .machineType(MachineType.GANGSAW)
                 .build());
 
-        assertThat(saved.getCode()).isEqualTo("MAK-I1");
+        Assertions.assertThat(saved.getCode()).isEqualTo("MAK-I1");
     }
 
     @Test
     @DisplayName("duplicate machine codes are rejected")
     void saveMachine_DuplicateCode_Throws() {
         Machine existing = Machine.builder().id(9L).code("MK-01").name("Eski").build();
-        when(machineRepository.findByCode("MK-01")).thenReturn(Optional.of(existing));
+        Mockito.when(machineRepository.findByCode("MK-01")).thenReturn(Optional.of(existing));
 
-        assertThatThrownBy(() -> masterDataService.saveMachine(Machine.builder()
+        Assertions.assertThatThrownBy(() -> masterDataService.saveMachine(Machine.builder()
                 .code("mk-01")
                 .name("Yeni")
                 .businessUnit(BusinessUnit.FACTORY)
@@ -136,25 +132,25 @@ class MasterDataServiceTest {
                 .build()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("MK-01");
-        verify(machineRepository, never()).save(any());
+        Mockito.verify(machineRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("machines with fuel entries cannot be deleted")
     void deleteMachine_WithFuel_Throws() {
-        when(machineRepository.findById(3L)).thenReturn(Optional.of(
+        Mockito.when(machineRepository.findById(3L)).thenReturn(Optional.of(
                 Machine.builder().id(3L).code("OCK-1").name("Loder").build()));
-        when(machineFuelEntryRepository.existsByMachineId(3L)).thenReturn(true);
+        Mockito.when(machineFuelEntryRepository.existsByMachineId(3L)).thenReturn(true);
 
-        assertThatThrownBy(() -> masterDataService.deleteMachine(3L))
+        Assertions.assertThatThrownBy(() -> masterDataService.deleteMachine(3L))
                 .isInstanceOf(IllegalStateException.class);
-        verify(machineRepository, never()).delete(any());
+        Mockito.verify(machineRepository, Mockito.never()).delete(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("seeded core stock locations cannot be deleted")
     void deleteStockLocation_CoreCode_Throws() {
-        when(stockLocationRepository.findById(1L)).thenReturn(Optional.of(StockLocation.builder()
+        Mockito.when(stockLocationRepository.findById(1L)).thenReturn(Optional.of(StockLocation.builder()
                 .id(1L)
                 .code(Constants.STOCK_LOCATION_PRODUCTION_YARD)
                 .name("Üretim Sahası")
@@ -162,48 +158,48 @@ class MasterDataServiceTest {
                 .locationType(StockLocationType.PRODUCTION_YARD)
                 .build()));
 
-        assertThatThrownBy(() -> masterDataService.deleteStockLocation(1L))
+        Assertions.assertThatThrownBy(() -> masterDataService.deleteStockLocation(1L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining(Constants.STOCK_LOCATION_PRODUCTION_YARD);
-        verify(stockLocationRepository, never()).delete(any());
+        Mockito.verify(stockLocationRepository, Mockito.never()).delete(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("customers with sales orders cannot be deleted")
     void deleteCustomer_WithOrders_Throws() {
-        when(customerRepository.findById(4L)).thenReturn(Optional.of(
+        Mockito.when(customerRepository.findById(4L)).thenReturn(Optional.of(
                 Customer.builder().id(4L).customerCode("C-1").companyName("Firma").build()));
-        when(salesOrderRepository.existsByCustomerId(4L)).thenReturn(true);
+        Mockito.when(salesOrderRepository.existsByCustomerId(4L)).thenReturn(true);
 
-        assertThatThrownBy(() -> masterDataService.deleteCustomer(4L))
+        Assertions.assertThatThrownBy(() -> masterDataService.deleteCustomer(4L))
                 .isInstanceOf(IllegalStateException.class);
-        verify(customerRepository, never()).delete(any());
+        Mockito.verify(customerRepository, Mockito.never()).delete(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("customers with sold quarry blocks cannot be deleted")
     void deleteCustomer_WithSoldBlock_Throws() {
-        when(customerRepository.findById(8L)).thenReturn(Optional.of(
+        Mockito.when(customerRepository.findById(8L)).thenReturn(Optional.of(
                 Customer.builder().id(8L).customerCode("C-8").companyName("Alıcı").build()));
-        when(salesOrderRepository.existsByCustomerId(8L)).thenReturn(false);
-        when(blockCustomerMarkRepository.existsByCustomerId(8L)).thenReturn(false);
-        when(blockRepository.existsBySoldCustomer_Id(8L)).thenReturn(true);
+        Mockito.when(salesOrderRepository.existsByCustomerId(8L)).thenReturn(false);
+        Mockito.when(blockCustomerMarkRepository.existsByCustomerId(8L)).thenReturn(false);
+        Mockito.when(blockRepository.existsBySoldCustomer_Id(8L)).thenReturn(true);
 
-        assertThatThrownBy(() -> masterDataService.deleteCustomer(8L))
+        Assertions.assertThatThrownBy(() -> masterDataService.deleteCustomer(8L))
                 .isInstanceOf(IllegalStateException.class);
-        verify(customerRepository, never()).delete(any());
+        Mockito.verify(customerRepository, Mockito.never()).delete(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("suppliers without purchase orders can be deleted")
     void deleteSupplier_WithoutOrders_Deletes() {
         Supplier supplier = Supplier.builder().id(5L).supplierCode("T-1").companyName("Tedarik").build();
-        when(supplierRepository.findById(5L)).thenReturn(Optional.of(supplier));
-        when(purchaseOrderRepository.existsBySupplierId(5L)).thenReturn(false);
+        Mockito.when(supplierRepository.findById(5L)).thenReturn(Optional.of(supplier));
+        Mockito.when(purchaseOrderRepository.existsBySupplierId(5L)).thenReturn(false);
 
         masterDataService.deleteSupplier(5L);
 
-        verify(supplierRepository).delete(supplier);
+        Mockito.verify(supplierRepository).delete(supplier);
     }
 
     @Test
@@ -215,28 +211,28 @@ class MasterDataServiceTest {
                 .companyName("Kaya Elmas")
                 .supplierType(SupplierType.CONSUMABLE)
                 .build();
-        when(supplierRepository.search(isNull(), isNull(), any(Pageable.class)))
+        Mockito.when(supplierRepository.search(ArgumentMatchers.isNull(), ArgumentMatchers.isNull(), ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(supplier), PageRequest.of(0, 25), 1));
 
         TabulatorResponse<SupplierDto> response =
                 masterDataService.getSuppliersPaged(1, 25, null, null, "companyName", "asc");
 
-        assertThat(response.getData()).hasSize(1);
-        assertThat(response.getData().get(0).getSupplierCode()).isEqualTo("SUPP-1");
-        assertThat(response.getData().get(0).getCompanyName()).isEqualTo("Kaya Elmas");
-        assertThat(response.getTotal()).isEqualTo(1);
-        assertThat(response.getLast_page()).isEqualTo(1);
+        Assertions.assertThat(response.getData()).hasSize(1);
+        Assertions.assertThat(response.getData().get(0).getSupplierCode()).isEqualTo("SUPP-1");
+        Assertions.assertThat(response.getData().get(0).getCompanyName()).isEqualTo("Kaya Elmas");
+        Assertions.assertThat(response.getTotal()).isEqualTo(1);
+        Assertions.assertThat(response.getLast_page()).isEqualTo(1);
     }
 
     @Test
     @DisplayName("cost centers with transactions cannot be deleted")
     void deleteCostCenter_WithTransactions_Throws() {
-        when(costCenterRepository.findById(7L)).thenReturn(Optional.of(
+        Mockito.when(costCenterRepository.findById(7L)).thenReturn(Optional.of(
                 CostCenter.builder().id(7L).code("CC-001").name("Ocak").build()));
-        when(costTransactionRepository.countByCostCenterId(7L)).thenReturn(2L);
+        Mockito.when(costTransactionRepository.countByCostCenterId(7L)).thenReturn(2L);
 
-        assertThatThrownBy(() -> masterDataService.deleteCostCenter(7L))
+        Assertions.assertThatThrownBy(() -> masterDataService.deleteCostCenter(7L))
                 .isInstanceOf(IllegalStateException.class);
-        verify(costCenterRepository, never()).delete(any());
+        Mockito.verify(costCenterRepository, Mockito.never()).delete(ArgumentMatchers.any());
     }
 }

@@ -1,9 +1,9 @@
 package com.ozerler.marble.model.enums;
 
-import com.ozerler.marble.util.MessageUtils;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.ozerler.marble.util.MessageUtils;
 
 /**
  * Named application roles and their localized display labels.

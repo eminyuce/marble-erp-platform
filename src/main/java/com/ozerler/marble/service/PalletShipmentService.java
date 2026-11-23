@@ -1,5 +1,16 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.MaterialLot;
 import com.ozerler.marble.model.Pallet;
@@ -8,9 +19,15 @@ import com.ozerler.marble.model.PalletLocationMovement;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.Shipment;
 import com.ozerler.marble.model.ShipmentItem;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.StockItem;
 import com.ozerler.marble.model.StockLocation;
+import com.ozerler.marble.model.StockMovement;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.MaterialLotStatus;
+import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.model.enums.StockMovementType;
 import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.MaterialLotRepository;
 import com.ozerler.marble.repository.PalletItemRepository;
@@ -19,30 +36,14 @@ import com.ozerler.marble.repository.PalletRepository;
 import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.ShipmentItemRepository;
 import com.ozerler.marble.repository.ShipmentRepository;
-import com.ozerler.marble.repository.StockLocationRepository;
-import com.ozerler.marble.util.MessageUtils;
-import com.ozerler.marble.util.UniqueCodes;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.ozerler.marble.model.Slab;
-import com.ozerler.marble.model.StockItem;
-import com.ozerler.marble.model.StockMovement;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.SlabStatus;
-import com.ozerler.marble.model.enums.StockMovementType;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockItemRepository;
+import com.ozerler.marble.repository.StockLocationRepository;
 import com.ozerler.marble.repository.StockMovementRepository;
-import java.math.RoundingMode;
+import com.ozerler.marble.util.MessageUtils;
+import com.ozerler.marble.util.UniqueCodes;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

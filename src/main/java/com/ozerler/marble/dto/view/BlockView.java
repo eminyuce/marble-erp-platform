@@ -1,13 +1,14 @@
 package com.ozerler.marble.dto.view;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.StockLocationType;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Getter
 @Setter

@@ -1,12 +1,13 @@
 package com.ozerler.marble.mapper;
 
-import com.ozerler.marble.dto.form.StockLocationForm;
-import com.ozerler.marble.dto.view.BlockView;
-import com.ozerler.marble.model.StockLocation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
+
+import com.ozerler.marble.dto.form.StockLocationForm;
+import com.ozerler.marble.dto.view.BlockView;
+import com.ozerler.marble.model.StockLocation;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface StockLocationMapper {

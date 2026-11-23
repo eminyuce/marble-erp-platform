@@ -1,15 +1,16 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.Slab;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * Data Transfer Object representing slab inventory details.

@@ -1,20 +1,10 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.dto.view.CheckRef;
-import com.ozerler.marble.dto.view.CollectionRef;
-import com.ozerler.marble.common.Constants;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
-import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.CheckStatus;
-import com.ozerler.marble.model.enums.CollectionMethod;
-import com.ozerler.marble.service.CollectionService;
-import com.ozerler.marble.web.CheckGrid;
-import com.ozerler.marble.web.CollectionGrid;
-import com.ozerler.marble.web.ListQuery;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -28,10 +18,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.CheckRef;
+import com.ozerler.marble.dto.view.CollectionRef;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.CheckStatus;
+import com.ozerler.marble.model.enums.CollectionMethod;
+import com.ozerler.marble.service.CollectionService;
+import com.ozerler.marble.web.CheckGrid;
+import com.ozerler.marble.web.CollectionGrid;
+import com.ozerler.marble.web.ListQuery;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/collections")

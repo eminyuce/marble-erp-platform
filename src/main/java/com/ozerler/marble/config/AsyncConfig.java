@@ -1,11 +1,12 @@
 package com.ozerler.marble.config;
 
-import com.ozerler.marble.common.Constants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
+
+import com.ozerler.marble.common.Constants;
 
 @Configuration
 public class AsyncConfig {

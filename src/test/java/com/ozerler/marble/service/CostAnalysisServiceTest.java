@@ -1,5 +1,19 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.ozerler.marble.dto.CostAnalysisDto;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.StockLocationType;
@@ -8,21 +22,6 @@ import com.ozerler.marble.repository.CostTransactionRepository;
 import com.ozerler.marble.repository.FactoryOperationRepository;
 import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.WorkshopOperationRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CostAnalysisServiceTest {
@@ -49,29 +48,29 @@ class CostAnalysisServiceTest {
     @Test
     @DisplayName("factory m2 cost includes incoming quarry block extraction cost")
     void factoryAnalysisIncludesIncomingBlockCost() {
-        when(costTransactionRepository.sumByUnitAndPeriod(eq(BusinessUnit.FACTORY), eq("2026-09")))
+        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.eq("2026-09")))
                 .thenReturn(new BigDecimal("1000"));
-        when(costTransactionRepository.sumByUnitAndPeriod(eq(BusinessUnit.FACTORY), eq("2026-08")))
+        Mockito.when(costTransactionRepository.sumByUnitAndPeriod(ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.eq("2026-08")))
                 .thenReturn(BigDecimal.ZERO);
-        when(factoryOperationRepository.aggregateQuantitiesByProcessType()).thenReturn(List.of());
-        when(costTransactionRepository.sumByCategoryForUnitAndPeriod(eq(BusinessUnit.FACTORY), eq("2026-09")))
+        Mockito.when(factoryOperationRepository.aggregateQuantitiesByProcessType()).thenReturn(List.of());
+        Mockito.when(costTransactionRepository.sumByCategoryForUnitAndPeriod(ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.eq("2026-09")))
                 .thenReturn(List.of());
-        when(costTransactionRepository.findByBusinessUnitAndExpensePeriod(eq(BusinessUnit.FACTORY), eq("2026-09")))
+        Mockito.when(costTransactionRepository.findByBusinessUnitAndExpensePeriod(ArgumentMatchers.eq(BusinessUnit.FACTORY), ArgumentMatchers.eq("2026-09")))
                 .thenReturn(List.of());
-        when(blockRepository.sumExtractionCostMovedTo(eq(StockLocationType.FACTORY_BLOCK_YARD),
-                any(LocalDateTime.class), any(LocalDateTime.class)))
+        Mockito.when(blockRepository.sumExtractionCostMovedTo(ArgumentMatchers.eq(StockLocationType.FACTORY_BLOCK_YARD),
+                ArgumentMatchers.any(LocalDateTime.class), ArgumentMatchers.any(LocalDateTime.class)))
                 .thenReturn(new BigDecimal("400"));
 
         CostAnalysisDto withBlocks = service.analyze(BusinessUnit.FACTORY, "2026-09");
 
-        when(blockRepository.sumExtractionCostMovedTo(eq(StockLocationType.FACTORY_BLOCK_YARD),
-                any(LocalDateTime.class), any(LocalDateTime.class)))
+        Mockito.when(blockRepository.sumExtractionCostMovedTo(ArgumentMatchers.eq(StockLocationType.FACTORY_BLOCK_YARD),
+                ArgumentMatchers.any(LocalDateTime.class), ArgumentMatchers.any(LocalDateTime.class)))
                 .thenReturn(BigDecimal.ZERO);
         CostAnalysisDto withoutBlocks = service.analyze(BusinessUnit.FACTORY, "2026-09");
 
-        assertThat(withBlocks.getIncomingBlockCost()).isEqualByComparingTo("400");
-        assertThat(withBlocks.getTotalExpense()).isEqualByComparingTo("1400");
-        assertThat(withoutBlocks.getTotalExpense()).isEqualByComparingTo("1000");
-        assertThat(withBlocks.getTotalExpense()).isNotEqualByComparingTo(withoutBlocks.getTotalExpense());
+        Assertions.assertThat(withBlocks.getIncomingBlockCost()).isEqualByComparingTo("400");
+        Assertions.assertThat(withBlocks.getTotalExpense()).isEqualByComparingTo("1400");
+        Assertions.assertThat(withoutBlocks.getTotalExpense()).isEqualByComparingTo("1000");
+        Assertions.assertThat(withBlocks.getTotalExpense()).isNotEqualByComparingTo(withoutBlocks.getTotalExpense());
     }
 }

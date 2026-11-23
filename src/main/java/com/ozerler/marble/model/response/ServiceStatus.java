@@ -1,9 +1,9 @@
 package com.ozerler.marble.model.response;
 
-import org.springframework.http.HttpStatus;
-
 import java.io.Serializable;
 import java.util.Objects;
+
+import org.springframework.http.HttpStatus;
 
 /**
  * Encapsulates the HTTP status and application-level status details.

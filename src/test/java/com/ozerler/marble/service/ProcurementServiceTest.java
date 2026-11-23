@@ -1,5 +1,19 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.util.Optional;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.PurchaseOrder;
@@ -11,23 +25,6 @@ import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.PurchaseOrderRepository;
 import com.ozerler.marble.repository.SupplierRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProcurementServiceTest {
@@ -55,19 +52,19 @@ class ProcurementServiceTest {
     @Test
     @DisplayName("purchase orders require a business unit")
     void createPurchaseOrder_MissingUnit_Throws() {
-        assertThatThrownBy(() -> procurementService.createPurchaseOrder(
+        Assertions.assertThatThrownBy(() -> procurementService.createPurchaseOrder(
                 "SIP-1", 1L, null, null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
-        verify(purchaseOrderRepository, never()).save(any());
+        Mockito.verify(purchaseOrderRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("site purchases require a project")
     void createPurchaseOrder_SiteWithoutProject_Throws() {
-        assertThatThrownBy(() -> procurementService.createPurchaseOrder(
+        Assertions.assertThatThrownBy(() -> procurementService.createPurchaseOrder(
                 "SIP-1", 1L, null, BusinessUnit.SITE, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
-        verify(purchaseOrderRepository, never()).save(any());
+        Mockito.verify(purchaseOrderRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test
@@ -86,19 +83,19 @@ class ProcurementServiceTest {
                 .build();
         CostCenter siteCenter = CostCenter.builder().id(5L).code("CC-005").name("Şantiyeler").businessUnit(BusinessUnit.SITE).build();
 
-        when(purchaseOrderRepository.findWithDetailsById(10L)).thenReturn(Optional.of(order));
-        when(costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE))
+        Mockito.when(purchaseOrderRepository.findWithDetailsById(10L)).thenReturn(Optional.of(order));
+        Mockito.when(costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE))
                 .thenReturn(Optional.of(siteCenter));
-        when(purchaseOrderRepository.save(any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Mockito.when(purchaseOrderRepository.save(ArgumentMatchers.any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         procurementService.updateStatus(10L, PurchaseOrderStatus.CONFIRMED);
 
         ArgumentCaptor<ExpenseService.ExpenseDraft> expense = ArgumentCaptor.forClass(ExpenseService.ExpenseDraft.class);
-        verify(expenseService).recordExpense(expense.capture());
-        assertThat(expense.getValue().businessUnit()).isEqualTo(BusinessUnit.SITE);
-        assertThat(expense.getValue().centerId()).isEqualTo(5L);
-        assertThat(expense.getValue().amount()).isEqualByComparingTo("2500");
-        assertThat(expense.getValue().project()).isEqualTo(project);
-        assertThat(order.getStatus()).isEqualTo(PurchaseOrderStatus.CONFIRMED);
+        Mockito.verify(expenseService).recordExpense(expense.capture());
+        Assertions.assertThat(expense.getValue().businessUnit()).isEqualTo(BusinessUnit.SITE);
+        Assertions.assertThat(expense.getValue().centerId()).isEqualTo(5L);
+        Assertions.assertThat(expense.getValue().amount()).isEqualByComparingTo("2500");
+        Assertions.assertThat(expense.getValue().project()).isEqualTo(project);
+        Assertions.assertThat(order.getStatus()).isEqualTo(PurchaseOrderStatus.CONFIRMED);
     }
 }

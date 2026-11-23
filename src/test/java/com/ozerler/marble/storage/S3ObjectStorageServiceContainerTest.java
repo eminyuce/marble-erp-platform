@@ -1,7 +1,13 @@
 package com.ozerler.marble.storage;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import com.ozerler.marble.config.PresignedUrlProperties;
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
@@ -9,6 +15,10 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+
+import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.config.PresignedUrlProperties;
+
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
@@ -18,15 +28,6 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-
-import java.io.ByteArrayInputStream;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers(disabledWithoutDocker = true)
 class S3ObjectStorageServiceContainerTest {
@@ -67,15 +68,15 @@ class S3ObjectStorageServiceContainerTest {
             byte[] payload = "rustfs-integration".getBytes(StandardCharsets.UTF_8);
             storage.upload(key, new ByteArrayInputStream(payload), payload.length, "text/plain");
 
-            assertThat(storage.exists(key)).isTrue();
-            assertThat(storage.download(key).readAllBytes()).isEqualTo(payload);
-            assertThat(storage.createPresignedUrl(key, Duration.ofMinutes(5)))
+            Assertions.assertThat(storage.exists(key)).isTrue();
+            Assertions.assertThat(storage.download(key).readAllBytes()).isEqualTo(payload);
+            Assertions.assertThat(storage.createPresignedUrl(key, Duration.ofMinutes(5)))
                     .startsWith(endpoint)
                     .contains(key);
-            assertThat(storage.checkHealth().getStatus()).isEqualTo("UP");
+            Assertions.assertThat(storage.checkHealth().getStatus()).isEqualTo("UP");
 
             storage.delete(key);
-            assertThat(storage.exists(key)).isFalse();
+            Assertions.assertThat(storage.exists(key)).isFalse();
         }
     }
 
@@ -103,13 +104,13 @@ class S3ObjectStorageServiceContainerTest {
 
             URI image = URI.create(imageUrl);
             URI document = URI.create(documentUrl);
-            assertThat(image.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
-            assertThat(document.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
-            assertThat(image.getHost()).isNotEqualTo(URI.create(internalEndpoint).getHost());
-            assertThat(image.getAuthority()).doesNotContain(":" + rustfs.getMappedPort(9000));
-            assertThat(queryParams(imageUrl)).containsEntry("X-Amz-Expires", "1800");
-            assertThat(queryParams(documentUrl)).containsEntry("X-Amz-Expires", "300");
-            assertThat(imageUrl).contains("response-content-type=");
+            Assertions.assertThat(image.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
+            Assertions.assertThat(document.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
+            Assertions.assertThat(image.getHost()).isNotEqualTo(URI.create(internalEndpoint).getHost());
+            Assertions.assertThat(image.getAuthority()).doesNotContain(":" + rustfs.getMappedPort(9000));
+            Assertions.assertThat(queryParams(imageUrl)).containsEntry("X-Amz-Expires", "1800");
+            Assertions.assertThat(queryParams(documentUrl)).containsEntry("X-Amz-Expires", "300");
+            Assertions.assertThat(imageUrl).contains("response-content-type=");
         }
     }
 

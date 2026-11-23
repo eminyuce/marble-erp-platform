@@ -1,17 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import com.ozerler.marble.model.FileStorage;
-import com.ozerler.marble.repository.FileStorageRepository;
-import com.ozerler.marble.storage.FileObjectKeyFactory;
-import com.ozerler.marble.storage.ObjectStorageService;
-import com.ozerler.marble.util.Filenames;
-import com.ozerler.marble.validation.FileUploadValidator;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -21,6 +9,20 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.model.FileStorage;
+import com.ozerler.marble.repository.FileStorageRepository;
+import com.ozerler.marble.storage.FileObjectKeyFactory;
+import com.ozerler.marble.storage.ObjectStorageService;
+import com.ozerler.marble.util.Filenames;
+import com.ozerler.marble.validation.FileUploadValidator;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Idempotent migration of leftover local-disk files into RustFS.

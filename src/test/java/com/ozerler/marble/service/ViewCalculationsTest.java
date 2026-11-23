@@ -4,6 +4,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import com.ozerler.marble.dto.view.FuelPeriodSummary;
 import com.ozerler.marble.dto.view.SiteViews;
 import com.ozerler.marble.mapper.SiteMapper;
@@ -14,13 +22,6 @@ import com.ozerler.marble.model.ProjectLocation;
 import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.repository.MachineFuelEntryRepository;
 import com.ozerler.marble.repository.ProjectLocationRepository;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 
 /**
  * The figures that used to be computed in controllers or entity getters are now produced by services.

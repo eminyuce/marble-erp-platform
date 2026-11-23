@@ -1,15 +1,14 @@
 package com.ozerler.marble.validation;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import com.ozerler.marble.exception.FileValidationException;
-import com.ozerler.marble.support.TestFiles;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.exception.FileValidationException;
+import com.ozerler.marble.support.TestFiles;
 
 class FileUploadValidatorTest {
 
@@ -33,15 +32,15 @@ class FileUploadValidatorTest {
     void validPng() {
         MockMultipartFile file = new MockMultipartFile("file", "a.png", "image/png", TestFiles.png());
         FileUploadValidator.ValidatedUpload result = validator.validate(file);
-        assertThat(result.cleanExtension()).isEqualTo("png");
-        assertThat(result.mimeType()).isEqualTo("image/png");
+        Assertions.assertThat(result.cleanExtension()).isEqualTo("png");
+        Assertions.assertThat(result.mimeType()).isEqualTo("image/png");
     }
 
     @Test
     @DisplayName("valid WebP is accepted")
     void validWebp() {
         MockMultipartFile file = new MockMultipartFile("file", "a.webp", "image/webp", TestFiles.webp());
-        assertThat(validator.validate(file).cleanExtension()).isEqualTo("webp");
+        Assertions.assertThat(validator.validate(file).cleanExtension()).isEqualTo("webp");
     }
 
     @Test
@@ -50,7 +49,7 @@ class FileUploadValidatorTest {
         byte[] big = new byte[2048];
         System.arraycopy(TestFiles.jpeg(), 0, big, 0, TestFiles.jpeg().length);
         MockMultipartFile file = new MockMultipartFile("file", "big.jpg", "image/jpeg", big);
-        assertThatThrownBy(() -> validator.validate(file))
+        Assertions.assertThatThrownBy(() -> validator.validate(file))
                 .isInstanceOf(FileValidationException.class)
                 .hasMessageContaining("maximum");
     }
@@ -59,7 +58,7 @@ class FileUploadValidatorTest {
     @DisplayName("empty file is rejected")
     void emptyFile() {
         MockMultipartFile file = new MockMultipartFile("file", "a.jpg", "image/jpeg", new byte[0]);
-        assertThatThrownBy(() -> validator.validate(file))
+        Assertions.assertThatThrownBy(() -> validator.validate(file))
                 .isInstanceOf(FileValidationException.class);
     }
 
@@ -69,15 +68,15 @@ class FileUploadValidatorTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "jeoloji.md", "text/markdown", "# Ocak notu".getBytes());
         FileUploadValidator.ValidatedUpload result = validator.validate(file);
-        assertThat(result.cleanExtension()).isEqualTo("md");
-        assertThat(result.mimeType()).isEqualTo("text/markdown");
+        Assertions.assertThat(result.cleanExtension()).isEqualTo("md");
+        Assertions.assertThat(result.mimeType()).isEqualTo("text/markdown");
     }
 
     @Test
     @DisplayName("invalid extension is rejected")
     void invalidExtension() {
         MockMultipartFile file = new MockMultipartFile("file", "a.exe", "application/octet-stream", "MZ".getBytes());
-        assertThatThrownBy(() -> validator.validate(file))
+        Assertions.assertThatThrownBy(() -> validator.validate(file))
                 .isInstanceOf(FileValidationException.class);
     }
 
@@ -86,14 +85,14 @@ class FileUploadValidatorTest {
     void clientContentTypeIsIgnored() {
         MockMultipartFile file = new MockMultipartFile("file", "a.jpg", "application/pdf", TestFiles.jpeg());
         FileUploadValidator.ValidatedUpload result = validator.validate(file);
-        assertThat(result.mimeType()).isEqualTo("image/jpeg");
+        Assertions.assertThat(result.mimeType()).isEqualTo("image/jpeg");
     }
 
     @Test
     @DisplayName("content whose detected type is outside the allowlist is rejected")
     void detectedTypeOutsideAllowlist() {
         MockMultipartFile file = new MockMultipartFile("file", "data.csv", "text/csv", TestFiles.png());
-        assertThatThrownBy(() -> validator.validate(file))
+        Assertions.assertThatThrownBy(() -> validator.validate(file))
                 .isInstanceOf(FileValidationException.class)
                 .hasMessageContaining("content type");
     }
@@ -102,10 +101,10 @@ class FileUploadValidatorTest {
     @DisplayName("Tika detects markdown and the stored type stays text/markdown")
     void markdownDetectionUsesTika() {
         byte[] content = "# Ocak notu".getBytes();
-        assertThat(FileUploadValidator.detectMimeType("jeoloji.md", content)).isEqualTo("text/markdown");
+        Assertions.assertThat(FileUploadValidator.detectMimeType("jeoloji.md", content)).isEqualTo("text/markdown");
 
         MockMultipartFile file = new MockMultipartFile("file", "jeoloji.md", "application/octet-stream", content);
-        assertThat(validator.validate(file).mimeType()).isEqualTo("text/markdown");
+        Assertions.assertThat(validator.validate(file).mimeType()).isEqualTo("text/markdown");
     }
 
     @Test
@@ -113,7 +112,7 @@ class FileUploadValidatorTest {
     void plainTextXlsIsRejected() {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "notes.xls", "application/vnd.ms-excel", "fake-xls-content".getBytes());
-        assertThatThrownBy(() -> validator.validate(file))
+        Assertions.assertThatThrownBy(() -> validator.validate(file))
                 .isInstanceOf(FileValidationException.class)
                 .hasMessageContaining("content type");
     }
@@ -123,7 +122,7 @@ class FileUploadValidatorTest {
     void oleXlsIsAccepted() {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "sheet.xls", "application/octet-stream", TestFiles.oleCompound());
-        assertThat(validator.validate(file).mimeType()).isEqualTo("application/vnd.ms-excel");
+        Assertions.assertThat(validator.validate(file).mimeType()).isEqualTo("application/vnd.ms-excel");
     }
 
     @Test
@@ -132,8 +131,8 @@ class FileUploadValidatorTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "analysis.docx", "application/octet-stream", TestFiles.docx());
         FileUploadValidator.ValidatedUpload result = officeValidator().validate(file);
-        assertThat(result.cleanExtension()).isEqualTo("docx");
-        assertThat(result.mimeType()).isEqualTo(
+        Assertions.assertThat(result.cleanExtension()).isEqualTo("docx");
+        Assertions.assertThat(result.mimeType()).isEqualTo(
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     }
 
@@ -143,8 +142,8 @@ class FileUploadValidatorTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "density.xlsx", "application/octet-stream", TestFiles.xlsx());
         FileUploadValidator.ValidatedUpload result = officeValidator().validate(file);
-        assertThat(result.cleanExtension()).isEqualTo("xlsx");
-        assertThat(result.mimeType()).isEqualTo(
+        Assertions.assertThat(result.cleanExtension()).isEqualTo("xlsx");
+        Assertions.assertThat(result.mimeType()).isEqualTo(
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     }
 
@@ -153,7 +152,7 @@ class FileUploadValidatorTest {
     void plainZipRenamedToDocx() {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "notes.docx", "application/zip", TestFiles.plainZip());
-        assertThatThrownBy(() -> officeValidator().validate(file))
+        Assertions.assertThatThrownBy(() -> officeValidator().validate(file))
                 .isInstanceOf(FileValidationException.class)
                 .hasMessageContaining("Office Open XML");
     }
@@ -163,7 +162,7 @@ class FileUploadValidatorTest {
     void plainZipRenamedToXlsx() {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "notes.xlsx", "application/zip", TestFiles.plainZip());
-        assertThatThrownBy(() -> officeValidator().validate(file))
+        Assertions.assertThatThrownBy(() -> officeValidator().validate(file))
                 .isInstanceOf(FileValidationException.class)
                 .hasMessageContaining("Office Open XML");
     }
@@ -175,10 +174,10 @@ class FileUploadValidatorTest {
                 "file", "broken.docx", "application/zip", TestFiles.zipOffice());
         MockMultipartFile xlsx = new MockMultipartFile(
                 "file", "broken.xlsx", "application/zip", TestFiles.zipOffice());
-        assertThatThrownBy(() -> validator.validate(docx))
+        Assertions.assertThatThrownBy(() -> validator.validate(docx))
                 .isInstanceOf(FileValidationException.class)
                 .hasMessageContaining("Office Open XML");
-        assertThatThrownBy(() -> validator.validate(xlsx))
+        Assertions.assertThatThrownBy(() -> validator.validate(xlsx))
                 .isInstanceOf(FileValidationException.class)
                 .hasMessageContaining("Office Open XML");
     }
@@ -187,7 +186,7 @@ class FileUploadValidatorTest {
     @DisplayName("malicious filename with path traversal is rejected")
     void maliciousFilename() {
         MockMultipartFile file = new MockMultipartFile("file", "..\\evil.jpg", "image/jpeg", TestFiles.jpeg());
-        assertThatThrownBy(() -> validator.validate(file))
+        Assertions.assertThatThrownBy(() -> validator.validate(file))
                 .isInstanceOf(FileValidationException.class);
     }
 }

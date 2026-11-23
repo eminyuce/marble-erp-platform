@@ -1,12 +1,11 @@
 package com.ozerler.marble.repository;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class StockItemRepositoryQueryTest {
 
@@ -23,8 +22,8 @@ class StockItemRepositoryQueryTest {
                         Pageable.class)
                 .getAnnotation(EntityGraph.class);
 
-        assertThat(entityGraph).isNotNull();
-        assertThat(entityGraph.attributePaths()).contains("customer", "sourceBlock", "stockLocation");
+        Assertions.assertThat(entityGraph).isNotNull();
+        Assertions.assertThat(entityGraph.attributePaths()).contains("customer", "sourceBlock", "stockLocation");
     }
 
     @Test
@@ -40,9 +39,9 @@ class StockItemRepositoryQueryTest {
                         Pageable.class)
                 .getAnnotation(Query.class);
 
-        assertThat(query).isNotNull();
-        assertThat(query.value()).contains("SELECT s FROM StockItem s");
-        assertThat(query.countQuery()).contains("SELECT COUNT(s) FROM StockItem s");
+        Assertions.assertThat(query).isNotNull();
+        Assertions.assertThat(query.value()).contains("SELECT s FROM StockItem s");
+        Assertions.assertThat(query.countQuery()).contains("SELECT COUNT(s) FROM StockItem s");
     }
 
     @Test
@@ -55,9 +54,9 @@ class StockItemRepositoryQueryTest {
                 .getMethod("findPositiveQuantityWithLocation")
                 .getAnnotation(Query.class);
 
-        assertThat(entityGraph).isNotNull();
-        assertThat(entityGraph.attributePaths()).contains("stockLocation");
-        assertThat(query).isNotNull();
-        assertThat(query.value()).contains("s.quantity > 0");
+        Assertions.assertThat(entityGraph).isNotNull();
+        Assertions.assertThat(entityGraph.attributePaths()).contains("stockLocation");
+        Assertions.assertThat(query).isNotNull();
+        Assertions.assertThat(query.value()).contains("s.quantity > 0");
     }
 }

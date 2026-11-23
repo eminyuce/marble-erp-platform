@@ -1,16 +1,15 @@
 package com.ozerler.marble.storage;
 
-import com.ozerler.marble.exception.StoredFileNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import com.ozerler.marble.exception.StoredFileNotFoundException;
 
 class InMemoryObjectStorageServiceTest {
 
@@ -30,14 +29,14 @@ class InMemoryObjectStorageServiceTest {
 
         storage.upload(key, new ByteArrayInputStream(payload), payload.length, "image/png");
 
-        assertThat(storage.exists(key)).isTrue();
-        assertThat(storage.download(key).readAllBytes()).isEqualTo(payload);
-        assertThat(storage.createPresignedUrl(key, Duration.ofMinutes(5))).contains(key);
-        assertThat(storage.checkHealth().getStatus()).isEqualTo("UP");
+        Assertions.assertThat(storage.exists(key)).isTrue();
+        Assertions.assertThat(storage.download(key).readAllBytes()).isEqualTo(payload);
+        Assertions.assertThat(storage.createPresignedUrl(key, Duration.ofMinutes(5))).contains(key);
+        Assertions.assertThat(storage.checkHealth().getStatus()).isEqualTo("UP");
 
         storage.delete(key);
-        assertThat(storage.exists(key)).isFalse();
-        assertThatThrownBy(() -> storage.download(key))
+        Assertions.assertThat(storage.exists(key)).isFalse();
+        Assertions.assertThatThrownBy(() -> storage.download(key))
                 .isInstanceOf(StoredFileNotFoundException.class);
     }
 }

@@ -1,5 +1,15 @@
 package com.ozerler.marble.session;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -10,17 +20,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Objects that actually land in the HTTP session must survive Java serialization.
@@ -42,17 +41,17 @@ class SessionAttributeSerializationTest {
 
         SecurityContext context = (SecurityContext) restored.get(
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
-        assertThat(context.getAuthentication().getName()).isEqualTo("admin@eimece.test");
-        assertThat(context.getAuthentication().getAuthorities())
+        Assertions.assertThat(context.getAuthentication().getName()).isEqualTo("admin@eimece.test");
+        Assertions.assertThat(context.getAuthentication().getAuthorities())
                 .extracting(authority -> authority.getAuthority())
                 .containsExactlyInAnyOrder("ROLE_ADMIN", "ROLE_EXECUTIVE");
-        assertThat(context.getAuthentication().getDetails()).isInstanceOf(WebAuthenticationDetails.class);
+        Assertions.assertThat(context.getAuthentication().getDetails()).isInstanceOf(WebAuthenticationDetails.class);
 
         @SuppressWarnings("unchecked")
         Map<String, List<String>> form = (Map<String, List<String>>) restored.get("preservedForm");
-        assertThat(form.get("customerName")).containsExactly("Özerler");
-        assertThat(restored.get("invalidFields")).isEqualTo(List.of("blockCode"));
-        assertThat(restored.get("successMessage")).isEqualTo("Blok kaydedildi");
+        Assertions.assertThat(form.get("customerName")).containsExactly("Özerler");
+        Assertions.assertThat(restored.get("invalidFields")).isEqualTo(List.of("blockCode"));
+        Assertions.assertThat(restored.get("successMessage")).isEqualTo("Blok kaydedildi");
     }
 
     private static SecurityContext securityContext() {

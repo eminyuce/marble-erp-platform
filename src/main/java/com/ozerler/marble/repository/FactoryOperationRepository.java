@@ -1,16 +1,17 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.FactoryOperation;
-import com.ozerler.marble.model.enums.FactoryProcessType;
-import com.ozerler.marble.model.enums.OperationStatus;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.model.FactoryOperation;
+import com.ozerler.marble.model.enums.FactoryProcessType;
+import com.ozerler.marble.model.enums.OperationStatus;
 
 @Repository
 public interface FactoryOperationRepository extends JpaRepository<FactoryOperation, Long> {

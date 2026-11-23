@@ -1,8 +1,8 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.TabulatorResponse;
-
 import java.util.List;
+
+import com.ozerler.marble.dto.TabulatorResponse;
 
 /**
  * Builds a {@link DataGridView} from an already paged result.

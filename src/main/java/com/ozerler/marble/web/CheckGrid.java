@@ -1,12 +1,13 @@
 package com.ozerler.marble.web;
 
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+
 import com.ozerler.marble.dto.view.CheckRef;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;
-import org.springframework.data.domain.Page;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * Çek portföyü. Status filter already exists. Unit stays a query parameter.

@@ -1,5 +1,24 @@
 package com.ozerler.marble.controller.erp;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
+
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.ProductionOrder;
@@ -12,26 +31,6 @@ import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.QuarryRepository;
 import com.ozerler.marble.repository.SlabRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = "spring.jpa.open-in-view=false")
 @ActiveProfiles("test")
@@ -61,7 +60,7 @@ class SizedFormPrefillTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(SecurityMockMvcConfigurers.springSecurity()).build();
         Quarry quarry = quarryRepository.save(Quarry.builder()
                 .code("Q-SIZED")
                 .name("E2E Ocak")
@@ -108,21 +107,21 @@ class SizedFormPrefillTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("workshop sized form renders the prefilled slab without a lazy session")
     void workshopSizedFormRendersPrefill() throws Exception {
-        mockMvc.perform(get("/operations/workshop/sized/new").param("slabId", slab.getId().toString()))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("SLB-SIZED")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Burdur Bej")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("E2E Mermer")));
+        mockMvc.perform(MockMvcRequestBuilders.get("/operations/workshop/sized/new").param("slabId", slab.getId().toString()))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("SLB-SIZED")))
+                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Burdur Bej")))
+                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("E2E Mermer")));
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("factory sized form renders slab block and customer outside the session")
     void factorySizedFormRendersSlabList() throws Exception {
-        mockMvc.perform(get("/operations/factory/sized/new"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("SLB-SIZED")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Burdur Bej")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("E2E Mermer")));
+        mockMvc.perform(MockMvcRequestBuilders.get("/operations/factory/sized/new"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("SLB-SIZED")))
+                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Burdur Bej")))
+                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("E2E Mermer")));
     }
 }

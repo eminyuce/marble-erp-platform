@@ -1,12 +1,12 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.SupplierDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.SupplierType;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Tedarikçi listesi. Sort keys match {@code GridPages.SUPPLIER_SORTS}. Type and unit filters already exist.

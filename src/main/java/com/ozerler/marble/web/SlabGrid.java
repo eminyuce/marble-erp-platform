@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.SlabStatus;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Plaka stok listesi. Sort keys match {@code GridPages.SLAB_SORTS}.

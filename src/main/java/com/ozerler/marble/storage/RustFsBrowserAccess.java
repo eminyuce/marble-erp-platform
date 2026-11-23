@@ -1,15 +1,17 @@
 package com.ozerler.marble.storage;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.springframework.stereotype.Component;
+
+import com.ozerler.marble.config.ObjectStorageProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Decides whether a browser can fetch a RustFS presigned URL.

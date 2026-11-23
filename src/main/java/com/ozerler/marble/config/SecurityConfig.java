@@ -1,6 +1,5 @@
 package com.ozerler.marble.config;
 
-import com.ozerler.marble.security.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+
+import com.ozerler.marble.security.CustomUserDetailsService;
 
 @Configuration
 @EnableWebSecurity

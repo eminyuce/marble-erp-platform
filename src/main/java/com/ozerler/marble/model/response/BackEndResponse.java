@@ -1,10 +1,11 @@
 package com.ozerler.marble.model.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.http.ResponseEntity;
-
 import java.io.Serializable;
 import java.util.Objects;
+
+import org.springframework.http.ResponseEntity;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Standard backend response envelope wrapping an inner ResponseEntity payload

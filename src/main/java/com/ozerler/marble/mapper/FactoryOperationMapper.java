@@ -1,10 +1,11 @@
 package com.ozerler.marble.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
 import com.ozerler.marble.dto.view.FactoryOperationView;
 import com.ozerler.marble.model.FactoryOperation;
 import com.ozerler.marble.model.FactoryWorkOrder;
-import org.mapstruct.Mapper;
-import org.mapstruct.ReportingPolicy;
 
 /**
  * Copies factory operations into views. No calculation happens here.

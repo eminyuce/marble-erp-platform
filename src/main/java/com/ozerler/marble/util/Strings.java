@@ -1,9 +1,9 @@
 package com.ozerler.marble.util;
 
-import com.ozerler.marble.common.Constants;
-
 import java.util.Map;
 import java.util.regex.Matcher;
+
+import com.ozerler.marble.common.Constants;
 
 public final class Strings {
 

@@ -1,12 +1,13 @@
 package com.ozerler.marble.web;
 
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+
 import com.ozerler.marble.dto.view.InvoiceView;
 import com.ozerler.marble.model.enums.InvoiceStatus;
 import com.ozerler.marble.model.enums.InvoiceType;
-import org.springframework.data.domain.Page;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * Fatura listesi. Status filter already exists. Type and department stay as query parameters.

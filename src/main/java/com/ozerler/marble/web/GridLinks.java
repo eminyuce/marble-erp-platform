@@ -1,12 +1,12 @@
 package com.ozerler.marble.web;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Rewrites page, size, sort, and an existing filter while keeping the other query parameters.

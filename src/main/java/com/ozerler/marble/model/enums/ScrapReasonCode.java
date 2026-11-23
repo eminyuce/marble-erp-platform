@@ -1,6 +1,7 @@
 package com.ozerler.marble.model.enums;
 
 import com.ozerler.marble.util.MessageUtils;
+
 import lombok.Getter;
 
 public enum ScrapReasonCode {

@@ -1,10 +1,11 @@
 package com.ozerler.marble.dto.view;
 
+import java.math.BigDecimal;
+
 import com.ozerler.marble.model.enums.SurfaceFinish;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.math.BigDecimal;
 
 @Getter
 @Setter

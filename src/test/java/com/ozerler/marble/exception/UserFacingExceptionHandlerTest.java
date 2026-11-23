@@ -1,6 +1,9 @@
 package com.ozerler.marble.exception;
 
-import com.ozerler.marble.web.FormDraft;
+import java.util.List;
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,10 +14,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.ozerler.marble.web.FormDraft;
 
 class UserFacingExceptionHandlerTest {
 
@@ -51,20 +51,20 @@ class UserFacingExceptionHandlerTest {
 
         Object view = handler.handleIllegalArgument(ex, request, response, null, model, redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/production/polish");
-        assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
+        Assertions.assertThat(view).isEqualTo("redirect:/production/polish");
+        Assertions.assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
                 .isEqualTo("Bu iş emri ST kesimden geldi. Yalnızca Bant Silim (Dar Bant Cila) seçebilirsiniz.");
-        assertThat(redirectAttributes.getFlashAttributes().get(FormDraft.FIELDS))
+        Assertions.assertThat(redirectAttributes.getFlashAttributes().get(FormDraft.FIELDS))
                 .isEqualTo(List.of("processType"));
         @SuppressWarnings("unchecked")
         Map<String, List<String>> preserved =
                 (Map<String, List<String>>) redirectAttributes.getFlashAttributes().get(FormDraft.VALUES);
-        assertThat(preserved.get("operatorName")).containsExactly("Ayşe");
-        assertThat(preserved.get("processType")).containsExactly("SLAB_POLISHING");
-        assertThat(preserved.get("inputM2")).containsExactly("12.5");
-        assertThat(preserved).doesNotContainKey("_csrf");
-        assertThat(preserved).doesNotContainKey("password");
-        assertThat(model.asMap()).doesNotContainKey("errorMessage");
+        Assertions.assertThat(preserved.get("operatorName")).containsExactly("Ayşe");
+        Assertions.assertThat(preserved.get("processType")).containsExactly("SLAB_POLISHING");
+        Assertions.assertThat(preserved.get("inputM2")).containsExactly("12.5");
+        Assertions.assertThat(preserved).doesNotContainKey("_csrf");
+        Assertions.assertThat(preserved).doesNotContainKey("password");
+        Assertions.assertThat(model.asMap()).doesNotContainKey("errorMessage");
     }
 
     @Test
@@ -76,13 +76,13 @@ class UserFacingExceptionHandlerTest {
                 new IllegalArgumentException("Blok kesim için hazır değil"),
                 request, response, null, model, redirectAttributes);
 
-        assertThat(body).isInstanceOf(ResponseEntity.class);
+        Assertions.assertThat(body).isInstanceOf(ResponseEntity.class);
         ResponseEntity<?> entity = (ResponseEntity<?>) body;
-        assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(entity.getBody()).isInstanceOf(org.springframework.http.ProblemDetail.class);
+        Assertions.assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        Assertions.assertThat(entity.getBody()).isInstanceOf(org.springframework.http.ProblemDetail.class);
         org.springframework.http.ProblemDetail error = (org.springframework.http.ProblemDetail) entity.getBody();
-        assertThat(error.getDetail()).isEqualTo("Blok kesim için hazır değil");
-        assertThat(error.getInstance()).hasToString("/production/polish");
+        Assertions.assertThat(error.getDetail()).isEqualTo("Blok kesim için hazır değil");
+        Assertions.assertThat(error.getInstance()).hasToString("/production/polish");
     }
 
     @Test
@@ -94,8 +94,8 @@ class UserFacingExceptionHandlerTest {
                 new IllegalArgumentException("Makine adı boş olamaz."),
                 request, response, null, model, redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/production/polish");
-        assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
+        Assertions.assertThat(view).isEqualTo("redirect:/production/polish");
+        Assertions.assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
                 .isEqualTo("Makine adı boş olamaz.");
     }
 
@@ -108,9 +108,9 @@ class UserFacingExceptionHandlerTest {
                 new IllegalArgumentException("Fabrika iş emri bulunamadı: 4"),
                 request, response, null, model, redirectAttributes);
 
-        assertThat(view).isEqualTo(UserFacingExceptionHandler.ERROR_VIEW);
-        assertThat(response.getStatus()).isEqualTo(400);
-        assertThat(model.getAttribute("errorMessage")).isEqualTo("Fabrika iş emri bulunamadı: 4");
-        assertThat(redirectAttributes.getFlashAttributes()).isEmpty();
+        Assertions.assertThat(view).isEqualTo(UserFacingExceptionHandler.ERROR_VIEW);
+        Assertions.assertThat(response.getStatus()).isEqualTo(400);
+        Assertions.assertThat(model.getAttribute("errorMessage")).isEqualTo("Fabrika iş emri bulunamadı: 4");
+        Assertions.assertThat(redirectAttributes.getFlashAttributes()).isEmpty();
     }
 }

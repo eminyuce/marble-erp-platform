@@ -1,9 +1,9 @@
 package com.ozerler.marble.storage;
 
-import com.ozerler.marble.dto.DependencyHealth;
-
 import java.io.InputStream;
 import java.time.Duration;
+
+import com.ozerler.marble.dto.DependencyHealth;
 
 /**
  * S3-compatible object storage port. Business services depend on this

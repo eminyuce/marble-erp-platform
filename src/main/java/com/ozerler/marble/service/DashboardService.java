@@ -1,17 +1,29 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.dto.CostDistributionDto;
 import com.ozerler.marble.dto.DashboardKpiDto;
 import com.ozerler.marble.dto.ScrapSummaryDto;
 import com.ozerler.marble.model.enums.ProjectStatus;
 import com.ozerler.marble.model.enums.SlabStatus;
-import com.ozerler.marble.repository.*;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CheckRecordRepository;
+import com.ozerler.marble.repository.CollectionRecordRepository;
+import com.ozerler.marble.repository.CostTransactionRepository;
+import com.ozerler.marble.repository.InvoiceRepository;
+import com.ozerler.marble.repository.OperationWorkOrderRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.ScrapLogRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.StockItemRepository;
+import com.ozerler.marble.repository.UserRepository;
 
-import java.math.BigDecimal;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Service orchestrating General Management Cockpit (Genel Müdür Tek Ekran Canlı Kokpiti - BRD Section 9.1)

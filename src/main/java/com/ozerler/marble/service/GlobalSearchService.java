@@ -1,19 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.GlobalSearchHit;
-import com.ozerler.marble.dto.GlobalSearchResponse;
-import com.ozerler.marble.model.Block;
-import com.ozerler.marble.repository.*;
-import com.ozerler.marble.util.Strings;
-import com.ozerler.marble.util.Urls;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -21,6 +7,34 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.GlobalSearchHit;
+import com.ozerler.marble.dto.GlobalSearchResponse;
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.CutItemRepository;
+import com.ozerler.marble.repository.CutOrderRepository;
+import com.ozerler.marble.repository.ProductionOrderRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.PurchaseOrderRepository;
+import com.ozerler.marble.repository.QuarryRepository;
+import com.ozerler.marble.repository.SalesOrderRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.SupplierRepository;
+import com.ozerler.marble.repository.UserRepository;
+import com.ozerler.marble.util.Strings;
+import com.ozerler.marble.util.Urls;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

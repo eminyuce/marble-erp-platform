@@ -1,6 +1,7 @@
 package com.ozerler.marble.dto;
 
 import com.ozerler.marble.dto.view.SlabView;
+
 import lombok.Builder;
 import lombok.Getter;
 

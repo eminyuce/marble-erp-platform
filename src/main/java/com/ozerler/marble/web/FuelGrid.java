@@ -1,10 +1,10 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.MachineFuelDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.MachineFuelDto;
+import com.ozerler.marble.dto.TabulatorResponse;
 
 /**
  * Mazot dolum listesi. Sort fields match {@code MachineFuelService.getFuelPaged}.

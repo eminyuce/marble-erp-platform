@@ -1,15 +1,14 @@
 package com.ozerler.marble.storage;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class ErpFilesPathReservedTest {
 
@@ -29,17 +28,17 @@ class ErpFilesPathReservedTest {
                 }
             });
         }
-        assertThat(hits).isEmpty();
+        Assertions.assertThat(hits).isEmpty();
     }
 
     @Test
     @DisplayName("nginx forwards /erp-files/ without rewriting the signed host or path")
     void nginxSnippetPreservesSigV4() throws IOException {
         String snippet = Files.readString(Path.of("deploy/nginx/ozerler.naklink.com-erp-files.conf"));
-        assertThat(snippet).contains("location ^~ /erp-files/");
-        assertThat(snippet).contains("proxy_pass http://127.0.0.1:9000;");
-        assertThat(snippet).contains("proxy_set_header Host $host;");
-        assertThat(snippet).doesNotContain("proxy_pass http://127.0.0.1:9000/;");
-        assertThat(snippet).doesNotContain("rewrite");
+        Assertions.assertThat(snippet).contains("location ^~ /erp-files/");
+        Assertions.assertThat(snippet).contains("proxy_pass http://127.0.0.1:9000;");
+        Assertions.assertThat(snippet).contains("proxy_set_header Host $host;");
+        Assertions.assertThat(snippet).doesNotContain("proxy_pass http://127.0.0.1:9000/;");
+        Assertions.assertThat(snippet).doesNotContain("rewrite");
     }
 }

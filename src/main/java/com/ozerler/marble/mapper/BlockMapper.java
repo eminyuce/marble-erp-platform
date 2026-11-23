@@ -1,11 +1,12 @@
 package com.ozerler.marble.mapper;
 
-import com.ozerler.marble.dto.view.BlockRef;
-import com.ozerler.marble.dto.view.BlockView;
-import com.ozerler.marble.model.Block;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
+
+import com.ozerler.marble.dto.view.BlockRef;
+import com.ozerler.marble.dto.view.BlockView;
+import com.ozerler.marble.model.Block;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR,
         uses = {QuarryMapper.class, CustomerMapper.class, StockLocationMapper.class})

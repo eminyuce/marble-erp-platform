@@ -1,36 +1,48 @@
 package com.ozerler.marble.service;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import jakarta.mail.internet.MimeMessage;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.EmailPlaceholderSample;
 import com.ozerler.marble.dto.EmailPreviewDto;
+import com.ozerler.marble.dto.email.BaseEmailModel;
+import com.ozerler.marble.dto.email.EmailTemplateCatalog;
 import com.ozerler.marble.exception.ResourceNotFoundException;
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.repository.EmailTemplateRepository;
 import com.ozerler.marble.util.GridPages;
 import com.ozerler.marble.util.Ints;
 import com.ozerler.marble.util.Strings;
-import jakarta.mail.internet.MimeMessage;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.ozerler.marble.dto.email.BaseEmailModel;
-import com.ozerler.marble.dto.email.EmailTemplateCatalog;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Service managing corporate email templates, dynamic rendering engine,

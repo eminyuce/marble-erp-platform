@@ -1,22 +1,21 @@
 package com.ozerler.marble.service;
 
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.Test;
-
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 
 class PostgresDataDumpTest {
 
     @Test
     void quotesTextAndIdentifiers() {
-        assertThat(PostgresDataDump.quote("O'Brien")).isEqualTo("'O''Brien'");
-        assertThat(PostgresDataDump.quoteIdentifier("order")).isEqualTo("\"order\"");
-        assertThat(PostgresDataDump.byteaLiteral(new byte[] {0x0a, (byte) 0xff})).isEqualTo("decode('0aff', 'hex')");
+        Assertions.assertThat(PostgresDataDump.quote("O'Brien")).isEqualTo("'O''Brien'");
+        Assertions.assertThat(PostgresDataDump.quoteIdentifier("order")).isEqualTo("\"order\"");
+        Assertions.assertThat(PostgresDataDump.byteaLiteral(new byte[] {0x0a, (byte) 0xff})).isEqualTo("decode('0aff', 'hex')");
     }
 
     @Test
@@ -31,12 +30,12 @@ class PostgresDataDumpTest {
             connection.rollback();
 
             String sql = writer.toString();
-            assertThat(rows).isGreaterThan(0);
-            assertThat(sql).contains("Özerler Mermer ERP Database Backup");
-            assertThat(sql).contains("INSERT INTO public.\"blocks\"");
-            assertThat(sql).contains("INSERT INTO public.\"users\"");
-            assertThat(sql).contains("-- Rows: " + rows);
-            assertThat(sql).doesNotContain("-- Tablo Listesi:");
+            Assertions.assertThat(rows).isGreaterThan(0);
+            Assertions.assertThat(sql).contains("Özerler Mermer ERP Database Backup");
+            Assertions.assertThat(sql).contains("INSERT INTO public.\"blocks\"");
+            Assertions.assertThat(sql).contains("INSERT INTO public.\"users\"");
+            Assertions.assertThat(sql).contains("-- Rows: " + rows);
+            Assertions.assertThat(sql).doesNotContain("-- Tablo Listesi:");
         }
     }
 

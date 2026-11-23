@@ -1,10 +1,11 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.view.BlockView;
-import com.ozerler.marble.model.enums.BlockStatus;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 
-import java.util.List;
+import com.ozerler.marble.dto.view.BlockView;
+import com.ozerler.marble.model.enums.BlockStatus;
 
 /**
  * Ocak blok listesi. Status filter already exists. Detail and dispatch stay as the two row links.

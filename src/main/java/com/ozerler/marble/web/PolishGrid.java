@@ -1,12 +1,12 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.view.FactoryOperationView;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.view.FactoryOperationView;
 
 /**
  * Silim ve ebatlama geçmişi. The list is already loaded and paged in memory. Columns are not sortable.

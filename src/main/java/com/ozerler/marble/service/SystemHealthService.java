@@ -1,17 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ozerler.marble.dto.DependencyHealth;
-import com.ozerler.marble.dto.HealthResponse;
-import com.ozerler.marble.storage.ObjectStorageService;
-import com.ozerler.marble.util.DateTimes;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.info.BuildProperties;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Service;
-
-import javax.sql.DataSource;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -20,7 +8,26 @@ import java.sql.DatabaseMetaData;
 import java.sql.Statement;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ozerler.marble.dto.DependencyHealth;
+import com.ozerler.marble.dto.HealthResponse;
+import com.ozerler.marble.storage.ObjectStorageService;
+import com.ozerler.marble.util.DateTimes;
+
+import javax.sql.DataSource;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service orchestrating system diagnostic metrics, JVM runtime stats, database,

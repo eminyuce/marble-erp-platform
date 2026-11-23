@@ -1,5 +1,10 @@
 package com.ozerler.marble.service;
 
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.dto.PassportResult;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CutItem;
@@ -9,11 +14,8 @@ import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CutItemRepository;
 import com.ozerler.marble.repository.PalletRepository;
 import com.ozerler.marble.repository.SlabRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Service managing Digital Stone Passport resolution (BRD Section 7.2)

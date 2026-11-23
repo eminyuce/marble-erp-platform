@@ -1,5 +1,12 @@
 package com.ozerler.marble.config;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+
 import org.springframework.boot.SpringBootVersion;
 import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.info.InfoContributor;
@@ -7,13 +14,6 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.core.SpringVersion;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
 
 /**
  * Publishes the pom.xml version and runtime facts on {@code /actuator/info}.

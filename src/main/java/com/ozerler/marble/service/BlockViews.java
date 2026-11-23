@@ -1,10 +1,12 @@
 package com.ozerler.marble.service;
 
+import org.springframework.stereotype.Component;
+
 import com.ozerler.marble.dto.view.BlockView;
 import com.ozerler.marble.mapper.BlockMapper;
 import com.ozerler.marble.model.Block;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 /**
  * Builds block views: MapStruct copies the stored columns, then the derived values the entity already

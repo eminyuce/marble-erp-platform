@@ -1,11 +1,12 @@
 package com.ozerler.marble.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
 import com.ozerler.marble.dto.view.CheckRef;
 import com.ozerler.marble.dto.view.CollectionRef;
 import com.ozerler.marble.model.CheckRecord;
 import com.ozerler.marble.model.CollectionRecord;
-import org.mapstruct.Mapper;
-import org.mapstruct.ReportingPolicy;
 
 /**
  * Copies collections and checks into references. No calculation happens here.

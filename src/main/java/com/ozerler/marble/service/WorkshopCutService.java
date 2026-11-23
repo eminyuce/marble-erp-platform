@@ -1,23 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.util.UniqueCodes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.ozerler.marble.dto.CutOrderDto;
-import com.ozerler.marble.dto.OrderChildAggregate;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.*;
-import com.ozerler.marble.model.enums.ScrapReasonCode;
-import com.ozerler.marble.model.enums.SlabStatus;
-import com.ozerler.marble.repository.*;
-import com.ozerler.marble.util.GridPages;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -27,6 +9,37 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.CutOrderDto;
+import com.ozerler.marble.dto.OrderChildAggregate;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.CutItem;
+import com.ozerler.marble.model.CutOrder;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.ProjectLocation;
+import com.ozerler.marble.model.ScrapLog;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.enums.ScrapReasonCode;
+import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.repository.CostTransactionRepository;
+import com.ozerler.marble.repository.CutItemRepository;
+import com.ozerler.marble.repository.CutOrderRepository;
+import com.ozerler.marble.repository.ProjectLocationRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.ScrapLogRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.UniqueCodes;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

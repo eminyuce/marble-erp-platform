@@ -4,6 +4,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+
 import com.ozerler.marble.dto.EmailTemplateDto;
 import com.ozerler.marble.dto.view.BlockMarkView;
 import com.ozerler.marble.dto.view.BlockMovementView;
@@ -41,13 +49,6 @@ import com.ozerler.marble.model.enums.BlockMarkStatus;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;
 import com.ozerler.marble.model.enums.StockLocationType;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 /**
  * Checks that the generated mappers only copy values: nested references go through the other mappers,

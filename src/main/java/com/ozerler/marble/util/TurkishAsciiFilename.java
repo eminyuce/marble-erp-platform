@@ -1,8 +1,8 @@
 package com.ozerler.marble.util;
 
-import com.ozerler.marble.common.Constants;
-
 import java.util.Locale;
+
+import com.ozerler.marble.common.Constants;
 
 /**
  * Builds download filenames from Turkish words using ASCII-only letters.

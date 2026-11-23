@@ -1,12 +1,13 @@
 package com.ozerler.marble.mapper;
 
-import com.ozerler.marble.dto.form.MachineForm;
-import com.ozerler.marble.dto.view.MachineRef;
-import com.ozerler.marble.model.Machine;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
+
+import com.ozerler.marble.dto.form.MachineForm;
+import com.ozerler.marble.dto.view.MachineRef;
+import com.ozerler.marble.model.Machine;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface MachineMapper {

@@ -1,13 +1,13 @@
 package com.ozerler.marble.web;
 
-import org.springframework.data.domain.Page;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+
+import org.springframework.data.domain.Page;
 
 /**
  * Shared display and paging helpers for operation grids. These queries do not accept a sort field.

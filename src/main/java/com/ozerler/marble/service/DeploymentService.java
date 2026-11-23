@@ -1,14 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.config.DeploymentProperties;
-import com.ozerler.marble.dto.DeploymentLogDto;
-import com.ozerler.marble.dto.DeploymentStartResult;
-import com.ozerler.marble.dto.DeploymentState;
-import com.ozerler.marble.dto.DeploymentStatusDto;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +13,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import com.ozerler.marble.config.DeploymentProperties;
+import com.ozerler.marble.dto.DeploymentLogDto;
+import com.ozerler.marble.dto.DeploymentStartResult;
+import com.ozerler.marble.dto.DeploymentState;
+import com.ozerler.marble.dto.DeploymentStatusDto;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor

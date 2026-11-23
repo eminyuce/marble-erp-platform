@@ -1,11 +1,11 @@
 package com.ozerler.marble.util;
 
-import com.ozerler.marble.common.Constants;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
+
+import com.ozerler.marble.common.Constants;
 
 public final class DateTimes {
 

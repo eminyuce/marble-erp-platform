@@ -1,5 +1,24 @@
 package com.ozerler.marble.service;
 
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.ozerler.marble.dto.CariSummaryDto;
 import com.ozerler.marble.dto.CariTransactionDto;
 import com.ozerler.marble.model.CariTransaction;
@@ -11,23 +30,6 @@ import com.ozerler.marble.model.enums.CollectionMethod;
 import com.ozerler.marble.model.enums.InvoiceType;
 import com.ozerler.marble.repository.CariTransactionRepository;
 import com.ozerler.marble.repository.CustomerRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CariTransactionServiceTest {
@@ -75,18 +77,18 @@ class CariTransactionServiceTest {
                 .creditAmount(new BigDecimal("400.00"))
                 .build();
 
-        when(transactionRepository.findByCustomerIdOrderByTransactionDateAscIdAsc(1L))
+        Mockito.when(transactionRepository.findByCustomerIdOrderByTransactionDateAscIdAsc(1L))
                 .thenReturn(new ArrayList<>(List.of(tx1, tx2)));
 
         List<CariTransactionDto> result = cariTransactionService.getTransactionsForCustomer(1L);
 
-        assertThat(result).hasSize(2);
+        Assertions.assertThat(result).hasSize(2);
         // Most recent first
-        assertThat(result.get(0).getId()).isEqualTo(102L);
-        assertThat(result.get(0).getRunningBalance()).isEqualByComparingTo("600.00");
+        Assertions.assertThat(result.get(0).getId()).isEqualTo(102L);
+        Assertions.assertThat(result.get(0).getRunningBalance()).isEqualByComparingTo("600.00");
 
-        assertThat(result.get(1).getId()).isEqualTo(101L);
-        assertThat(result.get(1).getRunningBalance()).isEqualByComparingTo("1000.00");
+        Assertions.assertThat(result.get(1).getId()).isEqualTo(101L);
+        Assertions.assertThat(result.get(1).getRunningBalance()).isEqualByComparingTo("1000.00");
     }
 
     @Test
@@ -95,32 +97,32 @@ class CariTransactionServiceTest {
         List<Object[]> totals = new ArrayList<>();
         totals.add(new Object[]{new BigDecimal("5000.00"), new BigDecimal("3000.00")});
 
-        when(transactionRepository.getDebitCreditTotalsByCustomerId(1L)).thenReturn(totals);
-        when(transactionRepository.findByCustomerIdOrderByTransactionDateAscIdAsc(1L)).thenReturn(List.of(new CariTransaction()));
+        Mockito.when(transactionRepository.getDebitCreditTotalsByCustomerId(1L)).thenReturn(totals);
+        Mockito.when(transactionRepository.findByCustomerIdOrderByTransactionDateAscIdAsc(1L)).thenReturn(List.of(new CariTransaction()));
 
         CariSummaryDto summary = cariTransactionService.getCustomerSummary(1L);
 
-        assertThat(summary.getTotalDebit()).isEqualByComparingTo("5000.00");
-        assertThat(summary.getTotalCredit()).isEqualByComparingTo("3000.00");
-        assertThat(summary.getNetBalance()).isEqualByComparingTo("2000.00");
-        assertThat(summary.getBalanceStatus()).isEqualTo("BORÇLU (B)");
+        Assertions.assertThat(summary.getTotalDebit()).isEqualByComparingTo("5000.00");
+        Assertions.assertThat(summary.getTotalCredit()).isEqualByComparingTo("3000.00");
+        Assertions.assertThat(summary.getNetBalance()).isEqualByComparingTo("2000.00");
+        Assertions.assertThat(summary.getBalanceStatus()).isEqualTo("BORÇLU (B)");
     }
 
     @Test
     @DisplayName("createTransaction persists a new cari transaction")
     void testCreateTransaction() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(sampleCustomer));
-        when(transactionRepository.save(any(CariTransaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(sampleCustomer));
+        Mockito.when(transactionRepository.save(ArgumentMatchers.any(CariTransaction.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CariTransaction saved = cariTransactionService.createTransaction(
                 1L, LocalDate.now(), CariTransactionType.BORC_DEKONTU,
                 "DKN-01", "Vade Farkı", new BigDecimal("150.00"), BigDecimal.ZERO, "Açıklama"
         );
 
-        assertThat(saved.getCustomer()).isEqualTo(sampleCustomer);
-        assertThat(saved.getDebitAmount()).isEqualByComparingTo("150.00");
-        assertThat(saved.getCreditAmount()).isEqualByComparingTo("0.00");
-        verify(transactionRepository, times(1)).save(any(CariTransaction.class));
+        Assertions.assertThat(saved.getCustomer()).isEqualTo(sampleCustomer);
+        Assertions.assertThat(saved.getDebitAmount()).isEqualByComparingTo("150.00");
+        Assertions.assertThat(saved.getCreditAmount()).isEqualByComparingTo("0.00");
+        Mockito.verify(transactionRepository, Mockito.times(1)).save(ArgumentMatchers.any(CariTransaction.class));
     }
 
     @Test
@@ -136,18 +138,18 @@ class CariTransactionServiceTest {
                 .notes("İhracat faturası")
                 .build();
 
-        when(transactionRepository.findByInvoiceId(50L)).thenReturn(Optional.empty());
+        Mockito.when(transactionRepository.findByInvoiceId(50L)).thenReturn(Optional.empty());
 
         cariTransactionService.syncInvoice(invoice);
 
         ArgumentCaptor<CariTransaction> captor = ArgumentCaptor.forClass(CariTransaction.class);
-        verify(transactionRepository).save(captor.capture());
+        Mockito.verify(transactionRepository).save(captor.capture());
 
         CariTransaction captured = captor.getValue();
-        assertThat(captured.getCustomer()).isEqualTo(sampleCustomer);
-        assertThat(captured.getTransactionType()).isEqualTo(CariTransactionType.SATIS_FATURASI);
-        assertThat(captured.getDebitAmount()).isEqualByComparingTo("12500.00");
-        assertThat(captured.getCreditAmount()).isEqualByComparingTo("0.00");
+        Assertions.assertThat(captured.getCustomer()).isEqualTo(sampleCustomer);
+        Assertions.assertThat(captured.getTransactionType()).isEqualTo(CariTransactionType.SATIS_FATURASI);
+        Assertions.assertThat(captured.getDebitAmount()).isEqualByComparingTo("12500.00");
+        Assertions.assertThat(captured.getCreditAmount()).isEqualByComparingTo("0.00");
     }
 
     @Test
@@ -163,17 +165,17 @@ class CariTransactionServiceTest {
                 .notes("Havale")
                 .build();
 
-        when(transactionRepository.findByCollectionId(77L)).thenReturn(Optional.empty());
+        Mockito.when(transactionRepository.findByCollectionId(77L)).thenReturn(Optional.empty());
 
         cariTransactionService.syncCollection(collection);
 
         ArgumentCaptor<CariTransaction> captor = ArgumentCaptor.forClass(CariTransaction.class);
-        verify(transactionRepository).save(captor.capture());
+        Mockito.verify(transactionRepository).save(captor.capture());
 
         CariTransaction captured = captor.getValue();
-        assertThat(captured.getCustomer()).isEqualTo(sampleCustomer);
-        assertThat(captured.getTransactionType()).isEqualTo(CariTransactionType.TAHSILAT);
-        assertThat(captured.getDebitAmount()).isEqualByComparingTo("0.00");
-        assertThat(captured.getCreditAmount()).isEqualByComparingTo("5000.00");
+        Assertions.assertThat(captured.getCustomer()).isEqualTo(sampleCustomer);
+        Assertions.assertThat(captured.getTransactionType()).isEqualTo(CariTransactionType.TAHSILAT);
+        Assertions.assertThat(captured.getDebitAmount()).isEqualByComparingTo("0.00");
+        Assertions.assertThat(captured.getCreditAmount()).isEqualByComparingTo("5000.00");
     }
 }

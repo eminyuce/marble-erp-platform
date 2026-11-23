@@ -1,14 +1,15 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 /**
  * Data Transfer Object representing unit cost breakdown and dynamic pricing recommendations.

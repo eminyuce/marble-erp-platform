@@ -1,13 +1,13 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.dto.UserDto;
-import com.ozerler.marble.model.enums.UserRole;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.UserDto;
+import com.ozerler.marble.model.enums.UserRole;
 
 /**
  * Kullanıcı listesi. Sort keys match {@code GridPages.USER_SORTS}. Enabled filter already exists.

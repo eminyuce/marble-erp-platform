@@ -1,8 +1,9 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.StockMovement;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.StockMovementType;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -11,14 +12,15 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import com.ozerler.marble.model.StockMovement;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.StockMovementType;
 
 public class StockMovementRepositoryCustomImpl implements StockMovementRepositoryCustom {
 

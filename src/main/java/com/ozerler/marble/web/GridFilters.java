@@ -1,9 +1,9 @@
 package com.ozerler.marble.web;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import java.util.Arrays;
 import java.util.List;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Current list filters copied from the request so templates do not read the request parameter map.

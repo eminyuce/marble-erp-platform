@@ -1,5 +1,6 @@
 package com.ozerler.marble.exception;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GlobalExceptionHandlerTest {
 
@@ -33,14 +32,14 @@ class GlobalExceptionHandlerTest {
 
         ResponseEntity<ProblemDetail> response = handler.handleResourceNotFound(ex, request);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         ProblemDetail body = response.getBody();
-        assertThat(body).isNotNull();
-        assertThat(body.getStatus()).isEqualTo(404);
-        assertThat(body.getTitle()).isEqualTo("Not Found");
-        assertThat(body.getDetail()).isEqualTo("Blok bulunamadı: 42");
-        assertThat(body.getInstance()).hasToString("/api/upload");
-        assertThat(body.getProperties()).isNull();
+        Assertions.assertThat(body).isNotNull();
+        Assertions.assertThat(body.getStatus()).isEqualTo(404);
+        Assertions.assertThat(body.getTitle()).isEqualTo("Not Found");
+        Assertions.assertThat(body.getDetail()).isEqualTo("Blok bulunamadı: 42");
+        Assertions.assertThat(body.getInstance()).hasToString("/api/upload");
+        Assertions.assertThat(body.getProperties()).isNull();
     }
 
     @Test
@@ -53,14 +52,14 @@ class GlobalExceptionHandlerTest {
 
         ResponseEntity<ProblemDetail> response = handler.handleValidation(ex, request);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         ProblemDetail body = response.getBody();
-        assertThat(body).isNotNull();
-        assertThat(body.getStatus()).isEqualTo(400);
-        assertThat(body.getTitle()).isEqualTo("Bad Request");
-        assertThat(body.getDetail()).isEqualTo("Validation failed");
-        assertThat(body.getInstance()).hasToString("/api/upload");
-        assertThat(body.getProperties().get("errors"))
+        Assertions.assertThat(body).isNotNull();
+        Assertions.assertThat(body.getStatus()).isEqualTo(400);
+        Assertions.assertThat(body.getTitle()).isEqualTo("Bad Request");
+        Assertions.assertThat(body.getDetail()).isEqualTo("Validation failed");
+        Assertions.assertThat(body.getInstance()).hasToString("/api/upload");
+        Assertions.assertThat(body.getProperties().get("errors"))
                 .isInstanceOf(java.util.Map.class);
     }
 
@@ -71,13 +70,13 @@ class GlobalExceptionHandlerTest {
 
         ResponseEntity<ProblemDetail> response = handler.handleAccessDenied(ex, request);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         ProblemDetail body = response.getBody();
-        assertThat(body).isNotNull();
-        assertThat(body.getStatus()).isEqualTo(403);
-        assertThat(body.getTitle()).isEqualTo("Forbidden");
-        assertThat(body.getDetail()).isEqualTo("Access denied");
-        assertThat(body.getInstance()).hasToString("/api/upload");
+        Assertions.assertThat(body).isNotNull();
+        Assertions.assertThat(body.getStatus()).isEqualTo(403);
+        Assertions.assertThat(body.getTitle()).isEqualTo("Forbidden");
+        Assertions.assertThat(body.getDetail()).isEqualTo("Access denied");
+        Assertions.assertThat(body.getInstance()).hasToString("/api/upload");
     }
 
     @Test
@@ -87,20 +86,20 @@ class GlobalExceptionHandlerTest {
 
         ResponseEntity<ProblemDetail> response = handler.handleUnexpected(ex, request);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         ProblemDetail body = response.getBody();
-        assertThat(body).isNotNull();
-        assertThat(body.getStatus()).isEqualTo(500);
-        assertThat(body.getTitle()).isEqualTo("Internal Server Error");
-        assertThat(body.getDetail()).isEqualTo("An unexpected error occurred");
-        assertThat(body.getDetail()).doesNotContain("secret", "database");
-        assertThat(body.getInstance()).hasToString("/api/upload");
+        Assertions.assertThat(body).isNotNull();
+        Assertions.assertThat(body.getStatus()).isEqualTo(500);
+        Assertions.assertThat(body.getTitle()).isEqualTo("Internal Server Error");
+        Assertions.assertThat(body.getDetail()).isEqualTo("An unexpected error occurred");
+        Assertions.assertThat(body.getDetail()).doesNotContain("secret", "database");
+        Assertions.assertThat(body.getInstance()).hasToString("/api/upload");
     }
 
     @Test
     @DisplayName("ResourceNotFoundException message constructor preserves the given text")
     void resourceNotFound_MessageConstructor() {
         ResourceNotFoundException ex = new ResourceNotFoundException("Plaka bulunamadı: S-100");
-        assertThat(ex.getMessage()).isEqualTo("Plaka bulunamadı: S-100");
+        Assertions.assertThat(ex.getMessage()).isEqualTo("Plaka bulunamadı: S-100");
     }
 }

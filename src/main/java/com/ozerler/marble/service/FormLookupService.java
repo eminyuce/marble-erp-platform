@@ -1,5 +1,12 @@
 package com.ozerler.marble.service;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.dto.option.ProjectOption;
 import com.ozerler.marble.dto.option.QuarryOption;
 import com.ozerler.marble.dto.view.BlockView;
@@ -41,13 +48,8 @@ import com.ozerler.marble.repository.SalesOrderItemRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockItemRepository;
 import com.ozerler.marble.repository.SupplierRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Form and select data for ERP screens. Controllers ask this service instead of repositories.

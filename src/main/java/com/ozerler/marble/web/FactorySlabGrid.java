@@ -1,9 +1,10 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.view.SlabView;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 
-import java.util.List;
+import com.ozerler.marble.dto.view.SlabView;
 
 /**
  * Fabrika plaka sahası. Status filter already exists. The stock query has a fixed order.

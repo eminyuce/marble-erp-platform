@@ -1,8 +1,8 @@
 package com.ozerler.marble.config;
 
-import com.ozerler.marble.storage.RustFsBrowserAccess;
-
 import java.net.URI;
+
+import com.ozerler.marble.storage.RustFsBrowserAccess;
 
 /**
  * Production browsers must reach RustFS through an HTTPS reverse proxy.

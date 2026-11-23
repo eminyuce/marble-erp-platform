@@ -1,11 +1,12 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.CostPeriodClose;
-import com.ozerler.marble.model.enums.BusinessUnit;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.ozerler.marble.model.CostPeriodClose;
+import com.ozerler.marble.model.enums.BusinessUnit;
 
 @Repository
 public interface CostPeriodCloseRepository extends JpaRepository<CostPeriodClose, Long> {

@@ -1,18 +1,18 @@
 package com.ozerler.marble.config;
 
-import org.springframework.boot.EnvironmentPostProcessor;
-import org.springframework.boot.SpringApplication;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.MapPropertySource;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.boot.EnvironmentPostProcessor;
+import org.springframework.boot.SpringApplication;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
 
 /**
  * Copies {@code *_FILE} environment variables into the matching setting.

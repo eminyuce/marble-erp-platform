@@ -1,8 +1,8 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.CostTransaction;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.ExpenseType;
+import java.math.BigDecimal;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,8 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
+import com.ozerler.marble.model.CostTransaction;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.ExpenseType;
 
 @Repository
 public interface CostTransactionRepository extends JpaRepository<CostTransaction, Long> {

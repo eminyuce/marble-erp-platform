@@ -1,9 +1,10 @@
 package com.ozerler.marble.mapper;
 
-import com.ozerler.marble.dto.EmailTemplateDto;
-import com.ozerler.marble.model.EmailTemplate;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
+
+import com.ozerler.marble.dto.EmailTemplateDto;
+import com.ozerler.marble.model.EmailTemplate;
 
 /**
  * Copies email templates into DTOs. No calculation happens here.

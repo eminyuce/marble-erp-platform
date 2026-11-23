@@ -1,6 +1,24 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.*;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import org.hibernate.Hibernate;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.dto.OrderChildAggregate;
+import com.ozerler.marble.dto.ProductionOrderDto;
+import com.ozerler.marble.dto.SlabDto;
+import com.ozerler.marble.dto.SlabLabelDto;
+import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.ScrapLog;
 import com.ozerler.marble.model.Slab;
@@ -14,19 +32,8 @@ import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.ScrapLogRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.util.GridPages;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.hibernate.Hibernate;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

@@ -1,6 +1,8 @@
 package com.ozerler.marble.util;
 
-import com.ozerler.marble.common.Constants;
+import java.util.Map;
+import java.util.function.Function;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.data.domain.Page;
@@ -8,8 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import java.util.Map;
-import java.util.function.Function;
+import com.ozerler.marble.common.Constants;
 
 /**
  * Builds Tabulator remote-pagination {@link Pageable} values, maps grid column

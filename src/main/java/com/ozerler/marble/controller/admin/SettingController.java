@@ -1,19 +1,12 @@
 package com.ozerler.marble.controller.admin;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.dto.EmailPlaceholderSample;
-import com.ozerler.marble.dto.EmailPreviewDto;
-import com.ozerler.marble.exception.ResourceNotFoundException;
-import com.ozerler.marble.dto.EmailTemplateDto;
-import com.ozerler.marble.model.response.BackEndResponse;
-import com.ozerler.marble.model.response.ServiceStatus;
-import com.ozerler.marble.model.response.Status;
-import com.ozerler.marble.service.EmailService;
-import com.ozerler.marble.service.NoticeDismissDuration;
-import com.ozerler.marble.service.SettingService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,15 +14,29 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.servlet.http.HttpServletRequest;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.dto.EmailPlaceholderSample;
+import com.ozerler.marble.dto.EmailPreviewDto;
+import com.ozerler.marble.dto.EmailTemplateDto;
+import com.ozerler.marble.exception.ResourceNotFoundException;
+import com.ozerler.marble.model.response.BackEndResponse;
+import com.ozerler.marble.model.response.ServiceStatus;
+import com.ozerler.marble.model.response.Status;
+import com.ozerler.marble.service.EmailService;
+import com.ozerler.marble.service.NoticeDismissDuration;
+import com.ozerler.marble.service.SettingService;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/admin/settings")

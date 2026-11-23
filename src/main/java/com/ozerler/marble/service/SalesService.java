@@ -1,27 +1,33 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ozerler.marble.dto.SalesOrderDto;
+import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.dto.view.SalesOrderView;
 import com.ozerler.marble.exception.SalesOrderNotFoundException;
 import com.ozerler.marble.mapper.SalesOrderMapper;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.*;
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.SalesOrder;
+import com.ozerler.marble.model.SalesOrderItem;
+import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.SalesOrderRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.util.GridPages;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

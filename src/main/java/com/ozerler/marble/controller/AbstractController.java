@@ -1,12 +1,13 @@
 package com.ozerler.marble.controller;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 /**
  * Base abstract controller providing standardized BackEndResponse builders

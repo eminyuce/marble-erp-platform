@@ -1,11 +1,12 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.EmailTemplateDto;
-import org.springframework.data.domain.Page;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.ToIntFunction;
+
+import org.springframework.data.domain.Page;
+
+import com.ozerler.marble.dto.EmailTemplateDto;
 
 /**
  * E-posta şablon listesi. The JSON endpoint has no sort keys, so columns stay unsorted.

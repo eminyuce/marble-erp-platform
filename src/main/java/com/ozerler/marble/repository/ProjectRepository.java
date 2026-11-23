@@ -1,7 +1,9 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.Project;
-import com.ozerler.marble.model.enums.ProjectStatus;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,9 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.enums.ProjectStatus;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {

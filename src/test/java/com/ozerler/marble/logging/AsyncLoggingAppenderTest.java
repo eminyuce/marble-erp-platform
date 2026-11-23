@@ -1,5 +1,15 @@
 package com.ozerler.marble.logging;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -7,16 +17,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.read.ListAppender;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class AsyncLoggingAppenderTest {
 
@@ -38,17 +38,17 @@ class AsyncLoggingAppenderTest {
     void enqueueDeliversEventsToNestedAppender() {
         ListAppender<ILoggingEvent> nested = startedListAppender("nested");
         async = startedAsync("enqueue-test", 32, 90, 16, nested);
-        assertThat(async.isStarted())
+        Assertions.assertThat(async.isStarted())
                 .as(() -> String.valueOf(context.getStatusManager().getCopyOfStatusList()))
                 .isTrue();
 
         async.doAppend(event(Level.INFO, "order-created"));
         async.stop();
 
-        assertThat(nested.list)
+        Assertions.assertThat(nested.list)
                 .extracting(event -> event.getFormattedMessage())
                 .containsExactly("order-created");
-        assertThat(async.metrics().droppedTotal()).isZero();
+        Assertions.assertThat(async.metrics().droppedTotal()).isZero();
     }
 
     @Test
@@ -71,32 +71,32 @@ class AsyncLoggingAppenderTest {
         async.start();
 
         async.doAppend(event(Level.INFO, "blocker"));
-        assertThat(nested.entered.await(2, TimeUnit.SECONDS)).isTrue();
+        Assertions.assertThat(nested.entered.await(2, TimeUnit.SECONDS)).isTrue();
 
         for (int i = 0; i < 5; i++) {
             async.doAppend(event(Level.INFO, "fill-" + i));
         }
-        assertThat(async.queueDepth()).isGreaterThanOrEqualTo(5);
+        Assertions.assertThat(async.queueDepth()).isGreaterThanOrEqualTo(5);
 
         async.doAppend(event(Level.DEBUG, "debug-at-high-water"));
         async.doAppend(event(Level.TRACE, "trace-at-high-water"));
 
-        assertThat(async.metrics().droppedLowPriorityCount()).isGreaterThanOrEqualTo(2);
+        Assertions.assertThat(async.metrics().droppedLowPriorityCount()).isGreaterThanOrEqualTo(2);
 
         for (int i = 0; i < 20; i++) {
             async.doAppend(event(Level.INFO, "overflow-" + i));
         }
-        assertThat(async.metrics().droppedQueueFullCount()).isPositive();
+        Assertions.assertThat(async.metrics().droppedQueueFullCount()).isPositive();
 
         long droppedBeforeError = async.metrics().droppedTotal();
         async.doAppend(event(Level.ERROR, "must-preserve-error"));
-        assertThat(async.metrics().droppedEvictedCount()).isPositive();
-        assertThat(async.metrics().droppedTotal()).isGreaterThan(droppedBeforeError);
+        Assertions.assertThat(async.metrics().droppedEvictedCount()).isPositive();
+        Assertions.assertThat(async.metrics().droppedTotal()).isGreaterThan(droppedBeforeError);
 
         nested.release.countDown();
         async.stop();
 
-        assertThat(nested.recorded)
+        Assertions.assertThat(nested.recorded)
                 .extracting(event -> event.getFormattedMessage())
                 .contains("must-preserve-error");
     }
@@ -113,9 +113,9 @@ class AsyncLoggingAppenderTest {
         }
         async.stop();
 
-        assertThat(nested.list).hasSize(eventCount);
-        assertThat(async.metrics().droppedShutdownCount()).isZero();
-        assertThat(async.queueDepth()).isZero();
+        Assertions.assertThat(nested.list).hasSize(eventCount);
+        Assertions.assertThat(async.metrics().droppedShutdownCount()).isZero();
+        Assertions.assertThat(async.queueDepth()).isZero();
     }
 
     private LoggerContext newContext() {

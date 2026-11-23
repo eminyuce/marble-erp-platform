@@ -1,5 +1,6 @@
 package com.ozerler.marble.repository;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +13,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
@@ -44,24 +43,24 @@ class FlywayPostgresSliceTest {
         Integer latest = jdbc.queryForObject(
                 "select max(version::int) from flyway_schema_history where version is not null",
                 Integer.class);
-        assertThat(latest).isGreaterThanOrEqualTo(38);
+        Assertions.assertThat(latest).isGreaterThanOrEqualTo(38);
 
         Integer quantityScale = jdbc.queryForObject(
                 "select numeric_scale from information_schema.columns "
                         + "where table_name = 'sales_order_items' and column_name = 'quantity'",
                 Integer.class);
-        assertThat(quantityScale).isEqualTo(4);
+        Assertions.assertThat(quantityScale).isEqualTo(4);
 
         Integer areaScale = jdbc.queryForObject(
                 "select numeric_scale from information_schema.columns "
                         + "where table_name = 'project_locations' and column_name = 'planned_area_m2'",
                 Integer.class);
-        assertThat(areaScale).isEqualTo(4);
+        Assertions.assertThat(areaScale).isEqualTo(4);
 
         Integer versionType = jdbc.queryForObject(
                 "select count(*) from information_schema.columns "
                         + "where table_name = 'invoices' and column_name = 'version'",
                 Integer.class);
-        assertThat(versionType).isEqualTo(1);
+        Assertions.assertThat(versionType).isEqualTo(1);
     }
 }

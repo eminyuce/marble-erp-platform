@@ -1,11 +1,12 @@
 package com.ozerler.marble.exception;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.springframework.http.HttpStatus;
-
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
+
+import org.springframework.http.HttpStatus;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ErrorResponse(

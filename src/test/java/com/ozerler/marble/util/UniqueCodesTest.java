@@ -1,13 +1,12 @@
 package com.ozerler.marble.util;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class UniqueCodesTest {
 
@@ -18,7 +17,7 @@ class UniqueCodesTest {
         taken.add("A-1");
         AtomicInteger n = new AtomicInteger(1);
         String code = UniqueCodes.allocate(() -> "A-" + n.getAndIncrement(), taken::contains);
-        assertThat(code).isEqualTo("A-2");
+        Assertions.assertThat(code).isEqualTo("A-2");
     }
 
     @Test
@@ -28,14 +27,14 @@ class UniqueCodesTest {
         String first = UniqueCodes.sequential("A-BLOK", 2026, 1, 3, taken::contains);
         taken.add(first);
         String second = UniqueCodes.sequential("A-BLOK", 2026, 1, 3, taken::contains);
-        assertThat(first).isEqualTo("A-BLOK-2026-001");
-        assertThat(second).isEqualTo("A-BLOK-2026-002");
+        Assertions.assertThat(first).isEqualTo("A-BLOK-2026-001");
+        Assertions.assertThat(second).isEqualTo("A-BLOK-2026-002");
     }
 
     @Test
     @DisplayName("yearly codes keep prefix and current year")
     void yearlyCodes() {
         String code = UniqueCodes.yearly("FWO", candidate -> false);
-        assertThat(code).startsWith("FWO-" + java.time.Year.now().getValue() + "-");
+        Assertions.assertThat(code).startsWith("FWO-" + java.time.Year.now().getValue() + "-");
     }
 }

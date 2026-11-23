@@ -1,24 +1,69 @@
 package com.ozerler.marble.config;
 
-import com.ozerler.marble.service.BoundedReads;
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.model.*;
-import com.ozerler.marble.model.enums.*;
-import com.ozerler.marble.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.CostCenter;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.FactoryOperation;
+import com.ozerler.marble.model.FactoryWorkOrder;
+import com.ozerler.marble.model.Machine;
+import com.ozerler.marble.model.MaterialLot;
+import com.ozerler.marble.model.OperationDefinition;
+import com.ozerler.marble.model.Pallet;
+import com.ozerler.marble.model.PalletItem;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.Quarry;
+import com.ozerler.marble.model.Role;
+import com.ozerler.marble.model.Shipment;
+import com.ozerler.marble.model.StockLocation;
+import com.ozerler.marble.model.User;
+import com.ozerler.marble.model.enums.BlockStatus;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.CustomerType;
+import com.ozerler.marble.model.enums.FactoryProcessType;
+import com.ozerler.marble.model.enums.FactoryWorkOrderStatus;
+import com.ozerler.marble.model.enums.MachineType;
+import com.ozerler.marble.model.enums.MaterialLotStatus;
+import com.ozerler.marble.model.enums.OperationStatus;
+import com.ozerler.marble.model.enums.PackagingType;
+import com.ozerler.marble.model.enums.ProductForm;
+import com.ozerler.marble.model.enums.ProjectStatus;
+import com.ozerler.marble.model.enums.QualityGrade;
+import com.ozerler.marble.model.enums.QuantityUnit;
+import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.FactoryOperationRepository;
+import com.ozerler.marble.repository.FactoryWorkOrderRepository;
+import com.ozerler.marble.repository.MachineRepository;
+import com.ozerler.marble.repository.MaterialLotRepository;
+import com.ozerler.marble.repository.OperationDefinitionRepository;
+import com.ozerler.marble.repository.PalletItemRepository;
+import com.ozerler.marble.repository.PalletRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.QuarryRepository;
+import com.ozerler.marble.repository.RoleRepository;
+import com.ozerler.marble.repository.ShipmentRepository;
+import com.ozerler.marble.repository.StockLocationRepository;
+import com.ozerler.marble.repository.UserRepository;
+import com.ozerler.marble.service.BoundedReads;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component

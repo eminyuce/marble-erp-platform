@@ -1,13 +1,14 @@
 package com.ozerler.marble.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
+
 import com.ozerler.marble.dto.view.SiteViews;
 import com.ozerler.marble.model.ConstructionSiteStonePlan;
 import com.ozerler.marble.model.ProjectLocation;
 import com.ozerler.marble.model.SiteConsumption;
 import com.ozerler.marble.model.SiteInstallation;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface SiteMapper {

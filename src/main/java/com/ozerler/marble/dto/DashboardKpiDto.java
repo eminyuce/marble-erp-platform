@@ -1,10 +1,10 @@
 package com.ozerler.marble.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-
 import java.math.BigDecimal;
 import java.util.List;
+
+import lombok.Builder;
+import lombok.Getter;
 
 /**
  * Strongly typed DTO transferring executive cockpit KPIs from DashboardService to presentation layer.

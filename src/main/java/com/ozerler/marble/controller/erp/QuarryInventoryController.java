@@ -1,25 +1,29 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.dto.view.MachineFuelEntryView;
-import com.ozerler.marble.dto.view.MachineRef;
-import com.ozerler.marble.dto.view.StockItemView;
-import com.ozerler.marble.common.Constants;
-
-import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.model.enums.QuarryCategory;
-import com.ozerler.marble.service.QuarryInventoryService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
+import com.ozerler.marble.dto.view.MachineRef;
+import com.ozerler.marble.dto.view.StockItemView;
+import com.ozerler.marble.model.enums.QuarryCategory;
+import com.ozerler.marble.service.QuarryInventoryService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/quarry")

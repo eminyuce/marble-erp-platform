@@ -1,14 +1,15 @@
 package com.ozerler.marble.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
+
 import com.ozerler.marble.dto.view.OrderRef;
 import com.ozerler.marble.dto.view.PalletRef;
 import com.ozerler.marble.dto.view.ProductionOrderView;
 import com.ozerler.marble.model.Pallet;
 import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.ScrapLog;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR,
         uses = {BlockMapper.class, SlabMapper.class})

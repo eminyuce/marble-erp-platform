@@ -1,23 +1,22 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.model.enums.QualityGrade;
-import com.ozerler.marble.model.enums.StockLocationType;
-import com.ozerler.marble.model.response.BackEndResponse;
-import com.ozerler.marble.service.QuarryBlockService;
+import java.math.BigDecimal;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.model.enums.QualityGrade;
+import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.model.response.BackEndResponse;
+import com.ozerler.marble.service.QuarryBlockService;
 
 @ExtendWith(MockitoExtension.class)
 class BlockControllerTest {
@@ -38,32 +37,32 @@ class BlockControllerTest {
     @DisplayName("deleteBlockApi should return successful BackEndResponse")
     void shouldReturnSuccessBackEndResponseOnDeleteBlockApi() {
         Long blockId = 100L;
-        org.mockito.Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
-        org.mockito.Mockito.when(messageSource.getMessage(org.mockito.ArgumentMatchers.eq("erp.block.delete.success"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+        Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
+        Mockito.when(messageSource.getMessage(org.mockito.ArgumentMatchers.eq("erp.block.delete.success"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn("BLK-100 kodlu blok silindi.");
 
         BackEndResponse response = blockController.deleteBlockApi(blockId, java.util.Locale.forLanguageTag("tr"));
 
-        verify(quarryBlockService).deleteBlock(blockId);
-        assertThat(response).isNotNull();
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("BLK-100 kodlu blok silindi.");
+        Mockito.verify(quarryBlockService).deleteBlock(blockId);
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("BLK-100 kodlu blok silindi.");
     }
 
     @Test
     @DisplayName("deleteBlockApi should return fatal BackEndResponse on exception")
     void shouldReturnFatalBackEndResponseOnDeleteBlockApiError() {
         Long blockId = 100L;
-        org.mockito.Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
-        doThrow(new IllegalStateException("Blok silinemez")).when(quarryBlockService).deleteBlock(blockId);
+        Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
+        Mockito.doThrow(new IllegalStateException("Blok silinemez")).when(quarryBlockService).deleteBlock(blockId);
 
         BackEndResponse response = blockController.deleteBlockApi(blockId, java.util.Locale.forLanguageTag("tr"));
 
-        assertThat(response).isNotNull();
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
-        assertThat(response.getServiceStatus().getStatus().getMessage()).contains("deleteBlock");
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).contains("deleteBlock");
     }
 
     @Test
@@ -74,11 +73,11 @@ class BlockControllerTest {
 
         BackEndResponse response = blockController.transferToFactoryApi(blockId, transportCost);
 
-        verify(quarryBlockService).transferToFactory(blockId, transportCost);
-        assertThat(response).isNotNull();
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Transfer to factory successful");
+        Mockito.verify(quarryBlockService).transferToFactory(blockId, transportCost);
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Transfer to factory successful");
     }
 
     @Test
@@ -86,14 +85,14 @@ class BlockControllerTest {
     void shouldReturnFatalBackEndResponseOnTransferError() {
         Long blockId = 100L;
         BigDecimal transportCost = new BigDecimal("1500.00");
-        doThrow(new RuntimeException("Database error")).when(quarryBlockService).transferToFactory(blockId, transportCost);
+        Mockito.doThrow(new RuntimeException("Database error")).when(quarryBlockService).transferToFactory(blockId, transportCost);
 
         BackEndResponse response = blockController.transferToFactoryApi(blockId, transportCost);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
-        assertThat(response.getServiceStatus().getStatus().getMessage()).contains("transferToFactory");
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).contains("transferToFactory");
     }
 
     @Test
@@ -103,23 +102,23 @@ class BlockControllerTest {
 
         BackEndResponse response = blockController.sellBlock(blockId, 9L, new BigDecimal("500000"));
 
-        verify(quarryBlockService).sellBlockExternally(
+        Mockito.verify(quarryBlockService).sellBlockExternally(
                 org.mockito.ArgumentMatchers.eq(blockId),
                 org.mockito.ArgumentMatchers.eq(9L),
                 org.mockito.ArgumentMatchers.eq(new BigDecimal("500000")),
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.isNull());
-        assertThat(response).isNotNull();
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Sell block successful");
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Sell block successful");
     }
 
     @Test
     @DisplayName("sellBlock should return fatal BackEndResponse on exception")
     void shouldReturnFatalBackEndResponseOnSellError() {
         Long blockId = 100L;
-        doThrow(new RuntimeException("Lock conflict")).when(quarryBlockService)
+        Mockito.doThrow(new RuntimeException("Lock conflict")).when(quarryBlockService)
                 .sellBlockExternally(
                         org.mockito.ArgumentMatchers.eq(blockId),
                         org.mockito.ArgumentMatchers.eq(9L),
@@ -129,10 +128,10 @@ class BlockControllerTest {
 
         BackEndResponse response = blockController.sellBlock(blockId, 9L, new BigDecimal("500000"));
 
-        assertThat(response).isNotNull();
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
-        assertThat(response.getServiceStatus().getStatus().getMessage()).contains("sellBlock");
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).contains("sellBlock");
     }
 
     @Test
@@ -143,55 +142,55 @@ class BlockControllerTest {
         BackEndResponse response = blockController.moveToYardApi(
                 blockId, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD, "Stok sahası");
 
-        verify(quarryBlockService).moveToYard(blockId, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD, "Stok sahası");
-        assertThat(response).isNotNull();
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
-        assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Move to yard successful");
+        Mockito.verify(quarryBlockService).moveToYard(blockId, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD, "Stok sahası");
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).isEqualTo("Move to yard successful");
     }
 
     @Test
     @DisplayName("moveToYardApi should return fatal BackEndResponse on exception")
     void shouldReturnFatalBackEndResponseOnMoveError() {
         Long blockId = 100L;
-        doThrow(new RuntimeException("Not at quarry")).when(quarryBlockService)
+        Mockito.doThrow(new RuntimeException("Not at quarry")).when(quarryBlockService)
                 .moveToYard(blockId, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD, "Stok sahası");
 
         BackEndResponse response = blockController.moveToYardApi(
                 blockId, com.ozerler.marble.model.enums.StockLocationType.DISPATCH_YARD, "Stok sahası");
 
-        assertThat(response).isNotNull();
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
-        assertThat(response.getServiceStatus().getStatus().getMessage()).contains("moveToYard");
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.ERR_FATAL);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getMessage()).contains("moveToYard");
     }
 
     @Test
     @DisplayName("deleteBlock form action redirects to /blocks on success")
     void shouldRedirectToBlocksOnDeleteBlockFormSuccess() {
         Long blockId = 100L;
-        org.mockito.Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
+        Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
                 new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
 
         String view = blockController.deleteBlock(blockId, java.util.Locale.forLanguageTag("tr"), redirectAttributes);
 
-        verify(quarryBlockService).deleteBlock(blockId);
-        assertThat(view).isEqualTo("redirect:/blocks");
+        Mockito.verify(quarryBlockService).deleteBlock(blockId);
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks");
     }
 
     @Test
     @DisplayName("deleteBlock form action redirects to /blocks/{id} on error")
     void shouldRedirectToBlockDetailOnDeleteBlockFormError() {
         Long blockId = 100L;
-        org.mockito.Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
-        doThrow(new IllegalStateException("Kullanımda olan blok silinemez")).when(quarryBlockService).deleteBlock(blockId);
+        Mockito.when(quarryBlockService.getBlock(blockId)).thenReturn(blockView(blockId, "BLK-100"));
+        Mockito.doThrow(new IllegalStateException("Kullanımda olan blok silinemez")).when(quarryBlockService).deleteBlock(blockId);
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
                 new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
 
         String view = blockController.deleteBlock(blockId, java.util.Locale.forLanguageTag("tr"), redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks/100");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks/100");
     }
 
     @Test
@@ -207,11 +206,11 @@ class BlockControllerTest {
                 "Not", null, null, "A-BLOK",
                 java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
-        verify(quarryBlockService).registerBlock(
+        Mockito.verify(quarryBlockService).registerBlock(
                 1L, "BLK-NEW-01", null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
                 "Not", null, StockLocationType.DISPATCH_YARD, null, "A-BLOK");
-        assertThat(view).isEqualTo("redirect:/blocks");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks");
     }
 
     @Test
@@ -228,11 +227,11 @@ class BlockControllerTest {
                 "Not", null, fileIds, "A3",
                 java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
-        verify(quarryBlockService).registerBlock(
+        Mockito.verify(quarryBlockService).registerBlock(
                 1L, "BLK-NEW-02", null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
                 "Not", null, StockLocationType.PRODUCTION_YARD, fileIds, "A3");
-        assertThat(view).isEqualTo("redirect:/blocks");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks");
     }
 
     @Test
@@ -249,17 +248,17 @@ class BlockControllerTest {
                 new BigDecimal("5000"), "Not", null, fileIds, "A-BLOK",
                 java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
-        verify(quarryBlockService).updateBlock(
+        Mockito.verify(quarryBlockService).updateBlock(
                 10L, 1L, "BLK-UPD-01", null, 150, 250, 140,
                 new BigDecimal("14500"), "Muğla Beyaz", "Beyaz", QualityGrade.A, 0,
                 new BigDecimal("5000"), "Not", null, StockLocationType.DISPATCH_YARD, fileIds, "A-BLOK");
-        assertThat(view).isEqualTo("redirect:/blocks");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks");
     }
 
     @Test
     @DisplayName("showMoveForm opens dedicated page with requested target yard")
     void shouldOpenMoveFormForQuarryBlock() {
-        org.mockito.Mockito.when(quarryBlockService.getBlock(100L))
+        Mockito.when(quarryBlockService.getBlock(100L))
                 .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
         org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
@@ -268,15 +267,15 @@ class BlockControllerTest {
         String view = blockController.showMoveForm(
                 100L, StockLocationType.DISPATCH_YARD, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
-        assertThat(view).isEqualTo("erp/blocks/move");
-        assertThat(model.getAttribute("selectedTargetType")).isEqualTo(StockLocationType.DISPATCH_YARD);
-        assertThat(model.getAttribute("block")).isNotNull();
+        Assertions.assertThat(view).isEqualTo("erp/blocks/move");
+        Assertions.assertThat(model.getAttribute("selectedTargetType")).isEqualTo(StockLocationType.DISPATCH_YARD);
+        Assertions.assertThat(model.getAttribute("block")).isNotNull();
     }
 
     @Test
     @DisplayName("showMoveForm defaults target to opposite quarry yard")
     void shouldDefaultMoveTargetToOppositeYard() {
-        org.mockito.Mockito.when(quarryBlockService.getBlock(100L))
+        Mockito.when(quarryBlockService.getBlock(100L))
                 .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
         org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
@@ -285,16 +284,16 @@ class BlockControllerTest {
         String view = blockController.showMoveForm(
                 100L, null, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
-        assertThat(view).isEqualTo("erp/blocks/move");
-        assertThat(model.getAttribute("selectedTargetType")).isEqualTo(StockLocationType.DISPATCH_YARD);
+        Assertions.assertThat(view).isEqualTo("erp/blocks/move");
+        Assertions.assertThat(model.getAttribute("selectedTargetType")).isEqualTo(StockLocationType.DISPATCH_YARD);
     }
 
     @Test
     @DisplayName("showMoveForm redirects sold blocks to detail")
     void shouldRedirectSoldBlockAwayFromMoveForm() {
-        org.mockito.Mockito.when(quarryBlockService.getBlock(100L))
+        Mockito.when(quarryBlockService.getBlock(100L))
                 .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.SOLD, StockLocationType.DISPATCH_YARD));
-        org.mockito.Mockito.when(messageSource.getMessage(
+        Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("erp.block.already_sold"),
                         org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.any()))
@@ -306,15 +305,15 @@ class BlockControllerTest {
         String view = blockController.showMoveForm(
                 100L, StockLocationType.PRODUCTION_YARD, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks/100");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks/100");
     }
 
     @Test
     @DisplayName("moveToYard form redirects to move page on error")
     void shouldRedirectToMovePageOnMoveFormError() {
-        doThrow(new IllegalArgumentException("Blok ocak sahasında değil")).when(quarryBlockService)
+        Mockito.doThrow(new IllegalArgumentException("Blok ocak sahasında değil")).when(quarryBlockService)
                 .moveToYard(100L, StockLocationType.DISPATCH_YARD, "Stok sahası");
-        org.mockito.Mockito.when(messageSource.getMessage(
+        Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("common.error.prefix"),
                         org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.any()))
@@ -326,13 +325,13 @@ class BlockControllerTest {
                 100L, StockLocationType.DISPATCH_YARD, "Stok sahası",
                 java.util.Locale.forLanguageTag("tr"), redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks/100/move?targetType=DISPATCH_YARD");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks/100/move?targetType=DISPATCH_YARD");
     }
 
     @Test
     @DisplayName("showTransferForm opens dedicated page for dispatch-yard blocks")
     void shouldOpenTransferFormForDispatchYardBlock() {
-        org.mockito.Mockito.when(quarryBlockService.getBlock(100L))
+        Mockito.when(quarryBlockService.getBlock(100L))
                 .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.DISPATCH_YARD));
         org.springframework.ui.Model model = new org.springframework.ui.ConcurrentModel();
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
@@ -341,16 +340,16 @@ class BlockControllerTest {
         String view = blockController.showTransferForm(
                 100L, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
-        assertThat(view).isEqualTo("erp/blocks/transfer");
-        assertThat(model.getAttribute("block")).isNotNull();
+        Assertions.assertThat(view).isEqualTo("erp/blocks/transfer");
+        Assertions.assertThat(model.getAttribute("block")).isNotNull();
     }
 
     @Test
     @DisplayName("showTransferForm redirects production-yard blocks to detail")
     void shouldRedirectProductionYardBlockAwayFromTransferForm() {
-        org.mockito.Mockito.when(quarryBlockService.getBlock(100L))
+        Mockito.when(quarryBlockService.getBlock(100L))
                 .thenReturn(quarryBlock(com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
-        org.mockito.Mockito.when(messageSource.getMessage(
+        Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("error.block.dispatch.not_in_dispatch_yard"),
                         org.mockito.ArgumentMatchers.isNull(),
                         org.mockito.ArgumentMatchers.any()))
@@ -362,15 +361,15 @@ class BlockControllerTest {
         String view = blockController.showTransferForm(
                 100L, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks/100");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks/100");
     }
 
     @Test
     @DisplayName("transferToFactory form redirects to transfer page on error")
     void shouldRedirectToTransferPageOnTransferFormError() {
-        doThrow(new IllegalArgumentException("only dispatch")).when(quarryBlockService)
+        Mockito.doThrow(new IllegalArgumentException("only dispatch")).when(quarryBlockService)
                 .transferToFactory(100L, new BigDecimal("12500"));
-        org.mockito.Mockito.when(messageSource.getMessage(
+        Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("common.error.prefix"),
                         org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.any()))
@@ -381,13 +380,13 @@ class BlockControllerTest {
         String view = blockController.transferToFactoryForm(
                 100L, new BigDecimal("12500"), java.util.Locale.forLanguageTag("tr"), redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks/100/transfer-to-factory");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks/100/transfer-to-factory");
     }
 
     @Test
     @DisplayName("moveToYard form redirects to list when redirectTarget is list")
     void shouldRedirectToListOnMoveFormSuccessWhenTargetIsList() {
-        org.mockito.Mockito.when(messageSource.getMessage(
+        Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("erp.block.move.success"),
                         org.mockito.ArgumentMatchers.isNull(),
                         org.mockito.ArgumentMatchers.any()))
@@ -399,13 +398,13 @@ class BlockControllerTest {
                 100L, StockLocationType.DISPATCH_YARD, "Stok sahası", "list",
                 java.util.Locale.forLanguageTag("tr"), redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks");
     }
 
     @Test
     @DisplayName("moveToYard form redirects to detail when redirectTarget is detail")
     void shouldRedirectToDetailOnMoveFormSuccessWhenTargetIsDetail() {
-        org.mockito.Mockito.when(messageSource.getMessage(
+        Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("erp.block.move.success"),
                         org.mockito.ArgumentMatchers.isNull(),
                         org.mockito.ArgumentMatchers.any()))
@@ -417,13 +416,13 @@ class BlockControllerTest {
                 100L, StockLocationType.DISPATCH_YARD, "Stok sahası", "detail",
                 java.util.Locale.forLanguageTag("tr"), redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks/100");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks/100");
     }
 
     @Test
     @DisplayName("transferToFactory form redirects to list when redirectTarget is list")
     void shouldRedirectToListOnTransferFormSuccessWhenTargetIsList() {
-        org.mockito.Mockito.when(messageSource.getMessage(
+        Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("erp.block.transfer.success"),
                         org.mockito.ArgumentMatchers.isNull(),
                         org.mockito.ArgumentMatchers.any()))
@@ -435,13 +434,13 @@ class BlockControllerTest {
                 100L, new BigDecimal("12500"), "list",
                 java.util.Locale.forLanguageTag("tr"), redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks");
     }
 
     @Test
     @DisplayName("transferToFactory form redirects to detail when redirectTarget is detail")
     void shouldRedirectToDetailOnTransferFormSuccessWhenTargetIsDetail() {
-        org.mockito.Mockito.when(messageSource.getMessage(
+        Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("erp.block.transfer.success"),
                         org.mockito.ArgumentMatchers.isNull(),
                         org.mockito.ArgumentMatchers.any()))
@@ -453,32 +452,32 @@ class BlockControllerTest {
                 100L, new BigDecimal("12500"), "detail",
                 java.util.Locale.forLanguageTag("tr"), redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks/100");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks/100");
     }
 
     @Test
     @DisplayName("blockPhotos redirects to the first image when photos exist")
     void blockPhotosRedirectsToFirstImage() {
-        org.mockito.Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
+        Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
                 com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
-        org.mockito.Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
+        Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
                 .thenReturn(java.util.List.of(com.ozerler.marble.dto.FileStorageDto.fromEntity(sampleImage(7L)), com.ozerler.marble.dto.FileStorageDto.fromEntity(sampleImage(8L))));
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
                 new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
 
         String view = blockController.blockPhotos(100L, java.util.Locale.forLanguageTag("tr"), redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks/100/photos/7");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks/100/photos/7");
     }
 
     @Test
     @DisplayName("blockPhotos redirects to detail when the block has no images")
     void blockPhotosRedirectsWhenEmpty() {
-        org.mockito.Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
+        Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
                 com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
-        org.mockito.Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
+        Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
                 .thenReturn(java.util.List.of());
-        org.mockito.Mockito.when(messageSource.getMessage(
+        Mockito.when(messageSource.getMessage(
                         org.mockito.ArgumentMatchers.eq("erp.block.photos.empty"),
                         org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.any()))
@@ -488,16 +487,16 @@ class BlockControllerTest {
 
         String view = blockController.blockPhotos(100L, java.util.Locale.forLanguageTag("tr"), redirectAttributes);
 
-        assertThat(view).isEqualTo("redirect:/blocks/100");
-        assertThat(redirectAttributes.getFlashAttributes().get("warningMessage")).isEqualTo("no photos");
+        Assertions.assertThat(view).isEqualTo("redirect:/blocks/100");
+        Assertions.assertThat(redirectAttributes.getFlashAttributes().get("warningMessage")).isEqualTo("no photos");
     }
 
     @Test
     @DisplayName("blockPhoto renders the dedicated photo page for a matching file")
     void blockPhotoRendersViewer() {
-        org.mockito.Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
+        Mockito.when(quarryBlockService.getBlock(100L)).thenReturn(quarryBlock(
                 com.ozerler.marble.model.enums.BlockStatus.PRODUCED, StockLocationType.PRODUCTION_YARD));
-        org.mockito.Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
+        Mockito.when(fileStorageService.getFileViewsForEntity("BLOCK", 100L))
                 .thenReturn(java.util.List.of(com.ozerler.marble.dto.FileStorageDto.fromEntity(sampleImage(7L)), com.ozerler.marble.dto.FileStorageDto.fromEntity(sampleImage(8L))));
         org.springframework.ui.ExtendedModelMap model = new org.springframework.ui.ExtendedModelMap();
         org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes =
@@ -506,13 +505,13 @@ class BlockControllerTest {
         String view = blockController.blockPhoto(
                 100L, 8L, java.util.Locale.forLanguageTag("tr"), model, redirectAttributes);
 
-        assertThat(view).isEqualTo("erp/blocks/photos");
-        assertThat(model.get("currentIndex")).isEqualTo(1);
+        Assertions.assertThat(view).isEqualTo("erp/blocks/photos");
+        Assertions.assertThat(model.get("currentIndex")).isEqualTo(1);
         com.ozerler.marble.dto.FileStorageDto current =
                 (com.ozerler.marble.dto.FileStorageDto) model.get("currentImage");
-        assertThat(current.getId()).isEqualTo(8L);
-        assertThat(model.get("previousImage")).isNotNull();
-        assertThat(model.get("nextImage")).isNotNull();
+        Assertions.assertThat(current.getId()).isEqualTo(8L);
+        Assertions.assertThat(model.get("previousImage")).isNotNull();
+        Assertions.assertThat(model.get("nextImage")).isNotNull();
     }
 
     private static com.ozerler.marble.model.FileStorage sampleImage(Long id) {

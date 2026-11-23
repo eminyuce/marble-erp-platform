@@ -1,10 +1,11 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.view.StockItemView;
-import org.springframework.data.domain.Page;
-
 import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+
+import com.ozerler.marble.dto.view.StockItemView;
 
 /**
  * Fabrika ebatlı stok. There is no status query parameter, so the status column is not filtered.

@@ -1,18 +1,19 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.dto.view.SlabView;
-import com.ozerler.marble.dto.view.StockItemView;
-import com.ozerler.marble.model.enums.SlabStatus;
-import com.ozerler.marble.service.FactoryStockService;
-import org.springframework.data.domain.Page;
-
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.SlabView;
+import com.ozerler.marble.dto.view.StockItemView;
+import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.service.FactoryStockService;
 
 /**
  * Tabulator rows shared by the factory and workshop stock yards.

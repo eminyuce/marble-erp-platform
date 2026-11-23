@@ -1,15 +1,16 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.StockMovement;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.StockMovementType;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.EntityManager;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -18,10 +19,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import java.time.LocalDateTime;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.ozerler.marble.model.StockMovement;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.StockMovementType;
 
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
@@ -63,8 +63,8 @@ class StockMovementRepositoryPostgresTest {
         var page = repository.searchMovements(
                 null, null, null, null, null, null, PageRequest.of(0, 25));
 
-        assertThat(page.getTotalElements()).isPositive();
-        assertThat(page.getContent())
+        Assertions.assertThat(page.getTotalElements()).isPositive();
+        Assertions.assertThat(page.getContent())
                 .extracting(StockMovement::getMovementCode)
                 .contains("MV-NULL-FILTER");
     }
@@ -83,10 +83,10 @@ class StockMovementRepositoryPostgresTest {
         var page = repository.searchMovements(
                 null, BusinessUnit.QUARRY, null, null, null, null, PageRequest.of(0, 25));
 
-        assertThat(page.getContent())
+        Assertions.assertThat(page.getContent())
                 .extracting(StockMovement::getMovementCode)
                 .contains("MV-QUARRY-ONLY");
-        assertThat(page.getContent())
+        Assertions.assertThat(page.getContent())
                 .allMatch(movement -> movement.getSourceDepartment() == BusinessUnit.QUARRY);
     }
 
@@ -107,7 +107,7 @@ class StockMovementRepositoryPostgresTest {
         first.setItemDescription("first clerk");
         repository.saveAndFlush(first);
         second.setItemDescription("second clerk");
-        assertThatThrownBy(() -> repository.saveAndFlush(second))
+        Assertions.assertThatThrownBy(() -> repository.saveAndFlush(second))
                 .isInstanceOf(ObjectOptimisticLockingFailureException.class);
     }
 }

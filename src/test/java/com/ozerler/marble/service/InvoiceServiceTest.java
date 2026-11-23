@@ -1,14 +1,8 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.model.*;
-import com.ozerler.marble.model.enums.*;
-import com.ozerler.marble.repository.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,10 +10,45 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.CostCenter;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.Invoice;
+import com.ozerler.marble.model.InvoiceItem;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.StockLocation;
+import com.ozerler.marble.model.StockMovement;
+import com.ozerler.marble.model.enums.BlockStatus;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.InvoiceStatus;
+import com.ozerler.marble.model.enums.InvoiceType;
+import com.ozerler.marble.model.enums.QuarryCategory;
+import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.repository.BlockCustomerMarkRepository;
+import com.ozerler.marble.repository.BlockLocationMovementRepository;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.CostTransactionRepository;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.InvoiceItemRepository;
+import com.ozerler.marble.repository.InvoiceRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.StockItemRepository;
+import com.ozerler.marble.repository.StockLocationRepository;
+import com.ozerler.marble.repository.StockMovementRepository;
+import com.ozerler.marble.repository.SupplierRepository;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceServiceTest {
@@ -63,7 +92,7 @@ class InvoiceServiceTest {
 
     @BeforeEach
     void setUp() {
-        org.mockito.Mockito.lenient().when(costCenterRepository.findAll(org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+        Mockito.lenient().when(costCenterRepository.findAll(ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
                 .thenReturn(org.springframework.data.domain.Page.empty());
         invoiceService = new InvoiceService(
                 invoiceRepository,
@@ -83,7 +112,7 @@ class InvoiceServiceTest {
                 factoryInventoryService,
                 blockCustomerMarkRepository,
                 cariTransactionService,
-                org.mockito.Mockito.mock(com.ozerler.marble.mapper.InvoiceMapper.class)
+                Mockito.mock(com.ozerler.marble.mapper.InvoiceMapper.class)
         );
     }
 
@@ -98,15 +127,15 @@ class InvoiceServiceTest {
                 .unit("adet")
                 .build();
 
-        when(stockItemRepository.findById(20L)).thenReturn(Optional.of(item));
+        Mockito.when(stockItemRepository.findById(20L)).thenReturn(Optional.of(item));
 
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<InvoiceService.InvoiceItemForm> items = List.of(
                 new InvoiceService.InvoiceItemForm("Matkap Ucu", "Ocak", new BigDecimal("15"), "adet", new BigDecimal("50.00"), null, null, 20L, null, null)
         );
 
-        assertThatThrownBy(() -> invoiceService.createInvoice(
+        Assertions.assertThatThrownBy(() -> invoiceService.createInvoice(
                 "FAT-001", LocalDate.now(), null, InvoiceType.SALES, BusinessUnit.QUARRY,
                 null, null, null, null, new BigDecimal("20"), false, "Müşteri A", null, items))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -124,9 +153,9 @@ class InvoiceServiceTest {
                 .estimatedTonnage(new BigDecimal("15"))
                 .build();
 
-        when(blockRepository.findById(5L)).thenReturn(Optional.of(block));
+        Mockito.when(blockRepository.findById(5L)).thenReturn(Optional.of(block));
 
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<InvoiceService.InvoiceItemForm> items = List.of(
                 new InvoiceService.InvoiceItemForm("Blok BLK-100", "Sevk", BigDecimal.ONE, "ton", new BigDecimal("1000.00"), 5L, null, null, null, null)
@@ -136,17 +165,17 @@ class InvoiceServiceTest {
                 "FAT-002", LocalDate.now(), null, InvoiceType.SALES, BusinessUnit.QUARRY,
                 null, null, BusinessUnit.FACTORY, null, BigDecimal.ZERO, false, null, "Dahili Sevk", items);
 
-        assertThat(block.getStatus()).isEqualTo(BlockStatus.IN_TRANSIT);
-        assertThat(block.getCurrentLocation()).isNull();
-        verify(blockRepository).save(block);
-        verify(stockMovementRepository).save(any(StockMovement.class));
+        Assertions.assertThat(block.getStatus()).isEqualTo(BlockStatus.IN_TRANSIT);
+        Assertions.assertThat(block.getCurrentLocation()).isNull();
+        Mockito.verify(blockRepository).save(block);
+        Mockito.verify(stockMovementRepository).save(ArgumentMatchers.any(StockMovement.class));
     }
 
     @Test
     @DisplayName("createInvoice with purchase and directExpense=false adds to quarry stock")
     void createInvoice_PurchaseStockAddition() {
 
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<InvoiceService.InvoiceItemForm> items = List.of(
                 new InvoiceService.InvoiceItemForm("Mazot (Dizel)", "Depo Dolumu", new BigDecimal("5000"), "litre", new BigDecimal("42.00"), null, null, null, null, null)
@@ -156,8 +185,8 @@ class InvoiceServiceTest {
                 "ALF-001", LocalDate.now(), null, InvoiceType.PURCHASE, BusinessUnit.QUARRY,
                 null, null, null, null, new BigDecimal("20"), false, "Tedarikçi Petrol", "Yakıt Alımı", items);
 
-        verify(quarryInventoryService).addFuelStock(eq(new BigDecimal("5000.00")), eq(new BigDecimal("42.00")), any(), any());
-        verify(costTransactionRepository, never()).save(any());
+        Mockito.verify(quarryInventoryService).addFuelStock(Mockito.eq(new BigDecimal("5000.00")), Mockito.eq(new BigDecimal("42.00")), ArgumentMatchers.any(), ArgumentMatchers.any());
+        Mockito.verify(costTransactionRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test
@@ -171,8 +200,8 @@ class InvoiceServiceTest {
                 .build();
 
 
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.QUARRY))
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.QUARRY))
                 .thenReturn(Optional.of(quarryCenter));
 
         List<InvoiceService.InvoiceItemForm> items = List.of(
@@ -184,11 +213,11 @@ class InvoiceServiceTest {
                 null, null, null, null, new BigDecimal("20"), true, "TEDAŞ", "Elektrik", items);
 
         // Subtotal (Net) is 25000, Total with 20% KDV is 30000. CostTransaction amount MUST be net (25000)
-        verify(costTransactionRepository).save(argThat(tx ->
+        Mockito.verify(costTransactionRepository).save(Mockito.argThat(tx ->
                 tx.getAmount().compareTo(new BigDecimal("25000.00")) == 0
                 && tx.getBusinessUnit() == BusinessUnit.QUARRY
         ));
-        verify(quarryInventoryService, never()).addFuelStock(any(), any(), any(), any());
+        Mockito.verify(quarryInventoryService, Mockito.never()).addFuelStock(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any());
     }
 
     @Test
@@ -202,7 +231,7 @@ class InvoiceServiceTest {
                 .unit("adet")
                 .build();
 
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<InvoiceService.InvoiceItemForm> items = List.of(
                 new InvoiceService.InvoiceItemForm("Matkap Ucu", "Ocak", new BigDecimal("5"), "adet", new BigDecimal("50.00"), null, null, 20L, null, null)
@@ -212,10 +241,10 @@ class InvoiceServiceTest {
                 "FAT-DRF-001", LocalDate.now(), null, InvoiceType.SALES, BusinessUnit.QUARRY,
                 null, null, null, null, new BigDecimal("20"), false, InvoiceStatus.DRAFT, "Müşteri A", null, items);
 
-        assertThat(inv.getStatus()).isEqualTo(InvoiceStatus.DRAFT);
-        assertThat(inv.getStockProcessed()).isFalse();
-        verify(stockItemRepository, never()).save(any());
-        verify(stockMovementRepository, never()).save(any());
+        Assertions.assertThat(inv.getStatus()).isEqualTo(InvoiceStatus.DRAFT);
+        Assertions.assertThat(inv.getStockProcessed()).isFalse();
+        Mockito.verify(stockItemRepository, Mockito.never()).save(ArgumentMatchers.any());
+        Mockito.verify(stockMovementRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test
@@ -247,20 +276,20 @@ class InvoiceServiceTest {
                 .items(new ArrayList<>(List.of(invoiceItem)))
                 .build();
 
-        when(invoiceRepository.findById(100L)).thenReturn(Optional.of(invoice));
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(invoiceRepository.findById(100L)).thenReturn(Optional.of(invoice));
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Invoice finalized = invoiceService.finalizeInvoice(100L);
 
-        assertThat(finalized.getStatus()).isEqualTo(InvoiceStatus.ISSUED);
-        assertThat(finalized.getStockProcessed()).isTrue();
-        assertThat(item.getQuantity()).isEqualByComparingTo("7");
-        verify(stockItemRepository).save(item);
-        verify(stockMovementRepository).save(any(StockMovement.class));
+        Assertions.assertThat(finalized.getStatus()).isEqualTo(InvoiceStatus.ISSUED);
+        Assertions.assertThat(finalized.getStockProcessed()).isTrue();
+        Assertions.assertThat(item.getQuantity()).isEqualByComparingTo("7");
+        Mockito.verify(stockItemRepository).save(item);
+        Mockito.verify(stockMovementRepository).save(ArgumentMatchers.any(StockMovement.class));
 
         // Idempotency: second finalize does not deduct stock again
         invoiceService.finalizeInvoice(100L);
-        assertThat(item.getQuantity()).isEqualByComparingTo("7");
+        Assertions.assertThat(item.getQuantity()).isEqualByComparingTo("7");
     }
 
     @Test
@@ -292,26 +321,26 @@ class InvoiceServiceTest {
                 .items(new ArrayList<>(List.of(invoiceItem)))
                 .build();
 
-        when(invoiceRepository.findById(200L)).thenReturn(Optional.of(invoice));
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(invoiceRepository.findById(200L)).thenReturn(Optional.of(invoice));
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Invoice cancelled = invoiceService.cancelInvoice(200L, "Müşteri vazgeçti");
 
-        assertThat(cancelled.getStatus()).isEqualTo(InvoiceStatus.CANCELLED);
-        assertThat(cancelled.getStockProcessed()).isFalse();
-        assertThat(item.getQuantity()).isEqualByComparingTo("10"); // 7 + 3
-        verify(stockItemRepository).save(item);
-        verify(stockMovementRepository).save(any(StockMovement.class));
+        Assertions.assertThat(cancelled.getStatus()).isEqualTo(InvoiceStatus.CANCELLED);
+        Assertions.assertThat(cancelled.getStockProcessed()).isFalse();
+        Assertions.assertThat(item.getQuantity()).isEqualByComparingTo("10"); // 7 + 3
+        Mockito.verify(stockItemRepository).save(item);
+        Mockito.verify(stockMovementRepository).save(ArgumentMatchers.any(StockMovement.class));
 
         // Idempotency: second cancel does not restore again
         invoiceService.cancelInvoice(200L, "Tekrar iptal");
-        assertThat(item.getQuantity()).isEqualByComparingTo("10");
+        Assertions.assertThat(item.getQuantity()).isEqualByComparingTo("10");
     }
 
     @Test
     @DisplayName("createInvoice saves quarryCategory correctly for purchase invoice")
     void createInvoice_PurchaseWithQuarryCategory_PersistsCategory() {
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<InvoiceService.InvoiceItemForm> items = List.of(
                 new InvoiceService.InvoiceItemForm("Ocak Elektrik Faturası", "Ocak", new BigDecimal("1"), "adet", new BigDecimal("15000.00"), null, null, null, null, null)
@@ -322,8 +351,8 @@ class InvoiceServiceTest {
                 null, null, null, null, new BigDecimal("20"), false, InvoiceStatus.ISSUED, "Tedaş A.Ş.",
                 null, items, QuarryCategory.ELEKTRIK);
 
-        assertThat(inv.getQuarryCategory()).isEqualTo(QuarryCategory.ELEKTRIK);
-        assertThat(inv.getInvoiceType()).isEqualTo(InvoiceType.PURCHASE);
+        Assertions.assertThat(inv.getQuarryCategory()).isEqualTo(QuarryCategory.ELEKTRIK);
+        Assertions.assertThat(inv.getInvoiceType()).isEqualTo(InvoiceType.PURCHASE);
     }
 
     @Test
@@ -339,14 +368,14 @@ class InvoiceServiceTest {
                 .collections(new ArrayList<>())
                 .build();
 
-        when(invoiceRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(invoice));
+        Mockito.when(invoiceRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(invoice));
 
         Invoice result = invoiceService.getInvoiceById(1L);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getInvoiceNo()).isEqualTo("FAT-001");
-        assertThat(result.getItems()).hasSize(1);
-        verify(invoiceRepository).findByIdWithDetails(1L);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result.getInvoiceNo()).isEqualTo("FAT-001");
+        Assertions.assertThat(result.getItems()).hasSize(1);
+        Mockito.verify(invoiceRepository).findByIdWithDetails(1L);
     }
 
     @Test
@@ -359,24 +388,24 @@ class InvoiceServiceTest {
                 .collections(new ArrayList<>())
                 .build();
 
-        when(invoiceRepository.findByIdWithDetails(2L)).thenReturn(Optional.empty());
-        when(invoiceRepository.findById(2L)).thenReturn(Optional.of(invoice));
+        Mockito.when(invoiceRepository.findByIdWithDetails(2L)).thenReturn(Optional.empty());
+        Mockito.when(invoiceRepository.findById(2L)).thenReturn(Optional.of(invoice));
 
         Invoice result = invoiceService.getInvoiceById(2L);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getInvoiceNo()).isEqualTo("FAT-002");
-        verify(invoiceRepository).findByIdWithDetails(2L);
-        verify(invoiceRepository).findById(2L);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result.getInvoiceNo()).isEqualTo("FAT-002");
+        Mockito.verify(invoiceRepository).findByIdWithDetails(2L);
+        Mockito.verify(invoiceRepository).findById(2L);
     }
 
     @Test
     @DisplayName("getInvoiceById throws IllegalArgumentException when invoice is not found")
     void getInvoiceById_NotFound_ThrowsException() {
-        when(invoiceRepository.findByIdWithDetails(999L)).thenReturn(Optional.empty());
-        when(invoiceRepository.findById(999L)).thenReturn(Optional.empty());
+        Mockito.when(invoiceRepository.findByIdWithDetails(999L)).thenReturn(Optional.empty());
+        Mockito.when(invoiceRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> invoiceService.getInvoiceById(999L))
+        Assertions.assertThatThrownBy(() -> invoiceService.getInvoiceById(999L))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Fatura bulunamadı: 999");
     }
@@ -394,8 +423,8 @@ class InvoiceServiceTest {
                 .status("AVAILABLE")
                 .build();
 
-        when(stockItemRepository.findById(100L)).thenReturn(Optional.of(sized));
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> {
+        Mockito.when(stockItemRepository.findById(100L)).thenReturn(Optional.of(sized));
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> {
             Invoice invObj = inv.getArgument(0);
             invObj.setId(101L);
             return invObj;
@@ -418,14 +447,14 @@ class InvoiceServiceTest {
                 null, null, null, null, new BigDecimal("20"), false, "Müşteri A", "Metretül Satış", items
         );
 
-        assertThat(saved).isNotNull();
-        assertThat(saved.getItems()).hasSize(1);
+        Assertions.assertThat(saved).isNotNull();
+        Assertions.assertThat(saved.getItems()).hasSize(1);
         InvoiceItem item = saved.getItems().get(0);
-        assertThat(item.getCalculatedM2()).isEqualByComparingTo("5.00");
+        Assertions.assertThat(item.getCalculatedM2()).isEqualByComparingTo("5.00");
 
         // Stock was 20.00, deducted 5.00 m2 -> should be 15.00 m2
-        assertThat(sized.getQuantity()).isEqualByComparingTo("15.00");
-        verify(stockItemRepository, atLeastOnce()).save(sized);
+        Assertions.assertThat(sized.getQuantity()).isEqualByComparingTo("15.00");
+        Mockito.verify(stockItemRepository, Mockito.atLeastOnce()).save(sized);
     }
 
     @Test
@@ -441,8 +470,8 @@ class InvoiceServiceTest {
                 .status("AVAILABLE")
                 .build();
 
-        when(stockItemRepository.findById(200L)).thenReturn(Optional.of(sized));
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> {
+        Mockito.when(stockItemRepository.findById(200L)).thenReturn(Optional.of(sized));
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> {
             Invoice invObj = inv.getArgument(0);
             invObj.setId(201L);
             return invObj;
@@ -465,14 +494,14 @@ class InvoiceServiceTest {
                 null, 1L, null, null, new BigDecimal("20"), false, "Tedarikçi A", "Metretül Alış", items
         );
 
-        assertThat(saved).isNotNull();
-        assertThat(saved.getItems()).hasSize(1);
+        Assertions.assertThat(saved).isNotNull();
+        Assertions.assertThat(saved.getItems()).hasSize(1);
         InvoiceItem item = saved.getItems().get(0);
-        assertThat(item.getCalculatedM2()).isEqualByComparingTo("10.00");
+        Assertions.assertThat(item.getCalculatedM2()).isEqualByComparingTo("10.00");
 
         // Stock was 5.00, added 10.00 m2 -> should be 15.00 m2
-        assertThat(sized.getQuantity()).isEqualByComparingTo("15.00");
-        verify(stockItemRepository, atLeastOnce()).save(sized);
+        Assertions.assertThat(sized.getQuantity()).isEqualByComparingTo("15.00");
+        Mockito.verify(stockItemRepository, Mockito.atLeastOnce()).save(sized);
     }
 
     @Test
@@ -501,10 +530,10 @@ class InvoiceServiceTest {
                 .unit("m2")
                 .build();
 
-        when(projectRepository.findById(50L)).thenReturn(Optional.of(project));
-        when(stockItemRepository.findById(500L)).thenReturn(Optional.of(item));
-        when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.SITE_STOCK)).thenReturn(Optional.of(siteYard));
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> {
+        Mockito.when(projectRepository.findById(50L)).thenReturn(Optional.of(project));
+        Mockito.when(stockItemRepository.findById(500L)).thenReturn(Optional.of(item));
+        Mockito.when(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.SITE_STOCK)).thenReturn(Optional.of(siteYard));
+        Mockito.when(invoiceRepository.save(ArgumentMatchers.any(Invoice.class))).thenAnswer(inv -> {
             Invoice invObj = inv.getArgument(0);
             if (invObj.getId() == null) invObj.setId(999L);
             return invObj;
@@ -528,15 +557,15 @@ class InvoiceServiceTest {
                 BigDecimal.ZERO, false, null, "Fabrikadan Şantiyeye Sevk", items
         );
 
-        assertThat(sales).isNotNull();
-        assertThat(sales.getTargetDepartment()).isEqualTo(BusinessUnit.SITE);
+        Assertions.assertThat(sales).isNotNull();
+        Assertions.assertThat(sales.getTargetDepartment()).isEqualTo(BusinessUnit.SITE);
 
         // Project cost should be updated by totalAmount (5000 TL + 10000 TL = 15000 TL)
-        assertThat(project.getActualCost()).isEqualByComparingTo("15000.00");
-        verify(projectRepository, atLeastOnce()).save(project);
+        Assertions.assertThat(project.getActualCost()).isEqualByComparingTo("15000.00");
+        Mockito.verify(projectRepository, Mockito.atLeastOnce()).save(project);
 
         // Verify that counterpart purchase invoice was saved with PURCHASE type and SITE department
-        verify(invoiceRepository, times(1)).save(argThat(inv ->
+        Mockito.verify(invoiceRepository, Mockito.times(1)).save(Mockito.argThat(inv ->
                 inv.getInvoiceType() == InvoiceType.PURCHASE
                 && inv.getDepartment() == BusinessUnit.SITE
                 && inv.getTargetDepartment() == BusinessUnit.FACTORY

@@ -1,12 +1,13 @@
 package com.ozerler.marble.repository;
 
-import com.ozerler.marble.model.PalletItem;
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
-import java.util.List;
+import com.ozerler.marble.model.PalletItem;
 
 @Repository
 public interface PalletItemRepository extends JpaRepository<PalletItem, Long> {

@@ -1,22 +1,32 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.model.*;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.StockMovementType;
-import com.ozerler.marble.model.enums.TargetDestination;
-import com.ozerler.marble.repository.StockMovementRepository;
-import com.ozerler.marble.util.UniqueCodes;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.Invoice;
+import com.ozerler.marble.model.OperationWorkOrder;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.StockLocation;
+import com.ozerler.marble.model.StockMovement;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.StockMovementType;
+import com.ozerler.marble.model.enums.TargetDestination;
+import com.ozerler.marble.repository.StockMovementRepository;
+import com.ozerler.marble.util.UniqueCodes;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor

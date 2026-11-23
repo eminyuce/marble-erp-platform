@@ -1,12 +1,13 @@
 package com.ozerler.marble.mapper;
 
-import com.ozerler.marble.dto.form.CostCenterForm;
-import com.ozerler.marble.dto.view.CostCenterRef;
-import com.ozerler.marble.model.CostCenter;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
+
+import com.ozerler.marble.dto.form.CostCenterForm;
+import com.ozerler.marble.dto.view.CostCenterRef;
+import com.ozerler.marble.model.CostCenter;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface CostCenterMapper {

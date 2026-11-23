@@ -1,9 +1,10 @@
 package com.ozerler.marble.model.enums;
 
-import com.ozerler.marble.util.MessageUtils;
-import lombok.Getter;
-
 import java.math.BigDecimal;
+
+import com.ozerler.marble.util.MessageUtils;
+
+import lombok.Getter;
 
 public enum QualityGrade {
     EXTRA("enum.quality_grade.extra", new BigDecimal("1.30")),

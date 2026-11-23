@@ -1,10 +1,10 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.QuarryDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.QuarryDto;
+import com.ozerler.marble.dto.TabulatorResponse;
 
 /**
  * Ocak listesi. Sort keys match {@code GridPages.QUARRY_SORTS}.

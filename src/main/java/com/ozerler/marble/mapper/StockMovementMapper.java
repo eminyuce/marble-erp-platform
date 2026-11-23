@@ -1,10 +1,11 @@
 package com.ozerler.marble.mapper;
 
-import com.ozerler.marble.dto.view.StockMovementView;
-import com.ozerler.marble.model.StockMovement;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
+
+import com.ozerler.marble.dto.view.StockMovementView;
+import com.ozerler.marble.model.StockMovement;
 
 /**
  * Copies stock movements into views. The invoice is left to the service, which sets it only when it is

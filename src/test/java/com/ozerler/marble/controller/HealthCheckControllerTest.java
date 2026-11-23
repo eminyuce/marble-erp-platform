@@ -1,25 +1,27 @@
 package com.ozerler.marble.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ozerler.marble.dto.DependencyHealth;
-import com.ozerler.marble.dto.HealthResponse;
-import com.ozerler.marble.service.SystemHealthService;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ozerler.marble.dto.DependencyHealth;
+import com.ozerler.marble.dto.HealthResponse;
+import com.ozerler.marble.service.SystemHealthService;
 
 @ExtendWith(MockitoExtension.class)
 class HealthCheckControllerTest {
@@ -40,17 +42,17 @@ class HealthCheckControllerTest {
     @Test
     @DisplayName("All dependencies UP returns HTTP 200 and overall UP")
     void allDependenciesUp_returnsOk() throws Exception {
-        when(systemHealthService.buildHealthResponse()).thenReturn(allUpHealthResponse());
+        Mockito.when(systemHealthService.buildHealthResponse()).thenReturn(allUpHealthResponse());
 
-        mockMvc.perform(get("/health"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies").doesNotExist())
-                .andExpect(jsonPath("$.response").doesNotExist())
-                .andExpect(jsonPath("$.serviceStatus").doesNotExist())
-                .andExpect(jsonPath("$.port").doesNotExist())
-                .andExpect(jsonPath("$.timestamp").doesNotExist());
+        mockMvc.perform(MockMvcRequestBuilders.get("/health"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("UP"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.dependencies").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.response").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.serviceStatus").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.port").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.timestamp").doesNotExist());
     }
 
     @Test
@@ -59,13 +61,13 @@ class HealthCheckControllerTest {
         Map<String, DependencyHealth> dependencies = healthyDependencies();
         dependencies.put("database", DependencyHealth.down("Database connection failed"));
 
-        when(systemHealthService.buildHealthResponse()).thenReturn(
+        Mockito.when(systemHealthService.buildHealthResponse()).thenReturn(
                 HealthResponse.builder().status("DOWN").dependencies(dependencies).build());
 
-        mockMvc.perform(get("/health/"))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies").doesNotExist());
+        mockMvc.perform(MockMvcRequestBuilders.get("/health/"))
+                .andExpect(MockMvcResultMatchers.status().isServiceUnavailable())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("DOWN"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.dependencies").doesNotExist());
     }
 
     @Test
@@ -74,13 +76,13 @@ class HealthCheckControllerTest {
         Map<String, DependencyHealth> dependencies = healthyDependencies();
         dependencies.put("quarryService", DependencyHealth.down("Unable to connect to Quarry Service"));
 
-        when(systemHealthService.buildHealthResponse()).thenReturn(
+        Mockito.when(systemHealthService.buildHealthResponse()).thenReturn(
                 HealthResponse.builder().status("DOWN").dependencies(dependencies).build());
 
-        mockMvc.perform(get("/health"))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies").doesNotExist());
+        mockMvc.perform(MockMvcRequestBuilders.get("/health"))
+                .andExpect(MockMvcResultMatchers.status().isServiceUnavailable())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("DOWN"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.dependencies").doesNotExist());
     }
 
     @Test
@@ -89,13 +91,13 @@ class HealthCheckControllerTest {
         Map<String, DependencyHealth> dependencies = healthyDependencies();
         dependencies.put("rustfs", DependencyHealth.down("RustFS erişilemiyor"));
 
-        when(systemHealthService.buildHealthResponse()).thenReturn(
+        Mockito.when(systemHealthService.buildHealthResponse()).thenReturn(
                 HealthResponse.builder().status("DOWN").dependencies(dependencies).build());
 
-        mockMvc.perform(get("/health"))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies").doesNotExist());
+        mockMvc.perform(MockMvcRequestBuilders.get("/health"))
+                .andExpect(MockMvcResultMatchers.status().isServiceUnavailable())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("DOWN"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.dependencies").doesNotExist());
     }
 
     @Test
@@ -109,22 +111,22 @@ class HealthCheckControllerTest {
         dependencies.put("costAccounting", DependencyHealth.down("Connection timeout"));
         dependencies.put("diskSpace", DependencyHealth.up());
 
-        when(systemHealthService.buildHealthResponse()).thenReturn(
+        Mockito.when(systemHealthService.buildHealthResponse()).thenReturn(
                 HealthResponse.builder().status("DOWN").dependencies(dependencies).build());
 
-        mockMvc.perform(get("/health"))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies").doesNotExist());
+        mockMvc.perform(MockMvcRequestBuilders.get("/health"))
+                .andExpect(MockMvcResultMatchers.status().isServiceUnavailable())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("DOWN"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.dependencies").doesNotExist());
     }
 
     @Test
     @DisplayName("Response JSON matches minimal health structure")
     void responseJsonStructure_isMinimal() throws Exception {
-        when(systemHealthService.buildHealthResponse()).thenReturn(allUpHealthResponse());
+        Mockito.when(systemHealthService.buildHealthResponse()).thenReturn(allUpHealthResponse());
 
-        String json = mockMvc.perform(get("/health"))
-                .andExpect(status().isOk())
+        String json = mockMvc.perform(MockMvcRequestBuilders.get("/health"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();

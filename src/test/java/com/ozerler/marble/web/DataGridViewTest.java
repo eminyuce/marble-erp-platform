@@ -1,11 +1,10 @@
 package com.ozerler.marble.web;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class DataGridViewTest {
 
@@ -14,8 +13,8 @@ class DataGridViewTest {
     void markersKeepFirstWindowAndLast() {
         List<PageMarker> markers = DataGridView.markers(12, 1677);
 
-        assertThat(labels(markers)).containsExactly("1", "…", "11", "12", "13", "14", "…", "1677");
-        assertThat(markers.get(3).isCurrent()).isTrue();
+        Assertions.assertThat(labels(markers)).containsExactly("1", "…", "11", "12", "13", "14", "…", "1677");
+        Assertions.assertThat(markers.get(3).isCurrent()).isTrue();
     }
 
     @Test
@@ -23,17 +22,17 @@ class DataGridViewTest {
     void shortListAndDefaultSize() {
         DataGridView grid = new DataGridView(1, 10, 1, 3, "", "", "sample", 4, List.of(), List.of());
 
-        assertThat(labels(grid.getMarkers())).containsExactly("1");
-        assertThat(grid.getSize()).isEqualTo(20);
-        assertThat(grid.getFrozenCount()).isEqualTo(1);
+        Assertions.assertThat(labels(grid.getMarkers())).containsExactly("1");
+        Assertions.assertThat(grid.getSize()).isEqualTo(20);
+        Assertions.assertThat(grid.getFrozenCount()).isEqualTo(1);
     }
 
     @Test
     @DisplayName("Id chip is a bordered monospace token and blank text is empty")
     void chipAndEmptyCell() {
-        assertThat(GridCell.chip(18067).getText()).isEqualTo("#18067");
-        assertThat(GridCell.chip(18067).isChip()).isTrue();
-        assertThat(GridCell.text(" ").isEmpty()).isTrue();
+        Assertions.assertThat(GridCell.chip(18067).getText()).isEqualTo("#18067");
+        Assertions.assertThat(GridCell.chip(18067).isChip()).isTrue();
+        Assertions.assertThat(GridCell.text(" ").isEmpty()).isTrue();
     }
 
     private static List<String> labels(List<PageMarker> markers) {

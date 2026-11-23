@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.ProjectDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.ProjectStatus;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Şantiye listesi columns. Sort keys match {@code GridPages.PROJECT_SORTS}. Status filter already exists.

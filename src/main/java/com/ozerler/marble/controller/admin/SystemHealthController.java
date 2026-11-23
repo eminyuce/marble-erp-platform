@@ -1,13 +1,7 @@
 package com.ozerler.marble.controller.admin;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.model.response.BackEndResponse;
-import com.ozerler.marble.model.response.ServiceStatus;
-import com.ozerler.marble.model.response.Status;
-import com.ozerler.marble.service.SystemHealthService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +12,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.Map;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.model.response.BackEndResponse;
+import com.ozerler.marble.model.response.ServiceStatus;
+import com.ozerler.marble.model.response.Status;
+import com.ozerler.marble.service.SystemHealthService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller

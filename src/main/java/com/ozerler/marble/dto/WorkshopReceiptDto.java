@@ -1,9 +1,9 @@
 package com.ozerler.marble.dto;
 
-import com.ozerler.marble.model.WorkshopMaterialReceipt;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import com.ozerler.marble.model.WorkshopMaterialReceipt;
 
 public record WorkshopReceiptDto(
         String receiptNo,

@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.OperationStatus;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Fabrika kesim iş emirleri. Sort keys match {@code GridPages.PRODUCTION_ORDER_SORTS}.

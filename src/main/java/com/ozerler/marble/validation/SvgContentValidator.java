@@ -1,6 +1,10 @@
 package com.ozerler.marble.validation;
 
-import com.ozerler.marble.exception.FileValidationException;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+import java.util.Set;
+
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -9,12 +13,10 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.ozerler.marble.exception.FileValidationException;
+
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Locale;
-import java.util.Set;
 
 /**
  * Rejects SVG payloads that can execute script, load external resources, or

@@ -1,5 +1,27 @@
 package com.ozerler.marble.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Optional;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import com.ozerler.marble.config.ObjectStorageProperties;
 import com.ozerler.marble.config.PresignedUrlProperties;
 import com.ozerler.marble.dto.DependencyHealth;
@@ -14,34 +36,6 @@ import com.ozerler.marble.storage.ObjectStorageService;
 import com.ozerler.marble.support.TestFiles;
 import com.ozerler.marble.validation.FileUploadValidator;
 import com.ozerler.marble.validation.SvgContentValidator;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FileStorageServiceTest {
@@ -85,15 +79,15 @@ class FileStorageServiceTest {
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 100L);
 
-        assertThat(saved.getOriginalName()).isEqualTo("block_front.jpg");
-        assertThat(saved.getEntityType()).isEqualTo("BLOCK");
-        assertThat(saved.getEntityId()).isEqualTo(100L);
-        assertThat(saved.getObjectKey()).startsWith("images/block/100/");
-        assertThat(saved.getObjectKey()).endsWith(".jpg");
-        assertThat(saved.getFilePath()).isEqualTo("/api/upload/view/1");
-        assertThat(saved.getChecksum()).isNotBlank();
-        assertThat(saved.isImage()).isTrue();
-        verify(objectStorageService).upload(anyString(), any(InputStream.class), anyLong(), anyString());
+        Assertions.assertThat(saved.getOriginalName()).isEqualTo("block_front.jpg");
+        Assertions.assertThat(saved.getEntityType()).isEqualTo("BLOCK");
+        Assertions.assertThat(saved.getEntityId()).isEqualTo(100L);
+        Assertions.assertThat(saved.getObjectKey()).startsWith("images/block/100/");
+        Assertions.assertThat(saved.getObjectKey()).endsWith(".jpg");
+        Assertions.assertThat(saved.getFilePath()).isEqualTo("/api/upload/view/1");
+        Assertions.assertThat(saved.getChecksum()).isNotBlank();
+        Assertions.assertThat(saved.isImage()).isTrue();
+        Mockito.verify(objectStorageService).upload(ArgumentMatchers.anyString(), ArgumentMatchers.any(InputStream.class), ArgumentMatchers.anyLong(), ArgumentMatchers.anyString());
     }
 
     @Test
@@ -105,10 +99,10 @@ class FileStorageServiceTest {
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 12L);
 
-        assertThat(saved.getObjectKey()).startsWith("svg/block/12/");
-        assertThat(saved.getObjectKey()).endsWith(".svg");
-        assertThat(saved.isImage()).isTrue();
-        assertThat(saved.getMimeType()).contains("svg");
+        Assertions.assertThat(saved.getObjectKey()).startsWith("svg/block/12/");
+        Assertions.assertThat(saved.getObjectKey()).endsWith(".svg");
+        Assertions.assertThat(saved.isImage()).isTrue();
+        Assertions.assertThat(saved.getMimeType()).contains("svg");
     }
 
     @Test
@@ -117,9 +111,9 @@ class FileStorageServiceTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "evil.svg", "image/svg+xml", TestFiles.maliciousSvg());
 
-        assertThatThrownBy(() -> fileStorageService.storeFile(file, "BLOCK", 1L))
+        Assertions.assertThatThrownBy(() -> fileStorageService.storeFile(file, "BLOCK", 1L))
                 .isInstanceOf(FileValidationException.class);
-        verify(objectStorageService, never()).upload(anyString(), any(), anyLong(), anyString());
+        Mockito.verify(objectStorageService, Mockito.never()).upload(ArgumentMatchers.anyString(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyString());
     }
 
     @Test
@@ -131,10 +125,10 @@ class FileStorageServiceTest {
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 100L);
 
-        assertThat(saved.getFilePath()).startsWith("/api/upload/view/");
-        assertThat(saved.getObjectKey()).startsWith("documents/block/100/");
-        assertThat(saved.isPdf()).isTrue();
-        assertThat(saved.isImage()).isFalse();
+        Assertions.assertThat(saved.getFilePath()).startsWith("/api/upload/view/");
+        Assertions.assertThat(saved.getObjectKey()).startsWith("documents/block/100/");
+        Assertions.assertThat(saved.isPdf()).isTrue();
+        Assertions.assertThat(saved.isImage()).isFalse();
     }
 
     @Test
@@ -148,8 +142,8 @@ class FileStorageServiceTest {
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", null);
 
-        assertThat(saved.getObjectKey()).startsWith("documents/block/pending/");
-        assertThat(saved.isWord()).isTrue();
+        Assertions.assertThat(saved.getObjectKey()).startsWith("documents/block/pending/");
+        Assertions.assertThat(saved.isWord()).isTrue();
     }
 
     @Test
@@ -163,10 +157,10 @@ class FileStorageServiceTest {
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", null);
 
-        assertThat(saved.isText()).isTrue();
-        assertThat(saved.isMarkdown()).isFalse();
-        assertThat(saved.isDocument()).isTrue();
-        assertThat(saved.getObjectKey()).contains("documents/");
+        Assertions.assertThat(saved.isText()).isTrue();
+        Assertions.assertThat(saved.isMarkdown()).isFalse();
+        Assertions.assertThat(saved.isDocument()).isTrue();
+        Assertions.assertThat(saved.getObjectKey()).contains("documents/");
     }
 
     @Test
@@ -180,12 +174,12 @@ class FileStorageServiceTest {
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 4L);
 
-        assertThat(saved.isMarkdown()).isTrue();
-        assertThat(saved.isText()).isFalse();
-        assertThat(saved.isDocument()).isTrue();
-        assertThat(saved.getMimeType()).isEqualTo("text/markdown");
-        assertThat(saved.getObjectKey()).startsWith("documents/block/4/");
-        assertThat(saved.getObjectKey()).endsWith(".md");
+        Assertions.assertThat(saved.isMarkdown()).isTrue();
+        Assertions.assertThat(saved.isText()).isFalse();
+        Assertions.assertThat(saved.isDocument()).isTrue();
+        Assertions.assertThat(saved.getMimeType()).isEqualTo("text/markdown");
+        Assertions.assertThat(saved.getObjectKey()).startsWith("documents/block/4/");
+        Assertions.assertThat(saved.getObjectKey()).endsWith(".md");
     }
 
     @Test
@@ -199,8 +193,8 @@ class FileStorageServiceTest {
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 11L);
 
-        assertThat(saved.isExcel()).isTrue();
-        assertThat(saved.getObjectKey()).startsWith("documents/block/11/");
+        Assertions.assertThat(saved.isExcel()).isTrue();
+        Assertions.assertThat(saved.getObjectKey()).startsWith("documents/block/11/");
     }
 
     @Test
@@ -214,8 +208,8 @@ class FileStorageServiceTest {
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 11L);
 
-        assertThat(saved.isExcel()).isTrue();
-        assertThat(saved.isDocument()).isTrue();
+        Assertions.assertThat(saved.isExcel()).isTrue();
+        Assertions.assertThat(saved.isDocument()).isTrue();
     }
 
     @Test
@@ -229,8 +223,8 @@ class FileStorageServiceTest {
 
         FileStorage saved = fileStorageService.storeFile(file, "BLOCK", 11L);
 
-        assertThat(saved.isCsv()).isTrue();
-        assertThat(saved.getOriginalName()).isEqualTo("spectrometry_data.csv");
+        Assertions.assertThat(saved.isCsv()).isTrue();
+        Assertions.assertThat(saved.getOriginalName()).isEqualTo("spectrometry_data.csv");
     }
 
     @Test
@@ -243,8 +237,8 @@ class FileStorageServiceTest {
         FileStorage one = fileStorageService.storeFile(first, "BLOCK", 1L);
         FileStorage two = fileStorageService.storeFile(second, "BLOCK", 1L);
 
-        assertThat(one.getOriginalName()).isEqualTo(two.getOriginalName());
-        assertThat(one.getObjectKey()).isNotEqualTo(two.getObjectKey());
+        Assertions.assertThat(one.getOriginalName()).isEqualTo(two.getOriginalName());
+        Assertions.assertThat(one.getObjectKey()).isNotEqualTo(two.getObjectKey());
     }
 
     @Test
@@ -253,7 +247,7 @@ class FileStorageServiceTest {
         MockMultipartFile emptyFile = new MockMultipartFile(
                 "file", "empty.jpg", "image/jpeg", new byte[0]);
 
-        assertThatThrownBy(() -> fileStorageService.storeFile(emptyFile, "BLOCK", 1L))
+        Assertions.assertThatThrownBy(() -> fileStorageService.storeFile(emptyFile, "BLOCK", 1L))
                 .isInstanceOf(FileValidationException.class);
     }
 
@@ -263,7 +257,7 @@ class FileStorageServiceTest {
         MockMultipartFile badFile = new MockMultipartFile(
                 "file", "../evil.jpg", "image/jpeg", TestFiles.jpeg());
 
-        assertThatThrownBy(() -> fileStorageService.storeFile(badFile, "BLOCK", 1L))
+        Assertions.assertThatThrownBy(() -> fileStorageService.storeFile(badFile, "BLOCK", 1L))
                 .isInstanceOf(FileValidationException.class);
     }
 
@@ -273,7 +267,7 @@ class FileStorageServiceTest {
         MockMultipartFile badFile = new MockMultipartFile(
                 "file", "malware.exe", "application/octet-stream", "bad".getBytes());
 
-        assertThatThrownBy(() -> fileStorageService.storeFile(badFile, "BLOCK", 1L))
+        Assertions.assertThatThrownBy(() -> fileStorageService.storeFile(badFile, "BLOCK", 1L))
                 .isInstanceOf(FileValidationException.class);
     }
 
@@ -283,7 +277,7 @@ class FileStorageServiceTest {
         MockMultipartFile badFile = new MockMultipartFile(
                 "file", "disguised.jpg", "image/jpeg", "MZ executable".getBytes());
 
-        assertThatThrownBy(() -> fileStorageService.storeFile(badFile, "BLOCK", 1L))
+        Assertions.assertThatThrownBy(() -> fileStorageService.storeFile(badFile, "BLOCK", 1L))
                 .isInstanceOf(FileValidationException.class);
     }
 
@@ -293,14 +287,14 @@ class FileStorageServiceTest {
         FileStorage f1 = FileStorage.builder().id(10L).fileName("f1.jpg").entityType("BLOCK").build();
         FileStorage f2 = FileStorage.builder().id(11L).fileName("f2.pdf").entityType("BLOCK").build();
 
-        when(fileStorageRepository.findByIdInAndDeletedFalse(List.of(10L, 11L)))
+        Mockito.when(fileStorageRepository.findByIdInAndDeletedFalse(List.of(10L, 11L)))
                 .thenReturn(List.of(f1, f2));
 
         fileStorageService.attachFilesToEntity(List.of(10L, 11L), "BLOCK", 500L);
 
-        assertThat(f1.getEntityId()).isEqualTo(500L);
-        assertThat(f2.getEntityId()).isEqualTo(500L);
-        verify(fileStorageRepository).saveAll(List.of(f1, f2));
+        Assertions.assertThat(f1.getEntityId()).isEqualTo(500L);
+        Assertions.assertThat(f2.getEntityId()).isEqualTo(500L);
+        Mockito.verify(fileStorageRepository).saveAll(List.of(f1, f2));
     }
 
     @Test
@@ -316,15 +310,15 @@ class FileStorageServiceTest {
                 .entityId(1L)
                 .build();
 
-        when(fileStorageRepository.findByIdAndDeletedFalse(42L)).thenReturn(Optional.of(fs));
+        Mockito.when(fileStorageRepository.findByIdAndDeletedFalse(42L)).thenReturn(Optional.of(fs));
 
         boolean deleted = fileStorageService.deleteFileRecord(42L);
 
-        assertThat(deleted).isTrue();
-        assertThat(fs.isDeleted()).isTrue();
-        assertThat(fs.getDeletedAt()).isNotNull();
-        verify(objectStorageService).delete("images/block/1/uuid.png");
-        verify(fileStorageRepository).save(fs);
+        Assertions.assertThat(deleted).isTrue();
+        Assertions.assertThat(fs.isDeleted()).isTrue();
+        Assertions.assertThat(fs.getDeletedAt()).isNotNull();
+        Mockito.verify(objectStorageService).delete("images/block/1/uuid.png");
+        Mockito.verify(fileStorageRepository).save(fs);
     }
 
     @Test
@@ -335,15 +329,15 @@ class FileStorageServiceTest {
         FileStorage f2 = FileStorage.builder().id(2L).fileName("f2.pdf")
                 .objectKey("documents/block/99/f2.pdf").entityType("BLOCK").entityId(99L).build();
 
-        when(fileStorageRepository.findByEntityTypeAndEntityId("BLOCK", 99L))
+        Mockito.when(fileStorageRepository.findByEntityTypeAndEntityId("BLOCK", 99L))
                 .thenReturn(List.of(f1, f2));
 
         fileStorageService.deleteAllFilesForEntity("BLOCK", 99L);
 
-        assertThat(f1.isDeleted()).isTrue();
-        assertThat(f2.isDeleted()).isTrue();
-        verify(objectStorageService).delete("images/block/99/f1.jpg");
-        verify(objectStorageService).delete("documents/block/99/f2.pdf");
+        Assertions.assertThat(f1.isDeleted()).isTrue();
+        Assertions.assertThat(f2.isDeleted()).isTrue();
+        Mockito.verify(objectStorageService).delete("images/block/99/f1.jpg");
+        Mockito.verify(objectStorageService).delete("documents/block/99/f2.pdf");
     }
 
     @Test
@@ -357,16 +351,16 @@ class FileStorageServiceTest {
                 .fileSize(8L)
                 .build();
 
-        when(fileStorageRepository.findByIdAndDeletedFalse(15L)).thenReturn(Optional.of(fs));
-        when(objectStorageService.download("documents/block/1/doc.pdf"))
+        Mockito.when(fileStorageRepository.findByIdAndDeletedFalse(15L)).thenReturn(Optional.of(fs));
+        Mockito.when(objectStorageService.download("documents/block/1/doc.pdf"))
                 .thenReturn(new ByteArrayInputStream("pdf-data".getBytes()));
 
         Resource resource = fileStorageService.loadAsResource(15L);
 
-        assertThat(resource).isNotNull();
-        assertThat(resource.getFilename()).isEqualTo("blocks_doc.pdf");
-        assertThat(resource.contentLength()).isEqualTo(8L);
-        assertThat(resource.getInputStream()).hasContent("pdf-data");
+        Assertions.assertThat(resource).isNotNull();
+        Assertions.assertThat(resource.getFilename()).isEqualTo("blocks_doc.pdf");
+        Assertions.assertThat(resource.contentLength()).isEqualTo(8L);
+        Assertions.assertThat(resource.getInputStream()).hasContent("pdf-data");
     }
 
     @Test
@@ -380,16 +374,16 @@ class FileStorageServiceTest {
                 .entityType("BLOCK")
                 .entityId(1L)
                 .build();
-        when(fileStorageRepository.findByIdAndDeletedFalse(8L)).thenReturn(Optional.of(fs));
-        when(objectStorageService.presignedDocumentUrl("documents/block/1/a.pdf"))
+        Mockito.when(fileStorageRepository.findByIdAndDeletedFalse(8L)).thenReturn(Optional.of(fs));
+        Mockito.when(objectStorageService.presignedDocumentUrl("documents/block/1/a.pdf"))
                 .thenReturn("http://localhost:9000/erp-files/documents/block/1/a.pdf?X-Amz-Expires=300");
 
         PresignedDownload download = fileStorageService.createPresignedDownload(8L);
 
-        assertThat(download.url()).contains("erp-files");
-        assertThat(download.expiresInSeconds()).isEqualTo(300);
-        assertThat(download.expiresAt()).isAfter(java.time.Instant.now());
-        verify(objectStorageService, never()).presignedImageUrl(anyString());
+        Assertions.assertThat(download.url()).contains("erp-files");
+        Assertions.assertThat(download.expiresInSeconds()).isEqualTo(300);
+        Assertions.assertThat(download.expiresAt()).isAfter(java.time.Instant.now());
+        Mockito.verify(objectStorageService, Mockito.never()).presignedImageUrl(ArgumentMatchers.anyString());
     }
 
     @Test
@@ -403,14 +397,14 @@ class FileStorageServiceTest {
                 .entityType("BLOCK")
                 .entityId(1L)
                 .build();
-        when(fileStorageRepository.findByIdAndDeletedFalse(9L)).thenReturn(Optional.of(fs));
-        when(objectStorageService.presignedImageUrl("images/block/1/a.jpg"))
+        Mockito.when(fileStorageRepository.findByIdAndDeletedFalse(9L)).thenReturn(Optional.of(fs));
+        Mockito.when(objectStorageService.presignedImageUrl("images/block/1/a.jpg"))
                 .thenReturn("http://localhost:9000/erp-files/images/block/1/a.jpg?X-Amz-Expires=1800");
 
         PresignedDownload download = fileStorageService.createPresignedDownload(9L);
 
-        assertThat(download.expiresInSeconds()).isEqualTo(1800);
-        verify(objectStorageService, never()).presignedDocumentUrl(anyString());
+        Assertions.assertThat(download.expiresInSeconds()).isEqualTo(1800);
+        Mockito.verify(objectStorageService, Mockito.never()).presignedDocumentUrl(ArgumentMatchers.anyString());
     }
 
     @Test
@@ -424,13 +418,13 @@ class FileStorageServiceTest {
                 .entityType("BLOCK")
                 .build();
         fs.setAddUserId("owner@example.com");
-        when(fileStorageRepository.findByIdAndDeletedFalse(3L)).thenReturn(Optional.of(fs));
+        Mockito.when(fileStorageRepository.findByIdAndDeletedFalse(3L)).thenReturn(Optional.of(fs));
         authenticate("other@example.com", "ROLE_USER");
 
-        assertThatThrownBy(() -> fileStorageService.createPresignedDownload(3L))
+        Assertions.assertThatThrownBy(() -> fileStorageService.createPresignedDownload(3L))
                 .isInstanceOf(FileAccessDeniedException.class);
-        verify(objectStorageService, never()).presignedImageUrl(anyString());
-        verify(objectStorageService, never()).presignedDocumentUrl(anyString());
+        Mockito.verify(objectStorageService, Mockito.never()).presignedImageUrl(ArgumentMatchers.anyString());
+        Mockito.verify(objectStorageService, Mockito.never()).presignedDocumentUrl(ArgumentMatchers.anyString());
     }
 
     @Test
@@ -447,13 +441,13 @@ class FileStorageServiceTest {
                 .entityType("BLOCK")
                 .entityId(1L)
                 .build();
-        when(objectStorageService.presignedImageUrl("images/block/1/a.jpg"))
+        Mockito.when(objectStorageService.presignedImageUrl("images/block/1/a.jpg"))
                 .thenReturn("http://localhost:9000/erp-files/images/block/1/a.jpg?X-Amz-Signature=hidden");
 
         FileStorageDto view = fileStorageService.toView(fs);
 
-        assertThat(view.getPresignedImageUrl()).contains("X-Amz-Signature");
-        assertThat(fs.getFilePath()).isEqualTo("/api/upload/view/4");
+        Assertions.assertThat(view.getPresignedImageUrl()).contains("X-Amz-Signature");
+        Assertions.assertThat(fs.getFilePath()).isEqualTo("/api/upload/view/4");
     }
 
     @Test
@@ -465,43 +459,43 @@ class FileStorageServiceTest {
                 .entityType("BLOCK")
                 .build();
         fs.setAddUserId("owner@example.com");
-        when(fileStorageRepository.findByIdAndDeletedFalse(3L)).thenReturn(Optional.of(fs));
+        Mockito.when(fileStorageRepository.findByIdAndDeletedFalse(3L)).thenReturn(Optional.of(fs));
         authenticate("other@example.com", "ROLE_USER");
 
-        assertThatThrownBy(() -> fileStorageService.requireAccessibleFile(3L))
+        Assertions.assertThatThrownBy(() -> fileStorageService.requireAccessibleFile(3L))
                 .isInstanceOf(FileAccessDeniedException.class);
     }
 
     @Test
     @DisplayName("checkStorageHealth should report UP when object storage is healthy")
     void checkStorageHealth_Success() {
-        when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.up());
+        Mockito.when(objectStorageService.checkHealth()).thenReturn(DependencyHealth.up());
 
         var health = fileStorageService.checkStorageHealth();
 
-        assertThat(health.getStatus()).isEqualTo("UP");
+        Assertions.assertThat(health.getStatus()).isEqualTo("UP");
     }
 
     @Test
     @DisplayName("checkStorageHealth should report DOWN when object storage is unavailable")
     void checkStorageHealth_WhenStorageDown_ReportsDown() {
-        when(objectStorageService.checkHealth())
+        Mockito.when(objectStorageService.checkHealth())
                 .thenReturn(DependencyHealth.down("RustFS erişilemiyor"));
 
         var health = fileStorageService.checkStorageHealth();
 
-        assertThat(health.getStatus()).isEqualTo("DOWN");
-        assertThat(health.getError()).contains("RustFS");
+        Assertions.assertThat(health.getStatus()).isEqualTo("DOWN");
+        Assertions.assertThat(health.getError()).contains("RustFS");
     }
 
     private void stubSuccessfulUpload() {
-        when(objectStorageService.getBucketName()).thenReturn("erp-files");
-        doAnswer(invocation -> {
+        Mockito.when(objectStorageService.getBucketName()).thenReturn("erp-files");
+        Mockito.doAnswer(invocation -> {
             InputStream in = invocation.getArgument(1);
             in.readAllBytes();
             return null;
-        }).when(objectStorageService).upload(anyString(), any(InputStream.class), anyLong(), anyString());
-        when(fileStorageRepository.save(any(FileStorage.class))).thenAnswer(invocation -> {
+        }).when(objectStorageService).upload(ArgumentMatchers.anyString(), ArgumentMatchers.any(InputStream.class), ArgumentMatchers.anyLong(), ArgumentMatchers.anyString());
+        Mockito.when(fileStorageRepository.save(ArgumentMatchers.any(FileStorage.class))).thenAnswer(invocation -> {
             FileStorage fs = invocation.getArgument(0);
             if (fs.getId() == null) {
                 fs.setId(1L);

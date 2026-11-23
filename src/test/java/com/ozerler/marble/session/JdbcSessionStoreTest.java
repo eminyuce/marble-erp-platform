@@ -1,5 +1,11 @@
 package com.ozerler.marble.session;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -25,17 +31,10 @@ import org.springframework.session.SessionRepository;
 import org.springframework.session.jdbc.JdbcIndexedSessionRepository;
 import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.DefaultCookieSerializer;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Two application contexts share one Postgres database. The second context can
@@ -77,51 +76,51 @@ class JdbcSessionStoreTest {
         String sessionId = saveLogin(writerRepository);
 
         Session loaded = find(reader.getBean(SessionRepository.class), sessionId);
-        assertThat(loaded).isNotNull();
+        Assertions.assertThat(loaded).isNotNull();
         SecurityContext restored = loaded.getAttribute(SECURITY_CONTEXT);
-        assertThat(restored).isNotNull();
-        assertThat(restored.getAuthentication().getName()).isEqualTo(PRINCIPAL);
-        assertThat(restored.getAuthentication().getAuthorities())
+        Assertions.assertThat(restored).isNotNull();
+        Assertions.assertThat(restored.getAuthentication().getName()).isEqualTo(PRINCIPAL);
+        Assertions.assertThat(restored.getAuthentication().getAuthorities())
                 .extracting(authority -> authority.getAuthority())
                 .containsExactlyInAnyOrder("ROLE_ADMIN", "ROLE_EXECUTIVE");
-        assertThat(restored.getAuthentication().getDetails()).isInstanceOf(WebAuthenticationDetails.class);
+        Assertions.assertThat(restored.getAuthentication().getDetails()).isInstanceOf(WebAuthenticationDetails.class);
 
         @SuppressWarnings("unchecked")
         Map<String, List<String>> form = loaded.getAttribute("preservedForm");
-        assertThat(form.get("customerName")).containsExactly("Özerler");
-        assertThat((String) loaded.getAttribute("erp.note")).isEqualTo("second-replica");
+        Assertions.assertThat(form.get("customerName")).containsExactly("Özerler");
+        Assertions.assertThat((String) loaded.getAttribute("erp.note")).isEqualTo("second-replica");
 
         JdbcTemplate jdbc = reader.getBean(JdbcTemplate.class);
         String principal = jdbc.queryForObject(
                 "SELECT PRINCIPAL_NAME FROM SPRING_SESSION WHERE SESSION_ID = ?",
                 String.class,
                 sessionId);
-        assertThat(principal).isEqualTo(PRINCIPAL);
+        Assertions.assertThat(principal).isEqualTo(PRINCIPAL);
 
         List<String> indexes = jdbc.queryForList(
                 "SELECT indexname FROM pg_indexes WHERE tablename = 'spring_session'",
                 String.class);
-        assertThat(indexes).contains("spring_session_ix1", "spring_session_ix2", "spring_session_ix3");
+        Assertions.assertThat(indexes).contains("spring_session_ix1", "spring_session_ix2", "spring_session_ix3");
 
         Map<String, ? extends Session> byPrincipal = findByPrincipal(
                 reader.getBean(FindByIndexNameSessionRepository.class),
                 PRINCIPAL);
-        assertThat(byPrincipal).containsKey(sessionId);
+        Assertions.assertThat(byPrincipal).containsKey(sessionId);
 
         Environment environment = writer.getEnvironment();
-        assertThat(environment.getProperty("spring.session.jdbc.initialize-schema")).isEqualTo("never");
-        assertThat(environment.getProperty("spring.session.jdbc.cleanup-cron")).isEqualTo("0 * * * * *");
-        assertThat(environment.getProperty("spring.session.jdbc.save-mode")).isEqualTo("on-set-attribute");
-        assertThat(environment.getProperty("spring.session.jdbc.flush-mode")).isEqualTo("on-save");
+        Assertions.assertThat(environment.getProperty("spring.session.jdbc.initialize-schema")).isEqualTo("never");
+        Assertions.assertThat(environment.getProperty("spring.session.jdbc.cleanup-cron")).isEqualTo("0 * * * * *");
+        Assertions.assertThat(environment.getProperty("spring.session.jdbc.save-mode")).isEqualTo("on-set-attribute");
+        Assertions.assertThat(environment.getProperty("spring.session.jdbc.flush-mode")).isEqualTo("on-save");
 
         DefaultCookieSerializer serializer = writer.getBean(DefaultCookieSerializer.class);
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         serializer.writeCookieValue(new CookieSerializer.CookieValue(request, response, "abc"));
         String setCookie = response.getHeader("Set-Cookie");
-        assertThat(setCookie).startsWith("SESSION=");
-        assertThat(setCookie).contains("HttpOnly").contains("SameSite=Lax");
-        assertThat(setCookie).doesNotContain("Secure");
+        Assertions.assertThat(setCookie).startsWith("SESSION=");
+        Assertions.assertThat(setCookie).contains("HttpOnly").contains("SameSite=Lax");
+        Assertions.assertThat(setCookie).doesNotContain("Secure");
     }
 
     @Test
@@ -133,15 +132,15 @@ class JdbcSessionStoreTest {
 
         JdbcTemplate jdbc = writer.getBean(JdbcTemplate.class);
         jdbc.update("UPDATE SPRING_SESSION SET EXPIRY_TIME = ? WHERE SESSION_ID = ?", 0L, expiredId);
-        assertThat(countRows(jdbc, expiredId)).isEqualTo(1);
+        Assertions.assertThat(countRows(jdbc, expiredId)).isEqualTo(1);
 
         writer.getBean(JdbcIndexedSessionRepository.class).cleanUpExpiredSessions();
 
-        assertThat(countRows(jdbc, expiredId)).isZero();
-        assertThat(countAttributes(jdbc, expiredId)).isZero();
-        assertThat(countRows(jdbc, liveId)).isEqualTo(1);
-        assertThat(find(reader.getBean(SessionRepository.class), liveId)).isNotNull();
-        assertThat(find(reader.getBean(SessionRepository.class), expiredId)).isNull();
+        Assertions.assertThat(countRows(jdbc, expiredId)).isZero();
+        Assertions.assertThat(countAttributes(jdbc, expiredId)).isZero();
+        Assertions.assertThat(countRows(jdbc, liveId)).isEqualTo(1);
+        Assertions.assertThat(find(reader.getBean(SessionRepository.class), liveId)).isNotNull();
+        Assertions.assertThat(find(reader.getBean(SessionRepository.class), expiredId)).isNull();
     }
 
     private static String saveLogin(SessionRepository<?> repository) {

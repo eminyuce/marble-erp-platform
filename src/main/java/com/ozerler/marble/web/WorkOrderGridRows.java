@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.view.WorkOrderView;
-import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.view.WorkOrderView;
+import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
 
 /**
  * Cells shared by the factory, workshop, and combined work-order grids.

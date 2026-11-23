@@ -1,12 +1,14 @@
 package com.ozerler.marble.controller.admin;
 
-import com.ozerler.marble.dto.DashboardKpiDto;
-import com.ozerler.marble.service.DashboardService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.ozerler.marble.dto.DashboardKpiDto;
+import com.ozerler.marble.service.DashboardService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/admin")

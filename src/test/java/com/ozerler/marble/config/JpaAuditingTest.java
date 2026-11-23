@@ -1,7 +1,6 @@
 package com.ozerler.marble.config;
 
-import com.ozerler.marble.model.Customer;
-import com.ozerler.marble.repository.CustomerRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +9,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.repository.CustomerRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -34,15 +34,15 @@ class JpaAuditingTest {
 
         Customer saved = customerRepository.saveAndFlush(customer);
 
-        assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getCreatedDate()).isNotNull();
-        assertThat(saved.getUpdatedDate()).isNotNull();
-        assertThat(saved.getAddUserId()).isEqualTo("auditor@ozerler.com");
-        assertThat(saved.getUpdateUserId()).isEqualTo("auditor@ozerler.com");
+        Assertions.assertThat(saved.getId()).isNotNull();
+        Assertions.assertThat(saved.getCreatedDate()).isNotNull();
+        Assertions.assertThat(saved.getUpdatedDate()).isNotNull();
+        Assertions.assertThat(saved.getAddUserId()).isEqualTo("auditor@ozerler.com");
+        Assertions.assertThat(saved.getUpdateUserId()).isEqualTo("auditor@ozerler.com");
 
         // Backward-compatible alias getters
-        assertThat(saved.getCreatedAt()).isEqualTo(saved.getCreatedDate());
-        assertThat(saved.getUpdatedAt()).isEqualTo(saved.getUpdatedDate());
+        Assertions.assertThat(saved.getCreatedAt()).isEqualTo(saved.getCreatedDate());
+        Assertions.assertThat(saved.getUpdatedAt()).isEqualTo(saved.getUpdatedDate());
     }
 
     @Test
@@ -58,10 +58,10 @@ class JpaAuditingTest {
 
         Customer saved = customerRepository.saveAndFlush(customer);
 
-        assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getCreatedDate()).isNotNull();
-        assertThat(saved.getUpdatedDate()).isNotNull();
-        assertThat(saved.getAddUserId()).isEqualTo("system@ozerler.com");
-        assertThat(saved.getUpdateUserId()).isEqualTo("system@ozerler.com");
+        Assertions.assertThat(saved.getId()).isNotNull();
+        Assertions.assertThat(saved.getCreatedDate()).isNotNull();
+        Assertions.assertThat(saved.getUpdatedDate()).isNotNull();
+        Assertions.assertThat(saved.getAddUserId()).isEqualTo("system@ozerler.com");
+        Assertions.assertThat(saved.getUpdateUserId()).isEqualTo("system@ozerler.com");
     }
 }

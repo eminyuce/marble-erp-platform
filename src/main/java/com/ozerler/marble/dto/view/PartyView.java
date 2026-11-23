@@ -3,6 +3,7 @@ package com.ozerler.marble.dto.view;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CustomerType;
 import com.ozerler.marble.model.enums.SupplierType;
+
 import lombok.Getter;
 import lombok.Setter;
 

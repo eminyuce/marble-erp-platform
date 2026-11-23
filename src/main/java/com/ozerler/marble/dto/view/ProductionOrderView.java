@@ -1,16 +1,17 @@
 package com.ozerler.marble.dto.view;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import com.ozerler.marble.model.enums.ProcessType;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.ScrapReasonCode;
 import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.model.enums.SurfaceFinish;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter

@@ -1,9 +1,10 @@
 package com.ozerler.marble.mapper;
 
-import com.ozerler.marble.dto.view.RoleView;
-import com.ozerler.marble.model.Role;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
+
+import com.ozerler.marble.dto.view.RoleView;
+import com.ozerler.marble.model.Role;
 
 /**
  * Copies roles into views. No calculation happens here.

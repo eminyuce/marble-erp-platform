@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.StockLocationDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.BusinessUnit;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Stok sahası listesi. Sort keys match {@code GridPages.STOCK_LOCATION_SORTS}. Unit filter already exists.

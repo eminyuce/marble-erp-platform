@@ -1,5 +1,18 @@
 package com.ozerler.marble.controller.erp;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.ozerler.marble.model.StockItem;
 import com.ozerler.marble.model.StockLocation;
 import com.ozerler.marble.model.enums.BusinessUnit;
@@ -7,19 +20,6 @@ import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.service.InvoiceScreenService;
 import com.ozerler.marble.service.InvoiceService;
 import com.ozerler.marble.service.QuarryInventoryService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceControllerAvailableStockTest {
@@ -47,13 +47,13 @@ class InvoiceControllerAvailableStockTest {
                 .stoneType("Traverten")
                 .build();
 
-        when(formLookup.positiveStockEntities())
+        Mockito.when(formLookup.positiveStockEntities())
                 .thenReturn(List.of(factoryItem, workshopItem, unlocatedItem));
 
         List<Map<String, Object>> result = screen.availableStock(
                 BusinessUnit.FACTORY, "SIZED", null, null, false);
 
-        assertThat(result).extracting(row -> row.get("code"))
+        Assertions.assertThat(result).extracting(row -> row.get("code"))
                 .containsExactly("EB-FAB", "EB-YOK");
     }
 

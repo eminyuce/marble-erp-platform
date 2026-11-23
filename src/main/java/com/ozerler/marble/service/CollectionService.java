@@ -1,24 +1,32 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.model.*;
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.CheckStatus;
-import com.ozerler.marble.model.enums.CollectionMethod;
-import com.ozerler.marble.model.enums.InvoiceStatus;
-import com.ozerler.marble.repository.*;
-import com.ozerler.marble.util.UniqueCodes;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
+import com.ozerler.marble.model.CheckRecord;
+import com.ozerler.marble.model.CollectionRecord;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.Invoice;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.CheckStatus;
+import com.ozerler.marble.model.enums.CollectionMethod;
+import com.ozerler.marble.model.enums.InvoiceStatus;
+import com.ozerler.marble.repository.CheckRecordRepository;
+import com.ozerler.marble.repository.CollectionRecordRepository;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.InvoiceRepository;
+import com.ozerler.marble.util.UniqueCodes;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor

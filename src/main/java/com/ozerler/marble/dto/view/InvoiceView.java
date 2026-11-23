@@ -1,16 +1,17 @@
 package com.ozerler.marble.dto.view;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CollectionMethod;
 import com.ozerler.marble.model.enums.InvoiceStatus;
 import com.ozerler.marble.model.enums.InvoiceType;
 import com.ozerler.marble.model.enums.QuarryCategory;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
 
 @Getter
 @Setter

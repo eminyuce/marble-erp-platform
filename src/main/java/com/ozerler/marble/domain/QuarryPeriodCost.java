@@ -1,11 +1,11 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.util.MessageUtils;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.util.MessageUtils;
 
 /**
  * Quarry monthly cost: period expense / produced tons, with zero-production handling.

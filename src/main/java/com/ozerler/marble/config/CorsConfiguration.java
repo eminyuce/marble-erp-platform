@@ -1,13 +1,14 @@
 package com.ozerler.marble.config;
 
-import com.ozerler.marble.common.Constants;
+import java.util.Arrays;
+
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.util.Arrays;
+import com.ozerler.marble.common.Constants;
 
 @Configuration
 @EnableConfigurationProperties(CorsProperties.class)

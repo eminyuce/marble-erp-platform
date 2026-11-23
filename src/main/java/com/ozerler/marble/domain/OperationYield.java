@@ -1,12 +1,12 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.model.enums.QuantityUnit;
-import com.ozerler.marble.util.MessageUtils;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.model.enums.QuantityUnit;
+import com.ozerler.marble.util.MessageUtils;
 
 /**
  * Factory and workshop yield rules. Different physical units are never converted.

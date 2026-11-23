@@ -1,25 +1,37 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.GlobalSearchResponse;
-import com.ozerler.marble.model.Block;
-import com.ozerler.marble.model.Project;
-import com.ozerler.marble.repository.*;
+import static org.mockito.Mockito.never;
+
+import java.util.List;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.task.support.TaskExecutorAdapter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import com.ozerler.marble.dto.GlobalSearchResponse;
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.CutItemRepository;
+import com.ozerler.marble.repository.CutOrderRepository;
+import com.ozerler.marble.repository.ProductionOrderRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.PurchaseOrderRepository;
+import com.ozerler.marble.repository.QuarryRepository;
+import com.ozerler.marble.repository.SalesOrderRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.SupplierRepository;
+import com.ozerler.marble.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class GlobalSearchServiceTest {
@@ -67,19 +79,19 @@ class GlobalSearchServiceTest {
     void search_ShortQuery_DoesNotHitRepositories() {
         GlobalSearchResponse response = globalSearchService.search("a");
 
-        assertThat(response.getTotal()).isZero();
-        assertThat(response.getResults()).isEmpty();
-        verify(blockRepository, never()).searchByBlockCode(any(), any());
-        verify(projectRepository, never()).searchByCodeOrName(any(), any());
+        Assertions.assertThat(response.getTotal()).isZero();
+        Assertions.assertThat(response.getResults()).isEmpty();
+        Mockito.verify(blockRepository, Mockito.never()).searchByBlockCode(Mockito.any(), Mockito.any());
+        Mockito.verify(projectRepository, Mockito.never()).searchByCodeOrName(Mockito.any(), Mockito.any());
     }
 
     @Test
     @DisplayName("search fans out across all entity repositories and merges hits")
     void search_MergesHitsFromAllSources() {
         stubEmptySearches();
-        when(blockRepository.searchByBlockCode(eq("blok"), any(Pageable.class)))
+        Mockito.when(blockRepository.searchByBlockCode(Mockito.eq("blok"), Mockito.any(Pageable.class)))
                 .thenReturn(List.of(Block.builder().blockCode("BLK-100").stoneType("Beyaz").build()));
-        when(projectRepository.searchByCodeOrName(eq("blok"), any(Pageable.class)))
+        Mockito.when(projectRepository.searchByCodeOrName(Mockito.eq("blok"), Mockito.any(Pageable.class)))
                 .thenReturn(List.of(Project.builder()
                         .id(4L)
                         .projectCode("PRJ-4")
@@ -89,47 +101,47 @@ class GlobalSearchServiceTest {
 
         GlobalSearchResponse response = globalSearchService.search("blok");
 
-        assertThat(response.getTotal()).isEqualTo(2);
-        assertThat(response.getResults()).extracting(hit -> hit.getType())
+        Assertions.assertThat(response.getTotal()).isEqualTo(2);
+        Assertions.assertThat(response.getResults()).extracting(hit -> hit.getType())
                 .containsExactlyInAnyOrder("BLOCK", "PROJECT");
-        verify(slabRepository).searchBySlabCode(eq("blok"), any(Pageable.class));
-        verify(productionOrderRepository).searchByOrderNo(eq("blok"), any(Pageable.class));
-        verify(cutOrderRepository).searchByCutOrderNo(eq("blok"), any(Pageable.class));
-        verify(salesOrderRepository).searchByOrderNo(eq("blok"), any(Pageable.class));
-        verify(purchaseOrderRepository).searchByPoNumber(eq("blok"), any(Pageable.class));
-        verify(userRepository).searchActiveUsers(eq("blok"), isNull(), isNull(), any(Pageable.class));
-        verify(customerRepository).searchByCodeOrName(eq("blok"), any(Pageable.class));
-        verify(supplierRepository).searchByCodeOrName(eq("blok"), any(Pageable.class));
-        verify(costCenterRepository).searchByCodeOrName(eq("blok"), any(Pageable.class));
-        verify(cutItemRepository).searchByItemCode(eq("blok"), any(Pageable.class));
-        verify(quarryRepository).searchByCodeOrName(eq("blok"), any(Pageable.class));
+        Mockito.verify(slabRepository).searchBySlabCode(Mockito.eq("blok"), Mockito.any(Pageable.class));
+        Mockito.verify(productionOrderRepository).searchByOrderNo(Mockito.eq("blok"), Mockito.any(Pageable.class));
+        Mockito.verify(cutOrderRepository).searchByCutOrderNo(Mockito.eq("blok"), Mockito.any(Pageable.class));
+        Mockito.verify(salesOrderRepository).searchByOrderNo(Mockito.eq("blok"), Mockito.any(Pageable.class));
+        Mockito.verify(purchaseOrderRepository).searchByPoNumber(Mockito.eq("blok"), Mockito.any(Pageable.class));
+        Mockito.verify(userRepository).searchActiveUsers(Mockito.eq("blok"), Mockito.isNull(), Mockito.isNull(), Mockito.any(Pageable.class));
+        Mockito.verify(customerRepository).searchByCodeOrName(Mockito.eq("blok"), Mockito.any(Pageable.class));
+        Mockito.verify(supplierRepository).searchByCodeOrName(Mockito.eq("blok"), Mockito.any(Pageable.class));
+        Mockito.verify(costCenterRepository).searchByCodeOrName(Mockito.eq("blok"), Mockito.any(Pageable.class));
+        Mockito.verify(cutItemRepository).searchByItemCode(Mockito.eq("blok"), Mockito.any(Pageable.class));
+        Mockito.verify(quarryRepository).searchByCodeOrName(Mockito.eq("blok"), Mockito.any(Pageable.class));
     }
 
     @Test
     @DisplayName("search unwraps repository failures from worker threads")
     void search_PropagatesRepositoryFailure() {
         stubEmptySearches();
-        when(blockRepository.searchByBlockCode(eq("xx"), any(Pageable.class)))
+        Mockito.when(blockRepository.searchByBlockCode(Mockito.eq("xx"), Mockito.any(Pageable.class)))
                 .thenThrow(new IllegalStateException("blok araması başarısız"));
 
-        assertThatThrownBy(() -> globalSearchService.search("xx"))
+        Assertions.assertThatThrownBy(() -> globalSearchService.search("xx"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("blok araması başarısız");
     }
 
     private void stubEmptySearches() {
-        when(blockRepository.searchByBlockCode(any(), any())).thenReturn(List.of());
-        when(projectRepository.searchByCodeOrName(any(), any())).thenReturn(List.of());
-        when(slabRepository.searchBySlabCode(any(), any())).thenReturn(List.of());
-        when(productionOrderRepository.searchByOrderNo(any(), any())).thenReturn(List.of());
-        when(cutOrderRepository.searchByCutOrderNo(any(), any())).thenReturn(List.of());
-        when(salesOrderRepository.searchByOrderNo(any(), any())).thenReturn(List.of());
-        when(purchaseOrderRepository.searchByPoNumber(any(), any())).thenReturn(List.of());
-        when(userRepository.searchActiveUsers(any(), isNull(), isNull(), any())).thenReturn(Page.empty());
-        when(customerRepository.searchByCodeOrName(any(), any())).thenReturn(List.of());
-        when(supplierRepository.searchByCodeOrName(any(), any())).thenReturn(List.of());
-        when(costCenterRepository.searchByCodeOrName(any(), any())).thenReturn(List.of());
-        when(cutItemRepository.searchByItemCode(any(), any())).thenReturn(List.of());
-        when(quarryRepository.searchByCodeOrName(any(), any())).thenReturn(List.of());
+        Mockito.when(blockRepository.searchByBlockCode(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(projectRepository.searchByCodeOrName(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(slabRepository.searchBySlabCode(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(productionOrderRepository.searchByOrderNo(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(cutOrderRepository.searchByCutOrderNo(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(salesOrderRepository.searchByOrderNo(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(purchaseOrderRepository.searchByPoNumber(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(userRepository.searchActiveUsers(Mockito.any(), Mockito.isNull(), Mockito.isNull(), Mockito.any())).thenReturn(Page.empty());
+        Mockito.when(customerRepository.searchByCodeOrName(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(supplierRepository.searchByCodeOrName(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(costCenterRepository.searchByCodeOrName(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(cutItemRepository.searchByItemCode(Mockito.any(), Mockito.any())).thenReturn(List.of());
+        Mockito.when(quarryRepository.searchByCodeOrName(Mockito.any(), Mockito.any())).thenReturn(List.of());
     }
 }

@@ -1,9 +1,9 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.service.ReportService;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.service.ReportService;
 
 /**
  * Selected report preview. Headers come from the report and are not sortable. Rows are paged in memory.

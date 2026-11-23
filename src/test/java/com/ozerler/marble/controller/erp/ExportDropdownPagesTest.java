@@ -1,11 +1,10 @@
 package com.ozerler.marble.controller.erp;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class ExportDropdownPagesTest {
 
@@ -33,10 +32,10 @@ class ExportDropdownPagesTest {
     void everyListPageUsesSharedExportDropdown() throws Exception {
         for (Map.Entry<String, String> page : LIST_PAGES.entrySet()) {
             String source = readResource(page.getKey());
-            assertThat(source)
+            Assertions.assertThat(source)
                     .as("%s should use the shared export dropdown", page.getKey())
                     .contains("fragments/list-chrome :: " + page.getValue());
-            assertThat(source)
+            Assertions.assertThat(source)
                     .as("%s should not hardcode a download filename", page.getKey())
                     .doesNotContain("downloadTable(");
         }
@@ -48,18 +47,18 @@ class ExportDropdownPagesTest {
         String fragment = readResource("/templates/fragments/list-chrome.html");
         String appJs = readResource("/static/js/app.js");
 
-        assertThat(fragment).contains("Dışa Aktar");
-        assertThat(fragment).contains("downloadTable($root.dataset.exportTable, $root.dataset.exportEntity, 'csv')");
-        assertThat(fragment).contains("downloadTable($root.dataset.exportTable, $root.dataset.exportEntity, 'xlsx')");
-        assertThat(appJs).contains("function buildExportFilename(");
-        assertThat(appJs).contains("function downloadTable(");
-        assertThat(appJs).contains("buildExportFilename(baseName, \"xlsx\")");
-        assertThat(appJs).contains("buildExportFilename(baseName, \"csv\")");
+        Assertions.assertThat(fragment).contains("Dışa Aktar");
+        Assertions.assertThat(fragment).contains("downloadTable($root.dataset.exportTable, $root.dataset.exportEntity, 'csv')");
+        Assertions.assertThat(fragment).contains("downloadTable($root.dataset.exportTable, $root.dataset.exportEntity, 'xlsx')");
+        Assertions.assertThat(appJs).contains("function buildExportFilename(");
+        Assertions.assertThat(appJs).contains("function downloadTable(");
+        Assertions.assertThat(appJs).contains("buildExportFilename(baseName, \"xlsx\")");
+        Assertions.assertThat(appJs).contains("buildExportFilename(baseName, \"csv\")");
     }
 
     private static String readResource(String resource) throws Exception {
         try (var in = ExportDropdownPagesTest.class.getResourceAsStream(resource)) {
-            assertThat(in).as("classpath resource %s", resource).isNotNull();
+            Assertions.assertThat(in).as("classpath resource %s", resource).isNotNull();
             return new String(in.readAllBytes());
         }
     }

@@ -1,16 +1,15 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.HelpFeedbackResponse;
-import com.ozerler.marble.dto.HelpPageDto;
+import java.util.Optional;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.DefaultResourceLoader;
 
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.ozerler.marble.dto.HelpFeedbackResponse;
+import com.ozerler.marble.dto.HelpPageDto;
 
 class HelpServiceTest {
 
@@ -26,37 +25,37 @@ class HelpServiceTest {
     @Test
     @DisplayName("startup cache contains every classpath help HTML file")
     void loadHelpPages_CachesAllClasspathFiles() {
-        assertThat(helpService.getHelpPage("projects")).isPresent();
-        assertThat(helpService.getHelpPage("users")).isPresent();
-        assertThat(helpService.getHelpPage("dashboard")).isPresent();
-        assertThat(helpService.getHelpPage("production")).isPresent();
-        assertThat(helpService.getHelpPage("slabs")).isPresent();
-        assertThat(helpService.getHelpPage("workshop")).isPresent();
-        assertThat(helpService.getHelpPage("procurement")).isPresent();
-        assertThat(helpService.getHelpPage("sales")).isPresent();
-        assertThat(helpService.getHelpPage("blocks")).isPresent();
-        assertThat(helpService.getHelpPage("genealogy")).isPresent();
-        assertThat(helpService.getHelpPage("reports")).isPresent();
-        assertThat(helpService.getHelpPage("costs")).isPresent();
-        assertThat(helpService.getHelpPage("definitions")).isPresent();
-        assertThat(helpService.getHelpPage("settings")).isPresent();
-        assertThat(helpService.getHelpPage("deployment")).isPresent();
-        assertThat(helpService.getHelpPage("change-password")).isPresent();
-        assertThat(helpService.getHelpPage("expenses")).isPresent();
-        assertThat(helpService.getHelpPage("machine-fuel")).isPresent();
-        assertThat(helpService.getHelpPage("system-health")).isPresent();
-        assertThat(helpService.getHelpPage("block-move")).isPresent();
-        assertThat(helpService.getHelpPage("block-move").orElseThrow().getTitle()).isEqualTo("Blok Saha Taşıma");
-        assertThat(helpService.getHelpPage("block-transfer")).isPresent();
-        assertThat(helpService.getHelpPage("block-transfer").orElseThrow().getTitle()).isEqualTo("Fabrikaya Sevk");
-        assertThat(helpService.getHelpPage("block-photos")).isPresent();
-        assertThat(helpService.getHelpPage("block-photos").orElseThrow().getTitle()).isEqualTo("Ocak — Blok Fotoğrafları & Taş Pasaportu");
-        assertThat(helpService.getHelpPage("block-sell")).isPresent();
-        assertThat(helpService.getHelpPage("tablet")).isPresent();
-        assertThat(helpService.getHelpPage("pallets")).isPresent();
-        assertThat(helpService.getHelpPage("polish")).isPresent();
-        assertThat(helpService.getHelpPage("email-preview")).isPresent();
-        assertThat(helpService.getHelpPage("email-preview").orElseThrow().getTitle()).isEqualTo("E-posta Şablon Önizleme");
+        Assertions.assertThat(helpService.getHelpPage("projects")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("users")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("dashboard")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("production")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("slabs")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("workshop")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("procurement")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("sales")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("blocks")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("genealogy")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("reports")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("costs")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("definitions")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("settings")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("deployment")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("change-password")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("expenses")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("machine-fuel")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("system-health")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("block-move")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("block-move").orElseThrow().getTitle()).isEqualTo("Blok Saha Taşıma");
+        Assertions.assertThat(helpService.getHelpPage("block-transfer")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("block-transfer").orElseThrow().getTitle()).isEqualTo("Fabrikaya Sevk");
+        Assertions.assertThat(helpService.getHelpPage("block-photos")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("block-photos").orElseThrow().getTitle()).isEqualTo("Ocak — Blok Fotoğrafları & Taş Pasaportu");
+        Assertions.assertThat(helpService.getHelpPage("block-sell")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("tablet")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("pallets")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("polish")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("email-preview")).isPresent();
+        Assertions.assertThat(helpService.getHelpPage("email-preview").orElseThrow().getTitle()).isEqualTo("E-posta Şablon Önizleme");
     }
 
     @Test
@@ -64,57 +63,57 @@ class HelpServiceTest {
     void getHelpPage_KnownKey() {
         Optional<HelpPageDto> page = helpService.getHelpPage("change-password");
 
-        assertThat(page).isPresent();
-        assertThat(page.get().getTitle()).isEqualTo("Şifre değiştir");
-        assertThat(page.get().getFormat()).isEqualTo("html");
-        assertThat(page.get().getBody()).contains("6 karakter");
-        assertThat(page.get().getBody()).contains("help-panel-list");
+        Assertions.assertThat(page).isPresent();
+        Assertions.assertThat(page.get().getTitle()).isEqualTo("Şifre değiştir");
+        Assertions.assertThat(page.get().getFormat()).isEqualTo("html");
+        Assertions.assertThat(page.get().getBody()).contains("6 karakter");
+        Assertions.assertThat(page.get().getBody()).contains("help-panel-list");
     }
 
     @Test
     @DisplayName("getHelpPage rejects unknown or unsafe keys")
     void getHelpPage_UnknownOrUnsafe() {
-        assertThat(helpService.getHelpPage("missing-page")).isEmpty();
-        assertThat(helpService.getHelpPage("../etc/passwd")).isEmpty();
-        assertThat(helpService.getHelpPage("")).isEmpty();
-        assertThat(helpService.getHelpPage(null)).isEmpty();
+        Assertions.assertThat(helpService.getHelpPage("missing-page")).isEmpty();
+        Assertions.assertThat(helpService.getHelpPage("../etc/passwd")).isEmpty();
+        Assertions.assertThat(helpService.getHelpPage("")).isEmpty();
+        Assertions.assertThat(helpService.getHelpPage(null)).isEmpty();
     }
 
     @Test
     @DisplayName("resolvePageKey maps request paths including nested routes")
     void resolvePageKey_MapsNestedRoutes() {
-        assertThat(helpService.resolvePageKey("/projects")).contains("projects");
-        assertThat(helpService.resolvePageKey("/projects/2")).contains("projects");
-        assertThat(helpService.resolvePageKey("/production/slabs")).contains("slabs");
-        assertThat(helpService.resolvePageKey("/production/orders/1")).contains("production");
-        assertThat(helpService.resolvePageKey("/production/polish")).contains("polish");
-        assertThat(helpService.resolvePageKey("/production/tablet")).contains("tablet");
-        assertThat(helpService.resolvePageKey("/production/pallets")).contains("pallets");
-        assertThat(helpService.resolvePageKey("/production/accept")).contains("production");
-        assertThat(helpService.resolvePageKey("/quarry")).contains("blocks");
-        assertThat(helpService.resolvePageKey("/factory")).contains("production");
-        assertThat(helpService.resolvePageKey("/sites")).contains("projects");
-        assertThat(helpService.resolvePageKey("/cost-analysis")).contains("costs");
-        assertThat(helpService.resolvePageKey("/admin/definitions")).contains("definitions");
-        assertThat(helpService.resolvePageKey("/admin/deployment")).contains("deployment");
-        assertThat(helpService.resolvePageKey("/account/change-password?x=1")).contains("change-password");
-        assertThat(helpService.resolvePageKey("/expenses")).contains("expenses");
-        assertThat(helpService.resolvePageKey("/machines/fuel")).contains("machine-fuel");
-        assertThat(helpService.resolvePageKey("/admin/dashboard/systemhealth")).contains("system-health");
-        assertThat(helpService.resolvePageKey("/blocks")).contains("blocks");
-        assertThat(helpService.resolvePageKey("/blocks/12")).contains("blocks");
-        assertThat(helpService.resolvePageKey("/blocks/12/edit")).contains("blocks");
-        assertThat(helpService.resolvePageKey("/blocks/12/move")).contains("block-move");
-        assertThat(helpService.resolvePageKey("/blocks/12/move?targetType=DISPATCH_YARD")).contains("block-move");
-        assertThat(helpService.resolvePageKey("/blocks/12/transfer-to-factory")).contains("block-transfer");
-        assertThat(helpService.resolvePageKey("/blocks/12/sell")).contains("block-sell");
-        assertThat(helpService.resolvePageKey("/blocks/12/photos")).contains("block-photos");
-        assertThat(helpService.resolvePageKey("/blocks/12/photos/8")).contains("block-photos");
-        assertThat(helpService.resolvePageKey("/admin/settings/templates/3/preview")).contains("email-preview");
-        assertThat(helpService.resolvePageKey("/invoices")).contains("invoices");
-        assertThat(helpService.resolvePageKey("/invoices/10")).contains("invoices");
-        assertThat(helpService.resolvePageKey("/unknown")).isEmpty();
-        assertThat(helpService.resolvePageKey("/roles")).isEmpty();
+        Assertions.assertThat(helpService.resolvePageKey("/projects")).contains("projects");
+        Assertions.assertThat(helpService.resolvePageKey("/projects/2")).contains("projects");
+        Assertions.assertThat(helpService.resolvePageKey("/production/slabs")).contains("slabs");
+        Assertions.assertThat(helpService.resolvePageKey("/production/orders/1")).contains("production");
+        Assertions.assertThat(helpService.resolvePageKey("/production/polish")).contains("polish");
+        Assertions.assertThat(helpService.resolvePageKey("/production/tablet")).contains("tablet");
+        Assertions.assertThat(helpService.resolvePageKey("/production/pallets")).contains("pallets");
+        Assertions.assertThat(helpService.resolvePageKey("/production/accept")).contains("production");
+        Assertions.assertThat(helpService.resolvePageKey("/quarry")).contains("blocks");
+        Assertions.assertThat(helpService.resolvePageKey("/factory")).contains("production");
+        Assertions.assertThat(helpService.resolvePageKey("/sites")).contains("projects");
+        Assertions.assertThat(helpService.resolvePageKey("/cost-analysis")).contains("costs");
+        Assertions.assertThat(helpService.resolvePageKey("/admin/definitions")).contains("definitions");
+        Assertions.assertThat(helpService.resolvePageKey("/admin/deployment")).contains("deployment");
+        Assertions.assertThat(helpService.resolvePageKey("/account/change-password?x=1")).contains("change-password");
+        Assertions.assertThat(helpService.resolvePageKey("/expenses")).contains("expenses");
+        Assertions.assertThat(helpService.resolvePageKey("/machines/fuel")).contains("machine-fuel");
+        Assertions.assertThat(helpService.resolvePageKey("/admin/dashboard/systemhealth")).contains("system-health");
+        Assertions.assertThat(helpService.resolvePageKey("/blocks")).contains("blocks");
+        Assertions.assertThat(helpService.resolvePageKey("/blocks/12")).contains("blocks");
+        Assertions.assertThat(helpService.resolvePageKey("/blocks/12/edit")).contains("blocks");
+        Assertions.assertThat(helpService.resolvePageKey("/blocks/12/move")).contains("block-move");
+        Assertions.assertThat(helpService.resolvePageKey("/blocks/12/move?targetType=DISPATCH_YARD")).contains("block-move");
+        Assertions.assertThat(helpService.resolvePageKey("/blocks/12/transfer-to-factory")).contains("block-transfer");
+        Assertions.assertThat(helpService.resolvePageKey("/blocks/12/sell")).contains("block-sell");
+        Assertions.assertThat(helpService.resolvePageKey("/blocks/12/photos")).contains("block-photos");
+        Assertions.assertThat(helpService.resolvePageKey("/blocks/12/photos/8")).contains("block-photos");
+        Assertions.assertThat(helpService.resolvePageKey("/admin/settings/templates/3/preview")).contains("email-preview");
+        Assertions.assertThat(helpService.resolvePageKey("/invoices")).contains("invoices");
+        Assertions.assertThat(helpService.resolvePageKey("/invoices/10")).contains("invoices");
+        Assertions.assertThat(helpService.resolvePageKey("/unknown")).isEmpty();
+        Assertions.assertThat(helpService.resolvePageKey("/roles")).isEmpty();
     }
 
     @Test
@@ -122,15 +121,15 @@ class HelpServiceTest {
     void recordFeedback_KnownPage() {
         HelpFeedbackResponse response = helpService.recordFeedback("users", true);
 
-        assertThat(response.isRecorded()).isTrue();
-        assertThat(response.isHelpful()).isTrue();
-        assertThat(response.getPageKey()).isEqualTo("users");
+        Assertions.assertThat(response.isRecorded()).isTrue();
+        Assertions.assertThat(response.isHelpful()).isTrue();
+        Assertions.assertThat(response.getPageKey()).isEqualTo("users");
     }
 
     @Test
     @DisplayName("recordFeedback rejects an unknown page")
     void recordFeedback_UnknownPage() {
-        assertThatThrownBy(() -> helpService.recordFeedback("no-such-page", false))
+        Assertions.assertThatThrownBy(() -> helpService.recordFeedback("no-such-page", false))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

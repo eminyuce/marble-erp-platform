@@ -1,10 +1,10 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.util.MessageUtils;
-
 import java.math.BigDecimal;
 import java.util.Objects;
+
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.util.MessageUtils;
 
 /**
  * Workshop work-order cost from recorded material, machine, labor, consumable, scrap and freight.

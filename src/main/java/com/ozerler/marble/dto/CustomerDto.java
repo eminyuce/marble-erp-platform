@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.enums.CustomerType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

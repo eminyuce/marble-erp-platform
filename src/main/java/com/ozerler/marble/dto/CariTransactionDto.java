@@ -1,10 +1,15 @@
 package com.ozerler.marble.dto;
 
-import com.ozerler.marble.model.enums.CariTransactionType;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import com.ozerler.marble.model.enums.CariTransactionType;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter

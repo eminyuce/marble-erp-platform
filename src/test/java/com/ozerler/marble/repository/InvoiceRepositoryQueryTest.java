@@ -1,10 +1,9 @@
 package com.ozerler.marble.repository;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.jpa.repository.Query;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class InvoiceRepositoryQueryTest {
 
@@ -15,16 +14,16 @@ class InvoiceRepositoryQueryTest {
                 .getMethod("findByIdWithDetails", Long.class)
                 .getAnnotation(Query.class);
 
-        assertThat(query).isNotNull();
-        assertThat(query.value()).containsIgnoringCase("SELECT DISTINCT i FROM Invoice i");
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.supplier");
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.project");
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.items it");
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH it.block");
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH it.slab");
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH it.stockItem");
-        assertThat(query.value()).contains("WHERE i.id = :id");
+        Assertions.assertThat(query).isNotNull();
+        Assertions.assertThat(query.value()).containsIgnoringCase("SELECT DISTINCT i FROM Invoice i");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.supplier");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.project");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.items it");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH it.block");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH it.slab");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH it.stockItem");
+        Assertions.assertThat(query.value()).contains("WHERE i.id = :id");
     }
 
     @Test
@@ -34,8 +33,8 @@ class InvoiceRepositoryQueryTest {
                 .getMethod("findAllWithCustomer")
                 .getAnnotation(Query.class);
 
-        assertThat(query).isNotNull();
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
+        Assertions.assertThat(query).isNotNull();
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
     }
 
     @Test
@@ -45,9 +44,9 @@ class InvoiceRepositoryQueryTest {
                 .getMethod("findByIdWithCustomer", Long.class)
                 .getAnnotation(Query.class);
 
-        assertThat(query).isNotNull();
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
-        assertThat(query.value()).contains("WHERE i.id = :id");
+        Assertions.assertThat(query).isNotNull();
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
+        Assertions.assertThat(query.value()).contains("WHERE i.id = :id");
     }
 
     @Test
@@ -65,9 +64,9 @@ class InvoiceRepositoryQueryTest {
                         org.springframework.data.domain.Pageable.class)
                 .getAnnotation(Query.class);
 
-        assertThat(query).isNotNull();
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.supplier");
-        assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.project");
+        Assertions.assertThat(query).isNotNull();
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.customer");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.supplier");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH i.project");
     }
 }

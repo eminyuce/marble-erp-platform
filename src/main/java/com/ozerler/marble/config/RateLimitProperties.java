@@ -1,9 +1,10 @@
 package com.ozerler.marble.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * IP tabanlı istek sınırlandırma (rate limiting) yapılandırma parametreleri.

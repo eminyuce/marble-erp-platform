@@ -1,28 +1,36 @@
 package com.ozerler.marble.controller.erp;
 
-import com.ozerler.marble.dto.view.FuelPeriodSummary;
-import com.ozerler.marble.dto.view.MachineFuelEntryView;
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.controller.AbstractController;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.dto.MachineFuelDto;
-import com.ozerler.marble.service.MachineFuelService;
-import com.ozerler.marble.web.FuelGrid;
-import com.ozerler.marble.web.ListQuery;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.Locale;
+
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.Locale;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.dto.MachineFuelDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.FuelPeriodSummary;
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
+import com.ozerler.marble.service.MachineFuelService;
+import com.ozerler.marble.web.FuelGrid;
+import com.ozerler.marble.web.ListQuery;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller

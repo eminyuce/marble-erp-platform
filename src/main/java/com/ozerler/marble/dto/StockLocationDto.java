@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.StockLocation;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.StockLocationType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

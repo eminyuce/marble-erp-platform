@@ -1,12 +1,11 @@
 package com.ozerler.marble.controller;
 
-import com.ozerler.marble.exception.ErrorResponse;
-import com.ozerler.marble.util.ErrorPageDetails;
-import com.ozerler.marble.util.HtmlErrors;
+import java.util.Map;
+
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.error.ErrorAttributeOptions.Include;
 import org.springframework.boot.webmvc.error.ErrorAttributes;
@@ -19,7 +18,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
 
-import java.util.Map;
+import com.ozerler.marble.exception.ErrorResponse;
+import com.ozerler.marble.util.ErrorPageDetails;
+import com.ozerler.marble.util.HtmlErrors;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("${spring.web.error.path:${error.path:/error}}")

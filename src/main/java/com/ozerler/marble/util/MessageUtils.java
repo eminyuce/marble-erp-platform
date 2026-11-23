@@ -1,12 +1,12 @@
 package com.ozerler.marble.util;
 
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.stereotype.Component;
-
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
+
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.stereotype.Component;
 
 /**
  * Static bridge and helper for retrieving localized messages from Spring MessageSource,

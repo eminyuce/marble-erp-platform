@@ -1,9 +1,14 @@
 package com.ozerler.marble.validation;
 
-import com.ozerler.marble.config.ObjectStorageProperties;
-import com.ozerler.marble.exception.FileValidationException;
-import com.ozerler.marble.util.Filenames;
-import lombok.RequiredArgsConstructor;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.UnsupportedFileFormatException;
 import org.apache.poi.ooxml.POIXMLException;
@@ -14,14 +19,11 @@ import org.apache.tika.mime.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.exception.FileValidationException;
+import com.ozerler.marble.util.Filenames;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

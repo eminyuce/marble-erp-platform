@@ -1,17 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.*;
-import com.ozerler.marble.model.enums.*;
-import com.ozerler.marble.repository.*;
-import com.ozerler.marble.util.UniqueCodes;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -21,6 +9,38 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.ProductionOrder;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.StockLocation;
+import com.ozerler.marble.model.enums.BlockStatus;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.ProcessType;
+import com.ozerler.marble.model.enums.QualityGrade;
+import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.model.enums.StockProductType;
+import com.ozerler.marble.model.enums.SurfaceFinish;
+import com.ozerler.marble.repository.BlockRepository;
+import com.ozerler.marble.repository.CustomerRepository;
+import com.ozerler.marble.repository.ProductionOrderRepository;
+import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.repository.StockItemRepository;
+import com.ozerler.marble.repository.StockLocationRepository;
+import com.ozerler.marble.util.UniqueCodes;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor

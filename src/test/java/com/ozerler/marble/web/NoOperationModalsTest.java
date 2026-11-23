@@ -1,8 +1,5 @@
 package com.ozerler.marble.web;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,7 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class NoOperationModalsTest {
 
@@ -42,7 +41,7 @@ class NoOperationModalsTest {
                 }
             }
         }
-        assertThat(hits).isEmpty();
+        Assertions.assertThat(hits).isEmpty();
     }
 
     @Test
@@ -55,24 +54,24 @@ class NoOperationModalsTest {
         String usersIndex = Files.readString(TEMPLATES.resolve("admin/users/index.html"), StandardCharsets.UTF_8);
         String usersGrid = Files.readString(STATIC_JS.resolve("users-grid.js"), StandardCharsets.UTF_8);
 
-        assertThat(settings)
+        Assertions.assertThat(settings)
                 .contains("/admin/settings/templates/{id}/preview")
                 .doesNotContain("x-html=\"previewHtml\"");
-        assertThat(preview)
+        Assertions.assertThat(preview)
                 .contains("layout:decorate=\"~{layout/base}\"")
                 .contains("id=\"email-preview-frame\"")
                 .contains("erp-ops-info-callout")
                 .contains("Örnek değişkenler");
-        assertThat(detail)
+        Assertions.assertThat(detail)
                 .contains("/blocks/' + ${block.id} + '/photos")
                 .contains("deleteModalOpen")
                 .doesNotContain("x-teleport");
-        assertThat(photos)
+        Assertions.assertThat(photos)
                 .contains("id=\"photo-main\"")
                 .contains("id=\"photo-prev\"")
                 .contains("Blok detayına dön");
-        assertThat(usersIndex).contains("id=\"delete-user-dialog\"");
-        assertThat(usersGrid)
+        Assertions.assertThat(usersIndex).contains("id=\"delete-user-dialog\"");
+        Assertions.assertThat(usersGrid)
                 .contains("openDeleteUser(")
                 .doesNotContain("if (!confirm(");
     }

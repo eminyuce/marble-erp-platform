@@ -1,10 +1,11 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+
 import com.ozerler.marble.model.enums.ScrapReasonCode;
+
 import lombok.Builder;
 import lombok.Getter;
-
-import java.math.BigDecimal;
 
 /**
  * Strongly typed DTO representing scrap aggregation metrics grouped by reason code.

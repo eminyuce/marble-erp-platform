@@ -1,17 +1,18 @@
 package com.ozerler.marble.dto;
 
+import java.time.LocalDate;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.FactoryWorkOrder;
 import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.enums.FactoryWorkOrderStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
 
 /**
  * View/API projection for factory work orders that never exposes a lazy Block proxy.

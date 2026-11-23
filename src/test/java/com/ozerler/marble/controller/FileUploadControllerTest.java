@@ -1,16 +1,18 @@
 package com.ozerler.marble.controller;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.PresignedDownload;
-import com.ozerler.marble.exception.FileAccessDeniedException;
-import com.ozerler.marble.model.FileStorage;
-import com.ozerler.marble.model.response.BackEndResponse;
-import com.ozerler.marble.service.FileStorageService;
+import static org.mockito.Mockito.eq;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.List;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -18,13 +20,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
-import java.io.IOException;
-import java.time.Instant;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.PresignedDownload;
+import com.ozerler.marble.exception.FileAccessDeniedException;
+import com.ozerler.marble.model.FileStorage;
+import com.ozerler.marble.model.response.BackEndResponse;
+import com.ozerler.marble.service.FileStorageService;
 
 @ExtendWith(MockitoExtension.class)
 class FileUploadControllerTest {
@@ -49,13 +50,13 @@ class FileUploadControllerTest {
                 .entityType("BLOCK")
                 .build();
 
-        when(fileStorageService.storeFileView(eq(file), eq("BLOCK"), isNull())).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.storeFileView(Mockito.eq(file), Mockito.eq("BLOCK"), Mockito.isNull())).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
 
         BackEndResponse response = fileUploadController.uploadFile(file, "BLOCK", null);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getServiceStatus().getStatus().getErrorCode()).isEqualTo(Constants.NO_ERR);
     }
 
     @Test
@@ -67,57 +68,57 @@ class FileUploadControllerTest {
         FileStorage s1 = FileStorage.builder().id(10L).fileName("s1.png").originalName("img1.png").mimeType("image/png").build();
         FileStorage s2 = FileStorage.builder().id(11L).fileName("s2.pdf").originalName("doc1.pdf").mimeType("application/pdf").build();
 
-        when(fileStorageService.storeFileView(eq(f1), eq("BLOCK"), eq(100L))).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(s1));
-        when(fileStorageService.storeFileView(eq(f2), eq("BLOCK"), eq(100L))).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(s2));
+        Mockito.when(fileStorageService.storeFileView(Mockito.eq(f1), Mockito.eq("BLOCK"), Mockito.eq(100L))).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(s1));
+        Mockito.when(fileStorageService.storeFileView(Mockito.eq(f2), Mockito.eq("BLOCK"), Mockito.eq(100L))).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(s2));
 
         BackEndResponse response = fileUploadController.uploadMultipleFiles(List.of(f1, f2), "BLOCK", 100L);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getResponse().getBody()).asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.LIST).hasSize(2);
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getResponse().getBody()).asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.LIST).hasSize(2);
     }
 
     @Test
     @DisplayName("deleteFileById should delete file and return OK status")
     void deleteFileById_Success() {
-        when(fileStorageService.deleteFileRecord(25L)).thenReturn(true);
+        Mockito.when(fileStorageService.deleteFileRecord(25L)).thenReturn(true);
 
         BackEndResponse response = fileUploadController.deleteFileById(25L);
 
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        verify(fileStorageService).deleteFileRecord(25L);
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Mockito.verify(fileStorageService).deleteFileRecord(25L);
     }
 
     @Test
     @DisplayName("deleteFileById should return 404 when file is not found")
     void deleteFileById_NotFound() {
-        when(fileStorageService.deleteFileRecord(999L)).thenReturn(false);
+        Mockito.when(fileStorageService.deleteFileRecord(999L)).thenReturn(false);
 
         BackEndResponse response = fileUploadController.deleteFileById(999L);
 
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     @DisplayName("revertUpload with numeric ID should delegate to deleteFileRecord")
     void revertUpload_NumericId() {
-        when(fileStorageService.deleteFileRecord(50L)).thenReturn(true);
+        Mockito.when(fileStorageService.deleteFileRecord(50L)).thenReturn(true);
 
         BackEndResponse response = fileUploadController.revertUpload("50");
 
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        verify(fileStorageService).deleteFileRecord(50L);
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Mockito.verify(fileStorageService).deleteFileRecord(50L);
     }
 
     @Test
     @DisplayName("revertUpload with URL should delegate to deleteFile")
     void revertUpload_FileUrl() {
-        when(fileStorageService.deleteFile("/uploads/test.jpg")).thenReturn(true);
+        Mockito.when(fileStorageService.deleteFile("/uploads/test.jpg")).thenReturn(true);
 
         BackEndResponse response = fileUploadController.revertUpload("/uploads/test.jpg");
 
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        verify(fileStorageService).deleteFile("/uploads/test.jpg");
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Mockito.verify(fileStorageService).deleteFile("/uploads/test.jpg");
     }
 
     @Test
@@ -132,14 +133,14 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("pdf-content".getBytes());
 
-        when(fileStorageService.requireAccessibleFileView(5L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
-        when(fileStorageService.loadAsResource(5L)).thenReturn(resource);
+        Mockito.when(fileStorageService.requireAccessibleFileView(5L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.loadAsResource(5L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(5L);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getHeaders().getContentDisposition().toString()).contains("Rapor 2026.pdf");
-        assertThat(response.getBody()).isEqualTo(resource);
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getHeaders().getContentDisposition().toString()).contains("Rapor 2026.pdf");
+        Assertions.assertThat(response.getBody()).isEqualTo(resource);
     }
 
     @Test
@@ -154,17 +155,17 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("fake-docx-data".getBytes());
 
-        when(fileStorageService.requireAccessibleFileView(6L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
-        when(fileStorageService.loadAsResource(6L)).thenReturn(resource);
+        Mockito.when(fileStorageService.requireAccessibleFileView(6L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.loadAsResource(6L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(6L);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getHeaders().getContentDisposition().getFilename())
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getHeaders().getContentDisposition().getFilename())
                 .isEqualTo("Mermer Analiz Raporu (Şantiye & Ocak).docx");
-        assertThat(response.getHeaders().getContentDisposition().getType())
+        Assertions.assertThat(response.getHeaders().getContentDisposition().getType())
                 .isEqualTo("attachment");
-        assertThat(response.getBody()).isEqualTo(resource);
+        Assertions.assertThat(response.getBody()).isEqualTo(resource);
     }
 
     @Test
@@ -179,17 +180,17 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("notlar...".getBytes());
 
-        when(fileStorageService.requireAccessibleFileView(7L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
-        when(fileStorageService.loadAsResource(7L)).thenReturn(resource);
+        Mockito.when(fileStorageService.requireAccessibleFileView(7L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.loadAsResource(7L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(7L);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getHeaders().getContentDisposition().getFilename())
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getHeaders().getContentDisposition().getFilename())
                 .isEqualTo("jeoloji_notlari.txt");
-        assertThat(response.getHeaders().getContentType().toString())
+        Assertions.assertThat(response.getHeaders().getContentType().toString())
                 .contains("text/plain");
-        assertThat(response.getBody()).isEqualTo(resource);
+        Assertions.assertThat(response.getBody()).isEqualTo(resource);
     }
 
     @Test
@@ -204,16 +205,16 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("# Ocak notu".getBytes());
 
-        when(fileStorageService.requireAccessibleFileView(11L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
-        when(fileStorageService.loadAsResource(11L)).thenReturn(resource);
+        Mockito.when(fileStorageService.requireAccessibleFileView(11L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.loadAsResource(11L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.viewFile(11L);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getHeaders().getContentDisposition().getType()).isEqualTo("inline");
-        assertThat(response.getHeaders().getContentDisposition().getFilename()).isEqualTo("jeoloji_notu.md");
-        assertThat(response.getHeaders().getContentType().toString()).contains("text/plain");
-        assertThat(response.getBody()).isEqualTo(resource);
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getHeaders().getContentDisposition().getType()).isEqualTo("inline");
+        Assertions.assertThat(response.getHeaders().getContentDisposition().getFilename()).isEqualTo("jeoloji_notu.md");
+        Assertions.assertThat(response.getHeaders().getContentType().toString()).contains("text/plain");
+        Assertions.assertThat(response.getBody()).isEqualTo(resource);
     }
 
     @Test
@@ -228,17 +229,17 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("fake-xlsx-bytes".getBytes());
 
-        when(fileStorageService.requireAccessibleFileView(8L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
-        when(fileStorageService.loadAsResource(8L)).thenReturn(resource);
+        Mockito.when(fileStorageService.requireAccessibleFileView(8L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.loadAsResource(8L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(8L);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getHeaders().getContentDisposition().getFilename())
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getHeaders().getContentDisposition().getFilename())
                 .isEqualTo("Blok_Analiz_Raporu_2026.xlsx");
-        assertThat(response.getHeaders().getContentType().toString())
+        Assertions.assertThat(response.getHeaders().getContentType().toString())
                 .contains("spreadsheetml.sheet");
-        assertThat(response.getBody()).isEqualTo(resource);
+        Assertions.assertThat(response.getBody()).isEqualTo(resource);
     }
 
     @Test
@@ -253,24 +254,24 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("id,code\n11,BLK-11".getBytes());
 
-        when(fileStorageService.requireAccessibleFileView(9L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
-        when(fileStorageService.loadAsResource(9L)).thenReturn(resource);
+        Mockito.when(fileStorageService.requireAccessibleFileView(9L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.loadAsResource(9L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(9L);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getHeaders().getContentDisposition().getFilename())
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getHeaders().getContentDisposition().getFilename())
                 .isEqualTo("blok_verileri.csv");
-        assertThat(response.getHeaders().getContentType().toString())
+        Assertions.assertThat(response.getHeaders().getContentType().toString())
                 .contains("text/csv");
-        assertThat(response.getBody()).isEqualTo(resource);
+        Assertions.assertThat(response.getBody()).isEqualTo(resource);
     }
 
     @Test
     @DisplayName("createDownloadUrl should return the presigned URL and its expiry")
     void createDownloadUrl_Success() {
         Instant expiresAt = Instant.parse("2026-11-23T12:05:00Z");
-        when(fileStorageService.createPresignedDownload(12L))
+        Mockito.when(fileStorageService.createPresignedDownload(12L))
                 .thenReturn(new PresignedDownload(
                         "http://localhost:9000/erp-files/documents/block/1/a.pdf?X-Amz-Expires=300",
                         300,
@@ -278,21 +279,21 @@ class FileUploadControllerTest {
 
         BackEndResponse response = fileUploadController.createDownloadUrl(12L);
 
-        assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
         @SuppressWarnings("unchecked")
         java.util.Map<String, Object> body =
                 (java.util.Map<String, Object>) response.getResponse().getBody();
-        assertThat(body).containsEntry("url",
+        Assertions.assertThat(body).containsEntry("url",
                 "http://localhost:9000/erp-files/documents/block/1/a.pdf?X-Amz-Expires=300");
-        assertThat(body).containsEntry("expiresInSeconds", 300L);
-        assertThat(body).containsEntry("expiresAt", "2026-11-23T12:05:00Z");
+        Assertions.assertThat(body).containsEntry("expiresInSeconds", 300L);
+        Assertions.assertThat(body).containsEntry("expiresAt", "2026-11-23T12:05:00Z");
     }
 
     @Test
     @DisplayName("createDownloadUrl returns an image link with the 30 minute expiry")
     void createDownloadUrl_ImageExpiry() {
         Instant expiresAt = Instant.parse("2026-11-23T12:30:00Z");
-        when(fileStorageService.createPresignedDownload(4L))
+        Mockito.when(fileStorageService.createPresignedDownload(4L))
                 .thenReturn(new PresignedDownload(
                         "http://localhost:9000/erp-files/images/block/1/a.jpg?X-Amz-Expires=1800",
                         1800,
@@ -303,17 +304,17 @@ class FileUploadControllerTest {
         @SuppressWarnings("unchecked")
         java.util.Map<String, Object> body =
                 (java.util.Map<String, Object>) response.getResponse().getBody();
-        assertThat(body).containsEntry("expiresInSeconds", 1800L);
-        assertThat(body.get("url").toString()).contains("X-Amz-Expires=1800");
+        Assertions.assertThat(body).containsEntry("expiresInSeconds", 1800L);
+        Assertions.assertThat(body.get("url").toString()).contains("X-Amz-Expires=1800");
     }
 
     @Test
     @DisplayName("createDownloadUrl does not hide an authorization failure")
     void createDownloadUrl_Unauthorized_Propagates() {
-        when(fileStorageService.createPresignedDownload(3L))
+        Mockito.when(fileStorageService.createPresignedDownload(3L))
                 .thenThrow(new FileAccessDeniedException("denied"));
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> fileUploadController.createDownloadUrl(3L))
+        Assertions.assertThatThrownBy(() -> fileUploadController.createDownloadUrl(3L))
                 .isInstanceOf(FileAccessDeniedException.class);
     }
 
@@ -328,12 +329,12 @@ class FileUploadControllerTest {
                 .fileSize(11L)
                 .build();
         ByteArrayResource resource = new ByteArrayResource("image".getBytes());
-        when(fileStorageService.requireAccessibleFileView(5L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
-        when(fileStorageService.loadAsResource(5L)).thenReturn(resource);
+        Mockito.when(fileStorageService.requireAccessibleFileView(5L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.loadAsResource(5L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.viewFile(5L);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getHeaders().getContentDisposition().getType()).isEqualTo("inline");
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(response.getHeaders().getContentDisposition().getType()).isEqualTo("inline");
     }
 }

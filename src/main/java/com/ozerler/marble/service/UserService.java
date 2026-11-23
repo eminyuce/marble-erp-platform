@@ -1,14 +1,13 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.common.Constants;
-import com.ozerler.marble.dto.*;
-import com.ozerler.marble.model.Role;
-import com.ozerler.marble.model.User;
-import com.ozerler.marble.repository.RoleRepository;
-import com.ozerler.marble.repository.UserRepository;
-import com.ozerler.marble.util.GridPages;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -16,8 +15,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.PasswordResetRequest;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.UserCreateRequest;
+import com.ozerler.marble.dto.UserDto;
+import com.ozerler.marble.dto.UserUpdateRequest;
+import com.ozerler.marble.model.Role;
+import com.ozerler.marble.model.User;
+import com.ozerler.marble.repository.RoleRepository;
+import com.ozerler.marble.repository.UserRepository;
+import com.ozerler.marble.util.GridPages;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service managing user lifecycle, authentication credentials, and role assignments.

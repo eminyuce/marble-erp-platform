@@ -1,14 +1,14 @@
 package com.ozerler.marble.storage;
 
-import com.sun.net.httpserver.HttpServer;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.URI;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import com.sun.net.httpserver.HttpServer;
 
 class RustFsEndpointProbeTest {
 
@@ -23,7 +23,7 @@ class RustFsEndpointProbeTest {
         server.start();
         try {
             URI endpoint = URI.create("http://127.0.0.1:" + server.getAddress().getPort());
-            assertThat(new RustFsEndpointProbe().canConnect(endpoint)).isTrue();
+            Assertions.assertThat(new RustFsEndpointProbe().canConnect(endpoint)).isTrue();
         } finally {
             server.stop(0);
         }
@@ -37,6 +37,6 @@ class RustFsEndpointProbeTest {
             closedPort = socket.getLocalPort();
         }
         URI endpoint = URI.create("http://127.0.0.1:" + closedPort);
-        assertThat(new RustFsEndpointProbe().canConnect(endpoint)).isFalse();
+        Assertions.assertThat(new RustFsEndpointProbe().canConnect(endpoint)).isFalse();
     }
 }

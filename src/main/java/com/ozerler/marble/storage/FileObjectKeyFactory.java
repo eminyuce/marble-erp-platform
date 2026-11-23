@@ -1,10 +1,10 @@
 package com.ozerler.marble.storage;
 
-import org.springframework.stereotype.Component;
-
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class FileObjectKeyFactory {

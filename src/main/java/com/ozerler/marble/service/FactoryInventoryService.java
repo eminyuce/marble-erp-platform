@@ -1,20 +1,38 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.model.*;
-import com.ozerler.marble.model.enums.*;
-import com.ozerler.marble.repository.*;
-import com.ozerler.marble.util.UniqueCodes;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Objects;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ozerler.marble.model.CostCenter;
+import com.ozerler.marble.model.Invoice;
+import com.ozerler.marble.model.Machine;
+import com.ozerler.marble.model.MachineFuelEntry;
+import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.StockLocation;
+import com.ozerler.marble.model.StockMovement;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.ExpenseType;
+import com.ozerler.marble.model.enums.QuarryCategory;
+import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.model.enums.StockMovementType;
+import com.ozerler.marble.model.enums.StockProductType;
+import com.ozerler.marble.repository.CostCenterRepository;
+import com.ozerler.marble.repository.MachineFuelEntryRepository;
+import com.ozerler.marble.repository.MachineRepository;
+import com.ozerler.marble.repository.StockItemRepository;
+import com.ozerler.marble.repository.StockLocationRepository;
+import com.ozerler.marble.repository.StockMovementRepository;
+import com.ozerler.marble.util.UniqueCodes;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor

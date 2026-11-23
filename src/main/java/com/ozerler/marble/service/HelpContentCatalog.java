@@ -1,8 +1,19 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.dto.HelpPageDto;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -10,13 +21,9 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.ozerler.marble.dto.HelpPageDto;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Loads every help HTML file from {@code classpath:help/*.html} once at startup

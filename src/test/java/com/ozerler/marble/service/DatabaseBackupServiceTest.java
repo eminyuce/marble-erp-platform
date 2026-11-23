@@ -1,19 +1,5 @@
 package com.ozerler.marble.service;
 
-import com.ozerler.marble.config.BackupProperties;
-import com.ozerler.marble.config.ObjectStorageProperties;
-import com.ozerler.marble.dto.BackupItemDto;
-import com.ozerler.marble.dto.BackupOperationStatus;
-import com.ozerler.marble.dto.StoredObjectMetadata;
-import com.ozerler.marble.exception.StorageException;
-import com.ozerler.marble.exception.StoredFileNotFoundException;
-import com.ozerler.marble.storage.InMemoryObjectStorageService;
-import com.ozerler.marble.storage.RustFsBrowserAccess;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,8 +13,21 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.zip.GZIPInputStream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import com.ozerler.marble.config.BackupProperties;
+import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.dto.BackupItemDto;
+import com.ozerler.marble.dto.BackupOperationStatus;
+import com.ozerler.marble.dto.StoredObjectMetadata;
+import com.ozerler.marble.exception.StorageException;
+import com.ozerler.marble.exception.StoredFileNotFoundException;
+import com.ozerler.marble.storage.InMemoryObjectStorageService;
+import com.ozerler.marble.storage.RustFsBrowserAccess;
 
 class DatabaseBackupServiceTest {
 
@@ -58,21 +57,21 @@ class DatabaseBackupServiceTest {
         CompletableFuture<String> future = backupService.createBackupAsync();
         String fileName = future.get();
 
-        assertThat(fileName).startsWith("backup_").endsWith(".sql.gz");
+        Assertions.assertThat(fileName).startsWith("backup_").endsWith(".sql.gz");
 
         String s3Key = "backups/" + fileName;
-        assertThat(storageService.exists(s3Key)).isTrue();
+        Assertions.assertThat(storageService.exists(s3Key)).isTrue();
 
         // Verify content is a valid GZIP stream
         try (InputStream raw = storageService.download(s3Key);
              GZIPInputStream gzis = new GZIPInputStream(raw)) {
             byte[] bytes = gzis.readAllBytes();
             String content = new String(bytes);
-            assertThat(content).contains("Özerler Mermer ERP Database Backup");
+            Assertions.assertThat(content).contains("Özerler Mermer ERP Database Backup");
         }
 
         BackupOperationStatus status = backupService.getStatus();
-        assertThat(status.getState()).isEqualTo(BackupOperationStatus.State.SUCCESS);
+        Assertions.assertThat(status.getState()).isEqualTo(BackupOperationStatus.State.SUCCESS);
     }
 
     @Test
@@ -87,12 +86,12 @@ class DatabaseBackupServiceTest {
                 "marbleuser",
                 "secret");
 
-        assertThatThrownBy(() -> backupService.createBackupAsync().get())
+        Assertions.assertThatThrownBy(() -> backupService.createBackupAsync().get())
                 .cause()
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Yedek dosyası oluşturulamadı");
-        assertThat(storageService.listObjects("backups/")).isEmpty();
-        assertThat(backupService.getStatus().getState()).isEqualTo(BackupOperationStatus.State.FAILED);
+        Assertions.assertThat(storageService.listObjects("backups/")).isEmpty();
+        Assertions.assertThat(backupService.getStatus().getState()).isEqualTo(BackupOperationStatus.State.FAILED);
     }
 
     @Test
@@ -101,14 +100,14 @@ class DatabaseBackupServiceTest {
         backupService.createBackupAsync().get();
 
         List<BackupItemDto> list = backupService.listBackups();
-        assertThat(list).isNotEmpty();
+        Assertions.assertThat(list).isNotEmpty();
 
         BackupItemDto first = list.get(0);
-        assertThat(first.getFileName()).startsWith("backup_").endsWith(".sql.gz");
-        assertThat(first.getS3Key()).startsWith("backups/");
-        assertThat(first.getSizeBytes()).isGreaterThan(0);
-        assertThat(first.getFormattedSize()).isNotBlank();
-        assertThat(first.getDownloadUrl())
+        Assertions.assertThat(first.getFileName()).startsWith("backup_").endsWith(".sql.gz");
+        Assertions.assertThat(first.getS3Key()).startsWith("backups/");
+        Assertions.assertThat(first.getSizeBytes()).isGreaterThan(0);
+        Assertions.assertThat(first.getFormattedSize()).isNotBlank();
+        Assertions.assertThat(first.getDownloadUrl())
                 .isEqualTo("/admin/settings/backups/download/" + first.getFileName())
                 .doesNotContain("rustfs");
     }
@@ -119,7 +118,7 @@ class DatabaseBackupServiceTest {
         String fileName = backupService.createBackupAsync().get();
         String url = backupService.generatePresignedDownloadUrl(fileName);
 
-        assertThat(url).contains("backups/" + fileName);
+        Assertions.assertThat(url).contains("backups/" + fileName);
     }
 
     @Test
@@ -131,8 +130,8 @@ class DatabaseBackupServiceTest {
         restoreFuture.get();
 
         BackupOperationStatus status = backupService.getStatus();
-        assertThat(status.getState()).isEqualTo(BackupOperationStatus.State.SUCCESS);
-        assertThat(status.getMessage()).contains("Geri yükleme başarıyla tamamlandı");
+        Assertions.assertThat(status.getState()).isEqualTo(BackupOperationStatus.State.SUCCESS);
+        Assertions.assertThat(status.getMessage()).contains("Geri yükleme başarıyla tamamlandı");
     }
 
     @Test
@@ -158,7 +157,7 @@ class DatabaseBackupServiceTest {
         backupService.cleanupOldBackupsScheduled();
 
         // The recent backup must still exist
-        assertThat(storageService.exists(recentKey)).isTrue();
+        Assertions.assertThat(storageService.exists(recentKey)).isTrue();
     }
 
     @Test
@@ -170,23 +169,23 @@ class DatabaseBackupServiceTest {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         backupService.writeBackup(content.body(), output, fileName);
 
-        assertThat(content.sizeBytes()).isEqualTo(output.size());
+        Assertions.assertThat(content.sizeBytes()).isEqualTo(output.size());
         try (GZIPInputStream gzip = new GZIPInputStream(new java.io.ByteArrayInputStream(output.toByteArray()))) {
             String text = new String(gzip.readAllBytes(), StandardCharsets.UTF_8);
-            assertThat(text).contains("Özerler Mermer ERP Database Backup");
+            Assertions.assertThat(text).contains("Özerler Mermer ERP Database Backup");
         }
     }
 
     @Test
     @DisplayName("download rejects a missing backup and an unsafe file name")
     void openDownload_rejectsMissingAndUnsafeNames() {
-        assertThatThrownBy(() -> backupService.openDownload("backup_missing.sql.gz"))
+        Assertions.assertThatThrownBy(() -> backupService.openDownload("backup_missing.sql.gz"))
                 .isInstanceOf(StoredFileNotFoundException.class);
 
-        assertThatThrownBy(() -> backupService.openDownload("../secret.sql.gz"))
+        Assertions.assertThatThrownBy(() -> backupService.openDownload("../secret.sql.gz"))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        assertThatThrownBy(() -> backupService.generatePresignedDownloadUrl("backup_missing.sql.gz"))
+        Assertions.assertThatThrownBy(() -> backupService.generatePresignedDownloadUrl("backup_missing.sql.gz"))
                 .isInstanceOf(StoredFileNotFoundException.class);
     }
 
@@ -208,7 +207,7 @@ class DatabaseBackupServiceTest {
     void writeBackup_reportsStorageFailure() throws Exception {
         String fileName = backupService.createBackupAsync().get();
 
-        assertThatThrownBy(() -> backupService.writeBackup(failingStream(), new ByteArrayOutputStream(), fileName))
+        Assertions.assertThatThrownBy(() -> backupService.writeBackup(failingStream(), new ByteArrayOutputStream(), fileName))
                 .isInstanceOf(StorageException.class)
                 .hasMessageContaining("Yedek indirilemedi");
     }
@@ -222,10 +221,10 @@ class DatabaseBackupServiceTest {
 
         String url = service.listBackups("erp.example.com").get(0).getDownloadUrl();
 
-        assertThat(url).startsWith("https://files.example.com/erp-files/backups/" + fileName);
-        assertThat(url).contains("X-Amz-Expires=1800");
-        assertThat(url).doesNotContain("rustfs");
-        assertThat(service.browserPresignedUrl(fileName, "erp.example.com")).contains(url);
+        Assertions.assertThat(url).startsWith("https://files.example.com/erp-files/backups/" + fileName);
+        Assertions.assertThat(url).contains("X-Amz-Expires=1800");
+        Assertions.assertThat(url).doesNotContain("rustfs");
+        Assertions.assertThat(service.browserPresignedUrl(fileName, "erp.example.com")).contains(url);
     }
 
     @Test
@@ -238,9 +237,9 @@ class DatabaseBackupServiceTest {
         Optional<String> presigned = service.browserPresignedUrl(fileName, "erp.example.com");
         String listed = service.listBackups("erp.example.com").get(0).getDownloadUrl();
 
-        assertThat(presigned).isEmpty();
-        assertThat(listed).isEqualTo("/admin/settings/backups/download/" + fileName);
-        assertThat(listed).doesNotContain("rustfs");
+        Assertions.assertThat(presigned).isEmpty();
+        Assertions.assertThat(listed).isEqualTo("/admin/settings/backups/download/" + fileName);
+        Assertions.assertThat(listed).doesNotContain("rustfs");
     }
 
     @Test
@@ -251,7 +250,7 @@ class DatabaseBackupServiceTest {
                 storage, "http://rustfs:9000", "http://localhost:9000", endpoint -> false);
         String fileName = unreachable.createBackupAsync().get();
 
-        assertThat(unreachable.listBackups("localhost").get(0).getDownloadUrl())
+        Assertions.assertThat(unreachable.listBackups("localhost").get(0).getDownloadUrl())
                 .isEqualTo("/admin/settings/backups/download/" + fileName);
 
         DatabaseBackupService remoteBrowser = serviceWith(
@@ -260,8 +259,8 @@ class DatabaseBackupServiceTest {
                 "http://localhost:9000",
                 endpoint -> { throw new AssertionError("loopback must not be probed for a remote browser"); });
 
-        assertThat(remoteBrowser.browserPresignedUrl(fileName, "erp.example.com")).isEmpty();
-        assertThat(remoteBrowser.listBackups("erp.example.com").get(0).getDownloadUrl())
+        Assertions.assertThat(remoteBrowser.browserPresignedUrl(fileName, "erp.example.com")).isEmpty();
+        Assertions.assertThat(remoteBrowser.listBackups("erp.example.com").get(0).getDownloadUrl())
                 .isEqualTo("/admin/settings/backups/download/" + fileName);
     }
 
@@ -277,8 +276,8 @@ class DatabaseBackupServiceTest {
                 browserAccess("http://rustfs:9000", "https://files.example.com", endpoint -> true));
         String fileName = service.createBackupAsync().get();
 
-        assertThat(service.browserPresignedUrl(fileName, "erp.example.com")).isEmpty();
-        assertThat(service.listBackups("erp.example.com").get(0).getDownloadUrl())
+        Assertions.assertThat(service.browserPresignedUrl(fileName, "erp.example.com")).isEmpty();
+        Assertions.assertThat(service.listBackups("erp.example.com").get(0).getDownloadUrl())
                 .isEqualTo("/admin/settings/backups/download/" + fileName);
     }
 

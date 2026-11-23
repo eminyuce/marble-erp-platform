@@ -1,7 +1,8 @@
 package com.ozerler.marble.util;
 
-import com.ozerler.marble.common.Constants;
 import jakarta.servlet.http.HttpServletRequest;
+
+import com.ozerler.marble.common.Constants;
 
 public final class ClientIps {
 

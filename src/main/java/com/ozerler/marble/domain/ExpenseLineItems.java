@@ -1,10 +1,10 @@
 package com.ozerler.marble.domain;
 
-import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.model.enums.ExpenseType;
-
 import java.util.List;
 import java.util.Map;
+
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.ExpenseType;
 
 /**
  * Gider kalemleri — birim bazında kullanılabilir masraf türleri.

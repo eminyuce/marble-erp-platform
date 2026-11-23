@@ -1,9 +1,10 @@
 package com.ozerler.marble.mapper;
 
-import com.ozerler.marble.dto.view.WorkshopOperationView;
-import com.ozerler.marble.model.WorkshopOperation;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
+
+import com.ozerler.marble.dto.view.WorkshopOperationView;
+import com.ozerler.marble.model.WorkshopOperation;
 
 /**
  * Copies workshop operations into views. No calculation happens here.

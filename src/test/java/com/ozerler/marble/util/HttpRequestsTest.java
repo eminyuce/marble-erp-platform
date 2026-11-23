@@ -1,10 +1,9 @@
 package com.ozerler.marble.util;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class HttpRequestsTest {
 
@@ -13,11 +12,11 @@ class HttpRequestsTest {
     void isHtmxReadsHeader() {
         MockHttpServletRequest htmx = new MockHttpServletRequest();
         htmx.addHeader("HX-Request", "true");
-        assertThat(HttpRequests.isHtmx(htmx)).isTrue();
+        Assertions.assertThat(HttpRequests.isHtmx(htmx)).isTrue();
 
         MockHttpServletRequest fullPage = new MockHttpServletRequest();
-        assertThat(HttpRequests.isHtmx(fullPage)).isFalse();
-        assertThat(HttpRequests.isHtmx(null)).isFalse();
+        Assertions.assertThat(HttpRequests.isHtmx(fullPage)).isFalse();
+        Assertions.assertThat(HttpRequests.isHtmx(null)).isFalse();
     }
 
     @Test
@@ -25,14 +24,14 @@ class HttpRequestsTest {
     void expectsJsonFromHeaders() {
         MockHttpServletRequest json = new MockHttpServletRequest();
         json.addHeader("Accept", "application/json");
-        assertThat(HttpRequests.expectsJson(json)).isTrue();
+        Assertions.assertThat(HttpRequests.expectsJson(json)).isTrue();
 
         MockHttpServletRequest xhr = new MockHttpServletRequest();
         xhr.addHeader("X-Requested-With", "XMLHttpRequest");
-        assertThat(HttpRequests.expectsJson(xhr)).isTrue();
+        Assertions.assertThat(HttpRequests.expectsJson(xhr)).isTrue();
 
         MockHttpServletRequest html = new MockHttpServletRequest();
         html.addHeader("Accept", "text/html");
-        assertThat(HttpRequests.expectsJson(html)).isFalse();
+        Assertions.assertThat(HttpRequests.expectsJson(html)).isFalse();
     }
 }

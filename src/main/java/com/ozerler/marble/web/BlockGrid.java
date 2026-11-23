@@ -1,12 +1,12 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.BlockDto;
-import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.enums.BlockStatus;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.BlockDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.enums.BlockStatus;
 
 /**
  * Ocak blok listesi. Sort keys match {@code GridPages.BLOCK_SORTS}. Status filter already exists.

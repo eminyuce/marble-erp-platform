@@ -1,13 +1,13 @@
 package com.ozerler.marble.web;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.CustomerDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CustomerType;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Cari listesi. Sort keys match {@code GridPages.CUSTOMER_SORTS}. Type and unit filters already exist.

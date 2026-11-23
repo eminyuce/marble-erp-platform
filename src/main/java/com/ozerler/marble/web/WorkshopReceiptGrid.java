@@ -1,9 +1,9 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.WorkshopReceiptDto;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ozerler.marble.dto.WorkshopReceiptDto;
 
 /**
  * Atölye malzeme kabulleri. Rows are already loaded and paged in memory. Columns are not sortable.

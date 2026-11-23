@@ -1,11 +1,11 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.OperationStatus;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Atölye iş emirleri. Sort keys match {@code GridPages.CUT_ORDER_SORTS}.

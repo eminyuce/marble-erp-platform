@@ -1,9 +1,10 @@
 package com.ozerler.marble.mapper;
 
-import com.ozerler.marble.dto.view.MachineFuelEntryView;
-import com.ozerler.marble.model.MachineFuelEntry;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
+
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
+import com.ozerler.marble.model.MachineFuelEntry;
 
 /**
  * Copies fuel entries into views. No calculation happens here.

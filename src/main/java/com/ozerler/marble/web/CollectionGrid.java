@@ -1,11 +1,12 @@
 package com.ozerler.marble.web;
 
-import com.ozerler.marble.dto.view.CollectionRef;
-import com.ozerler.marble.model.enums.CollectionMethod;
-import org.springframework.data.domain.Page;
-
 import java.math.BigDecimal;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+
+import com.ozerler.marble.dto.view.CollectionRef;
+import com.ozerler.marble.model.enums.CollectionMethod;
 
 /**
  * Tahsilat listesi. Method is the existing filter. There is no separate detail route.
