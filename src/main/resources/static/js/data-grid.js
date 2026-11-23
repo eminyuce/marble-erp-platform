@@ -131,42 +131,98 @@ window.erpGridDelete = erpGridDelete;
 window.erpSubmitSearch = erpSubmitSearch;
 
 var activeGridColumnFilter = null;
+var GRID_FILTER_GAP = 4;
+var GRID_FILTER_MARGIN = 8;
 
 function positionGridColumnFilterPanel(triggerRect, menuSize, viewport) {
-    var gap = 4;
+    var placer = window.positionGridActionsMenu;
+    if (typeof placer === "function") {
+        return placer(triggerRect, menuSize, viewport);
+    }
     var left = triggerRect.left;
-    var top = triggerRect.bottom + gap;
-    if (left + menuSize.width > viewport.width - gap) {
-        left = Math.max(gap, viewport.width - menuSize.width - gap);
+    var top = triggerRect.bottom + GRID_FILTER_GAP;
+    if (top + menuSize.height > viewport.height - GRID_FILTER_MARGIN) {
+        var flipped = triggerRect.top - menuSize.height - GRID_FILTER_GAP;
+        if (flipped >= GRID_FILTER_MARGIN) {
+            top = flipped;
+        } else {
+            top = Math.max(GRID_FILTER_MARGIN, viewport.height - menuSize.height - GRID_FILTER_MARGIN);
+        }
     }
-    if (left < gap) {
-        left = gap;
+    if (left + menuSize.width > viewport.width - GRID_FILTER_MARGIN) {
+        left = viewport.width - menuSize.width - GRID_FILTER_MARGIN;
     }
-    if (top + menuSize.height > viewport.height - gap
-            && triggerRect.top - gap - menuSize.height >= gap) {
-        top = triggerRect.top - gap - menuSize.height;
+    if (left < GRID_FILTER_MARGIN) {
+        left = GRID_FILTER_MARGIN;
     }
-    if (top < gap) {
-        top = gap;
+    if (top < GRID_FILTER_MARGIN) {
+        top = GRID_FILTER_MARGIN;
     }
-    return { left: left, top: top };
+    return {left: left, top: top};
 }
 
-function closeGridColumnFilter() {
+function placeOpenGridColumnFilter() {
+    if (!activeGridColumnFilter) {
+        return;
+    }
+    var button = activeGridColumnFilter.button;
+    var panel = activeGridColumnFilter.panel;
+    if (!button.isConnected || !panel.isConnected) {
+        closeGridColumnFilter(false);
+        return;
+    }
+    var rect = button.getBoundingClientRect();
+    if (rect.bottom < 0 || rect.top > window.innerHeight
+            || rect.right < 0 || rect.left > window.innerWidth) {
+        closeGridColumnFilter(false);
+        return;
+    }
+    var placed = positionGridColumnFilterPanel(
+        rect,
+        {width: panel.offsetWidth, height: panel.offsetHeight},
+        {width: window.innerWidth, height: window.innerHeight}
+    );
+    panel.style.position = "fixed";
+    panel.style.right = "auto";
+    panel.style.left = placed.left + "px";
+    panel.style.top = placed.top + "px";
+    panel.style.zIndex = "9999";
+}
+
+function onGridColumnFilterReposition() {
+    placeOpenGridColumnFilter();
+}
+
+function bindGridColumnFilterListeners() {
+    document.addEventListener("mousedown", onGridColumnFilterPointer, true);
+    document.addEventListener("keydown", onGridColumnFilterKey, true);
+    document.addEventListener("scroll", onGridColumnFilterReposition, true);
+    window.addEventListener("resize", onGridColumnFilterReposition);
+}
+
+function unbindGridColumnFilterListeners() {
+    document.removeEventListener("mousedown", onGridColumnFilterPointer, true);
+    document.removeEventListener("keydown", onGridColumnFilterKey, true);
+    document.removeEventListener("scroll", onGridColumnFilterReposition, true);
+    window.removeEventListener("resize", onGridColumnFilterReposition);
+}
+
+function closeGridColumnFilter(restoreFocus) {
     if (!activeGridColumnFilter) {
         return;
     }
     var panel = activeGridColumnFilter.panel;
     var button = activeGridColumnFilter.button;
+    unbindGridColumnFilterListeners();
     if (panel && panel.parentNode) {
         panel.parentNode.removeChild(panel);
     }
     if (button) {
         button.setAttribute("aria-expanded", "false");
-        button.focus();
+        if (restoreFocus !== false) {
+            button.focus();
+        }
     }
-    document.removeEventListener("mousedown", onGridColumnFilterPointer, true);
-    document.removeEventListener("keydown", onGridColumnFilterKey, true);
     activeGridColumnFilter = null;
 }
 
@@ -220,6 +276,7 @@ function fillGridColumnFilterValues(list, values, input, operator, form) {
         empty.className = "erp-data-grid__colfilter-empty";
         empty.textContent = "Değer yok";
         list.appendChild(empty);
+        placeOpenGridColumnFilter();
         return;
     }
     values.forEach(function (item) {
@@ -235,6 +292,7 @@ function fillGridColumnFilterValues(list, values, input, operator, form) {
         });
         list.appendChild(option);
     });
+    placeOpenGridColumnFilter();
 }
 
 function loadGridColumnFilterValues(url, list, input, operator, form) {
@@ -252,24 +310,19 @@ function toggleGridColumnFilter(event, button) {
         closeGridColumnFilter();
         return;
     }
-    closeGridColumnFilter();
+    closeGridColumnFilter(false);
     var template = button.parentElement.querySelector(".erp-data-grid__colfilter-tpl");
     if (!template) {
         return;
     }
     var panel = template.content.firstElementChild.cloneNode(true);
     panel.classList.add("erp-data-grid__colfilter-panel");
-    panel.style.visibility = "hidden";
+    panel.style.cssText = "position:fixed;visibility:hidden;left:0;top:0;right:auto;z-index:9999;";
     document.body.appendChild(panel);
-    var placed = positionGridColumnFilterPanel(
-        button.getBoundingClientRect(),
-        { width: panel.offsetWidth, height: panel.offsetHeight },
-        { width: window.innerWidth, height: window.innerHeight }
-    );
-    panel.style.left = placed.left + "px";
-    panel.style.top = placed.top + "px";
-    panel.style.visibility = "visible";
     button.setAttribute("aria-expanded", "true");
+    activeGridColumnFilter = { button: button, panel: panel };
+    placeOpenGridColumnFilter();
+    panel.style.visibility = "visible";
     var input = panel.querySelector("input[type='search']");
     var operator = panel.querySelector("select");
     var list = panel.querySelector(".erp-data-grid__colfilter-values");
@@ -281,13 +334,13 @@ function toggleGridColumnFilter(event, button) {
         input.focus();
         input.select();
     }
-    activeGridColumnFilter = { button: button, panel: panel };
-    document.addEventListener("mousedown", onGridColumnFilterPointer, true);
-    document.addEventListener("keydown", onGridColumnFilterKey, true);
+    bindGridColumnFilterListeners();
     if (window.lucide) {
         window.lucide.createIcons();
     }
 }
 
+window.positionGridColumnFilterPanel = positionGridColumnFilterPanel;
+window.placeOpenGridColumnFilter = placeOpenGridColumnFilter;
 window.toggleGridColumnFilter = toggleGridColumnFilter;
 window.closeGridColumnFilter = closeGridColumnFilter;

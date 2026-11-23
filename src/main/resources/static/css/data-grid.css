@@ -341,6 +341,7 @@
 
 .erp-data-grid__colfilter-panel {
     position: fixed;
+    right: auto;
     z-index: 9999;
     width: 260px;
     max-width: calc(100vw - 16px);
