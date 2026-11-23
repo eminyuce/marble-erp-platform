@@ -58,7 +58,12 @@ public class CollectionService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Müşteri bulunamadı: " + customerId));
 
-        Invoice invoice = invoiceId != null ? invoiceRepository.findById(invoiceId).orElse(null) : null;
+        Invoice invoice;
+        if (invoiceId != null) {
+            invoice = invoiceRepository.findById(invoiceId).orElse(null);
+        } else {
+            invoice = null;
+        }
 
         String code = UniqueCodes.yearly("THS", collectionRepository::existsByCollectionNo);
 
@@ -82,10 +87,16 @@ public class CollectionService {
             Objects.requireNonNull(checkData.checkNo(), "Çek numarası zorunludur.");
             Objects.requireNonNull(checkData.bankName(), "Banka adı zorunludur.");
 
+            LocalDate checkDate;
+            if (checkData.checkDate() != null) {
+                checkDate = checkData.checkDate();
+            } else {
+                checkDate = LocalDate.now();
+            }
             CheckRecord check = CheckRecord.builder()
                     .collection(savedCollection)
                     .checkNo(checkData.checkNo().trim())
-                    .checkDate(checkData.checkDate() != null ? checkData.checkDate() : LocalDate.now())
+                    .checkDate(checkDate)
                     .dueDate(checkData.dueDate())
                     .bankName(checkData.bankName().trim())
                     .customer(customer)
@@ -118,7 +129,13 @@ public class CollectionService {
 
         check.setStatus(newStatus);
         if (notes != null && !notes.isBlank()) {
-            check.setNotes((check.getNotes() != null ? check.getNotes() + " | " : "") + notes);
+            String value;
+            if (check.getNotes() != null) {
+                value = check.getNotes() + " | ";
+            } else {
+                value = "";
+            }
+            check.setNotes(value + notes);
         }
         return checkRepository.save(check);
     }
@@ -234,15 +251,51 @@ public class CollectionService {
             java.util.Map<String, Object> map = new java.util.HashMap<>();
             map.put("id", c.getId());
             map.put("collectionNo", c.getCollectionNo());
-            map.put("collectionDate", c.getCollectionDate() != null ? c.getCollectionDate().toString() : "");
-            map.put("customerName", c.getCustomer() != null ? c.getCustomer().getCompanyName() : "—");
-            map.put("method", c.getCollectionMethod() != null ? c.getCollectionMethod().name() : "");
-            map.put("methodLabel", c.getCollectionMethod() != null ? c.getCollectionMethod().getDisplayName() : "");
-            map.put("amount", c.getAmount() != null ? c.getAmount() : BigDecimal.ZERO);
-            map.put("bankName", c.getBankName() != null ? c.getBankName() : "—");
-            map.put("invoiceNo", c.getInvoice() != null ? c.getInvoice().getInvoiceNumber() : "—");
-            map.put("invoiceId", c.getInvoice() != null ? c.getInvoice().getId() : null);
-            map.put("notes", c.getNotes() != null ? c.getNotes() : "");
+            Object value;
+            if (c.getCollectionDate() != null) {
+                value = c.getCollectionDate().toString();
+            } else {
+                value = "";
+            }
+            map.put("collectionDate", value);
+            Object companyName;
+            if (c.getCustomer() != null) {
+                companyName = c.getCustomer().getCompanyName();
+            } else {
+                companyName = "—";
+            }
+            map.put("customerName", companyName);
+            Object valueValue;
+            if (c.getCollectionMethod() != null) {
+                valueValue = c.getCollectionMethod().name();
+            } else {
+                valueValue = "";
+            }
+            map.put("method", valueValue);
+            Object displayName;
+            if (c.getCollectionMethod() != null) {
+                displayName = c.getCollectionMethod().getDisplayName();
+            } else {
+                displayName = "";
+            }
+            map.put("methodLabel", displayName);
+            map.put("amount", Objects.requireNonNullElse(c.getAmount(), BigDecimal.ZERO));
+            map.put("bankName", Objects.requireNonNullElse(c.getBankName(), "—"));
+            Object invoiceNumber;
+            if (c.getInvoice() != null) {
+                invoiceNumber = c.getInvoice().getInvoiceNumber();
+            } else {
+                invoiceNumber = "—";
+            }
+            map.put("invoiceNo", invoiceNumber);
+            Long id;
+            if (c.getInvoice() != null) {
+                id = c.getInvoice().getId();
+            } else {
+                id = null;
+            }
+            map.put("invoiceId", id);
+            map.put("notes", Objects.requireNonNullElse(c.getNotes(), ""));
             return map;
         }).toList();
 
@@ -263,16 +316,52 @@ public class CollectionService {
             java.util.Map<String, Object> map = new java.util.HashMap<>();
             map.put("id", ch.getId());
             map.put("checkNo", ch.getCheckNo());
-            map.put("bankName", ch.getBankName() != null ? ch.getBankName() : "—");
-            map.put("customerName", ch.getCustomer() != null ? ch.getCustomer().getCompanyName() : "—");
+            map.put("bankName", Objects.requireNonNullElse(ch.getBankName(), "—"));
+            Object companyName;
+            if (ch.getCustomer() != null) {
+                companyName = ch.getCustomer().getCompanyName();
+            } else {
+                companyName = "—";
+            }
+            map.put("customerName", companyName);
             BusinessUnit bu = ch.getEffectiveBusinessUnit();
-            map.put("businessUnit", bu != null ? bu.name() : "");
-            map.put("businessUnitLabel", bu != null ? bu.getDisplayName() : "Genel");
-            map.put("dueDate", ch.getDueDate() != null ? ch.getDueDate().toString() : "");
-            map.put("amount", ch.getAmount() != null ? ch.getAmount() : BigDecimal.ZERO);
-            map.put("status", ch.getStatus() != null ? ch.getStatus().name() : "");
-            map.put("statusLabel", ch.getStatus() != null ? ch.getStatus().getLabel() : "");
-            map.put("notes", ch.getNotes() != null ? ch.getNotes() : "");
+            Object value;
+            if (bu != null) {
+                value = bu.name();
+            } else {
+                value = "";
+            }
+            map.put("businessUnit", value);
+            Object displayName;
+            if (bu != null) {
+                displayName = bu.getDisplayName();
+            } else {
+                displayName = "Genel";
+            }
+            map.put("businessUnitLabel", displayName);
+            Object valueValue;
+            if (ch.getDueDate() != null) {
+                valueValue = ch.getDueDate().toString();
+            } else {
+                valueValue = "";
+            }
+            map.put("dueDate", valueValue);
+            map.put("amount", Objects.requireNonNullElse(ch.getAmount(), BigDecimal.ZERO));
+            Object valueValue2;
+            if (ch.getStatus() != null) {
+                valueValue2 = ch.getStatus().name();
+            } else {
+                valueValue2 = "";
+            }
+            map.put("status", valueValue2);
+            Object label;
+            if (ch.getStatus() != null) {
+                label = ch.getStatus().getLabel();
+            } else {
+                label = "";
+            }
+            map.put("statusLabel", label);
+            map.put("notes", Objects.requireNonNullElse(ch.getNotes(), ""));
             return map;
         }).toList();
 

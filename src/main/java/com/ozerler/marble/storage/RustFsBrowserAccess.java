@@ -130,7 +130,10 @@ public class RustFsBrowserAccess {
         if (endpoint.getPort() > 0) {
             return endpoint.getPort();
         }
-        return "https".equalsIgnoreCase(endpoint.getScheme()) ? 443 : 80;
+        if ("https".equalsIgnoreCase(endpoint.getScheme())) {
+            return 443;
+        }
+        return 80;
     }
 
     private static boolean isHttp(URI uri) {

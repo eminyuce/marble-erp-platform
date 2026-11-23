@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 
 import jakarta.persistence.Column;
@@ -127,11 +128,22 @@ public class PalletItem extends AuditableEntity {
             return productName;
         }
         if (materialLot != null) {
-            String form = materialLot.getProductForm() != null ? materialLot.getProductForm().getLabel() : "";
-            return materialLot.getLotCode() + (form.isEmpty() ? "" : " — " + form);
+            String form;
+            if (materialLot.getProductForm() != null) {
+                form = materialLot.getProductForm().getLabel();
+            } else {
+                form = "";
+            }
+            String value;
+            if (form.isEmpty()) {
+                value = "";
+            } else {
+                value = " — " + form;
+            }
+            return materialLot.getLotCode() + value;
         }
         if (stockItem != null) {
-            return stockItem.getItemCode() + " (" + (stockItem.getStoneType() != null ? stockItem.getStoneType() : "Ebatlı") + ")";
+            return stockItem.getItemCode() + " (" + Objects.requireNonNullElse(stockItem.getStoneType(), "Ebatlı") + ")";
         }
         if (slab != null) {
             return slab.getSlabCode() + " (Plaka)";

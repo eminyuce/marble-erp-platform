@@ -37,7 +37,12 @@ class DataGridViewTest {
 
     private static List<String> labels(List<PageMarker> markers) {
         return markers.stream()
-                .map(marker -> marker.isEllipsis() ? "…" : Integer.toString(marker.getNumber()))
+                .map(marker -> {
+                    if (marker.isEllipsis()) {
+                        return "…";
+                    }
+                    return Integer.toString(marker.getNumber());
+                })
                 .toList();
     }
 }

@@ -55,9 +55,12 @@ public class UserFacingExceptionHandler {
                                         Model model,
                                         RedirectAttributes redirectAttributes) {
         String message = readableMessage(ex);
-        List<String> invalidFields = ex instanceof RejectedInputException rejected
-                ? rejected.fieldNames()
-                : List.of();
+        List<String> invalidFields;
+        if (ex instanceof RejectedInputException rejected) {
+            invalidFields = rejected.fieldNames();
+        } else {
+            invalidFields = List.of();
+        }
         log.warn("Rejected request on {}: {}", request.getRequestURI(), message);
         if (writesJson(handlerMethod, request)) {
             ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, message);
@@ -131,7 +134,10 @@ public class UserFacingExceptionHandler {
         if (referer != null) {
             return referer;
         }
-        return isAppPath(requestUri) ? requestUri : null;
+        if (isAppPath(requestUri)) {
+            return requestUri;
+        }
+        return null;
     }
 
     private static String sameOriginPath(String referer, HttpServletRequest request) {
@@ -165,7 +171,10 @@ public class UserFacingExceptionHandler {
 
     private static String pathOnly(String pathAndQuery) {
         int query = pathAndQuery.indexOf('?');
-        return query < 0 ? pathAndQuery : pathAndQuery.substring(0, query);
+        if (query < 0) {
+            return pathAndQuery;
+        }
+        return pathAndQuery.substring(0, query);
     }
 
     private static boolean isAppPath(String path) {

@@ -39,7 +39,12 @@ public class QuarryInventoryController extends AbstractController {
     @GetMapping("/fuel")
     public String fuelIndex(Model model) {
         StockItemView tank = quarryInventoryService.getOrCreateFuelTankStockItemView();
-        BigDecimal currentLiters = tank.getQuantity() != null ? tank.getQuantity() : BigDecimal.ZERO;
+        BigDecimal currentLiters;
+        if (tank.getQuantity() != null) {
+            currentLiters = tank.getQuantity();
+        } else {
+            currentLiters = BigDecimal.ZERO;
+        }
         List<MachineRef> machines = quarryInventoryService.getQuarryMachinesViews();
         List<MachineFuelEntryView> entries = quarryInventoryService.getRecentFuelEntryViews();
 
@@ -94,8 +99,18 @@ public class QuarryInventoryController extends AbstractController {
                                @RequestParam(value = "notes", required = false) String notes,
                                RedirectAttributes redirectAttributes) {
         try {
+            String addFuelStockView;
+            if (notes != null) {
+                addFuelStockView = notes;
+            } else {
+                if (invoiceNo != null) {
+                    addFuelStockView = "Fatura: " + invoiceNo;
+                } else {
+                    addFuelStockView = "Doğrudan Depo Girişi";
+                }
+            }
             StockItemView updated = quarryInventoryService.addFuelStockView(litres, netUnitPrice, null,
-                    notes != null ? notes : invoiceNo != null ? "Fatura: " + invoiceNo : "Doğrudan Depo Girişi");
+                    addFuelStockView);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s litre mazot depoya eklendi. Güncel stok: %s litre.", litres, updated.getQuantity()));
         } catch (Exception e) {
@@ -128,7 +143,13 @@ public class QuarryInventoryController extends AbstractController {
         model.addAttribute("totalQuantity", totalQuantity);
         model.addAttribute("machines", machines);
         model.addAttribute("categories", QuarryCategory.values());
-        model.addAttribute("selectedCategory", category != null ? category.name() : "");
+        Object valueValue;
+        if (category != null) {
+            valueValue = category.name();
+        } else {
+            valueValue = "";
+        }
+        model.addAttribute("selectedCategory", valueValue);
         model.addAttribute("activeSection", "quarry");
         model.addAttribute("activeSubSection", "consumables");
 
@@ -165,7 +186,12 @@ public class QuarryInventoryController extends AbstractController {
                                      @RequestParam(value = "notes", required = false) String notes,
                                      RedirectAttributes redirectAttributes) {
         try {
-            QuarryCategory cat = category != null ? category : QuarryCategory.SARF_MALZEME;
+            QuarryCategory cat;
+            if (category != null) {
+                cat = category;
+            } else {
+                cat = QuarryCategory.SARF_MALZEME;
+            }
             StockItemView item = quarryInventoryService.createStockCardView(
                     cat, description, unit, quantity, netUnitPrice, itemCode, notes);
             redirectAttributes.addFlashAttribute("successMessage",
@@ -175,7 +201,13 @@ public class QuarryInventoryController extends AbstractController {
             log.error("Stok ekleme hatası: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/quarry/consumables" + (category != null ? "?category=" + category.name() : "");
+        String valueValue;
+        if (category != null) {
+            valueValue = "?category=" + category.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/quarry/consumables" + valueValue;
     }
 
     @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
@@ -198,7 +230,13 @@ public class QuarryInventoryController extends AbstractController {
             log.error("Stok kartı oluşturma hatası: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/quarry/consumables" + (category != null ? "?category=" + category.name() : "");
+        String valueValue;
+        if (category != null) {
+            valueValue = "?category=" + category.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/quarry/consumables" + valueValue;
     }
 
     // ─────────────────────────────────────────────────────────────

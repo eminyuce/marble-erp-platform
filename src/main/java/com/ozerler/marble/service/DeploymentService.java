@@ -95,9 +95,12 @@ public class DeploymentService {
                     .build();
         }
         if (!status.isCanStart()) {
-            String reason = status.getBlockingReasons().isEmpty()
-                    ? "Yayın bu ortamda başlatılamaz."
-                    : status.getBlockingReasons().getFirst();
+            String reason;
+            if (status.getBlockingReasons().isEmpty()) {
+                reason = "Yayın bu ortamda başlatılamaz.";
+            } else {
+                reason = status.getBlockingReasons().getFirst();
+            }
             return DeploymentStartResult.builder()
                     .accepted(false)
                     .state(status.getState())
@@ -141,18 +144,39 @@ public class DeploymentService {
 
         try (RandomAccessFile file = new RandomAccessFile(logPath.toFile(), "r")) {
             long size = file.length();
-            long start = offset < 0 ? 0 : offset;
+            long start;
+            if (offset < 0) {
+                start = 0;
+            } else {
+                start = offset;
+            }
             if (start > size) {
                 start = 0;
             }
             int chunkSize = Math.min(properties.getLogChunkBytes(), (int) Math.min(Integer.MAX_VALUE, size - start));
             file.seek(start);
             byte[] buffer = new byte[Math.max(chunkSize, 0)];
-            int read = chunkSize > 0 ? file.read(buffer) : 0;
-            String chunk = read > 0 ? new String(buffer, 0, read, StandardCharsets.UTF_8) : "";
+            int read;
+            if (chunkSize > 0) {
+                read = file.read(buffer);
+            } else {
+                read = 0;
+            }
+            String chunk;
+            if (read > 0) {
+                chunk = new String(buffer, 0, read, StandardCharsets.UTF_8);
+            } else {
+                chunk = "";
+            }
+            int value;
+            if (read < 0) {
+                value = 0;
+            } else {
+                value = read;
+            }
             return DeploymentLogDto.builder()
                     .offset(start)
-                    .nextOffset(start + (read < 0 ? 0 : read))
+                    .nextOffset(start + value)
                     .chunk(chunk)
                     .state(fileStatus.state())
                     .startedAt(emptyToNull(fileStatus.startedAt()))
@@ -235,8 +259,18 @@ public class DeploymentService {
             String envSha = System.getenv("APP_GIT_SHA");
             String envVersion = System.getenv("APP_VERSION");
             if (envSha != null && !envSha.isBlank() && !"unknown".equalsIgnoreCase(envSha)) {
-                String shortSha = envSha.length() > 7 ? envSha.substring(0, 7) : envSha;
-                String msg = (envVersion != null && !envVersion.isBlank()) ? "v" + envVersion : "docker-image";
+                String shortSha;
+                if (envSha.length() > 7) {
+                    shortSha = envSha.substring(0, 7);
+                } else {
+                    shortSha = envSha;
+                }
+                String msg;
+                if (envVersion != null && !envVersion.isBlank()) {
+                    msg = "v" + envVersion;
+                } else {
+                    msg = "docker-image";
+                }
                 return new GitHead(properties.getGitBranch(), shortSha, msg);
             }
             return GitHead.unknown();
@@ -247,8 +281,14 @@ public class DeploymentService {
         if (branch.isBlank() && commit.isBlank()) {
             return GitHead.unknown();
         }
+        String gitBranch;
+        if (branch.isBlank()) {
+            gitBranch = properties.getGitBranch();
+        } else {
+            gitBranch = branch;
+        }
         return new GitHead(
-                branch.isBlank() ? properties.getGitBranch() : branch,
+                gitBranch,
                 commit,
                 message
         );
@@ -330,10 +370,15 @@ public class DeploymentService {
             case SUCCESS -> "Son yayın tamamlandı.";
             case FAILED -> "Son yayın başarısız oldu. Günlüğü inceleyin.";
             case UNAVAILABLE -> "Bu ortamdan yayın başlatılamaz.";
-            case IDLE -> canStart
-                    ? "Docker Hub imajını çekip yayına almaya hazır."
-                    : "Yayın şu anda başlatılamaz.";
+            case IDLE -> idleMessage(canStart);
         };
+    }
+
+    private static String idleMessage(boolean canStart) {
+        if (canStart) {
+            return "Docker Hub imajını çekip yayına almaya hazır.";
+        }
+        return "Yayın şu anda başlatılamaz.";
     }
 
     private static String startFailureMessage(String output) {
@@ -363,7 +408,10 @@ public class DeploymentService {
     }
 
     private static String emptyToNull(String value) {
-        return value == null || value.isBlank() ? null : value;
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value;
     }
 
     private record ProbeSnapshot(Instant expiresAt, boolean commandAvailable, boolean sudoReady, GitHead gitHead) {

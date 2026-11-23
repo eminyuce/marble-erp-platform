@@ -33,9 +33,24 @@ public final class CustomerGrid {
     }
 
     public static GridRow row(CustomerDto customer) {
-        String id = customer.getId() == null ? "" : customer.getId().toString();
-        String transactions = id.isEmpty() ? "" : "/admin/definitions/customers/" + id + "/transactions";
-        String editUrl = id.isEmpty() ? "" : "/admin/definitions/customers/" + id + "/edit";
+        String id;
+        if (customer.getId() == null) {
+            id = "";
+        } else {
+            id = customer.getId().toString();
+        }
+        String transactions;
+        if (id.isEmpty()) {
+            transactions = "";
+        } else {
+            transactions = "/admin/definitions/customers/" + id + "/transactions";
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = "/admin/definitions/customers/" + id + "/edit";
+        }
         String unit = unitText(customer.getBusinessUnitLabel());
         return GridRow.of(transactions, editUrl, customer.getId(), customer.getCompanyName(), List.of(
                 GridCell.chip(customer.getId()),
@@ -64,10 +79,16 @@ public final class CustomerGrid {
         String address = GridTexts.text(customer.getAddress());
         if (customer.getProjectCount() > 0) {
             String projects = customer.getProjectCount() + " Proje";
-            return address.isBlank() ? projects : address + " · " + projects;
+            if (address.isBlank()) {
+                return projects;
+            }
+            return address + " · " + projects;
         }
         if ("SITE".equals(customer.getBusinessUnit())) {
-            return address.isBlank() ? "+ Proje Aç" : address + " · + Proje Aç";
+            if (address.isBlank()) {
+                return "+ Proje Aç";
+            }
+            return address + " · + Proje Aç";
         }
         return address;
     }
@@ -87,11 +108,19 @@ public final class CustomerGrid {
 
     private static String unitText(String label) {
         String text = GridTexts.text(label);
-        return text.isBlank() ? "Genel" : text;
+        if (text.isBlank()) {
+            return "Genel";
+        }
+        return text;
     }
 
     private static String balance(BigDecimal value) {
-        BigDecimal amount = value == null ? BigDecimal.ZERO : value;
+        BigDecimal amount;
+        if (value == null) {
+            amount = BigDecimal.ZERO;
+        } else {
+            amount = value;
+        }
         if (amount.compareTo(BALANCE_STEP) > 0) {
             return GridTexts.money(amount) + " (B)";
         }

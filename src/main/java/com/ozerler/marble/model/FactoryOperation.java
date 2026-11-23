@@ -124,6 +124,9 @@ public class FactoryOperation extends AuditableEntity {
     }
 
     private static BigDecimal zero(BigDecimal value) {
-        return value != null ? value : BigDecimal.ZERO;
+        if (value != null) {
+            return value;
+        }
+        return BigDecimal.ZERO;
     }
 }

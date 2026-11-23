@@ -86,7 +86,10 @@ public class CheckRecord extends AuditableEntity {
         if (businessUnit != null) {
             return businessUnit;
         }
-        return customer != null ? customer.getBusinessUnit() : BusinessUnit.FACTORY;
+        if (customer != null) {
+            return customer.getBusinessUnit();
+        }
+        return BusinessUnit.FACTORY;
     }
 
     @Transient

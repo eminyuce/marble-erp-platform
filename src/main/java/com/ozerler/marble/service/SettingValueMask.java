@@ -11,7 +11,12 @@ public final class SettingValueMask {
     }
 
     public static String display(String key, String value) {
-        String name = key == null ? "" : key.toLowerCase(Locale.ROOT);
+        String name;
+        if (key == null) {
+            name = "";
+        } else {
+            name = key.toLowerCase(Locale.ROOT);
+        }
         if (name.contains("password") || name.contains("secret") || name.contains("token") || name.contains("key")) {
             return "******";
         }

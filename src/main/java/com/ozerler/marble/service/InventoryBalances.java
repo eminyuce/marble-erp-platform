@@ -36,12 +36,17 @@ final class InventoryBalances {
 
     static StockItem addIncomingFuel(StockItem tank, BigDecimal litres, BigDecimal netUnitPrice,
                                      StockItemRepository stockItemRepository) {
-        BigDecimal oldQty = tank.getQuantity() != null ? tank.getQuantity() : BigDecimal.ZERO;
+        BigDecimal oldQty;
+        if (tank.getQuantity() != null) {
+            oldQty = tank.getQuantity();
+        } else {
+            oldQty = BigDecimal.ZERO;
+        }
         BigDecimal newQty = oldQty.add(litres);
         tank.setQuantity(newQty);
 
         if (netUnitPrice != null && netUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal oldCost = oldQty.multiply(tank.getUnitPrice() != null ? tank.getUnitPrice() : BigDecimal.ZERO);
+            BigDecimal oldCost = oldQty.multiply(Objects.requireNonNullElse(tank.getUnitPrice(), BigDecimal.ZERO));
             BigDecimal newCost = litres.multiply(netUnitPrice);
             BigDecimal avgPrice = newCost.add(oldCost).divide(newQty, 2, RoundingMode.HALF_UP);
             tank.setUnitPrice(avgPrice);
@@ -51,9 +56,15 @@ final class InventoryBalances {
 
     static SavedFuel recordFuelEntry(MachineFuelEntryRepository fuelEntryRepository, FuelDraft draft) {
         BigDecimal totalNetCost = draft.litres().multiply(draft.unitPrice()).setScale(2, RoundingMode.HALF_UP);
+        LocalDate entryDate;
+        if (draft.entryDate() != null) {
+            entryDate = draft.entryDate();
+        } else {
+            entryDate = LocalDate.now();
+        }
         MachineFuelEntry entry = MachineFuelEntry.builder()
                 .machine(draft.machine())
-                .entryDate(draft.entryDate() != null ? draft.entryDate() : LocalDate.now())
+                .entryDate(entryDate)
                 .litres(draft.litres())
                 .pricePerLitre(draft.unitPrice())
                 .workingHoursOrKm(draft.workingHoursOrKm())
@@ -70,20 +81,39 @@ final class InventoryBalances {
                                            String fallbackDescription, StockLocation location, String unit,
                                            BigDecimal netUnitPrice, String notes, BigDecimal quantity) {
         StockItem item = stockItemRepository.findByItemCode(code)
-                .orElseGet(() -> StockItem.builder()
-                        .itemCode(code)
-                        .description(description != null ? description.trim() : fallbackDescription)
-                        .productType(StockProductType.CONSUMABLE)
-                        .stockLocation(location)
-                        .quantity(BigDecimal.ZERO)
-                        .unit(unit != null && !unit.isBlank() ? unit.trim() : "adet")
-                        .unitPrice(netUnitPrice != null ? netUnitPrice : BigDecimal.ZERO)
-                        .status("AVAILABLE")
-                        .productionDate(LocalDate.now())
-                        .notes(notes)
-                        .build());
+                .orElseGet(() -> {
+                    String descriptionValue;
+                    if (description != null) {
+                        descriptionValue = description.trim();
+                    } else {
+                        descriptionValue = fallbackDescription;
+                    }
+                    String unitValue;
+                    if (unit != null && !unit.isBlank()) {
+                        unitValue = unit.trim();
+                    } else {
+                        unitValue = "adet";
+                    }
+                    return StockItem.builder()
+                            .itemCode(code)
+                            .description(descriptionValue)
+                            .productType(StockProductType.CONSUMABLE)
+                            .stockLocation(location)
+                            .quantity(BigDecimal.ZERO)
+                            .unit(unitValue)
+                            .unitPrice(Objects.requireNonNullElse(netUnitPrice, BigDecimal.ZERO))
+                            .status("AVAILABLE")
+                            .productionDate(LocalDate.now())
+                            .notes(notes)
+                            .build();
+                });
 
-        BigDecimal oldQty = item.getQuantity() != null ? item.getQuantity() : BigDecimal.ZERO;
+        BigDecimal oldQty;
+        if (item.getQuantity() != null) {
+            oldQty = item.getQuantity();
+        } else {
+            oldQty = BigDecimal.ZERO;
+        }
         item.setQuantity(oldQty.add(quantity));
         if (netUnitPrice != null && netUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
             item.setUnitPrice(netUnitPrice);
@@ -103,7 +133,12 @@ final class InventoryBalances {
         StockItem item = stockItemRepository.findById(stockItemId)
                 .orElseThrow(() -> new IllegalArgumentException("Sarf malzeme bulunamadı: " + stockItemId));
 
-        BigDecimal currentStock = item.getQuantity() != null ? item.getQuantity() : BigDecimal.ZERO;
+        BigDecimal currentStock;
+        if (item.getQuantity() != null) {
+            currentStock = item.getQuantity();
+        } else {
+            currentStock = BigDecimal.ZERO;
+        }
         if (currentStock.compareTo(quantity) < 0) {
             throw new IllegalArgumentException(String.format(
                     insufficientStockMessage,
@@ -112,9 +147,19 @@ final class InventoryBalances {
 
         item.setQuantity(currentStock.subtract(quantity));
         StockItem saved = stockItemRepository.save(item);
-        BigDecimal unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO;
+        BigDecimal unitPrice;
+        if (item.getUnitPrice() != null) {
+            unitPrice = item.getUnitPrice();
+        } else {
+            unitPrice = BigDecimal.ZERO;
+        }
         BigDecimal netCost = quantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
-        Machine machine = machineId != null ? machineRepository.findById(machineId).orElse(null) : null;
+        Machine machine;
+        if (machineId != null) {
+            machine = machineRepository.findById(machineId).orElse(null);
+        } else {
+            machine = null;
+        }
         return new StockWithdrawal(saved, netCost, machine);
     }
 }

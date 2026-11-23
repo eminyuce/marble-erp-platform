@@ -29,12 +29,20 @@ public final class GridFilters {
         this.enabled = text(request, "enabled");
         String levels = text(request, "levels");
         String singleLevel = text(request, "level");
-        this.level = levels.isBlank() ? singleLevel : levels;
+        if (levels.isBlank()) {
+            this.level = singleLevel;
+        } else {
+            this.level = levels;
+        }
         this.startDate = text(request, "startDate");
         this.endDate = text(request, "endDate");
         this.amount = text(request, "amount");
         String[] selectedRoles = request.getParameterValues("roles");
-        this.roles = selectedRoles == null ? List.of() : List.copyOf(Arrays.asList(selectedRoles));
+        if (selectedRoles == null) {
+            this.roles = List.of();
+        } else {
+            this.roles = List.copyOf(Arrays.asList(selectedRoles));
+        }
     }
 
     public static GridFilters from(HttpServletRequest request) {
@@ -83,6 +91,9 @@ public final class GridFilters {
 
     private static String text(HttpServletRequest request, String name) {
         String value = request.getParameter(name);
-        return value == null ? "" : value;
+        if (value == null) {
+            return "";
+        }
+        return value;
     }
 }

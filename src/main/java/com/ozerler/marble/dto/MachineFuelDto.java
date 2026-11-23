@@ -35,14 +35,44 @@ public class MachineFuelDto {
         if (entry == null) {
             return null;
         }
+        Long machineIdValue;
+        if (entry.getMachine() != null) {
+            machineIdValue = entry.getMachine().getId();
+        } else {
+            machineIdValue = null;
+        }
+        String machineNameValue;
+        if (entry.getMachine() != null) {
+            machineNameValue = entry.getMachine().getName();
+        } else {
+            machineNameValue = "—";
+        }
+        String machineCodeValue;
+        if (entry.getMachine() != null) {
+            machineCodeValue = entry.getMachine().getCode();
+        } else {
+            machineCodeValue = "—";
+        }
+        String businessUnitValue;
+        if (entry.getMachine() != null && entry.getMachine().getBusinessUnit() != null) {
+            businessUnitValue = entry.getMachine().getBusinessUnit().name();
+        } else {
+            businessUnitValue = "";
+        }
+        String businessUnitLabelValue;
+        if (entry.getMachine() != null && entry.getMachine().getBusinessUnit() != null) {
+            businessUnitLabelValue = entry.getMachine().getBusinessUnit().getLabel();
+        } else {
+            businessUnitLabelValue = "";
+        }
         return MachineFuelDto.builder()
                 .id(entry.getId())
                 .entryDate(entry.getEntryDate())
-                .machineId(entry.getMachine() != null ? entry.getMachine().getId() : null)
-                .machineName(entry.getMachine() != null ? entry.getMachine().getName() : "—")
-                .machineCode(entry.getMachine() != null ? entry.getMachine().getCode() : "—")
-                .businessUnit(entry.getMachine() != null && entry.getMachine().getBusinessUnit() != null ? entry.getMachine().getBusinessUnit().name() : "")
-                .businessUnitLabel(entry.getMachine() != null && entry.getMachine().getBusinessUnit() != null ? entry.getMachine().getBusinessUnit().getLabel() : "")
+                .machineId(machineIdValue)
+                .machineName(machineNameValue)
+                .machineCode(machineCodeValue)
+                .businessUnit(businessUnitValue)
+                .businessUnitLabel(businessUnitLabelValue)
                 .litres(entry.getLitres())
                 .pricePerLitre(entry.getPricePerLitre())
                 .totalAmount(entry.getTotalAmount())

@@ -108,6 +108,16 @@ public class QuarryInventoryService {
 
         // Stok Giriş Hareketi (Gider yazılmaz, depoya giriş yapılır)
         String movCode = UniqueCodes.yearly("MOV-MZ", stockMovementRepository::existsByMovementCode);
+        String notesValue;
+        if (notes != null) {
+            notesValue = notes;
+        } else {
+            if (invoice != null) {
+                notesValue = "Fatura: " + invoice.getInvoiceNo();
+            } else {
+                notesValue = "Mazot alımı";
+            }
+        }
         StockMovement movement = StockMovement.builder()
                 .movementCode(movCode)
                 .movementDate(LocalDateTime.now())
@@ -120,7 +130,7 @@ public class QuarryInventoryService {
                 .quantity(litres)
                 .quantityUnit("litre")
                 .invoice(invoice)
-                .notes(notes != null ? notes : invoice != null ? "Fatura: " + invoice.getInvoiceNo() : "Mazot alımı")
+                .notes(notesValue)
                 .build();
         stockMovementRepository.save(movement);
 
@@ -130,7 +140,7 @@ public class QuarryInventoryService {
 
     @Transactional
     public StockItem addFuelStock(BigDecimal litres, BigDecimal netUnitPrice, String invoiceNo) {
-        return addFuelStock(litres, netUnitPrice, null, "Alış faturası: " + (invoiceNo != null ? invoiceNo : ""));
+        return addFuelStock(litres, netUnitPrice, null, "Alış faturası: " + Objects.requireNonNullElse(invoiceNo, ""));
     }
 
     @Transactional
@@ -145,7 +155,12 @@ public class QuarryInventoryService {
         }
 
         StockItem tank = getOrCreateFuelTankStockItem();
-        BigDecimal currentStock = tank.getQuantity() != null ? tank.getQuantity() : BigDecimal.ZERO;
+        BigDecimal currentStock;
+        if (tank.getQuantity() != null) {
+            currentStock = tank.getQuantity();
+        } else {
+            currentStock = BigDecimal.ZERO;
+        }
 
         if (currentStock.compareTo(litres) < 0) {
             throw new IllegalArgumentException(String.format(
@@ -162,9 +177,12 @@ public class QuarryInventoryService {
         stockItemRepository.save(tank);
 
         // 2. Birim Fiyat (KDV HARİÇ Net Fiyat)
-        BigDecimal unitPrice = tank.getUnitPrice() != null && tank.getUnitPrice().compareTo(BigDecimal.ZERO) > 0
-                ? tank.getUnitPrice()
-                : new BigDecimal("40.00"); // varsayılan piyasa referansı
+        BigDecimal unitPrice;
+        if (tank.getUnitPrice() != null && tank.getUnitPrice().compareTo(BigDecimal.ZERO) > 0) {
+            unitPrice = tank.getUnitPrice();
+        } else {
+            unitPrice = new BigDecimal("40.00");
+        } // varsayılan piyasa referansı
         InventoryBalances.SavedFuel savedFuel = InventoryBalances.recordFuelEntry(
                 fuelEntryRepository,
                 new InventoryBalances.FuelDraft(machine, entryDate, litres, unitPrice, workingHoursOrKm,
@@ -179,6 +197,12 @@ public class QuarryInventoryService {
                 .orElse(null);
 
         if (quarryCenter != null) {
+            String receiptNoValue;
+            if (receiptNo != null) {
+                receiptNoValue = receiptNo;
+            } else {
+                receiptNoValue = savedEntry.getId().toString();
+            }
             expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                     quarryCenter.getId(),
                     ExpenseType.DIESEL,
@@ -186,7 +210,7 @@ public class QuarryInventoryService {
                     BusinessUnit.QUARRY,
                     totalNetCost,
                     "TRY",
-                    receiptNo != null ? receiptNo : savedEntry.getId().toString(),
+                    receiptNoValue,
                     savedEntry.getEntryDate(),
                     savedEntry.getEntryDate(),
                     YearMonth.from(savedEntry.getEntryDate()).toString(),
@@ -249,9 +273,12 @@ public class QuarryInventoryService {
         }
 
         StockLocation loc = getOrCreateConsumablesLocation();
-        String code = (itemCode != null && !itemCode.isBlank())
-                ? itemCode.trim().toUpperCase()
-                : UniqueCodes.yearly("SRF", stockItemRepository::existsByItemCode);
+        String code;
+        if (itemCode != null && !itemCode.isBlank()) {
+            code = itemCode.trim().toUpperCase();
+        } else {
+            code = UniqueCodes.yearly("SRF", stockItemRepository::existsByItemCode);
+        }
 
         StockItem saved = InventoryBalances.addIncomingConsumable(
                 stockItemRepository, code, description, "Ocak Sarf Malzemesi",
@@ -271,7 +298,7 @@ public class QuarryInventoryService {
                 .quantity(quantity)
                 .quantityUnit(saved.getUnit())
                 .invoice(invoice)
-                .notes(notes != null ? notes : "Sarf malzeme stoğa alındı")
+                .notes(Objects.requireNonNullElse(notes, "Sarf malzeme stoğa alındı"))
                 .build();
         stockMovementRepository.save(movement);
 
@@ -281,7 +308,7 @@ public class QuarryInventoryService {
 
     @Transactional
     public StockItem addConsumableStock(String description, BigDecimal quantity, String unit, BigDecimal netUnitPrice, String invoiceNo) {
-        return addConsumableStock(null, description, quantity, unit, netUnitPrice, null, "Alış faturası: " + (invoiceNo != null ? invoiceNo : ""));
+        return addConsumableStock(null, description, quantity, unit, netUnitPrice, null, "Alış faturası: " + Objects.requireNonNullElse(invoiceNo, ""));
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -298,7 +325,12 @@ public class QuarryInventoryService {
         }
 
         String trimmedDesc = description.trim();
-        String trimmedCode = itemCode != null && !itemCode.isBlank() ? itemCode.trim().toUpperCase() : null;
+        String trimmedCode;
+        if (itemCode != null && !itemCode.isBlank()) {
+            trimmedCode = itemCode.trim().toUpperCase();
+        } else {
+            trimmedCode = null;
+        }
 
         // Duplicate kontrolü (Madde 2): Ocak stoğunda aynı isimde veya aynı kodda kayıt var mı?
         boolean descExists = stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(
@@ -340,17 +372,26 @@ public class QuarryInventoryService {
             }
         }
 
-        String finalCode = trimmedCode != null
-                ? trimmedCode
-                : UniqueCodes.yearly(defaultPrefix, stockItemRepository::existsByItemCode);
+        String finalCode;
+        if (trimmedCode != null) {
+            finalCode = trimmedCode;
+        } else {
+            finalCode = UniqueCodes.yearly(defaultPrefix, stockItemRepository::existsByItemCode);
+        }
 
-        BigDecimal qty = (initialQuantity != null && initialQuantity.compareTo(BigDecimal.ZERO) >= 0)
-                ? initialQuantity
-                : BigDecimal.ZERO;
+        BigDecimal qty;
+        if (initialQuantity != null && initialQuantity.compareTo(BigDecimal.ZERO) >= 0) {
+            qty = initialQuantity;
+        } else {
+            qty = BigDecimal.ZERO;
+        }
 
-        BigDecimal price = (netUnitPrice != null && netUnitPrice.compareTo(BigDecimal.ZERO) >= 0)
-                ? netUnitPrice
-                : BigDecimal.ZERO;
+        BigDecimal price;
+        if (netUnitPrice != null && netUnitPrice.compareTo(BigDecimal.ZERO) >= 0) {
+            price = netUnitPrice;
+        } else {
+            price = BigDecimal.ZERO;
+        }
 
         // Birim Tanımlamaları kuralı: Mazot alımlarında birim litre olmalıdır.
         String resolvedUnit;
@@ -438,6 +479,12 @@ public class QuarryInventoryService {
                 .orElse(null);
 
         if (quarryCenter != null && netCost.compareTo(BigDecimal.ZERO) > 0) {
+            String code;
+            if (machine != null) {
+                code = machine.getCode();
+            } else {
+                code = "OCAK-SARF";
+            }
             expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                     quarryCenter.getId(),
                     ExpenseType.CONSUMABLES,
@@ -453,13 +500,23 @@ public class QuarryInventoryService {
                     null, null, null, null,
                     machine,
                     null, null,
-                    machine != null ? machine.getCode() : "OCAK-SARF",
+                    code,
                     "Sarf Malzeme Kullanımı: " + item.getDescription() + " — " + quantity + " " + item.getUnit() + " (Net: " + netCost + " TL)"
             ));
         }
 
         // Stok Hareketi
         String movCode = UniqueCodes.yearly("MOV-SRF", stockMovementRepository::existsByMovementCode);
+        String notesValue;
+        if (notes != null) {
+            notesValue = notes;
+        } else {
+            if (machine != null) {
+                notesValue = machine.getName() + " için kullanıldı.";
+            } else {
+                notesValue = "Ocak sahasında kullanıldı.";
+            }
+        }
         StockMovement movement = StockMovement.builder()
                 .movementCode(movCode)
                 .movementDate(LocalDateTime.now())
@@ -470,7 +527,7 @@ public class QuarryInventoryService {
                 .itemDescription("Sarf Malzeme Tüketimi: " + item.getDescription())
                 .quantity(quantity)
                 .quantityUnit(item.getUnit())
-                .notes(notes != null ? notes : machine != null ? machine.getName() + " için kullanıldı." : "Ocak sahasında kullanıldı.")
+                .notes(notesValue)
                 .build();
         stockMovementRepository.save(movement);
 
@@ -492,9 +549,12 @@ public class QuarryInventoryService {
     @Transactional
     public Machine createQuarryMachine(String code, String name, String notes) {
         Objects.requireNonNull(name, "Makine adı zorunludur.");
-        String c = (code != null && !code.isBlank())
-                ? code.trim().toUpperCase()
-                : UniqueCodes.yearly("OCK-MK", codeStr -> machineRepository.findByCode(codeStr).isPresent());
+        String c;
+        if (code != null && !code.isBlank()) {
+            c = code.trim().toUpperCase();
+        } else {
+            c = UniqueCodes.yearly("OCK-MK", codeStr -> machineRepository.findByCode(codeStr).isPresent());
+        }
 
         Machine m = Machine.builder()
                 .code(c)

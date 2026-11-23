@@ -32,7 +32,12 @@ public final class WorkshopOrderCost {
     }
 
     private static BigDecimal nonNegative(String field, BigDecimal value) {
-        BigDecimal amount = value != null ? value : BigDecimal.ZERO;
+        BigDecimal amount;
+        if (value != null) {
+            amount = value;
+        } else {
+            amount = BigDecimal.ZERO;
+        }
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.cost.negative_amount") + ": " + field);
         }

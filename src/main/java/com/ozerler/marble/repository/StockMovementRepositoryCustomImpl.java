@@ -92,9 +92,13 @@ public class StockMovementRepositoryCustomImpl implements StockMovementRepositor
         List<Order> orders = new ArrayList<>();
         if (sort != null) {
             for (Sort.Order order : sort) {
-                orders.add(order.isAscending()
-                        ? builder.asc(root.get(order.getProperty()))
-                        : builder.desc(root.get(order.getProperty())));
+                Order value;
+                if (order.isAscending()) {
+                    value = builder.asc(root.get(order.getProperty()));
+                } else {
+                    value = builder.desc(root.get(order.getProperty()));
+                }
+                orders.add(value);
             }
         }
         if (orders.isEmpty()) {

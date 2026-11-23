@@ -97,21 +97,64 @@ public class OperationWorkOrderService {
     public OperationWorkOrder createWorkOrder(WorkOrderCreateForm form) {
         Objects.requireNonNull(form.department(), "Departman seçilmelidir.");
 
-        String prefix = form.department() == BusinessUnit.FACTORY ? "FWO"
-                : form.department() == BusinessUnit.WORKSHOP ? "AWO" : "SWO";
-        String code = (form.orderNo() != null && !form.orderNo().isBlank())
-                ? form.orderNo().trim().toUpperCase()
-                : UniqueCodes.yearly(prefix, workOrderRepository::existsByOrderNo);
+        String prefix;
+        if (form.department() == BusinessUnit.FACTORY) {
+            prefix = "FWO";
+        } else {
+            if (form.department() == BusinessUnit.WORKSHOP) {
+                prefix = "AWO";
+            } else {
+                prefix = "SWO";
+            }
+        }
+        String code;
+        if (form.orderNo() != null && !form.orderNo().isBlank()) {
+            code = form.orderNo().trim().toUpperCase();
+        } else {
+            code = UniqueCodes.yearly(prefix, workOrderRepository::existsByOrderNo);
+        }
 
-        Customer customer = form.customerId() != null ? customerRepository.findById(form.customerId()).orElse(null) : null;
-        StockItem stockItem = form.sourceStockItemId() != null ? stockItemRepository.findById(form.sourceStockItemId()).orElse(null) : null;
-        Slab slab = form.sourceSlabId() != null ? slabRepository.findById(form.sourceSlabId()).orElse(null) : null;
-        Block block = form.sourceBlockId() != null ? blockRepository.findById(form.sourceBlockId()).orElse(null) : null;
+        Customer customer;
+        if (form.customerId() != null) {
+            customer = customerRepository.findById(form.customerId()).orElse(null);
+        } else {
+            customer = null;
+        }
+        StockItem stockItem;
+        if (form.sourceStockItemId() != null) {
+            stockItem = stockItemRepository.findById(form.sourceStockItemId()).orElse(null);
+        } else {
+            stockItem = null;
+        }
+        Slab slab;
+        if (form.sourceSlabId() != null) {
+            slab = slabRepository.findById(form.sourceSlabId()).orElse(null);
+        } else {
+            slab = null;
+        }
+        Block block;
+        if (form.sourceBlockId() != null) {
+            block = blockRepository.findById(form.sourceBlockId()).orElse(null);
+        } else {
+            block = null;
+        }
 
+        LocalDate orderDate;
+        if (form.orderDate() != null) {
+            orderDate = form.orderDate();
+        } else {
+            orderDate = LocalDate.now();
+        }
+        String quantityUnit;
+        if (form.quantityUnit() != null) {
+            quantityUnit = form.quantityUnit();
+        } else {
+            quantityUnit = "m2";
+        }
         OperationWorkOrder order = OperationWorkOrder.builder()
                 .orderNo(code)
                 .customer(customer)
-                .orderDate(form.orderDate() != null ? form.orderDate() : LocalDate.now())
+                .orderDate(orderDate)
                 .dueDate(form.dueDate())
                 .department(form.department())
                 .responsiblePerson(form.responsiblePerson())
@@ -121,7 +164,7 @@ public class OperationWorkOrderService {
                 .widthCm(form.widthCm())
                 .lengthCm(form.lengthCm())
                 .quantity(form.quantity())
-                .quantityUnit(form.quantityUnit() != null ? form.quantityUnit() : "m2")
+                .quantityUnit(quantityUnit)
                 .surfaceOperation(form.surfaceOperation())
                 .edgeOperation(form.edgeOperation())
                 .status(OperationWorkOrderStatus.NEW)
@@ -150,17 +193,34 @@ public class OperationWorkOrderService {
                 block.setAssignedCustomer(customer);
             }
             blockRepository.save(block);
-            BigDecimal ton = block.getEffectiveTonnage() != null ? block.getEffectiveTonnage() : BigDecimal.ONE;
+            BigDecimal ton;
+            if (block.getEffectiveTonnage() != null) {
+                ton = block.getEffectiveTonnage();
+            } else {
+                ton = BigDecimal.ONE;
+            }
+            BigDecimal recordWorkOrderConsumption;
+            if (form.usedQuantity() != null) {
+                recordWorkOrderConsumption = form.usedQuantity();
+            } else {
+                recordWorkOrderConsumption = ton;
+            }
             stockMovementService.recordWorkOrderConsumption(saved, null, null, block,
-                    form.usedQuantity() != null ? form.usedQuantity() : ton, "ton");
+                    recordWorkOrderConsumption, "ton");
         } else if (slab != null) {
             slab.setStatus(SlabStatus.RESERVED);
             if (customer != null) {
                 slab.setCustomer(customer);
             }
             slabRepository.save(slab);
+            BigDecimal recordWorkOrderConsumptionValue;
+            if (form.usedQuantity() != null) {
+                recordWorkOrderConsumptionValue = form.usedQuantity();
+            } else {
+                recordWorkOrderConsumptionValue = slab.getSurfaceAreaM2();
+            }
             stockMovementService.recordWorkOrderConsumption(saved, null, slab, null,
-                    form.usedQuantity() != null ? form.usedQuantity() : slab.getSurfaceAreaM2(), "m2");
+                    recordWorkOrderConsumptionValue, "m2");
         } else if (stockItem != null && form.usedQuantity() != null) {
             BigDecimal remaining = stockItem.getQuantity().subtract(form.usedQuantity());
             if (remaining.compareTo(BigDecimal.ZERO) < 0) {
@@ -337,18 +397,62 @@ public class OperationWorkOrderService {
                 if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) {
                     continue;
                 }
-                BigDecimal l = (dimLengths != null && i < dimLengths.size()) ? dimLengths.get(i) : BigDecimal.ZERO;
-                BigDecimal t = (dimThicknesses != null && i < dimThicknesses.size()) ? dimThicknesses.get(i) : new BigDecimal("2.0");
-                int pcs = (dimPieceCounts != null && i < dimPieceCounts.size() && dimPieceCounts.get(i) != null) ? dimPieceCounts.get(i) : 1;
-                String sOp = (dimSurfaceOps != null && i < dimSurfaceOps.size() && dimSurfaceOps.get(i) != null && !dimSurfaceOps.get(i).isBlank())
-                        ? dimSurfaceOps.get(i).trim() : surfaceOperation != null ? surfaceOperation : "Cilalı";
-                String sUnit = (dimSurfaceUnits != null && i < dimSurfaceUnits.size() && dimSurfaceUnits.get(i) != null && !dimSurfaceUnits.get(i).isBlank())
-                        ? dimSurfaceUnits.get(i).trim() : "m2";
-                String eOp = (dimEdgeOps != null && i < dimEdgeOps.size() && dimEdgeOps.get(i) != null && !dimEdgeOps.get(i).isBlank())
-                        ? dimEdgeOps.get(i).trim() : edgeOperation != null ? edgeOperation : "Pah";
-                String eUnit = (dimEdgeUnits != null && i < dimEdgeUnits.size() && dimEdgeUnits.get(i) != null && !dimEdgeUnits.get(i).isBlank())
-                        ? dimEdgeUnits.get(i).trim() : "m.t.";
-                String dNote = (dimNotes != null && i < dimNotes.size() && dimNotes.get(i) != null) ? dimNotes.get(i).trim() : "";
+                BigDecimal l;
+                if (dimLengths != null && i < dimLengths.size()) {
+                    l = dimLengths.get(i);
+                } else {
+                    l = BigDecimal.ZERO;
+                }
+                BigDecimal t;
+                if (dimThicknesses != null && i < dimThicknesses.size()) {
+                    t = dimThicknesses.get(i);
+                } else {
+                    t = new BigDecimal("2.0");
+                }
+                int pcs;
+                if (dimPieceCounts != null && i < dimPieceCounts.size() && dimPieceCounts.get(i) != null) {
+                    pcs = dimPieceCounts.get(i);
+                } else {
+                    pcs = 1;
+                }
+                String sOp;
+                if (dimSurfaceOps != null && i < dimSurfaceOps.size() && dimSurfaceOps.get(i) != null && !dimSurfaceOps.get(i).isBlank()) {
+                    sOp = dimSurfaceOps.get(i).trim();
+                } else {
+                    if (surfaceOperation != null) {
+                        sOp = surfaceOperation;
+                    } else {
+                        sOp = "Cilalı";
+                    }
+                }
+                String sUnit;
+                if (dimSurfaceUnits != null && i < dimSurfaceUnits.size() && dimSurfaceUnits.get(i) != null && !dimSurfaceUnits.get(i).isBlank()) {
+                    sUnit = dimSurfaceUnits.get(i).trim();
+                } else {
+                    sUnit = "m2";
+                }
+                String eOp;
+                if (dimEdgeOps != null && i < dimEdgeOps.size() && dimEdgeOps.get(i) != null && !dimEdgeOps.get(i).isBlank()) {
+                    eOp = dimEdgeOps.get(i).trim();
+                } else {
+                    if (edgeOperation != null) {
+                        eOp = edgeOperation;
+                    } else {
+                        eOp = "Pah";
+                    }
+                }
+                String eUnit;
+                if (dimEdgeUnits != null && i < dimEdgeUnits.size() && dimEdgeUnits.get(i) != null && !dimEdgeUnits.get(i).isBlank()) {
+                    eUnit = dimEdgeUnits.get(i).trim();
+                } else {
+                    eUnit = "m.t.";
+                }
+                String dNote;
+                if (dimNotes != null && i < dimNotes.size() && dimNotes.get(i) != null) {
+                    dNote = dimNotes.get(i).trim();
+                } else {
+                    dNote = "";
+                }
 
                 BigDecimal rowM2 = w.multiply(l).multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(10000), 2, java.math.RoundingMode.HALF_UP);
                 BigDecimal rowMt = l.multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
@@ -382,8 +486,14 @@ public class OperationWorkOrderService {
                         .build();
                 items.add(item);
 
+                Object value;
+                if (dNote.isEmpty()) {
+                    value = "";
+                } else {
+                    value = " {" + dNote + "}";
+                }
                 breakdownBuilder.append(String.format("%d. %s x %s x %s cm — %d Adet (%s m² | %s m.t.) [Yüzey: %s (%s), Kenar: %s (%s)]%s\n",
-                        i + 1, w, l, t, pcs, rowM2, rowMt, sOp, sUnit, eOp, eUnit, dNote.isEmpty() ? "" : " {" + dNote + "}"));
+                        i + 1, w, l, t, pcs, rowM2, rowMt, sOp, sUnit, eOp, eUnit, value));
             }
             breakdownBuilder.append(String.format("-------------------------------------------\nTOPLAM: %d Adet | %s m² | %s m.t.\n", totalPieces, sumM2, sumMt));
 
@@ -398,16 +508,41 @@ public class OperationWorkOrderService {
             }
         }
 
-        String topSurface = (surfaceOperation != null && !surfaceOperation.isBlank())
-                ? surfaceOperation
-                : !items.isEmpty() && items.get(0).getSurfaceOperation() != null ? items.get(0).getSurfaceOperation() : "Cilalı";
-        String topEdge = (edgeOperation != null && !edgeOperation.isBlank())
-                ? edgeOperation
-                : !items.isEmpty() && items.get(0).getEdgeOperation() != null ? items.get(0).getEdgeOperation() : "Pah";
+        String topSurface;
+        if (surfaceOperation != null && !surfaceOperation.isBlank()) {
+            topSurface = surfaceOperation;
+        } else {
+            if (!items.isEmpty() && items.get(0).getSurfaceOperation() != null) {
+                topSurface = items.get(0).getSurfaceOperation();
+            } else {
+                topSurface = "Cilalı";
+            }
+        }
+        String topEdge;
+        if (edgeOperation != null && !edgeOperation.isBlank()) {
+            topEdge = edgeOperation;
+        } else {
+            if (!items.isEmpty() && items.get(0).getEdgeOperation() != null) {
+                topEdge = items.get(0).getEdgeOperation();
+            } else {
+                topEdge = "Pah";
+            }
+        }
 
-        String finalNotes = notes != null ? notes.trim() : "";
+        String finalNotes;
+        if (notes != null) {
+            finalNotes = notes.trim();
+        } else {
+            finalNotes = "";
+        }
         if (breakdownBuilder.length() > 0) {
-            finalNotes = breakdownBuilder.toString() + (finalNotes.isEmpty() ? "" : "\n\nEk Notlar: " + finalNotes);
+            String valueValue;
+            if (finalNotes.isEmpty()) {
+                valueValue = "";
+            } else {
+                valueValue = "\n\nEk Notlar: " + finalNotes;
+            }
+            finalNotes = breakdownBuilder.toString() + valueValue;
         }
 
         WorkOrderCreateForm form = new WorkOrderCreateForm(
@@ -447,17 +582,53 @@ public class OperationWorkOrderService {
             java.util.Map<String, Object> map = new java.util.HashMap<>();
             map.put("id", ord.getId());
             map.put("orderNo", ord.getOrderNo());
-            map.put("orderDate", ord.getOrderDate() != null ? ord.getOrderDate().toString() : "");
-            map.put("targetDeliveryDate", ord.getDueDate() != null ? ord.getDueDate().toString() : "");
-            map.put("department", ord.getDepartment() != null ? ord.getDepartment().name() : "");
-            map.put("departmentLabel", ord.getDepartment() != null ? ord.getDepartment().getDisplayName() : "");
+            Object value;
+            if (ord.getOrderDate() != null) {
+                value = ord.getOrderDate().toString();
+            } else {
+                value = "";
+            }
+            map.put("orderDate", value);
+            Object valueValue;
+            if (ord.getDueDate() != null) {
+                valueValue = ord.getDueDate().toString();
+            } else {
+                valueValue = "";
+            }
+            map.put("targetDeliveryDate", valueValue);
+            Object valueValue2;
+            if (ord.getDepartment() != null) {
+                valueValue2 = ord.getDepartment().name();
+            } else {
+                valueValue2 = "";
+            }
+            map.put("department", valueValue2);
+            Object displayName;
+            if (ord.getDepartment() != null) {
+                displayName = ord.getDepartment().getDisplayName();
+            } else {
+                displayName = "";
+            }
+            map.put("departmentLabel", displayName);
             map.put("customerName", ord.getCustomerDisplayName());
-            map.put("stoneType", ord.getStoneType() != null ? ord.getStoneType() : "—");
-            map.put("quantity", ord.getQuantity() != null ? ord.getQuantity() : BigDecimal.ZERO);
-            map.put("unit", ord.getUnit() != null ? ord.getUnit() : "m²");
-            map.put("responsiblePerson", ord.getResponsiblePerson() != null ? ord.getResponsiblePerson() : "—");
-            map.put("status", ord.getStatus() != null ? ord.getStatus().name() : "");
-            map.put("statusLabel", ord.getStatus() != null ? ord.getStatus().getDisplayName() : "");
+            map.put("stoneType", Objects.requireNonNullElse(ord.getStoneType(), "—"));
+            map.put("quantity", Objects.requireNonNullElse(ord.getQuantity(), BigDecimal.ZERO));
+            map.put("unit", Objects.requireNonNullElse(ord.getUnit(), "m²"));
+            map.put("responsiblePerson", Objects.requireNonNullElse(ord.getResponsiblePerson(), "—"));
+            Object valueValue3;
+            if (ord.getStatus() != null) {
+                valueValue3 = ord.getStatus().name();
+            } else {
+                valueValue3 = "";
+            }
+            map.put("status", valueValue3);
+            Object displayNameValue;
+            if (ord.getStatus() != null) {
+                displayNameValue = ord.getStatus().getDisplayName();
+            } else {
+                displayNameValue = "";
+            }
+            map.put("statusLabel", displayNameValue);
             return map;
         }).toList();
 

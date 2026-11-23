@@ -341,7 +341,12 @@ class DatabaseBackupServiceTest {
 
         @Override
         public String createPresignedUrl(String objectKey, Duration expiration) {
-            long seconds = expiration != null ? expiration.toSeconds() : 0;
+            long seconds;
+            if (expiration != null) {
+                seconds = expiration.toSeconds();
+            } else {
+                seconds = 0;
+            }
             return urlPrefix + objectKey + "?X-Amz-Expires=" + seconds + "&X-Amz-Signature=test";
         }
     }

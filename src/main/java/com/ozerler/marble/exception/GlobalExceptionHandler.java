@@ -123,7 +123,12 @@ public class GlobalExceptionHandler {
 
     private Map<String, String> fieldErrors(MethodArgumentNotValidException ex, Locale locale) {
         Map<String, String> errors = new LinkedHashMap<>();
-        Locale activeLocale = locale != null ? locale : LocaleContextHolder.getLocale();
+        Locale activeLocale;
+        if (locale != null) {
+            activeLocale = locale;
+        } else {
+            activeLocale = LocaleContextHolder.getLocale();
+        }
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             String message = null;
             if (messageSource != null) {
@@ -144,7 +149,12 @@ public class GlobalExceptionHandler {
     }
 
     private String resolveMessage(String code, Object[] args, String defaultMessage, Locale locale) {
-        Locale activeLocale = locale != null ? locale : LocaleContextHolder.getLocale();
+        Locale activeLocale;
+        if (locale != null) {
+            activeLocale = locale;
+        } else {
+            activeLocale = LocaleContextHolder.getLocale();
+        }
         if (messageSource != null) {
             try {
                 return messageSource.getMessage(code, args, defaultMessage, activeLocale);

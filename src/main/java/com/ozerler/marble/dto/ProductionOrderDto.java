@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -121,7 +122,7 @@ public class ProductionOrderDto {
                 .status(p.getStatus())
                 .statusLabel(OperationStatus.labelOf(p.getStatus()))
                 .slabCount(slabCount)
-                .totalSlabAreaM2(totalSlabAreaM2 != null ? totalSlabAreaM2 : BigDecimal.ZERO)
+                .totalSlabAreaM2(Objects.requireNonNullElse(totalSlabAreaM2, BigDecimal.ZERO))
                 .notes(p.getNotes())
                 .build();
     }

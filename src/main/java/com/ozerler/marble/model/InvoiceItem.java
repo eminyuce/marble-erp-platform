@@ -145,7 +145,11 @@ public class InvoiceItem extends AuditableEntity {
         if (isRunningMeter() && quantity != null && w != null && w.compareTo(BigDecimal.ZERO) > 0) {
             this.calculatedM2 = quantity.multiply(w).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
         } else if ("m2".equalsIgnoreCase(unit) || "m²".equalsIgnoreCase(unit)) {
-            this.calculatedM2 = quantity != null ? quantity.setScale(2, RoundingMode.HALF_UP) : null;
+            if (quantity != null) {
+                this.calculatedM2 = quantity.setScale(2, RoundingMode.HALF_UP);
+            } else {
+                this.calculatedM2 = null;
+            }
         }
     }
 }

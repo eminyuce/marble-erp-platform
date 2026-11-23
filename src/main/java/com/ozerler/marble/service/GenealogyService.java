@@ -85,11 +85,14 @@ public class GenealogyService {
                 .collect(Collectors.groupingBy(s -> s.getProductionOrder().getId()));
 
         List<Long> slabIds = allSlabs.stream().map(slab -> slab.getId()).toList();
-        Map<Long, List<CutItem>> itemsBySlabId = slabIds.isEmpty()
-                ? Collections.emptyMap()
-                : cutItemRepository.findBySourceSlabIdIn(slabIds).stream()
-                .filter(i -> i.getSourceSlab() != null)
-                .collect(Collectors.groupingBy(i -> i.getSourceSlab().getId()));
+        Map<Long, List<CutItem>> itemsBySlabId;
+        if (slabIds.isEmpty()) {
+            itemsBySlabId = Collections.emptyMap();
+        } else {
+            itemsBySlabId = cutItemRepository.findBySourceSlabIdIn(slabIds).stream()
+                    .filter(i -> i.getSourceSlab() != null)
+                    .collect(Collectors.groupingBy(i -> i.getSourceSlab().getId()));
+        }
         LotEventContext lotEvents = preloadLotEvents(slabIds);
 
         for (ProductionOrder order : orders) {
@@ -171,11 +174,14 @@ public class GenealogyService {
                 .map(item -> item.getPallet().getId())
                 .distinct()
                 .toList();
-        Map<Long, List<ShipmentItem>> shipmentItemsByPalletId = palletIds.isEmpty()
-                ? Map.of()
-                : shipmentItemRepository.findByPalletIdIn(palletIds).stream()
-                .filter(item -> item.getPallet() != null)
-                .collect(Collectors.groupingBy(item -> item.getPallet().getId()));
+        Map<Long, List<ShipmentItem>> shipmentItemsByPalletId;
+        if (palletIds.isEmpty()) {
+            shipmentItemsByPalletId = Map.of();
+        } else {
+            shipmentItemsByPalletId = shipmentItemRepository.findByPalletIdIn(palletIds).stream()
+                    .filter(item -> item.getPallet() != null)
+                    .collect(Collectors.groupingBy(item -> item.getPallet().getId()));
+        }
 
         Map<Long, List<SiteInstallation>> installationsByLotId =
                 siteInstallationRepository.findByMaterialLotIdIn(lotIds).stream()
@@ -215,11 +221,17 @@ public class GenealogyService {
             parent.getChildren().add(palletNode);
         }
         for (SiteInstallation installation : lotEvents.installationsByLotId().getOrDefault(lot.getId(), List.of())) {
+            String subtitle;
+            if (installation.getLocation() != null) {
+                subtitle = installation.getLocation().getLocationName();
+            } else {
+                subtitle = "";
+            }
             parent.getChildren().add(GenealogyNodeDto.builder()
                     .id("INS-" + installation.getId())
                     .type("SITE")
                     .title(getMessage("genealogy.node.site.title", installation.getProject().getName()))
-                    .subtitle(installation.getLocation() != null ? installation.getLocation().getLocationName() : "")
+                    .subtitle(subtitle)
                     .details(getMessage("genealogy.node.site.details",
                             installation.getInstalledAreaM2(), installation.getWasteAreaM2()))
                     .status(installation.getCrewName())
@@ -240,13 +252,19 @@ public class GenealogyService {
     }
 
     private GenealogyNodeDto buildCostNode(CostTransaction tx) {
+        String status;
+        if (tx.getAmount() != null) {
+            status = tx.getAmount().toPlainString();
+        } else {
+            status = "0";
+        }
         return GenealogyNodeDto.builder()
                 .id("CST-" + tx.getId())
                 .type("COST")
                 .title(getMessage("genealogy.node.cost.title", tx.getExpenseType().getLabel()))
                 .subtitle(tx.getExpensePeriod())
                 .details(tx.getDescription())
-                .status(tx.getAmount() != null ? tx.getAmount().toPlainString() : "0")
+                .status(status)
                 .children(new ArrayList<>())
                 .build();
     }
@@ -257,6 +275,12 @@ public class GenealogyService {
                 block.getQuarry().getName(), block.getWidthCm(), block.getLengthCm(), block.getHeightCm(),
                 block.getActualWeightKg(), block.getQualityGrade().getLabel());
 
+        String alertMessage;
+        if (hasCriticalCrack) {
+            alertMessage = getMessage("genealogy.node.block.crack_warning");
+        } else {
+            alertMessage = null;
+        }
         return GenealogyNodeDto.builder()
                 .id("BLK-" + block.getId())
                 .type("BLOCK")
@@ -266,7 +290,7 @@ public class GenealogyService {
                 .status(block.getStatus().getLabel())
                 .qrCode("BLK-" + block.getBlockCode())
                 .alert(hasCriticalCrack)
-                .alertMessage(hasCriticalCrack ? getMessage("genealogy.node.block.crack_warning") : null)
+                .alertMessage(alertMessage)
                 .children(new ArrayList<>())
                 .build();
     }

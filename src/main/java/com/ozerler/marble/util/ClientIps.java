@@ -25,7 +25,10 @@ public final class ClientIps {
         }
 
         String remoteAddr = request.getRemoteAddr();
-        return remoteAddr == null ? "" : remoteAddr;
+        if (remoteAddr == null) {
+            return "";
+        }
+        return remoteAddr;
     }
 
     private static boolean isPresent(String value) {

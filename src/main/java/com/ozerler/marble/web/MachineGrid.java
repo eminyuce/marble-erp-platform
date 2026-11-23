@@ -29,11 +29,27 @@ public final class MachineGrid {
     }
 
     public static GridRow row(MachineDto machine) {
-        String id = machine.getId() == null ? "" : machine.getId().toString();
-        String editUrl = id.isEmpty() ? "" : "/admin/definitions/machines/" + id + "/edit";
+        String id;
+        if (machine.getId() == null) {
+            id = "";
+        } else {
+            id = machine.getId().toString();
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = "/admin/definitions/machines/" + id + "/edit";
+        }
         String deleteName = firstText(machine.getName(), machine.getCode());
+        String badge;
+        if (machine.isActive()) {
+            badge = "Aktif";
+        } else {
+            badge = "Pasif";
+        }
         return GridRow.of(editUrl, editUrl, machine.getId(), deleteName, List.of(
-                GridCell.badge(machine.isActive() ? "Aktif" : "Pasif"),
+                GridCell.badge(badge),
                 GridCell.chip(machine.getId()),
                 GridCell.text(machine.getCode()),
                 GridCell.text(machine.getName()),

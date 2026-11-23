@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import java.util.Objects;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,10 @@ public class SettingService {
 
     public String getSetting(String key, String defaultValue) {
         String val = getSettingValue(key);
-        return val != null ? val : defaultValue;
+        if (val != null) {
+            return val;
+        }
+        return defaultValue;
     }
 
     @Transactional(readOnly = true)
@@ -64,7 +68,7 @@ public class SettingService {
         Optional<SystemSetting> existing = settingRepository.findByKey(key);
         SystemSetting setting = existing.orElseGet(() -> SystemSetting.builder()
                 .key(key)
-                .category(category != null ? category : "GENERAL")
+                .category(Objects.requireNonNullElse(category, "GENERAL"))
                 .description(description)
                 .build());
 

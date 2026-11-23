@@ -38,7 +38,12 @@ public final class ExpensePeriods {
     }
 
     public static String postingPeriod(LocalDate entryDate) {
-        LocalDate reference = entryDate != null ? entryDate : LocalDate.now();
+        LocalDate reference;
+        if (entryDate != null) {
+            reference = entryDate;
+        } else {
+            reference = LocalDate.now();
+        }
         return of(YearMonth.from(reference));
     }
 
@@ -47,7 +52,16 @@ public final class ExpensePeriods {
      * unless the caller supplies an explicit consumption period.
      */
     public static String expensePeriod(ExpenseType type, LocalDate invoiceDate, LocalDate entryDate) {
-        LocalDate reference = invoiceDate != null ? invoiceDate : entryDate != null ? entryDate : LocalDate.now();
+        LocalDate reference;
+        if (invoiceDate != null) {
+            reference = invoiceDate;
+        } else {
+            if (entryDate != null) {
+                reference = entryDate;
+            } else {
+                reference = LocalDate.now();
+            }
+        }
         YearMonth month = YearMonth.from(reference);
         if (type == ExpenseType.ELECTRICITY) {
             return of(month.minusMonths(1));

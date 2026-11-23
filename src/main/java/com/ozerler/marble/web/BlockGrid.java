@@ -28,13 +28,32 @@ public final class BlockGrid {
     }
 
     public static GridRow row(BlockDto block) {
-        String id = block.getId() == null ? "" : block.getId().toString();
+        String id;
+        if (block.getId() == null) {
+            id = "";
+        } else {
+            id = block.getId().toString();
+        }
         String viewUrl = "/blocks/" + id;
         String editUrl = viewUrl + "/edit";
-        Object deleteId = block.isCanDelete() ? block.getId() : null;
-        BigDecimal extraction = block.getCalculatedExtractionCost() != null
-                ? block.getCalculatedExtractionCost()
-                : block.getExtractionCost();
+        Object deleteId;
+        if (block.isCanDelete()) {
+            deleteId = block.getId();
+        } else {
+            deleteId = null;
+        }
+        BigDecimal extraction;
+        if (block.getCalculatedExtractionCost() != null) {
+            extraction = block.getCalculatedExtractionCost();
+        } else {
+            extraction = block.getExtractionCost();
+        }
+        String link;
+        if (block.isWeightDeviationWarning()) {
+            link = "%5 sapma uyarısı";
+        } else {
+            link = "";
+        }
         return GridRow.of(viewUrl, editUrl, deleteId, block.getBlockCode(), List.of(
                 GridCell.badge(block.getStatusLabel()),
                 GridCell.chip(block.getId()),
@@ -46,7 +65,7 @@ public final class BlockGrid {
                 GridCell.text(GridWindow.clean(block.getQuarrySection())),
                 GridCell.text(GridWindow.clean(block.getStoneType())),
                 GridCell.text(GridWindow.clean(block.getColorTone())),
-                GridCell.link(tonnage(block), null, block.isWeightDeviationWarning() ? "%5 sapma uyarısı" : "", null),
+                GridCell.link(tonnage(block), null, link, null),
                 GridCell.text(GridWindow.withUnit(block.getSurfaceAreaM2(), "m²")),
                 GridCell.text(market(block)),
                 GridCell.text(GridTexts.money(extraction)),
@@ -99,9 +118,12 @@ public final class BlockGrid {
         if (assigned.isBlank()) {
             return "";
         }
-        String price = block.getSalePrice() != null && block.getSalePrice().signum() > 0
-                ? " (" + GridTexts.money(block.getSalePrice()) + ")"
-                : "";
+        String price;
+        if (block.getSalePrice() != null && block.getSalePrice().signum() > 0) {
+            price = " (" + GridTexts.money(block.getSalePrice()) + ")";
+        } else {
+            price = "";
+        }
         return "Rezerve: " + assigned + price;
     }
 
@@ -110,7 +132,10 @@ public final class BlockGrid {
         if (block.getActualTonnage() != null && block.getActualTonnage().signum() > 0) {
             return approximate + " / " + GridTexts.quantity(block.getActualTonnage()) + " t";
         }
-        return approximate.isBlank() ? "" : approximate + " t";
+        if (approximate.isBlank()) {
+            return "";
+        }
+        return approximate + " t";
     }
 
     private static String market(BlockDto block) {

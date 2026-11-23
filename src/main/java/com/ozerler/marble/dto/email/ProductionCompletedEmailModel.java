@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.Objects;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -38,17 +39,17 @@ public class ProductionCompletedEmailModel implements BaseEmailModel {
     @Override
     public Map<String, String> toVariables() {
         Map<String, String> vars = new LinkedHashMap<>();
-        vars.put("workOrderNumber", workOrderNumber != null ? workOrderNumber : "");
-        vars.put("marbleType", marbleType != null ? marbleType : "");
-        vars.put("sourceBlockNo", sourceBlockNo != null ? sourceBlockNo : "");
-        vars.put("producedItemType", producedItemType != null ? producedItemType : "");
-        vars.put("totalProcessedM2", totalProcessedM2 != null ? totalProcessedM2 : "0.00");
-        vars.put("scrapM2", scrapM2 != null ? scrapM2 : "0.00");
-        vars.put("efficiencyRate", efficiencyRate != null ? efficiencyRate : "0");
-        vars.put("operatorName", operatorName != null ? operatorName : "");
-        vars.put("targetStockLocation", targetStockLocation != null ? targetStockLocation : "");
-        vars.put("completionDate", completionDate != null ? completionDate : "");
-        vars.put("companyName", companyName != null ? companyName : "Özerler Mermer A.Ş.");
+        vars.put("workOrderNumber", Objects.requireNonNullElse(workOrderNumber, ""));
+        vars.put("marbleType", Objects.requireNonNullElse(marbleType, ""));
+        vars.put("sourceBlockNo", Objects.requireNonNullElse(sourceBlockNo, ""));
+        vars.put("producedItemType", Objects.requireNonNullElse(producedItemType, ""));
+        vars.put("totalProcessedM2", Objects.requireNonNullElse(totalProcessedM2, "0.00"));
+        vars.put("scrapM2", Objects.requireNonNullElse(scrapM2, "0.00"));
+        vars.put("efficiencyRate", Objects.requireNonNullElse(efficiencyRate, "0"));
+        vars.put("operatorName", Objects.requireNonNullElse(operatorName, ""));
+        vars.put("targetStockLocation", Objects.requireNonNullElse(targetStockLocation, ""));
+        vars.put("completionDate", Objects.requireNonNullElse(completionDate, ""));
+        vars.put("companyName", Objects.requireNonNullElse(companyName, "Özerler Mermer A.Ş."));
         return vars;
     }
 

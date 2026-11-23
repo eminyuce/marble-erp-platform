@@ -51,10 +51,20 @@ public class ApplicationLogService {
             LocalDate endDate) {
 
         int pageIndex = Math.max(0, page - 1);
-        int pageSize = (size > 0 && size <= 500) ? size : 50;
+        int pageSize;
+        if (size > 0 && size <= 500) {
+            pageSize = size;
+        } else {
+            pageSize = 50;
+        }
 
         String safeSortField = resolveSortField(sortField);
-        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort.Direction direction;
+        if ("asc".equalsIgnoreCase(sortDir)) {
+            direction = Sort.Direction.ASC;
+        } else {
+            direction = Sort.Direction.DESC;
+        }
         Pageable pageable = PageRequest.of(pageIndex, pageSize, Sort.by(direction, safeSortField));
 
         Specification<ApplicationLog> spec = (root, query, cb) -> {
@@ -137,7 +147,12 @@ public class ApplicationLogService {
             }
             return applicationLogRepository.deleteAllLogs();
         }
-        int days = retentionDays > 0 ? retentionDays : DEFAULT_RETENTION_DAYS;
+        int days;
+        if (retentionDays > 0) {
+            days = retentionDays;
+        } else {
+            days = DEFAULT_RETENTION_DAYS;
+        }
         LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
         return applicationLogRepository.deleteLogsOlderThan(cutoff);
     }
@@ -149,7 +164,12 @@ public class ApplicationLogService {
     }
 
     private ApplicationLogDto mapToDto(ApplicationLog entity) {
-        String formatted = entity.getTimestamp() != null ? entity.getTimestamp().format(FORMATTER) : "";
+        String formatted;
+        if (entity.getTimestamp() != null) {
+            formatted = entity.getTimestamp().format(FORMATTER);
+        } else {
+            formatted = "";
+        }
         String shortLogger = shortenLogger(entity.getLoggerName());
         boolean hasEx = (entity.getExceptionClass() != null && !entity.getExceptionClass().isBlank())
                 || (entity.getStackTrace() != null && !entity.getStackTrace().isBlank());

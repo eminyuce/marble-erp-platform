@@ -26,7 +26,10 @@ public final class DateTimes {
 
     public static String formatYearMonthDayHourMinute(TemporalAccessor dateTime, String fallback) {
         if (dateTime == null) {
-            return fallback == null ? "" : fallback;
+            if (fallback == null) {
+                return "";
+            }
+            return fallback;
         }
         return YEAR_MONTH_DAY_HOUR_MINUTE.format(dateTime);
     }

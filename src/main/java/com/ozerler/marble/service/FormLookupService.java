@@ -97,7 +97,10 @@ public class FormLookupService {
     }
 
     public PartyView findCustomer(Long id) {
-        return id == null ? null : customerRepository.findById(id).map(customerMapper::toDto).orElse(null);
+        if (id == null) {
+            return null;
+        }
+        return customerRepository.findById(id).map(customerMapper::toDto).orElse(null);
     }
 
     public List<PartyView> suppliers() {
@@ -158,7 +161,10 @@ public class FormLookupService {
     }
 
     public BlockView findBlock(Long id) {
-        return id == null ? null : blockRepository.findById(id).map(this::blockView).orElse(null);
+        if (id == null) {
+            return null;
+        }
+        return blockRepository.findById(id).map(this::blockView).orElse(null);
     }
 
     public List<BlockView> blocksInStatus(List<BlockStatus> statuses) {
@@ -190,11 +196,17 @@ public class FormLookupService {
     }
 
     public SlabView findSlab(Long id) {
-        return id == null ? null : slabRepository.findById(id).map(slabMapper::toDto).orElse(null);
+        if (id == null) {
+            return null;
+        }
+        return slabRepository.findById(id).map(slabMapper::toDto).orElse(null);
     }
 
     public SlabView findSlabWithDetails(Long id) {
-        return id == null ? null : slabRepository.findWithDetailsById(id).map(slabMapper::toDto).orElse(null);
+        if (id == null) {
+            return null;
+        }
+        return slabRepository.findWithDetailsById(id).map(slabMapper::toDto).orElse(null);
     }
 
     public SlabView getSlabWithDetails(Long id) {
@@ -206,11 +218,17 @@ public class FormLookupService {
     }
 
     public StockItemView findStockItem(Long id) {
-        return id == null ? null : stockItemRepository.findById(id).map(stockItemMapper::toDto).orElse(null);
+        if (id == null) {
+            return null;
+        }
+        return stockItemRepository.findById(id).map(stockItemMapper::toDto).orElse(null);
     }
 
     public StockItemView findStockItemWithCustomer(Long id) {
-        return id == null ? null : stockItemRepository.findByIdWithCustomer(id).map(stockItemMapper::toDto).orElse(null);
+        if (id == null) {
+            return null;
+        }
+        return stockItemRepository.findByIdWithCustomer(id).map(stockItemMapper::toDto).orElse(null);
     }
 
     public StockItemView getStockItem(Long id) {
@@ -252,7 +270,10 @@ public class FormLookupService {
     }
 
     public InvoiceView findInvoiceWithCustomer(Long id) {
-        return id == null ? null : invoiceRepository.findByIdWithCustomer(id).map(this::invoiceView).orElse(null);
+        if (id == null) {
+            return null;
+        }
+        return invoiceRepository.findByIdWithCustomer(id).map(this::invoiceView).orElse(null);
     }
 
     public SalesOrderView.LineView getSalesOrderItem(Long id) {
@@ -262,7 +283,10 @@ public class FormLookupService {
     }
 
     public SalesOrderView.LineView findSalesOrderItem(Long id) {
-        return id == null ? null : salesOrderItemRepository.findByIdWithDetails(id).map(salesOrderMapper::toLine).orElse(null);
+        if (id == null) {
+            return null;
+        }
+        return salesOrderItemRepository.findByIdWithDetails(id).map(salesOrderMapper::toLine).orElse(null);
     }
 
     private BlockView blockView(Block block) {

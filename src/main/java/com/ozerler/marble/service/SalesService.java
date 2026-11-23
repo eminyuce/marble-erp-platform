@@ -120,8 +120,14 @@ public class SalesService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.customer.not_found", customerId)));
 
+        String orderNoValue;
+        if (orderNo != null) {
+            orderNoValue = orderNo.trim();
+        } else {
+            orderNoValue = "SAT-" + System.currentTimeMillis();
+        }
         SalesOrder order = SalesOrder.builder()
-                .orderNo(orderNo != null ? orderNo.trim() : "SAT-" + System.currentTimeMillis())
+                .orderNo(orderNoValue)
                 .customer(customer)
                 .orderDate(LocalDate.now())
                 .deliveryDate(deliveryDate)
@@ -140,9 +146,9 @@ public class SalesService {
         SalesOrderItem item = SalesOrderItem.builder()
                 .salesOrder(order)
                 .description(description)
-                .quantity(quantity != null ? quantity : BigDecimal.ONE)
-                .unit(unit != null ? unit : "m2")
-                .unitPrice(unitPrice != null ? unitPrice : BigDecimal.ZERO)
+                .quantity(Objects.requireNonNullElse(quantity, BigDecimal.ONE))
+                .unit(Objects.requireNonNullElse(unit, "m2"))
+                .unitPrice(Objects.requireNonNullElse(unitPrice, BigDecimal.ZERO))
                 .build();
 
         if (slabId != null) {

@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -50,10 +51,20 @@ public class MachineFuelController extends AbstractController {
                         @RequestParam(value = "unit", required = false) String unit,
                         @RequestParam(value = "machineId", required = false) Long machineId,
                         @ModelAttribute ListQuery query, Model model) {
-        String currentPeriod = (period != null && !period.isBlank()) ? period : YearMonth.now().toString();
-        String sortKey = query.sortKey() == null ? "entryDate" : query.sortKey();
+        String currentPeriod;
+        if (period != null && !period.isBlank()) {
+            currentPeriod = period;
+        } else {
+            currentPeriod = YearMonth.now().toString();
+        }
+        String sortKey;
+        if (query.sortKey() == null) {
+            sortKey = "entryDate";
+        } else {
+            sortKey = query.sortKey();
+        }
         model.addAttribute("period", currentPeriod);
-        model.addAttribute("selectedUnit", unit == null ? "" : unit);
+        model.addAttribute("selectedUnit", Objects.requireNonNullElse(unit, ""));
         model.addAttribute("selectedMachineId", machineId);
         model.addAttribute("fuelEntries", machineFuelService.listViewsByPeriod(currentPeriod));
         model.addAttribute("monthlyReport", machineFuelService.getMonthlyReport(currentPeriod));

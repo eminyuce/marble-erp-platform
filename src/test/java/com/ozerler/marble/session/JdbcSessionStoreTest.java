@@ -187,7 +187,10 @@ class JdbcSessionStoreTest {
                 "SELECT COUNT(*) FROM SPRING_SESSION WHERE SESSION_ID = ?",
                 Integer.class,
                 sessionId);
-        return count == null ? 0 : count;
+        if (count == null) {
+            return 0;
+        }
+        return count;
     }
 
     private static int countAttributes(JdbcTemplate jdbc, String sessionId) {
@@ -200,7 +203,10 @@ class JdbcSessionStoreTest {
                 """,
                 Integer.class,
                 sessionId);
-        return count == null ? 0 : count;
+        if (count == null) {
+            return 0;
+        }
+        return count;
     }
 
     private static SecurityContext securityContext() {

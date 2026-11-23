@@ -49,9 +49,24 @@ public class PricingService {
      * Strongly typed domain simulation method adhering to clean code immutability
      */
     public PriceSimulationResult calculateSimulation(BigDecimal unitCost, BigDecimal targetMarginPct, BigDecimal discountPct) {
-        BigDecimal cost = unitCost != null ? unitCost : Constants.DEFAULT_STANDARD_COST_PER_M2;
-        BigDecimal margin = targetMarginPct != null ? targetMarginPct : Constants.DEFAULT_TARGET_MARGIN_PCT;
-        BigDecimal discount = discountPct != null ? discountPct : BigDecimal.ZERO;
+        BigDecimal cost;
+        if (unitCost != null) {
+            cost = unitCost;
+        } else {
+            cost = Constants.DEFAULT_STANDARD_COST_PER_M2;
+        }
+        BigDecimal margin;
+        if (targetMarginPct != null) {
+            margin = targetMarginPct;
+        } else {
+            margin = Constants.DEFAULT_TARGET_MARGIN_PCT;
+        }
+        BigDecimal discount;
+        if (discountPct != null) {
+            discount = discountPct;
+        } else {
+            discount = BigDecimal.ZERO;
+        }
 
         BigDecimal basePrice = calculateBasePrice(cost, margin);
         BigDecimal netPrice = calculateDiscountedPrice(basePrice, discount);

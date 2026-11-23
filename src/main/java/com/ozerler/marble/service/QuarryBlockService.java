@@ -98,7 +98,12 @@ public class QuarryBlockService {
     @Transactional(readOnly = true)
     public TabulatorResponse<BlockDto> getBlocksPaged(int page, int size, String search, String sortField, String sortDir,
                                                     StockLocationType locationType, BlockStatus status, String stockFilter) {
-        String effectiveFilter = (stockFilter == null || stockFilter.isBlank()) ? "IN_STOCK" : stockFilter.trim().toUpperCase(Locale.ROOT);
+        String effectiveFilter;
+        if (stockFilter == null || stockFilter.isBlank()) {
+            effectiveFilter = "IN_STOCK";
+        } else {
+            effectiveFilter = stockFilter.trim().toUpperCase(Locale.ROOT);
+        }
         Page<Block> blockPage = GridPages.execute(page, size, sortField, sortDir, GridPages.BLOCK_SORTS,
                 pageable -> blockRepository.searchBlocksWithStockFilter(
                         GridPages.normalizeSearch(search), locationType, status, effectiveFilter, pageable));
@@ -139,8 +144,18 @@ public class QuarryBlockService {
     }
 
     private BlockDto toBlockDto(Block block, Map<Long, BigDecimal> expensePerTonByQuarry) {
-        Long quarryId = block.getQuarry() != null ? block.getQuarry().getId() : null;
-        BigDecimal expensePerTon = quarryId != null ? expensePerTonByQuarry.get(quarryId) : null;
+        Long quarryId;
+        if (block.getQuarry() != null) {
+            quarryId = block.getQuarry().getId();
+        } else {
+            quarryId = null;
+        }
+        BigDecimal expensePerTon;
+        if (quarryId != null) {
+            expensePerTon = expensePerTonByQuarry.get(quarryId);
+        } else {
+            expensePerTon = null;
+        }
         BigDecimal extraction = blockCostCalculationService.calculatedExtractionCost(block, expensePerTon);
         BigDecimal total = blockCostCalculationService.calculatedTotalCost(block, expensePerTon);
         BigDecimal m2 = blockCostCalculationService.blockFootprintM2(block);
@@ -156,7 +171,12 @@ public class QuarryBlockService {
         BigDecimal totalSurfaceM2 = BigDecimal.ZERO;
         BigDecimal totalTransport = BigDecimal.ZERO;
         BigDecimal totalExtraction = BigDecimal.ZERO;
-        Map<Long, BigDecimal> perTon = expensePerTonByQuarry != null ? expensePerTonByQuarry : Map.of();
+        Map<Long, BigDecimal> perTon;
+        if (expensePerTonByQuarry != null) {
+            perTon = expensePerTonByQuarry;
+        } else {
+            perTon = Map.of();
+        }
         if (rows != null) {
             for (Object[] row : rows) {
                 Object[] values = unwrapMetricRow(row);
@@ -170,8 +190,14 @@ public class QuarryBlockService {
                 totalTonnage = totalTonnage.add(tons);
                 totalSurfaceM2 = totalSurfaceM2.add(surfaceM2);
                 totalTransport = totalTransport.add(transport);
+                BigDecimal blockExtractionCost;
+                if (quarryId != null) {
+                    blockExtractionCost = perTon.get(quarryId);
+                } else {
+                    blockExtractionCost = null;
+                }
                 totalExtraction = totalExtraction.add(
-                        BlockCostFormula.blockExtractionCost(tons, quarryId != null ? perTon.get(quarryId) : null));
+                        BlockCostFormula.blockExtractionCost(tons, blockExtractionCost));
             }
         }
         Map<String, Object> meta = new HashMap<>();
@@ -186,7 +212,10 @@ public class QuarryBlockService {
         if (row != null && row.length == 1 && row[0] instanceof Object[] nested) {
             return nested;
         }
-        return row != null ? row : new Object[0];
+        if (row != null) {
+            return row;
+        }
+        return new Object[0];
     }
 
     private static Long toLong(Object value) {
@@ -266,19 +295,37 @@ public class QuarryBlockService {
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.quarry.not_found", quarryId)));
         assertBlockCodeAvailable(normalizedCode, null);
 
-        StockLocation targetLocation = requireLocation(locationType != null ? locationType : StockLocationType.PRODUCTION_YARD);
+        StockLocation targetLocation = requireLocation(Objects.requireNonNullElse(locationType, StockLocationType.PRODUCTION_YARD));
+        LocalDate extractionDateValue;
+        if (extractionDate != null) {
+            extractionDateValue = extractionDate;
+        } else {
+            extractionDateValue = LocalDate.now();
+        }
+        String stoneTypeValue;
+        if (stoneType != null && !stoneType.isBlank()) {
+            stoneTypeValue = stoneType.trim();
+        } else {
+            stoneTypeValue = null;
+        }
+        String colorToneValue;
+        if (colorTone != null && !colorTone.isBlank()) {
+            colorToneValue = colorTone.trim();
+        } else {
+            colorToneValue = null;
+        }
         Block block = Block.builder()
                 .quarry(quarry)
                 .blockCode(normalizedCode)
                 .quarrySection(optionalQuarrySection(quarrySection))
-                .extractionDate(extractionDate != null ? extractionDate : LocalDate.now())
+                .extractionDate(extractionDateValue)
                 .widthCm(widthCm)
                 .lengthCm(lengthCm)
                 .heightCm(heightCm)
-                .actualWeightKg(actualWeightKg != null ? actualWeightKg : BigDecimal.ZERO)
-                .stoneType(stoneType != null && !stoneType.isBlank() ? stoneType.trim() : null)
-                .colorTone(colorTone != null && !colorTone.isBlank() ? colorTone.trim() : null)
-                .qualityGrade(qualityGrade != null ? qualityGrade : QualityGrade.A)
+                .actualWeightKg(Objects.requireNonNullElse(actualWeightKg, BigDecimal.ZERO))
+                .stoneType(stoneTypeValue)
+                .colorTone(colorToneValue)
+                .qualityGrade(Objects.requireNonNullElse(qualityGrade, QualityGrade.A))
                 .crackLevel(crackLevel)
                 .status(BlockStatus.PRODUCED)
                 .currentLocation(targetLocation)
@@ -354,9 +401,21 @@ public class QuarryBlockService {
         block.setWidthCm(widthCm);
         block.setLengthCm(lengthCm);
         block.setHeightCm(heightCm);
-        block.setActualWeightKg(actualWeightKg != null ? actualWeightKg : BigDecimal.ZERO);
-        block.setStoneType(stoneType != null && !stoneType.isBlank() ? stoneType.trim() : null);
-        block.setColorTone(colorTone != null && !colorTone.isBlank() ? colorTone.trim() : null);
+        block.setActualWeightKg(Objects.requireNonNullElse(actualWeightKg, BigDecimal.ZERO));
+        String stoneTypeValue;
+        if (stoneType != null && !stoneType.isBlank()) {
+            stoneTypeValue = stoneType.trim();
+        } else {
+            stoneTypeValue = null;
+        }
+        block.setStoneType(stoneTypeValue);
+        String colorToneValue;
+        if (colorTone != null && !colorTone.isBlank()) {
+            colorToneValue = colorTone.trim();
+        } else {
+            colorToneValue = null;
+        }
+        block.setColorTone(colorToneValue);
         if (qualityGrade != null) {
             block.setQualityGrade(qualityGrade);
         }
@@ -502,7 +561,12 @@ public class QuarryBlockService {
         }
         requireDispatchYard(block, "error.block.dispatch.not_in_dispatch_yard");
         StockLocation from = block.getCurrentLocation();
-        BigDecimal cost = transportCost != null ? transportCost : BigDecimal.ZERO;
+        BigDecimal cost;
+        if (transportCost != null) {
+            cost = transportCost;
+        } else {
+            cost = BigDecimal.ZERO;
+        }
         block.setCurrentLocation(null);
         block.setStatus(BlockStatus.IN_TRANSIT);
         block.setTransportCost(cost);
@@ -556,8 +620,20 @@ public class QuarryBlockService {
         }
         block.setStatus(newStatus);
         Block saved = blockRepository.save(block);
+        String value;
+        if (oldStatus != null) {
+            value = oldStatus.name();
+        } else {
+            value = "";
+        }
+        String valueValue;
+        if (notes != null) {
+            valueValue = " (" + notes + ")";
+        } else {
+            valueValue = "";
+        }
         recordMovement(saved, block.getCurrentLocation(), block.getCurrentLocation(),
-                "Durum güncellendi: " + (oldStatus != null ? oldStatus.name() : "") + " -> " + newStatus.name() + (notes != null ? " (" + notes + ")" : ""));
+                "Durum güncellendi: " + value + " -> " + newStatus.name() + valueValue);
         return saved;
     }
 
@@ -580,7 +656,13 @@ public class QuarryBlockService {
         block.setStatus(BlockStatus.SOLD);
         block.setSoldCustomer(customer);
         block.setSalePrice(salePrice);
-        block.setSaleDate(saleDate != null ? saleDate : LocalDate.now());
+        LocalDate saleDateValue;
+        if (saleDate != null) {
+            saleDateValue = saleDate;
+        } else {
+            saleDateValue = LocalDate.now();
+        }
+        block.setSaleDate(saleDateValue);
         block.setSaleNotes(saleNotes);
         Block saved = blockRepository.save(block);
         recordMovement(saved, from, from, "Satış: " + customer.getCompanyName()
@@ -614,12 +696,22 @@ public class QuarryBlockService {
         if (specificGravity == null || specificGravity.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(getMessage("error.quarry.specific_gravity.required"));
         }
-        Quarry quarry = id != null ? quarryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(getMessage("error.quarry.not_found", id)))
-                : new Quarry();
+        Quarry quarry;
+        if (id != null) {
+            quarry = quarryRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException(getMessage("error.quarry.not_found", id)));
+        } else {
+            quarry = new Quarry();
+        }
         quarry.setCode(code.trim());
         quarry.setName(name.trim());
-        quarry.setLocation(location != null ? location.trim() : "");
+        String locationValue;
+        if (location != null) {
+            locationValue = location.trim();
+        } else {
+            locationValue = "";
+        }
+        quarry.setLocation(locationValue);
         quarry.setSpecificGravity(specificGravity);
         quarry.setLicenseNo(licenseNo);
         return quarryRepository.save(quarry);
@@ -652,11 +744,21 @@ public class QuarryBlockService {
         long sold = blockRepository.countSoldBlocks();
         long dispatchedToFactory = blockRepository.countDispatchedToFactoryBlocks();
         long totalInStock = blockRepository.countInStockBlocks();
-        BigDecimal fuelLiters = quarryInventoryService != null ? quarryInventoryService.getFuelStockLiters() : BigDecimal.ZERO;
+        BigDecimal fuelLiters;
+        if (quarryInventoryService != null) {
+            fuelLiters = quarryInventoryService.getFuelStockLiters();
+        } else {
+            fuelLiters = BigDecimal.ZERO;
+        }
         long consumablesCount = 0L;
         if (quarryInventoryService != null) {
             consumablesCount = quarryInventoryService.getConsumableStockItems().stream()
-                    .mapToLong(item -> item.getQuantity() != null ? item.getQuantity().longValue() : 0L)
+                    .mapToLong(item -> {
+                        if (item.getQuantity() != null) {
+                            return item.getQuantity().longValue();
+                        }
+                        return 0L;
+                    })
                     .sum();
         }
 
@@ -677,7 +779,7 @@ public class QuarryBlockService {
                 .markedCount(blockRepository.countMarkedBlocks())
                 .fuelStockLiters(fuelLiters)
                 .consumablesCount(consumablesCount)
-                .costPerTonThisMonth(analysis.getUnitCost() != null ? analysis.getUnitCost() : BigDecimal.ZERO)
+                .costPerTonThisMonth(Objects.requireNonNullElse(analysis.getUnitCost(), BigDecimal.ZERO))
                 .unallocatedCarryForward(analysis.isUnallocatedCarryForward())
                 .expensePeriod(period)
                 .totalCostInStock(totalCostInStock)

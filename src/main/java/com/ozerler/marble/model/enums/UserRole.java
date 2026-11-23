@@ -45,7 +45,10 @@ public enum UserRole {
         if (roleName == null || roleName.isBlank()) {
             return "";
         }
-        return roleName.startsWith("ROLE_") ? roleName.substring("ROLE_".length()) : roleName;
+        if (roleName.startsWith("ROLE_")) {
+            return roleName.substring("ROLE_".length());
+        }
+        return roleName;
     }
 
     public static Map<String, String> labelMap() {

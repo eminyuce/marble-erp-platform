@@ -28,8 +28,18 @@ public final class QuarryGrid {
     }
 
     public static GridRow row(QuarryDto quarry) {
-        String id = quarry.getId() == null ? "" : quarry.getId().toString();
-        String editUrl = id.isEmpty() ? "" : "/admin/definitions/quarries/" + id + "/edit";
+        String id;
+        if (quarry.getId() == null) {
+            id = "";
+        } else {
+            id = quarry.getId().toString();
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = "/admin/definitions/quarries/" + id + "/edit";
+        }
         String deleteName = GridTexts.text(quarry.getName());
         if (deleteName.isBlank()) {
             deleteName = GridTexts.text(quarry.getCode());

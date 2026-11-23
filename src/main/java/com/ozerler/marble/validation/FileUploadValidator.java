@@ -106,9 +106,12 @@ public class FileUploadValidator {
         }
 
         String rawExtension = Filenames.extension(originalFilename);
-        String cleanExtension = rawExtension.startsWith(".")
-                ? rawExtension.substring(1).toLowerCase(Locale.ROOT)
-                : rawExtension.toLowerCase(Locale.ROOT);
+        String cleanExtension;
+        if (rawExtension.startsWith(".")) {
+            cleanExtension = rawExtension.substring(1).toLowerCase(Locale.ROOT);
+        } else {
+            cleanExtension = rawExtension.toLowerCase(Locale.ROOT);
+        }
         if (!ALLOWED_EXTENSIONS.contains(cleanExtension)) {
             throw new FileValidationException("Unsupported file type: " + cleanExtension);
         }
@@ -136,10 +139,18 @@ public class FileUploadValidator {
     }
 
     public static String detectMimeType(String filename, byte[] content) {
-        byte[] prefix = content == null ? new byte[0] : content;
-        String detected = filename == null || filename.isBlank()
-                ? TIKA.detect(prefix)
-                : TIKA.detect(prefix, filename);
+        byte[] prefix;
+        if (content == null) {
+            prefix = new byte[0];
+        } else {
+            prefix = content;
+        }
+        String detected;
+        if (filename == null || filename.isBlank()) {
+            detected = TIKA.detect(prefix);
+        } else {
+            detected = TIKA.detect(prefix, filename);
+        }
         return MediaType.parse(detected).getBaseType().toString();
     }
 

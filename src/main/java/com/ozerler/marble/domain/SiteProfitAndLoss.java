@@ -42,7 +42,10 @@ public final class SiteProfitAndLoss {
         if (value != null && value.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.cost.negative_amount"));
         }
-        return value != null ? value : BigDecimal.ZERO;
+        if (value != null) {
+            return value;
+        }
+        return BigDecimal.ZERO;
     }
 
     public record Result(BigDecimal totalCost, BigDecimal realizedRevenue, BigDecimal netProfitOrLoss) {

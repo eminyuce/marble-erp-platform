@@ -29,13 +29,24 @@ public final class ApplicationLogGrid {
     }
 
     public static GridRow row(ApplicationLogDto log) {
-        String viewUrl = log.getId() == null ? "" : "#log-" + log.getId();
+        String viewUrl;
+        if (log.getId() == null) {
+            viewUrl = "";
+        } else {
+            viewUrl = "#log-" + log.getId();
+        }
+        String link;
+        if (log.isHasException()) {
+            link = "Hata";
+        } else {
+            link = "";
+        }
         return GridRow.of(viewUrl, "", null, null, List.of(
                 GridCell.badge(log.getLevel()),
                 GridCell.chip(log.getId()),
                 GridCell.text(when(log)),
                 logger(log),
-                GridCell.link(log.getMessage(), null, log.isHasException() ? "Hata" : "", null),
+                GridCell.link(log.getMessage(), null, link, null),
                 GridCell.text(log.getUsername()),
                 GridCell.text(log.getClientIp())
         ));
@@ -77,7 +88,12 @@ public final class ApplicationLogGrid {
         if (shortName.isBlank()) {
             return GridCell.text(fullName);
         }
-        String detail = fullName.equals(shortName) ? "" : fullName;
+        String detail;
+        if (fullName.equals(shortName)) {
+            detail = "";
+        } else {
+            detail = fullName;
+        }
         return GridCell.link(shortName, null, detail, null);
     }
 }

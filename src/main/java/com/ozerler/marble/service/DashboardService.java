@@ -52,7 +52,12 @@ public class DashboardService {
         BigDecimal reservedSlabArea = slabRepository.getTotalAreaByStatus(SlabStatus.RESERVED);
         long factoryBlockCount = blockRepository.getCountFactoryStock();
         Double factoryBlockWeight = blockRepository.getTotalFactoryStockWeightKg();
-        Double factoryBlockWeightTon = factoryBlockWeight != null ? factoryBlockWeight / 1000.0 : 0.0;
+        Double factoryBlockWeightTon;
+        if (factoryBlockWeight != null) {
+            factoryBlockWeightTon = factoryBlockWeight / 1000.0;
+        } else {
+            factoryBlockWeightTon = 0.0;
+        }
 
         // KPI 2: Active Projects
         long activeProjectsCount = projectRepository.countByStatus(ProjectStatus.ACTIVE);

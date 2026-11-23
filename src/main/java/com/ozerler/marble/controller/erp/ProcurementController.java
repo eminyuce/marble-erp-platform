@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -44,7 +45,7 @@ public class ProcurementController {
                                    @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("statuses", PurchaseOrderStatus.values());
         model.addAttribute("summary", procurementService.getProcurementSummary());
-        model.addAttribute("selectedStatus", status == null ? "" : status);
+        model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
         model.addAttribute("grid", ProcurementGrid.view(
                 procurementService.getPurchaseOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));

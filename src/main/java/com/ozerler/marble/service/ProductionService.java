@@ -162,11 +162,19 @@ public class ProductionService {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalCost = all.stream()
-                .map(s -> (s.getCostPerM2() != null && s.getSurfaceAreaM2() != null) ? s.getCostPerM2().multiply(s.getSurfaceAreaM2()) : BigDecimal.ZERO)
+                .map(s -> {
+                    if (s.getCostPerM2() != null && s.getSurfaceAreaM2() != null) {
+                        return s.getCostPerM2().multiply(s.getSurfaceAreaM2());
+                    }
+                    return BigDecimal.ZERO;
+                })
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        BigDecimal avgCost = (totalArea.compareTo(BigDecimal.ZERO) > 0)
-                ? totalCost.divide(totalArea, 2, java.math.RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        BigDecimal avgCost;
+        if (totalArea.compareTo(BigDecimal.ZERO) > 0) {
+            avgCost = totalCost.divide(totalArea, 2, java.math.RoundingMode.HALF_UP);
+        } else {
+            avgCost = BigDecimal.ZERO;
+        }
         long reserved = all.stream().filter(s -> s.getStatus() != null && "RESERVED".equalsIgnoreCase(s.getStatus().name())).count();
         return new SlabSummaryDto(totalSlabs, totalArea, avgCost, reserved);
     }
@@ -215,19 +223,36 @@ public class ProductionService {
         Slab slab = slabRepository.findByIdWithBlockAndQuarry(id)
                 .orElseThrow(() -> new EntityNotFoundException(getMessage("error.slab.entity_not_found", id)));
 
-        String baseUrl = passportBaseUrl != null && !passportBaseUrl.isBlank()
-                ? passportBaseUrl
-                : "http://localhost:8080/passport/";
+        String baseUrl;
+        if (passportBaseUrl != null && !passportBaseUrl.isBlank()) {
+            baseUrl = passportBaseUrl;
+        } else {
+            baseUrl = "http://localhost:8080/passport/";
+        }
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }
         String passportUrl = baseUrl + slab.getSlabCode();
         String qrCodeBase64 = barcodeService.generateQrCodeBase64(passportUrl);
 
-        String blockCode = slab.getBlock() != null ? slab.getBlock().getBlockCode() : "—";
-        String stoneType = slab.getBlock() != null ? slab.getBlock().getStoneType() : "—";
-        String quarryName = slab.getBlock() != null && slab.getBlock().getQuarry() != null
-                ? slab.getBlock().getQuarry().getName() : "—";
+        String blockCode;
+        if (slab.getBlock() != null) {
+            blockCode = slab.getBlock().getBlockCode();
+        } else {
+            blockCode = "—";
+        }
+        String stoneType;
+        if (slab.getBlock() != null) {
+            stoneType = slab.getBlock().getStoneType();
+        } else {
+            stoneType = "—";
+        }
+        String quarryName;
+        if (slab.getBlock() != null && slab.getBlock().getQuarry() != null) {
+            quarryName = slab.getBlock().getQuarry().getName();
+        } else {
+            quarryName = "—";
+        }
 
         return SlabLabelDto.builder()
                 .slab(slabMapper.toDto(slab))

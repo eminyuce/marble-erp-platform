@@ -12,10 +12,22 @@ public final class GridCell {
     private final String subHref;
 
     private GridCell(String text, String kind, String href, String subtext, String subHref) {
-        this.text = text == null ? "" : text;
-        this.kind = kind == null ? "text" : kind;
+        if (text == null) {
+            this.text = "";
+        } else {
+            this.text = text;
+        }
+        if (kind == null) {
+            this.kind = "text";
+        } else {
+            this.kind = kind;
+        }
         this.href = href;
-        this.subtext = subtext == null ? "" : subtext;
+        if (subtext == null) {
+            this.subtext = "";
+        } else {
+            this.subtext = subtext;
+        }
         this.subHref = subHref;
     }
 
@@ -43,7 +55,12 @@ public final class GridCell {
         if (raw.isEmpty()) {
             return new GridCell("", "chip", null, "", null);
         }
-        String shown = raw.charAt(0) == '#' ? raw : "#" + raw;
+        String shown;
+        if (raw.charAt(0) == '#') {
+            shown = raw;
+        } else {
+            shown = "#" + raw;
+        }
         return new GridCell(shown, "chip", null, "", null);
     }
 

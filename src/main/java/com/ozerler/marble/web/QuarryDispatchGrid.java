@@ -22,14 +22,37 @@ public final class QuarryDispatchGrid {
 
     static GridRow row(StockMovementView movement) {
         String product = productName(movement);
-        String blockUrl = movement.getBlock() == null ? null : "/blocks/" + movement.getBlock().getId();
-        String target = movement.getTargetDestination() != null
-                ? movement.getTargetDestination().getDisplayName()
-                : movement.getTargetDepartment() == null ? "Fabrika" : movement.getTargetDepartment().getDisplayName();
-        String customer = movement.getCustomer() == null ? "" : movement.getCustomer().getCompanyName();
+        String blockUrl;
+        if (movement.getBlock() == null) {
+            blockUrl = null;
+        } else {
+            blockUrl = "/blocks/" + movement.getBlock().getId();
+        }
+        String target;
+        if (movement.getTargetDestination() != null) {
+            target = movement.getTargetDestination().getDisplayName();
+        } else {
+            if (movement.getTargetDepartment() == null) {
+                target = "Fabrika";
+            } else {
+                target = movement.getTargetDepartment().getDisplayName();
+            }
+        }
+        String customer;
+        if (movement.getCustomer() == null) {
+            customer = "";
+        } else {
+            customer = movement.getCustomer().getCompanyName();
+        }
+        GridCell value;
+        if (blockUrl == null) {
+            value = GridCell.text(product);
+        } else {
+            value = GridCell.link(product, blockUrl);
+        }
         return GridRow.of(blockUrl, null, null, null, List.of(
                 GridCell.chip(movement.getId()),
-                blockUrl == null ? GridCell.text(product) : GridCell.link(product, blockUrl),
+                value,
                 GridCell.text(OperationGridSupport.day(movement.getMovementDate())),
                 GridCell.text(measure(movement)),
                 GridCell.badge("Ocak"),
@@ -73,7 +96,12 @@ public final class QuarryDispatchGrid {
         if (movement.getTonnage() != null) {
             return OperationGridSupport.amount(movement.getTonnage(), "ton");
         }
-        String unit = movement.getQuantityUnit() == null ? "ton" : movement.getQuantityUnit();
+        String unit;
+        if (movement.getQuantityUnit() == null) {
+            unit = "ton";
+        } else {
+            unit = movement.getQuantityUnit();
+        }
         return OperationGridSupport.amount(movement.getQuantity(), unit);
     }
 }

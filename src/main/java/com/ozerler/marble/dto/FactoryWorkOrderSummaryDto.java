@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto;
 
+import java.util.Objects;
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
@@ -62,16 +63,52 @@ public class FactoryWorkOrderSummaryDto {
         Machine machine = workOrder.getAssignedMachine();
         FactoryWorkOrderStatus status = workOrder.getStatus();
         LocalDate acceptedAt = workOrder.getAcceptedAt();
+        String blockCodeValue;
+        if (block != null) {
+            blockCodeValue = block.getBlockCode();
+        } else {
+            blockCodeValue = "";
+        }
+        String statusValue;
+        if (status != null) {
+            statusValue = status.name();
+        } else {
+            statusValue = "";
+        }
+        String statusLabelValue;
+        if (status != null) {
+            statusLabelValue = status.getLabel();
+        } else {
+            statusLabelValue = "";
+        }
+        String stoneTypeValue;
+        if (block != null && block.getStoneType() != null) {
+            stoneTypeValue = block.getStoneType();
+        } else {
+            stoneTypeValue = "";
+        }
+        String acceptedAtValue;
+        if (acceptedAt != null) {
+            acceptedAtValue = acceptedAt.toString();
+        } else {
+            acceptedAtValue = "";
+        }
+        String machineNameValue;
+        if (machine != null) {
+            machineNameValue = machine.getName();
+        } else {
+            machineNameValue = "";
+        }
         return FactoryWorkOrderSummaryDto.builder()
                 .id(workOrder.getId())
                 .orderNo(workOrder.getOrderNo())
-                .blockCode(block != null ? block.getBlockCode() : "")
-                .status(status != null ? status.name() : "")
-                .statusLabel(status != null ? status.getLabel() : "")
-                .stoneType(block != null && block.getStoneType() != null ? block.getStoneType() : "")
-                .acceptedAt(acceptedAt != null ? acceptedAt.toString() : "")
-                .machineName(machine != null ? machine.getName() : "")
-                .responsibleName(workOrder.getResponsibleName() != null ? workOrder.getResponsibleName() : "")
+                .blockCode(blockCodeValue)
+                .status(statusValue)
+                .statusLabel(statusLabelValue)
+                .stoneType(stoneTypeValue)
+                .acceptedAt(acceptedAtValue)
+                .machineName(machineNameValue)
+                .responsibleName(Objects.requireNonNullElse(workOrder.getResponsibleName(), ""))
                 .build();
     }
 }

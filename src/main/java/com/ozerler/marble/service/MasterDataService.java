@@ -302,9 +302,12 @@ public class MasterDataService {
     public TabulatorResponse<CustomerDto> getCustomersPaged(int page, int size, String search, CustomerType type,
                                                             BusinessUnit unit, String sortField, String sortDir) {
         Page<Customer> result = GridPages.execute(page, size, sortField, sortDir, GridPages.CUSTOMER_SORTS,
-                pageable -> unit != null
-                        ? customerRepository.search(GridPages.normalizeSearch(search), type, unit, pageable)
-                        : customerRepository.search(GridPages.normalizeSearch(search), type, pageable));
+                pageable -> {
+                    if (unit != null) {
+                        return customerRepository.search(GridPages.normalizeSearch(search), type, unit, pageable);
+                    }
+                    return customerRepository.search(GridPages.normalizeSearch(search), type, pageable);
+                });
 
         List<Customer> customers = result.getContent();
         List<Long> customerIds = customers.stream().map(Customer::getId).filter(Objects::nonNull).toList();
@@ -399,9 +402,12 @@ public class MasterDataService {
     public TabulatorResponse<SupplierDto> getSuppliersPaged(int page, int size, String search, SupplierType type,
                                                             BusinessUnit unit, String sortField, String sortDir) {
         Page<Supplier> result = GridPages.execute(page, size, sortField, sortDir, GridPages.SUPPLIER_SORTS,
-                pageable -> unit != null
-                        ? supplierRepository.search(GridPages.normalizeSearch(search), type, unit, pageable)
-                        : supplierRepository.search(GridPages.normalizeSearch(search), type, pageable));
+                pageable -> {
+                    if (unit != null) {
+                        return supplierRepository.search(GridPages.normalizeSearch(search), type, unit, pageable);
+                    }
+                    return supplierRepository.search(GridPages.normalizeSearch(search), type, pageable);
+                });
         return TabulatorResponse.of(
                 result.getContent().stream().map(SupplierDto::fromEntity).toList(),
                 result.getTotalPages(),
@@ -502,7 +508,12 @@ public class MasterDataService {
 
     @Transactional
     public Customer saveCustomerForm(CustomerForm form) {
-        Customer customer = form.getId() == null ? new Customer() : getCustomerById(form.getId());
+        Customer customer;
+        if (form.getId() == null) {
+            customer = new Customer();
+        } else {
+            customer = getCustomerById(form.getId());
+        }
         customerMapper.updateEntity(form, customer);
         return saveCustomer(customer);
     }
@@ -513,7 +524,12 @@ public class MasterDataService {
 
     @Transactional
     public Supplier saveSupplierForm(SupplierForm form) {
-        Supplier supplier = form.getId() == null ? new Supplier() : getSupplierById(form.getId());
+        Supplier supplier;
+        if (form.getId() == null) {
+            supplier = new Supplier();
+        } else {
+            supplier = getSupplierById(form.getId());
+        }
         supplierMapper.updateEntity(form, supplier);
         return saveSupplier(supplier);
     }
@@ -529,7 +545,12 @@ public class MasterDataService {
 
     @Transactional
     public Machine saveMachineForm(MachineForm form) {
-        Machine machine = form.getId() == null ? new Machine() : getMachineById(form.getId());
+        Machine machine;
+        if (form.getId() == null) {
+            machine = new Machine();
+        } else {
+            machine = getMachineById(form.getId());
+        }
         machineMapper.updateEntity(form, machine);
         return saveMachine(machine);
     }
@@ -540,7 +561,12 @@ public class MasterDataService {
 
     @Transactional
     public Quarry saveQuarryForm(QuarryForm form) {
-        Quarry quarry = form.getId() == null ? new Quarry() : getQuarryById(form.getId());
+        Quarry quarry;
+        if (form.getId() == null) {
+            quarry = new Quarry();
+        } else {
+            quarry = getQuarryById(form.getId());
+        }
         quarryMapper.updateEntity(form, quarry);
         return saveQuarry(quarry);
     }
@@ -556,7 +582,12 @@ public class MasterDataService {
 
     @Transactional
     public StockLocation saveStockLocationForm(StockLocationForm form) {
-        StockLocation location = form.getId() == null ? new StockLocation() : getStockLocationById(form.getId());
+        StockLocation location;
+        if (form.getId() == null) {
+            location = new StockLocation();
+        } else {
+            location = getStockLocationById(form.getId());
+        }
         stockLocationMapper.updateEntity(form, location);
         return saveStockLocation(location);
     }
@@ -567,7 +598,12 @@ public class MasterDataService {
 
     @Transactional
     public CostCenter saveCostCenterForm(CostCenterForm form) {
-        CostCenter costCenter = form.getId() == null ? new CostCenter() : getCostCenterById(form.getId());
+        CostCenter costCenter;
+        if (form.getId() == null) {
+            costCenter = new CostCenter();
+        } else {
+            costCenter = getCostCenterById(form.getId());
+        }
         costCenterMapper.updateEntity(form, costCenter);
         return saveCostCenter(costCenter);
     }

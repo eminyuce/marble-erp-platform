@@ -110,8 +110,8 @@ public class ConstructionSiteService {
         } else if (customerName != null) {
             project.setCustomerName(customerName.trim());
         }
-        project.setContractValue(contractValue != null ? contractValue : BigDecimal.ZERO);
-        project.setEstimatedCost(estimatedCost != null ? estimatedCost : BigDecimal.ZERO);
+        project.setContractValue(Objects.requireNonNullElse(contractValue, BigDecimal.ZERO));
+        project.setEstimatedCost(Objects.requireNonNullElse(estimatedCost, BigDecimal.ZERO));
         project.setStartDate(startDate);
         project.setDeliveryDate(deliveryDate);
         project.setNotes(notes);
@@ -131,8 +131,18 @@ public class ConstructionSiteService {
         Project project = projectSiteService.getProjectById(projectId);
         ProjectLocation location = projectLocationRepository.findById(locationId)
                 .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.location.not_found", locationId)));
-        BigDecimal planned = plannedAreaM2 != null ? plannedAreaM2 : BigDecimal.ZERO;
-        BigDecimal scrap = scrapPercent != null ? scrapPercent : BigDecimal.ZERO;
+        BigDecimal planned;
+        if (plannedAreaM2 != null) {
+            planned = plannedAreaM2;
+        } else {
+            planned = BigDecimal.ZERO;
+        }
+        BigDecimal scrap;
+        if (scrapPercent != null) {
+            scrap = scrapPercent;
+        } else {
+            scrap = BigDecimal.ZERO;
+        }
         BigDecimal required = projectSiteService.calculateProductionRequirement(planned, scrap, BigDecimal.ZERO, BigDecimal.ZERO);
         return stonePlanRepository.save(ConstructionSiteStonePlan.builder()
                 .project(project)
@@ -144,7 +154,7 @@ public class ConstructionSiteService {
                 .plannedAreaM2(planned)
                 .scrapPercent(scrap)
                 .requiredAreaM2(required)
-                .supplyRoute(supplyRoute != null ? supplyRoute : SupplyRoute.INTERNAL_PRODUCTION)
+                .supplyRoute(Objects.requireNonNullElse(supplyRoute, SupplyRoute.INTERNAL_PRODUCTION))
                 .notes(notes)
                 .build());
     }
@@ -161,10 +171,16 @@ public class ConstructionSiteService {
         if (!active.isEmpty()) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.reservation.active_exists"));
         }
+        BigDecimal reservedAreaM2;
+        if (areaM2 != null) {
+            reservedAreaM2 = areaM2;
+        } else {
+            reservedAreaM2 = slab.getSurfaceAreaM2();
+        }
         StockReservation reservation = stockReservationRepository.save(StockReservation.builder()
                 .slab(slab)
                 .project(plan.getProject())
-                .reservedAreaM2(areaM2 != null ? areaM2 : slab.getSurfaceAreaM2())
+                .reservedAreaM2(reservedAreaM2)
                 .status("ACTIVE")
                 .build());
         slab.setStatus(SlabStatus.RESERVED);
@@ -184,20 +200,41 @@ public class ConstructionSiteService {
         ProjectLocation location = projectLocationRepository.findById(locationId)
                 .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.location.not_found", locationId)));
         Objects.requireNonNull(installedAreaM2, MessageUtils.getMessage("error.site.install.area.required"));
-        MaterialLot lot = materialLotId != null ? materialLotRepository.findById(materialLotId).orElse(null) : null;
-        Pallet pallet = palletId != null ? palletRepository.findById(palletId).orElse(null) : null;
+        MaterialLot lot;
+        if (materialLotId != null) {
+            lot = materialLotRepository.findById(materialLotId).orElse(null);
+        } else {
+            lot = null;
+        }
+        Pallet pallet;
+        if (palletId != null) {
+            pallet = palletRepository.findById(palletId).orElse(null);
+        } else {
+            pallet = null;
+        }
+        LocalDate installedOnValue;
+        if (installedOn != null) {
+            installedOnValue = installedOn;
+        } else {
+            installedOnValue = LocalDate.now();
+        }
         SiteInstallation installation = installationRepository.save(SiteInstallation.builder()
                 .project(project)
                 .location(location)
                 .materialLot(lot)
                 .pallet(pallet)
                 .installedAreaM2(installedAreaM2)
-                .wasteAreaM2(wasteAreaM2 != null ? wasteAreaM2 : BigDecimal.ZERO)
-                .installedOn(installedOn != null ? installedOn : LocalDate.now())
+                .wasteAreaM2(Objects.requireNonNullElse(wasteAreaM2, BigDecimal.ZERO))
+                .installedOn(installedOnValue)
                 .crewName(crewName)
                 .notes(notes)
                 .build());
-        BigDecimal installed = location.getInstalledAreaM2() != null ? location.getInstalledAreaM2() : BigDecimal.ZERO;
+        BigDecimal installed;
+        if (location.getInstalledAreaM2() != null) {
+            installed = location.getInstalledAreaM2();
+        } else {
+            installed = BigDecimal.ZERO;
+        }
         location.setInstalledAreaM2(installed.add(installedAreaM2));
         if (lot != null) {
             lot.setStatus(MaterialLotStatus.INSTALLED);
@@ -211,8 +248,8 @@ public class ConstructionSiteService {
         Project project = projectSiteService.getProjectById(projectId);
         BigDecimal consumptions = consumptionRepository.getTotalConsumptionByProject(projectId);
         BigDecimal expenses = costTransactionRepository.sumByProjectId(projectId);
-        BigDecimal total = (consumptions != null ? consumptions : BigDecimal.ZERO)
-                .add(expenses != null ? expenses : BigDecimal.ZERO);
+        BigDecimal total = Objects.requireNonNullElse(consumptions, BigDecimal.ZERO)
+                .add(Objects.requireNonNullElse(expenses, BigDecimal.ZERO));
         project.setActualCost(total);
         projectRepository.save(project);
         return total;

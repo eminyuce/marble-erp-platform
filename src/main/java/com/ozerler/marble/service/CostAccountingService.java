@@ -106,15 +106,15 @@ public class CostAccountingService {
                                                     BigDecimal targetMarginPct) {
 
         return CostBreakdownDto.calculateStandard(
-                identifier != null ? identifier : Constants.DEFAULT_IDENTIFIER,
-                stoneType != null ? stoneType : Constants.DEFAULT_STONE_TYPE,
-                rawBlockCostM2 != null ? rawBlockCostM2 : Constants.DEFAULT_RAW_BLOCK_COST_M2,
-                factoryProductionM2 != null ? factoryProductionM2 : Constants.DEFAULT_FACTORY_PRODUCTION_M2,
-                workshopFabricationM2 != null ? workshopFabricationM2 : Constants.DEFAULT_WORKSHOP_FABRICATION_M2,
-                scrapBurdenM2 != null ? scrapBurdenM2 : Constants.DEFAULT_SCRAP_BURDEN_M2,
-                logisticsM2 != null ? logisticsM2 : Constants.DEFAULT_LOGISTICS_M2,
-                generalOverheadM2 != null ? generalOverheadM2 : Constants.DEFAULT_GENERAL_OVERHEAD_M2,
-                targetMarginPct != null ? targetMarginPct : Constants.DEFAULT_TARGET_MARGIN_PCT
+                Objects.requireNonNullElse(identifier, Constants.DEFAULT_IDENTIFIER),
+                Objects.requireNonNullElse(stoneType, Constants.DEFAULT_STONE_TYPE),
+                Objects.requireNonNullElse(rawBlockCostM2, Constants.DEFAULT_RAW_BLOCK_COST_M2),
+                Objects.requireNonNullElse(factoryProductionM2, Constants.DEFAULT_FACTORY_PRODUCTION_M2),
+                Objects.requireNonNullElse(workshopFabricationM2, Constants.DEFAULT_WORKSHOP_FABRICATION_M2),
+                Objects.requireNonNullElse(scrapBurdenM2, Constants.DEFAULT_SCRAP_BURDEN_M2),
+                Objects.requireNonNullElse(logisticsM2, Constants.DEFAULT_LOGISTICS_M2),
+                Objects.requireNonNullElse(generalOverheadM2, Constants.DEFAULT_GENERAL_OVERHEAD_M2),
+                Objects.requireNonNullElse(targetMarginPct, Constants.DEFAULT_TARGET_MARGIN_PCT)
         );
     }
 

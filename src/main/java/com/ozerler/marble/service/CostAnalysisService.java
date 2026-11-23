@@ -48,7 +48,13 @@ public class CostAnalysisService {
 
     @Transactional(readOnly = true)
     public CostAnalysisDto analyze(BusinessUnit unit, String period) {
-        String current = ExpensePeriods.normalize(period != null ? period : YearMonth.now().toString());
+        String normalize;
+        if (period != null) {
+            normalize = period;
+        } else {
+            normalize = YearMonth.now().toString();
+        }
+        String current = ExpensePeriods.normalize(normalize);
         String previous = ExpensePeriods.of(ExpensePeriods.parse(current).minusMonths(1));
         return switch (unit) {
             case QUARRY -> quarryAnalysis(current, previous);
@@ -99,7 +105,12 @@ public class CostAnalysisService {
                 .add(byCategory.getOrDefault(ExpenseCategory.DIESEL, BigDecimal.ZERO))
                 .add(byCategory.getOrDefault(ExpenseCategory.ELECTRICITY, BigDecimal.ZERO))
                 .add(byCategory.getOrDefault(ExpenseCategory.MAINTENANCE, BigDecimal.ZERO));
-        BigDecimal revenue = project.getContractValue() != null ? project.getContractValue() : BigDecimal.ZERO;
+        BigDecimal revenue;
+        if (project.getContractValue() != null) {
+            revenue = project.getContractValue();
+        } else {
+            revenue = BigDecimal.ZERO;
+        }
         SiteProfitAndLoss.Result result = SiteProfitAndLoss.calculate(
                 material, labor, tax, consumable, transport, other, revenue);
         return SiteProfitDto.builder()
@@ -143,9 +154,12 @@ public class CostAnalysisService {
         BigDecimal outputM2 = yields.stream()
                 .map(row -> row.getOutputQuantity())
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        BigDecimal unitCost = outputM2.compareTo(BigDecimal.ZERO) > 0
-                ? expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP)
-                : null;
+        BigDecimal unitCost;
+        if (outputM2.compareTo(BigDecimal.ZERO) > 0) {
+            unitCost = expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP);
+        } else {
+            unitCost = null;
+        }
         return base(BusinessUnit.FACTORY, current, previous, expense, previousExpense,
                 outputM2, "m²", unitCost, null, outputM2.compareTo(BigDecimal.ZERO) == 0 && expense.compareTo(BigDecimal.ZERO) > 0)
                 .incomingBlockCost(incomingBlockCost)
@@ -167,9 +181,12 @@ public class CostAnalysisService {
         BigDecimal expense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, current));
         BigDecimal previousExpense = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, previous));
         BigDecimal outputM2 = zero(workshopOperationRepository.sumOutputAreaM2ByStatus(OperationStatus.COMPLETED));
-        BigDecimal unitCost = outputM2.compareTo(BigDecimal.ZERO) > 0
-                ? expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP)
-                : null;
+        BigDecimal unitCost;
+        if (outputM2.compareTo(BigDecimal.ZERO) > 0) {
+            unitCost = expense.divide(outputM2, Constants.COST_SCALE, RoundingMode.HALF_UP);
+        } else {
+            unitCost = null;
+        }
         return base(BusinessUnit.WORKSHOP, current, previous, expense, previousExpense,
                 outputM2, "m²", unitCost, null, outputM2.compareTo(BigDecimal.ZERO) == 0 && expense.compareTo(BigDecimal.ZERO) > 0)
                 .expenseByCategory(categoryTotals(BusinessUnit.WORKSHOP, current))
@@ -246,9 +263,15 @@ public class CostAnalysisService {
     private List<CostAnalysisDto.Line> lines(BusinessUnit unit, String period) {
         List<CostAnalysisDto.Line> result = new ArrayList<>();
         for (CostTransaction tx : costTransactionRepository.findByBusinessUnitAndExpensePeriod(unit, period)) {
+            String categoryLabel;
+            if (tx.getExpenseCategory() != null) {
+                categoryLabel = tx.getExpenseCategory().getLabel();
+            } else {
+                categoryLabel = tx.getExpenseType().getLabel();
+            }
             result.add(CostAnalysisDto.Line.builder()
                     .id(tx.getId())
-                    .categoryLabel(tx.getExpenseCategory() != null ? tx.getExpenseCategory().getLabel() : tx.getExpenseType().getLabel())
+                    .categoryLabel(categoryLabel)
                     .description(tx.getDescription())
                     .amount(tx.getAmount())
                     .documentNo(tx.getDocumentNo())
@@ -278,6 +301,9 @@ public class CostAnalysisService {
     }
 
     private static BigDecimal zero(BigDecimal value) {
-        return value != null ? value : BigDecimal.ZERO;
+        if (value != null) {
+            return value;
+        }
+        return BigDecimal.ZERO;
     }
 }

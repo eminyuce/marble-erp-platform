@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.admin;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -141,6 +142,18 @@ public class UserController extends AbstractController {
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
         UserDto user = userService.getUserById(id);
+        LocalDateTime createdDate;
+        if (user.getCreatedDate() != null) {
+            createdDate = user.getCreatedDate();
+        } else {
+            createdDate = user.getCreatedAt();
+        }
+        LocalDateTime updatedDate;
+        if (user.getUpdatedDate() != null) {
+            updatedDate = user.getUpdatedDate();
+        } else {
+            updatedDate = user.getUpdatedAt();
+        }
         UserUpdateRequest form = UserUpdateRequest.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -148,8 +161,8 @@ public class UserController extends AbstractController {
                 .lastName(user.getLastName())
                 .enabled(user.isEnabled())
                 .roles(user.getRoles())
-                .createdDate(user.getCreatedDate() != null ? user.getCreatedDate() : user.getCreatedAt())
-                .updatedDate(user.getUpdatedDate() != null ? user.getUpdatedDate() : user.getUpdatedAt())
+                .createdDate(createdDate)
+                .updatedDate(updatedDate)
                 .addUserId(user.getAddUserId())
                 .updateUserId(user.getUpdateUserId())
                 .build();
@@ -169,8 +182,20 @@ public class UserController extends AbstractController {
         if (bindingResult.hasErrors()) {
             try {
                 UserDto existing = userService.getUserById(id);
-                form.setCreatedDate(existing.getCreatedDate() != null ? existing.getCreatedDate() : existing.getCreatedAt());
-                form.setUpdatedDate(existing.getUpdatedDate() != null ? existing.getUpdatedDate() : existing.getUpdatedAt());
+                LocalDateTime createdDate;
+                if (existing.getCreatedDate() != null) {
+                    createdDate = existing.getCreatedDate();
+                } else {
+                    createdDate = existing.getCreatedAt();
+                }
+                form.setCreatedDate(createdDate);
+                LocalDateTime updatedDate;
+                if (existing.getUpdatedDate() != null) {
+                    updatedDate = existing.getUpdatedDate();
+                } else {
+                    updatedDate = existing.getUpdatedAt();
+                }
+                form.setUpdatedDate(updatedDate);
                 form.setAddUserId(existing.getAddUserId());
                 form.setUpdateUserId(existing.getUpdateUserId());
             } catch (Exception ignored) {
@@ -187,8 +212,20 @@ public class UserController extends AbstractController {
         } catch (IllegalArgumentException e) {
             try {
                 UserDto existing = userService.getUserById(id);
-                form.setCreatedDate(existing.getCreatedDate() != null ? existing.getCreatedDate() : existing.getCreatedAt());
-                form.setUpdatedDate(existing.getUpdatedDate() != null ? existing.getUpdatedDate() : existing.getUpdatedAt());
+                LocalDateTime createdDateValue;
+                if (existing.getCreatedDate() != null) {
+                    createdDateValue = existing.getCreatedDate();
+                } else {
+                    createdDateValue = existing.getCreatedAt();
+                }
+                form.setCreatedDate(createdDateValue);
+                LocalDateTime updatedDateValue;
+                if (existing.getUpdatedDate() != null) {
+                    updatedDateValue = existing.getUpdatedDate();
+                } else {
+                    updatedDateValue = existing.getUpdatedAt();
+                }
+                form.setUpdatedDate(updatedDateValue);
                 form.setAddUserId(existing.getAddUserId());
                 form.setUpdateUserId(existing.getUpdateUserId());
             } catch (Exception ignored) {
@@ -279,7 +316,12 @@ public class UserController extends AbstractController {
         model.addAttribute("allRoles", userService.getAllRoleViews());
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("formErrors", collectFormErrors(bindingResult, extraError, locale));
-        String titleKey = isEdit ? "admin.users.title.edit" : "admin.users.title.create";
+        String titleKey;
+        if (isEdit) {
+            titleKey = "admin.users.title.edit";
+        } else {
+            titleKey = "admin.users.title.create";
+        }
         model.addAttribute("pageTitle", messageSource.getMessage(titleKey, null, locale));
     }
 
@@ -287,7 +329,13 @@ public class UserController extends AbstractController {
                                            PasswordResetRequest form, BindingResult bindingResult, Locale locale) {
         UserDto user = userService.getUserById(userId);
         model.addAttribute("user", user);
-        model.addAttribute("passwordForm", form != null ? form : PasswordResetRequest.builder().userId(user.getId()).build());
+        Object formValue;
+        if (form != null) {
+            formValue = form;
+        } else {
+            formValue = PasswordResetRequest.builder().userId(user.getId()).build();
+        }
+        model.addAttribute("passwordForm", formValue);
         model.addAttribute("formErrors", collectFormErrors(bindingResult, null, locale));
         model.addAttribute("pageTitle", messageSource.getMessage("admin.users.title.reset_password", null, locale));
     }

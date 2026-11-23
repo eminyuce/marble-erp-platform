@@ -92,9 +92,11 @@ public class HelpContentCatalog {
     private Map<String, HelpPageDto> pagesByKey = Map.of();
 
     public HelpContentCatalog(ResourceLoader resourceLoader) {
-        this.resourcePatternResolver = resourceLoader instanceof ResourcePatternResolver resolver
-                ? resolver
-                : new PathMatchingResourcePatternResolver(resourceLoader);
+        if (resourceLoader instanceof ResourcePatternResolver resolver) {
+            this.resourcePatternResolver = resolver;
+        } else {
+            this.resourcePatternResolver = new PathMatchingResourcePatternResolver(resourceLoader);
+        }
     }
 
     @PostConstruct
@@ -197,7 +199,10 @@ public class HelpContentCatalog {
 
     private static String stripQuery(String requestUri) {
         int queryIndex = requestUri.indexOf('?');
-        return queryIndex >= 0 ? requestUri.substring(0, queryIndex) : requestUri;
+        if (queryIndex >= 0) {
+            return requestUri.substring(0, queryIndex);
+        }
+        return requestUri;
     }
 
     private record PathMapping(String path, String pageKey) {

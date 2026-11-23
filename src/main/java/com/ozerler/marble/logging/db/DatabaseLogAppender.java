@@ -47,7 +47,12 @@ public class DatabaseLogAppender extends AppenderBase<ILoggingEvent> {
                     ZoneId.systemDefault()
             );
 
-            String level = event.getLevel() != null ? event.getLevel().toString() : "INFO";
+            String level;
+            if (event.getLevel() != null) {
+                level = event.getLevel().toString();
+            } else {
+                level = "INFO";
+            }
             String formattedMessage = event.getFormattedMessage();
             if (formattedMessage == null) {
                 formattedMessage = "";

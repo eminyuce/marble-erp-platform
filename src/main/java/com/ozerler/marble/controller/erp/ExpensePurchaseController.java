@@ -66,7 +66,12 @@ public class ExpensePurchaseController extends AbstractController {
                         @RequestParam(value = "period", required = false) String period,
                         @RequestParam(value = "expenseType", required = false) ExpenseType expenseType,
                         @ModelAttribute ListQuery query, Model model) {
-        String currentPeriod = period != null && !period.isBlank() ? period : YearMonth.now().toString();
+        String currentPeriod;
+        if (period != null && !period.isBlank()) {
+            currentPeriod = period;
+        } else {
+            currentPeriod = YearMonth.now().toString();
+        }
         ExpenseSummaryDto summary = expenseService.getExpenseSummary(currentPeriod);
         TabulatorResponse<ExpenseDto> expenses = expenseService.getExpensesPaged(
                 query.pageNumber(), query.pageSize(), query.getSearch(), query.sortKey(), query.sortDirection(), unit, currentPeriod, expenseType, null, quarryId, null);
@@ -80,7 +85,13 @@ public class ExpensePurchaseController extends AbstractController {
         model.addAttribute("projects", formLookup.projects());
         model.addAttribute("expenseTypes", ExpenseType.values());
         model.addAttribute("selectedQuarryId", quarryId);
-        model.addAttribute("selectedExpenseType", expenseType == null ? "" : expenseType.name());
+        Object valueValue;
+        if (expenseType == null) {
+            valueValue = "";
+        } else {
+            valueValue = expenseType.name();
+        }
+        model.addAttribute("selectedExpenseType", valueValue);
         model.addAttribute("grid", ExpenseGrid.view(expenses, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         if (expenses != null && expenses.getMeta() != null) {
             model.addAttribute("filteredAmount", expenses.getMeta().get("totalAmount"));
@@ -337,9 +348,12 @@ public class ExpensePurchaseController extends AbstractController {
 
     private ExpenseService.ExpenseDraft toDraft(ExpenseWrite write) {
         Long effectiveCenterId = resolveCenterId(write.businessUnit(), write.centerId());
-        String period = write.expensePeriod() != null && !write.expensePeriod().isBlank()
-                ? ExpensePeriods.normalize(write.expensePeriod())
-                : ExpensePeriods.expensePeriod(write.expenseType(), write.invoiceDate(), write.entryDate());
+        String period;
+        if (write.expensePeriod() != null && !write.expensePeriod().isBlank()) {
+            period = ExpensePeriods.normalize(write.expensePeriod());
+        } else {
+            period = ExpensePeriods.expensePeriod(write.expenseType(), write.invoiceDate(), write.entryDate());
+        }
         return new ExpenseService.ExpenseDraft(
                 effectiveCenterId, write.expenseType(), null, write.businessUnit(), write.amount(), Constants.CURRENCY_TRY,
                 write.documentNo(), write.invoiceDate(), write.entryDate(), period, YearMonth.now().toString(),

@@ -112,11 +112,31 @@ public class DatabaseBackupService {
         this.objectStorageService = objectStorageService;
         this.properties = properties;
         this.browserAccess = browserAccess;
-        this.s3Client = s3Clients == null ? null : s3Clients.getIfAvailable();
-        this.dataSource = dataSources == null ? null : dataSources.getIfAvailable();
-        this.datasourceUrl = datasourceUrl == null ? "" : datasourceUrl;
-        this.datasourceUsername = datasourceUsername == null ? "" : datasourceUsername;
-        this.datasourcePassword = datasourcePassword == null ? "" : datasourcePassword;
+        if (s3Clients == null) {
+            this.s3Client = null;
+        } else {
+            this.s3Client = s3Clients.getIfAvailable();
+        }
+        if (dataSources == null) {
+            this.dataSource = null;
+        } else {
+            this.dataSource = dataSources.getIfAvailable();
+        }
+        if (datasourceUrl == null) {
+            this.datasourceUrl = "";
+        } else {
+            this.datasourceUrl = datasourceUrl;
+        }
+        if (datasourceUsername == null) {
+            this.datasourceUsername = "";
+        } else {
+            this.datasourceUsername = datasourceUsername;
+        }
+        if (datasourcePassword == null) {
+            this.datasourcePassword = "";
+        } else {
+            this.datasourcePassword = datasourcePassword;
+        }
     }
 
     @PostConstruct
@@ -222,7 +242,12 @@ public class DatabaseBackupService {
             }
 
             String key = obj.getKey();
-            String fileName = key.contains("/") ? key.substring(key.lastIndexOf('/') + 1) : key;
+            String fileName;
+            if (key.contains("/")) {
+                fileName = key.substring(key.lastIndexOf('/') + 1);
+            } else {
+                fileName = key;
+            }
             String downloadUrl = authenticatedDownloadPath(fileName);
             if (presignForBrowser && isSafeBackupFileName(fileName)) {
                 try {
@@ -232,12 +257,18 @@ public class DatabaseBackupService {
                 }
             }
 
+            Instant createdAt;
+            if (obj.getLastModified() != null) {
+                createdAt = obj.getLastModified();
+            } else {
+                createdAt = Instant.now();
+            }
             result.add(BackupItemDto.builder()
                     .fileName(fileName)
                     .s3Key(key)
                     .sizeBytes(obj.getSizeBytes())
                     .formattedSize(formatFileSize(obj.getSizeBytes()))
-                    .createdAt(obj.getLastModified() != null ? obj.getLastModified() : Instant.now())
+                    .createdAt(createdAt)
                     .downloadUrl(downloadUrl)
                     .build());
         }
@@ -368,7 +399,13 @@ public class DatabaseBackupService {
                             "-d", dbInfo.database(),
                             "-f", tempSql.toAbsolutePath().toString()
                     );
-                    pb.environment().put("PGPASSWORD", dbInfo.password() != null ? dbInfo.password() : "");
+                    String value;
+                    if (dbInfo.password() != null) {
+                        value = dbInfo.password();
+                    } else {
+                        value = "";
+                    }
+                    pb.environment().put("PGPASSWORD", value);
 
                     Process process = pb.start();
                     int exitCode = process.waitFor();
@@ -476,17 +513,29 @@ public class DatabaseBackupService {
     // ─────────────────────────────────────────────────────────────
 
     private boolean dumpWithPgDump(Path tempFile, DbConnectionInfo dbInfo, String fileName) {
+        String value;
+        if (dbInfo.username() == null) {
+            value = "";
+        } else {
+            value = dbInfo.username();
+        }
         ProcessBuilder builder = new ProcessBuilder(
                 properties.getDatabase().getPgDumpPath(),
                 "-h", dbInfo.host(),
                 "-p", String.valueOf(dbInfo.port()),
-                "-U", dbInfo.username() == null ? "" : dbInfo.username(),
+                "-U", value,
                 "-F", "p",
                 "--no-owner",
                 "--no-privileges",
                 dbInfo.database()
         );
-        builder.environment().put("PGPASSWORD", dbInfo.password() != null ? dbInfo.password() : "");
+        String valueValue;
+        if (dbInfo.password() != null) {
+            valueValue = dbInfo.password();
+        } else {
+            valueValue = "";
+        }
+        builder.environment().put("PGPASSWORD", valueValue);
         return runDumpProcess(builder, tempFile, fileName, "pg_dump");
     }
 
@@ -499,10 +548,16 @@ public class DatabaseBackupService {
             log.warn("Geçersiz PostgreSQL konteyner adı, docker pg_dump atlandı.");
             return false;
         }
+        String value;
+        if (dbInfo.username() == null) {
+            value = "";
+        } else {
+            value = dbInfo.username();
+        }
         ProcessBuilder builder = new ProcessBuilder(
                 "docker", "exec", container,
                 "pg_dump",
-                "-U", dbInfo.username() == null ? "" : dbInfo.username(),
+                "-U", value,
                 "-d", dbInfo.database(),
                 "-F", "p",
                 "--no-owner",
@@ -589,7 +644,13 @@ public class DatabaseBackupService {
             writer.println("-- ========================================================");
             writer.println("-- Özerler Mermer ERP Database Backup");
             writer.println("-- Timestamp: " + Instant.now());
-            writer.println("-- Database: " + (dbInfo != null ? dbInfo.database() : "marble_erp"));
+            String value;
+            if (dbInfo != null) {
+                value = dbInfo.database();
+            } else {
+                value = "marble_erp";
+            }
+            writer.println("-- Database: " + value);
             writer.println("-- Format: SQL GZIP Archive");
             writer.println("-- ========================================================");
             writer.println();

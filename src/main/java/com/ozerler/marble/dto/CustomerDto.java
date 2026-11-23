@@ -77,7 +77,36 @@ public class CustomerDto {
     public static CustomerDto fromEntity(Customer customer) {
         CustomerType type = customer.getCustomerType();
         com.ozerler.marble.model.enums.BusinessUnit bu = customer.getBusinessUnit();
-        int pCount = (customer.getProjects() != null) ? customer.getProjects().size() : 0;
+        int pCount;
+        if (customer.getProjects() != null) {
+            pCount = customer.getProjects().size();
+        } else {
+            pCount = 0;
+        }
+        String customerTypeValue;
+        if (type != null) {
+            customerTypeValue = type.name();
+        } else {
+            customerTypeValue = null;
+        }
+        String customerTypeLabelValue;
+        if (type != null) {
+            customerTypeLabelValue = type.getLabel();
+        } else {
+            customerTypeLabelValue = "";
+        }
+        String businessUnitValue;
+        if (bu != null) {
+            businessUnitValue = bu.name();
+        } else {
+            businessUnitValue = null;
+        }
+        String businessUnitLabelValue;
+        if (bu != null) {
+            businessUnitLabelValue = bu.getDisplayName();
+        } else {
+            businessUnitLabelValue = "";
+        }
         return CustomerDto.builder()
                 .id(customer.getId())
                 .customerCode(customer.getCustomerCode())
@@ -88,10 +117,10 @@ public class CustomerDto {
                 .address(customer.getAddress())
                 .taxOffice(customer.getTaxOffice())
                 .taxNumber(customer.getTaxNumber())
-                .customerType(type != null ? type.name() : null)
-                .customerTypeLabel(type != null ? type.getLabel() : "")
-                .businessUnit(bu != null ? bu.name() : null)
-                .businessUnitLabel(bu != null ? bu.getDisplayName() : "")
+                .customerType(customerTypeValue)
+                .customerTypeLabel(customerTypeLabelValue)
+                .businessUnit(businessUnitValue)
+                .businessUnitLabel(businessUnitLabelValue)
                 .notes(customer.getNotes())
                 .projectCount(pCount)
                 .build();

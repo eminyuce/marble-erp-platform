@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Locale;
@@ -42,7 +43,7 @@ public class SalesController {
                              @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("statuses", SalesOrderStatus.values());
         model.addAttribute("summary", salesService.getSalesSummary());
-        model.addAttribute("selectedStatus", status == null ? "" : status);
+        model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
         model.addAttribute("grid", SalesGrid.view(
                 salesService.getSalesOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));

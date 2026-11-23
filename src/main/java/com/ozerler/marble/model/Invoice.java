@@ -185,7 +185,10 @@ public class Invoice extends AuditableEntity {
         if (supplier != null) {
             return supplier.getCompanyName();
         }
-        return partyName != null ? partyName : "—";
+        if (partyName != null) {
+            return partyName;
+        }
+        return "—";
     }
 
     @Transient

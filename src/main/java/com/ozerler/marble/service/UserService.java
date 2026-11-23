@@ -73,9 +73,12 @@ public class UserService {
         String normalizedSearch = GridPages.normalizeSearch(search);
         List<String> selectedRoles = normalizeRoleNames(roleNames);
         Page<User> userPage = GridPages.execute(page, size, sortField, sortDir, GridPages.USER_SORTS,
-                pageable -> selectedRoles.isEmpty()
-                        ? userRepository.searchActiveUsers(normalizedSearch, null, enabled, pageable)
-                        : userRepository.searchActiveUsersByAnyRole(normalizedSearch, selectedRoles, enabled, pageable));
+                pageable -> {
+                    if (selectedRoles.isEmpty()) {
+                        return userRepository.searchActiveUsers(normalizedSearch, null, enabled, pageable);
+                    }
+                    return userRepository.searchActiveUsersByAnyRole(normalizedSearch, selectedRoles, enabled, pageable);
+                });
         List<UserDto> dtos = userPage.getContent().stream()
                 .map(UserDto::fromEntity)
                 .collect(Collectors.toList());

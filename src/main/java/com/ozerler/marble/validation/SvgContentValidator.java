@@ -50,11 +50,17 @@ public class SvgContentValidator {
 
         Document document = parseSecurely(content);
         Element root = document.getDocumentElement();
-        if (root == null || !"svg".equals(root.getLocalName() != null ? root.getLocalName().toLowerCase(Locale.ROOT)
-                : root.getTagName().toLowerCase(Locale.ROOT).replaceFirst("^.*:", ""))) {
+        if (root == null || !"svg".equals(rootName(root))) {
             throw new FileValidationException("File is not a valid SVG document");
         }
         walk(root);
+    }
+
+    private static String rootName(Element element) {
+        if (element.getLocalName() != null) {
+            return element.getLocalName().toLowerCase(Locale.ROOT);
+        }
+        return element.getTagName().toLowerCase(Locale.ROOT).replaceFirst("^.*:", "");
     }
 
     private Document parseSecurely(byte[] content) {
@@ -91,7 +97,12 @@ public class SvgContentValidator {
         for (int i = 0; i < attributes.getLength(); i++) {
             Attr attr = (Attr) attributes.item(i);
             String attrName = attr.getName().toLowerCase(Locale.ROOT);
-            String attrValue = attr.getValue() != null ? attr.getValue().trim().toLowerCase(Locale.ROOT) : "";
+            String attrValue;
+            if (attr.getValue() != null) {
+                attrValue = attr.getValue().trim().toLowerCase(Locale.ROOT);
+            } else {
+                attrValue = "";
+            }
             if (attrName.startsWith("on")) {
                 throw new FileValidationException("SVG file contains event handler attributes");
             }

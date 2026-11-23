@@ -22,7 +22,10 @@ public final class NoticeDismissDuration {
 
     public static int seconds(String raw) {
         Integer parsed = secondsOrNull(raw);
-        return parsed != null ? parsed : DEFAULT_SECONDS;
+        if (parsed != null) {
+            return parsed;
+        }
+        return DEFAULT_SECONDS;
     }
 
     private static Integer secondsOrNull(String raw) {

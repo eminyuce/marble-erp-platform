@@ -64,7 +64,13 @@ final class WorkOrderGridRows {
     }
 
     static GridCell status(WorkOrderView order) {
-        return GridCell.badge(order.getStatus() == null ? "" : order.getStatus().getDisplayName());
+        String badge;
+        if (order.getStatus() == null) {
+            badge = "";
+        } else {
+            badge = order.getStatus().getDisplayName();
+        }
+        return GridCell.badge(badge);
     }
 
     static GridCell code(WorkOrderView order) {
@@ -80,8 +86,18 @@ final class WorkOrderGridRows {
     }
 
     static GridCell quantity(WorkOrderView order) {
-        BigDecimal quantity = order.getQuantity() == null ? BigDecimal.ZERO : order.getQuantity();
-        String unit = order.getUnit() == null ? "m²" : order.getUnit();
+        BigDecimal quantity;
+        if (order.getQuantity() == null) {
+            quantity = BigDecimal.ZERO;
+        } else {
+            quantity = order.getQuantity();
+        }
+        String unit;
+        if (order.getUnit() == null) {
+            unit = "m²";
+        } else {
+            unit = order.getUnit();
+        }
         return GridCell.text(OperationGridSupport.amount(quantity, unit));
     }
 
@@ -98,7 +114,13 @@ final class WorkOrderGridRows {
     }
 
     static GridCell department(WorkOrderView order) {
-        return GridCell.text(order.getDepartment() == null ? "" : order.getDepartment().getDisplayName());
+        String value;
+        if (order.getDepartment() == null) {
+            value = "";
+        } else {
+            value = order.getDepartment().getDisplayName();
+        }
+        return GridCell.text(value);
     }
 
     static List<GridColumn.FilterChoice> statuses() {

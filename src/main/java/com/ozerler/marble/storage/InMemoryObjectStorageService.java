@@ -87,7 +87,12 @@ public class InMemoryObjectStorageService implements ObjectStorageService {
         if (!exists(objectKey)) {
             throw new StoredFileNotFoundException("Stored object was not found: " + objectKey);
         }
-        long seconds = expiration != null ? expiration.toSeconds() : 900;
+        long seconds;
+        if (expiration != null) {
+            seconds = expiration.toSeconds();
+        } else {
+            seconds = 900;
+        }
         return "memory://" + BUCKET + "/" + objectKey + "?expires=" + seconds;
     }
 

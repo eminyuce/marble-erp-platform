@@ -27,15 +27,28 @@ public final class ProjectGrid {
     }
 
     public static GridRow row(ProjectDto project) {
-        String id = project.getId() == null ? "" : project.getId().toString();
+        String id;
+        if (project.getId() == null) {
+            id = "";
+        } else {
+            id = project.getId().toString();
+        }
         String viewUrl = "/projects/" + id;
         String editUrl = viewUrl + "/edit";
-        String customerHref = project.getCustomerId() == null
-                ? null
-                : "/admin/definitions/customers/" + project.getCustomerId() + "/transactions";
+        String customerHref;
+        if (project.getCustomerId() == null) {
+            customerHref = null;
+        } else {
+            customerHref = "/admin/definitions/customers/" + project.getCustomerId() + "/transactions";
+        }
         String installed = GridTexts.quantity(project.getTotalInstalledAreaM2());
         String planned = GridTexts.quantity(project.getTotalPlannedAreaM2());
-        String progress = installed.isBlank() && planned.isBlank() ? "" : installed + " / " + planned + " m²";
+        String progress;
+        if (installed.isBlank() && planned.isBlank()) {
+            progress = "";
+        } else {
+            progress = installed + " / " + planned + " m²";
+        }
         return GridRow.of(viewUrl, editUrl, project.getId(), project.getName(), List.of(
                 GridCell.badge(project.getStatusLabel()),
                 GridCell.chip(project.getId()),

@@ -74,12 +74,29 @@ public class BlockController extends AbstractController {
                               @RequestParam(value = "status", required = false) BlockStatus status,
                               @RequestParam(value = "stockFilter", required = false) String stockFilter,
                               @ModelAttribute ListQuery query, Model model) {
-        String stock = stockFilter == null || stockFilter.isBlank() ? "IN_STOCK" : stockFilter;
+        String stock;
+        if (stockFilter == null || stockFilter.isBlank()) {
+            stock = "IN_STOCK";
+        } else {
+            stock = stockFilter;
+        }
         model.addAttribute("summary", quarryBlockService.quarrySummary());
         model.addAttribute("customers", blockCustomerMarkService.customerViews());
         model.addAttribute("selectedStockFilter", stock);
-        model.addAttribute("selectedLocationType", locationType == null ? "" : locationType.name());
-        model.addAttribute("selectedStatus", status == null ? "" : status.name());
+        Object valueValue;
+        if (locationType == null) {
+            valueValue = "";
+        } else {
+            valueValue = locationType.name();
+        }
+        model.addAttribute("selectedLocationType", valueValue);
+        Object valueValue2;
+        if (status == null) {
+            valueValue2 = "";
+        } else {
+            valueValue2 = status.name();
+        }
+        model.addAttribute("selectedStatus", valueValue2);
         model.addAttribute("grid", BlockGrid.view(
                 quarryBlockService.getBlocksPaged(query.pageNumber(), query.pageSize(), query.getSearch(), query.sortKey(), query.sortDirection(), locationType, status, stock),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
@@ -116,9 +133,12 @@ public class BlockController extends AbstractController {
                                                    @RequestParam(value = "excludeId", required = false) Long excludeId,
                                                    Locale locale) {
         boolean available = quarryBlockService.isBlockCodeAvailable(code, excludeId);
-        String message = available
-                ? messageSource.getMessage("erp.block.code.available", null, locale)
-                : messageSource.getMessage("error.block.code.duplicate", new Object[]{code}, locale);
+        String message;
+        if (available) {
+            message = messageSource.getMessage("erp.block.code.available", null, locale);
+        } else {
+            message = messageSource.getMessage("error.block.code.duplicate", new Object[]{code}, locale);
+        }
         return new BlockCodeAvailabilityDto(available, message);
     }
 
@@ -229,12 +249,18 @@ public class BlockController extends AbstractController {
 
         FileStorageDto currentImage = images.get(currentIndex);
         boolean hasSiblings = images.size() > 1;
-        FileStorageDto previousImage = hasSiblings
-                ? images.get((currentIndex - 1 + images.size()) % images.size())
-                : null;
-        FileStorageDto nextImage = hasSiblings
-                ? images.get((currentIndex + 1) % images.size())
-                : null;
+        FileStorageDto previousImage;
+        if (hasSiblings) {
+            previousImage = images.get((currentIndex - 1 + images.size()) % images.size());
+        } else {
+            previousImage = null;
+        }
+        FileStorageDto nextImage;
+        if (hasSiblings) {
+            nextImage = images.get((currentIndex + 1) % images.size());
+        } else {
+            nextImage = null;
+        }
 
         model.addAttribute("block", block);
         model.addAttribute("imageFiles", images);
@@ -251,7 +277,13 @@ public class BlockController extends AbstractController {
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
         var block = quarryBlockService.getBlock(id);
         model.addAttribute("block", block);
-        model.addAttribute("currentLocationType", block.getCurrentLocation() != null ? block.getCurrentLocation().getLocationType() : StockLocationType.PRODUCTION_YARD);
+        Object locationType;
+        if (block.getCurrentLocation() != null) {
+            locationType = block.getCurrentLocation().getLocationType();
+        } else {
+            locationType = StockLocationType.PRODUCTION_YARD;
+        }
+        model.addAttribute("currentLocationType", locationType);
         model.addAttribute("isEdit", true);
 
         List<FileStorageDto> attachedFiles = fileStorageService.getFileViewsForEntity("BLOCK", id);
@@ -299,7 +331,13 @@ public class BlockController extends AbstractController {
             try {
                 var block = quarryBlockService.getBlock(id);
                 model.addAttribute("block", block);
-                model.addAttribute("currentLocationType", block.getCurrentLocation() != null ? block.getCurrentLocation().getLocationType() : StockLocationType.PRODUCTION_YARD);
+                Object locationTypeValue;
+                if (block.getCurrentLocation() != null) {
+                    locationTypeValue = block.getCurrentLocation().getLocationType();
+                } else {
+                    locationTypeValue = StockLocationType.PRODUCTION_YARD;
+                }
+                model.addAttribute("currentLocationType", locationTypeValue);
                 List<FileStorageDto> attachedFiles = fileStorageService.getFileViewsForEntity("BLOCK", id);
                 model.addAttribute("attachedFiles", attachedFiles);
             } catch (Exception ignored) {
@@ -555,7 +593,12 @@ public class BlockController extends AbstractController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
-            String targetQuery = targetType != null ? "?targetType=" + targetType.name() : "";
+            String targetQuery;
+            if (targetType != null) {
+                targetQuery = "?targetType=" + targetType.name();
+            } else {
+                targetQuery = "";
+            }
             return "redirect:/blocks/" + id + "/move" + targetQuery;
         }
     }
@@ -600,9 +643,12 @@ public class BlockController extends AbstractController {
     @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     public String showSellForm(@PathVariable("id") Long id) {
         BlockView block = quarryBlockService.getBlock(id);
-        String custParam = (block != null && block.getAssignedCustomer() != null)
-                ? "&customerId=" + block.getAssignedCustomer().getId()
-                : "";
+        String custParam;
+        if (block != null && block.getAssignedCustomer() != null) {
+            custParam = "&customerId=" + block.getAssignedCustomer().getId();
+        } else {
+            custParam = "";
+        }
         return "redirect:/invoices/create?type=SALES&department=QUARRY&blockId=" + id + custParam;
     }
 
@@ -708,9 +754,15 @@ public class BlockController extends AbstractController {
                                                      RedirectAttributes redirectAttributes,
                                                      String notAtQuarryMessageKey) {
         if (block.getStatus() == BlockStatus.SOLD) {
+            Object companyName;
+            if (block.getSoldCustomer() != null) {
+                companyName = block.getSoldCustomer().getCompanyName();
+            } else {
+                companyName = "";
+            }
             redirectAttributes.addFlashAttribute("errorMessage",
                     messageSource.getMessage("erp.block.already_sold",
-                            new Object[]{block.getSoldCustomer() != null ? block.getSoldCustomer().getCompanyName() : ""},
+                            new Object[]{companyName},
                             locale));
             return true;
         }

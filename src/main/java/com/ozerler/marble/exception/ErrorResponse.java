@@ -23,7 +23,11 @@ public record ErrorResponse(
         Objects.requireNonNull(error, "error");
         Objects.requireNonNull(message, "message");
         Objects.requireNonNull(path, "path");
-        errors = (errors == null || errors.isEmpty()) ? null : Map.copyOf(errors);
+        if (errors == null || errors.isEmpty()) {
+            errors = null;
+        } else {
+            errors = Map.copyOf(errors);
+        }
     }
 
     public static ErrorResponse of(HttpStatus httpStatus, String message, String path) {

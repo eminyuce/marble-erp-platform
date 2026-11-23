@@ -85,8 +85,18 @@ public class CariTransaction extends AuditableEntity {
 
     @Transient
     public BigDecimal getNetImpact() {
-        BigDecimal d = debitAmount != null ? debitAmount : BigDecimal.ZERO;
-        BigDecimal c = creditAmount != null ? creditAmount : BigDecimal.ZERO;
+        BigDecimal d;
+        if (debitAmount != null) {
+            d = debitAmount;
+        } else {
+            d = BigDecimal.ZERO;
+        }
+        BigDecimal c;
+        if (creditAmount != null) {
+            c = creditAmount;
+        } else {
+            c = BigDecimal.ZERO;
+        }
         return d.subtract(c);
     }
 }

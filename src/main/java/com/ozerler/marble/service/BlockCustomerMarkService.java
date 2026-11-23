@@ -49,13 +49,19 @@ public class BlockCustomerMarkService {
         });
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.customer.not_found", customerId)));
+        LocalDate markedAtValue;
+        if (markedAt != null) {
+            markedAtValue = markedAt;
+        } else {
+            markedAtValue = LocalDate.now();
+        }
         BlockCustomerMark mark = BlockCustomerMark.builder()
                 .block(block)
                 .customer(customer)
-                .markedAt(markedAt != null ? markedAt : LocalDate.now())
+                .markedAt(markedAtValue)
                 .validUntil(validUntil)
-                .offerPrice(offerPrice != null ? offerPrice : BigDecimal.ZERO)
-                .currency(currency != null ? currency : "TRY")
+                .offerPrice(Objects.requireNonNullElse(offerPrice, BigDecimal.ZERO))
+                .currency(Objects.requireNonNullElse(currency, "TRY"))
                 .status(BlockMarkStatus.ACTIVE)
                 .stockLocationSnapshot(block.getCurrentLocation())
                 .build();

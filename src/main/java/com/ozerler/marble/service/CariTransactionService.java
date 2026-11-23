@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -43,27 +44,61 @@ public class CariTransactionService {
         List<CariTransactionDto> dtoList = new ArrayList<>();
 
         for (CariTransaction t : rawList) {
-            BigDecimal debit = t.getDebitAmount() != null ? t.getDebitAmount() : BigDecimal.ZERO;
-            BigDecimal credit = t.getCreditAmount() != null ? t.getCreditAmount() : BigDecimal.ZERO;
+            BigDecimal debit;
+            if (t.getDebitAmount() != null) {
+                debit = t.getDebitAmount();
+            } else {
+                debit = BigDecimal.ZERO;
+            }
+            BigDecimal credit;
+            if (t.getCreditAmount() != null) {
+                credit = t.getCreditAmount();
+            } else {
+                credit = BigDecimal.ZERO;
+            }
             runningBalance = runningBalance.add(debit).subtract(credit);
 
+            String formattedDate;
+            if (t.getTransactionDate() != null) {
+                formattedDate = t.getTransactionDate().format(DATE_FORMATTER);
+            } else {
+                formattedDate = "—";
+            }
+            String transactionTypeLabel;
+            if (t.getTransactionType() != null) {
+                transactionTypeLabel = t.getTransactionType().getLabel();
+            } else {
+                transactionTypeLabel = "İşlem";
+            }
+            Long invoiceId;
+            if (t.getInvoice() != null) {
+                invoiceId = t.getInvoice().getId();
+            } else {
+                invoiceId = null;
+            }
+            Long collectionId;
+            if (t.getCollection() != null) {
+                collectionId = t.getCollection().getId();
+            } else {
+                collectionId = null;
+            }
             CariTransactionDto dto = CariTransactionDto.builder()
                     .id(t.getId())
                     .customerId(t.getCustomer().getId())
                     .customerCode(t.getCustomer().getCustomerCode())
                     .customerName(t.getCustomer().getCompanyName())
                     .transactionDate(t.getTransactionDate())
-                    .formattedDate(t.getTransactionDate() != null ? t.getTransactionDate().format(DATE_FORMATTER) : "—")
+                    .formattedDate(formattedDate)
                     .transactionType(t.getTransactionType())
-                    .transactionTypeLabel(t.getTransactionType() != null ? t.getTransactionType().getLabel() : "İşlem")
+                    .transactionTypeLabel(transactionTypeLabel)
                     .debit(t.getTransactionType() != null && t.getTransactionType().isDefaultDebit())
                     .documentNo(t.getDocumentNo())
                     .description(normalizeDescription(t.getDescription()))
                     .debitAmount(debit)
                     .creditAmount(credit)
                     .runningBalance(runningBalance)
-                    .invoiceId(t.getInvoice() != null ? t.getInvoice().getId() : null)
-                    .collectionId(t.getCollection() != null ? t.getCollection().getId() : null)
+                    .invoiceId(invoiceId)
+                    .collectionId(collectionId)
                     .notes(t.getNotes())
                     .build();
 
@@ -84,8 +119,16 @@ public class CariTransactionService {
         if (totals != null && !totals.isEmpty() && totals.get(0) != null) {
             Object[] row = totals.get(0);
             if (row.length >= 2) {
-                totalDebit = row[0] != null ? (BigDecimal) row[0] : BigDecimal.ZERO;
-                totalCredit = row[1] != null ? (BigDecimal) row[1] : BigDecimal.ZERO;
+                if (row[0] != null) {
+                    totalDebit = (BigDecimal) row[0];
+                } else {
+                    totalDebit = BigDecimal.ZERO;
+                }
+                if (row[1] != null) {
+                    totalCredit = (BigDecimal) row[1];
+                } else {
+                    totalCredit = BigDecimal.ZERO;
+                }
             }
         }
 
@@ -115,18 +158,56 @@ public class CariTransactionService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Cari bulunamadı: " + customerId));
 
-        BigDecimal finalDebit = debitAmount != null && debitAmount.compareTo(BigDecimal.ZERO) > 0 ? debitAmount : BigDecimal.ZERO;
-        BigDecimal finalCredit = creditAmount != null && creditAmount.compareTo(BigDecimal.ZERO) > 0 ? creditAmount : BigDecimal.ZERO;
+        BigDecimal finalDebit;
+        if (debitAmount != null && debitAmount.compareTo(BigDecimal.ZERO) > 0) {
+            finalDebit = debitAmount;
+        } else {
+            finalDebit = BigDecimal.ZERO;
+        }
+        BigDecimal finalCredit;
+        if (creditAmount != null && creditAmount.compareTo(BigDecimal.ZERO) > 0) {
+            finalCredit = creditAmount;
+        } else {
+            finalCredit = BigDecimal.ZERO;
+        }
 
+        LocalDate transactionDate;
+        if (date != null) {
+            transactionDate = date;
+        } else {
+            transactionDate = LocalDate.now();
+        }
+        String documentNoValue;
+        if (documentNo != null) {
+            documentNoValue = documentNo.trim();
+        } else {
+            documentNoValue = null;
+        }
+        String descriptionValue;
+        if (description != null) {
+            descriptionValue = description.trim();
+        } else {
+            if (type != null) {
+                descriptionValue = type.getLabel();
+            } else {
+                descriptionValue = "Cari Hareket";
+            }
+        }
+        String notesValue;
+        if (notes != null) {
+            notesValue = notes.trim();
+        } else {
+            notesValue = null;
+        }
         CariTransaction tx = CariTransaction.builder()
                 .customer(customer)
-                .transactionDate(date != null ? date : LocalDate.now())
-                .transactionType(type != null ? type : CariTransactionType.BORC_DEKONTU)
-                .documentNo(documentNo != null ? documentNo.trim() : null)
-                .description(description != null ? description.trim() : type != null ? type.getLabel() : "Cari Hareket")
+                .transactionDate(transactionDate)
+                .transactionType(Objects.requireNonNullElse(type, CariTransactionType.BORC_DEKONTU))
+                .documentNo(documentNoValue)
+                .description(descriptionValue)
                 .debitAmount(finalDebit)
                 .creditAmount(finalCredit)
-                .notes(notes != null ? notes.trim() : null)
+                .notes(notesValue)
                 .build();
 
         return transactionRepository.save(tx);
@@ -153,10 +234,22 @@ public class CariTransactionService {
         }
 
         if (debitAmount != null) {
-            tx.setDebitAmount(debitAmount.compareTo(BigDecimal.ZERO) > 0 ? debitAmount : BigDecimal.ZERO);
+            BigDecimal debitAmountValue;
+            if (debitAmount.compareTo(BigDecimal.ZERO) > 0) {
+                debitAmountValue = debitAmount;
+            } else {
+                debitAmountValue = BigDecimal.ZERO;
+            }
+            tx.setDebitAmount(debitAmountValue);
         }
         if (creditAmount != null) {
-            tx.setCreditAmount(creditAmount.compareTo(BigDecimal.ZERO) > 0 ? creditAmount : BigDecimal.ZERO);
+            BigDecimal creditAmountValue;
+            if (creditAmount.compareTo(BigDecimal.ZERO) > 0) {
+                creditAmountValue = creditAmount;
+            } else {
+                creditAmountValue = BigDecimal.ZERO;
+            }
+            tx.setCreditAmount(creditAmountValue);
         }
         if (notes != null) {
             tx.setNotes(notes.trim());
@@ -185,8 +278,18 @@ public class CariTransactionService {
         }
 
         Optional<CariTransaction> opt = transactionRepository.findByInvoiceId(invoice.getId());
-        CariTransactionType type = invoice.getInvoiceType() == InvoiceType.SALES ? CariTransactionType.SATIS_FATURASI : CariTransactionType.ALIS_FATURASI;
-        BigDecimal total = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : BigDecimal.ZERO;
+        CariTransactionType type;
+        if (invoice.getInvoiceType() == InvoiceType.SALES) {
+            type = CariTransactionType.SATIS_FATURASI;
+        } else {
+            type = CariTransactionType.ALIS_FATURASI;
+        }
+        BigDecimal total;
+        if (invoice.getTotalAmount() != null) {
+            total = invoice.getTotalAmount();
+        } else {
+            total = BigDecimal.ZERO;
+        }
 
         CariTransaction tx = opt.orElseGet(() -> CariTransaction.builder()
                 .customer(invoice.getCustomer())
@@ -194,12 +297,36 @@ public class CariTransactionService {
                 .build());
 
         tx.setCustomer(invoice.getCustomer());
-        tx.setTransactionDate(invoice.getInvoiceDate() != null ? invoice.getInvoiceDate() : LocalDate.now());
+        LocalDate transactionDate;
+        if (invoice.getInvoiceDate() != null) {
+            transactionDate = invoice.getInvoiceDate();
+        } else {
+            transactionDate = LocalDate.now();
+        }
+        tx.setTransactionDate(transactionDate);
         tx.setTransactionType(type);
         tx.setDocumentNo(invoice.getInvoiceNo());
-        tx.setDescription((invoice.getInvoiceType() == InvoiceType.SALES ? "Satış Faturası: " : "Alış Faturası: ") + invoice.getInvoiceNo());
-        tx.setDebitAmount(type == CariTransactionType.SATIS_FATURASI ? total : BigDecimal.ZERO);
-        tx.setCreditAmount(type == CariTransactionType.ALIS_FATURASI ? total : BigDecimal.ZERO);
+        String value;
+        if (invoice.getInvoiceType() == InvoiceType.SALES) {
+            value = "Satış Faturası: ";
+        } else {
+            value = "Alış Faturası: ";
+        }
+        tx.setDescription(value + invoice.getInvoiceNo());
+        BigDecimal debitAmount;
+        if (type == CariTransactionType.SATIS_FATURASI) {
+            debitAmount = total;
+        } else {
+            debitAmount = BigDecimal.ZERO;
+        }
+        tx.setDebitAmount(debitAmount);
+        BigDecimal creditAmount;
+        if (type == CariTransactionType.ALIS_FATURASI) {
+            creditAmount = total;
+        } else {
+            creditAmount = BigDecimal.ZERO;
+        }
+        tx.setCreditAmount(creditAmount);
         tx.setNotes(invoice.getNotes());
 
         transactionRepository.save(tx);
@@ -220,7 +347,12 @@ public class CariTransactionService {
         }
 
         Optional<CariTransaction> opt = transactionRepository.findByCollectionId(collection.getId());
-        BigDecimal amount = collection.getAmount() != null ? collection.getAmount() : BigDecimal.ZERO;
+        BigDecimal amount;
+        if (collection.getAmount() != null) {
+            amount = collection.getAmount();
+        } else {
+            amount = BigDecimal.ZERO;
+        }
 
         CariTransaction tx = opt.orElseGet(() -> CariTransaction.builder()
                 .customer(collection.getCustomer())
@@ -228,10 +360,22 @@ public class CariTransactionService {
                 .build());
 
         tx.setCustomer(collection.getCustomer());
-        tx.setTransactionDate(collection.getCollectionDate() != null ? collection.getCollectionDate() : LocalDate.now());
+        LocalDate transactionDate;
+        if (collection.getCollectionDate() != null) {
+            transactionDate = collection.getCollectionDate();
+        } else {
+            transactionDate = LocalDate.now();
+        }
+        tx.setTransactionDate(transactionDate);
         tx.setTransactionType(CariTransactionType.TAHSILAT);
         tx.setDocumentNo(collection.getCollectionNo());
-        tx.setDescription("Tahsilat (" + (collection.getCollectionMethod() != null ? collection.getCollectionMethod().getDisplayName() : "Nakit") + "): " + collection.getCollectionNo());
+        String displayName;
+        if (collection.getCollectionMethod() != null) {
+            displayName = collection.getCollectionMethod().getDisplayName();
+        } else {
+            displayName = "Nakit";
+        }
+        tx.setDescription("Tahsilat (" + displayName + "): " + collection.getCollectionNo());
         tx.setDebitAmount(BigDecimal.ZERO);
         tx.setCreditAmount(amount);
         tx.setNotes(collection.getNotes());

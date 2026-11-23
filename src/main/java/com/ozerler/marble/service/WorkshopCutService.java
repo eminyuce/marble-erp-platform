@@ -156,7 +156,12 @@ public class WorkshopCutService {
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.slab.not_found", slabId)));
 
         Project project = resolveProject(projectId);
-        ProjectLocation location = locationId != null ? projectLocationRepository.findById(locationId).orElse(null) : null;
+        ProjectLocation location;
+        if (locationId != null) {
+            location = projectLocationRepository.findById(locationId).orElse(null);
+        } else {
+            location = null;
+        }
 
         sourceSlab.setStatus(SlabStatus.IN_CUTTING);
         slabRepository.save(sourceSlab);
@@ -241,9 +246,20 @@ public class WorkshopCutService {
     }
 
     private BigDecimal calculateLoadedUnitCost(CutOrder order, Slab sourceSlab) {
-        BigDecimal baseCostPerM2 = zero(sourceSlab != null ? sourceSlab.getCostPerM2() : null);
+        BigDecimal zeroValue;
+        if (sourceSlab != null) {
+            zeroValue = sourceSlab.getCostPerM2();
+        } else {
+            zeroValue = null;
+        }
+        BigDecimal baseCostPerM2 = zero(zeroValue);
         BigDecimal posted = postedWorkshopCost(order, sourceSlab);
-        BigDecimal area = sourceSlab != null ? zero(sourceSlab.getSurfaceAreaM2()) : BigDecimal.ZERO;
+        BigDecimal area;
+        if (sourceSlab != null) {
+            area = zero(sourceSlab.getSurfaceAreaM2());
+        } else {
+            area = BigDecimal.ZERO;
+        }
         if (posted.compareTo(BigDecimal.ZERO) > 0 && area.compareTo(BigDecimal.ZERO) > 0) {
             return baseCostPerM2.add(posted.divide(area, Constants.COST_SCALE, RoundingMode.HALF_UP))
                     .setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
@@ -266,23 +282,44 @@ public class WorkshopCutService {
     }
 
     private BigDecimal applyWorkshopOverheadFallback(CutOrder order, BigDecimal baseCostPerM2) {
+        Object cutOrderNo;
+        if (order != null) {
+            cutOrderNo = order.getCutOrderNo();
+        } else {
+            cutOrderNo = "new";
+        }
         log.info("No posted workshop expenses for cut order {}; applying {} overhead fallback",
-                order != null ? order.getCutOrderNo() : "new", Constants.WORKSHOP_OVERHEAD_FACTOR);
+                cutOrderNo, Constants.WORKSHOP_OVERHEAD_FACTOR);
         return baseCostPerM2.multiply(Constants.WORKSHOP_OVERHEAD_FACTOR).setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
     }
 
     private static BigDecimal zero(BigDecimal value) {
-        return value != null ? value : BigDecimal.ZERO;
+        if (value != null) {
+            return value;
+        }
+        return BigDecimal.ZERO;
     }
 
     private List<CutItem> generateCutItems(CutOrder order, Slab sourceSlab, ProjectLocation location,
                                            int piecesCount, BigDecimal targetWidthCm, BigDecimal targetLengthCm,
                                            BigDecimal itemArea, BigDecimal unitCost,
                                            String edgeFinish, String targetLocationDesc) {
-        String finish = StringUtils.isNotBlank(edgeFinish) ? edgeFinish : Constants.DEFAULT_EDGE_FINISH;
-        String resolvedLocation = StringUtils.isNotBlank(targetLocationDesc)
-                ? targetLocationDesc
-                : location != null ? location.getLocationName() : Constants.DEFAULT_TARGET_LOCATION;
+        String finish;
+        if (StringUtils.isNotBlank(edgeFinish)) {
+            finish = edgeFinish;
+        } else {
+            finish = Constants.DEFAULT_EDGE_FINISH;
+        }
+        String resolvedLocation;
+        if (StringUtils.isNotBlank(targetLocationDesc)) {
+            resolvedLocation = targetLocationDesc;
+        } else {
+            if (location != null) {
+                resolvedLocation = location.getLocationName();
+            } else {
+                resolvedLocation = Constants.DEFAULT_TARGET_LOCATION;
+            }
+        }
 
         List<CutItem> items = new ArrayList<>(piecesCount);
         for (int i = 1; i <= piecesCount; i++) {

@@ -29,7 +29,10 @@ public class GlobalModelAttributes {
     public int gridDefaultPageSize() {
         String val = settingService.getSetting("grid.default_page_size", "25");
         int size = Ints.parseOrDefault(val, 25);
-        return (size > 0 && size <= 100) ? size : 25;
+        if (size > 0 && size <= 100) {
+            return size;
+        }
+        return 25;
     }
 
     @ModelAttribute("noticeDismissSeconds")

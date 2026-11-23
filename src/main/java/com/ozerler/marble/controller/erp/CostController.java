@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -42,7 +43,12 @@ public class CostController {
 
     @GetMapping
     public String costsIndex(@RequestParam(value = "period", required = false) String period, Model model) {
-        String current = period != null && !period.isBlank() ? period : YearMonth.now().toString();
+        String current;
+        if (period != null && !period.isBlank()) {
+            current = period;
+        } else {
+            current = YearMonth.now().toString();
+        }
         model.addAttribute("period", current);
         var quarry = costAnalysisService.analyze(BusinessUnit.QUARRY, current);
         var factory = costAnalysisService.analyze(BusinessUnit.FACTORY, current);
@@ -64,34 +70,34 @@ public class CostController {
         BigDecimal totalPeriodExpense = java.util.stream.Stream.of(
                         quarry.getTotalExpense(), factory.getTotalExpense(),
                         workshop.getTotalExpense(), site.getTotalExpense())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         model.addAttribute("totalPeriodExpense", totalPeriodExpense);
 
         BigDecimal totalSiteRevenue = siteProfits.stream()
                 .map(dto -> dto.getRealizedRevenue())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalMaterialCost = siteProfits.stream()
                 .map(dto -> dto.getMaterialCost())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalLaborCost = siteProfits.stream()
                 .map(dto -> dto.getLaborCost())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalOtherCost = siteProfits.stream()
-                .map(p -> (p.getTransportationCost() != null ? p.getTransportationCost() : BigDecimal.ZERO)
-                        .add(p.getConsumableCost() != null ? p.getConsumableCost() : BigDecimal.ZERO)
-                        .add(p.getOtherCost() != null ? p.getOtherCost() : BigDecimal.ZERO))
+                .map(p -> Objects.requireNonNullElse(p.getTransportationCost(), BigDecimal.ZERO)
+                        .add(Objects.requireNonNullElse(p.getConsumableCost(), BigDecimal.ZERO))
+                        .add(Objects.requireNonNullElse(p.getOtherCost(), BigDecimal.ZERO)))
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalSiteCost = siteProfits.stream()
                 .map(dto -> dto.getTotalCost())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalSiteNet = siteProfits.stream()
                 .map(dto -> dto.getNetProfitOrLoss())
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         model.addAttribute("totalSiteRevenue", totalSiteRevenue);
@@ -101,9 +107,12 @@ public class CostController {
         model.addAttribute("totalSiteCost", totalSiteCost);
         model.addAttribute("totalSiteNet", totalSiteNet);
 
-        BigDecimal totalSiteMarginPct = (totalSiteRevenue != null && totalSiteRevenue.compareTo(BigDecimal.ZERO) > 0 && totalSiteNet != null)
-                ? totalSiteNet.multiply(BigDecimal.valueOf(100)).divide(totalSiteRevenue, 1, java.math.RoundingMode.HALF_UP)
-                : null;
+        BigDecimal totalSiteMarginPct;
+        if (totalSiteRevenue != null && totalSiteRevenue.compareTo(BigDecimal.ZERO) > 0 && totalSiteNet != null) {
+            totalSiteMarginPct = totalSiteNet.multiply(BigDecimal.valueOf(100)).divide(totalSiteRevenue, 1, java.math.RoundingMode.HALF_UP);
+        } else {
+            totalSiteMarginPct = null;
+        }
         model.addAttribute("totalSiteMarginPct", totalSiteMarginPct);
 
         BigDecimal totalMonthlyBudget = costAccountingService.totalMonthlyBudget();

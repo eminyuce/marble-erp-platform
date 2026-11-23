@@ -48,7 +48,13 @@ public class QuarryOperationController extends AbstractController {
     @GetMapping
     public String index(@RequestParam(value = "status", required = false) BlockStatus status,
                         @ModelAttribute ListQuery query, Model model) {
-        model.addAttribute("status", status == null ? "" : status.name());
+        Object valueValue;
+        if (status == null) {
+            valueValue = "";
+        } else {
+            valueValue = status.name();
+        }
+        model.addAttribute("status", valueValue);
         model.addAttribute("totalEstTon", formLookup.estimatedTonnage());
         model.addAttribute("totalActTon", formLookup.actualTonnage());
         model.addAttribute("grid", OperationQuarryBlockGrid.view(

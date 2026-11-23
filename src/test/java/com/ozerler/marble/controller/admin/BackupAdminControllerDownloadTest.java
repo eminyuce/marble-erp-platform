@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.admin;
 
+import org.springframework.test.web.servlet.MvcResult;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,9 +48,12 @@ class BackupAdminControllerDownloadTest {
                 .thenReturn(Optional.of(location));
 
         var started = mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings/backups/download/backup_test.sql.gz")).andReturn();
-        var result = started.getRequest().isAsyncStarted()
-                ? mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(started)).andReturn()
-                : started;
+        MvcResult result;
+        if (started.getRequest().isAsyncStarted()) {
+            result = mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(started)).andReturn();
+        } else {
+            result = started;
+        }
 
         Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(302);
         Assertions.assertThat(result.getResponse().getHeader(HttpHeaders.LOCATION)).isEqualTo(location);
@@ -76,9 +80,12 @@ class BackupAdminControllerDownloadTest {
         }).when(backupService).writeBackup(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.eq("backup_test.sql.gz"));
 
         var started = mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings/backups/download/backup_test.sql.gz")).andReturn();
-        var result = started.getRequest().isAsyncStarted()
-                ? mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(started)).andReturn()
-                : started;
+        MvcResult result;
+        if (started.getRequest().isAsyncStarted()) {
+            result = mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(started)).andReturn();
+        } else {
+            result = started;
+        }
 
         Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(200);
         Assertions.assertThat(result.getResponse().getHeader(HttpHeaders.CONTENT_DISPOSITION)).contains("backup_test.sql.gz");

@@ -14,8 +14,18 @@ public final class GridAssembler {
 
     public static DataGridView from(TabulatorResponse<?> response, int page, int size, String sort, String direction,
                                     String tableId, int frozenCount, List<GridColumn> columns, List<GridRow> rows) {
-        int totalPages = response == null ? 1 : response.getLast_page();
-        long total = response == null ? 0L : response.getTotal();
+        int totalPages;
+        if (response == null) {
+            totalPages = 1;
+        } else {
+            totalPages = response.getLast_page();
+        }
+        long total;
+        if (response == null) {
+            total = 0L;
+        } else {
+            total = response.getTotal();
+        }
         return new DataGridView(page, size, totalPages, total, sort, direction, tableId, frozenCount, columns, rows);
     }
 

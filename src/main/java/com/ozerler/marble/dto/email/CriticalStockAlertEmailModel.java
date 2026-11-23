@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.Objects;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -37,16 +38,16 @@ public class CriticalStockAlertEmailModel implements BaseEmailModel {
     @Override
     public Map<String, String> toVariables() {
         Map<String, String> vars = new LinkedHashMap<>();
-        vars.put("stockCode", stockCode != null ? stockCode : "");
-        vars.put("stockName", stockName != null ? stockName : "");
-        vars.put("category", category != null ? category : "");
-        vars.put("currentStock", currentStock != null ? currentStock : "0");
-        vars.put("minimumThreshold", minimumThreshold != null ? minimumThreshold : "0");
-        vars.put("unit", unit != null ? unit : "adet");
-        vars.put("warehouseName", warehouseName != null ? warehouseName : "");
-        vars.put("suggestedReorderQuantity", suggestedReorderQuantity != null ? suggestedReorderQuantity : "0");
-        vars.put("alertLevel", alertLevel != null ? alertLevel : "KRİTİK STOK UYARISI");
-        vars.put("companyName", companyName != null ? companyName : "Özerler Mermer A.Ş.");
+        vars.put("stockCode", Objects.requireNonNullElse(stockCode, ""));
+        vars.put("stockName", Objects.requireNonNullElse(stockName, ""));
+        vars.put("category", Objects.requireNonNullElse(category, ""));
+        vars.put("currentStock", Objects.requireNonNullElse(currentStock, "0"));
+        vars.put("minimumThreshold", Objects.requireNonNullElse(minimumThreshold, "0"));
+        vars.put("unit", Objects.requireNonNullElse(unit, "adet"));
+        vars.put("warehouseName", Objects.requireNonNullElse(warehouseName, ""));
+        vars.put("suggestedReorderQuantity", Objects.requireNonNullElse(suggestedReorderQuantity, "0"));
+        vars.put("alertLevel", Objects.requireNonNullElse(alertLevel, "KRİTİK STOK UYARISI"));
+        vars.put("companyName", Objects.requireNonNullElse(companyName, "Özerler Mermer A.Ş."));
         return vars;
     }
 

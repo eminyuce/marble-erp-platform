@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -67,22 +68,42 @@ public class PalletShipmentService {
         if (customerId == null && projectId == null) {
             throw new IllegalArgumentException("Müşteri veya şantiye seçilmelidir");
         }
-        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
-        Project project = projectId != null ? projectRepository.findById(projectId).orElse(null) : null;
+        Customer customer;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+        } else {
+            customer = null;
+        }
+        Project project;
+        if (projectId != null) {
+            project = projectRepository.findById(projectId).orElse(null);
+        } else {
+            project = null;
+        }
         StockLocation yard = stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PALLET_STOCK_YARD)
                 .orElse(null);
+        String palletCodeValue;
+        if (palletCode != null && !palletCode.isBlank()) {
+            palletCodeValue = palletCode;
+        } else {
+            palletCodeValue = UniqueCodes.yearly("PAL", palletRepository::existsByPalletCode);
+        }
         Pallet pallet = palletRepository.save(Pallet.builder()
-                .palletCode(palletCode != null && !palletCode.isBlank()
-                        ? palletCode
-                        : UniqueCodes.yearly("PAL", palletRepository::existsByPalletCode))
+                .palletCode(palletCodeValue)
                 .warehouseLocation(warehouseLocation)
                 .currentLocation(yard)
-                .department(department != null ? department : BusinessUnit.FACTORY)
+                .department(Objects.requireNonNullElse(department, BusinessUnit.FACTORY))
                 .status("PREPARING")
                 .customer(customer)
                 .project(project)
                 .build());
-        recordPalletMovement(pallet, null, yard, "Palet oluşturuldu — Paletli Stok (" + (department != null ? department.getDisplayName() : "Fabrika") + ")");
+        String displayName;
+        if (department != null) {
+            displayName = department.getDisplayName();
+        } else {
+            displayName = "Fabrika";
+        }
+        recordPalletMovement(pallet, null, yard, "Palet oluşturuldu — Paletli Stok (" + displayName + ")");
         return pallet;
     }
 
@@ -106,9 +127,24 @@ public class PalletShipmentService {
             throw new IllegalStateException("Sevk edilmiş palete yeni ürün eklenemez.");
         }
 
-        MaterialLot lot = materialLotId != null ? materialLotRepository.findById(materialLotId).orElse(null) : null;
-        StockItem stockItem = stockItemId != null ? stockItemRepository.findById(stockItemId).orElse(null) : null;
-        Slab slab = slabId != null ? slabRepository.findById(slabId).orElse(null) : null;
+        MaterialLot lot;
+        if (materialLotId != null) {
+            lot = materialLotRepository.findById(materialLotId).orElse(null);
+        } else {
+            lot = null;
+        }
+        StockItem stockItem;
+        if (stockItemId != null) {
+            stockItem = stockItemRepository.findById(stockItemId).orElse(null);
+        } else {
+            stockItem = null;
+        }
+        Slab slab;
+        if (slabId != null) {
+            slab = slabRepository.findById(slabId).orElse(null);
+        } else {
+            slab = null;
+        }
 
         if (lot != null) {
             lot.setStatus(MaterialLotStatus.PALLETIZED);
@@ -122,7 +158,13 @@ public class PalletShipmentService {
                 thicknessCm = lot.getThicknessCm();
             }
             if (productName == null || productName.isBlank()) {
-                productName = lot.getLotCode() + (lot.getProductForm() != null ? " — " + lot.getProductForm().getLabel() : "");
+                String value;
+                if (lot.getProductForm() != null) {
+                    value = " — " + lot.getProductForm().getLabel();
+                } else {
+                    value = "";
+                }
+                productName = lot.getLotCode() + value;
             }
         } else if (stockItem != null) {
             if (widthCm == null) {
@@ -135,7 +177,7 @@ public class PalletShipmentService {
                 thicknessCm = stockItem.getThicknessCm();
             }
             if (productName == null || productName.isBlank()) {
-                productName = stockItem.getItemCode() + " (" + (stockItem.getStoneType() != null ? stockItem.getStoneType() : "Ebatlı") + ")";
+                productName = stockItem.getItemCode() + " (" + Objects.requireNonNullElse(stockItem.getStoneType(), "Ebatlı") + ")";
             }
         } else if (slab != null) {
             if (widthCm == null) {
@@ -152,13 +194,26 @@ public class PalletShipmentService {
             }
         }
 
-        int qty = quantity != null && quantity > 0 ? quantity : 1;
+        int qty;
+        if (quantity != null && quantity > 0) {
+            qty = quantity;
+        } else {
+            qty = 1;
+        }
         BigDecimal calculatedArea = areaM2;
         if ((calculatedArea == null || calculatedArea.compareTo(BigDecimal.ZERO) <= 0) && widthCm != null && lengthCm != null) {
             calculatedArea = widthCm.multiply(lengthCm).divide(new BigDecimal("10000"), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(qty));
         }
         if (calculatedArea == null || calculatedArea.compareTo(BigDecimal.ZERO) <= 0) {
-            calculatedArea = lot != null ? lot.getTotalAreaM2() : slab != null ? slab.getSurfaceAreaM2() : BigDecimal.ZERO;
+            if (lot != null) {
+                calculatedArea = lot.getTotalAreaM2();
+            } else {
+                if (slab != null) {
+                    calculatedArea = slab.getSurfaceAreaM2();
+                } else {
+                    calculatedArea = BigDecimal.ZERO;
+                }
+            }
         }
 
         PalletItem item = palletItemRepository.save(PalletItem.builder()
@@ -171,7 +226,7 @@ public class PalletShipmentService {
                 .lengthCm(lengthCm)
                 .thicknessCm(thicknessCm)
                 .quantity(qty)
-                .areaM2(calculatedArea != null ? calculatedArea : BigDecimal.ZERO)
+                .areaM2(Objects.requireNonNullElse(calculatedArea, BigDecimal.ZERO))
                 .build());
 
         pallet.setStatus("READY");
@@ -186,18 +241,32 @@ public class PalletShipmentService {
         }
         Pallet pallet = palletRepository.findById(palletId)
                 .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.pallet.not_found", palletId)));
-        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
-        Project project = projectId != null ? projectRepository.findById(projectId).orElse(null) : null;
+        Customer customer;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+        } else {
+            customer = null;
+        }
+        Project project;
+        if (projectId != null) {
+            project = projectRepository.findById(projectId).orElse(null);
+        } else {
+            project = null;
+        }
+        String waybillNoValue;
+        if (waybillNo != null && !waybillNo.isBlank()) {
+            waybillNoValue = waybillNo;
+        } else {
+            waybillNoValue = UniqueCodes.yearly("IRS", shipmentRepository::existsByWaybillNo);
+        }
         Shipment shipment = shipmentRepository.save(Shipment.builder()
-                .waybillNo(waybillNo != null && !waybillNo.isBlank()
-                        ? waybillNo
-                        : UniqueCodes.yearly("IRS", shipmentRepository::existsByWaybillNo))
+                .waybillNo(waybillNoValue)
                 .project(project)
                 .customer(customer)
                 .vehiclePlate(vehiclePlate)
                 .driverName(driverName)
                 .departureTime(LocalDateTime.now())
-                .freightCost(freightCost != null ? freightCost : BigDecimal.ZERO)
+                .freightCost(Objects.requireNonNullElse(freightCost, BigDecimal.ZERO))
                 .deliveryStatus("IN_TRANSIT")
                 .build());
         shipmentItemRepository.save(ShipmentItem.builder()
@@ -209,8 +278,14 @@ public class PalletShipmentService {
         pallet.setStatus("SHIPPED");
         palletItemRepository.findByPalletId(palletId)
                 .forEach(item -> item.getMaterialLot().setStatus(MaterialLotStatus.SHIPPED));
+        String value;
+        if (shipment.getWaybillNo() != null) {
+            value = " — " + shipment.getWaybillNo();
+        } else {
+            value = "";
+        }
         recordPalletMovement(pallet, from, from, "Palet sevk edildi"
-                + (shipment.getWaybillNo() != null ? " — " + shipment.getWaybillNo() : ""));
+                + value);
         return shipment;
     }
 
@@ -294,7 +369,12 @@ public class PalletShipmentService {
             throw new IllegalArgumentException("Satılacak adet en az 1 olmalıdır.");
         }
 
-        int currentItemQty = item.getQuantity() != null ? item.getQuantity() : 1;
+        int currentItemQty;
+        if (item.getQuantity() != null) {
+            currentItemQty = item.getQuantity();
+        } else {
+            currentItemQty = 1;
+        }
         if (piecesToSell > currentItemQty) {
             throw new IllegalArgumentException("Palette yalnızca " + currentItemQty + " adet ürün bulunmaktadır. " + piecesToSell + " adet satılamaz.");
         }
@@ -312,9 +392,12 @@ public class PalletShipmentService {
         BigDecimal soldArea = unitArea.multiply(BigDecimal.valueOf(piecesToSell)).setScale(2, RoundingMode.HALF_UP);
 
         // 2. Müşteri belirleme
-        Customer customer = customerId != null
-                ? customerRepository.findById(customerId).orElse(null)
-                : pallet.getCustomer();
+        Customer customer;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+        } else {
+            customer = pallet.getCustomer();
+        }
 
         // 3. İlgili asıl stoktan düşüş yap
         if (item.getStockItem() != null) {
@@ -360,19 +443,37 @@ public class PalletShipmentService {
         // 4. Stok Hareketi kaydet
         if (stockMovementRepository != null) {
             String movCode = UniqueCodes.yearly("MOV-PAL", stockMovementRepository::existsByMovementCode);
+            BigDecimal quantity;
+            if (soldArea.compareTo(BigDecimal.ZERO) > 0) {
+                quantity = soldArea;
+            } else {
+                quantity = BigDecimal.valueOf(piecesToSell);
+            }
+            String quantityUnit;
+            if (soldArea.compareTo(BigDecimal.ZERO) > 0) {
+                quantityUnit = "m2";
+            } else {
+                quantityUnit = "adet";
+            }
+            String value;
+            if (notes != null && !notes.isBlank()) {
+                value = " | " + notes;
+            } else {
+                value = "";
+            }
             stockMovementRepository.save(StockMovement.builder()
                     .movementCode(movCode)
                     .movementDate(LocalDateTime.now())
                     .movementType(StockMovementType.OUTGOING)
-                    .sourceDepartment(pallet.getDepartment() != null ? pallet.getDepartment() : BusinessUnit.FACTORY)
+                    .sourceDepartment(Objects.requireNonNullElse(pallet.getDepartment(), BusinessUnit.FACTORY))
                     .fromLocation(pallet.getCurrentLocation())
                     .customer(customer)
                     .stockItem(item.getStockItem())
                     .slab(item.getSlab())
                     .itemDescription("Paletten Parçalı Satış: " + pallet.getPalletCode() + " — " + item.getDisplayName() + " (" + piecesToSell + " adet)")
-                    .quantity(soldArea.compareTo(BigDecimal.ZERO) > 0 ? soldArea : BigDecimal.valueOf(piecesToSell))
-                    .quantityUnit(soldArea.compareTo(BigDecimal.ZERO) > 0 ? "m2" : "adet")
-                    .notes("Palet: " + pallet.getPalletCode() + ", Satılan Adet: " + piecesToSell + (notes != null && !notes.isBlank() ? " | " + notes : ""))
+                    .quantity(quantity)
+                    .quantityUnit(quantityUnit)
+                    .notes("Palet: " + pallet.getPalletCode() + ", Satılan Adet: " + piecesToSell + value)
                     .build());
         }
 
@@ -383,13 +484,25 @@ public class PalletShipmentService {
         } else {
             item.setQuantity(remainingQty);
             BigDecimal remainingArea = item.getAreaM2().subtract(soldArea).setScale(4, RoundingMode.HALF_UP);
-            item.setAreaM2(remainingArea.compareTo(BigDecimal.ZERO) > 0 ? remainingArea : BigDecimal.ZERO);
+            BigDecimal areaM2;
+            if (remainingArea.compareTo(BigDecimal.ZERO) > 0) {
+                areaM2 = remainingArea;
+            } else {
+                areaM2 = BigDecimal.ZERO;
+            }
+            item.setAreaM2(areaM2);
             palletItemRepository.save(item);
         }
 
         // 6. Palet hareket geçmişine not düş
+        String valueValue;
+        if (customer != null) {
+            valueValue = " — Müşteri: " + customer.getCompanyName();
+        } else {
+            valueValue = "";
+        }
         recordPalletMovement(pallet, pallet.getCurrentLocation(), pallet.getCurrentLocation(),
-                "Paletten " + piecesToSell + " adet satış yapıldı (" + soldArea + " m²)" + (customer != null ? " — Müşteri: " + customer.getCompanyName() : ""));
+                "Paletten " + piecesToSell + " adet satış yapıldı (" + soldArea + " m²)" + valueValue);
     }
 
     @Transactional
@@ -432,21 +545,58 @@ public class PalletShipmentService {
             ).toList();
         }
         int totalElements = allShipments.size();
-        int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 1;
+        int totalPages;
+        if (size > 0) {
+            totalPages = (int) Math.ceil((double) totalElements / size);
+        } else {
+            totalPages = 1;
+        }
         int fromIndex = Math.min((page - 1) * size, totalElements);
         int toIndex = Math.min(fromIndex + size, totalElements);
-        List<Shipment> paged = (fromIndex <= toIndex) ? allShipments.subList(fromIndex, toIndex) : List.of();
+        List<Shipment> paged;
+        if (fromIndex <= toIndex) {
+            paged = allShipments.subList(fromIndex, toIndex);
+        } else {
+            paged = List.of();
+        }
 
         java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         List<Map<String, Object>> list = paged.stream().map(s -> {
             Map<String, Object> map = new java.util.HashMap<>();
             map.put("id", s.getId());
             map.put("waybillNo", s.getWaybillNo());
-            map.put("departureTime", s.getDepartureTime() != null ? s.getDepartureTime().format(dtf) : "-");
-            map.put("customerName", s.getCustomer() != null ? s.getCustomer().getCompanyName() : "-");
-            map.put("projectName", s.getProject() != null ? s.getProject().getName() : "-");
-            map.put("target", s.getCustomer() != null ? s.getCustomer().getCompanyName()
-                    : s.getProject() != null ? s.getProject().getName() : "-");
+            Object value;
+            if (s.getDepartureTime() != null) {
+                value = s.getDepartureTime().format(dtf);
+            } else {
+                value = "-";
+            }
+            map.put("departureTime", value);
+            Object companyName;
+            if (s.getCustomer() != null) {
+                companyName = s.getCustomer().getCompanyName();
+            } else {
+                companyName = "-";
+            }
+            map.put("customerName", companyName);
+            Object name;
+            if (s.getProject() != null) {
+                name = s.getProject().getName();
+            } else {
+                name = "-";
+            }
+            map.put("projectName", name);
+            Object companyNameValue;
+            if (s.getCustomer() != null) {
+                companyNameValue = s.getCustomer().getCompanyName();
+            } else {
+                if (s.getProject() != null) {
+                    companyNameValue = s.getProject().getName();
+                } else {
+                    companyNameValue = "-";
+                }
+            }
+            map.put("target", companyNameValue);
             map.put("vehiclePlate", s.getVehiclePlate());
             map.put("driverName", s.getDriverName());
             map.put("freightCost", s.getFreightCost());

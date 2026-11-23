@@ -83,7 +83,12 @@ public class OperationWorkOrderItem extends AuditableEntity {
     @PrePersist
     @PreUpdate
     public void computeMetrics() {
-        int count = pieceCount != null ? Math.max(1, pieceCount) : 1;
+        int count;
+        if (pieceCount != null) {
+            count = Math.max(1, pieceCount);
+        } else {
+            count = 1;
+        }
         if (widthCm != null && lengthCm != null) {
             this.calculatedM2 = widthCm.multiply(lengthCm)
                     .multiply(BigDecimal.valueOf(count))

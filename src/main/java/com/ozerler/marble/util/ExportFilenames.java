@@ -23,9 +23,12 @@ public final class ExportFilenames {
     }
 
     public static String build(String entityName, String extension, LocalDateTime timestamp) {
-        LocalDateTime effectiveTimestamp = timestamp == null
-                ? LocalDateTime.now(ZoneId.systemDefault())
-                : timestamp;
+        LocalDateTime effectiveTimestamp;
+        if (timestamp == null) {
+            effectiveTimestamp = LocalDateTime.now(ZoneId.systemDefault());
+        } else {
+            effectiveTimestamp = timestamp;
+        }
         String stem = entityStem(entityName);
         String ext = normalizeExtension(extension);
         return stem + "_" + effectiveTimestamp.format(TIMESTAMP) + ext;
@@ -36,7 +39,10 @@ public final class ExportFilenames {
         int lastDot = ascii.lastIndexOf('.');
         if (lastDot > 0) {
             String withoutExtension = ascii.substring(0, lastDot);
-            return withoutExtension.isBlank() ? Constants.FALLBACK_DOWNLOAD_FILENAME : withoutExtension;
+            if (withoutExtension.isBlank()) {
+                return Constants.FALLBACK_DOWNLOAD_FILENAME;
+            }
+            return withoutExtension;
         }
         return ascii;
     }
@@ -53,6 +59,9 @@ public final class ExportFilenames {
             return "";
         }
         String ascii = TurkishAsciiFilename.toAsciiTurkishFilename(trimmed);
-        return ascii.isEmpty() ? "" : "." + ascii;
+        if (ascii.isEmpty()) {
+            return "";
+        }
+        return "." + ascii;
     }
 }

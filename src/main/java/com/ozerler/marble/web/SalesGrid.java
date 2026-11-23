@@ -27,7 +27,12 @@ public final class SalesGrid {
     }
 
     public static GridRow row(SalesOrderDto order) {
-        String id = order.getId() == null ? "" : order.getId().toString();
+        String id;
+        if (order.getId() == null) {
+            id = "";
+        } else {
+            id = order.getId().toString();
+        }
         String viewUrl = "/sales/" + id;
         return GridRow.of(viewUrl, viewUrl, null, order.getOrderNo(), List.of(
                 GridCell.badge(order.getStatusLabel()),

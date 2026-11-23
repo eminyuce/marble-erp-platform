@@ -27,11 +27,21 @@ public final class SlabGrid {
     }
 
     public static GridRow row(SlabDto slab) {
-        String id = slab.getId() == null ? "" : slab.getId().toString();
+        String id;
+        if (slab.getId() == null) {
+            id = "";
+        } else {
+            id = slab.getId().toString();
+        }
         String viewUrl = "/production/slabs/" + id;
         String editUrl = viewUrl + "/edit";
         String code = GridWindow.clean(slab.getSlabCode());
-        String passport = code.isBlank() ? "" : "/passport/" + code;
+        String passport;
+        if (code.isBlank()) {
+            passport = "";
+        } else {
+            passport = "/passport/" + code;
+        }
         return GridRow.of(viewUrl, editUrl, null, code, List.of(
                 GridCell.badge(slab.getStatusLabel()),
                 GridCell.chip(slab.getId()),
@@ -82,6 +92,9 @@ public final class SlabGrid {
 
     private static String label(String preferred, String fallback) {
         String text = GridWindow.clean(preferred);
-        return text.isBlank() ? GridWindow.clean(fallback) : text;
+        if (text.isBlank()) {
+            return GridWindow.clean(fallback);
+        }
+        return text;
     }
 }

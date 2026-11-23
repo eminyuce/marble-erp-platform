@@ -24,15 +24,38 @@ public final class InvoiceGrid {
 
     static GridRow row(InvoiceView invoice) {
         String viewUrl = "/invoices/" + invoice.getId();
-        String rate = invoice.getTaxRate() == null ? "" : "%" + GridTexts.quantity(invoice.getTaxRate());
+        String rate;
+        if (invoice.getTaxRate() == null) {
+            rate = "";
+        } else {
+            rate = "%" + GridTexts.quantity(invoice.getTaxRate());
+        }
+        String badge;
+        if (invoice.getStatus() == null) {
+            badge = "Ödenmedi";
+        } else {
+            badge = invoice.getStatus().getDisplayName();
+        }
+        String badgeValue;
+        if (invoice.getInvoiceType() == InvoiceType.SALES) {
+            badgeValue = "↑ Satış";
+        } else {
+            badgeValue = "↓ Alış";
+        }
+        String value;
+        if (invoice.getDepartment() == null) {
+            value = "Genel";
+        } else {
+            value = invoice.getDepartment().getDisplayName();
+        }
         return GridRow.of(viewUrl, null, null, null, List.of(
-                GridCell.badge(invoice.getStatus() == null ? "Ödenmedi" : invoice.getStatus().getDisplayName()),
+                GridCell.badge(badge),
                 GridCell.chip(invoice.getId()),
                 GridCell.link(invoice.getInvoiceNumber(), viewUrl),
                 GridCell.text(OperationGridSupport.day(invoice.getInvoiceDate())),
-                GridCell.badge(invoice.getInvoiceType() == InvoiceType.SALES ? "↑ Satış" : "↓ Alış"),
+                GridCell.badge(badgeValue),
                 party(invoice),
-                GridCell.text(invoice.getDepartment() == null ? "Genel" : invoice.getDepartment().getDisplayName()),
+                GridCell.text(value),
                 GridCell.text(GridTexts.money(money(invoice.getSubtotalAmount()))),
                 OperationGridSupport.lines(GridTexts.money(money(invoice.getTaxAmount())), rate),
                 GridCell.text(GridTexts.money(money(invoice.getTotalAmount())))
@@ -60,7 +83,12 @@ public final class InvoiceGrid {
             return GridCell.badge("Dahili: " + invoice.getTargetDepartment().getDisplayName());
         }
         String name = partyName(invoice);
-        String project = invoice.getProject() == null ? "" : invoice.getProject().getName();
+        String project;
+        if (invoice.getProject() == null) {
+            project = "";
+        } else {
+            project = invoice.getProject().getName();
+        }
         return OperationGridSupport.lines(name, project);
     }
 
@@ -75,6 +103,9 @@ public final class InvoiceGrid {
     }
 
     private static BigDecimal money(BigDecimal value) {
-        return value == null ? BigDecimal.ZERO : value;
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        return value;
     }
 }

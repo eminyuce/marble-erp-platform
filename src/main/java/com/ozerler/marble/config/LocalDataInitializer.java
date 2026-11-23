@@ -1,5 +1,6 @@
 package com.ozerler.marble.config;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -427,7 +428,7 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .processType(FactoryProcessType.GANGSAW_CUTTING)
                 .machine(m1)
                 .operatorName("Ahmet Usta")
-                .inputQuantity(b1.getActualTonnage() != null ? b1.getActualTonnage() : new BigDecimal("20.85"))
+                .inputQuantity(Objects.requireNonNullElse(b1.getActualTonnage(), new BigDecimal("20.85")))
                 .inputUnit(QuantityUnit.TON)
                 .outputQuantity(BigDecimal.ZERO)
                 .outputUnit(QuantityUnit.SQUARE_METER)
@@ -445,7 +446,7 @@ public class LocalDataInitializer implements CommandLineRunner {
                     .processType(FactoryProcessType.GANGSAW_CUTTING)
                     .machine(m2)
                     .operatorName("Mehmet Usta")
-                    .inputQuantity(b2.getActualTonnage() != null ? b2.getActualTonnage() : new BigDecimal("18.40"))
+                    .inputQuantity(Objects.requireNonNullElse(b2.getActualTonnage(), new BigDecimal("18.40")))
                     .inputUnit(QuantityUnit.TON)
                     .outputQuantity(BigDecimal.ZERO)
                     .outputUnit(QuantityUnit.SQUARE_METER)

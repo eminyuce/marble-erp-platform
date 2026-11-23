@@ -31,9 +31,21 @@ public final class HtmlErrors {
         String attributeException = stringValue(attributes, "exception");
         String attributeTrace = stringValue(attributes, "trace");
 
+        String reasonValue;
+        if (Strings.isPresent(reason)) {
+            reasonValue = reason;
+        } else {
+            reasonValue = defaultReason(status);
+        }
+        Object formatTimestampValue;
+        if (attributes == null) {
+            formatTimestampValue = null;
+        } else {
+            formatTimestampValue = attributes.get("timestamp");
+        }
         return new ErrorPageDetails(
                 status,
-                Strings.isPresent(reason) ? reason : defaultReason(status),
+                reasonValue,
                 titleFor(status),
                 iconFor(status),
                 toneFor(status),
@@ -41,7 +53,7 @@ public final class HtmlErrors {
                 pathOf(request, attributePath),
                 methodOf(request),
                 queryStringOf(request),
-                formatTimestamp(attributes == null ? null : attributes.get("timestamp")),
+                formatTimestamp(formatTimestampValue),
                 exceptionTypeOf(error, attributeException),
                 stackTraceOf(error, attributeTrace)
         );
@@ -125,7 +137,10 @@ public final class HtmlErrors {
             return Constants.ERROR_UNKNOWN_PATH;
         }
         String requestUri = request.getRequestURI();
-        return Strings.isPresent(requestUri) ? requestUri : Constants.ERROR_UNKNOWN_PATH;
+        if (Strings.isPresent(requestUri)) {
+            return requestUri;
+        }
+        return Constants.ERROR_UNKNOWN_PATH;
     }
 
     public static String methodOf(HttpServletRequest request) {
@@ -143,7 +158,10 @@ public final class HtmlErrors {
             return request.getQueryString();
         }
         String forwarded = attribute(request, RequestDispatcher.FORWARD_QUERY_STRING);
-        return forwarded == null ? "" : forwarded;
+        if (forwarded == null) {
+            return "";
+        }
+        return forwarded;
     }
 
     public static String formatTimestamp(Object timestamp) {
@@ -171,7 +189,10 @@ public final class HtmlErrors {
         if (error != null) {
             return error.getClass().getName();
         }
-        return attributeException == null ? "" : attributeException;
+        if (attributeException == null) {
+            return "";
+        }
+        return attributeException;
     }
 
     public static String stackTraceOf(Throwable error, String attributeTrace) {
@@ -180,7 +201,10 @@ public final class HtmlErrors {
             error.printStackTrace(new PrintWriter(writer));
             return writer.toString();
         }
-        return attributeTrace == null ? "" : attributeTrace;
+        if (attributeTrace == null) {
+            return "";
+        }
+        return attributeTrace;
     }
 
     public static String defaultReason(int status) {
@@ -209,7 +233,10 @@ public final class HtmlErrors {
             return "";
         }
         Object value = attributes.get(key);
-        return value == null ? "" : String.valueOf(value);
+        if (value == null) {
+            return "";
+        }
+        return String.valueOf(value);
     }
 
     private static String attribute(HttpServletRequest request, String name) {
@@ -217,6 +244,9 @@ public final class HtmlErrors {
             return "";
         }
         Object value = request.getAttribute(name);
-        return value == null ? "" : String.valueOf(value);
+        if (value == null) {
+            return "";
+        }
+        return String.valueOf(value);
     }
 }

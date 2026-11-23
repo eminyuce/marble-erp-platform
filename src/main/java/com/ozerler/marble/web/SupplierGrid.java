@@ -30,8 +30,18 @@ public final class SupplierGrid {
     }
 
     public static GridRow row(SupplierDto supplier) {
-        String id = supplier.getId() == null ? "" : supplier.getId().toString();
-        String editUrl = id.isEmpty() ? "" : "/admin/definitions/suppliers/" + id + "/edit";
+        String id;
+        if (supplier.getId() == null) {
+            id = "";
+        } else {
+            id = supplier.getId().toString();
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = "/admin/definitions/suppliers/" + id + "/edit";
+        }
         return GridRow.of(editUrl, editUrl, supplier.getId(), supplier.getCompanyName(), List.of(
                 GridCell.chip(supplier.getId()),
                 GridCell.text(supplier.getSupplierCode()),
@@ -66,7 +76,10 @@ public final class SupplierGrid {
 
     private static String unitText(String label) {
         String text = GridTexts.text(label);
-        return text.isBlank() ? "Genel" : text;
+        if (text.isBlank()) {
+            return "Genel";
+        }
+        return text;
     }
 
     private static GridCell contactCell(String person, String phone, String email) {

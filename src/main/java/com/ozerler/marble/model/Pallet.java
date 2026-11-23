@@ -96,7 +96,10 @@ public class Pallet extends AuditableEntity {
 
     @Transient
     public int getTotalLotCount() {
-        return items != null ? items.size() : 0;
+        if (items != null) {
+            return items.size();
+        }
+        return 0;
     }
 
     @Transient

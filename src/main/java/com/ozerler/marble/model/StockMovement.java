@@ -130,7 +130,10 @@ public class StockMovement extends AuditableEntity {
         if (stockItem != null) {
             return "Ürün: " + stockItem.getItemCode();
         }
-        return itemDescription != null ? itemDescription : "—";
+        if (itemDescription != null) {
+            return itemDescription;
+        }
+        return "—";
     }
 
     @Transient

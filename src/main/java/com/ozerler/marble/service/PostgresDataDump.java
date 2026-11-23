@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import java.util.Objects;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigDecimal;
@@ -53,7 +54,7 @@ final class PostgresDataDump {
         writer.write("-- ========================================================\n");
         writer.write("-- Özerler Mermer ERP Database Backup\n");
         writer.write("-- Timestamp: " + Instant.now() + "\n");
-        writer.write("-- Database: " + (databaseName == null ? "marble_erp" : databaseName) + "\n");
+        writer.write("-- Database: " + Objects.requireNonNullElse(databaseName, "marble_erp") + "\n");
         writer.write("-- Source: PostgreSQL data dump\n");
         writer.write("-- Tables: " + tables.size() + "\n");
         writer.write("-- ========================================================\n");
@@ -177,7 +178,13 @@ final class PostgresDataDump {
                     writer.write("SELECT setval(" + sequence + ", 1, false);\n");
                     continue;
                 }
-                writer.write("SELECT setval(" + sequence + ", " + lastValue + ", " + (called ? "true" : "false") + ");\n");
+                String value;
+                if (called) {
+                    value = "true";
+                } else {
+                    value = "false";
+                }
+                writer.write("SELECT setval(" + sequence + ", " + lastValue + ", " + value + ");\n");
             }
         }
     }
@@ -203,7 +210,10 @@ final class PostgresDataDump {
         }
         int sqlType = meta.getColumnType(column);
         if (sqlType == Types.BOOLEAN || sqlType == Types.BIT || value instanceof Boolean) {
-            return rows.getBoolean(column) ? "TRUE" : "FALSE";
+            if (rows.getBoolean(column)) {
+                return "TRUE";
+            }
+            return "FALSE";
         }
         if (value instanceof BigDecimal decimal) {
             return decimal.toPlainString();

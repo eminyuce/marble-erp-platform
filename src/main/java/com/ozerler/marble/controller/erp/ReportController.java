@@ -39,7 +39,12 @@ public class ReportController {
     public String index(@RequestParam(value = "report", required = false) String report,
                         @ModelAttribute ListQuery query,
                         Model model) {
-        String selected = knownReport(report) ? report : "QUARRY_BLOCKS";
+        String selected;
+        if (knownReport(report)) {
+            selected = report;
+        } else {
+            selected = "QUARRY_BLOCKS";
+        }
         return indexWithSelected(model, selected, query);
     }
 
@@ -73,7 +78,12 @@ public class ReportController {
         for (ReportService.ReportType type : ReportService.ReportType.values()) {
             reportsData.put(type.name(), reportService.getReportData(type));
         }
-        String key = knownReport(selectedKey) ? selectedKey : "QUARRY_BLOCKS";
+        String key;
+        if (knownReport(selectedKey)) {
+            key = selectedKey;
+        } else {
+            key = "QUARRY_BLOCKS";
+        }
 
         model.addAttribute("reports", reportsData);
         model.addAttribute("reportLinks", reportLinks());

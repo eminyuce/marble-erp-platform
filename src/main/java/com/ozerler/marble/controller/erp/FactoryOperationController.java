@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -156,7 +157,12 @@ public class FactoryOperationController extends AbstractController {
         Page<SlabView> slabsPage = StockYardResponses.slabPage(
                 factoryStockService, status, customerId, generalStockOnly, query);
         var customers = formLookup.customers();
-        BigDecimal customerSlabArea = customerId != null ? factoryStockService.getCustomerSlabAreaTotal(customerId) : BigDecimal.ZERO;
+        BigDecimal customerSlabArea;
+        if (customerId != null) {
+            customerSlabArea = factoryStockService.getCustomerSlabAreaTotal(customerId);
+        } else {
+            customerSlabArea = BigDecimal.ZERO;
+        }
 
         model.addAttribute("slabs", slabsPage.getContent());
         model.addAttribute("page", slabsPage);
@@ -219,13 +225,18 @@ public class FactoryOperationController extends AbstractController {
                         rowThicknesses, rowWidths, rowLengths, rowPieceCounts
                 );
                 BigDecimal totalM2 = slabs.stream()
-                        .map(s -> s.getSurfaceAreaM2() != null ? s.getSurfaceAreaM2() : BigDecimal.ZERO)
+                        .map(s -> {
+                            if (s.getSurfaceAreaM2() != null) {
+                                return s.getSurfaceAreaM2();
+                            }
+                            return BigDecimal.ZERO;
+                        })
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
                 redirectAttributes.addFlashAttribute("successMessage", slabs.size() + " adet plaka (" + totalM2 + " m²) başarıyla Plaka Stok Sahasına eklendi.");
                 return "redirect:/operations/factory/slabs";
             }
 
-            SlabView slab = factoryStockService.createSlabDirectView(blockId, thicknessCm != null ? thicknessCm : new BigDecimal("2.00"), widthCm, lengthCm, qualityGrade, surfaceFinish, customerId, notes);
+            SlabView slab = factoryStockService.createSlabDirectView(blockId, Objects.requireNonNullElse(thicknessCm, new BigDecimal("2.00")), widthCm, lengthCm, qualityGrade, surfaceFinish, customerId, notes);
             redirectAttributes.addFlashAttribute("successMessage", "Plaka (" + slab.getSlabCode() + ") başarıyla Plaka Stok Sahasına eklendi: " + slab.getSurfaceAreaM2() + " m²");
             return "redirect:/operations/factory/slabs";
         } catch (Exception e) {
@@ -242,7 +253,12 @@ public class FactoryOperationController extends AbstractController {
                                        RedirectAttributes redirectAttributes) {
         try {
             SlabView slab = factoryStockService.assignCustomerToSlabView(id, customerId);
-            String custName = slab.getCustomer() != null ? slab.getCustomer().getCompanyName() : "Genel Stok";
+            String custName;
+            if (slab.getCustomer() != null) {
+                custName = slab.getCustomer().getCompanyName();
+            } else {
+                custName = "Genel Stok";
+            }
             redirectAttributes.addFlashAttribute("successMessage", "Plaka (" + slab.getSlabCode() + ") müşterisi güncellendi: " + custName);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
@@ -332,7 +348,12 @@ public class FactoryOperationController extends AbstractController {
                         rowDescriptions, rowThicknesses, rowWidths, rowLengths, rowPieceCounts, rowQuantities,
                         rowSurfaceFinishes, rowEdgeFinishes
                 );
-                BigDecimal totalM2 = items.stream().map(i -> i.getQuantity() != null ? i.getQuantity() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal totalM2 = items.stream().map(i -> {
+                    if (i.getQuantity() != null) {
+                        return i.getQuantity();
+                    }
+                    return BigDecimal.ZERO;
+                }).reduce(BigDecimal.ZERO, BigDecimal::add);
                 redirectAttributes.addFlashAttribute("successMessage", items.size() + " grup ebatlı ürün (" + totalM2 + " m²) başarıyla Ebatlı Stok Sahasına eklendi.");
                 return "redirect:/operations/factory/sized";
             }
@@ -357,7 +378,12 @@ public class FactoryOperationController extends AbstractController {
                                             RedirectAttributes redirectAttributes) {
         try {
             StockItemView item = factoryStockService.assignCustomerToStockItemView(id, customerId);
-            String custName = item.getCustomer() != null ? item.getCustomer().getCompanyName() : "Genel Stok";
+            String custName;
+            if (item.getCustomer() != null) {
+                custName = item.getCustomer().getCompanyName();
+            } else {
+                custName = "Genel Stok";
+            }
             redirectAttributes.addFlashAttribute("successMessage", "Ebatlı ürün (" + item.getItemCode() + ") müşterisi güncellendi: " + custName);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
@@ -387,7 +413,12 @@ public class FactoryOperationController extends AbstractController {
     @GetMapping("/fuel")
     public String factoryFuelIndex(Model model) {
         StockItemView tank = factoryInventoryService.getOrCreateFactoryFuelTankStockItemView();
-        BigDecimal currentLiters = tank.getQuantity() != null ? tank.getQuantity() : BigDecimal.ZERO;
+        BigDecimal currentLiters;
+        if (tank.getQuantity() != null) {
+            currentLiters = tank.getQuantity();
+        } else {
+            currentLiters = BigDecimal.ZERO;
+        }
         List<MachineRef> vehicles = factoryInventoryService.getFactoryVehiclesViews();
         List<MachineFuelEntryView> entries = factoryInventoryService.getRecentFuelEntryViews();
 
@@ -431,8 +462,18 @@ public class FactoryOperationController extends AbstractController {
                                       @RequestParam(value = "notes", required = false) String notes,
                                       RedirectAttributes redirectAttributes) {
         try {
+            String addFuelStockView;
+            if (notes != null) {
+                addFuelStockView = notes;
+            } else {
+                if (invoiceNo != null) {
+                    addFuelStockView = "Fatura: " + invoiceNo;
+                } else {
+                    addFuelStockView = "Doğrudan Depo Girişi";
+                }
+            }
             StockItemView updated = factoryInventoryService.addFuelStockView(litres, netUnitPrice, null,
-                    notes != null ? notes : invoiceNo != null ? "Fatura: " + invoiceNo : "Doğrudan Depo Girişi");
+                    addFuelStockView);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s litre mazot fabrika deposuna eklendi. Güncel stok: %s litre.", litres, updated.getQuantity()));
         } catch (Exception e) {

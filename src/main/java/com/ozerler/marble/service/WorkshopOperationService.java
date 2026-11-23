@@ -99,34 +99,62 @@ public class WorkshopOperationService {
         if (source == WorkshopReceiptSource.EXTERNAL_FACTORY && supplierId == null) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.workshop.receipt.supplier.required"));
         }
-        Supplier supplier = supplierId != null ? supplierRepository.findById(supplierId).orElse(null) : null;
-        PurchaseOrderItem purchaseItem = purchaseOrderItemId != null
-                ? purchaseOrderItemRepository.findById(purchaseOrderItemId).orElse(null)
-                : null;
+        Supplier supplier;
+        if (supplierId != null) {
+            supplier = supplierRepository.findById(supplierId).orElse(null);
+        } else {
+            supplier = null;
+        }
+        PurchaseOrderItem purchaseItem;
+        if (purchaseOrderItemId != null) {
+            purchaseItem = purchaseOrderItemRepository.findById(purchaseOrderItemId).orElse(null);
+        } else {
+            purchaseItem = null;
+        }
+        int quantityValue;
+        if (quantity != null) {
+            quantityValue = quantity.intValue();
+        } else {
+            quantityValue = 1;
+        }
+        BigDecimal unitCost;
+        if (areaM2 != null && areaM2.compareTo(BigDecimal.ZERO) > 0 && purchaseCost != null) {
+            unitCost = purchaseCost.divide(areaM2, 2, RoundingMode.HALF_UP);
+        } else {
+            if (purchaseCost != null) {
+                unitCost = purchaseCost;
+            } else {
+                unitCost = BigDecimal.ZERO;
+            }
+        }
         MaterialLot lot = materialLotRepository.save(MaterialLot.builder()
                 .lotCode(UniqueCodes.yearly("WML", materialLotRepository::existsByLotCode))
                 .productForm(ProductForm.SLAB)
                 .stoneType(stoneType)
-                .quantity(quantity != null ? quantity.intValue() : 1)
-                .totalAreaM2(areaM2 != null ? areaM2 : BigDecimal.ZERO)
+                .quantity(quantityValue)
+                .totalAreaM2(Objects.requireNonNullElse(areaM2, BigDecimal.ZERO))
                 .chamferStatus(ChamferStatus.NOT_APPLICABLE)
                 .stockLocation(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.WORKSHOP_STOCK).orElse(null))
                 .status(MaterialLotStatus.AVAILABLE)
-                .unitCost(areaM2 != null && areaM2.compareTo(BigDecimal.ZERO) > 0 && purchaseCost != null
-                        ? purchaseCost.divide(areaM2, 2, RoundingMode.HALF_UP)
-                        : purchaseCost != null ? purchaseCost : BigDecimal.ZERO)
-                .totalCost(purchaseCost != null ? purchaseCost : BigDecimal.ZERO)
+                .unitCost(unitCost)
+                .totalCost(Objects.requireNonNullElse(purchaseCost, BigDecimal.ZERO))
                 .build());
+        LocalDate receivedAtValue;
+        if (receivedAt != null) {
+            receivedAtValue = receivedAt;
+        } else {
+            receivedAtValue = LocalDate.now();
+        }
         WorkshopMaterialReceipt receipt = receiptRepository.save(WorkshopMaterialReceipt.builder()
                 .receiptNo(UniqueCodes.yearly("WMR", receiptRepository::existsByReceiptNo))
                 .source(source)
                 .supplier(supplier)
                 .purchaseOrderItem(purchaseItem)
                 .materialLot(lot)
-                .quantity(quantity != null ? quantity : BigDecimal.ONE)
-                .areaM2(areaM2 != null ? areaM2 : BigDecimal.ZERO)
-                .purchaseCost(purchaseCost != null ? purchaseCost : BigDecimal.ZERO)
-                .receivedAt(receivedAt != null ? receivedAt : LocalDate.now())
+                .quantity(Objects.requireNonNullElse(quantity, BigDecimal.ONE))
+                .areaM2(Objects.requireNonNullElse(areaM2, BigDecimal.ZERO))
+                .purchaseCost(Objects.requireNonNullElse(purchaseCost, BigDecimal.ZERO))
+                .receivedAt(receivedAtValue)
                 .notes(notes)
                 .build());
         if (purchaseCost != null && purchaseCost.compareTo(BigDecimal.ZERO) > 0) {
@@ -153,7 +181,12 @@ public class WorkshopOperationService {
         if (processType.requiresLaborHours() && (laborHours == null || laborHours.compareTo(BigDecimal.ZERO) <= 0)) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.workshop.labor.required"));
         }
-        Machine machine = machineId != null ? machineRepository.findById(machineId).orElse(null) : null;
+        Machine machine;
+        if (machineId != null) {
+            machine = machineRepository.findById(machineId).orElse(null);
+        } else {
+            machine = null;
+        }
         WorkshopOperation operation = operationRepository.save(WorkshopOperation.builder()
                 .cutOrder(order)
                 .processType(processType)
@@ -165,7 +198,7 @@ public class WorkshopOperationService {
                 .inputAreaM2(inputAreaM2)
                 .outputAreaM2(outputAreaM2)
                 .wasteAreaM2(wasteAreaM2)
-                .extraExpense(extraExpense != null ? extraExpense : BigDecimal.ZERO)
+                .extraExpense(Objects.requireNonNullElse(extraExpense, BigDecimal.ZERO))
                 .status(OperationStatus.COMPLETED)
                 .notes(notes)
                 .build());
@@ -192,11 +225,20 @@ public class WorkshopOperationService {
         cutOrderRepository.findById(cutOrderId)
                 .orElseThrow(() -> new IllegalArgumentException(MessageUtils.getMessage("error.cut_order.not_found", cutOrderId)));
         BigDecimal material = cutItemRepository.findByCutOrderId(cutOrderId).stream()
-                .map(item -> item.getUnitCost() != null && item.getAreaM2() != null
-                        ? item.getUnitCost().multiply(item.getAreaM2()) : BigDecimal.ZERO)
+                .map(item -> {
+                    if (item.getUnitCost() != null && item.getAreaM2() != null) {
+                        return item.getUnitCost().multiply(item.getAreaM2());
+                    }
+                    return BigDecimal.ZERO;
+                })
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal extra = operationRepository.findByCutOrderIdOrderByIdAsc(cutOrderId).stream()
-                .map(op -> op.getExtraExpense() != null ? op.getExtraExpense() : BigDecimal.ZERO)
+                .map(op -> {
+                    if (op.getExtraExpense() != null) {
+                        return op.getExtraExpense();
+                    }
+                    return BigDecimal.ZERO;
+                })
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         return WorkshopOrderCost.total(material, extra, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
     }
@@ -267,8 +309,18 @@ public class WorkshopOperationService {
             return created;
         }
 
-        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
-        Project project = projectId != null ? projectRepository.findById(projectId).orElse(null) : null;
+        Customer customer;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+        } else {
+            customer = null;
+        }
+        Project project;
+        if (projectId != null) {
+            project = projectRepository.findById(projectId).orElse(null);
+        } else {
+            project = null;
+        }
 
         Slab sourceSlab = null;
         StockItem sourceStockItem = null;
@@ -327,29 +379,56 @@ public class WorkshopOperationService {
                 (index, width, length, thickness, count, quantity) -> {
             producedArea[0] = producedArea[0].add(quantity);
 
-            String desc = (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank())
-                    ? descriptions.get(index).trim()
-                    : defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Atölye Ebatlı " + thickness + "x" + width + "x" + length);
+            String desc;
+            if (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank()) {
+                desc = descriptions.get(index).trim();
+            } else {
+                if (defaultDescription != null && !defaultDescription.isBlank()) {
+                    desc = defaultDescription;
+                } else {
+                    desc = "Atölye Ebatlı " + thickness + "x" + width + "x" + length;
+                }
+            }
 
-            String rowSurfaceStr = (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank())
-                    ? rowSurfaceFinishes.get(index).trim() : surfaceFinishStr;
+            String rowSurfaceStr;
+            if (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank()) {
+                rowSurfaceStr = rowSurfaceFinishes.get(index).trim();
+            } else {
+                rowSurfaceStr = surfaceFinishStr;
+            }
             SurfaceFinish rowSurface = resolvedSurface;
             if (rowSurfaceStr != null) {
                 try { rowSurface = SurfaceFinish.valueOf(rowSurfaceStr); } catch (Exception ignored) {}
             }
 
-            String rowEdge = (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank())
-                    ? rowEdgeFinishes.get(index).trim() : edgeFinish != null ? edgeFinish : "DUZ";
+            String rowEdge;
+            if (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank()) {
+                rowEdge = rowEdgeFinishes.get(index).trim();
+            } else {
+                if (edgeFinish != null) {
+                    rowEdge = edgeFinish;
+                } else {
+                    rowEdge = "DUZ";
+                }
+            }
 
             String itemCode = UniqueCodes.yearly("ATL-EBT", stockItemRepository::existsByItemCode);
 
             String combinedNotes = notes;
             if (resolvedSlab != null) {
                 String slabInfo = "[Kaynak Plaka: " + resolvedSlab.getSlabCode() + "]";
-                combinedNotes = (combinedNotes != null && !combinedNotes.isBlank()) ? combinedNotes + " " + slabInfo : slabInfo;
+                if (combinedNotes != null && !combinedNotes.isBlank()) {
+                    combinedNotes = combinedNotes + " " + slabInfo;
+                } else {
+                    combinedNotes = slabInfo;
+                }
             } else if (resolvedSourceItem != null) {
                 String srcInfo = "[Yeniden Ebatlama - Kaynak Ürün: " + resolvedSourceItem.getItemCode() + "]";
-                combinedNotes = (combinedNotes != null && !combinedNotes.isBlank()) ? combinedNotes + " " + srcInfo : srcInfo;
+                if (combinedNotes != null && !combinedNotes.isBlank()) {
+                    combinedNotes = combinedNotes + " " + srcInfo;
+                } else {
+                    combinedNotes = srcInfo;
+                }
             }
 
             StockItem item = StockItem.builder()
@@ -383,12 +462,20 @@ public class WorkshopOperationService {
         BigDecimal totalProducedM2 = producedArea[0];
 
         // Kaynak hammadde düşümü
-        BigDecimal effectiveConsumed = (consumedQuantity != null && consumedQuantity.compareTo(BigDecimal.ZERO) > 0)
-                ? consumedQuantity
-                : totalProducedM2.add(wasteQuantity != null ? wasteQuantity : BigDecimal.ZERO);
+        BigDecimal effectiveConsumed;
+        if (consumedQuantity != null && consumedQuantity.compareTo(BigDecimal.ZERO) > 0) {
+            effectiveConsumed = consumedQuantity;
+        } else {
+            effectiveConsumed = totalProducedM2.add(Objects.requireNonNullElse(wasteQuantity, BigDecimal.ZERO));
+        }
 
         if (sourceSlab != null && effectiveConsumed.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal currentArea = sourceSlab.getSurfaceAreaM2() != null ? sourceSlab.getSurfaceAreaM2() : BigDecimal.ZERO;
+            BigDecimal currentArea;
+            if (sourceSlab.getSurfaceAreaM2() != null) {
+                currentArea = sourceSlab.getSurfaceAreaM2();
+            } else {
+                currentArea = BigDecimal.ZERO;
+            }
             if (effectiveConsumed.compareTo(currentArea) >= 0) {
                 sourceSlab.setStatus(SlabStatus.IN_CUTTING);
                 sourceSlab.setSurfaceAreaM2(BigDecimal.ZERO);
@@ -397,7 +484,12 @@ public class WorkshopOperationService {
             }
             slabRepository.save(sourceSlab);
         } else if (sourceStockItem != null && effectiveConsumed.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal currentQty = sourceStockItem.getQuantity() != null ? sourceStockItem.getQuantity() : BigDecimal.ZERO;
+            BigDecimal currentQty;
+            if (sourceStockItem.getQuantity() != null) {
+                currentQty = sourceStockItem.getQuantity();
+            } else {
+                currentQty = BigDecimal.ZERO;
+            }
             if (effectiveConsumed.compareTo(currentQty) >= 0) {
                 sourceStockItem.setQuantity(BigDecimal.ZERO);
                 sourceStockItem.setStatus("CONSUMED");
@@ -409,16 +501,31 @@ public class WorkshopOperationService {
 
         // Fire miktarı ve maliyeti
         if (wasteQuantity != null && wasteQuantity.compareTo(BigDecimal.ZERO) > 0) {
-            StockItem refItem = !created.isEmpty() ? created.get(0) : sourceStockItem;
+            StockItem refItem;
+            if (!created.isEmpty()) {
+                refItem = created.get(0);
+            } else {
+                refItem = sourceStockItem;
+            }
             stockMovementService.recordWorkshopWaste(refItem, project, wasteQuantity, "m2", "Atölyede kesim firesi zayi olarak düşüldü");
 
             if (project != null) {
                 CostCenter cc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE)
                         .or(() -> costCenterRepository.findByCode("CC-005")).orElse(null);
                 if (cc != null) {
-                    BigDecimal unitPrice = (sourceStockItem != null && sourceStockItem.getUnitPrice() != null)
-                            ? sourceStockItem.getUnitPrice() : new BigDecimal("400.00");
+                    BigDecimal unitPrice;
+                    if (sourceStockItem != null && sourceStockItem.getUnitPrice() != null) {
+                        unitPrice = sourceStockItem.getUnitPrice();
+                    } else {
+                        unitPrice = new BigDecimal("400.00");
+                    }
                     BigDecimal wasteCost = wasteQuantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
+                    String itemCodeValue;
+                    if (refItem != null) {
+                        itemCodeValue = refItem.getItemCode();
+                    } else {
+                        itemCodeValue = "Hammadde";
+                    }
                     CostTransaction wasteTx = CostTransaction.builder()
                             .costCenter(cc)
                             .project(project)
@@ -430,11 +537,11 @@ public class WorkshopOperationService {
                             .invoiceDate(LocalDate.now())
                             .entryDate(LocalDate.now())
                             .expensePeriod(YearMonth.now().toString())
-                            .description("Atölye Kesim/Ebatlama Fire Maliyeti (" + wasteQuantity + " m²): " + (refItem != null ? refItem.getItemCode() : "Hammadde"))
+                            .description("Atölye Kesim/Ebatlama Fire Maliyeti (" + wasteQuantity + " m²): " + itemCodeValue)
                             .build();
                     costTransactionRepository.save(wasteTx);
                     BigDecimal totalCosts = costTransactionRepository.sumByProjectId(project.getId());
-                    project.setActualCost(totalCosts != null ? totalCosts : BigDecimal.ZERO);
+                    project.setActualCost(Objects.requireNonNullElse(totalCosts, BigDecimal.ZERO));
                     projectRepository.save(project);
                 }
             }

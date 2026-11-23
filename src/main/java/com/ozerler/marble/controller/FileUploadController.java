@@ -161,7 +161,12 @@ public class FileUploadController extends AbstractController {
         status.setErrorCode(Constants.NO_ERR);
 
         try {
-            String payload = filePayload != null ? filePayload.trim() : "";
+            String payload;
+            if (filePayload != null) {
+                payload = filePayload.trim();
+            } else {
+                payload = "";
+            }
             log.info("Reverting file upload with payload {}", payload);
             boolean deleted = false;
 
@@ -261,9 +266,13 @@ public class FileUploadController extends AbstractController {
             mime = "text/plain;charset=UTF-8";
         }
 
-        ContentDisposition contentDisposition = (attachment
-                ? ContentDisposition.attachment()
-                : ContentDisposition.inline())
+        ContentDisposition.Builder value;
+        if (attachment) {
+            value = ContentDisposition.attachment();
+        } else {
+            value = ContentDisposition.inline();
+        }
+        ContentDisposition contentDisposition = value
                 .filename(originalName, StandardCharsets.UTF_8)
                 .build();
 

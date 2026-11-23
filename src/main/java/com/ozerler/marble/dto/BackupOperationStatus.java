@@ -26,7 +26,13 @@ public class BackupOperationStatus {
         this.currentFile = currentFile;
         this.startTime = Instant.now();
         this.finishTime = null;
-        this.message = ("BACKUP".equals(operationType) ? "Yedek alma" : "Geri yükleme") + " işlemi başlatıldı...";
+        String value;
+        if ("BACKUP".equals(operationType)) {
+            value = "Yedek alma";
+        } else {
+            value = "Geri yükleme";
+        }
+        this.message = value + " işlemi başlatıldı...";
     }
 
     public synchronized void success(String message) {

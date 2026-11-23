@@ -22,27 +22,63 @@ public final class EmailTemplateGrid {
         if (result != null && result.getContent() != null) {
             for (EmailTemplateDto template : result.getContent()) {
                 if (template != null) {
-                    int count = placeholderCount == null ? 0 : placeholderCount.applyAsInt(template);
+                    int count;
+                    if (placeholderCount == null) {
+                        count = 0;
+                    } else {
+                        count = placeholderCount.applyAsInt(template);
+                    }
                     rows.add(row(template, count));
                 }
             }
         }
-        int totalPages = result == null ? 1 : result.getTotalPages();
-        long total = result == null ? 0L : result.getTotalElements();
+        int totalPages;
+        if (result == null) {
+            totalPages = 1;
+        } else {
+            totalPages = result.getTotalPages();
+        }
+        long total;
+        if (result == null) {
+            total = 0L;
+        } else {
+            total = result.getTotalElements();
+        }
         return GridAssembler.from(page, size, totalPages, total, null, null,
                 "email-templates-table", 4, columns(), rows);
     }
 
     public static GridRow row(EmailTemplateDto template, int placeholderCount) {
-        String id = template.getId() == null ? "" : template.getId().toString();
-        String detailUrl = id.isEmpty() ? "" : "/admin/email-templates/" + id;
-        String editUrl = id.isEmpty() ? "" : detailUrl + "/edit";
+        String id;
+        if (template.getId() == null) {
+            id = "";
+        } else {
+            id = template.getId().toString();
+        }
+        String detailUrl;
+        if (id.isEmpty()) {
+            detailUrl = "";
+        } else {
+            detailUrl = "/admin/email-templates/" + id;
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = detailUrl + "/edit";
+        }
         String category = GridTexts.text(template.getCategory());
         if (category.isBlank()) {
             category = "Genel";
         }
+        String badge;
+        if (Boolean.TRUE.equals(template.getIsActive())) {
+            badge = "Aktif";
+        } else {
+            badge = "Pasif";
+        }
         return GridRow.of(detailUrl, editUrl, null, null, List.of(
-                GridCell.badge(Boolean.TRUE.equals(template.getIsActive()) ? "Aktif" : "Pasif"),
+                GridCell.badge(badge),
                 GridCell.chip(template.getId()),
                 GridCell.link(template.getTemplateKey(), detailUrl),
                 GridCell.link(template.getTemplateName(), detailUrl, description(template.getDescription()), null),

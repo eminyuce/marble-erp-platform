@@ -78,7 +78,13 @@ public final class FormDraft {
                 if (value == null) {
                     continue;
                 }
-                values.add(value.length() > MAX_VALUE_LENGTH ? value.substring(0, MAX_VALUE_LENGTH) : value);
+                String valueValue;
+                if (value.length() > MAX_VALUE_LENGTH) {
+                    valueValue = value.substring(0, MAX_VALUE_LENGTH);
+                } else {
+                    valueValue = value;
+                }
+                values.add(valueValue);
             }
             kept.put(name, values);
         }

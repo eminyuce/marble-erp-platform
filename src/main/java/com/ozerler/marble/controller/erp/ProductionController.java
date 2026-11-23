@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
@@ -62,7 +63,7 @@ public class ProductionController {
                                   @RequestParam(value = "status", required = false) String status,
                                   @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", productionService.getProductionSummary());
-        model.addAttribute("selectedStatus", status == null ? "" : status);
+        model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
         model.addAttribute("grid", ProductionOrderGrid.view(
                 productionService.getOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
@@ -310,13 +311,19 @@ public class ProductionController {
                                Locale locale,
                                RedirectAttributes redirectAttributes) {
         try {
-            palletShipmentService.createPallet(palletCode, customerId, projectId, warehouseLocation, department != null ? department : BusinessUnit.FACTORY);
+            palletShipmentService.createPallet(palletCode, customerId, projectId, warehouseLocation, Objects.requireNonNullElse(department, BusinessUnit.FACTORY));
             redirectAttributes.addFlashAttribute("successMessage",
                     messageSource.getMessage("erp.production.pallet.success", null, locale));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+        String valueValue;
+        if (department != null) {
+            valueValue = "?department=" + department.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/production/pallets" + valueValue;
     }
 
     @PostMapping("/pallets/{id}/items")
@@ -338,7 +345,13 @@ public class ProductionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+        String valueValue;
+        if (department != null) {
+            valueValue = "?department=" + department.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/production/pallets" + valueValue;
     }
 
     @PostMapping("/pallets/{id}/close")
@@ -352,7 +365,13 @@ public class ProductionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+        String valueValue;
+        if (department != null) {
+            valueValue = "?department=" + department.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/production/pallets" + valueValue;
     }
 
     @PostMapping("/pallets/{id}/reopen")
@@ -366,7 +385,13 @@ public class ProductionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+        String valueValue;
+        if (department != null) {
+            valueValue = "?department=" + department.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/production/pallets" + valueValue;
     }
 
     @PostMapping("/pallets/{id}/sell")
@@ -385,7 +410,13 @@ public class ProductionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/production/pallets" + (department != null ? "?department=" + department.name() : "");
+        String valueValue;
+        if (department != null) {
+            valueValue = "?department=" + department.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/production/pallets" + valueValue;
     }
 
     @PostMapping("/shipments")
@@ -479,7 +510,7 @@ public class ProductionController {
                             @RequestParam(value = "quality", required = false) String quality,
                             @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", productionService.getSlabSummary());
-        model.addAttribute("selectedStatus", status == null ? "" : status);
+        model.addAttribute("selectedStatus", Objects.requireNonNullElse(status, ""));
         model.addAttribute("grid", SlabGrid.view(
                 productionService.getSlabsPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, quality, query.sortKey(), query.sortDirection()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));

@@ -31,7 +31,12 @@ public class MessageUtils {
     }
 
     public static String getMessage(String code, Locale locale, Object... args) {
-        Locale targetLocale = (locale != null && "tr".equalsIgnoreCase(locale.getLanguage())) ? locale : DEFAULT_LOCALE;
+        Locale targetLocale;
+        if (locale != null && "tr".equalsIgnoreCase(locale.getLanguage())) {
+            targetLocale = locale;
+        } else {
+            targetLocale = DEFAULT_LOCALE;
+        }
         if (messageSource != null) {
             try {
                 return messageSource.getMessage(code, args, targetLocale);

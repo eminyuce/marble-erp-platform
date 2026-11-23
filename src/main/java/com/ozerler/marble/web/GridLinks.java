@@ -1,5 +1,6 @@
 package com.ozerler.marble.web;
 
+import java.util.Objects;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -30,7 +31,12 @@ public final class GridLinks {
     }
 
     public String sort(String field) {
-        String next = field.equals(first("sort")) && "asc".equalsIgnoreCase(first("dir")) ? "desc" : "asc";
+        String next;
+        if (field.equals(first("sort")) && "asc".equalsIgnoreCase(first("dir"))) {
+            next = "desc";
+        } else {
+            next = "asc";
+        }
         return url(query().put("sort", field).put("dir", next).put("page", "1"));
     }
 
@@ -38,7 +44,10 @@ public final class GridLinks {
         if (!field.equals(first("sort"))) {
             return "↕";
         }
-        return "asc".equalsIgnoreCase(first("dir")) ? "↑" : "↓";
+        if ("asc".equalsIgnoreCase(first("dir"))) {
+            return "↑";
+        }
+        return "↓";
     }
 
     public String with(String name, String value) {
@@ -67,7 +76,7 @@ public final class GridLinks {
             }
             for (String item : current) {
                 names.add(entry.getKey());
-                values.add(item == null ? "" : item);
+                values.add(Objects.requireNonNullElse(item, ""));
             }
         }
         return new Query(names, values);
@@ -91,7 +100,7 @@ public final class GridLinks {
     }
 
     private static String encode(String value) {
-        return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
+        return URLEncoder.encode(Objects.requireNonNullElse(value, ""), StandardCharsets.UTF_8);
     }
 
     private static final class Query {

@@ -14,15 +14,40 @@ public final class GridRow {
     private final List<GridCell> cells;
 
     public GridRow(String viewUrl, String editUrl, String deleteId, String deleteName, List<GridCell> cells) {
-        this.viewUrl = viewUrl == null ? "" : viewUrl;
-        this.editUrl = editUrl == null ? "" : editUrl;
-        this.deleteId = deleteId == null ? "" : deleteId;
-        this.deleteName = deleteName == null ? "" : deleteName;
-        this.cells = cells == null ? List.of() : List.copyOf(cells);
+        if (viewUrl == null) {
+            this.viewUrl = "";
+        } else {
+            this.viewUrl = viewUrl;
+        }
+        if (editUrl == null) {
+            this.editUrl = "";
+        } else {
+            this.editUrl = editUrl;
+        }
+        if (deleteId == null) {
+            this.deleteId = "";
+        } else {
+            this.deleteId = deleteId;
+        }
+        if (deleteName == null) {
+            this.deleteName = "";
+        } else {
+            this.deleteName = deleteName;
+        }
+        if (cells == null) {
+            this.cells = List.of();
+        } else {
+            this.cells = List.copyOf(cells);
+        }
     }
 
     public static GridRow of(String viewUrl, String editUrl, Object deleteId, String deleteName, List<GridCell> cells) {
-        String id = deleteId == null ? "" : String.valueOf(deleteId);
+        String id;
+        if (deleteId == null) {
+            id = "";
+        } else {
+            id = String.valueOf(deleteId);
+        }
         return new GridRow(viewUrl, editUrl, id, deleteName, cells);
     }
 

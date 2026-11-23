@@ -21,20 +21,43 @@ public final class WorkshopSizedGrid {
 
     static GridRow row(StockItemView item) {
         String stone = OperationGridSupport.named(item.getStoneType(), "Mermer");
-        String surface = item.getSurfaceFinish() == null ? "Cilalı" : item.getSurfaceFinish().getDisplayName();
+        String surface;
+        if (item.getSurfaceFinish() == null) {
+            surface = "Cilalı";
+        } else {
+            surface = item.getSurfaceFinish().getDisplayName();
+        }
         String description = OperationGridSupport.named(item.getDescription(), stone);
         String recutUrl = "/operations/workshop/sized/new?sourceStockItemId=" + item.getId();
+        String value;
+        if (item.getSourceBlock() == null) {
+            value = "";
+        } else {
+            value = item.getSourceBlock().getBlockCode();
+        }
+        String valueValue;
+        if (item.getPieceCount() == null) {
+            valueValue = "";
+        } else {
+            valueValue = item.getPieceCount().toString();
+        }
+        String customer;
+        if (item.getCustomer() == null) {
+            customer = null;
+        } else {
+            customer = item.getCustomer().getCompanyName();
+        }
         return GridRow.of(recutUrl, null, null, null, List.of(
                 GridCell.badge("Stokta"),
                 GridCell.chip(item.getId()),
                 GridCell.text(item.getItemCode()),
-                GridCell.text(item.getSourceBlock() == null ? "" : item.getSourceBlock().getBlockCode()),
+                GridCell.text(value),
                 OperationGridSupport.lines(description, stone + " · " + surface),
                 GridCell.text(OperationGridSupport.centimeters(item.getThicknessCm())),
                 GridCell.text(OperationGridSupport.rectangle(item.getWidthCm(), item.getLengthCm())),
                 GridCell.text(OperationGridSupport.amount(item.getQuantity(), "m²")),
-                GridCell.text(item.getPieceCount() == null ? "" : item.getPieceCount().toString()),
-                GridCell.text(OperationGridSupport.customer(item.getCustomer() == null ? null : item.getCustomer().getCompanyName()))
+                GridCell.text(valueValue),
+                GridCell.text(OperationGridSupport.customer(customer))
         ));
     }
 

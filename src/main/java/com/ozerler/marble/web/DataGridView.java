@@ -22,18 +22,51 @@ public final class DataGridView {
 
     public DataGridView(int number, int size, int totalPages, long total, String sort, String direction,
                         String tableId, int frozenCount, List<GridColumn> columns, List<GridRow> rows) {
-        this.number = number < 1 ? 1 : number;
+        if (number < 1) {
+            this.number = 1;
+        } else {
+            this.number = number;
+        }
         this.size = GridRequests.size(size);
-        this.totalPages = totalPages < 1 ? 1 : totalPages;
+        if (totalPages < 1) {
+            this.totalPages = 1;
+        } else {
+            this.totalPages = totalPages;
+        }
         this.total = Math.max(0L, total);
-        this.sort = sort == null ? "" : sort;
-        this.direction = direction == null ? "" : direction;
-        this.tableId = tableId == null || tableId.isBlank() ? "data-grid" : tableId;
-        int columnCount = columns == null ? 0 : columns.size();
+        if (sort == null) {
+            this.sort = "";
+        } else {
+            this.sort = sort;
+        }
+        if (direction == null) {
+            this.direction = "";
+        } else {
+            this.direction = direction;
+        }
+        if (tableId == null || tableId.isBlank()) {
+            this.tableId = "data-grid";
+        } else {
+            this.tableId = tableId;
+        }
+        int columnCount;
+        if (columns == null) {
+            columnCount = 0;
+        } else {
+            columnCount = columns.size();
+        }
         int requested = Math.max(1, frozenCount);
         this.frozenCount = Math.min(requested, columnCount + 1);
-        this.columns = columns == null ? List.of() : List.copyOf(columns);
-        this.rows = rows == null ? List.of() : List.copyOf(rows);
+        if (columns == null) {
+            this.columns = List.of();
+        } else {
+            this.columns = List.copyOf(columns);
+        }
+        if (rows == null) {
+            this.rows = List.of();
+        } else {
+            this.rows = List.copyOf(rows);
+        }
         this.markers = markers(this.number, this.totalPages);
     }
 

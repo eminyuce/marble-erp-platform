@@ -51,14 +51,38 @@ public class MachineDto {
     public static MachineDto fromEntity(Machine machine) {
         BusinessUnit unit = machine.getBusinessUnit();
         MachineType type = machine.getMachineType();
+        String businessUnitValue;
+        if (unit != null) {
+            businessUnitValue = unit.name();
+        } else {
+            businessUnitValue = null;
+        }
+        String businessUnitLabelValue;
+        if (unit != null) {
+            businessUnitLabelValue = unit.getLabel();
+        } else {
+            businessUnitLabelValue = "";
+        }
+        String machineTypeValue;
+        if (type != null) {
+            machineTypeValue = type.name();
+        } else {
+            machineTypeValue = null;
+        }
+        String machineTypeLabelValue;
+        if (type != null) {
+            machineTypeLabelValue = type.getLabel();
+        } else {
+            machineTypeLabelValue = "";
+        }
         return MachineDto.builder()
                 .id(machine.getId())
                 .code(machine.getCode())
                 .name(machine.getName())
-                .businessUnit(unit != null ? unit.name() : null)
-                .businessUnitLabel(unit != null ? unit.getLabel() : "")
-                .machineType(type != null ? type.name() : null)
-                .machineTypeLabel(type != null ? type.getLabel() : "")
+                .businessUnit(businessUnitValue)
+                .businessUnitLabel(businessUnitLabelValue)
+                .machineType(machineTypeValue)
+                .machineTypeLabel(machineTypeLabelValue)
                 .active(machine.isActive())
                 .notes(machine.getNotes())
                 .build();

@@ -133,7 +133,10 @@ public class StockItem extends AuditableEntity {
 
     @Transient
     public String getCustomerDisplayName() {
-        return customer != null ? customer.getCompanyName() : "Genel Stok";
+        if (customer != null) {
+            return customer.getCompanyName();
+        }
+        return "Genel Stok";
     }
 
     @Transient

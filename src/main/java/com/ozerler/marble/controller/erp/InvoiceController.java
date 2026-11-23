@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -64,9 +65,27 @@ public class InvoiceController extends AbstractController {
         model.addAttribute("grid", InvoiceGrid.view(
                 invoiceService.searchInvoiceRows(invoiceType, department, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
-        model.addAttribute("selectedType", invoiceType != null ? invoiceType.name() : "");
-        model.addAttribute("selectedDepartment", department != null ? department.name() : "");
-        model.addAttribute("selectedStatus", status != null ? status.name() : "");
+        Object valueValue;
+        if (invoiceType != null) {
+            valueValue = invoiceType.name();
+        } else {
+            valueValue = "";
+        }
+        model.addAttribute("selectedType", valueValue);
+        Object valueValue2;
+        if (department != null) {
+            valueValue2 = department.name();
+        } else {
+            valueValue2 = "";
+        }
+        model.addAttribute("selectedDepartment", valueValue2);
+        Object valueValue3;
+        if (status != null) {
+            valueValue3 = status.name();
+        } else {
+            valueValue3 = "";
+        }
+        model.addAttribute("selectedStatus", valueValue3);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("customers", formLookup.customers());
         model.addAttribute("departments", BusinessUnit.values());
@@ -112,10 +131,16 @@ public class InvoiceController extends AbstractController {
                     List<Map<String, Object>> itemMaps = po.getItems().stream().map(it -> {
                         Map<String, Object> m = new HashMap<>();
                         m.put("itemName", it.getItemName());
-                        m.put("description", it.getItemType() != null ? it.getItemType().getLabel() : "");
-                        m.put("quantity", it.getQuantity() != null ? it.getQuantity() : BigDecimal.ONE);
-                        m.put("unit", it.getUnit() != null ? it.getUnit() : "ADET");
-                        m.put("unitPrice", it.getUnitPrice() != null ? it.getUnitPrice() : BigDecimal.ZERO);
+                        Object label;
+                        if (it.getItemType() != null) {
+                            label = it.getItemType().getLabel();
+                        } else {
+                            label = "";
+                        }
+                        m.put("description", label);
+                        m.put("quantity", Objects.requireNonNullElse(it.getQuantity(), BigDecimal.ONE));
+                        m.put("unit", Objects.requireNonNullElse(it.getUnit(), "ADET"));
+                        m.put("unitPrice", Objects.requireNonNullElse(it.getUnitPrice(), BigDecimal.ZERO));
                         return m;
                     }).toList();
                     model.addAttribute("prefillPoItemsJson", mapper.writeValueAsString(itemMaps));
@@ -182,23 +207,83 @@ public class InvoiceController extends AbstractController {
                     if (pName == null || pName.isBlank()) {
                         continue;
                     }
-                    String desc = (descriptions != null && i < descriptions.size()) ? descriptions.get(i) : null;
-                    BigDecimal qty = (quantities != null && i < quantities.size()) ? quantities.get(i) : BigDecimal.ONE;
-                    String unit = (units != null && i < units.size()) ? units.get(i) : "m2";
-                    BigDecimal price = (unitPrices != null && i < unitPrices.size()) ? unitPrices.get(i) : BigDecimal.ZERO;
-                    Long blkId = (blockIds != null && i < blockIds.size()) ? blockIds.get(i) : null;
-                    Long slbId = (slabIds != null && i < slabIds.size()) ? slabIds.get(i) : null;
-                    Long stkId = (stockItemIds != null && i < stockItemIds.size()) ? stockItemIds.get(i) : null;
-                    BigDecimal width = (widthCms != null && i < widthCms.size()) ? widthCms.get(i) : null;
-                    BigDecimal calcM2 = (calculatedM2s != null && i < calculatedM2s.size()) ? calculatedM2s.get(i) : null;
-                    BigDecimal waste = (wasteQuantities != null && i < wasteQuantities.size()) ? wasteQuantities.get(i) : BigDecimal.ZERO;
+                    String desc;
+                    if (descriptions != null && i < descriptions.size()) {
+                        desc = descriptions.get(i);
+                    } else {
+                        desc = null;
+                    }
+                    BigDecimal qty;
+                    if (quantities != null && i < quantities.size()) {
+                        qty = quantities.get(i);
+                    } else {
+                        qty = BigDecimal.ONE;
+                    }
+                    String unit;
+                    if (units != null && i < units.size()) {
+                        unit = units.get(i);
+                    } else {
+                        unit = "m2";
+                    }
+                    BigDecimal price;
+                    if (unitPrices != null && i < unitPrices.size()) {
+                        price = unitPrices.get(i);
+                    } else {
+                        price = BigDecimal.ZERO;
+                    }
+                    Long blkId;
+                    if (blockIds != null && i < blockIds.size()) {
+                        blkId = blockIds.get(i);
+                    } else {
+                        blkId = null;
+                    }
+                    Long slbId;
+                    if (slabIds != null && i < slabIds.size()) {
+                        slbId = slabIds.get(i);
+                    } else {
+                        slbId = null;
+                    }
+                    Long stkId;
+                    if (stockItemIds != null && i < stockItemIds.size()) {
+                        stkId = stockItemIds.get(i);
+                    } else {
+                        stkId = null;
+                    }
+                    BigDecimal width;
+                    if (widthCms != null && i < widthCms.size()) {
+                        width = widthCms.get(i);
+                    } else {
+                        width = null;
+                    }
+                    BigDecimal calcM2;
+                    if (calculatedM2s != null && i < calculatedM2s.size()) {
+                        calcM2 = calculatedM2s.get(i);
+                    } else {
+                        calcM2 = null;
+                    }
+                    BigDecimal waste;
+                    if (wasteQuantities != null && i < wasteQuantities.size()) {
+                        waste = wasteQuantities.get(i);
+                    } else {
+                        waste = BigDecimal.ZERO;
+                    }
 
                     itemForms.add(new InvoiceService.InvoiceItemForm(pName, desc, qty, unit, price, blkId, slbId, stkId, width, calcM2, waste));
                 }
             }
 
-            BigDecimal effectiveTaxRate = taxRate != null ? taxRate : new BigDecimal("20.00");
-            InvoiceStatus effectiveStatus = status != null ? status : InvoiceStatus.ISSUED;
+            BigDecimal effectiveTaxRate;
+            if (taxRate != null) {
+                effectiveTaxRate = taxRate;
+            } else {
+                effectiveTaxRate = new BigDecimal("20.00");
+            }
+            InvoiceStatus effectiveStatus;
+            if (status != null) {
+                effectiveStatus = status;
+            } else {
+                effectiveStatus = InvoiceStatus.ISSUED;
+            }
 
             com.ozerler.marble.dto.view.InvoiceRef invoice = invoiceService.createInvoiceRef(
                     invoiceNo, invoiceDate, dueDate, invoiceType, department,
@@ -285,12 +370,30 @@ public class InvoiceController extends AbstractController {
             resp.put("id", item.getId());
             resp.put("name", item.getDescription());
             resp.put("code", item.getItemCode());
-            resp.put("category", item.getProductType() != null ? item.getProductType().name() : "CONSUMABLE");
-            resp.put("categoryLabel", item.getQuarryCategory() != null ? item.getQuarryCategory().getDisplayName() : "Sarf Malzeme");
-            resp.put("quarryCategory", item.getQuarryCategory() != null ? item.getQuarryCategory().name() : quarryCategory.name());
+            Object valueValue;
+            if (item.getProductType() != null) {
+                valueValue = item.getProductType().name();
+            } else {
+                valueValue = "CONSUMABLE";
+            }
+            resp.put("category", valueValue);
+            Object displayName;
+            if (item.getQuarryCategory() != null) {
+                displayName = item.getQuarryCategory().getDisplayName();
+            } else {
+                displayName = "Sarf Malzeme";
+            }
+            resp.put("categoryLabel", displayName);
+            Object valueValue2;
+            if (item.getQuarryCategory() != null) {
+                valueValue2 = item.getQuarryCategory().name();
+            } else {
+                valueValue2 = quarryCategory.name();
+            }
+            resp.put("quarryCategory", valueValue2);
             resp.put("unit", item.getUnit());
             resp.put("unitPrice", item.getUnitPrice());
-            resp.put("quantity", item.getQuantity() != null ? item.getQuantity() : BigDecimal.ZERO);
+            resp.put("quantity", Objects.requireNonNullElse(item.getQuantity(), BigDecimal.ZERO));
             resp.put("isExpense", Boolean.TRUE.equals(item.getDirectExpense()));
             return ResponseEntity.ok(resp);
         } catch (Exception e) {

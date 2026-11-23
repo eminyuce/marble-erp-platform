@@ -57,9 +57,12 @@ public class QuarryOperationService {
         Quarry quarry = quarryRepository.findById(quarryId)
                 .orElseThrow(() -> new IllegalArgumentException("Ocak bulunamadı: " + quarryId));
 
-        String code = (blockCode != null && !blockCode.isBlank())
-                ? blockCode.trim().toUpperCase()
-                : UniqueCodes.yearly("BLK", blockRepository::existsByBlockCode);
+        String code;
+        if (blockCode != null && !blockCode.isBlank()) {
+            code = blockCode.trim().toUpperCase();
+        } else {
+            code = UniqueCodes.yearly("BLK", blockRepository::existsByBlockCode);
+        }
 
         StockLocation prodYard = stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.PRODUCTION_YARD)
                 .orElseGet(() -> stockLocationRepository.save(StockLocation.builder()
@@ -73,20 +76,44 @@ public class QuarryOperationService {
         BigDecimal est = estimatedTonnage;
         BigDecimal act = actualTonnage;
 
+        String quarrySectionValue;
+        if (quarrySection != null && !quarrySection.isBlank()) {
+            quarrySectionValue = quarrySection.trim();
+        } else {
+            quarrySectionValue = "A1";
+        }
+        LocalDate extractionDateValue;
+        if (extractionDate != null) {
+            extractionDateValue = extractionDate;
+        } else {
+            extractionDateValue = LocalDate.now();
+        }
+        BigDecimal actualWeightKg;
+        if (act != null && act.compareTo(BigDecimal.ZERO) > 0) {
+            actualWeightKg = act.multiply(BigDecimal.valueOf(1000));
+        } else {
+            actualWeightKg = BigDecimal.ZERO;
+        }
+        String stoneTypeValue;
+        if (stoneType != null && !stoneType.isBlank()) {
+            stoneTypeValue = stoneType.trim();
+        } else {
+            stoneTypeValue = quarry.getName();
+        }
         Block block = Block.builder()
                 .quarry(quarry)
                 .blockCode(code)
-                .quarrySection(quarrySection != null && !quarrySection.isBlank() ? quarrySection.trim() : "A1")
-                .extractionDate(extractionDate != null ? extractionDate : LocalDate.now())
+                .quarrySection(quarrySectionValue)
+                .extractionDate(extractionDateValue)
                 .widthCm(widthCm)
                 .lengthCm(lengthCm)
                 .heightCm(heightCm)
                 .estimatedTonnage(est)
                 .actualTonnage(act)
-                .actualWeightKg(act != null && act.compareTo(BigDecimal.ZERO) > 0 ? act.multiply(BigDecimal.valueOf(1000)) : BigDecimal.ZERO)
-                .stoneType(stoneType != null && !stoneType.isBlank() ? stoneType.trim() : quarry.getName())
+                .actualWeightKg(actualWeightKg)
+                .stoneType(stoneTypeValue)
                 .colorTone(colorTone)
-                .qualityGrade(qualityGrade != null ? qualityGrade : QualityGrade.A)
+                .qualityGrade(Objects.requireNonNullElse(qualityGrade, QualityGrade.A))
                 .crackLevel(crackLevel)
                 .status(BlockStatus.PRODUCED)
                 .currentLocation(prodYard)
@@ -118,7 +145,13 @@ public class QuarryOperationService {
 
         block.setActualTonnage(actualTonnage);
         block.setActualWeightKg(actualTonnage.multiply(BigDecimal.valueOf(1000)));
-        block.calculateMetrics(block.getQuarry() != null ? block.getQuarry().getSpecificGravity() : new BigDecimal("2.70"));
+        BigDecimal calculateMetrics;
+        if (block.getQuarry() != null) {
+            calculateMetrics = block.getQuarry().getSpecificGravity();
+        } else {
+            calculateMetrics = new BigDecimal("2.70");
+        }
+        block.calculateMetrics(calculateMetrics);
         block.setActualTonnage(actualTonnage); // preserve explicitly
 
         return blockRepository.save(block);
@@ -163,7 +196,7 @@ public class QuarryOperationService {
             block.setSaleDate(LocalDate.now());
             block.setTargetDestination(TargetDestination.CUSTOMER);
         } else {
-            block.setTargetDestination(targetDestination != null ? targetDestination : TargetDestination.OTHER);
+            block.setTargetDestination(Objects.requireNonNullElse(targetDestination, TargetDestination.OTHER));
         }
 
         if (invoice != null) {
@@ -255,17 +288,41 @@ public class QuarryOperationService {
             java.util.Map<String, Object> map = new java.util.HashMap<>();
             map.put("id", b.getId());
             map.put("blockCode", b.getBlockCode());
-            map.put("quarryName", b.getQuarry() != null ? b.getQuarry().getName() : "—");
-            map.put("quarryLocation", b.getQuarrySection() != null ? b.getQuarrySection() : "—");
-            map.put("stoneType", b.getStoneType() != null ? b.getStoneType() : "—");
-            map.put("colorQuality", b.getColorQuality() != null ? b.getColorQuality() : "—");
-            map.put("dimensions", b.getDimensions() != null ? b.getDimensions() : "—");
-            map.put("approximateTonnage", b.getApproximateTonnage() != null ? b.getApproximateTonnage() : BigDecimal.ZERO);
+            Object name;
+            if (b.getQuarry() != null) {
+                name = b.getQuarry().getName();
+            } else {
+                name = "—";
+            }
+            map.put("quarryName", name);
+            map.put("quarryLocation", Objects.requireNonNullElse(b.getQuarrySection(), "—"));
+            map.put("stoneType", Objects.requireNonNullElse(b.getStoneType(), "—"));
+            map.put("colorQuality", Objects.requireNonNullElse(b.getColorQuality(), "—"));
+            map.put("dimensions", Objects.requireNonNullElse(b.getDimensions(), "—"));
+            map.put("approximateTonnage", Objects.requireNonNullElse(b.getApproximateTonnage(), BigDecimal.ZERO));
             map.put("actualTonnage", b.getActualTonnage());
-            map.put("extractionDate", b.getExtractionDate() != null ? b.getExtractionDate().toString() : "");
-            map.put("status", b.getStatus() != null ? b.getStatus().name() : "");
-            map.put("statusLabel", b.getStatus() != null ? b.getStatus().getDisplayName() : "");
-            map.put("notes", b.getNotes() != null ? b.getNotes() : "");
+            Object value;
+            if (b.getExtractionDate() != null) {
+                value = b.getExtractionDate().toString();
+            } else {
+                value = "";
+            }
+            map.put("extractionDate", value);
+            Object valueValue;
+            if (b.getStatus() != null) {
+                valueValue = b.getStatus().name();
+            } else {
+                valueValue = "";
+            }
+            map.put("status", valueValue);
+            Object displayName;
+            if (b.getStatus() != null) {
+                displayName = b.getStatus().getDisplayName();
+            } else {
+                displayName = "";
+            }
+            map.put("statusLabel", displayName);
+            map.put("notes", Objects.requireNonNullElse(b.getNotes(), ""));
             return map;
         }).toList();
 

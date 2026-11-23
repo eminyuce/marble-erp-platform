@@ -83,7 +83,12 @@ public class FileStorageService {
     @Transactional
     public FileStorage storeFile(MultipartFile file, String entityType, Long entityId) throws IOException {
         FileUploadValidator.ValidatedUpload validated = fileUploadValidator.validate(file);
-        String entity = (entityType != null && !entityType.isBlank()) ? entityType.trim().toUpperCase() : "BLOCK";
+        String entity;
+        if (entityType != null && !entityType.isBlank()) {
+            entity = entityType.trim().toUpperCase();
+        } else {
+            entity = "BLOCK";
+        }
         String objectKey = fileObjectKeyFactory.create(entity, entityId, validated.cleanExtension());
 
         log.info("File upload started entityType={} entityId={} objectKey={}", entity, entityId, objectKey);
@@ -149,7 +154,12 @@ public class FileStorageService {
         if (fileIds == null || fileIds.isEmpty() || entityId == null) {
             return;
         }
-        String entity = entityType != null ? entityType.trim().toUpperCase() : "BLOCK";
+        String entity;
+        if (entityType != null) {
+            entity = entityType.trim().toUpperCase();
+        } else {
+            entity = "BLOCK";
+        }
         List<FileStorage> files = fileStorageRepository.findByIdInAndDeletedFalse(fileIds);
         for (FileStorage file : files) {
             assertCanModify(file);
@@ -245,12 +255,18 @@ public class FileStorageService {
             throw new StorageException("File has not been migrated to object storage yet");
         }
         boolean image = fileStorage.isImage();
-        Duration expiry = image
-                ? presignedUrlProperties.imageExpiry()
-                : presignedUrlProperties.documentExpiry();
-        String url = image
-                ? objectStorageService.presignedImageUrl(fileStorage.getObjectKey())
-                : objectStorageService.presignedDocumentUrl(fileStorage.getObjectKey());
+        Duration expiry;
+        if (image) {
+            expiry = presignedUrlProperties.imageExpiry();
+        } else {
+            expiry = presignedUrlProperties.documentExpiry();
+        }
+        String url;
+        if (image) {
+            url = objectStorageService.presignedImageUrl(fileStorage.getObjectKey());
+        } else {
+            url = objectStorageService.presignedDocumentUrl(fileStorage.getObjectKey());
+        }
         log.info("Presigned download URL created fileId={} entityType={} entityId={} objectKey={} expirySeconds={}",
                 fileId, fileStorage.getEntityType(), fileStorage.getEntityId(), fileStorage.getObjectKey(),
                 expiry.toSeconds());
@@ -488,7 +504,10 @@ public class FileStorageService {
 
         @Override
         public long contentLength() {
-            return fileStorage.getFileSize() != null ? fileStorage.getFileSize() : -1L;
+            if (fileStorage.getFileSize() != null) {
+                return fileStorage.getFileSize();
+            }
+            return -1L;
         }
     }
 

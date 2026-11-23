@@ -12,7 +12,13 @@ final class SlabGridCells {
     }
 
     static GridCell status(SlabView slab) {
-        return GridCell.badge(slab.getStatus() == null ? "Hazır" : slab.getStatus().getDisplayName());
+        String badge;
+        if (slab.getStatus() == null) {
+            badge = "Hazır";
+        } else {
+            badge = slab.getStatus().getDisplayName();
+        }
+        return GridCell.badge(badge);
     }
 
     static GridCell code(SlabView slab) {
@@ -24,11 +30,23 @@ final class SlabGridCells {
     }
 
     static GridCell block(SlabView slab) {
-        return GridCell.text(slab.getBlock() == null ? "" : slab.getBlock().getBlockCode());
+        String value;
+        if (slab.getBlock() == null) {
+            value = "";
+        } else {
+            value = slab.getBlock().getBlockCode();
+        }
+        return GridCell.text(value);
     }
 
     static GridCell stone(SlabView slab) {
-        return GridCell.text(slab.getBlock() == null ? "" : slab.getBlock().getStoneType());
+        String value;
+        if (slab.getBlock() == null) {
+            value = "";
+        } else {
+            value = slab.getBlock().getStoneType();
+        }
+        return GridCell.text(value);
     }
 
     static GridCell finish(SlabView slab) {
@@ -48,7 +66,12 @@ final class SlabGridCells {
     }
 
     static GridCell customer(SlabView slab) {
-        String name = slab.getCustomer() == null ? null : slab.getCustomer().getCompanyName();
+        String name;
+        if (slab.getCustomer() == null) {
+            name = null;
+        } else {
+            name = slab.getCustomer().getCompanyName();
+        }
         return GridCell.text(OperationGridSupport.customer(name));
     }
 
@@ -90,10 +113,16 @@ final class SlabGridCells {
     }
 
     private static String quality(SlabView slab) {
-        return slab.getQualityGrade() == null ? "1. Sınıf" : slab.getQualityGrade().getDisplayName();
+        if (slab.getQualityGrade() == null) {
+            return "1. Sınıf";
+        }
+        return slab.getQualityGrade().getDisplayName();
     }
 
     private static String surface(SlabView slab) {
-        return slab.getSurfaceFinish() == null ? "Cilalı" : slab.getSurfaceFinish().getDisplayName();
+        if (slab.getSurfaceFinish() == null) {
+            return "Cilalı";
+        }
+        return slab.getSurfaceFinish().getDisplayName();
     }
 }

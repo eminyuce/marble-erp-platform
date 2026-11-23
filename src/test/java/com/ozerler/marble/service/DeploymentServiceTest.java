@@ -273,7 +273,13 @@ class DeploymentServiceTest {
                 }
                 return new HostCommandResult(0, "latest commit");
             }
-            return new HostCommandResult(startExitCode, startExitCode == 0 ? "started" : "failed");
+            String value;
+            if (startExitCode == 0) {
+                value = "started";
+            } else {
+                value = "failed";
+            }
+            return new HostCommandResult(startExitCode, value);
         }
     }
 }

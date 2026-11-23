@@ -179,7 +179,10 @@ public class OperationWorkOrder extends AuditableEntity {
     }
 
     private static String blankTo(String value, String fallback) {
-        return value == null || value.isBlank() ? fallback : value;
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        return value;
     }
 
     @Transient

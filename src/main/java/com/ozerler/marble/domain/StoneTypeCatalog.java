@@ -31,7 +31,10 @@ public final class StoneTypeCatalog {
 
     public static BigDecimal findDensityOrDefault(String stoneName, BigDecimal fallback) {
         if (stoneName == null || stoneName.isBlank()) {
-            return fallback != null ? fallback : new BigDecimal("2.70");
+            if (fallback != null) {
+                return fallback;
+            }
+            return new BigDecimal("2.70");
         }
         String normalized = stoneName.trim().toUpperCase();
         for (StoneTypeItem item : CATALOG) {
@@ -39,7 +42,10 @@ public final class StoneTypeCatalog {
                 return item.specificGravity();
             }
         }
-        return fallback != null ? fallback : new BigDecimal("2.70");
+        if (fallback != null) {
+            return fallback;
+        }
+        return new BigDecimal("2.70");
     }
 
     public static Optional<StoneTypeItem> findByName(String stoneName) {

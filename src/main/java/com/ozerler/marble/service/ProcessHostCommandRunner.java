@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import java.util.Objects;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +38,12 @@ public class ProcessHostCommandRunner implements HostCommandRunner {
                     return "";
                 }
             });
-            long timeoutMillis = command.timeout() != null ? command.timeout().toMillis() : 15_000L;
+            long timeoutMillis;
+            if (command.timeout() != null) {
+                timeoutMillis = command.timeout().toMillis();
+            } else {
+                timeoutMillis = 15_000L;
+            }
             boolean finished = process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS);
             if (!finished) {
                 process.destroyForcibly();
@@ -52,10 +58,16 @@ public class ProcessHostCommandRunner implements HostCommandRunner {
             return new HostCommandResult(-1, "interrupted");
         } catch (IOException ex) {
             log.warn("Host command failed: {} — {}", command.argv(), ex.getMessage());
-            return new HostCommandResult(-1, ex.getMessage() == null ? "" : ex.getMessage());
+            return new HostCommandResult(-1, Objects.requireNonNullElse(ex.getMessage(), ""));
         } catch (Exception ex) {
             log.warn("Host command output read failed: {} — {}", command.argv(), ex.getMessage());
-            return new HostCommandResult(process != null && !process.isAlive() ? process.exitValue() : -1, "");
+            int value;
+            if (process != null && !process.isAlive()) {
+                value = process.exitValue();
+            } else {
+                value = -1;
+            }
+            return new HostCommandResult(value, "");
         } finally {
             if (process != null && process.isAlive()) {
                 process.destroyForcibly();

@@ -152,7 +152,12 @@ public class DefinitionController extends AbstractController {
     public String toggleMachine(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             MachineForm machine = masterDataService.toggleMachineForm(id);
-            String statusText = machine.isActive() ? "aktif edildi" : "pasife alındı";
+            String statusText;
+            if (machine.isActive()) {
+                statusText = "aktif edildi";
+            } else {
+                statusText = "pasife alındı";
+            }
             addSuccessFlash(redirectAttributes, "Makine (" + machine.getCode() + ") " + statusText + ".");
         } catch (Exception e) {
             addErrorFlash(redirectAttributes, e.getMessage());
@@ -237,7 +242,12 @@ public class DefinitionController extends AbstractController {
     public String toggleStockLocation(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             StockLocationForm loc = masterDataService.toggleStockLocationForm(id);
-            String statusText = loc.isActive() ? "aktif edildi" : "pasife alındı";
+            String statusText;
+            if (loc.isActive()) {
+                statusText = "aktif edildi";
+            } else {
+                statusText = "pasife alındı";
+            }
             addSuccessFlash(redirectAttributes, "Stok sahası (" + loc.getCode() + ") " + statusText + ".");
         } catch (Exception e) {
             addErrorFlash(redirectAttributes, e.getMessage());
@@ -334,7 +344,13 @@ public class DefinitionController extends AbstractController {
                                 Model model) {
         model.addAttribute("customerTypes", CustomerType.values());
         model.addAttribute("businessUnits", BusinessUnit.values());
-        model.addAttribute("selectedUnit", unit != null ? unit.name() : "");
+        Object valueValue;
+        if (unit != null) {
+            valueValue = unit.name();
+        } else {
+            valueValue = "";
+        }
+        model.addAttribute("selectedUnit", valueValue);
         model.addAttribute("currentSection", "definitions-customers");
         model.addAttribute("grid", CustomerGrid.view(
                 masterDataService.getCustomersPaged(query.pageNo(), query.pageSize(), query.getSearch(), type, unit,

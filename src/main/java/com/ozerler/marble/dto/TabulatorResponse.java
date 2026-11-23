@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto;
 
+import java.util.Objects;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -45,9 +46,15 @@ public class TabulatorResponse<T> {
 
     public static <T> TabulatorResponse<T> of(List<T> data, int totalPages, long totalElements,
                                               Map<String, Object> meta) {
+        int totalPagesValue;
+        if (totalPages > 0) {
+            totalPagesValue = totalPages;
+        } else {
+            totalPagesValue = 1;
+        }
         return TabulatorResponse.<T>builder()
-                .data(data != null ? data : Collections.emptyList())
-                .last_page(totalPages > 0 ? totalPages : 1)
+                .data(Objects.requireNonNullElse(data, Collections.emptyList()))
+                .last_page(totalPagesValue)
                 .total(totalElements)
                 .meta(meta)
                 .build();

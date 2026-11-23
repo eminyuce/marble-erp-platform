@@ -1,5 +1,6 @@
 package com.ozerler.marble.web;
 
+import com.ozerler.marble.dto.view.BlockView;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -36,7 +37,12 @@ public final class PolishGrid {
 
     private static GridRow row(OperationView operation) {
         String editUrl = "/production/polish/" + operation.id + "/edit";
-        String orderUrl = operation.workOrderId == null ? null : "/production/orders/" + operation.workOrderId;
+        String orderUrl;
+        if (operation.workOrderId == null) {
+            orderUrl = null;
+        } else {
+            orderUrl = "/production/orders/" + operation.workOrderId;
+        }
         return GridRow.of(editUrl, editUrl, null, operation.orderNo, List.of(
                 GridCell.chip(operation.id),
                 GridCell.link(operation.orderNo, orderUrl),
@@ -83,18 +89,57 @@ public final class PolishGrid {
 
         private static OperationView from(FactoryOperationView operation) {
             var workOrder = operation.getWorkOrder();
-            var block = workOrder == null ? null : workOrder.getBlock();
+            BlockView block;
+            if (workOrder == null) {
+                block = null;
+            } else {
+                block = workOrder.getBlock();
+            }
             var machine = operation.getMachine();
-            String process = operation.getProcessType() == null ? "" : operation.getProcessType().getLabel();
-            String chamferLabel = operation.getChamferStatus() == null ? "" : operation.getChamferStatus().getLabel();
+            String process;
+            if (operation.getProcessType() == null) {
+                process = "";
+            } else {
+                process = operation.getProcessType().getLabel();
+            }
+            String chamferLabel;
+            if (operation.getChamferStatus() == null) {
+                chamferLabel = "";
+            } else {
+                chamferLabel = operation.getChamferStatus().getLabel();
+            }
+            Long value;
+            if (workOrder == null) {
+                value = null;
+            } else {
+                value = workOrder.getId();
+            }
+            String clean;
+            if (workOrder == null) {
+                clean = "";
+            } else {
+                clean = workOrder.getOrderNo();
+            }
+            String cleanValue;
+            if (block == null) {
+                cleanValue = "";
+            } else {
+                cleanValue = block.getBlockCode();
+            }
+            String cleanValue2;
+            if (machine == null) {
+                cleanValue2 = "";
+            } else {
+                cleanValue2 = machine.getName();
+            }
             return new OperationView(
                     operation.getId(),
-                    workOrder == null ? null : workOrder.getId(),
-                    GridWindow.clean(workOrder == null ? "" : workOrder.getOrderNo()),
-                    GridWindow.clean(block == null ? "" : block.getBlockCode()),
+                    value,
+                    GridWindow.clean(clean),
+                    GridWindow.clean(cleanValue),
                     GridWindow.clean(process),
                     GridWindow.clean(operation.getOperatorName()),
-                    GridWindow.clean(machine == null ? "" : machine.getName()),
+                    GridWindow.clean(cleanValue2),
                     operation.getInputQuantity(),
                     operation.getOutputQuantity(),
                     operation.getWasteQuantity(),

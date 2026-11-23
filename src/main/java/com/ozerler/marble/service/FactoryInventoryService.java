@@ -106,6 +106,16 @@ public class FactoryInventoryService {
         StockItem saved = InventoryBalances.addIncomingFuel(tank, litres, netUnitPrice, stockItemRepository);
 
         String movCode = UniqueCodes.yearly("MOV-FB-MZ", stockMovementRepository::existsByMovementCode);
+        String notesValue;
+        if (notes != null) {
+            notesValue = notes;
+        } else {
+            if (invoice != null) {
+                notesValue = "Fatura: " + invoice.getInvoiceNo();
+            } else {
+                notesValue = "Fabrika Mazot Alımı";
+            }
+        }
         StockMovement movement = StockMovement.builder()
                 .movementCode(movCode)
                 .movementDate(LocalDateTime.now())
@@ -118,7 +128,7 @@ public class FactoryInventoryService {
                 .quantity(litres)
                 .quantityUnit("litre")
                 .invoice(invoice)
-                .notes(notes != null ? notes : invoice != null ? "Fatura: " + invoice.getInvoiceNo() : "Fabrika Mazot Alımı")
+                .notes(notesValue)
                 .build();
         stockMovementRepository.save(movement);
 
@@ -138,7 +148,12 @@ public class FactoryInventoryService {
         }
 
         StockItem tank = getOrCreateFactoryFuelTankStockItem();
-        BigDecimal currentStock = tank.getQuantity() != null ? tank.getQuantity() : BigDecimal.ZERO;
+        BigDecimal currentStock;
+        if (tank.getQuantity() != null) {
+            currentStock = tank.getQuantity();
+        } else {
+            currentStock = BigDecimal.ZERO;
+        }
 
         if (currentStock.compareTo(litres) < 0) {
             throw new IllegalArgumentException(String.format(
@@ -153,9 +168,12 @@ public class FactoryInventoryService {
         tank.setQuantity(newStock);
         stockItemRepository.save(tank);
 
-        BigDecimal unitPrice = tank.getUnitPrice() != null && tank.getUnitPrice().compareTo(BigDecimal.ZERO) > 0
-                ? tank.getUnitPrice()
-                : new BigDecimal("42.00");
+        BigDecimal unitPrice;
+        if (tank.getUnitPrice() != null && tank.getUnitPrice().compareTo(BigDecimal.ZERO) > 0) {
+            unitPrice = tank.getUnitPrice();
+        } else {
+            unitPrice = new BigDecimal("42.00");
+        }
         InventoryBalances.SavedFuel savedFuel = InventoryBalances.recordFuelEntry(
                 fuelEntryRepository,
                 new InventoryBalances.FuelDraft(machine, entryDate, litres, unitPrice, workingHoursOrKm,
@@ -168,6 +186,12 @@ public class FactoryInventoryService {
                 .orElse(null);
 
         if (factoryCenter != null && totalNetCost.compareTo(BigDecimal.ZERO) > 0) {
+            String receiptNoValue;
+            if (receiptNo != null) {
+                receiptNoValue = receiptNo;
+            } else {
+                receiptNoValue = savedEntry.getId().toString();
+            }
             expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                     factoryCenter.getId(),
                     ExpenseType.DIESEL,
@@ -175,7 +199,7 @@ public class FactoryInventoryService {
                     BusinessUnit.FACTORY,
                     totalNetCost,
                     "TRY",
-                    receiptNo != null ? receiptNo : savedEntry.getId().toString(),
+                    receiptNoValue,
                     savedEntry.getEntryDate(),
                     savedEntry.getEntryDate(),
                     YearMonth.from(savedEntry.getEntryDate()).toString(),
@@ -253,7 +277,12 @@ public class FactoryInventoryService {
             throw new IllegalArgumentException("Stok kartı ürün tanımı / adı boş olamaz.");
         }
         String trimmedDesc = description.trim();
-        String trimmedCode = itemCode != null && !itemCode.isBlank() ? itemCode.trim().toUpperCase() : null;
+        String trimmedCode;
+        if (itemCode != null && !itemCode.isBlank()) {
+            trimmedCode = itemCode.trim().toUpperCase();
+        } else {
+            trimmedCode = null;
+        }
 
         boolean descExists = stockItemRepository.existsByStockLocation_BusinessUnitAndDescriptionIgnoreCase(
                 BusinessUnit.FACTORY, trimmedDesc);
@@ -265,10 +294,30 @@ public class FactoryInventoryService {
         }
 
         StockLocation loc = getOrCreateFactoryConsumablesLocation();
-        String finalCode = trimmedCode != null ? trimmedCode : UniqueCodes.yearly("FB-SRF", stockItemRepository::existsByItemCode);
-        BigDecimal qty = (initialQuantity != null && initialQuantity.compareTo(BigDecimal.ZERO) >= 0) ? initialQuantity : BigDecimal.ZERO;
-        BigDecimal price = (netUnitPrice != null && netUnitPrice.compareTo(BigDecimal.ZERO) >= 0) ? netUnitPrice : BigDecimal.ZERO;
-        String resolvedUnit = (unit != null && !unit.isBlank()) ? unit.trim().toLowerCase() : "adet";
+        String finalCode;
+        if (trimmedCode != null) {
+            finalCode = trimmedCode;
+        } else {
+            finalCode = UniqueCodes.yearly("FB-SRF", stockItemRepository::existsByItemCode);
+        }
+        BigDecimal qty;
+        if (initialQuantity != null && initialQuantity.compareTo(BigDecimal.ZERO) >= 0) {
+            qty = initialQuantity;
+        } else {
+            qty = BigDecimal.ZERO;
+        }
+        BigDecimal price;
+        if (netUnitPrice != null && netUnitPrice.compareTo(BigDecimal.ZERO) >= 0) {
+            price = netUnitPrice;
+        } else {
+            price = BigDecimal.ZERO;
+        }
+        String resolvedUnit;
+        if (unit != null && !unit.isBlank()) {
+            resolvedUnit = unit.trim().toLowerCase();
+        } else {
+            resolvedUnit = "adet";
+        }
 
         StockItem item = StockItem.builder()
                 .itemCode(finalCode)
@@ -311,9 +360,12 @@ public class FactoryInventoryService {
             throw new IllegalArgumentException("Malzeme miktarı 0'dan büyük olmalıdır.");
         }
         StockLocation loc = getOrCreateFactoryConsumablesLocation();
-        String code = (itemCode != null && !itemCode.isBlank())
-                ? itemCode.trim().toUpperCase()
-                : UniqueCodes.yearly("FB-SRF", stockItemRepository::existsByItemCode);
+        String code;
+        if (itemCode != null && !itemCode.isBlank()) {
+            code = itemCode.trim().toUpperCase();
+        } else {
+            code = UniqueCodes.yearly("FB-SRF", stockItemRepository::existsByItemCode);
+        }
 
         StockItem saved = InventoryBalances.addIncomingConsumable(
                 stockItemRepository, code, description, "Fabrika Sarf Malzemesi",
@@ -332,7 +384,7 @@ public class FactoryInventoryService {
                 .quantity(quantity)
                 .quantityUnit(saved.getUnit())
                 .invoice(invoice)
-                .notes(notes != null ? notes : "Fabrika sarf malzeme stoğa alındı")
+                .notes(Objects.requireNonNullElse(notes, "Fabrika sarf malzeme stoğa alındı"))
                 .build();
         stockMovementRepository.save(movement);
         return saved;
@@ -353,6 +405,12 @@ public class FactoryInventoryService {
                 .orElse(null);
 
         if (factoryCenter != null && netCost.compareTo(BigDecimal.ZERO) > 0) {
+            String code;
+            if (machine != null) {
+                code = machine.getCode();
+            } else {
+                code = "FAB-SARF";
+            }
             expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                     factoryCenter.getId(),
                     ExpenseType.CONSUMABLES,
@@ -368,12 +426,22 @@ public class FactoryInventoryService {
                     null, null, null, null,
                     machine,
                     null, null,
-                    machine != null ? machine.getCode() : "FAB-SARF",
+                    code,
                     "Fabrika Sarf Malzeme Kullanımı: " + item.getDescription() + " — " + quantity + " " + item.getUnit() + " (Net: " + netCost + " TL)"
             ));
         }
 
         String movCode = UniqueCodes.yearly("MOV-FB-SRF", stockMovementRepository::existsByMovementCode);
+        String notesValue;
+        if (notes != null) {
+            notesValue = notes;
+        } else {
+            if (machine != null) {
+                notesValue = machine.getName() + " için kullanıldı.";
+            } else {
+                notesValue = "Fabrikada kullanıldı.";
+            }
+        }
         StockMovement movement = StockMovement.builder()
                 .movementCode(movCode)
                 .movementDate(LocalDateTime.now())
@@ -384,7 +452,7 @@ public class FactoryInventoryService {
                 .itemDescription("Fabrika Sarf Tüketimi: " + item.getDescription())
                 .quantity(quantity)
                 .quantityUnit(item.getUnit())
-                .notes(notes != null ? notes : machine != null ? machine.getName() + " için kullanıldı." : "Fabrikada kullanıldı.")
+                .notes(notesValue)
                 .build();
         stockMovementRepository.save(movement);
 

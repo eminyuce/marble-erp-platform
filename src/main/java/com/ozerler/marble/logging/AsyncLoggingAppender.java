@@ -165,7 +165,10 @@ public class AsyncLoggingAppender extends UnsynchronizedAppenderBase<ILoggingEve
 
     public int queueDepth() {
         BlockingQueue<ILoggingEvent> current = queue;
-        return current == null ? 0 : current.size();
+        if (current == null) {
+            return 0;
+        }
+        return current.size();
     }
 
     public int queueCapacity() {

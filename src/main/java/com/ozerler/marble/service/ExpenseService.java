@@ -1,5 +1,7 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.Quarry;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -53,9 +55,12 @@ public class ExpenseService {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.cost.negative_amount"));
         }
 
-        BusinessUnit unit = draft.businessUnit() != null
-                ? draft.businessUnit()
-                : BusinessUnit.FACTORY;
+        BusinessUnit unit;
+        if (draft.businessUnit() != null) {
+            unit = draft.businessUnit();
+        } else {
+            unit = BusinessUnit.FACTORY;
+        }
 
         CostCenter center;
         if (draft.centerId() != null) {
@@ -67,18 +72,42 @@ public class ExpenseService {
                     .or(() -> BoundedReads.all(costCenterRepository).stream().findFirst())
                     .orElseThrow(() -> new IllegalArgumentException("Masraf merkezi tanımlı değil."));
         }
+        String normalize;
+        if (draft.postingPeriod() != null) {
+            normalize = draft.postingPeriod();
+        } else {
+            normalize = YearMonth.now().toString();
+        }
         String postingPeriod = ExpensePeriods.normalize(
-                draft.postingPeriod() != null ? draft.postingPeriod() : YearMonth.now().toString());
-        String expensePeriod = draft.expensePeriod() != null
-                ? ExpensePeriods.normalize(draft.expensePeriod())
-                : ExpensePeriods.expensePeriod(draft.expenseType(), draft.invoiceDate(), draft.entryDate());
+                normalize);
+        String expensePeriod;
+        if (draft.expensePeriod() != null) {
+            expensePeriod = ExpensePeriods.normalize(draft.expensePeriod());
+        } else {
+            expensePeriod = ExpensePeriods.expensePeriod(draft.expenseType(), draft.invoiceDate(), draft.entryDate());
+        }
 
         assertPeriodOpen(unit, expensePeriod);
 
-        ExpenseCategory category = draft.expenseCategory() != null
-                ? draft.expenseCategory()
-                : draft.expenseType().toCategory();
+        ExpenseCategory category;
+        if (draft.expenseCategory() != null) {
+            category = draft.expenseCategory();
+        } else {
+            category = draft.expenseType().toCategory();
+        }
 
+        String currency;
+        if (draft.currency() != null) {
+            currency = draft.currency();
+        } else {
+            currency = Constants.CURRENCY_TRY;
+        }
+        LocalDate entryDate;
+        if (draft.entryDate() != null) {
+            entryDate = draft.entryDate();
+        } else {
+            entryDate = LocalDate.now();
+        }
         CostTransaction tx = CostTransaction.builder()
                 .costCenter(center)
                 .block(draft.block())
@@ -90,10 +119,10 @@ public class ExpenseService {
                 .expenseCategory(category)
                 .businessUnit(unit)
                 .amount(draft.amount())
-                .currency(draft.currency() != null ? draft.currency() : Constants.CURRENCY_TRY)
+                .currency(currency)
                 .documentNo(draft.documentNo())
                 .invoiceDate(draft.invoiceDate())
-                .entryDate(draft.entryDate() != null ? draft.entryDate() : LocalDate.now())
+                .entryDate(entryDate)
                 .expensePeriod(expensePeriod)
                 .postingPeriod(postingPeriod)
                 .machine(draft.machine())
@@ -117,14 +146,20 @@ public class ExpenseService {
 
     private ExpenseDraft link(ExpenseDraft draft, Long projectId, Long quarryId) {
         BusinessUnit unit = draft.businessUnit();
-        var project = unit == BusinessUnit.SITE && projectId != null
-                ? projectRepository.findById(projectId).orElseThrow(() -> new IllegalArgumentException(
-                        MessageUtils.getMessage("error.project.not_found", projectId)))
-                : null;
-        var quarry = unit == BusinessUnit.QUARRY && quarryId != null
-                ? quarryRepository.findById(quarryId).orElseThrow(() -> new IllegalArgumentException(
-                        MessageUtils.getMessage("error.quarry.not_found", quarryId)))
-                : null;
+        Project project;
+        if (unit == BusinessUnit.SITE && projectId != null) {
+            project = projectRepository.findById(projectId).orElseThrow(() -> new IllegalArgumentException(
+                            MessageUtils.getMessage("error.project.not_found", projectId)));
+        } else {
+            project = null;
+        }
+        Quarry quarry;
+        if (unit == BusinessUnit.QUARRY && quarryId != null) {
+            quarry = quarryRepository.findById(quarryId).orElseThrow(() -> new IllegalArgumentException(
+                            MessageUtils.getMessage("error.quarry.not_found", quarryId)));
+        } else {
+            quarry = null;
+        }
         return new ExpenseDraft(
                 draft.centerId(), draft.expenseType(), draft.expenseCategory(), draft.businessUnit(),
                 draft.amount(), draft.currency(), draft.documentNo(), draft.invoiceDate(), draft.entryDate(),
@@ -175,7 +210,12 @@ public class ExpenseService {
             Long centerId, Long quarryId, Long projectId) {
 
         String normSearch = GridPages.normalizeSearch(search);
-        String normPeriod = (period != null && !period.isBlank()) ? ExpensePeriods.normalize(period) : null;
+        String normPeriod;
+        if (period != null && !period.isBlank()) {
+            normPeriod = ExpensePeriods.normalize(period);
+        } else {
+            normPeriod = null;
+        }
 
         Page<CostTransaction> paged = GridPages.execute(
                 page, size, sortField, sortDir, GridPages.EXPENSE_SORTS,
@@ -193,7 +233,7 @@ public class ExpenseService {
                 .toList();
 
         Map<String, Object> meta = Map.of(
-                "totalAmount", filteredTotal != null ? filteredTotal : BigDecimal.ZERO,
+                "totalAmount", Objects.requireNonNullElse(filteredTotal, BigDecimal.ZERO),
                 "count", paged.getTotalElements()
         );
 
@@ -202,7 +242,13 @@ public class ExpenseService {
 
     @Transactional(readOnly = true)
     public ExpenseSummaryDto getExpenseSummary(String period) {
-        String normalized = ExpensePeriods.normalize(period != null && !period.isBlank() ? period : YearMonth.now().toString());
+        String normalize;
+        if (period != null && !period.isBlank()) {
+            normalize = period;
+        } else {
+            normalize = YearMonth.now().toString();
+        }
+        String normalized = ExpensePeriods.normalize(normalize);
         BigDecimal quarry = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, normalized));
         BigDecimal factory = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.FACTORY, normalized));
         BigDecimal workshop = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.WORKSHOP, normalized));
@@ -244,7 +290,16 @@ public class ExpenseService {
 
         assertPeriodOpen(tx.getBusinessUnit(), tx.getExpensePeriod());
 
-        BusinessUnit unit = draft.businessUnit() != null ? draft.businessUnit() : tx.getBusinessUnit() != null ? tx.getBusinessUnit() : BusinessUnit.FACTORY;
+        BusinessUnit unit;
+        if (draft.businessUnit() != null) {
+            unit = draft.businessUnit();
+        } else {
+            if (tx.getBusinessUnit() != null) {
+                unit = tx.getBusinessUnit();
+            } else {
+                unit = BusinessUnit.FACTORY;
+            }
+        }
 
         CostCenter center;
         if (draft.centerId() != null) {
@@ -259,15 +314,21 @@ public class ExpenseService {
                     .orElseThrow(() -> new IllegalArgumentException("Masraf merkezi tanımlı değil."));
         }
 
-        String expensePeriod = draft.expensePeriod() != null
-                ? ExpensePeriods.normalize(draft.expensePeriod())
-                : ExpensePeriods.expensePeriod(draft.expenseType(), draft.invoiceDate(), draft.entryDate());
+        String expensePeriod;
+        if (draft.expensePeriod() != null) {
+            expensePeriod = ExpensePeriods.normalize(draft.expensePeriod());
+        } else {
+            expensePeriod = ExpensePeriods.expensePeriod(draft.expenseType(), draft.invoiceDate(), draft.entryDate());
+        }
 
         assertPeriodOpen(unit, expensePeriod);
 
-        ExpenseCategory category = draft.expenseCategory() != null
-                ? draft.expenseCategory()
-                : draft.expenseType().toCategory();
+        ExpenseCategory category;
+        if (draft.expenseCategory() != null) {
+            category = draft.expenseCategory();
+        } else {
+            category = draft.expenseType().toCategory();
+        }
 
         tx.setCostCenter(center);
         tx.setBusinessUnit(unit);
@@ -303,7 +364,10 @@ public class ExpenseService {
     }
 
     private BigDecimal zero(BigDecimal val) {
-        return val != null ? val : BigDecimal.ZERO;
+        if (val != null) {
+            return val;
+        }
+        return BigDecimal.ZERO;
     }
 
     private void assertPeriodOpen(BusinessUnit unit, String expensePeriod) {
@@ -325,9 +389,9 @@ public class ExpenseService {
             String expensePeriod,
             String postingPeriod,
             com.ozerler.marble.model.Block block,
-            com.ozerler.marble.model.Quarry quarry,
+            Quarry quarry,
             com.ozerler.marble.model.Slab slab,
-            com.ozerler.marble.model.Project project,
+            Project project,
             com.ozerler.marble.model.Machine machine,
             com.ozerler.marble.model.FactoryOperation factoryOperation,
             com.ozerler.marble.model.WorkshopOperation workshopOperation,

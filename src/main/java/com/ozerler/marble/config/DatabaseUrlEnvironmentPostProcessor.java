@@ -35,8 +35,18 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
                 URI uri = new URI(uriString);
                 String host = uri.getHost();
-                int port = uri.getPort() > 0 ? uri.getPort() : 5432;
-                String path = uri.getPath() != null ? uri.getPath() : "/marble_erp";
+                int port;
+                if (uri.getPort() > 0) {
+                    port = uri.getPort();
+                } else {
+                    port = 5432;
+                }
+                String path;
+                if (uri.getPath() != null) {
+                    path = uri.getPath();
+                } else {
+                    path = "/marble_erp";
+                }
 
                 String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + path;
                 Map<String, Object> properties = new HashMap<>();

@@ -171,7 +171,12 @@ public class S3ObjectStorageService implements ObjectStorageService {
 
     private String presignedUrl(String objectKey, Duration expiration, String responseContentType) {
         validateObjectKey(objectKey);
-        Duration ttl = expiration != null ? expiration : storageProperties.getPresignedUrlExpiry();
+        Duration ttl;
+        if (expiration != null) {
+            ttl = expiration;
+        } else {
+            ttl = storageProperties.getPresignedUrlExpiry();
+        }
         try {
             GetObjectRequest.Builder getObject = GetObjectRequest.builder()
                     .bucket(getBucketName())

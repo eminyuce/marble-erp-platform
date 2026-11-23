@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.erp;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -54,8 +55,20 @@ public class OperationWorkOrderController extends AbstractController {
         model.addAttribute("grid", WorkOrderGrid.view(
                 workOrderService.searchOrderRows(department, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
-        model.addAttribute("selectedDepartment", department != null ? department.name() : "");
-        model.addAttribute("selectedStatus", status != null ? status.name() : "");
+        Object valueValue;
+        if (department != null) {
+            valueValue = department.name();
+        } else {
+            valueValue = "";
+        }
+        model.addAttribute("selectedDepartment", valueValue);
+        Object valueValue2;
+        if (status != null) {
+            valueValue2 = status.name();
+        } else {
+            valueValue2 = "";
+        }
+        model.addAttribute("selectedStatus", valueValue2);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("customers", formLookup.customers());
         model.addAttribute("departments", List.of(BusinessUnit.FACTORY, BusinessUnit.WORKSHOP, BusinessUnit.SITE));
@@ -104,7 +117,7 @@ public class OperationWorkOrderController extends AbstractController {
                 customerId = orderItem.getCustomerId();
             }
             model.addAttribute("prefillOrderItem", orderItem);
-            prefillNotes = "Sipariş: " + (orderItem.getOrderNo() != null ? orderItem.getOrderNo() : "")
+            prefillNotes = "Sipariş: " + Objects.requireNonNullElse(orderItem.getOrderNo(), "")
                     + " | Kalem: " + orderItem.getDescription();
             if (orderItem.getBlock() != null && orderItem.getBlock().getStoneType() != null) {
                 prefillStoneType = orderItem.getBlock().getStoneType();
@@ -133,7 +146,13 @@ public class OperationWorkOrderController extends AbstractController {
         model.addAttribute("prefillCustomerId", customerId);
         model.addAttribute("prefillStoneType", prefillStoneType);
         model.addAttribute("prefillNotes", prefillNotes);
-        model.addAttribute("prefillCount", prefillCount != null ? prefillCount.intValue() : 1);
+        int valueValue;
+        if (prefillCount != null) {
+            valueValue = prefillCount.intValue();
+        } else {
+            valueValue = 1;
+        }
+        model.addAttribute("prefillCount", valueValue);
         model.addAttribute("customers", formLookup.customers());
         model.addAttribute("departments", List.of(BusinessUnit.FACTORY, BusinessUnit.WORKSHOP, BusinessUnit.SITE));
         model.addAttribute("availableBlocks", availableBlocks);

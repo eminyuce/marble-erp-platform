@@ -248,7 +248,12 @@ public class WorkshopOperationController extends AbstractController {
                     rowSurfaceFinishes, rowEdgeFinishes
             );
             BigDecimal totalM2 = created.stream()
-                    .map(i -> i.getQuantity() != null ? i.getQuantity() : BigDecimal.ZERO)
+                    .map(i -> {
+                        if (i.getQuantity() != null) {
+                            return i.getQuantity();
+                        }
+                        return BigDecimal.ZERO;
+                    })
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Atölye ebatlama işlemi başarıyla tamamlandı. " + created.size() + " grup ürün (" + totalM2 + " m²) Atölye Ebatlı Stok Sahasına eklendi.");

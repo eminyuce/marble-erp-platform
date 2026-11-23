@@ -24,22 +24,45 @@ public final class FactorySizedGrid {
         String description = OperationGridSupport.named(item.getDescription(),
                 OperationGridSupport.named(item.getStoneType(), "Ebatlı Mermer"));
         String stone = OperationGridSupport.named(item.getStoneType(), "Mermer");
-        String surface = item.getSurfaceFinish() == null ? "Cilalı" : item.getSurfaceFinish().getDisplayName();
+        String surface;
+        if (item.getSurfaceFinish() == null) {
+            surface = "Cilalı";
+        } else {
+            surface = item.getSurfaceFinish().getDisplayName();
+        }
         String edge = OperationGridSupport.named(item.getEdgeFinish(), "Düz");
+        String lines;
+        if (stone.equals(description)) {
+            lines = "";
+        } else {
+            lines = stone;
+        }
+        String value;
+        if (item.getPieceCount() == null) {
+            value = "";
+        } else {
+            value = item.getPieceCount().toString();
+        }
+        String customer;
+        if (item.getCustomer() == null) {
+            customer = null;
+        } else {
+            customer = item.getCustomer().getCompanyName();
+        }
         return GridRow.of(null, null, null, null, List.of(
                 GridCell.badge("Hazır / Stokta"),
                 GridCell.chip(item.getId()),
                 GridCell.text(item.getItemCode()),
                 GridCell.text(produced(item)),
                 GridCell.text(sourceLabel(item)),
-                OperationGridSupport.lines(description, stone.equals(description) ? "" : stone),
+                OperationGridSupport.lines(description, lines),
                 OperationGridSupport.lines(surface, edge),
                 GridCell.text(OperationGridSupport.centimeters(item.getThicknessCm())),
                 GridCell.text(OperationGridSupport.rectangle(item.getWidthCm(), item.getLengthCm())),
                 GridCell.text(OperationGridSupport.amount(item.getQuantity(), "m²")),
-                GridCell.text(item.getPieceCount() == null ? "" : item.getPieceCount().toString()),
+                GridCell.text(value),
                 GridCell.text(GridTexts.quantity(item.getActualProducedQuantity())),
-                GridCell.text(OperationGridSupport.customer(item.getCustomer() == null ? null : item.getCustomer().getCompanyName()))
+                GridCell.text(OperationGridSupport.customer(customer))
         ));
     }
 
@@ -77,10 +100,18 @@ public final class FactorySizedGrid {
         String notes = item.getNotes();
         if (notes != null) {
             int marker = notes.indexOf("[Kaynak Plaka:");
-            int end = marker < 0 ? -1 : notes.indexOf(']', marker);
+            int end;
+            if (marker < 0) {
+                end = -1;
+            } else {
+                end = notes.indexOf(']', marker);
+            }
             if (marker >= 0 && end > marker) {
                 String code = notes.substring(marker + "[Kaynak Plaka:".length(), end).trim();
-                return code.isEmpty() ? "Plaka" : code;
+                if (code.isEmpty()) {
+                    return "Plaka";
+                }
+                return code;
             }
         }
         return "Bağımsız";

@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.Objects;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -40,19 +41,19 @@ public class ShipmentDispatchEmailModel implements BaseEmailModel {
     @Override
     public Map<String, String> toVariables() {
         Map<String, String> vars = new LinkedHashMap<>();
-        vars.put("customerName", customerName != null ? customerName : "");
-        vars.put("dispatchNumber", dispatchNumber != null ? dispatchNumber : "");
-        vars.put("dispatchDate", dispatchDate != null ? dispatchDate : "");
-        vars.put("vehiclePlate", vehiclePlate != null ? vehiclePlate : "");
-        vars.put("carrierCompany", carrierCompany != null ? carrierCompany : "");
-        vars.put("driverName", driverName != null ? driverName : "");
-        vars.put("driverPhone", driverPhone != null ? driverPhone : "");
-        vars.put("palletCount", palletCount != null ? palletCount : "0");
-        vars.put("totalM2", totalM2 != null ? totalM2 : "0.00");
-        vars.put("totalWeightKg", totalWeightKg != null ? totalWeightKg : "0");
-        vars.put("destinationAddress", destinationAddress != null ? destinationAddress : "");
-        vars.put("trackingUrl", trackingUrl != null ? trackingUrl : "#");
-        vars.put("companyName", companyName != null ? companyName : "Özerler Mermer A.Ş.");
+        vars.put("customerName", Objects.requireNonNullElse(customerName, ""));
+        vars.put("dispatchNumber", Objects.requireNonNullElse(dispatchNumber, ""));
+        vars.put("dispatchDate", Objects.requireNonNullElse(dispatchDate, ""));
+        vars.put("vehiclePlate", Objects.requireNonNullElse(vehiclePlate, ""));
+        vars.put("carrierCompany", Objects.requireNonNullElse(carrierCompany, ""));
+        vars.put("driverName", Objects.requireNonNullElse(driverName, ""));
+        vars.put("driverPhone", Objects.requireNonNullElse(driverPhone, ""));
+        vars.put("palletCount", Objects.requireNonNullElse(palletCount, "0"));
+        vars.put("totalM2", Objects.requireNonNullElse(totalM2, "0.00"));
+        vars.put("totalWeightKg", Objects.requireNonNullElse(totalWeightKg, "0"));
+        vars.put("destinationAddress", Objects.requireNonNullElse(destinationAddress, ""));
+        vars.put("trackingUrl", Objects.requireNonNullElse(trackingUrl, "#"));
+        vars.put("companyName", Objects.requireNonNullElse(companyName, "Özerler Mermer A.Ş."));
         return vars;
     }
 

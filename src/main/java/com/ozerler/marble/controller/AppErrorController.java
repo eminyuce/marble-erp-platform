@@ -77,6 +77,9 @@ public class AppErrorController implements ErrorController {
     }
 
     private static String stringValue(Object value) {
-        return value == null ? "" : String.valueOf(value);
+        if (value == null) {
+            return "";
+        }
+        return String.valueOf(value);
     }
 }

@@ -1,5 +1,6 @@
 package com.ozerler.marble.web;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -22,17 +23,45 @@ public final class CollectionGrid {
     }
 
     static GridRow row(CollectionRef record) {
-        String invoiceNo = record.getInvoice() == null ? "" : record.getInvoice().getInvoiceNo();
-        String invoiceUrl = record.getInvoice() == null ? null : "/invoices/" + record.getInvoice().getId();
+        String invoiceNo;
+        if (record.getInvoice() == null) {
+            invoiceNo = "";
+        } else {
+            invoiceNo = record.getInvoice().getInvoiceNo();
+        }
+        String invoiceUrl;
+        if (record.getInvoice() == null) {
+            invoiceUrl = null;
+        } else {
+            invoiceUrl = "/invoices/" + record.getInvoice().getId();
+        }
+        String badge;
+        if (record.getCollectionMethod() == null) {
+            badge = "";
+        } else {
+            badge = record.getCollectionMethod().getDisplayName();
+        }
+        String value;
+        if (record.getCustomer() == null) {
+            value = "";
+        } else {
+            value = record.getCustomer().getCompanyName();
+        }
+        GridCell valueValue;
+        if (invoiceUrl == null) {
+            valueValue = GridCell.text(invoiceNo);
+        } else {
+            valueValue = GridCell.link(invoiceNo, invoiceUrl);
+        }
         return GridRow.of(null, null, null, null, List.of(
-                GridCell.badge(record.getCollectionMethod() == null ? "" : record.getCollectionMethod().getDisplayName()),
+                GridCell.badge(badge),
                 GridCell.chip(record.getId()),
                 GridCell.text(record.getCollectionNo()),
                 GridCell.text(OperationGridSupport.day(record.getCollectionDate())),
-                GridCell.text(record.getCustomer() == null ? "" : record.getCustomer().getCompanyName()),
+                GridCell.text(value),
                 GridCell.text(record.getBankName()),
-                invoiceUrl == null ? GridCell.text(invoiceNo) : GridCell.link(invoiceNo, invoiceUrl),
-                GridCell.text(GridTexts.money(record.getAmount() == null ? BigDecimal.ZERO : record.getAmount())),
+                valueValue,
+                GridCell.text(GridTexts.money(Objects.requireNonNullElse(record.getAmount(), BigDecimal.ZERO))),
                 GridCell.text(record.getNotes())
         ));
     }

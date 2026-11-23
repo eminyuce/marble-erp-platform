@@ -41,12 +41,42 @@ public class ScrapSummaryDto {
             }
         }
 
-        long count = row.length > 1 && row[1] instanceof Number n ? n.longValue() : 0L;
-        BigDecimal weight = row.length > 2 && row[2] instanceof BigDecimal bd ? bd
-                : (row.length > 2 && row[2] instanceof Number n ? BigDecimal.valueOf(n.doubleValue()) : BigDecimal.ZERO);
-        BigDecimal cost = row.length > 3 && row[3] instanceof BigDecimal bd ? bd
-                : (row.length > 3 && row[3] instanceof Number n ? BigDecimal.valueOf(n.doubleValue()) : BigDecimal.ZERO);
-        String label = code != null ? code.getTitle() : (row[0] != null ? row[0].toString() : "—");
+        long count;
+        if (row.length > 1 && row[1] instanceof Number n) {
+            count = n.longValue();
+        } else {
+            count = 0L;
+        }
+        BigDecimal weight;
+        if (row.length > 2 && row[2] instanceof BigDecimal bd) {
+            weight = bd;
+        } else {
+            if (row.length > 2 && row[2] instanceof Number n) {
+                weight = BigDecimal.valueOf(n.doubleValue());
+            } else {
+                weight = BigDecimal.ZERO;
+            }
+        }
+        BigDecimal cost;
+        if (row.length > 3 && row[3] instanceof BigDecimal bd) {
+            cost = bd;
+        } else {
+            if (row.length > 3 && row[3] instanceof Number n) {
+                cost = BigDecimal.valueOf(n.doubleValue());
+            } else {
+                cost = BigDecimal.ZERO;
+            }
+        }
+        String label;
+        if (code != null) {
+            label = code.getTitle();
+        } else {
+            if (row[0] != null) {
+                label = row[0].toString();
+            } else {
+                label = "—";
+            }
+        }
 
         return ScrapSummaryDto.builder()
                 .reasonCode(code)

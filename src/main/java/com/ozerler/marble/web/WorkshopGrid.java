@@ -27,7 +27,12 @@ public final class WorkshopGrid {
     }
 
     public static GridRow row(CutOrderDto order) {
-        String id = order.getId() == null ? "" : order.getId().toString();
+        String id;
+        if (order.getId() == null) {
+            id = "";
+        } else {
+            id = order.getId().toString();
+        }
         String viewUrl = "/workshop/" + id;
         String editUrl = viewUrl + "/edit";
         String produced = order.getItemCount() + " Adet";

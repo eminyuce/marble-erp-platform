@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto.email;
 
+import java.util.Objects;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -38,17 +39,17 @@ public class CustomerStatementEmailModel implements BaseEmailModel {
     @Override
     public Map<String, String> toVariables() {
         Map<String, String> vars = new LinkedHashMap<>();
-        vars.put("customerCode", customerCode != null ? customerCode : "");
-        vars.put("customerName", customerName != null ? customerName : "");
-        vars.put("statementPeriod", statementPeriod != null ? statementPeriod : "");
-        vars.put("totalDebit", totalDebit != null ? totalDebit : "0.00");
-        vars.put("totalCredit", totalCredit != null ? totalCredit : "0.00");
-        vars.put("currentBalance", currentBalance != null ? currentBalance : "0.00");
-        vars.put("currency", currency != null ? currency : "TL");
-        vars.put("overdueAmount", overdueAmount != null ? overdueAmount : "0.00");
-        vars.put("financeContactEmail", financeContactEmail != null ? financeContactEmail : "finans@ozerlermermer.com");
-        vars.put("confirmationDueDate", confirmationDueDate != null ? confirmationDueDate : "");
-        vars.put("companyName", companyName != null ? companyName : "Özerler Mermer A.Ş.");
+        vars.put("customerCode", Objects.requireNonNullElse(customerCode, ""));
+        vars.put("customerName", Objects.requireNonNullElse(customerName, ""));
+        vars.put("statementPeriod", Objects.requireNonNullElse(statementPeriod, ""));
+        vars.put("totalDebit", Objects.requireNonNullElse(totalDebit, "0.00"));
+        vars.put("totalCredit", Objects.requireNonNullElse(totalCredit, "0.00"));
+        vars.put("currentBalance", Objects.requireNonNullElse(currentBalance, "0.00"));
+        vars.put("currency", Objects.requireNonNullElse(currency, "TL"));
+        vars.put("overdueAmount", Objects.requireNonNullElse(overdueAmount, "0.00"));
+        vars.put("financeContactEmail", Objects.requireNonNullElse(financeContactEmail, "finans@ozerlermermer.com"));
+        vars.put("confirmationDueDate", Objects.requireNonNullElse(confirmationDueDate, ""));
+        vars.put("companyName", Objects.requireNonNullElse(companyName, "Özerler Mermer A.Ş."));
         return vars;
     }
 

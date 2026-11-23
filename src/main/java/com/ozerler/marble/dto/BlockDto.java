@@ -201,14 +201,108 @@ public class BlockDto {
 
     public static BlockDto fromEntity(Block b, boolean canDelete, BigDecimal calculatedExtractionCost,
                                       BigDecimal totalCost, BigDecimal surfaceAreaM2, BigDecimal marketValue) {
+        Long quarryIdValue;
+        if (b.getQuarry() != null) {
+            quarryIdValue = b.getQuarry().getId();
+        } else {
+            quarryIdValue = null;
+        }
+        String quarryNameValue;
+        if (b.getQuarry() != null) {
+            quarryNameValue = b.getQuarry().getName();
+        } else {
+            quarryNameValue = "";
+        }
+        String blockCodeValue;
+        if (b.getBlockCode() != null) {
+            blockCodeValue = b.getBlockCode().toUpperCase(Locale.ROOT);
+        } else {
+            blockCodeValue = "";
+        }
+        LocalDateTime createdAtValue;
+        if (b.getCreatedDate() != null) {
+            createdAtValue = b.getCreatedDate();
+        } else {
+            if (b.getExtractionDate() != null) {
+                createdAtValue = b.getExtractionDate().atStartOfDay();
+            } else {
+                createdAtValue = null;
+            }
+        }
+        String qualityGradeValue;
+        if (b.getQualityGrade() != null) {
+            qualityGradeValue = b.getQualityGrade().name();
+        } else {
+            qualityGradeValue = "";
+        }
+        String qualityGradeLabelValue;
+        if (b.getQualityGrade() != null) {
+            qualityGradeLabelValue = b.getQualityGrade().getLabel();
+        } else {
+            qualityGradeLabelValue = "";
+        }
+        String statusValue;
+        if (b.getStatus() != null) {
+            statusValue = b.getStatus().name();
+        } else {
+            statusValue = "";
+        }
+        String statusLabelValue;
+        if (b.getStatus() != null) {
+            statusLabelValue = b.getStatus().getLabel();
+        } else {
+            statusLabelValue = "";
+        }
+        BigDecimal extractionCostValue;
+        if (calculatedExtractionCost != null) {
+            extractionCostValue = calculatedExtractionCost;
+        } else {
+            extractionCostValue = b.getExtractionCost();
+        }
+        BigDecimal totalCostValue;
+        if (totalCost != null) {
+            totalCostValue = totalCost;
+        } else {
+            totalCostValue = b.getTotalCost();
+        }
+        String locationNameValue;
+        if (b.getCurrentLocation() != null) {
+            locationNameValue = b.getCurrentLocation().getName();
+        } else {
+            locationNameValue = "";
+        }
+        String locationTypeValue;
+        if (b.getCurrentLocation() != null && b.getCurrentLocation().getLocationType() != null) {
+            locationTypeValue = b.getCurrentLocation().getLocationType().name();
+        } else {
+            locationTypeValue = "";
+        }
+        String soldCustomerNameValue;
+        if (b.getSoldCustomer() != null) {
+            soldCustomerNameValue = b.getSoldCustomer().getCompanyName();
+        } else {
+            soldCustomerNameValue = "";
+        }
+        Long assignedCustomerIdValue;
+        if (b.getAssignedCustomer() != null) {
+            assignedCustomerIdValue = b.getAssignedCustomer().getId();
+        } else {
+            assignedCustomerIdValue = null;
+        }
+        String assignedCustomerNameValue;
+        if (b.getAssignedCustomer() != null) {
+            assignedCustomerNameValue = b.getAssignedCustomer().getCompanyName();
+        } else {
+            assignedCustomerNameValue = "";
+        }
         return BlockDto.builder()
                 .id(b.getId())
-                .quarryId(b.getQuarry() != null ? b.getQuarry().getId() : null)
-                .quarryName(b.getQuarry() != null ? b.getQuarry().getName() : "")
-                .blockCode(b.getBlockCode() != null ? b.getBlockCode().toUpperCase(Locale.ROOT) : "")
+                .quarryId(quarryIdValue)
+                .quarryName(quarryNameValue)
+                .blockCode(blockCodeValue)
                 .quarrySection(b.getQuarrySection())
                 .extractionDate(b.getExtractionDate())
-                .createdAt(b.getCreatedDate() != null ? b.getCreatedDate() : (b.getExtractionDate() != null ? b.getExtractionDate().atStartOfDay() : null))
+                .createdAt(createdAtValue)
                 .widthCm(b.getWidthCm())
                 .lengthCm(b.getLengthCm())
                 .heightCm(b.getHeightCm())
@@ -218,14 +312,14 @@ public class BlockDto {
                 .weightDeviationPct(b.getWeightDeviationPct())
                 .stoneType(b.getStoneType())
                 .colorTone(b.getColorTone())
-                .qualityGrade(b.getQualityGrade() != null ? b.getQualityGrade().name() : "")
-                .qualityGradeLabel(b.getQualityGrade() != null ? b.getQualityGrade().getLabel() : "")
+                .qualityGrade(qualityGradeValue)
+                .qualityGradeLabel(qualityGradeLabelValue)
                 .crackLevel(b.getCrackLevel())
-                .status(b.getStatus() != null ? b.getStatus().name() : "")
-                .statusLabel(b.getStatus() != null ? b.getStatus().getLabel() : "")
-                .extractionCost(calculatedExtractionCost != null ? calculatedExtractionCost : b.getExtractionCost())
+                .status(statusValue)
+                .statusLabel(statusLabelValue)
+                .extractionCost(extractionCostValue)
                 .transportCost(b.getTransportCost())
-                .totalCost(totalCost != null ? totalCost : b.getTotalCost())
+                .totalCost(totalCostValue)
                 .calculatedExtractionCost(calculatedExtractionCost)
                 .surfaceAreaM2(surfaceAreaM2)
                 .marketValue(marketValue)
@@ -233,12 +327,11 @@ public class BlockDto {
                 .unitMarketValuePerTon(b.getUnitMarketValuePerTon())
                 .notes(b.getNotes())
                 .photoUrls(b.getPhotoUrls())
-                .locationName(b.getCurrentLocation() != null ? b.getCurrentLocation().getName() : "")
-                .locationType(b.getCurrentLocation() != null && b.getCurrentLocation().getLocationType() != null
-                        ? b.getCurrentLocation().getLocationType().name() : "")
-                .soldCustomerName(b.getSoldCustomer() != null ? b.getSoldCustomer().getCompanyName() : "")
-                .assignedCustomerId(b.getAssignedCustomer() != null ? b.getAssignedCustomer().getId() : null)
-                .assignedCustomerName(b.getAssignedCustomer() != null ? b.getAssignedCustomer().getCompanyName() : "")
+                .locationName(locationNameValue)
+                .locationType(locationTypeValue)
+                .soldCustomerName(soldCustomerNameValue)
+                .assignedCustomerId(assignedCustomerIdValue)
+                .assignedCustomerName(assignedCustomerNameValue)
                 .approximateTonnage(b.getApproximateTonnage())
                 .actualTonnage(b.getActualTonnage())
                 .canonicalStatus(b.getCanonicalStatus().name())

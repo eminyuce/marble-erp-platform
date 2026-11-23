@@ -70,6 +70,30 @@ public class SupplierDto {
     public static SupplierDto fromEntity(Supplier supplier) {
         SupplierType type = supplier.getSupplierType();
         com.ozerler.marble.model.enums.BusinessUnit bu = supplier.getBusinessUnit();
+        String supplierTypeValue;
+        if (type != null) {
+            supplierTypeValue = type.name();
+        } else {
+            supplierTypeValue = null;
+        }
+        String supplierTypeLabelValue;
+        if (type != null) {
+            supplierTypeLabelValue = type.getLabel();
+        } else {
+            supplierTypeLabelValue = "";
+        }
+        String businessUnitValue;
+        if (bu != null) {
+            businessUnitValue = bu.name();
+        } else {
+            businessUnitValue = null;
+        }
+        String businessUnitLabelValue;
+        if (bu != null) {
+            businessUnitLabelValue = bu.getDisplayName();
+        } else {
+            businessUnitLabelValue = "";
+        }
         return SupplierDto.builder()
                 .id(supplier.getId())
                 .supplierCode(supplier.getSupplierCode())
@@ -80,10 +104,10 @@ public class SupplierDto {
                 .address(supplier.getAddress())
                 .taxOffice(supplier.getTaxOffice())
                 .taxNumber(supplier.getTaxNumber())
-                .supplierType(type != null ? type.name() : null)
-                .supplierTypeLabel(type != null ? type.getLabel() : "")
-                .businessUnit(bu != null ? bu.name() : null)
-                .businessUnitLabel(bu != null ? bu.getDisplayName() : "")
+                .supplierType(supplierTypeValue)
+                .supplierTypeLabel(supplierTypeLabelValue)
+                .businessUnit(businessUnitValue)
+                .businessUnitLabel(businessUnitLabelValue)
                 .notes(supplier.getNotes())
                 .build();
     }

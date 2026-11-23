@@ -1,5 +1,6 @@
 package com.ozerler.marble.web;
 
+import java.util.Objects;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -41,20 +42,86 @@ public final class StockYardResponses {
             Map<String, Object> map = new HashMap<>();
             map.put("id", s.getId());
             map.put("slabCode", s.getSlabCode());
-            map.put("sourceBlockCode", s.getBlock() != null ? s.getBlock().getBlockCode() : "—");
-            map.put("stoneType", s.getBlock() != null && s.getBlock().getStoneType() != null ? s.getBlock().getStoneType() : "—");
-            map.put("qualityGrade", s.getQualityGrade() != null ? s.getQualityGrade().getDisplayName() : "1. Sınıf");
-            map.put("surfaceFinish", s.getSurfaceFinish() != null ? s.getSurfaceFinish().getDisplayName() : "Cilalı");
-            map.put("thicknessCm", s.getThicknessCm() != null ? s.getThicknessCm() + " cm" : "2 cm");
-            map.put("dimensions", (s.getWidthCm() != null && s.getLengthCm() != null) ? (s.getWidthCm() + "×" + s.getLengthCm() + " cm") : "—");
+            Object blockCode;
+            if (s.getBlock() != null) {
+                blockCode = s.getBlock().getBlockCode();
+            } else {
+                blockCode = "—";
+            }
+            map.put("sourceBlockCode", blockCode);
+            Object stoneType;
+            if (s.getBlock() != null && s.getBlock().getStoneType() != null) {
+                stoneType = s.getBlock().getStoneType();
+            } else {
+                stoneType = "—";
+            }
+            map.put("stoneType", stoneType);
+            Object displayName;
+            if (s.getQualityGrade() != null) {
+                displayName = s.getQualityGrade().getDisplayName();
+            } else {
+                displayName = "1. Sınıf";
+            }
+            map.put("qualityGrade", displayName);
+            Object displayNameValue;
+            if (s.getSurfaceFinish() != null) {
+                displayNameValue = s.getSurfaceFinish().getDisplayName();
+            } else {
+                displayNameValue = "Cilalı";
+            }
+            map.put("surfaceFinish", displayNameValue);
+            Object value;
+            if (s.getThicknessCm() != null) {
+                value = s.getThicknessCm() + " cm";
+            } else {
+                value = "2 cm";
+            }
+            map.put("thicknessCm", value);
+            Object valueValue;
+            if (s.getWidthCm() != null && s.getLengthCm() != null) {
+                valueValue = s.getWidthCm() + "×" + s.getLengthCm() + " cm";
+            } else {
+                valueValue = "—";
+            }
+            map.put("dimensions", valueValue);
             map.put("surfaceAreaM2", s.getSurfaceAreaM2());
             map.put("pieceCount", 1);
-            map.put("customerName", s.getCustomer() != null ? s.getCustomer().getCompanyName() : null);
-            map.put("customerId", s.getCustomer() != null ? s.getCustomer().getId() : null);
+            Object companyName;
+            if (s.getCustomer() != null) {
+                companyName = s.getCustomer().getCompanyName();
+            } else {
+                companyName = null;
+            }
+            map.put("customerName", companyName);
+            Long id;
+            if (s.getCustomer() != null) {
+                id = s.getCustomer().getId();
+            } else {
+                id = null;
+            }
+            map.put("customerId", id);
             map.put("isGeneralStock", s.getCustomer() == null);
-            map.put("status", s.getStatus() != null ? s.getStatus().name() : "AVAILABLE");
-            map.put("statusLabel", s.getStatus() != null ? s.getStatus().getDisplayName() : "Hazır");
-            map.put("createdDate", s.getCreatedDate() != null ? s.getCreatedDate().format(DATE_FORMAT) : "—");
+            Object valueValue2;
+            if (s.getStatus() != null) {
+                valueValue2 = s.getStatus().name();
+            } else {
+                valueValue2 = "AVAILABLE";
+            }
+            map.put("status", valueValue2);
+            Object displayNameValue2;
+            if (s.getStatus() != null) {
+                displayNameValue2 = s.getStatus().getDisplayName();
+            } else {
+                displayNameValue2 = "Hazır";
+            }
+            map.put("statusLabel", displayNameValue2);
+            Object valueValue3;
+            if (s.getCreatedDate() != null) {
+                valueValue3 = s.getCreatedDate().format(DATE_FORMAT);
+            } else {
+                valueValue3 = "—";
+            }
+            map.put("createdDate", valueValue3);
             map.put("notes", "");
             return map;
         }).collect(Collectors.toList());
@@ -80,7 +147,7 @@ public final class StockYardResponses {
     private static Map<String, Object> factorySizedRow(StockItemView it) {
         Map<String, Object> map = new HashMap<>();
         putSizedIdentity(map, it);
-        map.put("edgeFinish", it.getEdgeFinish() != null ? it.getEdgeFinish() : "Düz");
+        map.put("edgeFinish", Objects.requireNonNullElse(it.getEdgeFinish(), "Düz"));
         putSizedMeasurements(map, it, "m2");
         map.put("pieceCount", it.getPieceCount());
         map.put("actualProducedQuantity", it.getActualProducedQuantity());
@@ -96,10 +163,20 @@ public final class StockYardResponses {
         map.put("customerName", customerName);
         map.put("customerId", custId);
         map.put("isGeneralStock", it.getCustomer() == null);
-        map.put("productionDate", it.getProductionDate() != null ? it.getProductionDate().format(DATE_FORMAT) : it.getCreatedDate() != null ? it.getCreatedDate().format(DATE_FORMAT) : "—");
-        map.put("status", it.getStatus() != null ? it.getStatus() : "AVAILABLE");
+        Object value;
+        if (it.getProductionDate() != null) {
+            value = it.getProductionDate().format(DATE_FORMAT);
+        } else {
+            if (it.getCreatedDate() != null) {
+                value = it.getCreatedDate().format(DATE_FORMAT);
+            } else {
+                value = "—";
+            }
+        }
+        map.put("productionDate", value);
+        map.put("status", Objects.requireNonNullElse(it.getStatus(), "AVAILABLE"));
         map.put("statusLabel", "Hazır / Stokta");
-        map.put("notes", it.getNotes() != null ? it.getNotes() : "");
+        map.put("notes", Objects.requireNonNullElse(it.getNotes(), ""));
         return map;
     }
 
@@ -107,7 +184,7 @@ public final class StockYardResponses {
         Map<String, Object> map = new HashMap<>();
         putSizedIdentity(map, it);
         putSizedMeasurements(map, it, "m²");
-        map.put("pieceCount", it.getPieceCount() != null ? it.getPieceCount() : "—");
+        map.put("pieceCount", Objects.requireNonNullElse(it.getPieceCount(), "—"));
         String crateLoc = "—";
         if (it.getStockLocation() != null) {
             try {
@@ -116,12 +193,30 @@ public final class StockYardResponses {
             }
         }
         map.put("crateNumber", crateLoc);
-        map.put("customerName", it.getCustomer() != null ? it.getCustomer().getCompanyName() : null);
-        map.put("customerId", it.getCustomer() != null ? it.getCustomer().getId() : null);
+        Object companyName;
+        if (it.getCustomer() != null) {
+            companyName = it.getCustomer().getCompanyName();
+        } else {
+            companyName = null;
+        }
+        map.put("customerName", companyName);
+        Long id;
+        if (it.getCustomer() != null) {
+            id = it.getCustomer().getId();
+        } else {
+            id = null;
+        }
+        map.put("customerId", id);
         map.put("isGeneralStock", it.getCustomer() == null);
         map.put("statusLabel", "Stokta");
-        map.put("createdDate", it.getCreatedDate() != null ? it.getCreatedDate().format(DATE_FORMAT) : "—");
-        map.put("notes", it.getNotes() != null ? it.getNotes() : "");
+        Object value;
+        if (it.getCreatedDate() != null) {
+            value = it.getCreatedDate().format(DATE_FORMAT);
+        } else {
+            value = "—";
+        }
+        map.put("createdDate", value);
+        map.put("notes", Objects.requireNonNullElse(it.getNotes(), ""));
         return map;
     }
 
@@ -136,16 +231,40 @@ public final class StockYardResponses {
                 sourceBlockCode = "—";
             }
         }
-        map.put("sourceBlockCode", sourceBlockCode != null ? sourceBlockCode : "—");
-        map.put("stoneType", it.getStoneType() != null ? it.getStoneType() : "Mermer");
-        map.put("description", it.getDescription() != null ? it.getDescription() : "Ebatlı Mermer");
-        map.put("surfaceFinish", it.getSurfaceFinish() != null ? it.getSurfaceFinish().getDisplayName() : "Cilalı");
+        map.put("sourceBlockCode", Objects.requireNonNullElse(sourceBlockCode, "—"));
+        map.put("stoneType", Objects.requireNonNullElse(it.getStoneType(), "Mermer"));
+        map.put("description", Objects.requireNonNullElse(it.getDescription(), "Ebatlı Mermer"));
+        Object displayName;
+        if (it.getSurfaceFinish() != null) {
+            displayName = it.getSurfaceFinish().getDisplayName();
+        } else {
+            displayName = "Cilalı";
+        }
+        map.put("surfaceFinish", displayName);
     }
 
     private static void putSizedMeasurements(Map<String, Object> map, StockItemView it, String defaultUnit) {
-        map.put("thicknessCm", it.getThicknessCm() != null ? it.getThicknessCm() + " cm" : "2 cm");
-        map.put("dimensions", (it.getWidthCm() != null && it.getLengthCm() != null) ? (it.getWidthCm() + "×" + it.getLengthCm() + " cm") : "—");
+        Object value;
+        if (it.getThicknessCm() != null) {
+            value = it.getThicknessCm() + " cm";
+        } else {
+            value = "2 cm";
+        }
+        map.put("thicknessCm", value);
+        Object valueValue;
+        if (it.getWidthCm() != null && it.getLengthCm() != null) {
+            valueValue = it.getWidthCm() + "×" + it.getLengthCm() + " cm";
+        } else {
+            valueValue = "—";
+        }
+        map.put("dimensions", valueValue);
         map.put("quantity", it.getQuantity());
-        map.put("unit", it.getUnit() != null ? it.getUnit() : defaultUnit);
+        Object unit;
+        if (it.getUnit() != null) {
+            unit = it.getUnit();
+        } else {
+            unit = defaultUnit;
+        }
+        map.put("unit", unit);
     }
 }

@@ -115,6 +115,9 @@ public class Slab extends AuditableEntity {
 
     @Transient
     public String getStoneType() {
-        return block != null ? block.getStoneType() : null;
+        if (block != null) {
+            return block.getStoneType();
+        }
+        return null;
     }
 }

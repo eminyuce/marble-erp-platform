@@ -191,8 +191,18 @@ class S3ObjectStorageServiceTest {
         Map<String, String> params = new HashMap<>();
         for (String pair : query.split("&")) {
             int separator = pair.indexOf('=');
-            String key = separator < 0 ? pair : pair.substring(0, separator);
-            String value = separator < 0 ? "" : pair.substring(separator + 1);
+            String key;
+            if (separator < 0) {
+                key = pair;
+            } else {
+                key = pair.substring(0, separator);
+            }
+            String value;
+            if (separator < 0) {
+                value = "";
+            } else {
+                value = pair.substring(separator + 1);
+            }
             params.put(key, value);
         }
         return params;

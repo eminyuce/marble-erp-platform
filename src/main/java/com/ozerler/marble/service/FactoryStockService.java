@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -98,7 +99,12 @@ public class FactoryStockService {
         Block block = blockRepository.findById(blockId)
                 .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + blockId));
 
-        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
+        Customer customer;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+        } else {
+            customer = null;
+        }
         block.setAssignedCustomer(customer);
         return blockRepository.save(block);
     }
@@ -132,9 +138,23 @@ public class FactoryStockService {
         BigDecimal cost = BigDecimal.ZERO;
         BigDecimal sale = BigDecimal.ZERO;
         for (Block block : blocks) {
-            weight = weight.add(block.getActualTonnage() != null ? block.getActualTonnage()
-                    : block.getApproximateTonnage() != null ? block.getApproximateTonnage() : BigDecimal.ZERO);
-            BigDecimal lineCost = block.getTotalCost() != null ? block.getTotalCost() : BigDecimal.ZERO;
+            BigDecimal actualTonnage;
+            if (block.getActualTonnage() != null) {
+                actualTonnage = block.getActualTonnage();
+            } else {
+                if (block.getApproximateTonnage() != null) {
+                    actualTonnage = block.getApproximateTonnage();
+                } else {
+                    actualTonnage = BigDecimal.ZERO;
+                }
+            }
+            weight = weight.add(actualTonnage);
+            BigDecimal lineCost;
+            if (block.getTotalCost() != null) {
+                lineCost = block.getTotalCost();
+            } else {
+                lineCost = BigDecimal.ZERO;
+            }
             cost = cost.add(lineCost);
             sale = sale.add(saleValue(block, lineCost));
         }
@@ -154,7 +174,12 @@ public class FactoryStockService {
     @Transactional
     public String assignCustomerMessage(Long blockId, Long customerId) {
         Block block = assignCustomerToBlock(blockId, customerId);
-        String custName = block.getAssignedCustomer() != null ? block.getAssignedCustomer().getCompanyName() : "Genel Stok";
+        String custName;
+        if (block.getAssignedCustomer() != null) {
+            custName = block.getAssignedCustomer().getCompanyName();
+        } else {
+            custName = "Genel Stok";
+        }
         return "Blok (" + block.getBlockCode() + ") müşterisi güncellendi: " + custName;
     }
 
@@ -175,8 +200,16 @@ public class FactoryStockService {
             return block.getSalePrice();
         }
         if (block.getUnitMarketValuePerTon() != null && block.getUnitMarketValuePerTon().compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage()
-                    : block.getApproximateTonnage() != null ? block.getApproximateTonnage() : BigDecimal.ZERO;
+            BigDecimal ton;
+            if (block.getActualTonnage() != null) {
+                ton = block.getActualTonnage();
+            } else {
+                if (block.getApproximateTonnage() != null) {
+                    ton = block.getApproximateTonnage();
+                } else {
+                    ton = BigDecimal.ZERO;
+                }
+            }
             return block.getUnitMarketValuePerTon().multiply(ton);
         }
         return cost;
@@ -186,25 +219,73 @@ public class FactoryStockService {
         Map<String, Object> map = new HashMap<>();
         map.put("id", block.getId());
         map.put("blockCode", block.getBlockCode());
-        map.put("stoneType", block.getStoneType() != null ? block.getStoneType() : "—");
-        map.put("quarryName", block.getQuarry() != null ? block.getQuarry().getName()
-                : block.getQuarryName() != null ? block.getQuarryName() : "Merkez Ocak");
-        map.put("arrivalDate", block.getArrivalDate() != null ? block.getArrivalDate().format(dateFmt)
-                : block.getCreatedDate() != null ? block.getCreatedDate().format(dateFmt) : "—");
-        map.put("estimatedTonnage", block.getEstimatedTonnage() != null ? block.getEstimatedTonnage()
-                : block.getApproximateTonnage());
+        map.put("stoneType", Objects.requireNonNullElse(block.getStoneType(), "—"));
+        Object name;
+        if (block.getQuarry() != null) {
+            name = block.getQuarry().getName();
+        } else {
+            if (block.getQuarryName() != null) {
+                name = block.getQuarryName();
+            } else {
+                name = "Merkez Ocak";
+            }
+        }
+        map.put("quarryName", name);
+        Object value;
+        if (block.getArrivalDate() != null) {
+            value = block.getArrivalDate().format(dateFmt);
+        } else {
+            if (block.getCreatedDate() != null) {
+                value = block.getCreatedDate().format(dateFmt);
+            } else {
+                value = "—";
+            }
+        }
+        map.put("arrivalDate", value);
+        Object estimatedTonnage;
+        if (block.getEstimatedTonnage() != null) {
+            estimatedTonnage = block.getEstimatedTonnage();
+        } else {
+            estimatedTonnage = block.getApproximateTonnage();
+        }
+        map.put("estimatedTonnage", estimatedTonnage);
         map.put("actualTonnage", block.getActualTonnage());
-        map.put("dimensions", block.getDimensions() != null ? block.getDimensions() : "—");
-        map.put("customerName", block.getAssignedCustomer() != null ? block.getAssignedCustomer().getCompanyName() : null);
-        map.put("customerId", block.getAssignedCustomer() != null ? block.getAssignedCustomer().getId() : null);
+        map.put("dimensions", Objects.requireNonNullElse(block.getDimensions(), "—"));
+        Object companyName;
+        if (block.getAssignedCustomer() != null) {
+            companyName = block.getAssignedCustomer().getCompanyName();
+        } else {
+            companyName = null;
+        }
+        map.put("customerName", companyName);
+        Long id;
+        if (block.getAssignedCustomer() != null) {
+            id = block.getAssignedCustomer().getId();
+        } else {
+            id = null;
+        }
+        map.put("customerId", id);
         map.put("isGeneralStock", block.getAssignedCustomer() == null);
         map.put("statusLabel", "Kesilmemiş Blok");
-        map.put("notes", block.getNotes() != null ? block.getNotes() : "");
-        BigDecimal cost = block.getTotalCost() != null ? block.getTotalCost() : BigDecimal.ZERO;
+        map.put("notes", Objects.requireNonNullElse(block.getNotes(), ""));
+        BigDecimal cost;
+        if (block.getTotalCost() != null) {
+            cost = block.getTotalCost();
+        } else {
+            cost = BigDecimal.ZERO;
+        }
         BigDecimal saleOrMarket = block.getSalePrice();
         if ((saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) && block.getUnitMarketValuePerTon() != null) {
-            BigDecimal ton = block.getActualTonnage() != null ? block.getActualTonnage()
-                    : block.getApproximateTonnage() != null ? block.getApproximateTonnage() : BigDecimal.ZERO;
+            BigDecimal ton;
+            if (block.getActualTonnage() != null) {
+                ton = block.getActualTonnage();
+            } else {
+                if (block.getApproximateTonnage() != null) {
+                    ton = block.getApproximateTonnage();
+                } else {
+                    ton = BigDecimal.ZERO;
+                }
+            }
             saleOrMarket = block.getUnitMarketValuePerTon().multiply(ton).setScale(2, RoundingMode.HALF_UP);
         }
         if (saleOrMarket == null || saleOrMarket.compareTo(BigDecimal.ZERO) <= 0) {
@@ -228,7 +309,12 @@ public class FactoryStockService {
         Slab slab = slabRepository.findById(slabId)
                 .orElseThrow(() -> new IllegalArgumentException("Plaka bulunamadı: " + slabId));
 
-        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
+        Customer customer;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+        } else {
+            customer = null;
+        }
         slab.setCustomer(customer);
         if (customer != null && slab.getStatus() == SlabStatus.AVAILABLE) {
             slab.setStatus(SlabStatus.RESERVED);
@@ -245,10 +331,30 @@ public class FactoryStockService {
         Block block = blockRepository.findById(blockId)
                 .orElseThrow(() -> new IllegalArgumentException("Kaynak blok bulunamadı: " + blockId));
 
-        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
-        BigDecimal thick = thicknessCm != null ? thicknessCm : new BigDecimal("2.00");
-        BigDecimal width = widthCm != null ? widthCm : BigDecimal.valueOf(block.getWidthCm());
-        BigDecimal length = lengthCm != null ? lengthCm : BigDecimal.valueOf(block.getLengthCm());
+        Customer customer;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+        } else {
+            customer = null;
+        }
+        BigDecimal thick;
+        if (thicknessCm != null) {
+            thick = thicknessCm;
+        } else {
+            thick = new BigDecimal("2.00");
+        }
+        BigDecimal width;
+        if (widthCm != null) {
+            width = widthCm;
+        } else {
+            width = BigDecimal.valueOf(block.getWidthCm());
+        }
+        BigDecimal length;
+        if (lengthCm != null) {
+            length = lengthCm;
+        } else {
+            length = BigDecimal.valueOf(block.getLengthCm());
+        }
         BigDecimal area = width.multiply(length).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
 
         String orderNo = UniqueCodes.yearly("PRD", productionOrderRepository::existsByOrderNo);
@@ -264,6 +370,12 @@ public class FactoryStockService {
 
         String slabCode = UniqueCodes.yearly("SLB", slabRepository::existsBySlabCode);
 
+        SlabStatus status;
+        if (customer != null) {
+            status = SlabStatus.RESERVED;
+        } else {
+            status = SlabStatus.AVAILABLE;
+        }
         Slab slab = Slab.builder()
                 .slabCode(slabCode)
                 .productionOrder(order)
@@ -272,10 +384,10 @@ public class FactoryStockService {
                 .widthCm(width)
                 .lengthCm(length)
                 .surfaceAreaM2(area)
-                .qualityGrade(qualityGrade != null ? qualityGrade : QualityGrade.A)
-                .surfaceFinish(surfaceFinish != null ? surfaceFinish : SurfaceFinish.RAW)
+                .qualityGrade(Objects.requireNonNullElse(qualityGrade, QualityGrade.A))
+                .surfaceFinish(Objects.requireNonNullElse(surfaceFinish, SurfaceFinish.RAW))
                 .customer(customer)
-                .status(customer != null ? SlabStatus.RESERVED : SlabStatus.AVAILABLE)
+                .status(status)
                 .costPerM2(BigDecimal.ZERO)
                 .build();
 
@@ -293,7 +405,12 @@ public class FactoryStockService {
 
         Block block = blockRepository.findById(blockId)
                 .orElseThrow(() -> new IllegalArgumentException("Kaynak blok bulunamadı: " + blockId));
-        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
+        Customer customer;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+        } else {
+            customer = null;
+        }
 
         String orderNo = UniqueCodes.yearly("PRD", productionOrderRepository::existsByOrderNo);
         ProductionOrder order = productionOrderRepository.save(ProductionOrder.builder()
@@ -314,18 +431,29 @@ public class FactoryStockService {
         for (int i = 0; i < widths.size(); i++) {
             RowDimensions.Row row = RowDimensions.positiveWidth(
                     widths, lengths, thicknesses, i,
-                    commonThicknessCm != null ? commonThicknessCm : new BigDecimal("2.00"));
+                    Objects.requireNonNullElse(commonThicknessCm, new BigDecimal("2.00")));
             if (row == null) {
                 continue;
             }
             BigDecimal w = row.width();
             BigDecimal l = row.length();
             BigDecimal t = row.thickness();
-            int count = (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null) ? pieceCounts.get(i) : 1;
+            int count;
+            if (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null) {
+                count = pieceCounts.get(i);
+            } else {
+                count = 1;
+            }
             BigDecimal area = w.multiply(l).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
 
             for (int k = 0; k < count; k++) {
                 String slabCode = UniqueCodes.yearly("SLB", slabRepository::existsBySlabCode);
+                SlabStatus status;
+                if (customer != null) {
+                    status = SlabStatus.RESERVED;
+                } else {
+                    status = SlabStatus.AVAILABLE;
+                }
                 Slab slab = Slab.builder()
                         .slabCode(slabCode)
                         .productionOrder(order)
@@ -334,10 +462,10 @@ public class FactoryStockService {
                         .widthCm(w)
                         .lengthCm(l)
                         .surfaceAreaM2(area)
-                        .qualityGrade(qualityGrade != null ? qualityGrade : QualityGrade.A)
-                        .surfaceFinish(surfaceFinish != null ? surfaceFinish : SurfaceFinish.RAW)
+                        .qualityGrade(Objects.requireNonNullElse(qualityGrade, QualityGrade.A))
+                        .surfaceFinish(Objects.requireNonNullElse(surfaceFinish, SurfaceFinish.RAW))
                         .customer(customer)
-                        .status(customer != null ? SlabStatus.RESERVED : SlabStatus.AVAILABLE)
+                        .status(status)
                         .costPerM2(BigDecimal.ZERO)
                         .build();
 
@@ -399,12 +527,27 @@ public class FactoryStockService {
                                      BigDecimal actualProducedQuantity, Long customerId, String qualityGradeStr,
                                      String surfaceFinishStr, String edgeFinish, String notes) {
 
-        Block block = blockId != null ? blockRepository.findById(blockId).orElse(null) : null;
-        Slab slab = slabId != null ? slabRepository.findById(slabId).orElse(null) : null;
+        Block block;
+        if (blockId != null) {
+            block = blockRepository.findById(blockId).orElse(null);
+        } else {
+            block = null;
+        }
+        Slab slab;
+        if (slabId != null) {
+            slab = slabRepository.findById(slabId).orElse(null);
+        } else {
+            slab = null;
+        }
         if (block == null && slab != null && slab.getBlock() != null) {
             block = slab.getBlock();
         }
-        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
+        Customer customer;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+        } else {
+            customer = null;
+        }
         if (customer == null && slab != null && slab.getCustomer() != null) {
             customer = slab.getCustomer();
         }
@@ -420,12 +563,30 @@ public class FactoryStockService {
 
         String code = UniqueCodes.yearly("EBT", stockItemRepository::existsByItemCode);
 
-        BigDecimal thick = thicknessCm != null ? thicknessCm : new BigDecimal("2.00");
-        BigDecimal w = widthCm != null ? widthCm : new BigDecimal("60.00");
-        BigDecimal l = lengthCm != null ? lengthCm : new BigDecimal("60.00");
-        BigDecimal qty = quantity != null
-                ? quantity.setScale(2, RoundingMode.HALF_UP)
-                : w.multiply(l).multiply(BigDecimal.valueOf(pieceCount)).divide(BigDecimal.valueOf(10000), 2, RoundingMode.HALF_UP);
+        BigDecimal thick;
+        if (thicknessCm != null) {
+            thick = thicknessCm;
+        } else {
+            thick = new BigDecimal("2.00");
+        }
+        BigDecimal w;
+        if (widthCm != null) {
+            w = widthCm;
+        } else {
+            w = new BigDecimal("60.00");
+        }
+        BigDecimal l;
+        if (lengthCm != null) {
+            l = lengthCm;
+        } else {
+            l = new BigDecimal("60.00");
+        }
+        BigDecimal qty;
+        if (quantity != null) {
+            qty = quantity.setScale(2, RoundingMode.HALF_UP);
+        } else {
+            qty = w.multiply(l).multiply(BigDecimal.valueOf(pieceCount)).divide(BigDecimal.valueOf(10000), 2, RoundingMode.HALF_UP);
+        }
 
         QualityGrade grade = QualityGrade.A;
         if (qualityGradeStr != null) {
@@ -436,20 +597,45 @@ public class FactoryStockService {
             try { surface = SurfaceFinish.valueOf(surfaceFinishStr); } catch (Exception ignored) {}
         }
 
-        BigDecimal actualProduced = actualProducedQuantity != null ? actualProducedQuantity.setScale(2, RoundingMode.HALF_UP) : qty;
+        BigDecimal actualProduced;
+        if (actualProducedQuantity != null) {
+            actualProduced = actualProducedQuantity.setScale(2, RoundingMode.HALF_UP);
+        } else {
+            actualProduced = qty;
+        }
 
         String combinedNotes = notes;
         if (slab != null) {
             String slabInfo = "[Kaynak Plaka: " + slab.getSlabCode() + "]";
-            combinedNotes = (combinedNotes != null && !combinedNotes.isBlank()) ? combinedNotes + " " + slabInfo : slabInfo;
+            if (combinedNotes != null && !combinedNotes.isBlank()) {
+                combinedNotes = combinedNotes + " " + slabInfo;
+            } else {
+                combinedNotes = slabInfo;
+            }
         }
 
+        String stoneType;
+        if (block != null) {
+            stoneType = block.getStoneType();
+        } else {
+            if (slab != null && slab.getBlock() != null) {
+                stoneType = slab.getBlock().getStoneType();
+            } else {
+                stoneType = "Mermer";
+            }
+        }
+        String descriptionValue;
+        if (description != null && !description.isBlank()) {
+            descriptionValue = description;
+        } else {
+            descriptionValue = "Ebatlı Mermer " + thick + "x" + w + "x" + l;
+        }
         StockItem item = StockItem.builder()
                 .itemCode(code)
                 .productType(StockProductType.SIZED)
                 .sourceBlock(block)
-                .stoneType(block != null ? block.getStoneType() : slab != null && slab.getBlock() != null ? slab.getBlock().getStoneType() : "Mermer")
-                .description(description != null && !description.isBlank() ? description : "Ebatlı Mermer " + thick + "x" + w + "x" + l)
+                .stoneType(stoneType)
+                .description(descriptionValue)
                 .thicknessCm(thick)
                 .widthCm(w)
                 .lengthCm(l)
@@ -461,7 +647,7 @@ public class FactoryStockService {
                 .stockLocation(sizedLoc)
                 .qualityGrade(grade)
                 .surfaceFinish(surface)
-                .edgeFinish(edgeFinish != null ? edgeFinish : "DUZ")
+                .edgeFinish(Objects.requireNonNullElse(edgeFinish, "DUZ"))
                 .status("AVAILABLE")
                 .productionDate(LocalDate.now())
                 .notes(combinedNotes)
@@ -498,14 +684,29 @@ public class FactoryStockService {
 
         RowDimensions.eachPositiveSizedRow(widths, lengths, thicknesses, pieceCounts, quantities, new BigDecimal("2.0"),
                 (index, width, length, thickness, count, quantity) -> {
-            String desc = (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank())
-                    ? descriptions.get(index).trim()
-                    : defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Ebatlı Mermer " + thickness + "x" + width + "x" + length);
+            String desc;
+            if (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank()) {
+                desc = descriptions.get(index).trim();
+            } else {
+                if (defaultDescription != null && !defaultDescription.isBlank()) {
+                    desc = defaultDescription;
+                } else {
+                    desc = "Ebatlı Mermer " + thickness + "x" + width + "x" + length;
+                }
+            }
 
-            String rowSurface = (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank())
-                    ? rowSurfaceFinishes.get(index).trim() : surfaceFinishStr;
-            String rowEdge = (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank())
-                    ? rowEdgeFinishes.get(index).trim() : edgeFinish;
+            String rowSurface;
+            if (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank()) {
+                rowSurface = rowSurfaceFinishes.get(index).trim();
+            } else {
+                rowSurface = surfaceFinishStr;
+            }
+            String rowEdge;
+            if (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank()) {
+                rowEdge = rowEdgeFinishes.get(index).trim();
+            } else {
+                rowEdge = edgeFinish;
+            }
 
             StockItem item = createSizedItem(blockId, slabId, desc, thickness, width, length, quantity, count, quantity, customerId, qualityGradeStr, rowSurface, rowEdge, notes);
             created.add(item);
@@ -518,7 +719,12 @@ public class FactoryStockService {
         StockItem item = stockItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Stok ürünü bulunamadı: " + itemId));
 
-        Customer customer = customerId != null ? customerRepository.findById(customerId).orElse(null) : null;
+        Customer customer;
+        if (customerId != null) {
+            customer = customerRepository.findById(customerId).orElse(null);
+        } else {
+            customer = null;
+        }
         item.setCustomer(customer);
         return stockItemRepository.save(item);
     }

@@ -17,8 +17,18 @@ public final class QuarryPeriodCost {
 
     public static QuarryPeriodCostResult calculate(String expensePeriod, BigDecimal periodExpense, BigDecimal producedTons) {
         Objects.requireNonNull(expensePeriod, MessageUtils.getMessage("error.expense.period.required"));
-        BigDecimal expense = periodExpense != null ? periodExpense : BigDecimal.ZERO;
-        BigDecimal tons = producedTons != null ? producedTons : BigDecimal.ZERO;
+        BigDecimal expense;
+        if (periodExpense != null) {
+            expense = periodExpense;
+        } else {
+            expense = BigDecimal.ZERO;
+        }
+        BigDecimal tons;
+        if (producedTons != null) {
+            tons = producedTons;
+        } else {
+            tons = BigDecimal.ZERO;
+        }
         if (expense.compareTo(BigDecimal.ZERO) < 0 || tons.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.cost.negative_amount"));
         }

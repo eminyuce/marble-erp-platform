@@ -20,12 +20,32 @@ public final class GridColumn {
 
     public GridColumn(String key, String label, boolean sortable, int minWidth,
                       String filterParam, List<FilterChoice> filters) {
-        this.key = key == null ? "" : key;
-        this.label = label == null ? "" : label;
+        if (key == null) {
+            this.key = "";
+        } else {
+            this.key = key;
+        }
+        if (label == null) {
+            this.label = "";
+        } else {
+            this.label = label;
+        }
         this.sortable = sortable && !this.key.isBlank();
-        this.minWidth = minWidth < 72 ? 72 : minWidth;
-        this.filterParam = filterParam == null ? "" : filterParam;
-        this.filters = filters == null ? List.of() : List.copyOf(filters);
+        if (minWidth < 72) {
+            this.minWidth = 72;
+        } else {
+            this.minWidth = minWidth;
+        }
+        if (filterParam == null) {
+            this.filterParam = "";
+        } else {
+            this.filterParam = filterParam;
+        }
+        if (filters == null) {
+            this.filters = List.of();
+        } else {
+            this.filters = List.copyOf(filters);
+        }
     }
 
     public static GridColumn text(String key, String label, boolean sortable) {
@@ -74,8 +94,16 @@ public final class GridColumn {
         private final String label;
 
         public FilterChoice(String value, String label) {
-            this.value = value == null ? "" : value;
-            this.label = label == null ? "" : label;
+            if (value == null) {
+                this.value = "";
+            } else {
+                this.value = value;
+            }
+            if (label == null) {
+                this.label = "";
+            } else {
+                this.label = label;
+            }
         }
 
         public String getValue() {

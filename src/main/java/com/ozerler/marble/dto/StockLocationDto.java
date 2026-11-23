@@ -48,14 +48,38 @@ public class StockLocationDto {
     public static StockLocationDto fromEntity(StockLocation location) {
         BusinessUnit unit = location.getBusinessUnit();
         StockLocationType type = location.getLocationType();
+        String businessUnitValue;
+        if (unit != null) {
+            businessUnitValue = unit.name();
+        } else {
+            businessUnitValue = null;
+        }
+        String businessUnitLabelValue;
+        if (unit != null) {
+            businessUnitLabelValue = unit.getLabel();
+        } else {
+            businessUnitLabelValue = "";
+        }
+        String locationTypeValue;
+        if (type != null) {
+            locationTypeValue = type.name();
+        } else {
+            locationTypeValue = null;
+        }
+        String locationTypeLabelValue;
+        if (type != null) {
+            locationTypeLabelValue = type.getLabel();
+        } else {
+            locationTypeLabelValue = "";
+        }
         return StockLocationDto.builder()
                 .id(location.getId())
                 .code(location.getCode())
                 .name(location.getName())
-                .businessUnit(unit != null ? unit.name() : null)
-                .businessUnitLabel(unit != null ? unit.getLabel() : "")
-                .locationType(type != null ? type.name() : null)
-                .locationTypeLabel(type != null ? type.getLabel() : "")
+                .businessUnit(businessUnitValue)
+                .businessUnitLabel(businessUnitLabelValue)
+                .locationType(locationTypeValue)
+                .locationTypeLabel(locationTypeLabelValue)
                 .active(location.isActive())
                 .build();
     }

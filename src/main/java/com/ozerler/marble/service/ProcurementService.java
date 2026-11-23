@@ -142,8 +142,14 @@ public class ProcurementService {
 
         CostCenter costCenter = resolveCostCenter(businessUnit, costCenterId);
 
+        String poNumberValue;
+        if (poNumber != null) {
+            poNumberValue = poNumber.trim();
+        } else {
+            poNumberValue = "SIP-" + System.currentTimeMillis();
+        }
         PurchaseOrder order = PurchaseOrder.builder()
-                .poNumber(poNumber != null ? poNumber.trim() : "SIP-" + System.currentTimeMillis())
+                .poNumber(poNumberValue)
                 .supplier(supplier)
                 .project(project)
                 .businessUnit(businessUnit)
@@ -166,9 +172,9 @@ public class ProcurementService {
                 .purchaseOrder(order)
                 .itemName(itemName)
                 .itemType(PurchaseItemType.fromCode(itemType))
-                .quantity(quantity != null ? quantity : BigDecimal.ONE)
-                .unit(unit != null ? unit : "ADET")
-                .unitPrice(unitPrice != null ? unitPrice : BigDecimal.ZERO)
+                .quantity(Objects.requireNonNullElse(quantity, BigDecimal.ONE))
+                .unit(Objects.requireNonNullElse(unit, "ADET"))
+                .unitPrice(Objects.requireNonNullElse(unitPrice, BigDecimal.ZERO))
                 .build();
 
         item.calculateLineTotal();
@@ -217,9 +223,12 @@ public class ProcurementService {
         if (unit == BusinessUnit.SITE && order.getProject() == null) {
             throw new IllegalArgumentException(getMessage("error.purchase.site.project.required"));
         }
-        CostCenter center = order.getCostCenter() != null
-                ? order.getCostCenter()
-                : resolveCostCenter(unit, null);
+        CostCenter center;
+        if (order.getCostCenter() != null) {
+            center = order.getCostCenter();
+        } else {
+            center = resolveCostCenter(unit, null);
+        }
         String period = YearMonth.now().toString();
         expenseService.recordExpense(new ExpenseService.ExpenseDraft(
                 center.getId(), ExpenseType.MATERIAL, null, unit, order.getTotalAmount(),

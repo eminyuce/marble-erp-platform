@@ -1,5 +1,6 @@
 package com.ozerler.marble.web;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -24,15 +25,33 @@ public final class CheckGrid {
 
     static GridRow row(CheckRef check) {
         BusinessUnit unit = check.getEffectiveBusinessUnit();
+        String badge;
+        if (check.getStatus() == null) {
+            badge = "";
+        } else {
+            badge = check.getStatus().getLabel();
+        }
+        String value;
+        if (check.getCustomer() == null) {
+            value = "";
+        } else {
+            value = check.getCustomer().getCompanyName();
+        }
+        String valueValue;
+        if (unit == null) {
+            valueValue = "Genel";
+        } else {
+            valueValue = unit.getDisplayName();
+        }
         return GridRow.of(null, null, null, null, List.of(
-                GridCell.badge(check.getStatus() == null ? "" : check.getStatus().getLabel()),
+                GridCell.badge(badge),
                 GridCell.chip(check.getId()),
                 GridCell.text(check.getCheckNo()),
-                GridCell.text(check.getCustomer() == null ? "" : check.getCustomer().getCompanyName()),
-                GridCell.text(unit == null ? "Genel" : unit.getDisplayName()),
+                GridCell.text(value),
+                GridCell.text(valueValue),
                 GridCell.text(check.getBankName()),
                 GridCell.text(OperationGridSupport.day(check.getDueDate())),
-                GridCell.text(GridTexts.money(check.getAmount() == null ? BigDecimal.ZERO : check.getAmount()))
+                GridCell.text(GridTexts.money(Objects.requireNonNullElse(check.getAmount(), BigDecimal.ZERO)))
         ));
     }
 

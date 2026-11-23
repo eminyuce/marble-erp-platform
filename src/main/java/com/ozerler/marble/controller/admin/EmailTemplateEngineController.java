@@ -1,5 +1,6 @@
 package com.ozerler.marble.controller.admin;
 
+import java.util.Objects;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -87,19 +88,25 @@ public class EmailTemplateEngineController {
         boolean smtpReady = StringUtils.isNotBlank(host);
         long totalCount = emailService.countTemplates();
 
+        String smtpHost;
+        if (smtpReady) {
+            smtpHost = host;
+        } else {
+            smtpHost = "Yapılandırılmadı";
+        }
         TemplateKpiDto kpi = TemplateKpiDto.builder()
                 .totalCount(totalCount)
                 .activeCount(emailService.countActiveTemplates())
                 .categoriesCount(categories.size())
                 .smtpReady(smtpReady)
-                .smtpHost(smtpReady ? host : "Yapılandırılmadı")
+                .smtpHost(smtpHost)
                 .build();
 
         model.addAttribute("templates", result.getContent());
         model.addAttribute("allCount", totalCount);
         model.addAttribute("kpi", kpi);
         model.addAttribute("categories", categories);
-        model.addAttribute("selectedCategory", category != null ? category : "ALL");
+        model.addAttribute("selectedCategory", Objects.requireNonNullElse(category, "ALL"));
         model.addAttribute("grid", EmailTemplateGrid.view(result, query.pageNumber(), query.pageSize(),
                 template -> emailService.placeholderKeys(template).size()));
         model.addAttribute("activeMegaGroup", "system");
@@ -115,9 +122,12 @@ public class EmailTemplateEngineController {
     @ResponseBody
     public ResponseEntity<List<TemplateGridRowDto>> data(
             @RequestParam(value = "category", required = false) String category) {
-        List<EmailTemplateDto> list = (StringUtils.isNotBlank(category) && !"ALL".equalsIgnoreCase(category))
-                ? emailService.getTemplateViewsByCategory(category)
-                : emailService.getAllTemplateViews();
+        List<EmailTemplateDto> list;
+        if (StringUtils.isNotBlank(category) && !"ALL".equalsIgnoreCase(category)) {
+            list = emailService.getTemplateViewsByCategory(category);
+        } else {
+            list = emailService.getAllTemplateViews();
+        }
 
         List<TemplateGridRowDto> rows = list.stream().map(t -> {
             int count = emailService.placeholderKeys(t).size();
@@ -127,7 +137,7 @@ public class EmailTemplateEngineController {
                     .name(t.getTemplateName())
                     .category(StringUtils.defaultIfBlank(t.getCategory(), "Genel"))
                     .subject(t.getSubject())
-                    .description(t.getDescription() == null ? "—" : t.getDescription())
+                    .description(Objects.requireNonNullElse(t.getDescription(), "—"))
                     .active(Boolean.TRUE.equals(t.getIsActive()))
                     .placeholderCount(count)
                     .editUrl("/admin/email-templates/" + t.getId() + "/edit")

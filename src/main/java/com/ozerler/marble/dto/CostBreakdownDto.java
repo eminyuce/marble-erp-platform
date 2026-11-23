@@ -76,16 +76,29 @@ public class CostBreakdownDto {
                                                      BigDecimal marginPct) {
         BigDecimal total = raw.add(factory).add(workshop).add(scrap).add(logistics).add(overhead);
 
-        BigDecimal margin = marginPct != null ? marginPct : new BigDecimal("30.0");
+        BigDecimal margin;
+        if (marginPct != null) {
+            margin = marginPct;
+        } else {
+            margin = new BigDecimal("30.0");
+        }
         BigDecimal marginDecimal = margin.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
         BigDecimal divisor = BigDecimal.ONE.subtract(marginDecimal);
 
-        BigDecimal suggestedPrice = divisor.compareTo(BigDecimal.ZERO) > 0
-                ? total.divide(divisor, 2, RoundingMode.HALF_UP) : total;
+        BigDecimal suggestedPrice;
+        if (divisor.compareTo(BigDecimal.ZERO) > 0) {
+            suggestedPrice = total.divide(divisor, 2, RoundingMode.HALF_UP);
+        } else {
+            suggestedPrice = total;
+        }
 
         BigDecimal minDivisor = BigDecimal.ONE.subtract(new BigDecimal("0.20"));
-        BigDecimal floorPrice = minDivisor.compareTo(BigDecimal.ZERO) > 0
-                ? total.divide(minDivisor, 2, RoundingMode.HALF_UP) : total;
+        BigDecimal floorPrice;
+        if (minDivisor.compareTo(BigDecimal.ZERO) > 0) {
+            floorPrice = total.divide(minDivisor, 2, RoundingMode.HALF_UP);
+        } else {
+            floorPrice = total;
+        }
 
         return CostBreakdownDto.builder()
                 .itemIdentifier(identifier)

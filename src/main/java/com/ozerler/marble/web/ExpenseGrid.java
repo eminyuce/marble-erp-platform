@@ -27,10 +27,25 @@ public final class ExpenseGrid {
     }
 
     public static GridRow row(ExpenseDto expense) {
-        String id = expense.getId() == null ? "" : expense.getId().toString();
+        String id;
+        if (expense.getId() == null) {
+            id = "";
+        } else {
+            id = expense.getId().toString();
+        }
         String viewUrl = "/expenses/" + id;
-        String editUrl = expense.isCanEdit() ? viewUrl + "/edit" : "";
-        Object deleteId = expense.isCanDelete() ? expense.getId() : null;
+        String editUrl;
+        if (expense.isCanEdit()) {
+            editUrl = viewUrl + "/edit";
+        } else {
+            editUrl = "";
+        }
+        Object deleteId;
+        if (expense.isCanDelete()) {
+            deleteId = expense.getId();
+        } else {
+            deleteId = null;
+        }
         String amount = GridTexts.money(expense.getAmount());
         String currency = GridWindow.clean(expense.getCurrency());
         if (!amount.isBlank() && !currency.isBlank()) {

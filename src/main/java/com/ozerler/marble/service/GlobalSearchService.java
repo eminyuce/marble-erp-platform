@@ -69,7 +69,12 @@ public class GlobalSearchService {
     }
 
     public GlobalSearchResponse search(String rawQuery) {
-        String query = rawQuery == null ? "" : rawQuery.trim();
+        String query;
+        if (rawQuery == null) {
+            query = "";
+        } else {
+            query = rawQuery.trim();
+        }
         if (query.length() < Constants.SEARCH_MIN_QUERY_LENGTH) {
             return GlobalSearchResponse.empty(query);
         }
@@ -139,9 +144,17 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchSlabs(String query, Pageable limit) {
         return slabRepository.searchBySlabCode(query, limit).stream()
-                .map(slab -> hit("SLAB", getMessage("search.type.slab"), "layers", slab.getSlabCode(),
-                        slab.getStatus() != null ? slab.getStatus().name() : null,
-                        "/passport/" + Urls.encode(slab.getSlabCode()), query))
+                .map(slab -> {
+                    String hitValue;
+                    if (slab.getStatus() != null) {
+                        hitValue = slab.getStatus().name();
+                    } else {
+                        hitValue = null;
+                    }
+                    return hit("SLAB", getMessage("search.type.slab"), "layers", slab.getSlabCode(),
+                            hitValue,
+                            "/passport/" + Urls.encode(slab.getSlabCode()), query);
+                })
                 .toList();
     }
 
@@ -156,10 +169,18 @@ public class GlobalSearchService {
     private List<GlobalSearchHit> searchCutOrders(String query, Pageable limit) {
         return cutOrderRepository.searchByCutOrderNo(query, limit).stream()
                 .map(order -> {
-                    String url = order.getProject() != null
-                            ? "/projects/" + order.getProject().getId()
-                            : "/workshop";
-                    String projectName = order.getProject() != null ? order.getProject().getName() : null;
+                    String url;
+                    if (order.getProject() != null) {
+                        url = "/projects/" + order.getProject().getId();
+                    } else {
+                        url = "/workshop";
+                    }
+                    String projectName;
+                    if (order.getProject() != null) {
+                        projectName = order.getProject().getName();
+                    } else {
+                        projectName = null;
+                    }
                     return hit("CUT_ORDER", getMessage("search.type.cut_order"), "scissors", order.getCutOrderNo(),
                             projectName, url, query);
                 })
@@ -168,17 +189,33 @@ public class GlobalSearchService {
 
     private List<GlobalSearchHit> searchSalesOrders(String query, Pageable limit) {
         return salesOrderRepository.searchByOrderNo(query, limit).stream()
-                .map(order -> hit("SALES", getMessage("search.type.sales"), "shopping-cart", order.getOrderNo(),
-                        order.getCustomer() != null ? order.getCustomer().getCompanyName() : null,
-                        "/sales/" + order.getId(), query))
+                .map(order -> {
+                    String hitValue;
+                    if (order.getCustomer() != null) {
+                        hitValue = order.getCustomer().getCompanyName();
+                    } else {
+                        hitValue = null;
+                    }
+                    return hit("SALES", getMessage("search.type.sales"), "shopping-cart", order.getOrderNo(),
+                            hitValue,
+                            "/sales/" + order.getId(), query);
+                })
                 .toList();
     }
 
     private List<GlobalSearchHit> searchPurchaseOrders(String query, Pageable limit) {
         return purchaseOrderRepository.searchByPoNumber(query, limit).stream()
-                .map(order -> hit("PROCUREMENT", getMessage("search.type.procurement"), "truck", order.getPoNumber(),
-                        order.getSupplier() != null ? order.getSupplier().getCompanyName() : null,
-                        "/procurement/" + order.getId(), query))
+                .map(order -> {
+                    String hitValue;
+                    if (order.getSupplier() != null) {
+                        hitValue = order.getSupplier().getCompanyName();
+                    } else {
+                        hitValue = null;
+                    }
+                    return hit("PROCUREMENT", getMessage("search.type.procurement"), "truck", order.getPoNumber(),
+                            hitValue,
+                            "/procurement/" + order.getId(), query);
+                })
                 .toList();
     }
 
@@ -267,6 +304,9 @@ public class GlobalSearchService {
     }
 
     private static String statusLabel(Block block) {
-        return block.getStatus() != null ? block.getStatus().name() : null;
+        if (block.getStatus() != null) {
+            return block.getStatus().name();
+        }
+        return null;
     }
 }

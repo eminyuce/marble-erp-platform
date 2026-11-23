@@ -31,7 +31,13 @@ public class BlockCostCalculationService {
 
     @Transactional(readOnly = true)
     public QuarryCostBreakdownDto quarryBreakdown(Long quarryId, String period) {
-        String normalized = ExpensePeriods.normalize(period != null ? period : YearMonth.now().toString());
+        String normalize;
+        if (period != null) {
+            normalize = period;
+        } else {
+            normalize = YearMonth.now().toString();
+        }
+        String normalized = ExpensePeriods.normalize(normalize);
         BigDecimal totalExpenses = zero(costTransactionRepository.sumByQuarryAndPeriod(quarryId, normalized));
         if (totalExpenses.compareTo(BigDecimal.ZERO) == 0) {
             totalExpenses = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, normalized));
@@ -69,7 +75,12 @@ public class BlockCostCalculationService {
         }
 
         String quarryName = blocks.stream()
-                .map(b -> b.getQuarry() != null ? b.getQuarry().getName() : null)
+                .map(b -> {
+                    if (b.getQuarry() != null) {
+                        return b.getQuarry().getName();
+                    }
+                    return null;
+                })
                 .filter(n -> n != null && !n.isBlank())
                 .findFirst()
                 .orElse("Ocak");
@@ -90,7 +101,13 @@ public class BlockCostCalculationService {
 
     @Transactional(readOnly = true)
     public Map<Long, BigDecimal> expensePerTonByQuarry(String period) {
-        String normalized = ExpensePeriods.normalize(period != null ? period : YearMonth.now().toString());
+        String normalize;
+        if (period != null) {
+            normalize = period;
+        } else {
+            normalize = YearMonth.now().toString();
+        }
+        String normalized = ExpensePeriods.normalize(normalize);
         BigDecimal unitExpenses = zero(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.QUARRY, normalized));
 
         Map<Long, BigDecimal> quarryExpenses = new LinkedHashMap<>();
@@ -133,7 +150,12 @@ public class BlockCostCalculationService {
     @Transactional(readOnly = true)
     public BigDecimal calculatedTotalCost(Block block, BigDecimal expensePerTon) {
         BigDecimal extraction = calculatedExtractionCost(block, expensePerTon);
-        BigDecimal transport = block.getTransportCost() != null ? block.getTransportCost() : BigDecimal.ZERO;
+        BigDecimal transport;
+        if (block.getTransportCost() != null) {
+            transport = block.getTransportCost();
+        } else {
+            transport = BigDecimal.ZERO;
+        }
         return extraction.add(transport);
     }
 
@@ -151,6 +173,9 @@ public class BlockCostCalculationService {
     }
 
     private static BigDecimal zero(BigDecimal value) {
-        return value != null ? value : BigDecimal.ZERO;
+        if (value != null) {
+            return value;
+        }
+        return BigDecimal.ZERO;
     }
 }

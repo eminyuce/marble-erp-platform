@@ -1,5 +1,6 @@
 package com.ozerler.marble.web;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,8 +20,18 @@ final class OperationGridSupport {
 
     static DataGridView assemble(Page<?> page, int number, int size, String sort, String direction,
                                  String tableId, List<GridColumn> columns, List<GridRow> rows) {
-        int totalPages = page == null ? 1 : page.getTotalPages();
-        long total = page == null ? 0L : page.getTotalElements();
+        int totalPages;
+        if (page == null) {
+            totalPages = 1;
+        } else {
+            totalPages = page.getTotalPages();
+        }
+        long total;
+        if (page == null) {
+            total = 0L;
+        } else {
+            total = page.getTotalElements();
+        }
         return GridAssembler.from(number, size, totalPages, total, sort, direction, tableId, 4, columns, rows);
     }
 
@@ -46,7 +57,10 @@ final class OperationGridSupport {
 
     static String named(String value, String fallback) {
         if (value == null || value.isBlank()) {
-            return fallback == null ? "" : fallback;
+            if (fallback == null) {
+                return "";
+            }
+            return fallback;
         }
         return value;
     }
@@ -75,7 +89,10 @@ final class OperationGridSupport {
 
     static String centimeters(BigDecimal value) {
         String number = GridTexts.quantity(value);
-        return number.isBlank() ? "2 cm" : number + " cm";
+        if (number.isBlank()) {
+            return "2 cm";
+        }
+        return number + " cm";
     }
 
     static String rectangle(BigDecimal width, BigDecimal length) {
@@ -94,11 +111,14 @@ final class OperationGridSupport {
         if (hasLeft) {
             return left;
         }
-        return hasRight ? right : "";
+        if (hasRight) {
+            return right;
+        }
+        return "";
     }
 
     static GridCell lines(String text, String subtext) {
-        return GridCell.link(text, null, subtext == null ? "" : subtext, null);
+        return GridCell.link(text, null, Objects.requireNonNullElse(subtext, ""), null);
     }
 
     static String customer(String companyName) {

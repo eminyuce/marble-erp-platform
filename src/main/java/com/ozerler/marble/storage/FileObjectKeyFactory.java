@@ -15,9 +15,20 @@ public class FileObjectKeyFactory {
 
     public String create(String entityType, Long entityId, String extension) {
         String entity = sanitizeEntityType(entityType);
-        String entityFolder = entityId != null ? String.valueOf(entityId) : "pending";
+        String entityFolder;
+        if (entityId != null) {
+            entityFolder = String.valueOf(entityId);
+        } else {
+            entityFolder = "pending";
+        }
         String ext = normalizeExtension(extension);
-        String uniqueName = UUID.randomUUID() + (ext.isEmpty() ? "" : "." + ext);
+        String value;
+        if (ext.isEmpty()) {
+            value = "";
+        } else {
+            value = "." + ext;
+        }
+        String uniqueName = UUID.randomUUID() + value;
 
         if ("svg".equals(ext)) {
             return "svg/" + entity + "/" + entityFolder + "/" + uniqueName;
@@ -36,14 +47,22 @@ public class FileObjectKeyFactory {
         if ("blocks".equals(normalized)) {
             return "block";
         }
-        return normalized.isBlank() ? "general" : normalized;
+        if (normalized.isBlank()) {
+            return "general";
+        }
+        return normalized;
     }
 
     private static String normalizeExtension(String extension) {
         if (extension == null || extension.isBlank()) {
             return "";
         }
-        String cleaned = extension.startsWith(".") ? extension.substring(1) : extension;
+        String cleaned;
+        if (extension.startsWith(".")) {
+            cleaned = extension.substring(1);
+        } else {
+            cleaned = extension;
+        }
         return cleaned.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "");
     }
 }

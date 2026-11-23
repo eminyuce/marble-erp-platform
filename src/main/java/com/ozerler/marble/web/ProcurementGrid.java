@@ -27,7 +27,12 @@ public final class ProcurementGrid {
     }
 
     public static GridRow row(PurchaseOrderDto order) {
-        String id = order.getId() == null ? "" : order.getId().toString();
+        String id;
+        if (order.getId() == null) {
+            id = "";
+        } else {
+            id = order.getId().toString();
+        }
         String viewUrl = "/procurement/" + id;
         String invoiceUrl = "/invoices/new?type=PURCHASE&purchaseOrderId=" + id;
         return GridRow.of(viewUrl, viewUrl, null, order.getPoNumber(), List.of(

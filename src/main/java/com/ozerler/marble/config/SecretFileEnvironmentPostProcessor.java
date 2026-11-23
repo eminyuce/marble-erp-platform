@@ -32,7 +32,12 @@ public class SecretFileEnvironmentPostProcessor implements EnvironmentPostProces
             if (name == null || !name.endsWith("_FILE")) {
                 continue;
             }
-            String configuredPath = entry.getValue() == null ? "" : String.valueOf(entry.getValue());
+            String configuredPath;
+            if (entry.getValue() == null) {
+                configuredPath = "";
+            } else {
+                configuredPath = String.valueOf(entry.getValue());
+            }
             if (configuredPath.isBlank()) {
                 throw new IllegalStateException(name + " is set but empty");
             }

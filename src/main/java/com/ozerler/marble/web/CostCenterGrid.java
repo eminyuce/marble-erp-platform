@@ -29,8 +29,18 @@ public final class CostCenterGrid {
     }
 
     public static GridRow row(CostCenterDto center) {
-        String id = center.getId() == null ? "" : center.getId().toString();
-        String editUrl = id.isEmpty() ? "" : "/admin/definitions/cost-centers/" + id + "/edit";
+        String id;
+        if (center.getId() == null) {
+            id = "";
+        } else {
+            id = center.getId().toString();
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = "/admin/definitions/cost-centers/" + id + "/edit";
+        }
         String deleteName = GridTexts.text(center.getName());
         if (deleteName.isBlank()) {
             deleteName = GridTexts.text(center.getCode());
@@ -67,6 +77,9 @@ public final class CostCenterGrid {
 
     private static String labelOrCode(String label, String code) {
         String text = GridTexts.text(label);
-        return text.isBlank() ? GridTexts.text(code) : text;
+        if (text.isBlank()) {
+            return GridTexts.text(code);
+        }
+        return text;
     }
 }

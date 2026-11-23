@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto;
 
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -83,21 +84,45 @@ public class CutOrderDto {
     }
 
     public static CutOrderDto fromEntity(CutOrder c, int itemCount, BigDecimal totalAreaM2) {
+        Long projectIdValue;
+        if (c.getProject() != null) {
+            projectIdValue = c.getProject().getId();
+        } else {
+            projectIdValue = null;
+        }
+        String projectNameValue;
+        if (c.getProject() != null) {
+            projectNameValue = c.getProject().getName();
+        } else {
+            projectNameValue = "-";
+        }
+        String locationNameValue;
+        if (c.getLocation() != null) {
+            locationNameValue = c.getLocation().getLocationName();
+        } else {
+            locationNameValue = "-";
+        }
+        String purposeLabelValue;
+        if (c.getPurpose() != null) {
+            purposeLabelValue = c.getPurpose().getLabel();
+        } else {
+            purposeLabelValue = "";
+        }
         return CutOrderDto.builder()
                 .id(c.getId())
                 .cutOrderNo(c.getCutOrderNo())
-                .projectId(c.getProject() != null ? c.getProject().getId() : null)
-                .projectName(c.getProject() != null ? c.getProject().getName() : "-")
-                .locationName(c.getLocation() != null ? c.getLocation().getLocationName() : "-")
+                .projectId(projectIdValue)
+                .projectName(projectNameValue)
+                .locationName(locationNameValue)
                 .machineName(c.getMachineName())
                 .operatorName(c.getOperatorName())
                 .plannedStart(c.getPlannedStart())
                 .status(c.getStatus())
                 .statusLabel(OperationStatus.labelOf(c.getStatus()))
                 .itemCount(itemCount)
-                .totalAreaM2(totalAreaM2 != null ? totalAreaM2 : BigDecimal.ZERO)
+                .totalAreaM2(Objects.requireNonNullElse(totalAreaM2, BigDecimal.ZERO))
                 .notes(c.getNotes())
-                .purposeLabel(c.getPurpose() != null ? c.getPurpose().getLabel() : "")
+                .purposeLabel(purposeLabelValue)
                 .build();
     }
 }

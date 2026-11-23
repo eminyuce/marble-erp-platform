@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import java.util.Objects;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -171,19 +172,46 @@ public class ReportService {
                     if (b.getActualWeightKg() != null) {
                         actualTon = b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString() + " t";
                     }
-                    String stoneType = b.getStoneType() != null ? b.getStoneType() : "-";
-                    String dest = b.getTargetDestination() != null ? b.getTargetDestination().getDisplayName() : "-";
-                    String cust = b.getCustomer() != null ? b.getCustomer().getCompanyName() : "-";
+                    String stoneType;
+                    if (b.getStoneType() != null) {
+                        stoneType = b.getStoneType();
+                    } else {
+                        stoneType = "-";
+                    }
+                    String dest;
+                    if (b.getTargetDestination() != null) {
+                        dest = b.getTargetDestination().getDisplayName();
+                    } else {
+                        dest = "-";
+                    }
+                    String cust;
+                    if (b.getCustomer() != null) {
+                        cust = b.getCustomer().getCompanyName();
+                    } else {
+                        cust = "-";
+                    }
+                    String name;
+                    if (b.getQuarry() != null) {
+                        name = b.getQuarry().getName();
+                    } else {
+                        name = "-";
+                    }
+                    String value;
+                    if (b.getStatus() != null) {
+                        value = b.getStatus().name();
+                    } else {
+                        value = "";
+                    }
                     data.rows.add(new String[]{
-                            b.getBlockCode() != null ? b.getBlockCode() : "",
-                            b.getQuarry() != null ? b.getQuarry().getName() : "-",
+                            Objects.requireNonNullElse(b.getBlockCode(), ""),
+                            name,
                             stoneType,
                             theoTon,
                             actualTon,
                             varianceStr,
                             dest,
                             cust,
-                            b.getStatus() != null ? b.getStatus().name() : ""
+                            value
                     });
                 }
             }
@@ -203,58 +231,138 @@ public class ReportService {
                 List<Block> factoryBlocks = BoundedReads.all(blockRepository);
                 for (Block b : factoryBlocks) {
                     if (b.getStatus() == com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY || b.getStatus() == com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) {
-                        String ton = b.getActualWeightKg() != null
-                                ? b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString()
-                                : b.getTheoreticalWeightKg() != null ? b.getTheoreticalWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString() : "0.00";
-                        String cust = b.getCustomer() != null ? b.getCustomer().getCompanyName() : "Genel Stok";
+                        String ton;
+                        if (b.getActualWeightKg() != null) {
+                            ton = b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString();
+                        } else {
+                            if (b.getTheoreticalWeightKg() != null) {
+                                ton = b.getTheoreticalWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString();
+                            } else {
+                                ton = "0.00";
+                            }
+                        }
+                        String cust;
+                        if (b.getCustomer() != null) {
+                            cust = b.getCustomer().getCompanyName();
+                        } else {
+                            cust = "Genel Stok";
+                        }
+                        int lengthCm;
+                        if (b.getLengthCm() != null) {
+                            lengthCm = b.getLengthCm();
+                        } else {
+                            lengthCm = 0;
+                        }
+                        int widthCm;
+                        if (b.getWidthCm() != null) {
+                            widthCm = b.getWidthCm();
+                        } else {
+                            widthCm = 0;
+                        }
+                        int heightCm;
+                        if (b.getHeightCm() != null) {
+                            heightCm = b.getHeightCm();
+                        } else {
+                            heightCm = 0;
+                        }
+                        String valueValue;
+                        if (b.getStatus() != null) {
+                            valueValue = b.getStatus().name();
+                        } else {
+                            valueValue = "-";
+                        }
                         data.rows.add(new String[]{
                                 "Blok Stok",
                                 b.getBlockCode(),
                                 "-",
-                                b.getStoneType() != null ? b.getStoneType() : "-",
-                                (b.getLengthCm() != null ? b.getLengthCm() : 0) + "x" + (b.getWidthCm() != null ? b.getWidthCm() : 0) + "x" + (b.getHeightCm() != null ? b.getHeightCm() : 0) + " cm",
+                                Objects.requireNonNullElse(b.getStoneType(), "-"),
+                                lengthCm + "x" + widthCm + "x" + heightCm + " cm",
                                 ton,
                                 "ton",
                                 "1",
                                 cust,
-                                b.getStatus() != null ? b.getStatus().name() : "-"
+                                valueValue
                         });
                     }
                 }
                 List<Slab> slabs = BoundedReads.all(slabRepository);
                 for (Slab sl : slabs) {
-                    String cust = sl.getCustomer() != null ? sl.getCustomer().getCompanyName() : "Genel Stok";
-                    String dims = (sl.getWidthCm() != null ? sl.getWidthCm() : 0) + "x" + (sl.getLengthCm() != null ? sl.getLengthCm() : 0) + " (" + (sl.getThicknessCm() != null ? sl.getThicknessCm() : 2) + "cm)";
-                    String src = sl.getBlock() != null ? sl.getBlock().getBlockCode() : "-";
+                    String cust;
+                    if (sl.getCustomer() != null) {
+                        cust = sl.getCustomer().getCompanyName();
+                    } else {
+                        cust = "Genel Stok";
+                    }
+                    String dims = Objects.requireNonNullElse(sl.getWidthCm(), 0) + "x" + Objects.requireNonNullElse(sl.getLengthCm(), 0) + " (" + Objects.requireNonNullElse(sl.getThicknessCm(), 2) + "cm)";
+                    String src;
+                    if (sl.getBlock() != null) {
+                        src = sl.getBlock().getBlockCode();
+                    } else {
+                        src = "-";
+                    }
+                    String valueValue2;
+                    if (sl.getAreaM2() != null) {
+                        valueValue2 = sl.getAreaM2().toString();
+                    } else {
+                        valueValue2 = "0.00";
+                    }
+                    String label;
+                    if (sl.getStatus() != null) {
+                        label = sl.getStatus().getLabel();
+                    } else {
+                        label = "-";
+                    }
                     data.rows.add(new String[]{
                             "Plaka Stok",
-                            sl.getSlabCode() != null ? sl.getSlabCode() : "-",
+                            Objects.requireNonNullElse(sl.getSlabCode(), "-"),
                             src,
-                            sl.getStoneType() != null ? sl.getStoneType() : "-",
+                            Objects.requireNonNullElse(sl.getStoneType(), "-"),
                             dims,
-                            sl.getAreaM2() != null ? sl.getAreaM2().toString() : "0.00",
+                            valueValue2,
                             "m²",
                             "1",
                             cust,
-                            sl.getStatus() != null ? sl.getStatus().getLabel() : "-"
+                            label
                     });
                 }
                 List<StockItem> sizedItems = BoundedReads.all(stockItemRepository);
                 for (StockItem si : sizedItems) {
-                    String cust = si.getCustomer() != null ? si.getCustomer().getCompanyName() : "Genel Stok";
-                    String dims = (si.getWidthCm() != null ? si.getWidthCm() : 0) + "x" + (si.getLengthCm() != null ? si.getLengthCm() : 0) + " (" + (si.getThicknessCm() != null ? si.getThicknessCm() : 2) + "cm)";
-                    String src = si.getSourceBlock() != null ? si.getSourceBlock().getBlockCode() : "-";
+                    String cust;
+                    if (si.getCustomer() != null) {
+                        cust = si.getCustomer().getCompanyName();
+                    } else {
+                        cust = "Genel Stok";
+                    }
+                    String dims = Objects.requireNonNullElse(si.getWidthCm(), 0) + "x" + Objects.requireNonNullElse(si.getLengthCm(), 0) + " (" + Objects.requireNonNullElse(si.getThicknessCm(), 2) + "cm)";
+                    String src;
+                    if (si.getSourceBlock() != null) {
+                        src = si.getSourceBlock().getBlockCode();
+                    } else {
+                        src = "-";
+                    }
+                    String valueValue3;
+                    if (si.getQuantity() != null) {
+                        valueValue3 = si.getQuantity().toString();
+                    } else {
+                        valueValue3 = "0.00";
+                    }
+                    int pieceCount;
+                    if (si.getPieceCount() != null) {
+                        pieceCount = si.getPieceCount();
+                    } else {
+                        pieceCount = 1;
+                    }
                     data.rows.add(new String[]{
                             "Ebatlı Ürün",
-                            si.getItemCode() != null ? si.getItemCode() : "-",
+                            Objects.requireNonNullElse(si.getItemCode(), "-"),
                             src,
-                            si.getStoneType() != null ? si.getStoneType() : "-",
+                            Objects.requireNonNullElse(si.getStoneType(), "-"),
                             dims,
-                            si.getQuantity() != null ? si.getQuantity().toString() : "0.00",
-                            si.getUnit() != null ? si.getUnit() : "m2",
-                            String.valueOf(si.getPieceCount() != null ? si.getPieceCount() : 1),
+                            valueValue3,
+                            Objects.requireNonNullElse(si.getUnit(), "m2"),
+                            String.valueOf(pieceCount),
                             cust,
-                            si.getStatus() != null ? si.getStatus() : "-"
+                            Objects.requireNonNullElse(si.getStatus(), "-")
                     });
                 }
             }
@@ -271,17 +379,51 @@ public class ReportService {
                 };
                 List<Invoice> invoices = BoundedReads.all(invoiceRepository);
                 for (Invoice inv : invoices) {
-                    String cust = inv.getCustomer() != null ? inv.getCustomer().getCompanyName() : "-";
-                    String amt = inv.getTotalAmount() != null ? String.format("%,.2f TL", inv.getTotalAmount().doubleValue()) : "0,00 TL";
+                    String cust;
+                    if (inv.getCustomer() != null) {
+                        cust = inv.getCustomer().getCompanyName();
+                    } else {
+                        cust = "-";
+                    }
+                    String amt;
+                    if (inv.getTotalAmount() != null) {
+                        amt = String.format("%,.2f TL", inv.getTotalAmount().doubleValue());
+                    } else {
+                        amt = "0,00 TL";
+                    }
+                    String valueValue4;
+                    if (inv.getInvoiceDate() != null) {
+                        valueValue4 = inv.getInvoiceDate().toString();
+                    } else {
+                        valueValue4 = "-";
+                    }
+                    String displayName;
+                    if (inv.getInvoiceType() != null) {
+                        displayName = inv.getInvoiceType().getDisplayName();
+                    } else {
+                        displayName = "-";
+                    }
+                    String displayNameValue;
+                    if (inv.getDepartment() != null) {
+                        displayNameValue = inv.getDepartment().getDisplayName();
+                    } else {
+                        displayNameValue = "-";
+                    }
+                    String displayNameValue2;
+                    if (inv.getStatus() != null) {
+                        displayNameValue2 = inv.getStatus().getDisplayName();
+                    } else {
+                        displayNameValue2 = "-";
+                    }
                     data.rows.add(new String[]{
-                            inv.getInvoiceNo() != null ? inv.getInvoiceNo() : "-",
-                            inv.getInvoiceDate() != null ? inv.getInvoiceDate().toString() : "-",
-                            inv.getInvoiceType() != null ? inv.getInvoiceType().getDisplayName() : "-",
-                            inv.getDepartment() != null ? inv.getDepartment().getDisplayName() : "-",
+                            Objects.requireNonNullElse(inv.getInvoiceNo(), "-"),
+                            valueValue4,
+                            displayName,
+                            displayNameValue,
                             cust,
                             amt,
-                            inv.getStatus() != null ? inv.getStatus().getDisplayName() : "-",
-                            inv.getNotes() != null ? inv.getNotes() : "-"
+                            displayNameValue2,
+                            Objects.requireNonNullElse(inv.getNotes(), "-")
                     });
                 }
             }
@@ -298,18 +440,63 @@ public class ReportService {
                 };
                 List<CollectionRecord> collections = BoundedReads.all(collectionRecordRepository);
                 for (CollectionRecord col : collections) {
-                    String cust = col.getCustomer() != null ? col.getCustomer().getCompanyName() : "-";
-                    String amt = col.getAmount() != null ? String.format("%,.2f TL", col.getAmount().doubleValue()) : "0,00 TL";
-                    String checkNo = col.getCheckRecord() != null && col.getCheckRecord().getCheckNumber() != null ? col.getCheckRecord().getCheckNumber() : col.getCollectionNo() != null ? col.getCollectionNo() : ("COL-" + col.getId());
-                    String dueDate = col.getCheckRecord() != null && col.getCheckRecord().getDueDate() != null ? col.getCheckRecord().getDueDate().toString() : "-";
-                    String statDesc = col.getCheckRecord() != null && col.getCheckRecord().getStatus() != null ? col.getCheckRecord().getStatus().getDisplayName() : col.getNotes() != null ? col.getNotes() : "-";
+                    String cust;
+                    if (col.getCustomer() != null) {
+                        cust = col.getCustomer().getCompanyName();
+                    } else {
+                        cust = "-";
+                    }
+                    String amt;
+                    if (col.getAmount() != null) {
+                        amt = String.format("%,.2f TL", col.getAmount().doubleValue());
+                    } else {
+                        amt = "0,00 TL";
+                    }
+                    String checkNo;
+                    if (col.getCheckRecord() != null && col.getCheckRecord().getCheckNumber() != null) {
+                        checkNo = col.getCheckRecord().getCheckNumber();
+                    } else {
+                        if (col.getCollectionNo() != null) {
+                            checkNo = col.getCollectionNo();
+                        } else {
+                            checkNo = "COL-" + col.getId();
+                        }
+                    }
+                    String dueDate;
+                    if (col.getCheckRecord() != null && col.getCheckRecord().getDueDate() != null) {
+                        dueDate = col.getCheckRecord().getDueDate().toString();
+                    } else {
+                        dueDate = "-";
+                    }
+                    String statDesc;
+                    if (col.getCheckRecord() != null && col.getCheckRecord().getStatus() != null) {
+                        statDesc = col.getCheckRecord().getStatus().getDisplayName();
+                    } else {
+                        if (col.getNotes() != null) {
+                            statDesc = col.getNotes();
+                        } else {
+                            statDesc = "-";
+                        }
+                    }
+                    String valueValue5;
+                    if (col.getCollectionDate() != null) {
+                        valueValue5 = col.getCollectionDate().toString();
+                    } else {
+                        valueValue5 = "-";
+                    }
+                    String displayNameValue3;
+                    if (col.getMethod() != null) {
+                        displayNameValue3 = col.getMethod().getDisplayName();
+                    } else {
+                        displayNameValue3 = "-";
+                    }
                     data.rows.add(new String[]{
                             checkNo,
-                            col.getCollectionDate() != null ? col.getCollectionDate().toString() : "-",
-                            col.getMethod() != null ? col.getMethod().getDisplayName() : "-",
+                            valueValue5,
+                            displayNameValue3,
                             cust,
                             amt,
-                            col.getBankName() != null ? col.getBankName() : "-",
+                            Objects.requireNonNullElse(col.getBankName(), "-"),
                             dueDate,
                             statDesc
                     });
@@ -330,22 +517,63 @@ public class ReportService {
                 };
                 List<OperationWorkOrder> workOrders = BoundedReads.all(operationWorkOrderRepository);
                 for (OperationWorkOrder wo : workOrders) {
-                    String cust = wo.getCustomer() != null ? wo.getCustomer().getCompanyName() : "-";
-                    String stone = (wo.getStoneType() != null ? wo.getStoneType() : "-") + (wo.getStoneColorQuality() != null ? " / " + wo.getStoneColorQuality() : "");
-                    String dims = (wo.getStoneThicknessCm() != null ? wo.getStoneThicknessCm() + "cm " : "")
-                            + (wo.getWidthCm() != null ? wo.getWidthCm() : 0) + "x" + (wo.getLengthCm() != null ? wo.getLengthCm() : 0) + " cm";
-                    String qty = (wo.getPlannedQuantity() != null ? wo.getPlannedQuantity().toString() : "0") + " " + (wo.getUnit() != null ? wo.getUnit() : "m2");
+                    String cust;
+                    if (wo.getCustomer() != null) {
+                        cust = wo.getCustomer().getCompanyName();
+                    } else {
+                        cust = "-";
+                    }
+                    String valueValue6;
+                    if (wo.getStoneColorQuality() != null) {
+                        valueValue6 = " / " + wo.getStoneColorQuality();
+                    } else {
+                        valueValue6 = "";
+                    }
+                    String stone = Objects.requireNonNullElse(wo.getStoneType(), "-") + valueValue6;
+                    String valueValue7;
+                    if (wo.getStoneThicknessCm() != null) {
+                        valueValue7 = wo.getStoneThicknessCm() + "cm ";
+                    } else {
+                        valueValue7 = "";
+                    }
+                    String dims = valueValue7
+                            + Objects.requireNonNullElse(wo.getWidthCm(), 0) + "x" + Objects.requireNonNullElse(wo.getLengthCm(), 0) + " cm";
+                    String valueValue8;
+                    if (wo.getPlannedQuantity() != null) {
+                        valueValue8 = wo.getPlannedQuantity().toString();
+                    } else {
+                        valueValue8 = "0";
+                    }
+                    String qty = valueValue8 + " " + Objects.requireNonNullElse(wo.getUnit(), "m2");
+                    String displayNameValue4;
+                    if (wo.getDepartment() != null) {
+                        displayNameValue4 = wo.getDepartment().getDisplayName();
+                    } else {
+                        displayNameValue4 = "-";
+                    }
+                    String valueValue9;
+                    if (wo.getTargetDate() != null) {
+                        valueValue9 = wo.getTargetDate().toString();
+                    } else {
+                        valueValue9 = "-";
+                    }
+                    String displayNameValue5;
+                    if (wo.getStatus() != null) {
+                        displayNameValue5 = wo.getStatus().getDisplayName();
+                    } else {
+                        displayNameValue5 = "-";
+                    }
                     data.rows.add(new String[]{
-                            wo.getWorkOrderNo() != null ? wo.getWorkOrderNo() : "-",
-                            wo.getDepartment() != null ? wo.getDepartment().getDisplayName() : "-",
+                            Objects.requireNonNullElse(wo.getWorkOrderNo(), "-"),
+                            displayNameValue4,
                             cust,
                             stone,
                             dims,
-                            wo.getSurfaceOperation() != null ? wo.getSurfaceOperation() : "-",
-                            wo.getEdgeOperation() != null ? wo.getEdgeOperation() : "-",
+                            Objects.requireNonNullElse(wo.getSurfaceOperation(), "-"),
+                            Objects.requireNonNullElse(wo.getEdgeOperation(), "-"),
                             qty,
-                            wo.getTargetDate() != null ? wo.getTargetDate().toString() : "-",
-                            wo.getStatus() != null ? wo.getStatus().getDisplayName() : "-"
+                            valueValue9,
+                            displayNameValue5
                     });
                 }
             }
@@ -360,13 +588,43 @@ public class ReportService {
                 };
                 List<ScrapLog> scraps = scrapLogRepository.findAllWithBlock();
                 for (ScrapLog s : scraps) {
+                    String blockCode;
+                    if (s.getBlock() != null) {
+                        blockCode = s.getBlock().getBlockCode();
+                    } else {
+                        blockCode = "-";
+                    }
+                    String code;
+                    if (s.getReasonCode() != null) {
+                        code = s.getReasonCode().getCode();
+                    } else {
+                        code = "";
+                    }
+                    String title;
+                    if (s.getReasonCode() != null) {
+                        title = s.getReasonCode().getTitle();
+                    } else {
+                        title = "";
+                    }
+                    String valueValue10;
+                    if (s.getScrapAreaM2() != null) {
+                        valueValue10 = s.getScrapAreaM2().toString();
+                    } else {
+                        valueValue10 = "0.00";
+                    }
+                    String loggedBy;
+                    if (s.getLoggedBy() != null) {
+                        loggedBy = s.getLoggedBy();
+                    } else {
+                        loggedBy = getMessage("common.system");
+                    }
                     data.rows.add(new String[]{
                             DateTimes.formatYearMonthDayHourMinute(s.getLoggedAt(), ""),
-                            s.getBlock() != null ? s.getBlock().getBlockCode() : "-",
-                            s.getReasonCode() != null ? s.getReasonCode().getCode() : "",
-                            s.getReasonCode() != null ? s.getReasonCode().getTitle() : "",
-                            s.getScrapAreaM2() != null ? s.getScrapAreaM2().toString() : "0.00",
-                            s.getLoggedBy() != null ? s.getLoggedBy() : getMessage("common.system")
+                            blockCode,
+                            code,
+                            title,
+                            valueValue10,
+                            loggedBy
                     });
                 }
             }
@@ -382,15 +640,26 @@ public class ReportService {
                 };
                 List<CutOrder> orders = cutOrderRepository.findAllWithProject();
                 for (CutOrder o : orders) {
-                    String siteName = o.getProject() != null ? o.getProject().getName() : "-";
-                    String itemsCount = String.valueOf(o.getItems() != null ? o.getItems().size() : 0);
+                    String siteName;
+                    if (o.getProject() != null) {
+                        siteName = o.getProject().getName();
+                    } else {
+                        siteName = "-";
+                    }
+                    int valueValue11;
+                    if (o.getItems() != null) {
+                        valueValue11 = o.getItems().size();
+                    } else {
+                        valueValue11 = 0;
+                    }
+                    String itemsCount = String.valueOf(valueValue11);
                     data.rows.add(new String[]{
-                            o.getCutOrderNo() != null ? o.getCutOrderNo() : "",
+                            Objects.requireNonNullElse(o.getCutOrderNo(), ""),
                             siteName,
-                            o.getMachineName() != null ? o.getMachineName() : "-",
-                            o.getOperatorName() != null ? o.getOperatorName() : "-",
+                            Objects.requireNonNullElse(o.getMachineName(), "-"),
+                            Objects.requireNonNullElse(o.getOperatorName(), "-"),
                             getMessage("common.unit.pieces", itemsCount),
-                            o.getStatus() != null ? o.getStatus() : "",
+                            Objects.requireNonNullElse(o.getStatus(), ""),
                             DateTimes.formatYearMonthDayHourMinute(o.getCreatedAt(), "-")
                     });
                 }
@@ -408,15 +677,45 @@ public class ReportService {
                 };
                 List<Project> projects = BoundedReads.all(projectRepository);
                 for (Project p : projects) {
+                    String valueValue12;
+                    if (p.getContractValue() != null) {
+                        valueValue12 = p.getContractValue().toString() + " ₺";
+                    } else {
+                        valueValue12 = "0.00 ₺";
+                    }
+                    String valueValue13;
+                    if (p.getActualCost() != null) {
+                        valueValue13 = p.getActualCost().toString() + " ₺";
+                    } else {
+                        valueValue13 = "0.00 ₺";
+                    }
+                    String valueValue14;
+                    if (p.getStartDate() != null) {
+                        valueValue14 = p.getStartDate().toString();
+                    } else {
+                        valueValue14 = "-";
+                    }
+                    String valueValue15;
+                    if (p.getDeliveryDate() != null) {
+                        valueValue15 = p.getDeliveryDate().toString();
+                    } else {
+                        valueValue15 = "-";
+                    }
+                    String valueValue16;
+                    if (p.getStatus() != null) {
+                        valueValue16 = p.getStatus().name();
+                    } else {
+                        valueValue16 = "";
+                    }
                     data.rows.add(new String[]{
-                            p.getProjectCode() != null ? p.getProjectCode() : "",
-                            p.getName() != null ? p.getName() : "",
-                            p.getCustomerName() != null ? p.getCustomerName() : "",
-                            p.getContractValue() != null ? p.getContractValue().toString() + " ₺" : "0.00 ₺",
-                            p.getActualCost() != null ? p.getActualCost().toString() + " ₺" : "0.00 ₺",
-                            p.getStartDate() != null ? p.getStartDate().toString() : "-",
-                            p.getDeliveryDate() != null ? p.getDeliveryDate().toString() : "-",
-                            p.getStatus() != null ? p.getStatus().name() : ""
+                            Objects.requireNonNullElse(p.getProjectCode(), ""),
+                            Objects.requireNonNullElse(p.getName(), ""),
+                            Objects.requireNonNullElse(p.getCustomerName(), ""),
+                            valueValue12,
+                            valueValue13,
+                            valueValue14,
+                            valueValue15,
+                            valueValue16
                     });
                 }
             }
@@ -433,11 +732,17 @@ public class ReportService {
                 for (var cc : centers) {
                     BigDecimal unitCost = new BigDecimal("1365.00");
                     BigDecimal recPrice = unitCost.divide(BigDecimal.valueOf(0.65), 2, RoundingMode.HALF_UP);
+                    String valueValue17;
+                    if (cc.getMonthlyBudget() != null) {
+                        valueValue17 = cc.getMonthlyBudget().toString() + " ₺";
+                    } else {
+                        valueValue17 = "0.00 ₺";
+                    }
                     data.rows.add(new String[]{
-                            cc.getName() != null ? cc.getName() : "",
-                            cc.getCode() != null ? cc.getCode() : "",
-                            cc.getDescription() != null ? cc.getDescription() : "-",
-                            cc.getMonthlyBudget() != null ? cc.getMonthlyBudget().toString() + " ₺" : "0.00 ₺",
+                            Objects.requireNonNullElse(cc.getName(), ""),
+                            Objects.requireNonNullElse(cc.getCode(), ""),
+                            Objects.requireNonNullElse(cc.getDescription(), "-"),
+                            valueValue17,
                             unitCost.toString() + " ₺/m²",
                             recPrice.toString() + " ₺/m²"
                     });
@@ -456,16 +761,52 @@ public class ReportService {
                 };
                 List<Slab> slabs = slabRepository.findAllWithBlock();
                 for (Slab sl : slabs) {
-                    String dims = (sl.getWidthCm() != null ? sl.getWidthCm() : 0) + "x" + (sl.getLengthCm() != null ? sl.getLengthCm() : 0) + " cm";
+                    String dims = Objects.requireNonNullElse(sl.getWidthCm(), 0) + "x" + Objects.requireNonNullElse(sl.getLengthCm(), 0) + " cm";
+                    String blockCodeValue;
+                    if (sl.getBlock() != null) {
+                        blockCodeValue = sl.getBlock().getBlockCode();
+                    } else {
+                        blockCodeValue = "-";
+                    }
+                    String valueValue18;
+                    if (sl.getThicknessCm() != null) {
+                        valueValue18 = sl.getThicknessCm() + " cm";
+                    } else {
+                        valueValue18 = "2 cm";
+                    }
+                    String labelValue;
+                    if (sl.getSurfaceFinish() != null) {
+                        labelValue = sl.getSurfaceFinish().getLabel();
+                    } else {
+                        labelValue = "";
+                    }
+                    String labelValue2;
+                    if (sl.getQualityGrade() != null) {
+                        labelValue2 = sl.getQualityGrade().getLabel();
+                    } else {
+                        labelValue2 = "";
+                    }
+                    String valueValue19;
+                    if (sl.getCostPerM2() != null) {
+                        valueValue19 = sl.getCostPerM2().toString() + " ₺";
+                    } else {
+                        valueValue19 = "1365.00 ₺";
+                    }
+                    String labelValue3;
+                    if (sl.getStatus() != null) {
+                        labelValue3 = sl.getStatus().getLabel();
+                    } else {
+                        labelValue3 = "";
+                    }
                     data.rows.add(new String[]{
-                            sl.getSlabCode() != null ? sl.getSlabCode() : "",
-                            sl.getBlock() != null ? sl.getBlock().getBlockCode() : "-",
+                            Objects.requireNonNullElse(sl.getSlabCode(), ""),
+                            blockCodeValue,
                             dims,
-                            sl.getThicknessCm() != null ? sl.getThicknessCm() + " cm" : "2 cm",
-                            sl.getSurfaceFinish() != null ? sl.getSurfaceFinish().getLabel() : "",
-                            sl.getQualityGrade() != null ? sl.getQualityGrade().getLabel() : "",
-                            sl.getCostPerM2() != null ? sl.getCostPerM2().toString() + " ₺" : "1365.00 ₺",
-                            sl.getStatus() != null ? sl.getStatus().getLabel() : ""
+                            valueValue18,
+                            labelValue,
+                            labelValue2,
+                            valueValue19,
+                            labelValue3
                     });
                 }
             }

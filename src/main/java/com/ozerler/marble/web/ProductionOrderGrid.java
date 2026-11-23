@@ -27,13 +27,28 @@ public final class ProductionOrderGrid {
     }
 
     public static GridRow row(ProductionOrderDto order) {
-        String id = order.getId() == null ? "" : order.getId().toString();
+        String id;
+        if (order.getId() == null) {
+            id = "";
+        } else {
+            id = order.getId().toString();
+        }
         String viewUrl = "/production/orders/" + id;
         String editUrl = viewUrl + "/edit";
         String hours = GridTexts.quantity(order.getDurationHours());
         String energy = GridTexts.quantity(order.getElectricityKwh());
-        String duration = hours.isBlank() ? "" : hours + " sa";
-        String consumption = energy.isBlank() ? "" : energy + " kWh";
+        String duration;
+        if (hours.isBlank()) {
+            duration = "";
+        } else {
+            duration = hours + " sa";
+        }
+        String consumption;
+        if (energy.isBlank()) {
+            consumption = "";
+        } else {
+            consumption = energy + " kWh";
+        }
         String slabs = order.getSlabCount() + " Plaka";
         return GridRow.of(viewUrl, editUrl, null, order.getOrderNo(), List.of(
                 GridCell.badge(order.getStatusLabel()),

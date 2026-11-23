@@ -38,9 +38,12 @@ public final class PalletCostAccumulator {
         BigDecimal added = zero(operationCost);
         BigDecimal previousTotal = money(previousCostPerM2.multiply(inputArea));
         BigDecimal newTotal = money(previousTotal.add(added));
-        BigDecimal newUnit = remaining.compareTo(BigDecimal.ZERO) > 0
-                ? newTotal.divide(remaining, Constants.COST_SCALE, RoundingMode.HALF_UP)
-                : previousCostPerM2;
+        BigDecimal newUnit;
+        if (remaining.compareTo(BigDecimal.ZERO) > 0) {
+            newUnit = newTotal.divide(remaining, Constants.COST_SCALE, RoundingMode.HALF_UP);
+        } else {
+            newUnit = previousCostPerM2;
+        }
         return new StepResult(previousTotal, added, remaining, newTotal, newUnit);
     }
 
@@ -65,7 +68,13 @@ public final class PalletCostAccumulator {
     }
 
     private static BigDecimal remainingAreaOrInput(BigDecimal remainingAreaM2, BigDecimal inputArea) {
-        return positiveOrZero(remainingAreaM2 != null ? remainingAreaM2 : inputArea);
+        BigDecimal positiveOrZeroValue;
+        if (remainingAreaM2 != null) {
+            positiveOrZeroValue = remainingAreaM2;
+        } else {
+            positiveOrZeroValue = inputArea;
+        }
+        return positiveOrZero(positiveOrZeroValue);
     }
 
     private static BigDecimal money(BigDecimal value) {
@@ -73,12 +82,18 @@ public final class PalletCostAccumulator {
     }
 
     private static BigDecimal zero(BigDecimal value) {
-        return value != null ? value : BigDecimal.ZERO;
+        if (value != null) {
+            return value;
+        }
+        return BigDecimal.ZERO;
     }
 
     private static BigDecimal positiveOrZero(BigDecimal value) {
         BigDecimal safe = zero(value);
-        return safe.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : safe;
+        if (safe.compareTo(BigDecimal.ZERO) < 0) {
+            return BigDecimal.ZERO;
+        }
+        return safe;
     }
 
     public static AreaCost line(BigDecimal areaM2, BigDecimal costPerM2) {

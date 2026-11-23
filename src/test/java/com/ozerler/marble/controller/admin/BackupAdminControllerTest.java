@@ -102,9 +102,12 @@ class BackupAdminControllerTest {
         String fileName = backupService.createBackupAsync().get(60, TimeUnit.SECONDS);
 
         MvcResult started = mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings/backups/download/" + fileName)).andReturn();
-        MvcResult result = started.getRequest().isAsyncStarted()
-                ? mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(started)).andReturn()
-                : started;
+        MvcResult result;
+        if (started.getRequest().isAsyncStarted()) {
+            result = mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(started)).andReturn();
+        } else {
+            result = started;
+        }
 
         Assertions.assertThat(result.getResponse().getStatus())
                 .withFailMessage("status=%s body=%s", result.getResponse().getStatus(), result.getResponse().getContentAsString())

@@ -14,18 +14,30 @@ public interface OrderChildAggregate {
     BigDecimal getTotalArea();
 
     default int itemCountOrZero() {
-        return getItemCount() == null ? 0 : getItemCount().intValue();
+        if (getItemCount() == null) {
+            return 0;
+        }
+        return getItemCount().intValue();
     }
 
     default BigDecimal totalAreaOrZero() {
-        return getTotalArea() == null ? BigDecimal.ZERO : getTotalArea();
+        if (getTotalArea() == null) {
+            return BigDecimal.ZERO;
+        }
+        return getTotalArea();
     }
 
     static int itemCountOrZero(OrderChildAggregate aggregate) {
-        return aggregate == null ? 0 : aggregate.itemCountOrZero();
+        if (aggregate == null) {
+            return 0;
+        }
+        return aggregate.itemCountOrZero();
     }
 
     static BigDecimal totalAreaOrZero(OrderChildAggregate aggregate) {
-        return aggregate == null ? BigDecimal.ZERO : aggregate.totalAreaOrZero();
+        if (aggregate == null) {
+            return BigDecimal.ZERO;
+        }
+        return aggregate.totalAreaOrZero();
     }
 }

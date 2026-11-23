@@ -55,7 +55,13 @@ public class CollectionController extends AbstractController {
         model.addAttribute("grid", CollectionGrid.view(
                 collectionService.searchCollectionViews(method, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
-        model.addAttribute("selectedMethod", method != null ? method.name() : "");
+        Object valueValue;
+        if (method != null) {
+            valueValue = method.name();
+        } else {
+            valueValue = "";
+        }
+        model.addAttribute("selectedMethod", valueValue);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("customers", formLookup.customers());
         model.addAttribute("methods", CollectionMethod.values());
@@ -147,7 +153,13 @@ public class CollectionController extends AbstractController {
         model.addAttribute("overdueChecks", overdue);
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedCustomerId", customerId);
-        model.addAttribute("selectedUnit", unit != null ? unit.name() : "");
+        Object valueValue;
+        if (unit != null) {
+            valueValue = unit.name();
+        } else {
+            valueValue = "";
+        }
+        model.addAttribute("selectedUnit", valueValue);
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("customers", formLookup.customers());
         model.addAttribute("checkStatuses", CheckStatus.values());
@@ -184,6 +196,12 @@ public class CollectionController extends AbstractController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
-        return "redirect:/collections/checks" + (unit != null ? "?unit=" + unit.name() : "");
+        String valueValue;
+        if (unit != null) {
+            valueValue = "?unit=" + unit.name();
+        } else {
+            valueValue = "";
+        }
+        return "redirect:/collections/checks" + valueValue;
     }
 }

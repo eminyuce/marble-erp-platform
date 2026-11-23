@@ -40,19 +40,27 @@ final class RowDimensions {
             if (row == null) {
                 continue;
             }
-            int count = (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null)
-                    ? pieceCounts.get(i) : 1;
-            BigDecimal quantity = (quantities != null && i < quantities.size() && quantities.get(i) != null)
-                    ? quantities.get(i)
-                    : row.width().multiply(row.length()).multiply(BigDecimal.valueOf(count))
-                        .divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+            int count;
+            if (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null) {
+                count = pieceCounts.get(i);
+            } else {
+                count = 1;
+            }
+            BigDecimal quantity;
+            if (quantities != null && i < quantities.size() && quantities.get(i) != null) {
+                quantity = quantities.get(i);
+            } else {
+                quantity = row.width().multiply(row.length()).multiply(BigDecimal.valueOf(count))
+                            .divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+            }
             piece.accept(i, row.width(), row.length(), row.thickness(), count, quantity);
         }
     }
 
     private static BigDecimal listedOr(List<BigDecimal> values, int index, BigDecimal fallback) {
-        return (values != null && index < values.size() && values.get(index) != null)
-                ? values.get(index)
-                : fallback;
+        if (values != null && index < values.size() && values.get(index) != null) {
+            return values.get(index);
+        }
+        return fallback;
     }
 }

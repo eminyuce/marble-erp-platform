@@ -28,6 +28,9 @@ public final class TurkishAsciiFilename {
                 .replaceAll("[^a-z0-9._-]+", "_")
                 .replaceAll("^_+|_+$", "");
 
-        return ascii.isEmpty() ? Constants.FALLBACK_DOWNLOAD_FILENAME : ascii;
+        if (ascii.isEmpty()) {
+            return Constants.FALLBACK_DOWNLOAD_FILENAME;
+        }
+        return ascii;
     }
 }

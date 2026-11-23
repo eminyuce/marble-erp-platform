@@ -76,8 +76,14 @@ public class CariTransactionController extends AbstractController {
         try {
             CariAmounts amounts = CariAmounts.of(direction, amount);
 
+            LocalDate createTransaction;
+            if (transactionDate != null) {
+                createTransaction = transactionDate;
+            } else {
+                createTransaction = LocalDate.now();
+            }
             cariTransactionService.createTransaction(
-                    customerId, transactionDate != null ? transactionDate : LocalDate.now(),
+                    customerId, createTransaction,
                     transactionType, documentNo, description, amounts.debit(), amounts.credit(), notes
             );
 
@@ -134,17 +140,33 @@ public class CariTransactionController extends AbstractController {
 
     private record CariAmounts(BigDecimal debit, BigDecimal credit) {
         private static CariAmounts of(String direction, BigDecimal amount) {
-            BigDecimal debitAmount = "DEBIT".equalsIgnoreCase(direction) ? amount : BigDecimal.ZERO;
-            BigDecimal creditAmount = "CREDIT".equalsIgnoreCase(direction) ? amount : BigDecimal.ZERO;
+            BigDecimal debitAmount;
+            if ("DEBIT".equalsIgnoreCase(direction)) {
+                debitAmount = amount;
+            } else {
+                debitAmount = BigDecimal.ZERO;
+            }
+            BigDecimal creditAmount;
+            if ("CREDIT".equalsIgnoreCase(direction)) {
+                creditAmount = amount;
+            } else {
+                creditAmount = BigDecimal.ZERO;
+            }
             return new CariAmounts(debitAmount, creditAmount);
         }
     }
 
     private static String labelOf(CustomerType customerType) {
-        return customerType == null ? "Genel" : customerType.getLabel();
+        if (customerType == null) {
+            return "Genel";
+        }
+        return customerType.getLabel();
     }
 
     private static String labelOf(BusinessUnit businessUnit) {
-        return businessUnit == null ? "Genel" : businessUnit.getLabel();
+        if (businessUnit == null) {
+            return "Genel";
+        }
+        return businessUnit.getLabel();
     }
 }

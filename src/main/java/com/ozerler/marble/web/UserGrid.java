@@ -31,15 +31,36 @@ public final class UserGrid {
     }
 
     public static GridRow row(UserDto user) {
-        String id = user.getId() == null ? "" : user.getId().toString();
-        String viewUrl = id.isEmpty() ? "" : "/admin/users/" + id;
-        String editUrl = id.isEmpty() ? "" : viewUrl + "/edit";
+        String id;
+        if (user.getId() == null) {
+            id = "";
+        } else {
+            id = user.getId().toString();
+        }
+        String viewUrl;
+        if (id.isEmpty()) {
+            viewUrl = "";
+        } else {
+            viewUrl = "/admin/users/" + id;
+        }
+        String editUrl;
+        if (id.isEmpty()) {
+            editUrl = "";
+        } else {
+            editUrl = viewUrl + "/edit";
+        }
         String deleteName = GridTexts.text(user.getFullName());
         if (deleteName.isBlank()) {
             deleteName = GridTexts.text(user.getUsername());
         }
+        String badge;
+        if (user.isEnabled()) {
+            badge = "Aktif";
+        } else {
+            badge = "Askıda";
+        }
         return GridRow.of(viewUrl, editUrl, user.getId(), deleteName, List.of(
-                GridCell.badge(user.isEnabled() ? "Aktif" : "Askıda"),
+                GridCell.badge(badge),
                 GridCell.chip(user.getId()),
                 GridCell.link(user.getUsername(), viewUrl),
                 GridCell.link(user.getFullName(), viewUrl),
@@ -88,7 +109,12 @@ public final class UserGrid {
     }
 
     private static String createdOn(UserDto user) {
-        LocalDateTime created = user.getCreatedAt() != null ? user.getCreatedAt() : user.getCreatedDate();
+        LocalDateTime created;
+        if (user.getCreatedAt() != null) {
+            created = user.getCreatedAt();
+        } else {
+            created = user.getCreatedDate();
+        }
         if (created == null) {
             return "";
         }

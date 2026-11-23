@@ -46,9 +46,15 @@ public class MachineFuelService {
         if (litres.compareTo(BigDecimal.ZERO) <= 0 || pricePerLitre.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(MessageUtils.getMessage("error.fuel.positive"));
         }
+        LocalDate entryDateValue;
+        if (entryDate != null) {
+            entryDateValue = entryDate;
+        } else {
+            entryDateValue = LocalDate.now();
+        }
         MachineFuelEntry entry = MachineFuelEntry.builder()
                 .machine(machine)
-                .entryDate(entryDate != null ? entryDate : LocalDate.now())
+                .entryDate(entryDateValue)
                 .litres(litres)
                 .pricePerLitre(pricePerLitre)
                 .workingHoursOrKm(workingHoursOrKm)
@@ -73,6 +79,12 @@ public class MachineFuelService {
 
         if (center != null) {
             CostCenter finalCenter = center;
+            String value;
+            if (workingHoursOrKm != null) {
+                value = workingHoursOrKm + " saat/km";
+            } else {
+                value = "Saat belirtilmedi";
+            }
             expenseService.recordExpense(
                     new ExpenseService.ExpenseDraft(
                             finalCenter.getId(), ExpenseType.DIESEL, null, machine.getBusinessUnit(), saved.getTotalAmount(),
@@ -80,7 +92,7 @@ public class MachineFuelService {
                             YearMonth.from(entry.getEntryDate()).toString(),
                             YearMonth.now().toString(),
                             null, null, null, null, machine, null, null, machine.getCode(),
-                            "Mazot: " + machine.getName() + " / " + litres + " L (" + (workingHoursOrKm != null ? workingHoursOrKm + " saat/km" : "Saat belirtilmedi") + ")"));
+                            "Mazot: " + machine.getName() + " / " + litres + " L (" + value + ")"));
         }
         return saved;
     }
@@ -108,7 +120,12 @@ public class MachineFuelService {
 
     @Transactional(readOnly = true)
     public List<MachineFuelReportItem> getMonthlyReport(String period) {
-        YearMonth ym = (period != null && !period.isBlank()) ? YearMonth.parse(period) : YearMonth.now();
+        YearMonth ym;
+        if (period != null && !period.isBlank()) {
+            ym = YearMonth.parse(period);
+        } else {
+            ym = YearMonth.now();
+        }
         List<Object[]> rows = fuelEntryRepository.sumFuelByMachineBetween(ym.atDay(1), ym.plusMonths(1).atDay(1));
         return rows.stream()
                 .map(r -> new MachineFuelReportItem((String) r[0], (BigDecimal) r[1], (BigDecimal) r[2], ((Number) r[3]).longValue()))
@@ -128,9 +145,12 @@ public class MachineFuelService {
     public com.ozerler.marble.dto.TabulatorResponse<com.ozerler.marble.dto.MachineFuelDto> getFuelPaged(
             int page, int size, String search, String period, String unit, Long machineId, String sortField, String sortDir) {
 
-        List<MachineFuelEntry> allEntries = (period != null && !period.isBlank())
-                ? listByPeriod(period)
-                : listAll();
+        List<MachineFuelEntry> allEntries;
+        if (period != null && !period.isBlank()) {
+            allEntries = listByPeriod(period);
+        } else {
+            allEntries = listAll();
+        }
 
         java.util.stream.Stream<MachineFuelEntry> stream = allEntries.stream();
 
@@ -145,12 +165,42 @@ public class MachineFuelService {
         if (search != null && !search.isBlank()) {
             String s = search.trim().toLowerCase(java.util.Locale.ROOT);
             stream = stream.filter(e -> {
-                String mName = e.getMachine() != null ? e.getMachine().getName().toLowerCase(java.util.Locale.ROOT) : "";
-                String mCode = e.getMachine() != null ? e.getMachine().getCode().toLowerCase(java.util.Locale.ROOT) : "";
-                String receipt = e.getReceiptNo() != null ? e.getReceiptNo().toLowerCase(java.util.Locale.ROOT) : "";
-                String issued = e.getIssuedBy() != null ? e.getIssuedBy().toLowerCase(java.util.Locale.ROOT) : "";
-                String received = e.getReceivedBy() != null ? e.getReceivedBy().toLowerCase(java.util.Locale.ROOT) : "";
-                String notes = e.getNotes() != null ? e.getNotes().toLowerCase(java.util.Locale.ROOT) : "";
+                String mName;
+                if (e.getMachine() != null) {
+                    mName = e.getMachine().getName().toLowerCase(java.util.Locale.ROOT);
+                } else {
+                    mName = "";
+                }
+                String mCode;
+                if (e.getMachine() != null) {
+                    mCode = e.getMachine().getCode().toLowerCase(java.util.Locale.ROOT);
+                } else {
+                    mCode = "";
+                }
+                String receipt;
+                if (e.getReceiptNo() != null) {
+                    receipt = e.getReceiptNo().toLowerCase(java.util.Locale.ROOT);
+                } else {
+                    receipt = "";
+                }
+                String issued;
+                if (e.getIssuedBy() != null) {
+                    issued = e.getIssuedBy().toLowerCase(java.util.Locale.ROOT);
+                } else {
+                    issued = "";
+                }
+                String received;
+                if (e.getReceivedBy() != null) {
+                    received = e.getReceivedBy().toLowerCase(java.util.Locale.ROOT);
+                } else {
+                    received = "";
+                }
+                String notes;
+                if (e.getNotes() != null) {
+                    notes = e.getNotes().toLowerCase(java.util.Locale.ROOT);
+                } else {
+                    notes = "";
+                }
                 return mName.contains(s) || mCode.contains(s) || receipt.contains(s) || issued.contains(s) || received.contains(s) || notes.contains(s);
             });
         }
@@ -184,7 +234,12 @@ public class MachineFuelService {
         dtos.sort(comparator);
 
         int totalElements = dtos.size();
-        int safeSize = size > 0 ? size : 25;
+        int safeSize;
+        if (size > 0) {
+            safeSize = size;
+        } else {
+            safeSize = 25;
+        }
         int safePage = Math.max(1, page);
         int totalPages = (int) Math.ceil((double) totalElements / safeSize);
 

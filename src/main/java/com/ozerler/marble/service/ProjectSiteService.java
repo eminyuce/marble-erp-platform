@@ -128,13 +128,23 @@ public class ProjectSiteService {
                     });
         }
 
+        String customerNameValue;
+        if (customerName != null) {
+            customerNameValue = customerName.trim();
+        } else {
+            if (customer != null) {
+                customerNameValue = customer.getCompanyName();
+            } else {
+                customerNameValue = "";
+            }
+        }
         Project project = Project.builder()
                 .projectCode(projectCode.trim())
                 .name(name.trim())
                 .customer(customer)
-                .customerName(customerName != null ? customerName.trim() : customer != null ? customer.getCompanyName() : "")
-                .contractValue(contractValue != null ? contractValue : BigDecimal.ZERO)
-                .estimatedCost(estimatedCost != null ? estimatedCost : BigDecimal.ZERO)
+                .customerName(customerNameValue)
+                .contractValue(Objects.requireNonNullElse(contractValue, BigDecimal.ZERO))
+                .estimatedCost(Objects.requireNonNullElse(estimatedCost, BigDecimal.ZERO))
                 .actualCost(BigDecimal.ZERO)
                 .startDate(startDate)
                 .deliveryDate(deliveryDate)
@@ -157,7 +167,12 @@ public class ProjectSiteService {
                                        String floorLevel, String stoneSpec, BigDecimal plannedAreaM2) {
         Objects.requireNonNull(locationName, getMessage("error.location.name.required"));
         Project project = getProjectById(projectId);
-        ProjectLocation parent = parentId != null ? projectLocationRepository.findById(parentId).orElse(null) : null;
+        ProjectLocation parent;
+        if (parentId != null) {
+            parent = projectLocationRepository.findById(parentId).orElse(null);
+        } else {
+            parent = null;
+        }
 
         ProjectLocation location = ProjectLocation.builder()
                 .project(project)
@@ -165,7 +180,7 @@ public class ProjectSiteService {
                 .locationName(locationName.trim())
                 .floorLevel(floorLevel)
                 .stoneSpec(stoneSpec)
-                .plannedAreaM2(plannedAreaM2 != null ? plannedAreaM2 : BigDecimal.ZERO)
+                .plannedAreaM2(Objects.requireNonNullElse(plannedAreaM2, BigDecimal.ZERO))
                 .installedAreaM2(BigDecimal.ZERO)
                 .status(Constants.STATUS_PLANNED)
                 .build();
@@ -209,11 +224,21 @@ public class ProjectSiteService {
         if (type != ConsumptionType.STONE) {
             return;
         }
-        BigDecimal currentInstalled = location.getInstalledAreaM2() != null ? location.getInstalledAreaM2() : BigDecimal.ZERO;
+        BigDecimal currentInstalled;
+        if (location.getInstalledAreaM2() != null) {
+            currentInstalled = location.getInstalledAreaM2();
+        } else {
+            currentInstalled = BigDecimal.ZERO;
+        }
         BigDecimal newInstalled = currentInstalled.add(quantity);
         location.setInstalledAreaM2(newInstalled);
 
-        BigDecimal plannedArea = location.getPlannedAreaM2() != null ? location.getPlannedAreaM2() : BigDecimal.ZERO;
+        BigDecimal plannedArea;
+        if (location.getPlannedAreaM2() != null) {
+            plannedArea = location.getPlannedAreaM2();
+        } else {
+            plannedArea = BigDecimal.ZERO;
+        }
         if (newInstalled.compareTo(plannedArea) >= 0) {
             location.setStatus(Constants.STATUS_COMPLETED);
         } else {
@@ -224,7 +249,12 @@ public class ProjectSiteService {
 
     private void updateProjectActualCost(Project project, BigDecimal additionalCost) {
         if (additionalCost != null && additionalCost.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal currentActual = project.getActualCost() != null ? project.getActualCost() : BigDecimal.ZERO;
+            BigDecimal currentActual;
+            if (project.getActualCost() != null) {
+                currentActual = project.getActualCost();
+            } else {
+                currentActual = BigDecimal.ZERO;
+            }
             project.setActualCost(currentActual.add(additionalCost));
             projectRepository.save(project);
         }
@@ -248,17 +278,40 @@ public class ProjectSiteService {
      */
     public BigDecimal calculateProductionRequirement(BigDecimal plannedArea, BigDecimal scrapPct,
                                                      BigDecimal availableStock, BigDecimal inProduction) {
-        BigDecimal effectivePlanned = plannedArea != null ? plannedArea : BigDecimal.ZERO;
-        BigDecimal effectiveScrap = scrapPct != null ? scrapPct : BigDecimal.ZERO;
-        BigDecimal effectiveStock = availableStock != null ? availableStock : BigDecimal.ZERO;
-        BigDecimal effectiveInProduction = inProduction != null ? inProduction : BigDecimal.ZERO;
+        BigDecimal effectivePlanned;
+        if (plannedArea != null) {
+            effectivePlanned = plannedArea;
+        } else {
+            effectivePlanned = BigDecimal.ZERO;
+        }
+        BigDecimal effectiveScrap;
+        if (scrapPct != null) {
+            effectiveScrap = scrapPct;
+        } else {
+            effectiveScrap = BigDecimal.ZERO;
+        }
+        BigDecimal effectiveStock;
+        if (availableStock != null) {
+            effectiveStock = availableStock;
+        } else {
+            effectiveStock = BigDecimal.ZERO;
+        }
+        BigDecimal effectiveInProduction;
+        if (inProduction != null) {
+            effectiveInProduction = inProduction;
+        } else {
+            effectiveInProduction = BigDecimal.ZERO;
+        }
 
         BigDecimal scrapFactor = BigDecimal.ONE.add(effectiveScrap.divide(Constants.PERCENT_DIVISOR, Constants.CALCULATION_SCALE, RoundingMode.HALF_UP));
         BigDecimal grossRequirement = effectivePlanned.multiply(scrapFactor);
         BigDecimal currentCoverage = effectiveStock.add(effectiveInProduction);
         BigDecimal shortfall = grossRequirement.subtract(currentCoverage);
 
-        return shortfall.compareTo(BigDecimal.ZERO) > 0 ? shortfall.setScale(Constants.RESULT_SCALE, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+        if (shortfall.compareTo(BigDecimal.ZERO) > 0) {
+            return shortfall.setScale(Constants.RESULT_SCALE, RoundingMode.HALF_UP);
+        }
+        return BigDecimal.ZERO;
     }
 
     /**

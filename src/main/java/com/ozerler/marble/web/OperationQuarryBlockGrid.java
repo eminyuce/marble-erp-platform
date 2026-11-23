@@ -23,17 +23,35 @@ public final class OperationQuarryBlockGrid {
     static GridRow row(BlockView block) {
         String viewUrl = "/blocks/" + block.getId();
         String dispatchUrl = "/operations/quarry/" + block.getId() + "/dispatch";
-        String quarry = block.getQuarry() == null ? "" : OperationGridSupport.named(block.getQuarry().getName(), "");
+        String quarry;
+        if (block.getQuarry() == null) {
+            quarry = "";
+        } else {
+            quarry = OperationGridSupport.named(block.getQuarry().getName(), "");
+        }
         String section = block.getQuarrySection();
         if (quarry.isBlank()) {
-            quarry = section == null ? "" : section;
+            if (section == null) {
+                quarry = "";
+            } else {
+                quarry = section;
+            }
             section = "";
         }
-        String actual = block.getActualTonnage() == null
-                ? "Kantar Gir"
-                : OperationGridSupport.amount(block.getActualTonnage(), "ton");
+        String actual;
+        if (block.getActualTonnage() == null) {
+            actual = "Kantar Gir";
+        } else {
+            actual = OperationGridSupport.amount(block.getActualTonnage(), "ton");
+        }
+        String badge;
+        if (block.getStatus() == null) {
+            badge = "";
+        } else {
+            badge = block.getStatus().getDisplayName();
+        }
         return GridRow.of(viewUrl, dispatchUrl, null, null, List.of(
-                GridCell.badge(block.getStatus() == null ? "" : block.getStatus().getDisplayName()),
+                GridCell.badge(badge),
                 GridCell.chip(block.getId()),
                 GridCell.link(block.getBlockCode(), viewUrl),
                 OperationGridSupport.lines(quarry, section),
