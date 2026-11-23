@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.web.GridColumnFilterContext;
 
 /**
  * Builds Tabulator remote-pagination {@link Pageable} values, maps grid column
@@ -275,7 +276,9 @@ public final class GridPages {
     public static <T> Page<T> execute(int page, int size, String sortField, String sortDir,
                                       Map<String, String> sortAliases,
                                       Function<Pageable, Page<T>> query) {
-        return execute(of(page, size, sortField, sortDir, sortAliases), query);
+        try (GridColumnFilterContext ignored = GridColumnFilterContext.open(sortAliases)) {
+            return execute(of(page, size, sortField, sortDir, sortAliases), query);
+        }
     }
 
     public static <T> Page<T> execute(Pageable pageable, Function<Pageable, Page<T>> query) {

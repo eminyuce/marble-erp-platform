@@ -12,12 +12,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.PurchaseOrder;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
 
-    @Query(
-            value = "SELECT po FROM PurchaseOrder po "
+    @Query(value = "SELECT po FROM PurchaseOrder po "
                     + "LEFT JOIN FETCH po.supplier supplier "
                     + "LEFT JOIN FETCH po.project project WHERE "
                     + "(:search IS NULL OR LOWER(po.poNumber) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
@@ -28,7 +28,8 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
                     + "LEFT JOIN po.project project WHERE "
                     + "(:search IS NULL OR LOWER(po.poNumber) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
                     + "LOWER(COALESCE(supplier.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
-                    + "'%')))")
+                    + "'%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<PurchaseOrder> searchPurchaseOrders(@Param("search") String search, Pageable pageable);
 
     @EntityGraph(attributePaths = {"supplier", "project", "items", "costCenter"})

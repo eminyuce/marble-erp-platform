@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.StockLocationType;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface BlockRepository extends JpaRepository<Block, Long> {
@@ -48,8 +49,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     long countByStatusIn(List<BlockStatus> statuses);
 
-    @Query(
-            value =
+    @Query(value =
                     "SELECT b FROM Block b "
                             + "LEFT JOIN FETCH b.currentLocation loc "
                             + "LEFT JOIN FETCH b.soldCustomer soldCust "
@@ -82,7 +82,8 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                             + "'%'))) AND "
                             + "(:locationType IS NULL OR loc.locationType = :locationType) AND "
                             + "(:status IS NULL OR b.status = :status) AND "
-                            + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)")
+                            + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Block> searchBlocks(
             @Param("search") String search,
             @Param("locationType") StockLocationType locationType,
@@ -90,8 +91,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             @Param("unsoldOnly") boolean unsoldOnly,
             Pageable pageable);
 
-    @Query(
-            value =
+    @Query(value =
                     "SELECT b FROM Block b "
                             + "LEFT JOIN FETCH b.currentLocation loc "
                             + "LEFT JOIN FETCH b.soldCustomer soldCust "
@@ -170,7 +170,8 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                             + "com.ozerler.marble.model.enums.BlockStatus.QUARRY, "
                             + "com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> "
                             + "com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND "
-                            + "b.dispatchInvoiceId IS NULL))")
+                            + "b.dispatchInvoiceId IS NULL))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Block> searchBlocksWithStockFilter(
             @Param("search") String search,
             @Param("locationType") StockLocationType locationType,
@@ -353,8 +354,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             @Param("generalStockOnly") boolean generalStockOnly);
 
     @EntityGraph(attributePaths = {"quarry", "assignedCustomer", "currentLocation"})
-    @Query(
-            value =
+    @Query(value =
                     "SELECT b FROM Block b "
                             + "LEFT JOIN b.quarry q "
                             + "LEFT JOIN b.assignedCustomer cust "
@@ -401,7 +401,8 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                             + "     OR LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
                             + "'%')) "
                             + "     OR LOWER(COALESCE(cust.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
-                            + "string), '%')))")
+                            + "string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Block> searchFactoryUncutBlocks(
             @Param("customerId") Long customerId,
             @Param("generalStockOnly") boolean generalStockOnly,

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.model.CutOrder;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface CutOrderRepository extends JpaRepository<CutOrder, Long> {
@@ -31,8 +32,7 @@ public interface CutOrderRepository extends JpaRepository<CutOrder, Long> {
     @Query("SELECT DISTINCT c FROM CutOrder c ORDER BY c.id DESC")
     List<CutOrder> findAllWithProject();
 
-    @Query(
-            value = "SELECT c FROM CutOrder c "
+    @Query(value = "SELECT c FROM CutOrder c "
                     + "LEFT JOIN FETCH c.project project "
                     + "LEFT JOIN FETCH c.location location WHERE "
                     + "(:search IS NULL OR LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
@@ -43,7 +43,8 @@ public interface CutOrderRepository extends JpaRepository<CutOrder, Long> {
                     + "LEFT JOIN c.location location WHERE "
                     + "(:search IS NULL OR LOWER(c.cutOrderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
                     + "OR LOWER(c.machineName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "LOWER(COALESCE(project.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+                    + "LOWER(COALESCE(project.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<CutOrder> searchCutOrders(@Param("search") String search, Pageable pageable);
 
     @Query(

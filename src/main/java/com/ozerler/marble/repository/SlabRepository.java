@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface SlabRepository extends JpaRepository<Slab, Long> {
@@ -47,10 +48,11 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
     List<Slab> findAllWithBlock();
 
     @EntityGraph(attributePaths = {"block", "productionOrder", "pallet"})
-    @Query("SELECT s FROM Slab s WHERE "
+    @Query(value = "SELECT s FROM Slab s WHERE "
             + "(:search IS NULL OR LOWER(s.slabCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(s.block.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(s.block.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+            + "LOWER(s.block.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Slab> searchSlabs(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT s FROM Slab s WHERE LOWER(s.slabCode) LIKE LOWER(CONCAT('%', :query, '%'))")
@@ -65,7 +67,7 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
     long countByStatus(SlabStatus status);
 
     @EntityGraph(attributePaths = {"block", "block.quarry", "customer", "productionOrder", "pallet"})
-    @Query("SELECT s FROM Slab s "
+    @Query(value = "SELECT s FROM Slab s "
             + "LEFT JOIN s.customer c "
             + "LEFT JOIN s.block b "
             + "WHERE (:status IS NULL OR s.status = :status) "
@@ -76,7 +78,8 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
             + "OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(b.stoneType) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(COALESCE(c.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-            + "ORDER BY s.id DESC")
+            + "ORDER BY s.id DESC",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Slab> searchSlabsWithCustomer(@Param("status") SlabStatus status,
                                        @Param("customerId") Long customerId,
                                        @Param("generalStockOnly") boolean generalStockOnly,

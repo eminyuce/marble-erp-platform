@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.ScrapLog;
 import com.ozerler.marble.model.enums.ScrapReasonCode;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface ScrapLogRepository extends JpaRepository<ScrapLog, Long> {
@@ -38,6 +39,7 @@ public interface ScrapLogRepository extends JpaRepository<ScrapLog, Long> {
     @Query("SELECT COALESCE(SUM(s.costImpact), 0) FROM ScrapLog s")
     BigDecimal getTotalScrapCostImpact();
 
-    @Query("SELECT s FROM ScrapLog s ORDER BY s.loggedAt DESC")
+    @Query(value = "SELECT s FROM ScrapLog s ORDER BY s.loggedAt DESC",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<ScrapLog> findAllPaged(Pageable pageable);
 }

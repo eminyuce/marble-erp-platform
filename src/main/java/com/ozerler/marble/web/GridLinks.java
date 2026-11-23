@@ -22,6 +22,10 @@ public final class GridLinks {
         this.parameters = request.getParameterMap();
     }
 
+    public String getPath() {
+        return path;
+    }
+
     public String page(int page) {
         return url(query().put("page", Integer.toString(Math.max(1, page))));
     }
@@ -56,6 +60,83 @@ public final class GridLinks {
             return url(query.remove(name));
         }
         return url(query.put(name, value));
+    }
+
+
+    public boolean filtered(String key) {
+        return !first(GridColumnFilters.VALUE_PREFIX + key).isBlank();
+    }
+
+    public boolean hasColumnFilters() {
+        for (String name : parameters.keySet()) {
+            if (GridColumnFilters.isFilterParameter(name) && !first(name).isBlank()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String operator(String key) {
+        String current = first(GridColumnFilters.OPERATOR_PREFIX + key);
+        return GridFilterOperator.parse(current).getCode();
+    }
+
+    public String value(String key) {
+        return first(GridColumnFilters.VALUE_PREFIX + key);
+    }
+
+    public String clearFilter(String key) {
+        return url(query()
+                .remove(GridColumnFilters.VALUE_PREFIX + key)
+                .remove(GridColumnFilters.OPERATOR_PREFIX + key)
+                .put("page", "1"));
+    }
+
+    public String clearFilters() {
+        Query next = query();
+        for (String name : List.copyOf(parameters.keySet())) {
+            if (GridColumnFilters.isFilterParameter(name)) {
+                next = next.remove(name);
+            }
+        }
+        return url(next.put("page", "1"));
+    }
+
+    public String filterValues(String tableId, String columnKey) {
+        return "/grid-filter-values?grid=" + encode(tableId) + "&column=" + encode(columnKey);
+    }
+
+    public List<GridParameter> hiddenParameters(String columnKey) {
+        List<GridParameter> hidden = new ArrayList<>();
+        String valueName = GridColumnFilters.VALUE_PREFIX + columnKey;
+        String operatorName = GridColumnFilters.OPERATOR_PREFIX + columnKey;
+        Query current = query();
+        for (int index = 0; index < current.names.size(); index++) {
+            String name = current.names.get(index);
+            if ("page".equals(name) || name.equals(valueName) || name.equals(operatorName)) {
+                continue;
+            }
+            hidden.add(new GridParameter(name, current.values.get(index)));
+        }
+        return List.copyOf(hidden);
+    }
+
+    public static final class GridParameter {
+        private final String name;
+        private final String value;
+
+        public GridParameter(String name, String value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getValue() {
+            return value;
+        }
     }
 
     private String first(String name) {

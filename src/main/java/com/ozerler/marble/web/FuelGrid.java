@@ -57,8 +57,8 @@ public final class FuelGrid {
 
     private static List<GridColumn> columns() {
         return List.of(
-                GridColumn.text("", "Id", false, GridWidth.PX_110),
-                GridColumn.text("", "Fiş No", false, GridWidth.PX_120),
+                GridColumn.text("id", "Id", false, GridWidth.PX_110),
+                GridColumn.text("receiptNo", "Fiş No", false, GridWidth.PX_120),
                 GridColumn.text("machineName", "Makine", true, GridWidth.PX_180),
                 GridColumn.text("entryDate", "Tarih", true, GridWidth.PX_120),
                 GridColumn.text("", "Birim", false, GridWidth.PX_130),

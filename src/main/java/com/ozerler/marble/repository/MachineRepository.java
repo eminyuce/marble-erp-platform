@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.MachineType;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface MachineRepository extends JpaRepository<Machine, Long> {
@@ -27,7 +28,7 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
 
     List<Machine> findAllByOrderByCodeAsc();
 
-    @Query("SELECT m FROM Machine m WHERE (:search IS NULL "
+    @Query(value = "SELECT m FROM Machine m WHERE (:search IS NULL "
             + "OR LOWER(m.code) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(m.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
             + "AND (:unit IS NULL OR m.businessUnit = :unit) "
@@ -35,6 +36,7 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
             + "com.ozerler.marble.model.enums.MachineType.ST, "
             + "com.ozerler.marble.model.enums.MachineType.SLAB_POLISHING, "
             + "com.ozerler.marble.model.enums.MachineType.STRIP_POLISHING, "
-            + "com.ozerler.marble.model.enums.MachineType.FACTORY_BRIDGE_SAW))")
+            + "com.ozerler.marble.model.enums.MachineType.FACTORY_BRIDGE_SAW))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Machine> search(@Param("search") String search, @Param("unit") BusinessUnit unit, Pageable pageable);
 }

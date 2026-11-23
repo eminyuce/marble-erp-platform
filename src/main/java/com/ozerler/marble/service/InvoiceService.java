@@ -60,6 +60,8 @@ import com.ozerler.marble.repository.StockLocationRepository;
 import com.ozerler.marble.repository.StockMovementRepository;
 import com.ozerler.marble.repository.SupplierRepository;
 import com.ozerler.marble.util.UniqueCodes;
+import com.ozerler.marble.web.GridColumnFilterContext;
+import com.ozerler.marble.web.GridFilterCatalog;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -1501,7 +1503,11 @@ public class InvoiceService {
                                         Long customerId, LocalDate startDate, LocalDate endDate,
                                         String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        return invoiceRepository.searchInvoices(type, dept, status, customerId, startDate, endDate, search, pageable);
+        try (GridColumnFilterContext ignored =
+                     GridColumnFilterContext.open(GridFilterCatalog.aliases("invoices-table"))) {
+            return invoiceRepository.searchInvoices(
+                    type, dept, status, customerId, startDate, endDate, search, pageable);
+        }
     }
 
     @Transactional(readOnly = true)

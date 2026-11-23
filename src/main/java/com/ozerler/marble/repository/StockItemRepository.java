@@ -17,6 +17,7 @@ import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.QuarryCategory;
 import com.ozerler.marble.model.enums.StockLocationType;
 import com.ozerler.marble.model.enums.StockProductType;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface StockItemRepository extends JpaRepository<StockItem, Long> {
@@ -81,7 +82,8 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
             + "AND (:search IS NULL OR :search = '' "
             + "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) "
             + "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) "
-            + "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%')))")
+            + "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<StockItem> searchItems(@Param("productType") StockProductType productType,
                                @Param("status") String status,
                                @Param("customerId") Long customerId,
@@ -114,7 +116,8 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
             + "AND (:search IS NULL OR :search = '' "
             + "OR LOWER(s.itemCode) LIKE LOWER(CONCAT('%', :search, '%')) "
             + "OR LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) "
-            + "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%')))")
+            + "OR LOWER(COALESCE(s.stoneType, '')) LIKE LOWER(CONCAT('%', :search, '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<StockItem> searchItemsDetailed(@Param("productType") StockProductType productType,
                                        @Param("status") String status,
                                        @Param("customerId") Long customerId,

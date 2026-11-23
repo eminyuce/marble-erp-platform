@@ -34,6 +34,8 @@ import com.ozerler.marble.repository.InvoiceRepository;
 import com.ozerler.marble.repository.QuarryRepository;
 import com.ozerler.marble.repository.StockLocationRepository;
 import com.ozerler.marble.util.UniqueCodes;
+import com.ozerler.marble.web.GridColumnFilterContext;
+import com.ozerler.marble.web.GridFilterCatalog;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -229,7 +231,10 @@ public class QuarryOperationService {
     @Transactional(readOnly = true)
     public Page<Block> searchQuarryBlocks(String search, BlockStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        return blockRepository.searchBlocks(search, null, status, false, pageable);
+        try (GridColumnFilterContext ignored =
+                     GridColumnFilterContext.open(GridFilterCatalog.aliases("quarry-blocks-table"))) {
+            return blockRepository.searchBlocks(search, null, status, false, pageable);
+        }
     }
 
     @Transactional(readOnly = true)

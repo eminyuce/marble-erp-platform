@@ -16,6 +16,7 @@ import com.ozerler.marble.model.Invoice;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.InvoiceStatus;
 import com.ozerler.marble.model.enums.InvoiceType;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
@@ -72,7 +73,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
             + "AND (:search IS NULL OR :search = '' "
             + "OR LOWER(i.invoiceNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(COALESCE(i.partyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-            + "OR LOWER(COALESCE(i.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+            + "OR LOWER(COALESCE(i.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Invoice> searchInvoices(@Param("invoiceType") InvoiceType invoiceType,
                                 @Param("department") BusinessUnit department,
                                 @Param("status") InvoiceStatus status,

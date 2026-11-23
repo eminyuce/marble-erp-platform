@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import com.ozerler.marble.model.OperationWorkOrder;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface OperationWorkOrderRepository extends JpaRepository<OperationWorkOrder, Long> {
@@ -30,7 +31,7 @@ public interface OperationWorkOrderRepository extends JpaRepository<OperationWor
             + "WHERE o.id = :id")
     Optional<OperationWorkOrder> findByIdWithDetails(@Param("id") Long id);
 
-    @Query("SELECT o FROM OperationWorkOrder o "
+    @Query(value = "SELECT o FROM OperationWorkOrder o "
             + "LEFT JOIN FETCH o.customer "
             + "LEFT JOIN FETCH o.sourceStockItem "
             + "LEFT JOIN FETCH o.sourceSlab "
@@ -45,7 +46,8 @@ public interface OperationWorkOrderRepository extends JpaRepository<OperationWor
             + "OR LOWER(COALESCE(o.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(COALESCE(o.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(COALESCE(o.responsiblePerson, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-            + "ORDER BY o.orderDate DESC, o.id DESC")
+            + "ORDER BY o.orderDate DESC, o.id DESC",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<OperationWorkOrder> searchOrders(@Param("department") BusinessUnit department,
                                          @Param("status") OperationWorkOrderStatus status,
                                          @Param("customerId") Long customerId,

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.model.ProductionOrder;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface ProductionOrderRepository extends JpaRepository<ProductionOrder, Long> {
@@ -28,10 +29,11 @@ public interface ProductionOrderRepository extends JpaRepository<ProductionOrder
     List<ProductionOrder> findByBlockId(Long blockId);
 
     @EntityGraph(attributePaths = {"block"})
-    @Query("SELECT p FROM ProductionOrder p WHERE "
+    @Query(value = "SELECT p FROM ProductionOrder p WHERE "
             + "(:search IS NULL OR LOWER(p.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(p.machineName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(p.block.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+            + "LOWER(p.block.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<ProductionOrder> searchOrders(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT p FROM ProductionOrder p WHERE LOWER(p.orderNo) LIKE LOWER(CONCAT('%', :query, '%'))")

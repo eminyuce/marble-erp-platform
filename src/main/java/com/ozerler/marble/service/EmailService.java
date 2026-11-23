@@ -46,6 +46,8 @@ import com.ozerler.marble.util.GridPages;
 import com.ozerler.marble.util.Ints;
 import com.ozerler.marble.util.MessageUtils;
 import com.ozerler.marble.util.Strings;
+import com.ozerler.marble.web.GridColumnFilterContext;
+import com.ozerler.marble.web.GridFilterCatalog;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -138,11 +140,14 @@ public class EmailService {
             pageSize = DEFAULT_PAGE_SIZE;
         }
         Sort order = Sort.by(Sort.Order.asc("category"), Sort.Order.asc("templateName"));
-        return templateRepository.searchTemplates(
-                categoryFilter,
-                activeOnly,
-                GridPages.normalizeSearch(search),
-                PageRequest.of(pageIndex, pageSize, order));
+        try (GridColumnFilterContext ignored =
+                     GridColumnFilterContext.open(GridFilterCatalog.aliases("email-templates-table"))) {
+            return templateRepository.searchTemplates(
+                    categoryFilter,
+                    activeOnly,
+                    GridPages.normalizeSearch(search),
+                    PageRequest.of(pageIndex, pageSize, order));
+        }
     }
 
     @Cacheable(value = "emailTemplates", key = "#key.trim().toUpperCase()")

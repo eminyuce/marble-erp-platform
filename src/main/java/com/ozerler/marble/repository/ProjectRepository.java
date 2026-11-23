@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.enums.ProjectStatus;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
@@ -29,21 +30,23 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     long countByCustomerId(Long customerId);
 
-    @Query("SELECT p FROM Project p WHERE "
+    @Query(value = "SELECT p FROM Project p WHERE "
             + "(:customerId IS NULL OR (p.customer IS NOT NULL AND p.customer.id = :customerId)) AND "
             + "(:status IS NULL OR p.status = :status) AND "
             + "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+            + "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Project> searchProjectsFiltered(@Param("search") String search,
                                          @Param("status") ProjectStatus status,
                                          @Param("customerId") Long customerId,
                                          Pageable pageable);
 
-    @Query("SELECT p FROM Project p WHERE "
+    @Query(value = "SELECT p FROM Project p WHERE "
             + "(:search IS NULL OR LOWER(p.projectCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+            + "LOWER(p.customerName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Project> searchProjects(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT p FROM Project p WHERE LOWER(p.projectCode) LIKE LOWER(CONCAT('%', :query, '%')) "

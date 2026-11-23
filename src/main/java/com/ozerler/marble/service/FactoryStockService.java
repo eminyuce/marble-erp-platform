@@ -45,6 +45,8 @@ import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockItemRepository;
 import com.ozerler.marble.repository.StockLocationRepository;
 import com.ozerler.marble.util.UniqueCodes;
+import com.ozerler.marble.web.GridColumnFilterContext;
+import com.ozerler.marble.web.GridFilterCatalog;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -103,7 +105,10 @@ public class FactoryStockService {
     public Page<Block> getFactoryUncutBlocksPaged(
             Long customerId, boolean generalStockOnly, String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        return blockRepository.searchFactoryUncutBlocks(customerId, generalStockOnly, search, pageable);
+        try (GridColumnFilterContext ignored =
+                     GridColumnFilterContext.open(GridFilterCatalog.aliases("factory-blocks-table"))) {
+            return blockRepository.searchFactoryUncutBlocks(customerId, generalStockOnly, search, pageable);
+        }
     }
 
     @Transactional
@@ -331,7 +336,10 @@ public class FactoryStockService {
             int page,
             int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        return slabRepository.searchSlabsWithCustomer(status, customerId, generalStockOnly, search, pageable);
+        try (GridColumnFilterContext ignored =
+                     GridColumnFilterContext.open(GridFilterCatalog.aliases("factory-slabs-table"))) {
+            return slabRepository.searchSlabsWithCustomer(status, customerId, generalStockOnly, search, pageable);
+        }
     }
 
     @Transactional
@@ -526,15 +534,18 @@ public class FactoryStockService {
             int page,
             int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        Page<StockItem> items =
-                stockItemRepository.searchItemsDetailed(
-                        StockProductType.SIZED,
-                        null,
-                        customerId,
-                        generalStockOnly,
-                        customerOnly,
-                        search,
-                        pageable);
+        Page<StockItem> items;
+        try (GridColumnFilterContext ignored =
+                     GridColumnFilterContext.open(GridFilterCatalog.aliases("factory-sized-table"))) {
+            items = stockItemRepository.searchItemsDetailed(
+                    StockProductType.SIZED,
+                    null,
+                    customerId,
+                    generalStockOnly,
+                    customerOnly,
+                    search,
+                    pageable);
+        }
         if (items.hasContent()) {
             items.getContent().forEach(it -> {
                 if (it.getSourceBlock() != null) {

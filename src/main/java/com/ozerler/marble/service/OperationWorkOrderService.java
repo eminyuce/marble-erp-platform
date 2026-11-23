@@ -42,6 +42,8 @@ import com.ozerler.marble.repository.StockItemRepository;
 import com.ozerler.marble.repository.WorkOrderStatusHistoryRepository;
 import com.ozerler.marble.security.SecurityUtils;
 import com.ozerler.marble.util.UniqueCodes;
+import com.ozerler.marble.web.GridColumnFilterContext;
+import com.ozerler.marble.web.GridFilterCatalog;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -297,10 +299,13 @@ public class OperationWorkOrderService {
                                                 Long customerId, LocalDate startDate, LocalDate endDate,
                                                 String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        Page<OperationWorkOrder> pageResult = workOrderRepository.searchOrders(
-                dept, status, customerId, startDate, endDate, search, pageable);
-        pageResult.getContent().forEach(this::initializeDetails);
-        return pageResult;
+        try (GridColumnFilterContext ignored =
+                     GridColumnFilterContext.open(GridFilterCatalog.aliases("workorders-table"))) {
+            Page<OperationWorkOrder> pageResult = workOrderRepository.searchOrders(
+                    dept, status, customerId, startDate, endDate, search, pageable);
+            pageResult.getContent().forEach(this::initializeDetails);
+            return pageResult;
+        }
     }
 
     @Transactional(readOnly = true)

@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.CutItem;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface CutItemRepository extends JpaRepository<CutItem, Long> {
@@ -26,9 +27,10 @@ public interface CutItemRepository extends JpaRepository<CutItem, Long> {
 
     List<CutItem> findBySourceSlabIdIn(Collection<Long> slabIds);
 
-    @Query("SELECT i FROM CutItem i WHERE "
+    @Query(value = "SELECT i FROM CutItem i WHERE "
             + "(:search IS NULL OR LOWER(i.itemCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(i.targetLocation) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+            + "LOWER(i.targetLocation) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<CutItem> searchItems(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT i FROM CutItem i WHERE LOWER(i.itemCode) LIKE LOWER(CONCAT('%', :query, '%'))")

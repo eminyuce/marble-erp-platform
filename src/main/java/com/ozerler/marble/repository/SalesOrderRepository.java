@@ -12,12 +12,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.SalesOrder;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
 
-    @Query(
-            value = "SELECT so FROM SalesOrder so "
+    @Query(value = "SELECT so FROM SalesOrder so "
                     + "LEFT JOIN FETCH so.customer customer WHERE "
                     + "(:search IS NULL OR LOWER(so.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
                     + "LOWER(COALESCE(customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
@@ -26,7 +26,8 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
                     + "LEFT JOIN so.customer customer WHERE "
                     + "(:search IS NULL OR LOWER(so.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
                     + "LOWER(COALESCE(customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
-                    + "'%')))")
+                    + "'%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<SalesOrder> searchSalesOrders(@Param("search") String search, Pageable pageable);
 
     @EntityGraph(attributePaths = {"customer", "items"})

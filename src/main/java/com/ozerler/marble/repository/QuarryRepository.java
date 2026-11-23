@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.Quarry;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface QuarryRepository extends JpaRepository<Quarry, Long> {
@@ -22,9 +23,10 @@ public interface QuarryRepository extends JpaRepository<Quarry, Long> {
 
     List<Quarry> findAllByOrderByCodeAsc();
 
-    @Query("SELECT q FROM Quarry q WHERE (:search IS NULL "
+    @Query(value = "SELECT q FROM Quarry q WHERE (:search IS NULL "
             + "OR LOWER(q.code) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(q.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
-            + "OR LOWER(COALESCE(q.location, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+            + "OR LOWER(COALESCE(q.location, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Quarry> search(@Param("search") String search, Pageable pageable);
 }

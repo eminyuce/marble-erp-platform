@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.CollectionRecord;
 import com.ozerler.marble.model.enums.CollectionMethod;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface CollectionRecordRepository extends JpaRepository<CollectionRecord, Long> {
@@ -22,7 +23,7 @@ public interface CollectionRecordRepository extends JpaRepository<CollectionReco
 
     boolean existsByCollectionNo(String collectionNo);
 
-    @Query("SELECT c FROM CollectionRecord c "
+    @Query(value = "SELECT c FROM CollectionRecord c "
             + "LEFT JOIN FETCH c.customer "
             + "LEFT JOIN FETCH c.invoice "
             + "WHERE (:method IS NULL OR c.collectionMethod = :method) "
@@ -32,7 +33,8 @@ public interface CollectionRecordRepository extends JpaRepository<CollectionReco
             + "AND (:search IS NULL OR :search = '' "
             + "OR LOWER(c.collectionNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(COALESCE(c.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-            + "ORDER BY c.collectionDate DESC, c.id DESC")
+            + "ORDER BY c.collectionDate DESC, c.id DESC",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<CollectionRecord> searchCollections(@Param("method") CollectionMethod method,
                                             @Param("customerId") Long customerId,
                                             @Param("startDate") LocalDate startDate,

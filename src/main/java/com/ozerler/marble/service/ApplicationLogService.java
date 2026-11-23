@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -26,6 +27,9 @@ import com.ozerler.marble.exception.ResourceNotFoundException;
 import com.ozerler.marble.logging.db.DatabaseLogQueue;
 import com.ozerler.marble.model.ApplicationLog;
 import com.ozerler.marble.repository.ApplicationLogRepository;
+import com.ozerler.marble.web.GridColumnFilterSpecifications;
+import com.ozerler.marble.web.GridColumnFilters;
+import com.ozerler.marble.web.GridFilterCatalog;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -107,6 +111,8 @@ public class ApplicationLogService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
+        Map<String, String> aliases = GridFilterCatalog.aliases("logs-table");
+        spec = spec.and(GridColumnFilterSpecifications.of(aliases, GridColumnFilters.fromCurrentRequest(aliases)));
         Page<ApplicationLog> pageResult = applicationLogRepository.findAll(spec, pageable);
         List<ApplicationLogDto> dtoList = pageResult.getContent().stream()
                 .map(this::mapToDto)

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import com.ozerler.marble.model.Supplier;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.SupplierType;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface SupplierRepository extends JpaRepository<Supplier, Long> {
@@ -25,12 +26,13 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
             + "OR LOWER(s.companyName) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Supplier> searchByCodeOrName(@Param("query") String query, Pageable pageable);
 
-    @Query("SELECT s FROM Supplier s WHERE (:search IS NULL "
+    @Query(value = "SELECT s FROM Supplier s WHERE (:search IS NULL "
             + "OR LOWER(s.supplierCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(s.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(COALESCE(s.contactPerson, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
             + "AND (:type IS NULL OR s.supplierType = :type) "
-            + "AND (:unit IS NULL OR s.businessUnit = :unit)")
+            + "AND (:unit IS NULL OR s.businessUnit = :unit)",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<Supplier> search(@Param("search") String search,
                           @Param("type") SupplierType type,
                           @Param("unit") BusinessUnit unit,

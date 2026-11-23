@@ -1,5 +1,6 @@
 package com.ozerler.marble.web;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.ozerler.marble.dto.TabulatorResponse;
@@ -28,11 +29,24 @@ public final class GridAssembler {
         } else {
             total = response.getTotal();
         }
-        return new DataGridView(page, size, totalPages, total, sort, direction, tableId, frozenCount, columns, rows);
+        return new DataGridView(page, size, totalPages, total, sort, direction, tableId, frozenCount,
+                headerFilters(tableId, columns), rows);
     }
 
     public static DataGridView from(int page, int size, int totalPages, long total, String sort, String direction,
                                     String tableId, int frozenCount, List<GridColumn> columns, List<GridRow> rows) {
-        return new DataGridView(page, size, totalPages, total, sort, direction, tableId, frozenCount, columns, rows);
+        return new DataGridView(page, size, totalPages, total, sort, direction, tableId, frozenCount,
+                headerFilters(tableId, columns), rows);
+    }
+
+    private static List<GridColumn> headerFilters(String tableId, List<GridColumn> columns) {
+        if (columns == null || columns.isEmpty()) {
+            return List.of();
+        }
+        List<GridColumn> marked = new ArrayList<>();
+        for (GridColumn column : columns) {
+            marked.add(column.withHeaderFilter(GridFilterCatalog.allows(tableId, column.getKey())));
+        }
+        return List.copyOf(marked);
     }
 }

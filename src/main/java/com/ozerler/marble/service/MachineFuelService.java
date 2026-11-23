@@ -30,6 +30,9 @@ import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.repository.MachineFuelEntryRepository;
 import com.ozerler.marble.repository.MachineRepository;
 import com.ozerler.marble.util.MessageUtils;
+import com.ozerler.marble.web.GridColumnFilterMatcher;
+import com.ozerler.marble.web.GridColumnFilters;
+import com.ozerler.marble.web.GridFilterCatalog;
 
 import lombok.RequiredArgsConstructor;
 
@@ -276,6 +279,11 @@ public class MachineFuelService {
         List<MachineFuelDto> dtos = stream
                 .map(MachineFuelDto::fromEntity)
                 .collect(Collectors.toList());
+        GridColumnFilters columnFilters = GridColumnFilters.fromCurrentRequest(
+                GridFilterCatalog.aliases("fuel-table"));
+        dtos = dtos.stream()
+                .filter(dto -> GridColumnFilterMatcher.matches(columnFilters, key -> fuelColumnValue(dto, key)))
+                .collect(Collectors.toList());
 
         // Sort
         Comparator<MachineFuelDto> comparator = Comparator.comparing(
@@ -414,4 +422,33 @@ public class MachineFuelService {
                 .map(entry -> entry.getMachine().getId()).distinct().count();
         return new FuelPeriodSummary(totalLitres, totalAmount, entries.size(), machineCount);
     }
+
+    private static String fuelColumnValue(MachineFuelDto dto, String key) {
+        if (dto == null || key == null) {
+            return "";
+        }
+        if ("id".equals(key) && dto.getId() != null) {
+            return dto.getId().toString();
+        }
+        if ("receiptNo".equals(key)) {
+            return dto.getReceiptNo();
+        }
+        if ("machineName".equals(key)) {
+            return dto.getMachineName();
+        }
+        if ("entryDate".equals(key) && dto.getEntryDate() != null) {
+            return dto.getEntryDate().toString();
+        }
+        if ("litres".equals(key) && dto.getLitres() != null) {
+            return dto.getLitres().toPlainString();
+        }
+        if ("totalAmount".equals(key) && dto.getTotalAmount() != null) {
+            return dto.getTotalAmount().toPlainString();
+        }
+        if ("workingHoursOrKm".equals(key) && dto.getWorkingHoursOrKm() != null) {
+            return dto.getWorkingHoursOrKm().toPlainString();
+        }
+        return "";
+    }
+
 }

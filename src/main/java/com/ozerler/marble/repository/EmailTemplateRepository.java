@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.EmailTemplate;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface EmailTemplateRepository extends JpaRepository<EmailTemplate, Long> {
@@ -23,14 +24,15 @@ public interface EmailTemplateRepository extends JpaRepository<EmailTemplate, Lo
     @Query("SELECT DISTINCT t.category FROM EmailTemplate t")
     List<String> findDistinctCategories();
 
-    @Query("SELECT t FROM EmailTemplate t WHERE "
+    @Query(value = "SELECT t FROM EmailTemplate t WHERE "
             + "(:category IS NULL OR t.category = :category) AND "
             + "(:active IS NULL OR t.isActive = :active) AND "
             + "(:search IS NULL OR LOWER(t.templateKey) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(t.templateName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(t.subject) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
             + "LOWER(COALESCE(t.description, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(COALESCE(t.category, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+            + "LOWER(COALESCE(t.category, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<EmailTemplate> searchTemplates(@Param("category") String category,
                                         @Param("active") Boolean active,
                                         @Param("search") String search,

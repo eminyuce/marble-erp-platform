@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import com.ozerler.marble.model.CostTransaction;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface CostTransactionRepository extends JpaRepository<CostTransaction, Long> {
@@ -76,8 +77,7 @@ public interface CostTransactionRepository extends JpaRepository<CostTransaction
     List<CostTransaction> findByBusinessUnitAndExpensePeriodOrderByEntryDateDesc(
             BusinessUnit businessUnit, String expensePeriod);
 
-    @Query(
-            value = "SELECT c FROM CostTransaction c "
+    @Query(value = "SELECT c FROM CostTransaction c "
                     + "LEFT JOIN FETCH c.costCenter cc "
                     + "LEFT JOIN FETCH c.quarry q "
                     + "LEFT JOIN FETCH c.project p "
@@ -112,7 +112,8 @@ public interface CostTransactionRepository extends JpaRepository<CostTransaction
                     + "     LOWER(COALESCE(cc.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
                     + "     LOWER(COALESCE(cc.code, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
                     + "     LOWER(COALESCE(q.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-                    + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+                    + "     LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<CostTransaction> searchExpenses(@Param("search") String search,
                                          @Param("unit") BusinessUnit unit,
                                          @Param("period") String period,

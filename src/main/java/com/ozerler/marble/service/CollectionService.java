@@ -30,6 +30,8 @@ import com.ozerler.marble.repository.CollectionRecordRepository;
 import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.InvoiceRepository;
 import com.ozerler.marble.util.UniqueCodes;
+import com.ozerler.marble.web.GridColumnFilterContext;
+import com.ozerler.marble.web.GridFilterCatalog;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -154,7 +156,11 @@ public class CollectionService {
                                                     LocalDate startDate, LocalDate endDate,
                                                     String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        return collectionRepository.searchCollections(method, customerId, startDate, endDate, search, pageable);
+        try (GridColumnFilterContext ignored =
+                     GridColumnFilterContext.open(GridFilterCatalog.aliases("collections-table"))) {
+            return collectionRepository.searchCollections(
+                    method, customerId, startDate, endDate, search, pageable);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -162,7 +168,11 @@ public class CollectionService {
                                           LocalDate startDate, LocalDate endDate,
                                           String search, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        return checkRepository.searchChecks(unit, status, customerId, startDate, endDate, search, pageable);
+        try (GridColumnFilterContext ignored =
+                     GridColumnFilterContext.open(GridFilterCatalog.aliases("checks-table"))) {
+            return checkRepository.searchChecks(
+                    unit, status, customerId, startDate, endDate, search, pageable);
+        }
     }
 
     @Transactional(readOnly = true)

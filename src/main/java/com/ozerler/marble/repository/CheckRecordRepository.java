@@ -14,12 +14,12 @@ import org.springframework.stereotype.Repository;
 import com.ozerler.marble.model.CheckRecord;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface CheckRecordRepository extends JpaRepository<CheckRecord, Long> {
 
-    @Query(
-            "SELECT ch FROM CheckRecord ch "
+    @Query(value = "SELECT ch FROM CheckRecord ch "
                     + "LEFT JOIN FETCH ch.customer "
                     + "LEFT JOIN FETCH ch.collection "
                     + "WHERE (:unit IS NULL OR ch.businessUnit = :unit OR (ch.businessUnit IS NULL AND "
@@ -33,7 +33,8 @@ public interface CheckRecordRepository extends JpaRepository<CheckRecord, Long> 
                     + "OR LOWER(COALESCE(ch.bankName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
                     + "OR LOWER(COALESCE(ch.customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS "
                     + "string), '%'))) "
-                    + "ORDER BY ch.dueDate ASC, ch.id DESC")
+                    + "ORDER BY ch.dueDate ASC, ch.id DESC",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<CheckRecord> searchChecks(
             @Param("unit") BusinessUnit unit,
             @Param("status") CheckStatus status,

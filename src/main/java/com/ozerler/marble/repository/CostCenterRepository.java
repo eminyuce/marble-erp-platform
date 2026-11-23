@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.web.GridColumnFilterRewriter;
 
 @Repository
 public interface CostCenterRepository extends JpaRepository<CostCenter, Long> {
@@ -27,9 +28,10 @@ public interface CostCenterRepository extends JpaRepository<CostCenter, Long> {
 
     List<CostCenter> findAllByOrderByCodeAsc();
 
-    @Query("SELECT c FROM CostCenter c WHERE (:search IS NULL "
+    @Query(value = "SELECT c FROM CostCenter c WHERE (:search IS NULL "
             + "OR LOWER(c.code) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
             + "OR LOWER(c.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
-            + "AND (:unit IS NULL OR c.businessUnit = :unit)")
+            + "AND (:unit IS NULL OR c.businessUnit = :unit)",
+            queryRewriter = GridColumnFilterRewriter.class)
     Page<CostCenter> search(@Param("search") String search, @Param("unit") BusinessUnit unit, Pageable pageable);
 }

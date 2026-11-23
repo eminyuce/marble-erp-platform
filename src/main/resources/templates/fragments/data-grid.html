@@ -26,6 +26,53 @@
                                    th:text="${choice.label}">Tümü</a>
                             </div>
                         </details>
+                        <div th:if="${column.headerFilter}" class="erp-data-grid__colfilter"
+                             th:classappend="${gridLinks.filtered(column.key)} ? ' is-active'">
+                            <button type="button" class="erp-data-grid__colfilter-btn"
+                                    aria-haspopup="dialog" aria-expanded="false"
+                                    th:attr="aria-label=${'Sütun filtresi: ' + column.label},
+                                             data-filter-key=${column.key},
+                                             data-filter-operator=${gridLinks.operator(column.key)},
+                                             data-filter-value=${gridLinks.value(column.key)},
+                                             data-values-url=${gridLinks.filterValues(grid.tableId, column.key)}"
+                                    onclick="toggleGridColumnFilter(event, this)">
+                                <i data-lucide="filter" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                                <span class="sr-only" th:text="${column.label}">Filtre</span>
+                            </button>
+                            <template class="erp-data-grid__colfilter-tpl">
+                                <form method="get" th:action="${gridLinks.path}"
+                                      class="erp-data-grid__colfilter-form" role="dialog"
+                                      th:attr="aria-label=${column.label + ' filtresi'}">
+                                    <th:block th:each="kept : ${gridLinks.hiddenParameters(column.key)}">
+                                        <input type="hidden" th:name="${kept.name}" th:value="${kept.value}">
+                                    </th:block>
+                                    <input type="hidden" name="page" value="1">
+                                    <label class="erp-data-grid__colfilter-label">Operatör
+                                        <select th:name="${'co.' + column.key}">
+                                            <option value="contains"
+                                                    th:selected="${gridLinks.operator(column.key) == 'contains'}">İçerir</option>
+                                            <option value="equals"
+                                                    th:selected="${gridLinks.operator(column.key) == 'equals'}">Eşittir</option>
+                                            <option value="starts"
+                                                    th:selected="${gridLinks.operator(column.key) == 'starts'}">İle Başlar</option>
+                                            <option value="not_contains"
+                                                    th:selected="${gridLinks.operator(column.key) == 'not_contains'}">İçermez</option>
+                                        </select>
+                                    </label>
+                                    <label class="erp-data-grid__colfilter-label">Değer
+                                        <input type="search" th:name="${'cf.' + column.key}"
+                                               th:value="${gridLinks.value(column.key)}"
+                                               autocomplete="off">
+                                    </label>
+                                    <div class="erp-data-grid__colfilter-values" role="listbox"
+                                         aria-label="Değerler" tabindex="0"></div>
+                                    <div class="erp-data-grid__colfilter-actions">
+                                        <button type="submit">Uygula</button>
+                                        <a th:href="${gridLinks.clearFilter(column.key)}">Temizle</a>
+                                    </div>
+                                </form>
+                            </template>
+                        </div>
                     </span>
                 </th>
             </tr>
@@ -90,7 +137,10 @@
         </table>
     </div>
     <footer class="erp-data-grid__footer">
-        <div class="erp-data-grid__total">Toplam <strong th:text="${grid.total}">0</strong></div>
+        <div class="erp-data-grid__total">Toplam <strong th:text="${grid.total}">0</strong>
+            <a th:if="${gridLinks.hasColumnFilters()}" th:href="${gridLinks.clearFilters()}"
+               class="erp-data-grid__clear-filters">Filtreleri temizle</a>
+        </div>
         <label class="erp-data-grid__size">
             <select @change="setSize($event)">
                 <option value="20" th:selected="${grid.size == 20}">20/sayfa</option>
