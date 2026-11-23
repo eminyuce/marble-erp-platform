@@ -34,7 +34,10 @@ class ProjectDtoJsonTest {
             html = new String(in.readAllBytes());
         }
 
-        assertThat(html).contains("erpGridAjaxResponse(");
-        assertThat(html).contains("field: \"projectCode\"");
+        assertThat(html).contains("fragments/data-grid :: shell");
+        try (var app = getClass().getResourceAsStream("/static/js/app.js")) {
+            assertThat(app).isNotNull();
+            assertThat(new String(app.readAllBytes())).contains("camelizeTabulatorRows");
+        }
     }
 }

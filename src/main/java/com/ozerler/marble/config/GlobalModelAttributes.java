@@ -17,7 +17,7 @@ public class GlobalModelAttributes {
     private final SettingService settingService;
     private final HelpService helpService;
 
-    @Value("${app.asset-version:20261123-presigned-urls}")
+    @Value("${app.asset-version:20261123-data-grid}")
     private String configuredAssetVersion;
 
     private final String fallbackAssetVersion = "20260916-" + System.currentTimeMillis();

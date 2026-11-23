@@ -15,6 +15,12 @@
         this.deleteId = id;
         this.deleteName = name;
         this.deleteModalOpen = true;
+    },
+    applyQuery(name, value) {
+        const url = new URL(window.location.href);
+        if (value) url.searchParams.set(name, value); else url.searchParams.delete(name);
+        url.searchParams.set('page', '1');
+        window.location.assign(url.toString());
     }
 }">
 
@@ -31,21 +37,25 @@
             <i data-lucide="plus"></i>
             <span>Yeni tedarikçi</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Tedarikçi kodu, firma adı veya yetkili', 'search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Tedarikçi kodu, firma adı veya yetkili', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
-            <select id="business-unit-filter" class="erp-toolbar-filter" aria-label="İşletme birimi">
-                <option value="">Tüm birimler</option>
-                <option th:each="bu : ${businessUnits}" th:value="${bu.name()}" th:text="${bu.displayName}"></option>
+            <select id="business-unit-filter" class="erp-toolbar-filter" aria-label="İşletme birimi"
+                    @change="applyQuery('unit', $event.target.value)">
+                <option value="" th:selected="${filters.unit == ''}">Tüm birimler</option>
+                <option th:each="bu : ${businessUnits}" th:value="${bu.name()}" th:text="${bu.displayName}"
+                        th:selected="${filters.unit == bu.name()}"></option>
             </select>
-            <select id="supplier-type-filter" class="erp-toolbar-filter" aria-label="Tedarikçi tipi">
-                <option value="">Tüm tedarikçi tipleri</option>
-                <option th:each="type : ${supplierTypes}" th:value="${type.name()}" th:text="${type.label}"></option>
+            <select id="supplier-type-filter" class="erp-toolbar-filter" aria-label="Tedarikçi tipi"
+                    @change="applyQuery('type', $event.target.value)">
+                <option value="" th:selected="${filters.type == ''}">Tüm tedarikçi tipleri</option>
+                <option th:each="type : ${supplierTypes}" th:value="${type.name()}" th:text="${type.label}"
+                        th:selected="${filters.type == type.name()}"></option>
             </select>
             <div th:replace="~{fragments/list-chrome :: exportDropdown('suppliers-table', 'tedarikciler')}"></div>
         </div>
     </div>
 
-    <div th:replace="~{fragments/list-chrome :: gridShell('suppliers-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
     <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
          style="display: none;">
@@ -66,115 +76,6 @@
 
 <th:block layout:fragment="scripts">
     <script th:src="@{/js/definitions-page.js(v=${assetVersion})}"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            window.definitionTable = new Tabulator("#suppliers-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
-                ajaxURL: "/admin/definitions/suppliers/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "search-input", function () {
-                        const type = document.getElementById("supplier-type-filter")?.value || "";
-                        const unit = document.getElementById("business-unit-filter")?.value || "";
-                        let extra = "";
-                        if (type) extra += "&type=" + encodeURIComponent(type);
-                        if (unit) extra += "&unit=" + encodeURIComponent(unit);
-                        return extra;
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("suppliers-table", response);
-                },
-                placeholder: "Tedarikçi kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Tedarikçi Kodu",
-                        field: "supplierCode",
-                        width: 150,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            return `<span class="font-mono font-bold text-slate-900">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Firma / Ünvan",
-                        field: "companyName",
-                        minWidth: 200,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<div>
-                                <div class="font-semibold text-slate-800">${gridText(row.companyName)}</div>
-                                <div class="text-xs text-slate-400">${gridText(row.address)}</div>
-                            </div>`;
-                        }
-                    },
-                    {
-                        title: "İşletme Birimi",
-                        field: "businessUnitLabel",
-                        width: 140,
-                        formatter: function (cell) {
-                            const val = gridText(cell.getValue());
-                            if (!val || val === "—") return '<span class="text-slate-400">Genel</span>';
-                            return `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">${val}</span>`;
-                        }
-                    },
-                    {
-                        title: "Tedarik Tipi",
-                        field: "supplierTypeLabel",
-                        width: 150,
-                        formatter: function (cell) {
-                            return `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Yetkili / İletişim",
-                        minWidth: 180,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<div>
-                                <div class="font-medium text-slate-800">${gridText(row.contactPerson)}</div>
-                                <div class="text-xs text-slate-500 font-mono">${gridText(row.phone)} ${gridText(row.email)}</div>
-                            </div>`;
-                        }
-                    },
-                    {
-                        title: "Vergi Dairesi / No",
-                        minWidth: 160,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<span class="font-mono text-slate-600">${gridText(row.taxOffice)} / ${gridText(row.taxNumber)}</span>`;
-                        }
-                    },
-                    {
-                        title: "İşlemler",
-                        width: 120,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const id = cell.getRow().getData().id;
-                            return gridActionsHtml([
-                                {icon: "edit-3", label: "Düzenle", href: "/admin/definitions/suppliers/" + id + "/edit"},
-                                {icon: "trash-2", label: "Sil", onclick: "confirmDefinitionDelete(" + id + ")", danger: true}
-                            ]);
-                        }
-                    }
-                ]
-            });
-            attachTabulatorPagingAnimation(window.definitionTable);
-            bindGridSearch(window.definitionTable, "search-input");
-            bindGridSelectFilter(window.definitionTable, "supplier-type-filter");
-            bindGridSelectFilter(window.definitionTable, "business-unit-filter");
-            window.definitionTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-    </script>
 </th:block>
 </body>
 </html>

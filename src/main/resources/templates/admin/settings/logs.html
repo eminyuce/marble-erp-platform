@@ -7,6 +7,9 @@
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
      th:attr="data-kpi-total=${kpis != null ? kpis.totalCount : 0}, data-kpi-error=${kpis != null ? kpis.errorCount : 0}, data-kpi-warn=${kpis != null ? kpis.warnCount : 0}, data-kpi-info=${kpis != null ? kpis.infoCount : 0}, data-kpi-total-24=${kpis != null ? kpis.totalLast24Hours : 0}, data-kpi-error-24=${kpis != null ? kpis.errorLast24Hours : 0}, data-kpi-warn-24=${kpis != null ? kpis.warnLast24Hours : 0}, data-kpi-info-24=${kpis != null ? kpis.infoLast24Hours : 0}"
+     th:data-level-filter="${filters.level}"
+     th:data-start-date="${filters.startDate}"
+     th:data-end-date="${filters.endDate}"
      x-data="{
         levelFilter: '',
         startDate: '',
@@ -29,6 +32,9 @@
         kpiInfo24: 0,
 
         init() {
+            this.levelFilter = this.$el.dataset.levelFilter || '';
+            this.startDate = this.$el.dataset.startDate || '';
+            this.endDate = this.$el.dataset.endDate || '';
             this.kpiTotal = parseInt(this.$el.dataset.kpiTotal || '0', 10);
             this.kpiError = parseInt(this.$el.dataset.kpiError || '0', 10);
             this.kpiWarn = parseInt(this.$el.dataset.kpiWarn || '0', 10);
@@ -60,22 +66,24 @@
             return Number(val || 0).toLocaleString('tr-TR');
         },
         setLevelFilter(lvl) {
-            this.levelFilter = lvl;
-            this.reloadGrid();
+            const url = new URL(window.location.href);
+            if (lvl) url.searchParams.set('levels', lvl); else url.searchParams.delete('levels');
+            url.searchParams.delete('level');
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        },
+        applyDates() {
+            const url = new URL(window.location.href);
+            if (this.startDate) url.searchParams.set('startDate', this.startDate); else url.searchParams.delete('startDate');
+            if (this.endDate) url.searchParams.set('endDate', this.endDate); else url.searchParams.delete('endDate');
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
         },
         resetFilters() {
-            this.levelFilter = '';
-            this.startDate = '';
-            this.endDate = '';
-            const searchInput = document.getElementById('log-search-input');
-            if (searchInput) searchInput.value = '';
-            this.reloadGrid();
+            window.location.assign(window.location.pathname);
         },
         reloadGrid() {
-            this.fetchKpis();
-            if (typeof reloadLogsGrid === 'function') {
-                reloadLogsGrid();
-            }
+            window.location.reload();
         },
         openCleanupModal() {
             this.cleanupModalOpen = true;
@@ -168,11 +176,9 @@
                     if (window.lucide) {
                         this.$nextTick(() => lucide.createIcons());
                     }
-                    this.reloadGrid();
                     setTimeout(() => {
-                        this.cleanupModalOpen = false;
-                        this.cleanupMessage = '';
-                    }, 1800);
+                        window.location.reload();
+                    }, 900);
                 } else {
                     alert('Temizleme işlemi başarısız oldu.');
                 }
@@ -182,22 +188,15 @@
                 alert('İşlem sırasında bir hata oluştu: ' + err.message);
             });
         },
-        gridExtraQuery() {
-            const params = [];
-            if (this.levelFilter) {
-                params.push('levels=' + encodeURIComponent(this.levelFilter));
+        openLogFromHash() {
+            const hash = window.location.hash || '';
+            if (hash.indexOf('#log-') === 0) {
+                this.openDetail(hash.substring(5));
             }
-            if (this.startDate) {
-                params.push('startDate=' + encodeURIComponent(this.startDate));
-            }
-            if (this.endDate) {
-                params.push('endDate=' + encodeURIComponent(this.endDate));
-            }
-            return params.length > 0 ? '&' + params.join('&') : '';
         }
      }"
      :class="{ 'is-compact': density === 'compact' }"
-     x-init="window.logsPageState = $data">
+     x-init="window.logsPageState = $data; openLogFromHash()">
 
     <div class="flex flex-col lg:flex-row gap-5">
         <aside class="w-full lg:w-[260px] flex-shrink-0">
@@ -341,24 +340,19 @@
         <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 pt-3 border-t border-slate-100">
             <!-- Search Input -->
             <div class="flex-1">
-                <div class="relative">
-                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                    <input type="text" id="log-search-input"
-                           placeholder="Mesaj, sınıf adı, kullanıcı adı, IP veya hata detayında ara..."
-                           class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition outline-none"/>
-                </div>
+                <div th:replace="~{fragments/list-chrome :: searchSubmit('Mesaj, sınıf adı, kullanıcı adı, IP veya hata detayında ara...', 'log-search-input')}"></div>
             </div>
 
             <!-- Date Pickers -->
             <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
                     <span class="text-slate-500 font-medium">Başlangıç:</span>
-                    <input type="date" x-model="startDate" @change="reloadGrid()"
+                    <input type="date" x-model="startDate" @change="applyDates()"
                            class="bg-transparent text-slate-700 font-semibold text-xs outline-none cursor-pointer"/>
                 </div>
                 <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
                     <span class="text-slate-500 font-medium">Bitiş:</span>
-                    <input type="date" x-model="endDate" @change="reloadGrid()"
+                    <input type="date" x-model="endDate" @change="applyDates()"
                            class="bg-transparent text-slate-700 font-semibold text-xs outline-none cursor-pointer"/>
                 </div>
                 <button type="button" @click="resetFilters()"
@@ -372,7 +366,7 @@
     </div>
 
     <!-- Tabulator Grid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('logs-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
         </div>
     </div>
@@ -645,123 +639,14 @@
 
 <th:block layout:fragment="scripts">
     <script>
-        let logsTable;
-
-        function reloadLogsGrid() {
-            if (logsTable) {
-                logsTable.setData();
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            logsTable = new Tabulator("#logs-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 50,
-                paginationSizeSelector: [20, 50, 100, 200],
-                initialSort: [{ column: "timestamp", dir: "desc" }],
-                ajaxURL: "/admin/settings/logs/api/data",
-                ajaxConfig: {
-                    method: "GET",
-                    headers: { "Accept": "application/json" }
-                },
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "log-search-input", function () {
-                        return window.logsPageState ? window.logsPageState.gridExtraQuery() : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("logs-table", response);
-                },
-                placeholder: "Kriterlere uygun uygulama log kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Tarih & Saat",
-                        field: "timestamp",
-                        width: 165,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            const timeStr = row.formattedTimestamp || gridText(cell.getValue());
-                            return `<span class="font-mono text-xs font-semibold text-slate-800">${timeStr}</span>`;
-                        }
-                    },
-                    {
-                        title: "Seviye",
-                        field: "level",
-                        width: 100,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const val = (cell.getValue() || "").toUpperCase();
-                            let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
-                            if (val === "ERROR") badgeClass = "bg-rose-100 text-rose-800 border-rose-200 font-bold";
-                            else if (val === "WARN") badgeClass = "bg-amber-100 text-amber-800 border-amber-200 font-bold";
-                            else if (val === "INFO") badgeClass = "bg-blue-50 text-blue-700 border-blue-200";
-                            return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] border ${badgeClass}">${val}</span>`;
-                        }
-                    },
-                    {
-                        title: "Kaynak (Logger)",
-                        field: "shortLoggerName",
-                        width: 180,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<span class="font-mono text-[11px] text-slate-600 block truncate" title="${gridText(row.loggerName)}">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Mesaj",
-                        field: "message",
-                        minWidth: 280,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            const hasEx = row.hasException;
-                            let exBadge = "";
-                            if (hasEx) {
-                                exBadge = `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 mr-1.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">Hata</span>`;
-                            }
-                            return `<div class="truncate text-xs text-slate-900" title="${gridText(row.message)}">${exBadge}${gridText(row.message)}</div>`;
-                        }
-                    },
-                    {
-                        title: "Kullanıcı",
-                        field: "username",
-                        width: 120,
-                        formatter: function (cell) {
-                            const val = cell.getValue();
-                            return `<span class="text-xs ${val ? 'font-semibold text-slate-700' : 'text-slate-400'}">${val ? gridText(val) : '—'}</span>`;
-                        }
-                    },
-                    {
-                        title: "İstemci IP",
-                        field: "clientIp",
-                        width: 120,
-                        formatter: function (cell) {
-                            const val = cell.getValue();
-                            return `<span class="font-mono text-[11px] text-slate-500">${val ? gridText(val) : '—'}</span>`;
-                        }
-                    },
-                    {
-                        title: "İşlem",
-                        width: 90,
-                        headerSort: false,
-                        hozAlign: "center",
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<button type="button" onclick="if(window.logsPageState) window.logsPageState.openDetail(${row.id})"
-                                            class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition cursor-pointer">
-                                        Detay
-                                    </button>`;
-                        }
-                    }
-                ]
-            });
-
-            bindGridSearch(logsTable, "log-search-input");
-            attachTabulatorPagingAnimation(logsTable);
+        document.addEventListener("click", function (event) {
+            const link = event.target.closest("a.erp-data-grid__view");
+            if (!link) return;
+            const href = link.getAttribute("href") || "";
+            const marker = href.indexOf("#log-");
+            if (marker < 0) return;
+            event.preventDefault();
+            if (window.logsPageState) window.logsPageState.openDetail(href.substring(marker + 5));
         });
     </script>
 </th:block>

@@ -6,9 +6,14 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
-     x-data="productionPage()"
-     x-init="init()">
-    <script th:src="@{/js/production-grid.js(v=${assetVersion})}"></script>
+     x-data="{
+        setParam(name, value) {
+            const url = new URL(window.location.href);
+            if (value) url.searchParams.set(name, value); else url.searchParams.delete(name);
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        }
+     }">
 
     <!-- Header Section -->
     <div class="erp-list-header">
@@ -29,8 +34,8 @@
     <!-- KPI Summary Cards (Blocks Standard) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === '' ? 'erp-summary-card--active' : ''"
-                @click="setStatusFilter('')">
+                th:classappend="${selectedStatus == ''} ? 'erp-summary-card--active' : ''"
+                @click="setParam('status', '')">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam İş Emri</div>
             <div class="text-lg font-black text-slate-900 mt-1">
                 <span th:text="${summary.totalOrders}">0</span> emir
@@ -38,8 +43,8 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === 'IN_PROGRESS' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
-                @click="setStatusFilter('IN_PROGRESS')">
+                th:classappend="${selectedStatus == 'IN_PROGRESS'} ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setParam('status', 'IN_PROGRESS')">
             <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
                 <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> Devam Eden Kesim
             </div>
@@ -49,8 +54,8 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === 'COMPLETED' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
-                @click="setStatusFilter('COMPLETED')">
+                th:classappend="${selectedStatus == 'COMPLETED'} ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setParam('status', 'COMPLETED')">
             <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
                 <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Tamamlanan Kesim
             </div>
@@ -69,17 +74,17 @@
     <!-- Operational Filter Chips -->
     <div class="erp-yard-filters">
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('')">Tüm İş Emirleri</button>
+                th:classappend="${selectedStatus == ''} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', '')">Tüm İş Emirleri</button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'IN_PROGRESS' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('IN_PROGRESS')">
+                th:classappend="${selectedStatus == 'IN_PROGRESS'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', 'IN_PROGRESS')">
             <i data-lucide="play" class="w-3.5 h-3.5 inline mr-1"></i>
             Devam Edenler
         </button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'COMPLETED' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('COMPLETED')">
+                th:classappend="${selectedStatus == 'COMPLETED'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', 'COMPLETED')">
             <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
             Tamamlananlar
         </button>
@@ -91,7 +96,7 @@
             <i data-lucide="plus"></i>
             <span>Yeni ST / Katrak Kesim</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('İş emri no, makine veya blok kodu...', 'search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('İş emri no, makine veya blok kodu...', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
             <a th:href="@{/production/accept}" class="erp-btn-secondary">
                 <i data-lucide="package-plus"></i>
@@ -118,7 +123,7 @@
     </div>
 
     <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('production-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 </div>
 
 <th:block layout:fragment="scripts"></th:block>

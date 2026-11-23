@@ -6,9 +6,23 @@
 </head>
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
-     x-data="quarryPage()"
-     x-init="init()">
-    <script th:src="@{/js/blocks-grid.js(v=${assetVersion})}"></script>
+     x-data="{
+        setParam(name, value, clearNames) {
+            const url = new URL(window.location.href);
+            if (value) url.searchParams.set(name, value); else url.searchParams.delete(name);
+            (clearNames || []).forEach((key) => url.searchParams.delete(key));
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        },
+        confirmDelete(id, name) {
+            const code = document.getElementById('delete-block-code');
+            if (code) code.textContent = name || id;
+            const form = document.getElementById('block-delete-form');
+            if (form) form.action = '/blocks/' + id + '/delete';
+            const dialog = document.getElementById('delete-block-dialog');
+            if (dialog && dialog.showModal) dialog.showModal();
+        }
+     }">
 
     <!-- Header & Breadcrumb -->
     <div class="erp-list-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -71,8 +85,8 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
         <!-- 1. Stoktaki Bloklar -->
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="stockFilter === 'IN_STOCK' && yardFilter === '' && statusFilter === '' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
-                @click="setStockFilter('IN_STOCK')">
+                th:classappend="${selectedStockFilter == 'IN_STOCK' and selectedLocationType == '' and selectedStatus == ''} ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setParam('stockFilter', 'IN_STOCK', ['locationType', 'status'])">
             <div class="text-[11px] uppercase tracking-wide text-amber-700 font-semibold flex items-center gap-1">
                 <i data-lucide="boxes" class="w-3.5 h-3.5"></i> Stoktaki Bloklar
             </div>
@@ -84,8 +98,8 @@
 
         <!-- 2. Satılan (Faturası Kesilmiş / Sevk Edilmiş) -->
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="stockFilter === 'SOLD' ? 'erp-summary-card--active ring-2 ring-purple-500' : ''"
-                @click="setStockFilter('SOLD')">
+                th:classappend="${selectedStockFilter == 'SOLD'} ? 'erp-summary-card--active ring-2 ring-purple-500' : ''"
+                @click="setParam('stockFilter', 'SOLD', ['locationType', 'status'])">
             <div class="text-[11px] uppercase tracking-wide text-purple-700 font-semibold flex items-center gap-1">
                 <i data-lucide="handshake" class="w-3.5 h-3.5"></i> Satılan
             </div>
@@ -97,8 +111,8 @@
 
         <!-- 3. Yolda -->
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="stockFilter === 'IN_TRANSIT' ? 'erp-summary-card--active ring-2 ring-indigo-500' : ''"
-                @click="setStockFilter('IN_TRANSIT')">
+                th:classappend="${selectedStockFilter == 'IN_TRANSIT'} ? 'erp-summary-card--active ring-2 ring-indigo-500' : ''"
+                @click="setParam('stockFilter', 'IN_TRANSIT', ['locationType', 'status'])">
             <div class="text-[11px] uppercase tracking-wide text-indigo-700 font-semibold flex items-center gap-1">
                 <i data-lucide="truck" class="w-3.5 h-3.5"></i> Yolda
             </div>
@@ -110,8 +124,8 @@
 
         <!-- 4. Markalanan Bloklar -->
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="stockFilter === 'MARKED' ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
-                @click="setStockFilter('MARKED')">
+                th:classappend="${selectedStockFilter == 'MARKED'} ? 'erp-summary-card--active ring-2 ring-blue-500' : ''"
+                @click="setParam('stockFilter', 'MARKED', ['locationType', 'status'])">
             <div class="text-[11px] uppercase tracking-wide text-blue-700 font-semibold flex items-center gap-1">
                 <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> Markalanan Bloklar
             </div>
@@ -144,60 +158,60 @@
         <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-wide">Filtrele:</span>
             <button type="button" class="erp-yard-chip"
-                    :class="stockFilter === 'IN_STOCK' ? 'erp-yard-chip--active' : ''"
-                    @click="setStockFilter('IN_STOCK')">
+                    th:classappend="${selectedStockFilter == 'IN_STOCK'} ? 'erp-yard-chip--active' : ''"
+                    @click="setParam('stockFilter', 'IN_STOCK', ['locationType', 'status'])">
                 <i data-lucide="boxes" class="w-3.5 h-3.5 inline mr-1"></i>
                 Stoktaki Bloklar
                 <span class="erp-yard-chip-count" th:text="${summary != null ? summary.totalInStockCount : 0}">0</span>
             </button>
             <button type="button" class="erp-yard-chip"
-                    :class="stockFilter === 'SOLD' ? 'erp-yard-chip--active' : ''"
-                    @click="setStockFilter('SOLD')">
+                    th:classappend="${selectedStockFilter == 'SOLD'} ? 'erp-yard-chip--active' : ''"
+                    @click="setParam('stockFilter', 'SOLD', ['locationType', 'status'])">
                 <i data-lucide="handshake" class="w-3.5 h-3.5 inline mr-1"></i>
                 Satılan (Faturası Kesilmiş)
                 <span class="erp-yard-chip-count" th:text="${summary != null ? summary.soldCount : 0}">0</span>
             </button>
             <button type="button" class="erp-yard-chip"
-                    :class="stockFilter === 'IN_TRANSIT' ? 'erp-yard-chip--active' : ''"
-                    @click="setStockFilter('IN_TRANSIT')">
+                    th:classappend="${selectedStockFilter == 'IN_TRANSIT'} ? 'erp-yard-chip--active' : ''"
+                    @click="setParam('stockFilter', 'IN_TRANSIT', ['locationType', 'status'])">
                 <i data-lucide="truck" class="w-3.5 h-3.5 inline mr-1"></i>
                 Yolda
                 <span class="erp-yard-chip-count" th:text="${summary != null ? summary.inTransitCount : 0}">0</span>
             </button>
             <button type="button" class="erp-yard-chip"
-                    :class="stockFilter === 'MARKED' ? 'erp-yard-chip--active' : ''"
-                    @click="setStockFilter('MARKED')">
+                    th:classappend="${selectedStockFilter == 'MARKED'} ? 'erp-yard-chip--active' : ''"
+                    @click="setParam('stockFilter', 'MARKED', ['locationType', 'status'])">
                 <i data-lucide="bookmark" class="w-3.5 h-3.5 inline mr-1"></i>
                 Markalanan Bloklar
                 <span class="erp-yard-chip-count" th:text="${summary != null ? summary.markedCount : 0}">0</span>
             </button>
             <button type="button" class="erp-yard-chip"
-                    :class="stockFilter === 'ALL' ? 'erp-yard-chip--active' : ''"
-                    @click="setStockFilter('ALL')">
+                    th:classappend="${selectedStockFilter == 'ALL'} ? 'erp-yard-chip--active' : ''"
+                    @click="setParam('stockFilter', 'ALL', ['locationType', 'status'])">
                 <i data-lucide="layers" class="w-3.5 h-3.5 inline mr-1"></i>
                 Tümü
             </button>
         </div>
 
         <!-- 2. Ocak İçi Alt Kategori Filtreleri (Only visible when stockFilter === 'IN_STOCK') -->
-        <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100" x-show="stockFilter === 'IN_STOCK'">
+        <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100" th:if="${selectedStockFilter == 'IN_STOCK'}">
             <span class="text-[11px] font-semibold text-slate-400 mr-2">Saha / İşlem:</span>
             <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
-                    :class="yardFilter === '' && statusFilter === '' ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
-                    @click="setYardFilter('')">Tüm Sahalar</button>
+                    th:classappend="${selectedLocationType == '' and selectedStatus == ''} ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                    @click="setParam('locationType', '', ['status'])">Tüm Sahalar</button>
             <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
-                    :class="yardFilter === 'PRODUCTION_YARD' ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
-                    @click="setYardFilter('PRODUCTION_YARD')">
+                    th:classappend="${selectedLocationType == 'PRODUCTION_YARD'} ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                    @click="setParam('locationType', 'PRODUCTION_YARD', ['status'])">
                 Üretim Sahası (<span th:text="${summary != null ? summary.productionYardCount : 0}">0</span>)
             </button>
             <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
-                    :class="yardFilter === 'DISPATCH_YARD' ? 'bg-sky-100 text-sky-900 border-sky-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
-                    @click="setYardFilter('DISPATCH_YARD')">
+                    th:classappend="${selectedLocationType == 'DISPATCH_YARD'} ? 'bg-sky-100 text-sky-900 border-sky-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                    @click="setParam('locationType', 'DISPATCH_YARD', ['status'])">
                 Stok Sahası (<span th:text="${summary != null ? summary.dispatchYardCount : 0}">0</span>)
             </button>
             <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border"
-                    :class="statusFilter === 'IN_TRANSIT' ? 'bg-indigo-100 text-indigo-900 border-indigo-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
-                    @click="setStatusFilter('IN_TRANSIT')">
+                    th:classappend="${selectedStatus == 'IN_TRANSIT'} ? 'bg-indigo-100 text-indigo-900 border-indigo-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                    @click="setParam('status', 'IN_TRANSIT', ['locationType'])">
                 Yolda (<span th:text="${summary != null ? summary.inTransitCount : 0}">0</span>)
             </button>
         </div>
@@ -206,13 +220,13 @@
     <!-- Data Grid Toolbar & Table -->
     <section class="space-y-4">
         <div class="erp-toolbar">
-            <div th:replace="~{fragments/list-chrome :: search('Blok kodu, ocak bölgesi, taş cinsi veya müşteri', 'search-input')}"></div>
+            <div th:replace="~{fragments/list-chrome :: searchSubmit('Blok kodu, ocak bölgesi, taş cinsi veya müşteri', 'search-input')}"></div>
             <div class="erp-toolbar-actions">
                 <div th:replace="~{fragments/list-chrome :: exportDropdown('blocks-table', 'bloklar')}"></div>
             </div>
         </div>
 
-        <div th:replace="~{fragments/list-chrome :: gridShell('blocks-table')}"></div>
+        <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
     </section>
 
     <!-- Kantar Tartımı Gir (Gerçek Tonaj) Dialog -->
@@ -291,7 +305,8 @@
 
     <!-- Güvenli Silme Dialog -->
     <dialog id="delete-block-dialog" class="erp-dialog-panel">
-        <form method="dialog" class="erp-dialog-body">
+        <form id="block-delete-form" method="post" action="/blocks/0/delete" class="erp-dialog-body">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
                     <i data-lucide="alert-triangle" class="w-5 h-5"></i>
@@ -303,8 +318,8 @@
             </div>
             <p class="erp-dialog-lead text-slate-600 mt-2">Bu bloğu sistemden kalıcı olarak silmek istediğinize emin misiniz? Yanlışlıkla girilen veya henüz satılmamış/kesilmemiş bloklar silinebilir.</p>
             <div class="erp-dialog-actions mt-4">
-                <button value="cancel" type="button" class="erp-btn-secondary" id="delete-cancel">Vazgeç</button>
-                <button type="button" id="confirm-delete-block" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                <button type="button" class="erp-btn-secondary" id="delete-cancel" onclick="document.getElementById('delete-block-dialog').close()">Vazgeç</button>
+                <button type="submit" id="confirm-delete-block" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                     <span>Evet, Bloğu Sil</span>
                 </button>

@@ -7,16 +7,13 @@
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
      x-data="{
-        statusFilter: '',
-        setStatusFilter(st) {
-            this.statusFilter = st;
-            if (typeof reloadWorkshopGrid === 'function') reloadWorkshopGrid();
-        },
-        gridExtraQuery() {
-            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
+        setParam(name, value) {
+            const url = new URL(window.location.href);
+            if (value) url.searchParams.set(name, value); else url.searchParams.delete(name);
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
         }
-     }"
-     x-init="window.workshopPageState = $data">
+     }">
 
     <!-- Header Section -->
     <div class="erp-list-header">
@@ -36,8 +33,8 @@
     <!-- KPI Summary Cards (Blocks Standard) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === '' ? 'erp-summary-card--active' : ''"
-                @click="setStatusFilter('')">
+                th:classappend="${selectedStatus == ''} ? 'erp-summary-card--active' : ''"
+                @click="setParam('status', '')">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam İş Emri</div>
             <div class="text-lg font-black text-slate-900 mt-1">
                 <span th:text="${summary.totalOrders}">0</span> emir
@@ -45,8 +42,8 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === 'IN_PROGRESS' ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
-                @click="setStatusFilter('IN_PROGRESS')">
+                th:classappend="${selectedStatus == 'IN_PROGRESS'} ? 'erp-summary-card--active ring-2 ring-amber-500' : ''"
+                @click="setParam('status', 'IN_PROGRESS')">
             <div class="text-[11px] uppercase tracking-wide text-amber-600 font-semibold flex items-center gap-1">
                 <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> Devam Eden Kesim
             </div>
@@ -56,8 +53,8 @@
         </button>
 
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === 'COMPLETED' ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
-                @click="setStatusFilter('COMPLETED')">
+                th:classappend="${selectedStatus == 'COMPLETED'} ? 'erp-summary-card--active ring-2 ring-emerald-500' : ''"
+                @click="setParam('status', 'COMPLETED')">
             <div class="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold flex items-center gap-1">
                 <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Tamamlanan İmalat
             </div>
@@ -77,17 +74,17 @@
     <!-- Operational Filter Chips -->
     <div class="erp-yard-filters">
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('')">Tüm İş Emirleri</button>
+                th:classappend="${selectedStatus == ''} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', '')">Tüm İş Emirleri</button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'IN_PROGRESS' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('IN_PROGRESS')">
+                th:classappend="${selectedStatus == 'IN_PROGRESS'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', 'IN_PROGRESS')">
             <i data-lucide="play" class="w-3.5 h-3.5 inline mr-1"></i>
             Devam Edenler
         </button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'COMPLETED' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('COMPLETED')">
+                th:classappend="${selectedStatus == 'COMPLETED'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', 'COMPLETED')">
             <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
             Tamamlananlar
         </button>
@@ -99,7 +96,7 @@
             <i data-lucide="scissors"></i>
             <span>Yeni Atölye İş Emri</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('İş emri no veya şantiye adı...', 'workshop-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('İş emri no veya şantiye adı...', 'workshop-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <a th:href="@{/workshop/receipts}" class="erp-btn-secondary">
                 <i data-lucide="package-plus"></i>
@@ -110,92 +107,9 @@
     </div>
 
     <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('workshop-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        let workshopTable;
-        document.addEventListener("DOMContentLoaded", () => {
-            workshopTable = new Tabulator("#workshop-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50, 100],
-                ajaxURL: "/workshop/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "workshop-search-input", function () {
-                        return window.workshopPageState ? window.workshopPageState.gridExtraQuery() : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("workshop-table", response);
-                },
-                placeholder: "Kriterlere uygun atölye iş emri kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "İş Emri No",
-                        field: "cutOrderNo",
-                        width: 170,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<a href="/workshop/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
-                        }
-                    },
-                    {title: "Şantiye / Müşteri", field: "projectName", minWidth: 150},
-                    {title: "Amaç", field: "purposeLabel", minWidth: 140},
-                    {title: "Hedef Mahal", field: "locationName", minWidth: 130},
-                    {title: "Makine", field: "machineName", width: 150},
-                    {title: "Operatör", field: "operatorName", width: 130},
-                    {
-                        title: "Üretilen Mamul",
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<strong>${gridText(row.itemCount)} Adet</strong> (${gridArea(row.totalAreaM2)})`;
-                        }
-                    },
-                    {
-                        title: "Durum",
-                        field: "status",
-                        width: 130,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return erpStatusBadge(row.status, row.statusLabel);
-                        }
-                    },
-                    {
-                        title: "İşlemler",
-                        width: 120,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return gridActionsHtml([
-                                {icon: 'eye', label: 'Detay', href: '/workshop/' + row.id},
-                                {icon: 'edit-3', label: 'Düzenle', href: '/workshop/' + row.id + '/edit'}
-                            ]);
-                        }
-                    }
-                ]
-            });
-
-            attachTabulatorPagingAnimation(workshopTable);
-            bindGridSearch(workshopTable, "workshop-search-input");
-            workshopTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-
-        function reloadWorkshopGrid() {
-            if (workshopTable) workshopTable.setData();
-        }
-        window.reloadWorkshopGrid = reloadWorkshopGrid;
-    </script>
-</th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>

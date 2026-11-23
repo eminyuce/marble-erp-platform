@@ -31,13 +31,13 @@
             <i data-lucide="plus"></i>
             <span>Yeni ocak</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Ocak kodu, adı veya bölgesi', 'search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Ocak kodu, adı veya bölgesi', 'search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('quarries-table', 'ocaklar')}"></div>
         </div>
     </div>
 
-    <div th:replace="~{fragments/list-chrome :: gridShell('quarries-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
     <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
          style="display: none;">
@@ -58,68 +58,6 @@
 
 <th:block layout:fragment="scripts">
     <script th:src="@{/js/definitions-page.js(v=${assetVersion})}"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            window.definitionTable = new Tabulator("#quarries-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
-                ajaxURL: "/admin/definitions/quarries/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "search-input");
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("quarries-table", response);
-                },
-                placeholder: "Ocak kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Ocak Kodu",
-                        field: "code",
-                        width: 130,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            return `<span class="font-mono font-bold text-slate-900">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {title: "Ocak Adı", field: "name", minWidth: 180, formatter: (cell) => gridText(cell.getValue())},
-                    {title: "Lokasyon / Mevkii", field: "location", minWidth: 180, formatter: (cell) => gridText(cell.getValue())},
-                    {
-                        title: "Özgül Ağırlık",
-                        field: "specificGravity",
-                        width: 140,
-                        formatter: function (cell) {
-                            return `<span class="font-mono font-bold text-emerald-700">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {title: "Ruhsat No", field: "licenseNo", minWidth: 140, formatter: (cell) => gridText(cell.getValue())},
-                    {
-                        title: "İşlemler",
-                        width: 120,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const id = cell.getRow().getData().id;
-                            return gridActionsHtml([
-                                {icon: "edit-3", label: "Düzenle", href: "/admin/definitions/quarries/" + id + "/edit"},
-                                {icon: "trash-2", label: "Sil", onclick: "confirmDefinitionDelete(" + id + ")", danger: true}
-                            ]);
-                        }
-                    }
-                ]
-            });
-            attachTabulatorPagingAnimation(window.definitionTable);
-            bindGridSearch(window.definitionTable, "search-input");
-            window.definitionTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-    </script>
 </th:block>
 </body>
 </html>

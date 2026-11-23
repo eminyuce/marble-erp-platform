@@ -344,9 +344,49 @@ function resolveExportTable(table) {
     return null;
 }
 
+function downloadDomGrid(table, baseName, format) {
+    var selector = typeof table === "string" ? (table.charAt(0) === "#" ? table : "#" + table) : null;
+    var root = selector ? document.querySelector(selector) : null;
+    var element = root ? (root.querySelector("table") || root) : null;
+    if (!element) {
+        return false;
+    }
+    var rows = [];
+    element.querySelectorAll("tr").forEach(function (row) {
+        var cells = [];
+        row.querySelectorAll("th, td").forEach(function (cell) {
+            cells.push((cell.innerText || "").trim());
+        });
+        if (cells.length) {
+            rows.push(cells);
+        }
+    });
+    if (format === "xlsx" && window.XLSX) {
+        var sheet = window.XLSX.utils.aoa_to_sheet(rows);
+        var book = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(book, sheet, "Veri");
+        window.XLSX.writeFile(book, buildExportFilename(baseName, "xlsx"));
+        return true;
+    }
+    var csv = rows.map(function (row) {
+        return row.map(function (value) {
+            var text = String(value).replaceAll('"', '""');
+            return '"' + text + '"';
+        }).join(";");
+    }).join("\n");
+    var blob = new Blob(["\uFEFF" + csv], {type: "text/csv;charset=utf-8"});
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = buildExportFilename(baseName, "csv");
+    link.click();
+    URL.revokeObjectURL(link.href);
+    return true;
+}
+
 function downloadTableCsv(table, filename) {
     var resolved = resolveExportTable(table);
     if (!resolved) {
+        downloadDomGrid(table, filename, "csv");
         return;
     }
     resolved.download("csv", buildExportFilename(filename, "csv"));
@@ -355,6 +395,7 @@ function downloadTableCsv(table, filename) {
 function downloadTable(table, baseName, format) {
     var resolved = resolveExportTable(table);
     if (!resolved) {
+        downloadDomGrid(table, baseName, format);
         return;
     }
     if (format === 'xlsx') {

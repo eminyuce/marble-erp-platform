@@ -30,142 +30,16 @@
 
     <!-- Standard ERP Toolbar -->
     <div class="erp-toolbar">
-        <div th:replace="~{fragments/list-chrome :: search('Ürün, müşteri, hedef veya açıklama...', 'quarry-dispatches-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Ürün, müşteri, hedef veya açıklama...', 'quarry-dispatches-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('quarry-dispatches-table', 'ocak-sevkiyat-raporu')}"></div>
         </div>
     </div>
 
     <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('quarry-dispatches-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        let quarryDispatchesTable;
-        document.addEventListener("DOMContentLoaded", () => {
-            quarryDispatchesTable = new Tabulator("#quarry-dispatches-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [10, 25, 50, 100],
-                ajaxURL: "/operations/quarry/dispatches/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "quarry-dispatches-search-input");
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("quarry-dispatches-table", response);
-                },
-                placeholder: "Henüz ocak sevkiyat hareketi bulunmuyor.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Tarih",
-                        field: "movementDate",
-                        width: 140,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            return `<span class="text-slate-600 whitespace-nowrap">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Ürün / Blok",
-                        field: "productName",
-                        width: 150,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            if (row.blockId) {
-                                return `<a href="/blocks/${row.blockId}" class="font-mono font-bold text-blue-600 hover:text-blue-800 underline">${gridText(cell.getValue())}</a>`;
-                            }
-                            return `<span class="font-bold text-slate-900">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Tonaj / Miktar",
-                        field: "tonnage",
-                        width: 140,
-                        headerHozAlign: "right",
-                        hozAlign: "right",
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            const val = cell.getValue();
-                            if (val != null) {
-                                const num = Number(val).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                                return `<span class="font-black text-emerald-700 bg-emerald-50/70 px-2 py-0.5 rounded">${num} ton</span>`;
-                            }
-                            return `<span class="font-bold text-slate-700">${gridText(row.quantity)} ${gridText(row.unit)}</span>`;
-                        }
-                    },
-                    {
-                        title: "Kaynak",
-                        field: "source",
-                        width: 100,
-                        formatter: function () {
-                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-amber-50 text-amber-800 border border-amber-200">Ocak</span>`;
-                        }
-                    },
-                    {
-                        title: "Hedef",
-                        field: "targetDestination",
-                        width: 120,
-                        formatter: function (cell) {
-                            const val = cell.getValue();
-                            let badgeClass = "bg-blue-50 text-blue-800 border-blue-200";
-                            if (val === 'Müşteri') badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200";
-                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md border ${badgeClass}">${gridText(val)}</span>`;
-                        }
-                    },
-                    {
-                        title: "Müşteri",
-                        field: "customerName",
-                        minWidth: 160,
-                        formatter: function (cell) {
-                            const val = cell.getValue();
-                            if (val && val !== '—') {
-                                return `<span class="font-bold text-slate-900 flex items-center gap-1">
-                                    <i data-lucide="user-check" class="w-3.5 h-3.5 text-blue-600 inline"></i>
-                                    <span>${gridText(val)}</span>
-                                </span>`;
-                            }
-                            return `<span class="text-slate-400">—</span>`;
-                        }
-                    },
-                    {
-                        title: "Fatura",
-                        field: "invoiceNo",
-                        width: 120,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            const val = cell.getValue();
-                            if (val && row.invoiceId) {
-                                return `<a href="/invoices/${row.invoiceId}" class="text-blue-600 hover:underline font-bold">${gridText(val)}</a>`;
-                            }
-                            return `<span class="text-slate-400">—</span>`;
-                        }
-                    },
-                    {
-                        title: "Açıklama",
-                        field: "notes",
-                        minWidth: 180,
-                        formatter: function (cell) {
-                            return `<span class="text-slate-500 text-xs">${gridText(cell.getValue())}</span>`;
-                        }
-                    }
-                ]
-            });
-
-            attachTabulatorPagingAnimation(quarryDispatchesTable);
-            bindGridSearch(quarryDispatchesTable, "quarry-dispatches-search-input");
-            quarryDispatchesTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-    </script>
-</th:block>
 </body>
 </html>

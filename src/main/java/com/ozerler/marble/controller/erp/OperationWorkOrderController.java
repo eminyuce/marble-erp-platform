@@ -5,6 +5,8 @@ import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.repository.*;
 import com.ozerler.marble.service.OperationWorkOrderService;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.WorkOrderGrid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -39,8 +41,11 @@ public class OperationWorkOrderController extends AbstractController {
     public String index(@RequestParam(value = "department", required = false) BusinessUnit department,
                         @RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
                         @RequestParam(value = "customerId", required = false) Long customerId,
-                        Model model) {
+                        @ModelAttribute ListQuery query, Model model) {
 
+        model.addAttribute("grid", WorkOrderGrid.view(
+                workOrderService.searchOrders(department, status, customerId, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("selectedDepartment", department != null ? department.name() : "");
         model.addAttribute("selectedStatus", status != null ? status.name() : "");
         model.addAttribute("selectedCustomerId", customerId);

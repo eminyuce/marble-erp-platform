@@ -1,0 +1,142 @@
+package com.ozerler.marble.web;
+
+import com.ozerler.marble.dto.CustomerDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.CustomerType;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Cari listesi. Sort keys match {@code GridPages.CUSTOMER_SORTS}. Type and unit filters already exist.
+ */
+public final class CustomerGrid {
+
+    private static final BigDecimal BALANCE_STEP = new BigDecimal("0.009");
+
+    private CustomerGrid() {
+    }
+
+    public static DataGridView view(TabulatorResponse<CustomerDto> response, int page, int size,
+                                    String sort, String direction) {
+        List<GridRow> rows = new ArrayList<>();
+        if (response != null && response.getData() != null) {
+            for (CustomerDto customer : response.getData()) {
+                if (customer != null) {
+                    rows.add(row(customer));
+                }
+            }
+        }
+        return GridAssembler.from(response, page, size, sort, direction, "customers-table", 4, columns(), rows);
+    }
+
+    public static GridRow row(CustomerDto customer) {
+        String id = customer.getId() == null ? "" : customer.getId().toString();
+        String transactions = id.isEmpty() ? "" : "/admin/definitions/customers/" + id + "/transactions";
+        String editUrl = id.isEmpty() ? "" : "/admin/definitions/customers/" + id + "/edit";
+        String unit = unitText(customer.getBusinessUnitLabel());
+        return GridRow.of(transactions, editUrl, customer.getId(), customer.getCompanyName(), List.of(
+                GridCell.chip(customer.getId()),
+                GridCell.link(customer.getCustomerCode(), transactions),
+                GridCell.link(customer.getCompanyName(), transactions, companyDetail(customer), companyDetailHref(customer)),
+                GridCell.badge(unit),
+                GridCell.badge(customer.getCustomerTypeLabel()),
+                contact(customer.getContactPerson(), customer.getPhone(), customer.getEmail()),
+                GridCell.text(balance(customer.getBalance()))
+        ));
+    }
+
+    private static List<GridColumn> columns() {
+        return List.of(
+                GridColumn.text("id", "Id", true, 110),
+                GridColumn.text("customerCode", "Cari Kodu", true, 140),
+                GridColumn.text("companyName", "Firma / Ünvan", true, 240),
+                GridColumn.filtered("businessUnitLabel", "İşletme Birimi", false, 150, "unit", units()),
+                GridColumn.filtered("customerTypeLabel", "Müşteri Tipi", true, 150, "type", types()),
+                GridColumn.text("contactPerson", "Yetkili / İletişim", true, 200),
+                GridColumn.text("balance", "Bakiye", false, 150)
+        );
+    }
+
+    private static String companyDetail(CustomerDto customer) {
+        String address = GridTexts.text(customer.getAddress());
+        if (customer.getProjectCount() > 0) {
+            String projects = customer.getProjectCount() + " Proje";
+            return address.isBlank() ? projects : address + " · " + projects;
+        }
+        if ("SITE".equals(customer.getBusinessUnit())) {
+            return address.isBlank() ? "+ Proje Aç" : address + " · + Proje Aç";
+        }
+        return address;
+    }
+
+    private static String companyDetailHref(CustomerDto customer) {
+        if (customer.getId() == null) {
+            return null;
+        }
+        if (customer.getProjectCount() > 0) {
+            return "/projects?customerId=" + customer.getId();
+        }
+        if ("SITE".equals(customer.getBusinessUnit())) {
+            return "/projects/create?customerId=" + customer.getId();
+        }
+        return null;
+    }
+
+    private static String unitText(String label) {
+        String text = GridTexts.text(label);
+        return text.isBlank() ? "Genel" : text;
+    }
+
+    private static String balance(BigDecimal value) {
+        BigDecimal amount = value == null ? BigDecimal.ZERO : value;
+        if (amount.compareTo(BALANCE_STEP) > 0) {
+            return GridTexts.money(amount) + " (B)";
+        }
+        if (amount.compareTo(BALANCE_STEP.negate()) < 0) {
+            return GridTexts.money(amount.abs()) + " (A)";
+        }
+        return "0,00 ₺";
+    }
+
+    private static GridCell contact(String person, String phone, String email) {
+        String name = GridTexts.text(person);
+        String line = join(phone, email);
+        if (name.isBlank()) {
+            return GridCell.text(line);
+        }
+        return GridCell.link(name, null, line, null);
+    }
+
+    private static String join(String phone, String email) {
+        String left = GridTexts.text(phone);
+        String right = GridTexts.text(email);
+        if (left.isBlank()) {
+            return right;
+        }
+        if (right.isBlank()) {
+            return left;
+        }
+        return left + " " + right;
+    }
+
+    private static List<GridColumn.FilterChoice> units() {
+        List<GridColumn.FilterChoice> choices = new ArrayList<>();
+        choices.add(new GridColumn.FilterChoice("", "Tümü"));
+        for (BusinessUnit unit : BusinessUnit.values()) {
+            choices.add(new GridColumn.FilterChoice(unit.name(), unit.getDisplayName()));
+        }
+        return choices;
+    }
+
+    private static List<GridColumn.FilterChoice> types() {
+        List<GridColumn.FilterChoice> choices = new ArrayList<>();
+        choices.add(new GridColumn.FilterChoice("", "Tümü"));
+        for (CustomerType type : CustomerType.values()) {
+            choices.add(new GridColumn.FilterChoice(type.name(), type.getLabel()));
+        }
+        return choices;
+    }
+}

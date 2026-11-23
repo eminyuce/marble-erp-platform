@@ -19,6 +19,11 @@ import com.ozerler.marble.service.FactoryProductionService;
 import com.ozerler.marble.service.PalletShipmentService;
 import com.ozerler.marble.service.ProductionService;
 import com.ozerler.marble.service.QuarryBlockService;
+import com.ozerler.marble.web.FactoryAcceptGrid;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.PolishGrid;
+import com.ozerler.marble.web.ProductionOrderGrid;
+import com.ozerler.marble.web.SlabGrid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -49,8 +54,14 @@ public class ProductionController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public String productionIndex(Model model) {
+    public String productionIndex(@RequestParam(value = "page", required = false) Integer page,
+                                  @RequestParam(value = "status", required = false) String status,
+                                  @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", productionService.getProductionSummary());
+        model.addAttribute("selectedStatus", status == null ? "" : status);
+        model.addAttribute("grid", ProductionOrderGrid.view(
+                productionService.getOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "erp/production/index";
     }
 
@@ -123,8 +134,8 @@ public class ProductionController {
     }
 
     @GetMapping("/accept")
-    public String acceptPage(Model model) {
-        populateAcceptPage(model);
+    public String acceptPage(@ModelAttribute ListQuery query, Model model) {
+        populateAcceptPage(model, query);
         return "erp/production/accept";
     }
 
@@ -144,7 +155,7 @@ public class ProductionController {
         } catch (Exception e) {
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
-            populateAcceptPage(model);
+            populateAcceptPage(model, new ListQuery());
             return "erp/production/accept";
         }
     }
@@ -185,12 +196,13 @@ public class ProductionController {
     }
 
     @GetMapping("/polish")
-    public String polishForm(Model model) {
+    public String polishForm(@RequestParam(value = "page", required = false) Integer page,
+                             @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
         model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
         model.addAttribute("processTypes", FactoryProcessRouting.SURFACE_TYPES.toArray(FactoryProcessType[]::new));
         model.addAttribute("chamferStatuses", ChamferStatus.values());
-        model.addAttribute("operations", factoryProductionService.surfaceOperations());
+        model.addAttribute("grid", PolishGrid.view(factoryProductionService.surfaceOperations(), query.pageNumber(), query.pageSize(), query.getSearch()));
         return "erp/production/polish";
     }
 
@@ -516,8 +528,15 @@ public class ProductionController {
     }
 
     @GetMapping("/slabs")
-    public String slabsView(Model model) {
+    public String slabsView(@RequestParam(value = "page", required = false) Integer page,
+                            @RequestParam(value = "status", required = false) String status,
+                            @RequestParam(value = "quality", required = false) String quality,
+                            @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", productionService.getSlabSummary());
+        model.addAttribute("selectedStatus", status == null ? "" : status);
+        model.addAttribute("grid", SlabGrid.view(
+                productionService.getSlabsPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, quality, query.sortKey(), query.sortDirection()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "erp/production/slabs";
     }
 
@@ -593,8 +612,9 @@ public class ProductionController {
         return "erp/production/slab-label";
     }
 
-    private void populateAcceptPage(Model model) {
-        model.addAttribute("workOrders", factoryProductionService.listWorkOrderSummaries());
+    private void populateAcceptPage(Model model, ListQuery query) {
+        model.addAttribute("grid", FactoryAcceptGrid.view(
+                factoryProductionService.listWorkOrderSummaries(), query.pageNumber(), query.pageSize(), query.getSearch()));
         model.addAttribute("dispatchedBlocks", quarryBlockService.getDispatchedBlocks());
         model.addAttribute("factoryMachines", factoryProductionService.factoryMachines());
     }

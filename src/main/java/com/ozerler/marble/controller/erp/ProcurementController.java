@@ -7,6 +7,8 @@ import com.ozerler.marble.model.PurchaseOrder;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.PurchaseOrderStatus;
 import com.ozerler.marble.service.ProcurementService;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.ProcurementGrid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
@@ -27,9 +29,15 @@ public class ProcurementController {
     private final org.springframework.context.MessageSource messageSource;
 
     @GetMapping
-    public String procurementIndex(Model model) {
+    public String procurementIndex(@RequestParam(value = "page", required = false) Integer page,
+                                   @RequestParam(value = "status", required = false) String status,
+                                   @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("statuses", PurchaseOrderStatus.values());
         model.addAttribute("summary", procurementService.getProcurementSummary());
+        model.addAttribute("selectedStatus", status == null ? "" : status);
+        model.addAttribute("grid", ProcurementGrid.view(
+                procurementService.getPurchaseOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "erp/procurement/index";
     }
 

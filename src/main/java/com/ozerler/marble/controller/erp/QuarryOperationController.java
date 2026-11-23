@@ -5,9 +5,13 @@ import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.repository.*;
 import com.ozerler.marble.service.QuarryOperationService;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.OperationQuarryBlockGrid;
+import com.ozerler.marble.web.QuarryDispatchGrid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -36,8 +40,16 @@ public class QuarryOperationController extends AbstractController {
     private final StockMovementRepository movementRepository;
 
     @GetMapping
-    public String index() {
-        return "redirect:/blocks";
+    public String index(@RequestParam(value = "status", required = false) BlockStatus status,
+                        @ModelAttribute ListQuery query, Model model) {
+        model.addAttribute("status", status == null ? "" : status.name());
+        model.addAttribute("totalEstTon", blockRepository.sumTotalEstimatedTonnage());
+        model.addAttribute("totalActTon", blockRepository.sumTotalActualTonnage());
+        model.addAttribute("grid", OperationQuarryBlockGrid.view(
+                quarryOperationService.searchQuarryBlocks(query.getSearch(), status, query.pageNumber() - 1, query.pageSize()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
+        model.addAttribute("activeSection", "quarry");
+        return "operations/quarry/index";
     }
 
     @GetMapping("/api/data")
@@ -155,9 +167,12 @@ public class QuarryOperationController extends AbstractController {
     }
 
     @GetMapping("/dispatches")
-    public String dispatchesReport(Model model) {
-        List<StockMovement> dispatches = movementRepository.findRecentBySourceDepartment(BusinessUnit.QUARRY, java.time.LocalDateTime.now().minusDays(90));
-        model.addAttribute("dispatches", dispatches);
+    public String dispatchesReport(@RequestParam(value = "page", required = false) Integer page,
+                                   @ModelAttribute ListQuery query, Model model) {
+        Page<StockMovement> pageData = movementRepository.searchMovements(
+                null, BusinessUnit.QUARRY, null, null, null, null, PageRequest.of(query.pageNumber() - 1, query.pageSize()));
+        model.addAttribute("grid", QuarryDispatchGrid.view(
+                pageData, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("activeSection", "quarry");
         return "operations/quarry/dispatches";
     }
@@ -171,7 +186,7 @@ public class QuarryOperationController extends AbstractController {
         int pageIndex = Math.max(0, page - 1);
         Page<StockMovement> pageData = movementRepository.searchMovements(
                 null, BusinessUnit.QUARRY, null, null, null, null,
-                org.springframework.data.domain.PageRequest.of(pageIndex, size));
+                PageRequest.of(pageIndex, size));
 
         DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 

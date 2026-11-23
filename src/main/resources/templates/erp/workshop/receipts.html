@@ -32,7 +32,7 @@
             <i data-lucide="save"></i>
             <span>Kabul kaydet</span>
         </button>
-        <div th:replace="~{fragments/list-chrome :: search('Kabul no, taş cinsi veya tedarikçi', 'workshop-receipt-search')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Kabul no, taş cinsi veya tedarikçi', 'workshop-receipt-search')}"></div>
         <div class="erp-toolbar-actions">
             <a th:href="@{/workshop}" class="erp-btn-secondary">
                 <i data-lucide="scissors"></i>
@@ -95,78 +95,9 @@
         </form>
     </div>
 
-    <div th:replace="~{fragments/list-chrome :: gridShell('workshop-receipts-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script th:inline="javascript">
-        const workshopReceiptRows = /*[[${receipts}]]*/ [];
-        document.addEventListener("DOMContentLoaded", () => {
-            const receiptsTable = new Tabulator("#workshop-receipts-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "local",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50],
-                data: workshopReceiptRows || [],
-                placeholder: "Malzeme kabulü kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Kabul No",
-                        field: "receiptNo",
-                        minWidth: 150,
-                        responsive: 0,
-                        formatter: (cell) => `<span class="font-mono font-bold">${gridText(cell.getValue())}</span>`
-                    },
-                    {title: "Kaynak", field: "sourceLabel", minWidth: 140, formatter: (cell) => gridText(cell.getValue())},
-                    {title: "Tedarikçi", field: "supplierName", minWidth: 150, formatter: (cell) => gridText(cell.getValue())},
-                    {title: "Taş cinsi", field: "stoneType", minWidth: 130, formatter: (cell) => gridText(cell.getValue())},
-                    {
-                        title: "Miktar",
-                        field: "quantity",
-                        minWidth: 90,
-                        formatter: (cell) => gridNumber(cell.getValue())
-                    },
-                    {
-                        title: "m²",
-                        field: "areaM2",
-                        minWidth: 90,
-                        formatter: (cell) => gridArea(cell.getValue())
-                    },
-                    {
-                        title: "Alış maliyeti",
-                        field: "purchaseCost",
-                        minWidth: 130,
-                        formatter: (cell) => gridMoney(cell.getValue())
-                    },
-                    {title: "Tarih", field: "receivedAt", minWidth: 120, formatter: (cell) => gridText(cell.getValue())},
-                    {title: "Not", field: "notes", minWidth: 160, formatter: (cell) => gridText(cell.getValue())}
-                ]
-            });
-            const searchInput = document.getElementById("workshop-receipt-search");
-            if (searchInput) {
-                searchInput.addEventListener("input", function () {
-                    const query = searchInput.value.trim().toLocaleLowerCase("tr-TR");
-                    if (!query) {
-                        receiptsTable.clearFilter();
-                        return;
-                    }
-                    receiptsTable.setFilter(function (data) {
-                        return [data.receiptNo, data.sourceLabel, data.supplierName, data.stoneType, data.notes]
-                            .filter(Boolean)
-                            .join(" ")
-                            .toLocaleLowerCase("tr-TR")
-                            .includes(query);
-                    });
-                });
-            }
-            receiptsTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-    </script>
-</th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>

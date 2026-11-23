@@ -5,6 +5,8 @@ import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.SalesOrder;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
 import com.ozerler.marble.service.SalesService;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.SalesGrid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -26,9 +28,15 @@ public class SalesController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public String salesIndex(Model model) {
+    public String salesIndex(@RequestParam(value = "page", required = false) Integer page,
+                             @RequestParam(value = "status", required = false) String status,
+                             @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("statuses", SalesOrderStatus.values());
         model.addAttribute("summary", salesService.getSalesSummary());
+        model.addAttribute("selectedStatus", status == null ? "" : status);
+        model.addAttribute("grid", SalesGrid.view(
+                salesService.getSalesOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "erp/sales/index";
     }
 

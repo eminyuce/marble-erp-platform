@@ -16,9 +16,9 @@ class ProductionLazyAssociationTemplateTest {
 
         assertDoesNotDereferenceLazyBlock(index);
         assertDoesNotDereferenceLazyBlock(accept);
-        assertThat(accept).contains("field: \"blockCode\"");
-        assertThat(accept).contains("field: \"statusLabel\"");
+        assertThat(accept).contains("fragments/data-grid :: shell");
         assertDoesNotDereferenceLazyBlock(polish);
+        assertThat(polish).contains("fragments/data-grid :: shell");
         assertThat(polish).contains("wo.blockCode");
     }
 

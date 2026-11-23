@@ -10,33 +10,36 @@
      th:data-initial-unit="${selectedUnit}"
      x-data="{
         statusFilter: $el.dataset.initialStatus || '',
-        unitFilter: $el.dataset.initialUnit || (new URLSearchParams(window.location.search)).get('unit') || '',
+        unitFilter: $el.dataset.initialUnit || '',
         statusModal: false,
         selectedCheckId: null,
         selectedCheckNo: '',
         currentStatus: '',
+        go(values) {
+            const url = new URL(window.location.href);
+            Object.keys(values).forEach((key) => {
+                const value = values[key];
+                if (value) url.searchParams.set(key, value);
+                else url.searchParams.delete(key);
+            });
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
+        },
         setStatusFilter(s) {
             this.statusFilter = s;
-            if (typeof reloadChecksGrid === 'function') reloadChecksGrid();
+            this.go({ status: s });
         },
         setUnitFilter(u) {
             this.unitFilter = u;
-            if (typeof reloadChecksGrid === 'function') reloadChecksGrid();
+            this.go({ unit: u });
         },
         openStatusModal(id, no, st) {
             this.selectedCheckId = id;
             this.selectedCheckNo = no;
             this.currentStatus = st;
             this.statusModal = true;
-        },
-        gridExtraQuery() {
-            let extra = '';
-            if (this.statusFilter) extra += '&status=' + encodeURIComponent(this.statusFilter);
-            if (this.unitFilter) extra += '&unit=' + encodeURIComponent(this.unitFilter);
-            return extra;
         }
-     }"
-     x-init="window.checksPageState = $data">
+     }">
 
     <!-- Header Section -->
     <div class="erp-list-header">
@@ -174,14 +177,14 @@
                 <span>Tüm Tahsilatlar</span>
             </a>
         </div>
-        <div th:replace="~{fragments/list-chrome :: search('Çek no, müşteri veya banka...', 'check-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Çek no, müşteri veya banka...', 'check-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('checks-table', 'cekler')}"></div>
         </div>
     </div>
 
     <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('checks-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 
     <!-- Quick Status Change Modal -->
     <div x-show="statusModal" x-cloak
@@ -239,129 +242,5 @@
     </div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        let checksTable;
-        document.addEventListener("DOMContentLoaded", () => {
-            checksTable = new Tabulator("#checks-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50, 100],
-                ajaxURL: "/collections/checks/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "check-search-input", function () {
-                        return window.checksPageState ? window.checksPageState.gridExtraQuery() : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("checks-table", response);
-                },
-                placeholder: "Kriterlere uygun çek kaydı bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Çek No",
-                        field: "checkNo",
-                        width: 160,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            return `<span class="font-mono font-bold text-purple-900 flex items-center gap-1.5">
-                                <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-purple-600 inline"></i>
-                                <span>${gridText(cell.getValue())}</span>
-                            </span>`;
-                        }
-                    },
-                    {
-                        title: "Müşteri (Keşideci)",
-                        field: "customerName",
-                        minWidth: 180,
-                        formatter: function (cell) {
-                            return `<strong class="text-slate-900">${gridText(cell.getValue())}</strong>`;
-                        }
-                    },
-                    {
-                        title: "İşletme Birimi",
-                        field: "businessUnitLabel",
-                        width: 130,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            let cls = "bg-blue-50 text-blue-800 border-blue-200";
-                            if (row.businessUnit === "QUARRY") cls = "bg-amber-50 text-amber-800 border-amber-200";
-                            else if (row.businessUnit === "WORKSHOP") cls = "bg-rose-50 text-rose-800 border-rose-200";
-                            else if (row.businessUnit === "SITE") cls = "bg-cyan-50 text-cyan-800 border-cyan-200";
-                            return `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold border ${cls}">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Banka",
-                        field: "bankName",
-                        width: 140,
-                        formatter: function (cell) {
-                            return `<span class="text-slate-700 font-medium">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Vade Tarihi",
-                        field: "dueDate",
-                        width: 130,
-                        formatter: function (cell) {
-                            return `<span class="font-mono font-bold text-slate-800">${gridDate(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Tutar",
-                        field: "amount",
-                        width: 150,
-                        formatter: function (cell) {
-                            return `<strong class="font-mono text-emerald-700 text-sm">${gridMoney(cell.getValue())}</strong>`;
-                        }
-                    },
-                    {
-                        title: "Durum",
-                        field: "statusLabel",
-                        width: 130,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            let cls = "bg-purple-100 text-purple-800";
-                            if (row.status === "COLLECTED") cls = "bg-emerald-100 text-emerald-800";
-                            else if (row.status === "BOUNCED") cls = "bg-rose-100 text-rose-800";
-                            else if (row.status === "RETURNED") cls = "bg-slate-100 text-slate-800";
-                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${cls}">● ${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "İşlem",
-                        width: 120,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<button type="button" onclick="window.checksPageState.openStatusModal(${row.id}, '${row.checkNo}', '${row.status}')"
-                                        class="px-2.5 py-1 rounded-lg text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition inline-flex items-center gap-1">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                                <span>Durum</span>
-                            </button>`;
-                        }
-                    }
-                ]
-            });
-
-            attachTabulatorPagingAnimation(checksTable);
-            bindGridSearch(checksTable, "check-search-input");
-            checksTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-
-        function reloadChecksGrid() {
-            if (checksTable) checksTable.setData();
-        }
-        window.reloadChecksGrid = reloadChecksGrid;
-    </script>
-</th:block>
 </body>
 </html>

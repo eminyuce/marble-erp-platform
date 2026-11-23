@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -29,6 +30,10 @@ import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockItemRepository;
 import com.ozerler.marble.service.WorkshopOperationService;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.WorkshopOrderGrid;
+import com.ozerler.marble.web.WorkshopSizedGrid;
+import com.ozerler.marble.web.WorkshopSlabGrid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -66,13 +71,14 @@ public class WorkshopOperationController extends AbstractController {
 
     @GetMapping
     public String index(@RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
-                        @RequestParam(value = "page", defaultValue = "0") int page,
-                        @RequestParam(value = "size", defaultValue = "20") int size,
-                        Model model) {
+                        @ModelAttribute ListQuery query, Model model) {
 
-        Page<OperationWorkOrder> ordersPage = workOrderService.searchOrders(BusinessUnit.WORKSHOP, status, null, null, null, null, page, size);
+        Page<OperationWorkOrder> ordersPage = workOrderService.searchOrders(
+                BusinessUnit.WORKSHOP, status, null, null, null, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         model.addAttribute("orders", ordersPage.getContent());
         model.addAttribute("page", ordersPage);
+        model.addAttribute("grid", WorkshopOrderGrid.view(
+                ordersPage, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("selectedStatus", status);
         model.addAttribute("activeSection", "workshop");
         model.addAttribute("activeSubSection", "orders");
@@ -94,12 +100,10 @@ public class WorkshopOperationController extends AbstractController {
     public String workshopSlabs(@RequestParam(value = "status", required = false) SlabStatus status,
                                 @RequestParam(value = "customerId", required = false) Long customerId,
                                 @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
-                                @RequestParam(value = "search", required = false) String search,
-                                @RequestParam(value = "page", defaultValue = "0") int page,
-                                @RequestParam(value = "size", defaultValue = "20") int size,
-                                Model model) {
+                                @ModelAttribute ListQuery query, Model model) {
 
-        Page<Slab> slabsPage = factoryStockService.getFactorySlabsPaged(status, customerId, generalStockOnly, search, page, size);
+        Page<Slab> slabsPage = factoryStockService.getFactorySlabsPaged(
+                status, customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         List<Customer> customers = customerRepository.findAll();
 
         BigDecimal totalAvailableM2 = slabsPage.getContent().stream()
@@ -115,6 +119,8 @@ public class WorkshopOperationController extends AbstractController {
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("generalStockOnly", generalStockOnly);
+        model.addAttribute("grid", WorkshopSlabGrid.view(
+                slabsPage, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("activeSection", "workshop");
         model.addAttribute("activeSubSection", "slabs");
 
@@ -166,12 +172,10 @@ public class WorkshopOperationController extends AbstractController {
     public String workshopSized(@RequestParam(value = "customerId", required = false) Long customerId,
                                 @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
                                 @RequestParam(value = "customerOnly", defaultValue = "false") boolean customerOnly,
-                                @RequestParam(value = "search", required = false) String search,
-                                @RequestParam(value = "page", defaultValue = "0") int page,
-                                @RequestParam(value = "size", defaultValue = "20") int size,
-                                Model model) {
+                                @ModelAttribute ListQuery query, Model model) {
 
-        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(customerId, generalStockOnly, customerOnly, search, page, size);
+        Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(
+                customerId, generalStockOnly, customerOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
         List<Customer> customers = customerRepository.findAll();
 
         BigDecimal totalStockM2 = itemsPage.getContent().stream()
@@ -187,7 +191,9 @@ public class WorkshopOperationController extends AbstractController {
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("generalStockOnly", generalStockOnly);
         model.addAttribute("customerOnly", customerOnly);
-        model.addAttribute("search", search);
+        model.addAttribute("search", query.getSearch());
+        model.addAttribute("grid", WorkshopSizedGrid.view(
+                itemsPage, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("activeSection", "workshop");
         model.addAttribute("activeSubSection", "sized");
 

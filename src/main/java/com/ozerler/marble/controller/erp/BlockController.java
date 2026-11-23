@@ -19,6 +19,8 @@ import com.ozerler.marble.service.BlockCostCalculationService;
 import com.ozerler.marble.service.BlockCustomerMarkService;
 import com.ozerler.marble.service.FileStorageService;
 import com.ozerler.marble.service.QuarryBlockService;
+import com.ozerler.marble.web.BlockGrid;
+import com.ozerler.marble.web.ListQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -60,9 +62,20 @@ public class BlockController extends AbstractController {
     }
 
     @GetMapping
-    public String blocksIndex(Model model) {
+    public String blocksIndex(@RequestParam(value = "page", required = false) Integer page,
+                              @RequestParam(value = "locationType", required = false) StockLocationType locationType,
+                              @RequestParam(value = "status", required = false) BlockStatus status,
+                              @RequestParam(value = "stockFilter", required = false) String stockFilter,
+                              @ModelAttribute ListQuery query, Model model) {
+        String stock = stockFilter == null || stockFilter.isBlank() ? "IN_STOCK" : stockFilter;
         model.addAttribute("summary", quarryBlockService.quarrySummary());
         model.addAttribute("customers", blockCustomerMarkService.customers());
+        model.addAttribute("selectedStockFilter", stock);
+        model.addAttribute("selectedLocationType", locationType == null ? "" : locationType.name());
+        model.addAttribute("selectedStatus", status == null ? "" : status.name());
+        model.addAttribute("grid", BlockGrid.view(
+                quarryBlockService.getBlocksPaged(query.pageNumber(), query.pageSize(), query.getSearch(), query.sortKey(), query.sortDirection(), locationType, status, stock),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "erp/blocks/index";
     }
 

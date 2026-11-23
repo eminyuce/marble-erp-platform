@@ -136,6 +136,12 @@ class TabulatorGridUndefinedTest {
     void everyGridUsesSharedAjaxHelpersAndSafeDisplay() throws Exception {
         for (String resource : GRID_SOURCES) {
             String source = readResource(resource);
+            if (source.contains("fragments/data-grid :: shell")) {
+                assertThat(source)
+                        .as("%s server grid must not embed raw Thymeleaf inside Alpine", resource)
+                        .doesNotContain("[[${");
+                continue;
+            }
             assertThat(source)
                     .as("%s should build page/size with erpGridAjaxUrl", resource)
                     .contains("erpGridAjaxUrl(");

@@ -7,16 +7,13 @@
 <body>
 <div layout:fragment="content" class="erp-list-page space-y-5"
      x-data="{
-        statusFilter: '',
-        setStatusFilter(st) {
-            this.statusFilter = st;
-            if (typeof reloadSalesGrid === 'function') reloadSalesGrid();
-        },
-        gridExtraQuery() {
-            return this.statusFilter ? '&status=' + encodeURIComponent(this.statusFilter) : '';
+        setParam(name, value) {
+            const url = new URL(window.location.href);
+            if (value) url.searchParams.set(name, value); else url.searchParams.delete(name);
+            url.searchParams.set('page', '1');
+            window.location.assign(url.toString());
         }
-     }"
-     x-init="window.salesPageState = $data">
+     }">
 
     <!-- Header Section -->
     <div class="erp-list-header">
@@ -36,8 +33,8 @@
     <!-- KPI Summary Cards (Blocks Standard) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" th:if="${summary != null}">
         <button type="button" class="erp-summary-card bg-white rounded-xl border border-slate-200 p-4 text-left cursor-pointer transition-all hover:border-slate-300"
-                :class="statusFilter === '' ? 'erp-summary-card--active' : ''"
-                @click="setStatusFilter('')">
+                th:classappend="${selectedStatus == ''} ? 'erp-summary-card--active' : ''"
+                @click="setParam('status', '')">
             <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Toplam Satış Cirosu</div>
             <div class="text-lg font-black text-slate-900 mt-1 font-mono"
                  th:text="${summary.totalAmount != null ? #numbers.formatDecimal(summary.totalAmount, 1, 'POINT', 2, 'COMMA') + ' ₺' : '0,00 ₺'}">0,00 ₺</div>
@@ -70,23 +67,23 @@
     <!-- Operational Filter Chips -->
     <div class="erp-yard-filters">
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('')">Tüm Siparişler</button>
+                th:classappend="${selectedStatus == ''} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', '')">Tüm Siparişler</button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'CONFIRMED' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('CONFIRMED')">
+                th:classappend="${selectedStatus == 'CONFIRMED'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', 'CONFIRMED')">
             <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1"></i>
             Onaylananlar
         </button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'SHIPPED' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('SHIPPED')">
+                th:classappend="${selectedStatus == 'SHIPPED'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', 'SHIPPED')">
             <i data-lucide="truck" class="w-3.5 h-3.5 inline mr-1"></i>
             Sevkiyattakiler
         </button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'INVOICED' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('INVOICED')">
+                th:classappend="${selectedStatus == 'INVOICED'} ? 'erp-yard-chip--active' : ''"
+                @click="setParam('status', 'INVOICED')">
             <i data-lucide="file-text" class="w-3.5 h-3.5 inline mr-1"></i>
             Faturalananlar
         </button>
@@ -98,132 +95,16 @@
             <i data-lucide="plus"></i>
             <span>Yeni Satış Siparişi</span>
         </a>
-        <div th:replace="~{fragments/list-chrome :: search('Sipariş no veya müşteri adı...', 'sales-search-input')}"></div>
+        <div th:replace="~{fragments/list-chrome :: searchSubmit('Sipariş no veya müşteri adı...', 'sales-search-input')}"></div>
         <div class="erp-toolbar-actions">
             <div th:replace="~{fragments/list-chrome :: exportDropdown('sales-table', 'satislar')}"></div>
         </div>
     </div>
 
     <!-- DataGrid Shell -->
-    <div th:replace="~{fragments/list-chrome :: gridShell('sales-table')}"></div>
+    <div th:replace="~{fragments/data-grid :: shell(${grid})}"></div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        let salesTable;
-        document.addEventListener("DOMContentLoaded", () => {
-            salesTable = new Tabulator("#sales-table", {
-                ...erpGridDefaults(),
-                pagination: true,
-                paginationMode: "remote",
-                paginationSize: window.ERP_GRID_PAGE_SIZE || 25,
-                paginationSizeSelector: [5, 10, 25, 50, 100],
-                ajaxURL: "/sales/api/data",
-                ajaxConfig: {method: "GET", headers: {"Accept": "application/json"}},
-                ajaxURLGenerator: function (url, config, params) {
-                    return erpGridAjaxUrl(url, params, "sales-search-input", function () {
-                        return window.salesPageState ? window.salesPageState.gridExtraQuery() : "";
-                    });
-                },
-                ajaxResponse: function (url, params, response) {
-                    return erpGridAjaxResponse("sales-table", response);
-                },
-                placeholder: "Kriterlere uygun satış siparişi bulunamadı.",
-                columns: [
-                    erpResponsiveCollapseColumn(),
-                    erpIndexColumn(),
-                    {
-                        title: "Sipariş No",
-                        field: "orderNo",
-                        width: 160,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<a href="/sales/${row.id}" class="font-mono font-bold text-amber-900 hover:text-amber-700 underline">${gridText(cell.getValue())}</a>`;
-                        }
-                    },
-                    {
-                        title: "Müşteri",
-                        field: "customerName",
-                        minWidth: 200,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return `<div>
-                        <a href="/sales/${row.id}" class="font-bold text-slate-900 hover:text-amber-700 underline">${gridText(row.customerName)}</a>
-                        <div class="text-xs text-slate-500">${gridText(row.customerType)}</div>
-                    </div>`;
-                        }
-                    },
-                    {
-                        title: "Sipariş Tarihi",
-                        field: "orderDate",
-                        width: 130,
-                        formatter: function (cell) {
-                            return `<span class="text-sm font-mono text-slate-700">${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Toplam Tutar",
-                        field: "totalAmount",
-                        width: 150,
-                        formatter: function (cell) {
-                            return `<strong class="font-mono">${gridMoney(cell.getValue())}</strong>`;
-                        }
-                    },
-                    {
-                        title: "Ödenen",
-                        field: "paidAmount",
-                        width: 130,
-                        formatter: function (cell) {
-                            return `<span class="text-sm font-mono text-slate-600">${gridMoney(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "Durum",
-                        field: "statusLabel",
-                        width: 130,
-                        formatter: function (cell) {
-                            const status = cell.getRow().getData().status;
-                            const colors = {
-                                'DRAFT': 'bg-slate-100 text-slate-700',
-                                'CONFIRMED': 'bg-blue-100 text-blue-800',
-                                'SHIPPED': 'bg-amber-100 text-amber-800',
-                                'DELIVERED': 'bg-emerald-100 text-emerald-800',
-                                'INVOICED': 'bg-green-100 text-green-800',
-                                'CANCELLED': 'bg-rose-100 text-rose-800'
-                            };
-                            const c = colors[status] || 'bg-slate-100 text-slate-700';
-                            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${c}">● ${gridText(cell.getValue())}</span>`;
-                        }
-                    },
-                    {
-                        title: "İşlemler",
-                        width: 120,
-                        headerSort: false,
-                        responsive: 0,
-                        formatter: function (cell) {
-                            const row = cell.getRow().getData();
-                            return gridActionsHtml([
-                                {icon: 'eye', label: 'Detay', href: '/sales/' + row.id},
-                                {icon: 'edit-3', label: 'Düzenle', href: '/sales/' + row.id}
-                            ]);
-                        }
-                    }
-                ]
-            });
-
-            attachTabulatorPagingAnimation(salesTable);
-            bindGridSearch(salesTable, "sales-search-input");
-            salesTable.on("renderComplete", () => {
-                if (window.lucide) window.lucide.createIcons();
-            });
-        });
-
-        function reloadSalesGrid() {
-            if (salesTable) salesTable.setData();
-        }
-        window.reloadSalesGrid = reloadSalesGrid;
-    </script>
-</th:block>
+<th:block layout:fragment="scripts"></th:block>
 </body>
 </html>

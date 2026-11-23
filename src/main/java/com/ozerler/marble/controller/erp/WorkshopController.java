@@ -9,6 +9,9 @@ import com.ozerler.marble.model.enums.WorkshopReceiptSource;
 import com.ozerler.marble.model.enums.WorkshopWorkPurpose;
 import com.ozerler.marble.service.WorkshopCutService;
 import com.ozerler.marble.service.WorkshopOperationService;
+import com.ozerler.marble.web.ListQuery;
+import com.ozerler.marble.web.WorkshopGrid;
+import com.ozerler.marble.web.WorkshopReceiptGrid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,8 +41,14 @@ public class WorkshopController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public String workshopIndex(Model model) {
+    public String workshopIndex(@RequestParam(value = "page", required = false) Integer page,
+                                @RequestParam(value = "status", required = false) String status,
+                                @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", workshopCutService.getWorkshopSummary());
+        model.addAttribute("selectedStatus", status == null ? "" : status);
+        model.addAttribute("grid", WorkshopGrid.view(
+                workshopCutService.getCutOrdersPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, query.sortKey(), query.sortDirection()),
+                query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         return "erp/workshop/index";
     }
 
@@ -56,8 +66,8 @@ public class WorkshopController {
     }
 
     @GetMapping("/receipts")
-    public String receiptsPage(Model model) {
-        populateReceiptsPage(model);
+    public String receiptsPage(@ModelAttribute ListQuery query, Model model) {
+        populateReceiptsPage(model, query);
         return "erp/workshop/receipts";
     }
 
@@ -170,7 +180,7 @@ public class WorkshopController {
         } catch (Exception e) {
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
-            populateReceiptsPage(model);
+            populateReceiptsPage(model, new ListQuery());
             return "erp/workshop/receipts";
         }
     }
@@ -212,8 +222,9 @@ public class WorkshopController {
                 messageSource.getMessage("erp.workshop.title.edit", null, locale) + ": " + order.getCutOrderNo());
     }
 
-    private void populateReceiptsPage(Model model) {
-        model.addAttribute("receipts", workshopOperationService.listReceipts());
+    private void populateReceiptsPage(Model model, ListQuery query) {
+        model.addAttribute("grid", WorkshopReceiptGrid.view(
+                workshopOperationService.listReceipts(), query.pageNumber(), query.pageSize(), query.getSearch()));
         model.addAttribute("receiptSources", WorkshopReceiptSource.values());
         model.addAttribute("suppliers", workshopOperationService.suppliers());
     }

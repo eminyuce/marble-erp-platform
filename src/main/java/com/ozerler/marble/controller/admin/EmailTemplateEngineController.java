@@ -6,11 +6,14 @@ import com.ozerler.marble.dto.email.EmailTemplateCatalog;
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.service.EmailService;
 import com.ozerler.marble.service.SettingService;
+import com.ozerler.marble.web.EmailTemplateGrid;
+import com.ozerler.marble.web.ListQuery;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -19,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Dedicated System Controller managing the Corporate Email Template Engine.
@@ -65,33 +67,30 @@ public class EmailTemplateEngineController {
      * Dedicated Index List Page with canonical Tabulator 6 datagrid & KPI summary.
      */
     @GetMapping
-    public String index(Model model,
+    public String index(@ModelAttribute ListQuery query, Model model,
                         @RequestParam(value = "category", required = false) String category) {
-        List<EmailTemplate> all = emailService.getAllTemplates();
-        List<EmailTemplate> filtered = (StringUtils.isNotBlank(category) && !"ALL".equalsIgnoreCase(category))
-                ? emailService.getTemplatesByCategory(category)
-                : all;
-
-        Set<String> categories = all.stream()
-                .map(t -> StringUtils.defaultIfBlank(t.getCategory(), "Genel"))
-                .collect(Collectors.toCollection(TreeSet::new));
+        Page<EmailTemplate> result = emailService.getTemplatesPaged(query.pageNumber(), query.pageSize(), category, query.getSearch());
+        Set<String> categories = emailService.templateCategories();
 
         String host = settingService.getSetting("smtp.host", settingService.getSetting("mail.smtp.host", ""));
         boolean smtpReady = StringUtils.isNotBlank(host);
+        long totalCount = emailService.countTemplates();
 
         TemplateKpiDto kpi = TemplateKpiDto.builder()
-                .totalCount(all.size())
-                .activeCount(all.stream().filter(t -> Boolean.TRUE.equals(t.getIsActive())).count())
+                .totalCount(totalCount)
+                .activeCount(emailService.countActiveTemplates())
                 .categoriesCount(categories.size())
                 .smtpReady(smtpReady)
                 .smtpHost(smtpReady ? host : "Yapılandırılmadı")
                 .build();
 
-        model.addAttribute("templates", filtered);
-        model.addAttribute("allCount", all.size());
+        model.addAttribute("templates", result.getContent());
+        model.addAttribute("allCount", totalCount);
         model.addAttribute("kpi", kpi);
         model.addAttribute("categories", categories);
         model.addAttribute("selectedCategory", category != null ? category : "ALL");
+        model.addAttribute("grid", EmailTemplateGrid.view(result, query.pageNumber(), query.pageSize(),
+                template -> emailService.placeholderKeys(template).size()));
         model.addAttribute("activeMegaGroup", "system");
         model.addAttribute("activeSidebar", "email-templates");
 
