@@ -48,13 +48,12 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
     long countByStatusIn(List<BlockStatus> statuses);
 
-    @EntityGraph(attributePaths = {"quarry", "currentLocation", "soldCustomer"})
     @Query(
             value =
-                    "SELECT DISTINCT b FROM Block b "
-                            + "LEFT JOIN b.currentLocation loc "
-                            + "LEFT JOIN b.soldCustomer soldCust "
-                            + "LEFT JOIN b.quarry q WHERE "
+                    "SELECT b FROM Block b "
+                            + "LEFT JOIN FETCH b.currentLocation loc "
+                            + "LEFT JOIN FETCH b.soldCustomer soldCust "
+                            + "LEFT JOIN FETCH b.quarry q WHERE "
                             + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
                             + "'%')) OR "
                             + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
@@ -68,7 +67,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                             + "(:status IS NULL OR b.status = :status) AND "
                             + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)",
             countQuery =
-                    "SELECT COUNT(DISTINCT b) FROM Block b "
+                    "SELECT COUNT(b) FROM Block b "
                             + "LEFT JOIN b.currentLocation loc "
                             + "LEFT JOIN b.soldCustomer soldCust "
                             + "LEFT JOIN b.quarry q WHERE "
@@ -91,13 +90,12 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             @Param("unsoldOnly") boolean unsoldOnly,
             Pageable pageable);
 
-    @EntityGraph(attributePaths = {"quarry", "currentLocation", "soldCustomer"})
     @Query(
             value =
-                    "SELECT DISTINCT b FROM Block b "
-                            + "LEFT JOIN b.currentLocation loc "
-                            + "LEFT JOIN b.soldCustomer soldCust "
-                            + "LEFT JOIN b.quarry q WHERE "
+                    "SELECT b FROM Block b "
+                            + "LEFT JOIN FETCH b.currentLocation loc "
+                            + "LEFT JOIN FETCH b.soldCustomer soldCust "
+                            + "LEFT JOIN FETCH b.quarry q WHERE "
                             + "(:search IS NULL OR LOWER(b.blockCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
                             + "'%')) OR "
                             + "LOWER(COALESCE(b.stoneType, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) "
@@ -134,7 +132,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                             + "com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND "
                             + "b.dispatchInvoiceId IS NULL))",
             countQuery =
-                    "SELECT COUNT(DISTINCT b) FROM Block b "
+                    "SELECT COUNT(b) FROM Block b "
                             + "LEFT JOIN b.currentLocation loc "
                             + "LEFT JOIN b.soldCustomer soldCust "
                             + "LEFT JOIN b.quarry q WHERE "

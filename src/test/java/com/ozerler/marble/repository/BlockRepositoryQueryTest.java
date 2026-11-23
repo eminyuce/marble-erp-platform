@@ -35,10 +35,14 @@ class BlockRepositoryQueryTest {
                 .getAnnotation(Query.class);
 
         Assertions.assertThat(query).isNotNull();
-        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN b.soldCustomer");
-        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN b.currentLocation");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH b.soldCustomer");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH b.currentLocation");
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH b.quarry");
+        Assertions.assertThat(query.value()).doesNotContain("SELECT DISTINCT");
         Assertions.assertThat(query.value()).doesNotContain("b.soldCustomer.companyName");
         Assertions.assertThat(query.countQuery()).containsIgnoringCase("LEFT JOIN b.soldCustomer");
+        Assertions.assertThat(query.countQuery()).doesNotContain("FETCH");
+        Assertions.assertThat(query.countQuery()).doesNotContain("COUNT(DISTINCT");
     }
 
     @Test
@@ -55,5 +59,22 @@ class BlockRepositoryQueryTest {
         Assertions.assertThat(query.value()).containsIgnoringCase("GROUP BY b.quarry.id");
         Assertions.assertThat(query.value()).containsIgnoringCase("SUM(b.transportCost)");
         Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN b.soldCustomer");
+    }
+
+    @Test
+    @DisplayName("searchBlocksWithStockFilter uses the same join-fetch aliases and no DISTINCT")
+    void searchBlocksWithStockFilterAvoidsDistinctOrderByConflict() throws Exception {
+        Query query = BlockRepository.class
+                .getMethod("searchBlocksWithStockFilter", String.class,
+                        StockLocationType.class,
+                        BlockStatus.class,
+                        String.class,
+                        Pageable.class)
+                .getAnnotation(Query.class);
+
+        Assertions.assertThat(query.value()).containsIgnoringCase("LEFT JOIN FETCH b.quarry q");
+        Assertions.assertThat(query.value()).doesNotContain("SELECT DISTINCT");
+        Assertions.assertThat(query.countQuery()).doesNotContain("FETCH");
+        Assertions.assertThat(query.countQuery()).doesNotContain("COUNT(DISTINCT");
     }
 }

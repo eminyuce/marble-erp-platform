@@ -16,10 +16,17 @@ import com.ozerler.marble.model.SalesOrder;
 @Repository
 public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
 
-    @EntityGraph(attributePaths = {"customer"})
-    @Query("SELECT so FROM SalesOrder so WHERE "
-            + "(:search IS NULL OR LOWER(so.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
-            + "LOWER(so.customer.companyName) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))")
+    @Query(
+            value = "SELECT so FROM SalesOrder so "
+                    + "LEFT JOIN FETCH so.customer customer WHERE "
+                    + "(:search IS NULL OR LOWER(so.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                    + "'%')))",
+            countQuery = "SELECT COUNT(so) FROM SalesOrder so "
+                    + "LEFT JOIN so.customer customer WHERE "
+                    + "(:search IS NULL OR LOWER(so.orderNo) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "
+                    + "LOWER(COALESCE(customer.companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS string), "
+                    + "'%')))")
     Page<SalesOrder> searchSalesOrders(@Param("search") String search, Pageable pageable);
 
     @EntityGraph(attributePaths = {"customer", "items"})
