@@ -204,6 +204,10 @@ class DeploymentServiceTest {
         assertThat(script).contains("SONUÇ: BAŞARILI");
         assertThat(script).contains("Europe/Istanbul");
         assertThat(script).contains("/actuator/info");
+        assertThat(script).contains("Spring Boot:");
+        assertThat(script).contains("Spring Framework:");
+        assertThat(script).contains("Git commit:");
+        assertThat(script).contains("Flyway şema sürümü");
         assertThat(script).doesNotContain("RUSTFS_SECRET_KEY");
         assertThat(script).doesNotContain("DB_PASSWORD");
         assertThat(script).doesNotContain("down -v");
