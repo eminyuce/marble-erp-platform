@@ -86,7 +86,7 @@ export DB_PASSWORD='YOUR_STRONG_DB_PASSWORD_HERE'
 export RUSTFS_ACCESS_KEY='YOUR_RUSTFS_ACCESS_KEY'
 export RUSTFS_SECRET_KEY='YOUR_RUSTFS_SECRET_KEY'
 export CORS_ALLOWED_ORIGIN='https://erp.ozerlermermer.com'
-export RUSTFS_PUBLIC_ENDPOINT='https://files.example.com'
+export RUSTFS_PUBLIC_ENDPOINT='https://ozerler.naklink.com'
 export SPRING_PROFILES_ACTIVE=prod
 ```
 > [!WARNING]
@@ -267,6 +267,26 @@ server {
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;
     gzip_min_length 1024;
+
+    # Path-style RustFS downloads. Must be before location / and before the
+    # static-file regex, or jpg/png under /erp-files/ are sent to the app.
+    # See deploy/nginx/ozerler.naklink.com-erp-files.conf.
+    location ^~ /erp-files/ {
+        proxy_pass http://127.0.0.1:9000;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Accept-Encoding "identity";
+        proxy_request_buffering off;
+        proxy_buffering off;
+        client_max_body_size 0;
+        proxy_connect_timeout 60s;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
 
     # Application Proxy
     location / {

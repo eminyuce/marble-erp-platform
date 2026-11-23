@@ -17,7 +17,7 @@ docker compose -f docker/docker-compose.yml up -d rustfs postgres
 | Variable | Purpose | Local default |
 | :--- | :--- | :--- |
 | `RUSTFS_ENDPOINT` | Internal S3 API (upload, delete, head) | `http://localhost:9000` on the host; `http://rustfs:9000` in Compose |
-| `RUSTFS_PUBLIC_ENDPOINT` | Host written into presigned URLs. Prod must be https behind Nginx | `http://localhost:9000` in dev; `https://files.example.com` in prod |
+| `RUSTFS_PUBLIC_ENDPOINT` | Host written into presigned URLs. Prod must be https behind Nginx | `http://localhost:9000` in dev; `https://ozerler.naklink.com` in prod |
 | `RUSTFS_ACCESS_KEY` | Access key (must match the RustFS container) | dev placeholder; prod startup fails when empty |
 | `RUSTFS_SECRET_KEY` | Secret key. Never log it | dev placeholder; prod startup fails when empty |
 | `RUSTFS_BUCKET` | Private bucket. No permanent public URL | `erp-files` |
@@ -79,11 +79,13 @@ Native JAR installs (systemd) should still run RustFS in Docker and point the JA
 
 ```bash
 RUSTFS_ENDPOINT=http://127.0.0.1:9000
-RUSTFS_PUBLIC_ENDPOINT=https://files.example.com   # required in prod: https behind Nginx or another reverse proxy
+RUSTFS_PUBLIC_ENDPOINT=https://ozerler.naklink.com   # required in prod: https on the app domain; Nginx forwards /erp-files/
 RUSTFS_ACCESS_KEY=...
 RUSTFS_SECRET_KEY=...
 RUSTFS_BUCKET=erp-files
 ```
+
+Presigned URLs use that public host and the bucket as the first path segment (`/erp-files/<key>`). Paste `deploy/nginx/ozerler.naklink.com-erp-files.conf` into the TLS server for `ozerler.naklink.com` before `location /`, then `sudo nginx -t && sudo systemctl reload nginx`. Leave `RUSTFS_SERVER_DOMAINS` unset; path-style does not use it.
 
 Do not store production objects only inside the container writable layer.
 

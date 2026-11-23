@@ -61,6 +61,8 @@ services:
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
       RUSTFS_ADDRESS: ":9000"
+      # Leave RUSTFS_SERVER_DOMAINS unset. It is only for virtual-hosted names
+      # (erp-files.ozerler.naklink.com). Path-style /erp-files/<key> needs no domain list.
       RUSTFS_CONSOLE_ENABLE: "false"
       RUSTFS_OBS_LOGGER_LEVEL: error
     ports:
@@ -130,8 +132,8 @@ services:
       APP_MEDIA_DIR: /app/media
       STORAGE_TYPE: rustfs
       RUSTFS_ENDPOINT: ${RUSTFS_ENDPOINT:-http://rustfs:9000}
-      # Must be https on a public host (Nginx or another reverse proxy). Plain http fails startup.
-      RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-https://files.example.com}
+      # Same host as the app. Nginx forwards /erp-files/ to RustFS without rewriting the path.
+      RUSTFS_PUBLIC_ENDPOINT: ${RUSTFS_PUBLIC_ENDPOINT:-https://ozerler.naklink.com}
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-marblerustfs}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-marblerustfs_change_me}
       RUSTFS_BUCKET: ${RUSTFS_BUCKET:-erp-files}

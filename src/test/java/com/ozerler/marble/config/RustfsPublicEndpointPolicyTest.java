@@ -13,6 +13,8 @@ class RustfsPublicEndpointPolicyTest {
     void httpsPublicHostIsAccepted() {
         assertThatCode(() -> RustfsPublicEndpointPolicy.requireHttpsPublicHost("https://files.example.com"))
                 .doesNotThrowAnyException();
+        assertThatCode(() -> RustfsPublicEndpointPolicy.requireHttpsPublicHost("https://ozerler.naklink.com"))
+                .doesNotThrowAnyException();
     }
 
     @Test
