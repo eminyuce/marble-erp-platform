@@ -94,7 +94,7 @@ public class RustFsBrowserAccess {
         return reachable;
     }
 
-    static boolean isInternalServiceHost(String host) {
+    public static boolean isInternalServiceHost(String host) {
         if (host == null || host.isBlank()) {
             return true;
         }
@@ -113,7 +113,7 @@ public class RustFsBrowserAccess {
                 || normalized.endsWith(".docker");
     }
 
-    static boolean isLoopback(String host) {
+    public static boolean isLoopback(String host) {
         if (host == null || host.isBlank()) {
             return false;
         }

@@ -1,7 +1,6 @@
 package com.ozerler.marble.config;
 
 import com.ozerler.marble.web.FormDraftInterceptor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -15,15 +14,11 @@ import java.nio.file.Paths;
 public class WebConfig implements WebMvcConfigurer {
 
     private final FormDraftInterceptor formDraftInterceptor;
+    private final ObjectStorageProperties storageProperties;
 
-    @Value("${app.media.dir:media}")
-    private String mediaDir;
-
-    @Value("${app.upload.dir:media}")
-    private String uploadDir;
-
-    public WebConfig(FormDraftInterceptor formDraftInterceptor) {
+    public WebConfig(FormDraftInterceptor formDraftInterceptor, ObjectStorageProperties storageProperties) {
         this.formDraftInterceptor = formDraftInterceptor;
+        this.storageProperties = storageProperties;
     }
 
     @Override
@@ -33,10 +28,10 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Path mediaPath = Paths.get(mediaDir);
+        Path mediaPath = Paths.get(storageProperties.getMediaDir());
         String mediaAbsolutePath = mediaPath.toFile().getAbsolutePath();
 
-        Path uploadPath = Paths.get(uploadDir);
+        Path uploadPath = Paths.get(storageProperties.getUploadDir());
         String uploadAbsolutePath = uploadPath.toFile().getAbsolutePath();
 
         registry.addResourceHandler("/media/**")

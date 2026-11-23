@@ -86,6 +86,7 @@ export DB_PASSWORD='YOUR_STRONG_DB_PASSWORD_HERE'
 export RUSTFS_ACCESS_KEY='YOUR_RUSTFS_ACCESS_KEY'
 export RUSTFS_SECRET_KEY='YOUR_RUSTFS_SECRET_KEY'
 export CORS_ALLOWED_ORIGIN='https://erp.ozerlermermer.com'
+export RUSTFS_PUBLIC_ENDPOINT='https://files.example.com'
 export SPRING_PROFILES_ACTIVE=prod
 ```
 > [!WARNING]

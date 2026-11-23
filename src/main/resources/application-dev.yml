@@ -51,6 +51,16 @@ app:
       bucket: ${RUSTFS_BUCKET:erp-files}
       region: ${RUSTFS_REGION:us-east-1}
 
+# Unset RUSTFS_ENDPOINT means the JVM is on the host, next to published port 9000.
+# The Compose app service sets RUSTFS_ENDPOINT=http://rustfs:9000 for Docker DNS.
+rustfs:
+  endpoint: ${RUSTFS_ENDPOINT:http://localhost:9000}
+  public-endpoint: ${RUSTFS_PUBLIC_ENDPOINT:http://localhost:9000}
+  access-key: ${RUSTFS_ACCESS_KEY:marblerustfs}
+  secret-key: ${RUSTFS_SECRET_KEY:marblerustfs_change_me}
+  bucket: ${RUSTFS_BUCKET:erp-files}
+  region: ${RUSTFS_REGION:us-east-1}
+
 rate-limiting:
   login:
     max-requests: 1000

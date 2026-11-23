@@ -1,9 +1,11 @@
 package com.ozerler.marble.storage;
 
+import com.ozerler.marble.config.PresignedUrlProperties;
 import com.ozerler.marble.dto.DependencyHealth;
 import com.ozerler.marble.dto.StoredObjectMetadata;
 import com.ozerler.marble.exception.StorageException;
 import com.ozerler.marble.exception.StoredFileNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,16 @@ public class InMemoryObjectStorageService implements ObjectStorageService {
     private static final String BUCKET = "erp-files-test";
 
     private final Map<String, StoredObject> objects = new ConcurrentHashMap<>();
+    private final PresignedUrlProperties presignedUrlProperties;
+
+    public InMemoryObjectStorageService() {
+        this(new PresignedUrlProperties());
+    }
+
+    @Autowired
+    public InMemoryObjectStorageService(PresignedUrlProperties presignedUrlProperties) {
+        this.presignedUrlProperties = presignedUrlProperties;
+    }
 
     @Override
     public void ensureBucketExists() {
@@ -76,6 +88,16 @@ public class InMemoryObjectStorageService implements ObjectStorageService {
         }
         long seconds = expiration != null ? expiration.toSeconds() : 900;
         return "memory://" + BUCKET + "/" + objectKey + "?expires=" + seconds;
+    }
+
+    @Override
+    public String presignedImageUrl(String objectKey) {
+        return createPresignedUrl(objectKey, presignedUrlProperties.imageExpiry());
+    }
+
+    @Override
+    public String presignedDocumentUrl(String objectKey) {
+        return createPresignedUrl(objectKey, presignedUrlProperties.documentExpiry());
     }
 
     @Override

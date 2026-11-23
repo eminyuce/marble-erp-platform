@@ -89,7 +89,7 @@ ENV SERVER_PORT=81 \
     APP_GIT_SHA="${GIT_COMMIT_SHA}" \
     APP_UPLOAD_DIR=/app/uploads \
     APP_MEDIA_DIR=/app/media \
-    JAVA_OPTS="-XX:+UseSerialGC -Xms256m -Xmx768m -XX:MaxMetaspaceSize=192m -XX:+ExitOnOutOfMemoryError"
+    JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError"
 
 EXPOSE 81
 

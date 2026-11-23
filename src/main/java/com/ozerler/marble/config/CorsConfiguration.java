@@ -1,7 +1,7 @@
 package com.ozerler.marble.config;
 
 import com.ozerler.marble.common.Constants;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -10,13 +10,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.Arrays;
 
 @Configuration
+@EnableConfigurationProperties(CorsProperties.class)
 public class CorsConfiguration implements WebMvcConfigurer {
 
-    @Value("${app.cors.allowed-origin:}")
-    private String allowedOrigin;
+    private final CorsProperties corsProperties;
 
-    @Value("${app.cors.allowed-origin-pattern:}")
-    private String allowedOriginPattern;
+    public CorsConfiguration(CorsProperties corsProperties) {
+        this.corsProperties = corsProperties;
+    }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -25,12 +26,12 @@ public class CorsConfiguration implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true);
 
-        String[] origins = splitCsv(allowedOrigin);
+        String[] origins = splitCsv(corsProperties.allowedOrigin());
         if (origins.length > 0) {
             mapping.allowedOrigins(origins);
         }
 
-        String[] patterns = splitCsv(allowedOriginPattern);
+        String[] patterns = splitCsv(corsProperties.allowedOriginPattern());
         if (patterns.length > 0) {
             mapping.allowedOriginPatterns(patterns);
         }

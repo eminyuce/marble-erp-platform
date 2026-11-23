@@ -1,0 +1,55 @@
+name: Version bump
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  pom-version-increased:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Require pom.xml version greater than main
+        run: |
+          git fetch origin main
+          python3 - <<'PY'
+          import subprocess
+          import xml.etree.ElementTree as ET
+
+          NS = {"m": "http://maven.apache.org/POM/4.0.0"}
+
+          def project_version(xml_text):
+              root = ET.fromstring(xml_text)
+              node = root.find("m:version", NS)
+              if node is None or not node.text or not node.text.strip():
+                  raise SystemExit("pom.xml is missing the project version")
+              return node.text.strip()
+
+          def parse(version):
+              parts = version.split(".")
+              if len(parts) != 3 or not all(part.isdigit() for part in parts):
+                  raise SystemExit(
+                      f"pom.xml version must be numeric major.minor.patch, got {version}"
+                  )
+              return tuple(int(part) for part in parts)
+
+          current = project_version(open("pom.xml", encoding="utf-8").read())
+          base_xml = subprocess.check_output(
+              ["git", "show", "origin/main:pom.xml"], text=True
+          )
+          base = project_version(base_xml)
+          if parse(current) <= parse(base):
+              raise SystemExit(
+                  f"pom.xml version {current} must be greater than main ({base}). "
+                  "Bump the patch component by one."
+              )
+          print(f"pom.xml version {current} is greater than main ({base})")
+          PY

@@ -1,6 +1,8 @@
 package com.ozerler.marble.controller;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.PresignedDownload;
+import com.ozerler.marble.exception.FileAccessDeniedException;
 import com.ozerler.marble.model.FileStorage;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.service.FileStorageService;
@@ -17,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -264,11 +267,14 @@ class FileUploadControllerTest {
     }
 
     @Test
-    @DisplayName("createDownloadUrl should return metadata and a presigned URL")
+    @DisplayName("createDownloadUrl should return the presigned URL and its expiry")
     void createDownloadUrl_Success() {
-        when(fileStorageService.createPresignedDownloadUrl(12L))
-                .thenReturn("http://localhost:9000/erp-files/documents/block/1/a.pdf?sig=1");
-        when(fileStorageService.getPresignedUrlExpiry()).thenReturn(java.time.Duration.ofMinutes(15));
+        Instant expiresAt = Instant.parse("2026-11-23T12:05:00Z");
+        when(fileStorageService.createPresignedDownload(12L))
+                .thenReturn(new PresignedDownload(
+                        "http://localhost:9000/erp-files/documents/block/1/a.pdf?X-Amz-Expires=300",
+                        300,
+                        expiresAt));
 
         BackEndResponse response = fileUploadController.createDownloadUrl(12L);
 
@@ -276,8 +282,39 @@ class FileUploadControllerTest {
         @SuppressWarnings("unchecked")
         java.util.Map<String, Object> body =
                 (java.util.Map<String, Object>) response.getResponse().getBody();
-        assertThat(body).containsEntry("fileId", 12L);
-        assertThat(body).containsEntry("url", "http://localhost:9000/erp-files/documents/block/1/a.pdf?sig=1");
+        assertThat(body).containsEntry("url",
+                "http://localhost:9000/erp-files/documents/block/1/a.pdf?X-Amz-Expires=300");
+        assertThat(body).containsEntry("expiresInSeconds", 300L);
+        assertThat(body).containsEntry("expiresAt", "2026-11-23T12:05:00Z");
+    }
+
+    @Test
+    @DisplayName("createDownloadUrl returns an image link with the 30 minute expiry")
+    void createDownloadUrl_ImageExpiry() {
+        Instant expiresAt = Instant.parse("2026-11-23T12:30:00Z");
+        when(fileStorageService.createPresignedDownload(4L))
+                .thenReturn(new PresignedDownload(
+                        "http://localhost:9000/erp-files/images/block/1/a.jpg?X-Amz-Expires=1800",
+                        1800,
+                        expiresAt));
+
+        BackEndResponse response = fileUploadController.createDownloadUrl(4L);
+
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> body =
+                (java.util.Map<String, Object>) response.getResponse().getBody();
+        assertThat(body).containsEntry("expiresInSeconds", 1800L);
+        assertThat(body.get("url").toString()).contains("X-Amz-Expires=1800");
+    }
+
+    @Test
+    @DisplayName("createDownloadUrl does not hide an authorization failure")
+    void createDownloadUrl_Unauthorized_Propagates() {
+        when(fileStorageService.createPresignedDownload(3L))
+                .thenThrow(new FileAccessDeniedException("denied"));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> fileUploadController.createDownloadUrl(3L))
+                .isInstanceOf(FileAccessDeniedException.class);
     }
 
     @Test

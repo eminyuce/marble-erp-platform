@@ -118,5 +118,12 @@ echo "Email:       admin@eimece.test"
 echo "Pass:        B2u5c8JB"
 echo ""
 echo "[APP] Starting Spring Boot (dev profile)..."
+echo "Host-side RustFS API and presigned links use http://localhost:9000."
+
+# The dev profile default is the Docker DNS name. The JVM on the host must use localhost.
+export RUSTFS_ENDPOINT="${RUSTFS_ENDPOINT:-http://localhost:9000}"
+export RUSTFS_PUBLIC_ENDPOINT="${RUSTFS_PUBLIC_ENDPOINT:-http://localhost:9000}"
+export PRESIGNED_IMAGE_EXPIRY_MINUTES="${PRESIGNED_IMAGE_EXPIRY_MINUTES:-30}"
+export PRESIGNED_DOCUMENT_EXPIRY_MINUTES="${PRESIGNED_DOCUMENT_EXPIRY_MINUTES:-5}"
 
 exec ./mvnw spring-boot:run

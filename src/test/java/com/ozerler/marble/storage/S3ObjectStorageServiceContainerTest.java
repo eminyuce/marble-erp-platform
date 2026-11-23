@@ -1,6 +1,7 @@
 package com.ozerler.marble.storage;
 
 import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.config.PresignedUrlProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
@@ -22,11 +23,13 @@ import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers(disabledWithoutDocker = true)
-class S3ObjectStorageServiceIT {
+class S3ObjectStorageServiceContainerTest {
 
     private static final String ACCESS_KEY = "rustfstest";
     private static final String SECRET_KEY = "rustfstestsecret";
@@ -56,7 +59,8 @@ class S3ObjectStorageServiceIT {
 
         try (S3Client s3Client = s3Client(endpoint);
              S3Presigner presigner = s3Presigner(endpoint)) {
-            S3ObjectStorageService storage = new S3ObjectStorageService(s3Client, presigner, properties);
+            S3ObjectStorageService storage = new S3ObjectStorageService(
+                    s3Client, presigner, properties, new PresignedUrlProperties());
             storage.ensureBucketExists();
 
             String key = "documents/block/1/sample.txt";
@@ -73,6 +77,55 @@ class S3ObjectStorageServiceIT {
             storage.delete(key);
             assertThat(storage.exists(key)).isFalse();
         }
+    }
+
+    @Test
+    @DisplayName("presigned image and document URLs use the public host and configured expiry")
+    void presignedUrlsUsePublicEndpointAndDistinctExpiries() {
+        String internalEndpoint = "http://" + rustfs.getHost() + ":" + rustfs.getMappedPort(9000);
+        String publicEndpoint = "http://files.example.com";
+        ObjectStorageProperties properties = new ObjectStorageProperties();
+        properties.getRustfs().setEndpoint(internalEndpoint);
+        properties.getRustfs().setPublicEndpoint(publicEndpoint);
+        properties.getRustfs().setBucket(BUCKET);
+        properties.getRustfs().setRegion("us-east-1");
+
+        PresignedUrlProperties expiry = new PresignedUrlProperties();
+        expiry.setImageExpiryMinutes(30);
+        expiry.setDocumentExpiryMinutes(5);
+
+        try (S3Client s3Client = s3Client(internalEndpoint);
+             S3Presigner presigner = s3Presigner(publicEndpoint)) {
+            S3ObjectStorageService storage = new S3ObjectStorageService(s3Client, presigner, properties, expiry);
+
+            String imageUrl = storage.presignedImageUrl("images/block/1/photo.jpg");
+            String documentUrl = storage.presignedDocumentUrl("documents/block/1/spec.pdf");
+
+            URI image = URI.create(imageUrl);
+            URI document = URI.create(documentUrl);
+            assertThat(image.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
+            assertThat(document.getHost()).isEqualTo(URI.create(publicEndpoint).getHost());
+            assertThat(image.getHost()).isNotEqualTo(URI.create(internalEndpoint).getHost());
+            assertThat(image.getAuthority()).doesNotContain(":" + rustfs.getMappedPort(9000));
+            assertThat(queryParams(imageUrl)).containsEntry("X-Amz-Expires", "1800");
+            assertThat(queryParams(documentUrl)).containsEntry("X-Amz-Expires", "300");
+            assertThat(imageUrl).contains("response-content-type=");
+        }
+    }
+
+    private static Map<String, String> queryParams(String url) {
+        String query = URI.create(url).getRawQuery();
+        Map<String, String> params = new HashMap<>();
+        if (query == null || query.isBlank()) {
+            return params;
+        }
+        for (String pair : query.split("&")) {
+            int separator = pair.indexOf('=');
+            String key = separator < 0 ? pair : pair.substring(0, separator);
+            String value = separator < 0 ? "" : pair.substring(separator + 1);
+            params.put(key, value);
+        }
+        return params;
     }
 
     private static S3Client s3Client(String endpoint) {

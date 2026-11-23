@@ -2,6 +2,8 @@ package com.ozerler.marble.controller;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.FileStorageDto;
+import com.ozerler.marble.dto.PresignedDownload;
+import com.ozerler.marble.exception.FileAccessDeniedException;
 import com.ozerler.marble.exception.FileValidationException;
 import com.ozerler.marble.exception.StoredFileNotFoundException;
 import com.ozerler.marble.model.FileStorage;
@@ -194,11 +196,11 @@ public class FileUploadController extends AbstractController {
         status.setErrorCode(Constants.NO_ERR);
 
         try {
-            String url = fileStorageService.createPresignedDownloadUrl(id);
+            PresignedDownload download = fileStorageService.createPresignedDownload(id);
             Map<String, Object> payload = new LinkedHashMap<>();
-            payload.put("fileId", id);
-            payload.put("expiresInSeconds", fileStorageService.getPresignedUrlExpiry().toSeconds());
-            payload.put("url", url);
+            payload.put("url", download.url());
+            payload.put("expiresInSeconds", download.expiresInSeconds());
+            payload.put("expiresAt", download.expiresAt().toString());
 
             HttpHeaders responseHeaders = new HttpHeaders();
             ResponseEntity<Map<String, Object>> resp = new ResponseEntity<>(payload, responseHeaders, HttpStatus.OK);
@@ -208,6 +210,8 @@ public class FileUploadController extends AbstractController {
             status.setMessage("Download URL created");
             serviceStatus.setStatus(status);
             ber.setServiceStatus(serviceStatus);
+        } catch (FileAccessDeniedException denied) {
+            throw denied;
         } catch (StoredFileNotFoundException e) {
             serviceStatus.setHttpStatus(HttpStatus.NOT_FOUND);
             status.setErrorCode(Constants.ERR_NOT_FOUND);

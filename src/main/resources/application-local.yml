@@ -52,3 +52,9 @@ rate-limiting:
   general:
     max-requests: 10000
     window-seconds: 60
+
+# H2 profile does not open RustFS. These values keep the shared properties valid
+# when someone points this profile at a host-side RustFS later.
+rustfs:
+  endpoint: ${RUSTFS_ENDPOINT:http://localhost:9000}
+  public-endpoint: ${RUSTFS_PUBLIC_ENDPOINT:http://localhost:9000}

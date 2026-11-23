@@ -185,7 +185,7 @@ services:
     ports:
       - "8081:81"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_PROFILES_ACTIVE: dev
       SERVER_PORT: 81
       DB_URL: jdbc:postgresql://postgres:5432/marble_erp
       DB_HOST: postgres
@@ -202,6 +202,8 @@ services:
       RUSTFS_SECRET_KEY: marblerustfs_change_me
       RUSTFS_BUCKET: erp-files
       RUSTFS_REGION: us-east-1
+      PRESIGNED_IMAGE_EXPIRY_MINUTES: "30"
+      PRESIGNED_DOCUMENT_EXPIRY_MINUTES: "5"
       SESSION_STORE_TYPE: jdbc
       SESSION_TIMEOUT: 30m
       SESSION_COOKIE_SECURE: "false"
@@ -291,6 +293,48 @@ To populate sample quarry blocks, cut orders, slabs, and barcode records:
 | **Health Check** | `http://localhost:8080/actuator/health` | `http://localhost:81/actuator/health` | System health probe |
 
 ---
+
+## 4b. RustFS presigned URLs
+
+There is no `.env` file. Defaults live in the YAML files and in the Compose `environment` entries.
+
+| Variable | dev / local HTTP | prod |
+| :--- | :--- | :--- |
+| `RUSTFS_ENDPOINT` | `http://localhost:9000` when unset, including `./mvnw spring-boot:run`. Compose sets `http://rustfs:9000`. | `http://rustfs:9000` in Compose, or `http://127.0.0.1:9000` for a host-side JAR |
+| `RUSTFS_PUBLIC_ENDPOINT` | `http://localhost:9000` | `https://files.example.com` — must be **https** behind Nginx or another reverse proxy. Startup fails for plain http or an internal host (`rustfs`, `localhost`). |
+| `RUSTFS_BUCKET` | `erp-files` | `erp-files` (private; no permanent public URL) |
+| `RUSTFS_REGION` | `us-east-1` | `us-east-1` |
+| `RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY` | dev defaults in `application-dev.yml` | required; empty values abort startup. Never log the secret. |
+| `PRESIGNED_IMAGE_EXPIRY_MINUTES` | `30` | `30` |
+| `PRESIGNED_DOCUMENT_EXPIRY_MINUTES` | `5` | `5` |
+
+The S3 client uses the internal endpoint for upload, delete, and head. The presigner uses the public endpoint, so the browser downloads the file directly from RustFS. Presigned URLs are created per page render and per `GET /api/upload/{id}/download-url`. They are not stored in the database.
+
+To change the image expiry from 30 minutes to 15 minutes without a code change:
+
+```bash
+export PRESIGNED_IMAGE_EXPIRY_MINUTES=15
+./mvnw spring-boot:run
+```
+
+Or edit the default in `src/main/resources/application.yml`:
+
+```yaml
+presigned:
+  url:
+    image-expiry-minutes: ${PRESIGNED_IMAGE_EXPIRY_MINUTES:15}
+```
+
+### Manual test
+
+1. Start PostgreSQL and RustFS, then the app on the host (`./scripts/run_local.sh` or `.\scripts\run_local.ps1`). That sets both RustFS endpoints to `http://localhost:9000`.
+2. Sign in and open a block that has a photo, for example `http://localhost:8080/blocks/1` (gallery) or `http://localhost:8080/blocks/1/photos`.
+3. View page source. The photo `<img>` `src` is a `http://localhost:9000/...` URL containing `X-Amz-Expires=1800`. It is not `/api/upload/view/...` when the file already lives in RustFS.
+4. Open that `src` in the browser. The bytes come from RustFS, not from the application.
+5. Wait 31 minutes and open the same URL again. RustFS returns an expired signature (`AccessDenied` or request expired). The bucket stays private.
+6. `GET /api/upload/{id}/download-url` for a PDF returns `expiresInSeconds` `300` and `X-Amz-Expires=300`.
+
+Clock skew between the app and RustFS can make a fresh URL look expired. A page on https that embeds an http RustFS URL is mixed content and the browser will block it. A JavaScript `fetch` of the presigned URL needs CORS on RustFS; a plain `<img src>` does not.
 
 ## 5. Running Automated Tests
 

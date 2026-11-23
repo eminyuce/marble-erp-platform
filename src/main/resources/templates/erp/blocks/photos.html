@@ -67,10 +67,10 @@
                    aria-label="Önceki fotoğraf">
                     <i data-lucide="chevron-left" class="w-6 h-6"></i>
                 </a>
-                <a th:href="${currentImage.filePath}" target="_blank" rel="noopener"
+                <a th:href="${presignedImageUrl} ?: ${currentImage.filePath}" target="_blank" rel="noopener"
                    class="block w-full" title="Tam boyutta aç">
                     <img id="photo-main"
-                         th:src="${currentImage.filePath}"
+                         th:src="${presignedImageUrl} ?: ${currentImage.filePath}"
                          th:alt="${currentImage.originalName}"
                          class="w-full max-h-[70vh] object-contain select-none">
                 </a>
@@ -90,7 +90,7 @@
                    class="photo-thumb shrink-0 rounded-xl overflow-hidden border-2 w-20 h-20"
                    th:classappend="${img.id == currentImage.id} ? 'is-active border-emerald-400 ring-2 ring-emerald-400/40' : 'border-slate-200 opacity-70 hover:opacity-100'"
                    th:title="${img.originalName}">
-                    <img th:src="${img.filePath}" th:alt="${img.originalName}" class="w-full h-full object-cover">
+                    <img th:src="${img.presignedImageUrl} ?: ${img.filePath}" th:alt="${img.originalName}" class="w-full h-full object-cover">
                 </a>
             </div>
         </section>

@@ -238,6 +238,75 @@ wait_for_app_health() {
     docker logs --tail 30 marble-erp 2>&1 || true
     return 1
 }
+istanbul_now() {
+    TZ=Europe/Istanbul date '+%Y-%m-%d %H:%M:%S %Z' 2>/dev/null || date -u '+%Y-%m-%dT%H:%M:%SZ'
+}
+json_field() {
+    printf '%s' "\$1" | sed -n "s/.*\"\$2\":\"\\([^\"]*\\)\".*/\\1/p" | head -n 1
+}
+print_actuator_lines() {
+    info="\$1"
+    if [ -z "\$info" ]; then
+        echo "actuator/info okunamadı. Sürüm, imaj etiketinden okunur."
+        return
+    fi
+    echo "Uygulama: \$(json_field "\$info" appName) \$(json_field "\$info" appVersion) (pom.xml)"
+    echo "Derleme zamanı: \$(json_field "\$info" buildTime)"
+    echo "Git commit: \$(json_field "\$info" gitCommit)"
+    echo "Git dalı: \$(json_field "\$info" gitBranch)"
+    echo "Spring Boot: \$(json_field "\$info" springBootVersion)"
+    echo "Spring Framework: \$(json_field "\$info" springFrameworkVersion)"
+    echo "Java: \$(json_field "\$info" javaVersion)"
+    echo "Aktif profil: \$(json_field "\$info" activeProfiles)"
+    echo "Depolama: \$(json_field "\$info" storageType) / kova \$(json_field "\$info" bucket)"
+    echo "Oturum deposu: \$(json_field "\$info" sessionStore)"
+    echo "İmaj (yapılandırma): \$(json_field "\$info" image)"
+}
+print_release_header() {
+    echo "========== Yayın öncesi — teknik özet =========="
+    echo "Uygulama: Özerler Mermer ERP"
+    echo "Çekilecek imaj: \$APP_IMAGE"
+    echo "Başlangıç (Europe/Istanbul): \$(istanbul_now)"
+    echo "Çalışan imaj sürümü: \${prev_ver:-okunamadı}"
+    echo "Çalışan imaj kimliği: \${prev_id:-yok}"
+    echo "Çalışan imaj özeti: \${prev_digest:-yok}"
+    echo "Çalışan git revizyonu: \${prev_rev:-yok}"
+    info=\$(docker exec marble-erp curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)
+    print_actuator_lines "\$info"
+    pgver=\$(docker exec -u postgres marble-erp-postgres psql -d marble_erp -tAc 'SELECT version();' 2>/dev/null || true)
+    flyway=\$(docker exec -u postgres marble-erp-postgres psql -d marble_erp -tAc 'SELECT version FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 1;' 2>/dev/null || true)
+    echo "PostgreSQL: \${pgver:-okunamadı}"
+    echo "Flyway şema sürümü: \${flyway:-okunamadı}"
+    java_ver=\$(docker exec marble-erp java -version 2>&1 | head -n 1 || true)
+    echo "Java: \${java_ver:-okunamadı}"
+    echo "Parolalar, anahtarlar ve imzalı dosya adresleri yazılmaz."
+    echo "==============================================="
+}
+print_release_summary() {
+    echo "========== Yayın sonrası — teknik özet =========="
+    echo "Bitiş (Europe/Istanbul): \$(istanbul_now)"
+    new_id=\$(docker inspect -f '{{.Image}}' marble-erp 2>/dev/null || true)
+    new_digest=\$(docker image inspect -f '{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}' "\$new_id" 2>/dev/null || true)
+    new_ver=\$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.version"}}' "\$new_id" 2>/dev/null || true)
+    new_rev=\$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "\$new_id" 2>/dev/null || true)
+    echo "Yeni imaj: \$APP_IMAGE"
+    echo "Yeni imaj sürümü (pom.xml etiketi): \${new_ver:-okunamadı}"
+    echo "Yeni imaj kimliği: \${new_id:-okunamadı}"
+    echo "Yeni imaj özeti: \${new_digest:-okunamadı}"
+    echo "Yeni git revizyonu: \${new_rev:-okunamadı}"
+    echo "Önceki imaj kimliği: \${prev_id:-yok}"
+    info=\$(docker exec marble-erp curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)
+    echo "Yeni konteyner:"
+    print_actuator_lines "\$info"
+    echo "Önceki imaj özeti: \${prev_digest:-yok}"
+    echo "Yeni imaj özeti yukarıda; etiket sürümü \${new_ver:-okunamadı}."
+    if [ "\$code" -eq 0 ]; then
+        echo "SONUÇ: BAŞARILI — yeni imaj yayında."
+    else
+        echo "SONUÇ: BAŞARISIZ — yayın tamamlanamadı. Ayrıntı yukarıdaki satırlardadır."
+    fi
+    echo "==============================================="
+}
 write_status RUNNING ""
 code=0
 STACK='${host_stack}'
@@ -250,6 +319,7 @@ STACK='${host_stack}'
     if [ -n "\$prev_id" ] && [ "\$prev_health" = "healthy" ]; then
         prev_digest=\$(docker image inspect -f '{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}' "\$prev_id" 2>/dev/null || true)
         prev_rev=\$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "\$prev_id" 2>/dev/null || true)
+        prev_ver=\$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.version"}}' "\$prev_id" 2>/dev/null || true)
         docker tag "\$prev_id" "\${IMAGE_REPO}:rollback-previous" 2>/dev/null || true
         cat > "\$LAST_GOOD" <<GOOD_EOF
 PREV_IMAGE_REF=\$APP_IMAGE
@@ -261,6 +331,7 @@ GOOD_EOF
         chown 1001:1001 "\$LAST_GOOD" 2>/dev/null || true
         echo "[INFO] Önceki sağlıklı imaj rollback için kaydedildi (\$prev_id)."
     fi
+    print_release_header
     echo "\$ docker pull \$APP_IMAGE"
     docker pull "\$APP_IMAGE" || code=1
     if [ "\$code" -eq 0 ]; then
@@ -309,6 +380,7 @@ GOOD_EOF
             fi
         fi
     fi
+    print_release_summary
 } >> "\$LOG" 2>&1
 if [ "\$code" -eq 0 ]; then
     write_status SUCCESS 0
@@ -379,12 +451,48 @@ if ! command -v docker >/dev/null 2>&1; then
     exit 1
 fi
 
+istanbul_now() {
+    TZ=Europe/Istanbul date '+%Y-%m-%d %H:%M:%S %Z' 2>/dev/null || date -u '+%Y-%m-%dT%H:%M:%SZ'
+}
+
+json_field() {
+    printf '%s' "$1" | sed -n "s/.*\"$2\":\"\([^\"]*\)\".*/\1/p" | head -n 1
+}
+
+print_actuator_lines() {
+    info="$1"
+    if [ -z "$info" ]; then
+        echo "actuator/info okunamadı. Sürüm, imaj etiketinden okunur."
+        return
+    fi
+    echo "Uygulama: $(json_field "$info" appName) $(json_field "$info" appVersion) (pom.xml)"
+    echo "Derleme zamanı: $(json_field "$info" buildTime)"
+    echo "Git commit: $(json_field "$info" gitCommit)"
+    echo "Git dalı: $(json_field "$info" gitBranch)"
+    echo "Spring Boot: $(json_field "$info" springBootVersion)"
+    echo "Spring Framework: $(json_field "$info" springFrameworkVersion)"
+    echo "Java: $(json_field "$info" javaVersion)"
+    echo "Aktif profil: $(json_field "$info" activeProfiles)"
+    echo "Depolama: $(json_field "$info" storageType) / kova $(json_field "$info" bucket)"
+    echo "Oturum deposu: $(json_field "$info" sessionStore)"
+    echo "İmaj (yapılandırma): $(json_field "$info" image)"
+}
+
 echo "======================================================================"
 echo "   Özerler Mermer ERP — Docker Hub yayını"
-echo "======================================================================"
-echo "Started:  $STARTED_AT"
+echo "========== Yayın öncesi — teknik özet =========="
+echo "Uygulama: Özerler Mermer ERP"
+echo "Sürüm kaynağı: pom.xml (imaj etiketi org.opencontainers.image.version)"
+echo "Başlangıç (Europe/Istanbul): $(istanbul_now)"
 echo "Compose:  $(compose_file)"
-echo "Log:      $LOG_FILE"
+echo "İmaj:     ${DOCKERHUB_USERNAME:-guvenulu}/marble-erp-platform:${APP_TAG:-latest}"
+echo "Depolama: ${STORAGE_TYPE:-rustfs} / kova ${RUSTFS_BUCKET:-erp-files}"
+echo "Oturum deposu: JDBC (Spring Session)"
+echo "Aktif profil: ${SPRING_PROFILES_ACTIVE:-prod}"
+echo "Parolalar, anahtarlar ve imzalı dosya adresleri yazılmaz."
+before="$(docker exec marble-erp curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)"
+print_actuator_lines "$before"
+echo "======================================================================"
 echo
 
 cd "$REPO_ROOT"
@@ -409,4 +517,15 @@ if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet marble-er
 fi
 
 echo
+echo "========== Yayın sonrası — teknik özet =========="
+echo "Bitiş (Europe/Istanbul): $(istanbul_now)"
+new_id="$(docker inspect -f '{{.Image}}' marble-erp 2>/dev/null || true)"
+new_ver="$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.version"}}' "$new_id" 2>/dev/null || true)"
+new_rev="$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$new_id" 2>/dev/null || true)"
+echo "Yeni imaj sürümü (pom.xml etiketi): ${new_ver:-okunamadı}"
+echo "Yeni git revizyonu: ${new_rev:-okunamadı}"
+info="$(docker exec marble-erp curl -fsS http://127.0.0.1:81/actuator/info 2>/dev/null || true)"
+echo "Yeni konteyner:"
+print_actuator_lines "$info"
+echo "SONUÇ: BAŞARILI — yeni imaj yayında."
 echo "[OK] Docker Hub imajı çekildi ve yığın yenilendi."

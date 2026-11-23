@@ -91,12 +91,14 @@ Override a placeholder by exporting the variable before startup. Do not commit p
 | `DB_NAME` | Database name | `marble_erp` |
 | `DB_USERNAME` | Database username | `marbleuser` |
 | `DB_PASSWORD` | Database password | `marblepass` (change this in production) |
-| `RUSTFS_ENDPOINT` | RustFS S3 API used by Spring Boot | `http://localhost:9000` (IDE) / `http://rustfs:9000` (Compose app) |
-| `RUSTFS_PUBLIC_ENDPOINT` | Browser-facing endpoint for presigned URLs | `http://localhost:9000` |
-| `RUSTFS_ACCESS_KEY` | RustFS access key | `marblerustfs` in dev; empty in the shared file |
-| `RUSTFS_SECRET_KEY` | RustFS secret key | `marblerustfs_change_me` in dev; empty in the shared file |
+| `RUSTFS_ENDPOINT` | Internal S3 API used by Spring Boot | `http://localhost:9000` when unset (host JVM). Compose sets `http://rustfs:9000` |
+| `RUSTFS_PUBLIC_ENDPOINT` | Browser host written into presigned URLs | `http://localhost:9000` in dev. Prod must be `https://` on a public host (Nginx); `https://files.example.com` is the prod default |
+| `RUSTFS_ACCESS_KEY` | RustFS access key | `marblerustfs` in dev; empty in the shared file (prod startup fails if empty) |
+| `RUSTFS_SECRET_KEY` | RustFS secret key | `marblerustfs_change_me` in dev; empty in the shared file. Never log it |
 | `RUSTFS_BUCKET` | Private bucket name | `erp-files` |
 | `RUSTFS_REGION` | S3 region string | `us-east-1` |
+| `PRESIGNED_IMAGE_EXPIRY_MINUTES` | Image presigned URL lifetime | `30` |
+| `PRESIGNED_DOCUMENT_EXPIRY_MINUTES` | Document presigned URL lifetime | `5` |
 | `APP_MEDIA_DIR` | Legacy local media dir (migration only) | `media` |
 | `APP_UPLOAD_DIR` | Legacy local upload dir (migration only) | `media` |
 | `SESSION_COOKIE_SECURE` | Optional cookie override | `false` in dev/local, `true` in prod |
@@ -132,7 +134,7 @@ Override a placeholder by exporting the variable before startup. Do not commit p
    ```
    *Access the web application at `http://localhost:81` (or `http://localhost:8080` with the local run scripts).*
 
-The `dev` profile talks to RustFS on `localhost:9000`. When the Spring Boot `app` container runs inside Compose, set `RUSTFS_ENDPOINT=http://rustfs:9000`.
+With `RUSTFS_ENDPOINT` unset, the dev profile uses `http://localhost:9000`, which matches `./mvnw spring-boot:run` beside the published RustFS port. `docker/docker-compose.yml` sets `RUSTFS_ENDPOINT=http://rustfs:9000` and `RUSTFS_PUBLIC_ENDPOINT=http://localhost:9000` for the app container.
 
 Full object-storage, backup, and filesystem-migration notes: [docs/storage.md](docs/storage.md).
 

@@ -1,6 +1,7 @@
 package com.ozerler.marble.storage;
 
 import com.ozerler.marble.config.ObjectStorageProperties;
+import com.ozerler.marble.config.PresignedUrlProperties;
 import com.ozerler.marble.dto.DependencyHealth;
 import com.ozerler.marble.exception.StorageException;
 import com.ozerler.marble.exception.StoredFileNotFoundException;
@@ -31,6 +32,7 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Slf4j
@@ -44,6 +46,7 @@ public class S3ObjectStorageService implements ObjectStorageService {
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final ObjectStorageProperties storageProperties;
+    private final PresignedUrlProperties presignedUrlProperties;
 
     @PostConstruct
     public void initialize() {
@@ -142,21 +145,73 @@ public class S3ObjectStorageService implements ObjectStorageService {
 
     @Override
     public String createPresignedUrl(String objectKey, Duration expiration) {
+        return presignedUrl(objectKey, expiration);
+    }
+
+    @Override
+    public String presignedImageUrl(String objectKey) {
+        return presignedUrl(objectKey, presignedUrlProperties.imageExpiry(), contentTypeForImageKey(objectKey));
+    }
+
+    @Override
+    public String presignedDocumentUrl(String objectKey) {
+        return presignedUrl(objectKey, presignedUrlProperties.documentExpiry(), null);
+    }
+
+    /**
+     * Signs a GET against the public-endpoint presigner. The signature query is
+     * the secret: this method logs the object key only, never the URL.
+     */
+    private String presignedUrl(String objectKey, Duration expiration) {
+        return presignedUrl(objectKey, expiration, null);
+    }
+
+    private String presignedUrl(String objectKey, Duration expiration, String responseContentType) {
         validateObjectKey(objectKey);
         Duration ttl = expiration != null ? expiration : storageProperties.getPresignedUrlExpiry();
         try {
+            GetObjectRequest.Builder getObject = GetObjectRequest.builder()
+                    .bucket(getBucketName())
+                    .key(objectKey);
+            if (responseContentType != null && !responseContentType.isBlank()) {
+                getObject.responseContentType(responseContentType);
+            }
             GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
                     .signatureDuration(ttl)
-                    .getObjectRequest(GetObjectRequest.builder()
-                            .bucket(getBucketName())
-                            .key(objectKey)
-                            .build())
+                    .getObjectRequest(getObject.build())
                     .build();
             return s3Presigner.presignGetObject(presignRequest).url().toString();
         } catch (S3Exception e) {
             log.error("Presigned URL generation failed objectKey={}", objectKey, e);
             throw new StorageException("Unable to create a download link", e);
         }
+    }
+
+    /**
+     * Images get a response content type when the key extension identifies one.
+     * Unknown extensions omit the override and keep the stored object metadata.
+     */
+    static String contentTypeForImageKey(String objectKey) {
+        String lower = objectKey.toLowerCase(Locale.ROOT);
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        if (lower.endsWith(".png")) {
+            return "image/png";
+        }
+        if (lower.endsWith(".gif")) {
+            return "image/gif";
+        }
+        if (lower.endsWith(".webp")) {
+            return "image/webp";
+        }
+        if (lower.endsWith(".bmp")) {
+            return "image/bmp";
+        }
+        if (lower.endsWith(".svg")) {
+            return "image/svg+xml";
+        }
+        return null;
     }
 
     @Override

@@ -93,7 +93,7 @@ APP_UPLOAD_DIR=/opt/marble-erp/uploads
 APP_MEDIA_DIR=/opt/marble-erp/media
 STORAGE_TYPE=rustfs
 RUSTFS_ENDPOINT=http://127.0.0.1:9000
-RUSTFS_PUBLIC_ENDPOINT=http://127.0.0.1:9000
+RUSTFS_PUBLIC_ENDPOINT=https://files.example.com
 RUSTFS_BUCKET=erp-files
 RUSTFS_DATA_DIR=/opt/rustfs/data
 

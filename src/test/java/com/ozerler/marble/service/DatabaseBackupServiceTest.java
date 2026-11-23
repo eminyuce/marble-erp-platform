@@ -17,7 +17,6 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -80,9 +79,13 @@ class DatabaseBackupServiceTest {
     @DisplayName("PostgreSQL backup is not uploaded when it would only list table names")
     void createBackupAsync_doesNotUploadCommentShellForPostgres() throws Exception {
         properties.getDatabase().setPgDumpPath("pg_dump-not-installed");
-        setField("datasourceUrl", "jdbc:postgresql://postgres:5432/marble_erp");
-        setField("datasourceUsername", "marbleuser");
-        setField("datasourcePassword", "secret");
+        backupService = new DatabaseBackupService(
+                storageService,
+                properties,
+                internalDockerAccess(),
+                "jdbc:postgresql://postgres:5432/marble_erp",
+                "marbleuser",
+                "secret");
 
         assertThatThrownBy(() -> backupService.createBackupAsync().get())
                 .cause()
@@ -310,12 +313,6 @@ class DatabaseBackupServiceTest {
         storageProperties.getRustfs().setPublicEndpoint(publicEndpoint);
         storageProperties.getRustfs().setBucket("erp-files");
         return new RustFsBrowserAccess(storageProperties, probe);
-    }
-
-    private void setField(String name, String value) throws Exception {
-        Field field = DatabaseBackupService.class.getDeclaredField(name);
-        field.setAccessible(true);
-        field.set(backupService, value);
     }
 
     private static InputStream brokenPipe() {

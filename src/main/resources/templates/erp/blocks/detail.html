@@ -298,7 +298,7 @@
                 <div th:each="img : ${imageFiles}" class="group relative rounded-xl border border-slate-200 overflow-hidden bg-slate-100 shadow-2xs">
                     <a th:href="@{'/blocks/' + ${block.id} + '/photos/' + ${img.id}}"
                        class="block w-full aspect-square overflow-hidden relative cursor-pointer focus:outline-hidden">
-                        <img th:src="${img.filePath}" th:alt="${img.originalName}"
+                        <img th:src="${img.presignedImageUrl} ?: ${img.filePath}" th:alt="${img.originalName}"
                              class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                         <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                             <span class="p-2 rounded-full bg-white/20 backdrop-blur-xs">

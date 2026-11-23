@@ -1,4 +1,7 @@
 spring:
+  threads:
+    virtual:
+      enabled: false
   datasource:
     url: jdbc:h2:mem:marble_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
     username: sa
@@ -23,6 +26,21 @@ app:
     type: memory
     rustfs:
       endpoint: http://localhost:9000
+      public-endpoint: http://localhost:9000
       access-key: test-access-key
       secret-key: test-secret-key
       bucket: erp-files-test
+      region: us-east-1
+
+rustfs:
+  endpoint: http://localhost:9000
+  public-endpoint: http://localhost:9000
+  access-key: test-access-key
+  secret-key: test-secret-key
+  bucket: erp-files-test
+  region: us-east-1
+
+presigned:
+  url:
+    image-expiry-minutes: 30
+    document-expiry-minutes: 5
