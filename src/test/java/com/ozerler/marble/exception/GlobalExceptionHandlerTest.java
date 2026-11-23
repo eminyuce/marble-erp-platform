@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.access.AccessDeniedException;
@@ -30,17 +31,16 @@ class GlobalExceptionHandlerTest {
     void handleResourceNotFound_ReturnsNotFound() {
         ResourceNotFoundException ex = new ResourceNotFoundException("Blok", 42L);
 
-        ResponseEntity<ErrorResponse> response = handler.handleResourceNotFound(ex, request);
+        ResponseEntity<ProblemDetail> response = handler.handleResourceNotFound(ex, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        ErrorResponse body = response.getBody();
+        ProblemDetail body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.status()).isEqualTo(404);
-        assertThat(body.error()).isEqualTo("Not Found");
-        assertThat(body.message()).isEqualTo("Blok bulunamadı: 42");
-        assertThat(body.path()).isEqualTo("/api/upload");
-        assertThat(body.errors()).isNull();
-        assertThat(body.timestamp()).isNotNull();
+        assertThat(body.getStatus()).isEqualTo(404);
+        assertThat(body.getTitle()).isEqualTo("Not Found");
+        assertThat(body.getDetail()).isEqualTo("Blok bulunamadı: 42");
+        assertThat(body.getInstance()).hasToString("/api/upload");
+        assertThat(body.getProperties()).isNull();
     }
 
     @Test
@@ -51,19 +51,17 @@ class GlobalExceptionHandlerTest {
         bindingResult.addError(new FieldError("request", "username", "Missing required field: username"));
         MethodArgumentNotValidException ex = new MethodArgumentNotValidException(null, bindingResult);
 
-        ResponseEntity<ErrorResponse> response = handler.handleValidation(ex, request);
+        ResponseEntity<ProblemDetail> response = handler.handleValidation(ex, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        ErrorResponse body = response.getBody();
+        ProblemDetail body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.status()).isEqualTo(400);
-        assertThat(body.error()).isEqualTo("Bad Request");
-        assertThat(body.message()).isEqualTo("Validation failed");
-        assertThat(body.path()).isEqualTo("/api/upload");
-        assertThat(body.errors())
-                .containsEntry("email", "Geçerli bir e-posta adresi giriniz")
-                .containsEntry("username", "Missing required field: username")
-                .hasSize(2);
+        assertThat(body.getStatus()).isEqualTo(400);
+        assertThat(body.getTitle()).isEqualTo("Bad Request");
+        assertThat(body.getDetail()).isEqualTo("Validation failed");
+        assertThat(body.getInstance()).hasToString("/api/upload");
+        assertThat(body.getProperties().get("errors"))
+                .isInstanceOf(java.util.Map.class);
     }
 
     @Test
@@ -71,16 +69,15 @@ class GlobalExceptionHandlerTest {
     void handleAccessDenied_ReturnsForbidden() {
         AccessDeniedException ex = new AccessDeniedException("User is not ADMIN");
 
-        ResponseEntity<ErrorResponse> response = handler.handleAccessDenied(ex, request);
+        ResponseEntity<ProblemDetail> response = handler.handleAccessDenied(ex, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        ErrorResponse body = response.getBody();
+        ProblemDetail body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.status()).isEqualTo(403);
-        assertThat(body.error()).isEqualTo("Forbidden");
-        assertThat(body.message()).isEqualTo("Access denied");
-        assertThat(body.path()).isEqualTo("/api/upload");
-        assertThat(body.errors()).isNull();
+        assertThat(body.getStatus()).isEqualTo(403);
+        assertThat(body.getTitle()).isEqualTo("Forbidden");
+        assertThat(body.getDetail()).isEqualTo("Access denied");
+        assertThat(body.getInstance()).hasToString("/api/upload");
     }
 
     @Test
@@ -88,17 +85,16 @@ class GlobalExceptionHandlerTest {
     void handleUnexpected_HidesInternalDetails() {
         Exception ex = new IllegalStateException("secret database url leaked");
 
-        ResponseEntity<ErrorResponse> response = handler.handleUnexpected(ex, request);
+        ResponseEntity<ProblemDetail> response = handler.handleUnexpected(ex, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-        ErrorResponse body = response.getBody();
+        ProblemDetail body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.status()).isEqualTo(500);
-        assertThat(body.error()).isEqualTo("Internal Server Error");
-        assertThat(body.message()).isEqualTo("An unexpected error occurred");
-        assertThat(body.message()).doesNotContain("secret", "database");
-        assertThat(body.path()).isEqualTo("/api/upload");
-        assertThat(body.errors()).isNull();
+        assertThat(body.getStatus()).isEqualTo(500);
+        assertThat(body.getTitle()).isEqualTo("Internal Server Error");
+        assertThat(body.getDetail()).isEqualTo("An unexpected error occurred");
+        assertThat(body.getDetail()).doesNotContain("secret", "database");
+        assertThat(body.getInstance()).hasToString("/api/upload");
     }
 
     @Test

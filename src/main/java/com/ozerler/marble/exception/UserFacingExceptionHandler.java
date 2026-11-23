@@ -9,6 +9,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -45,8 +46,11 @@ public class UserFacingExceptionHandler {
                 : List.of();
         log.warn("Rejected request on {}: {}", request.getRequestURI(), message);
         if (writesJson(handlerMethod, request)) {
-            return ResponseEntity.badRequest()
-                    .body(ErrorResponse.of(HttpStatus.BAD_REQUEST, message, request.getRequestURI(), fieldErrors(invalidFields, message)));
+            ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, message);
+            problem.setTitle(HttpStatus.BAD_REQUEST.getReasonPhrase());
+            problem.setInstance(URI.create(request.getRequestURI()));
+            problem.setProperty("errors", fieldErrors(invalidFields, message));
+            return ResponseEntity.badRequest().body(problem);
         }
         String target = returnPath(request);
         if (target != null) {

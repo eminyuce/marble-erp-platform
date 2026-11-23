@@ -79,10 +79,10 @@ class UserFacingExceptionHandlerTest {
         assertThat(body).isInstanceOf(ResponseEntity.class);
         ResponseEntity<?> entity = (ResponseEntity<?>) body;
         assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(entity.getBody()).isInstanceOf(ErrorResponse.class);
-        ErrorResponse error = (ErrorResponse) entity.getBody();
-        assertThat(error.message()).isEqualTo("Blok kesim için hazır değil");
-        assertThat(error.path()).isEqualTo("/production/polish");
+        assertThat(entity.getBody()).isInstanceOf(org.springframework.http.ProblemDetail.class);
+        org.springframework.http.ProblemDetail error = (org.springframework.http.ProblemDetail) entity.getBody();
+        assertThat(error.getDetail()).isEqualTo("Blok kesim için hazır değil");
+        assertThat(error.getInstance()).hasToString("/production/polish");
     }
 
     @Test
