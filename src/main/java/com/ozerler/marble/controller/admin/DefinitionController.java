@@ -1,5 +1,7 @@
 package com.ozerler.marble.controller.admin;
 
+import java.util.Arrays;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -96,7 +98,7 @@ public class DefinitionController extends AbstractController {
                                @RequestParam(value = "unit", required = false) BusinessUnit unit,
                                Model model) {
         model.addAttribute("businessUnits", BusinessUnit.values());
-        model.addAttribute("machineTypes", java.util.Arrays.stream(MachineType.values()).filter(t -> !t.isElectric()).toList());
+        model.addAttribute("machineTypes", Arrays.stream(MachineType.values()).filter(t -> !t.isElectric()).toList());
         model.addAttribute("currentSection", "definitions-machines");
         model.addAttribute("grid", MachineGrid.view(
                 masterDataService.getMachinesPaged(query.pageNo(), query.pageSize(), query.getSearch(), unit,
@@ -575,7 +577,7 @@ public class DefinitionController extends AbstractController {
         model.addAttribute("machine", machine);
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("businessUnits", BusinessUnit.values());
-        model.addAttribute("machineTypes", java.util.Arrays.stream(MachineType.values()).filter(t -> !t.isElectric()).toList());
+        model.addAttribute("machineTypes", Arrays.stream(MachineType.values()).filter(t -> !t.isElectric()).toList());
         model.addAttribute("currentSection", "definitions-machines");
     }
 

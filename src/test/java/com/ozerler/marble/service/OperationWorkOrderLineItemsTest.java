@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.ozerler.marble.mapper.WorkOrderMapperImpl;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.OperationWorkOrder;
 import com.ozerler.marble.model.OperationWorkOrderItem;
@@ -56,7 +57,7 @@ class OperationWorkOrderLineItemsTest {
     void setUp() {
         workOrderService = new OperationWorkOrderService(
                 workOrderRepository,
-                new com.ozerler.marble.mapper.WorkOrderMapperImpl(),
+                new WorkOrderMapperImpl(),
                 historyRepository,
                 customerRepository,
                 stockItemRepository,

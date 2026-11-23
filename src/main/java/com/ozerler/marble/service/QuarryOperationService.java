@@ -2,7 +2,9 @@ package com.ozerler.marble.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.data.domain.Page;
@@ -11,6 +13,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.BlockView;
+import com.ozerler.marble.dto.view.QuarryRef;
+import com.ozerler.marble.mapper.BlockMapper;
+import com.ozerler.marble.mapper.QuarryMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.Invoice;
@@ -38,8 +45,8 @@ public class QuarryOperationService {
 
     private final BlockRepository blockRepository;
     private final BlockViews blockViews;
-    private final com.ozerler.marble.mapper.QuarryMapper quarryMapper;
-    private final com.ozerler.marble.mapper.BlockMapper blockMapper;
+    private final QuarryMapper quarryMapper;
+    private final BlockMapper blockMapper;
     private final QuarryRepository quarryRepository;
     private final StockLocationRepository stockLocationRepository;
     private final CustomerRepository customerRepository;
@@ -239,7 +246,7 @@ public class QuarryOperationService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.BlockView createQuarryBlockView(Long quarryId, String blockCode, LocalDate extractionDate,
+    public BlockView createQuarryBlockView(Long quarryId, String blockCode, LocalDate extractionDate,
                                    int widthCm, int lengthCm, int heightCm,
                                    BigDecimal estimatedTonnage, BigDecimal actualTonnage,
                                    String stoneType, String colorTone, QualityGrade qualityGrade,
@@ -255,7 +262,7 @@ public class QuarryOperationService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.BlockView updateActualTonnageView(Long blockId, BigDecimal actualTonnage) {
+    public BlockView updateActualTonnageView(Long blockId, BigDecimal actualTonnage) {
         return blockMapper.toDto(updateActualTonnage(blockId, actualTonnage));
     }
 
@@ -270,7 +277,7 @@ public class QuarryOperationService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.BlockView dispatchBlockView(Long blockId, TargetDestination targetDestination, Long customerId, Long invoiceId, String notes) {
+    public BlockView dispatchBlockView(Long blockId, TargetDestination targetDestination, Long customerId, Long invoiceId, String notes) {
         return blockMapper.toDto(dispatchBlock(blockId, targetDestination, customerId, invoiceId, notes));
     }
 
@@ -280,12 +287,12 @@ public class QuarryOperationService {
      * @return grid rows
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.TabulatorResponse<java.util.Map<String, Object>> quarryBlockRows(String search, BlockStatus status, int page, int size) {
+    public TabulatorResponse<Map<String, Object>> quarryBlockRows(String search, BlockStatus status, int page, int size) {
         int pageIndex = Math.max(0, page - 1);
         Page<Block> blockPage = searchQuarryBlocks(search, status, pageIndex, size);
 
-        List<java.util.Map<String, Object>> data = blockPage.getContent().stream().map(b -> {
-            java.util.Map<String, Object> map = new java.util.HashMap<>();
+        List<Map<String, Object>> data = blockPage.getContent().stream().map(b -> {
+            Map<String, Object> map = new HashMap<>();
             map.put("id", b.getId());
             map.put("blockCode", b.getBlockCode());
             Object name;
@@ -326,7 +333,7 @@ public class QuarryOperationService {
             return map;
         }).toList();
 
-        return com.ozerler.marble.dto.TabulatorResponse.of(data, blockPage.getTotalPages(), blockPage.getTotalElements());
+        return TabulatorResponse.of(data, blockPage.getTotalPages(), blockPage.getTotalElements());
     }
 
     /**
@@ -335,7 +342,7 @@ public class QuarryOperationService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.QuarryRef> getAllQuarryViews() {
+    public List<QuarryRef> getAllQuarryViews() {
         return getAllQuarries().stream().map(quarryMapper::toDto).toList();
     }
 
@@ -349,7 +356,7 @@ public class QuarryOperationService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.view.BlockView> searchQuarryBlockViews(String search, BlockStatus status, int page, int size) {
+    public Page<BlockView> searchQuarryBlockViews(String search, BlockStatus status, int page, int size) {
         return searchQuarryBlocks(search, status, page, size).map(blockViews::toView);
     }
 }

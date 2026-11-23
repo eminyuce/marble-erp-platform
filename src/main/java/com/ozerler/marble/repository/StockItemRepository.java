@@ -13,6 +13,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.QuarryCategory;
+import com.ozerler.marble.model.enums.StockLocationType;
 import com.ozerler.marble.model.enums.StockProductType;
 
 @Repository
@@ -35,19 +38,19 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     List<StockItem> findByCustomerIdAndStatus(Long customerId, String status);
 
-    List<StockItem> findByStockLocationLocationTypeAndStatus(com.ozerler.marble.model.enums.StockLocationType locationType, String status);
+    List<StockItem> findByStockLocationLocationTypeAndStatus(StockLocationType locationType, String status);
 
-    List<StockItem> findByStockLocationBusinessUnitAndStatus(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String status);
+    List<StockItem> findByStockLocationBusinessUnitAndStatus(BusinessUnit businessUnit, String status);
 
-    List<StockItem> findByQuarryCategoryAndStatus(com.ozerler.marble.model.enums.QuarryCategory quarryCategory, String status);
+    List<StockItem> findByQuarryCategoryAndStatus(QuarryCategory quarryCategory, String status);
 
-    boolean existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String description);
+    boolean existsByStockLocationBusinessUnitAndDescriptionIgnoreCase(BusinessUnit businessUnit, String description);
 
     boolean existsByDescriptionIgnoreCase(String description);
 
-    Optional<StockItem> findByStockLocationBusinessUnitAndDescriptionIgnoreCase(com.ozerler.marble.model.enums.BusinessUnit businessUnit, String description);
+    Optional<StockItem> findByStockLocationBusinessUnitAndDescriptionIgnoreCase(BusinessUnit businessUnit, String description);
 
-    Optional<StockItem> findFirstByStockLocationLocationTypeAndProductType(com.ozerler.marble.model.enums.StockLocationType locationType, StockProductType productType);
+    Optional<StockItem> findFirstByStockLocationLocationTypeAndProductType(StockLocationType locationType, StockProductType productType);
 
     List<StockItem> findByProjectId(Long projectId);
 

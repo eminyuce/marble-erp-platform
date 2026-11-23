@@ -1,6 +1,7 @@
 package com.ozerler.marble.util;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
 import org.assertj.core.api.Assertions;
@@ -110,7 +111,7 @@ class ExportFilenamesTest {
         String timestamp = filename.substring("bloklar_".length(), filename.length() - ".csv".length());
         LocalDateTime parsed = LocalDateTime.parse(
                 timestamp,
-                java.time.format.DateTimeFormatter.ofPattern(Constants.DATE_TIME_FORMAT_EXPORT_FILENAME));
+                DateTimeFormatter.ofPattern(Constants.DATE_TIME_FORMAT_EXPORT_FILENAME));
         Assertions.assertThat(parsed).isBetween(LocalDateTime.now().minusSeconds(2), LocalDateTime.now().plusSeconds(2));
     }
 }

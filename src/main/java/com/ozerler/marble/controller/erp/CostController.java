@@ -1,11 +1,13 @@
 package com.ozerler.marble.controller.erp;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -24,6 +26,7 @@ import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.service.CostAccountingService;
 import com.ozerler.marble.service.CostAnalysisService;
 import com.ozerler.marble.service.ExpenseService;
+import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.service.PricingService;
 
 import lombok.RequiredArgsConstructor;
@@ -33,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CostController {
 
-    private final com.ozerler.marble.service.FormLookupService formLookup;
+    private final FormLookupService formLookup;
 
     private final CostAccountingService costAccountingService;
     private final CostAnalysisService costAnalysisService;
@@ -67,7 +70,7 @@ public class CostController {
         model.addAttribute("projects", formLookup.projects());
         model.addAttribute("totalExpenses", costAccountingService.getTotalExpenses());
 
-        BigDecimal totalPeriodExpense = java.util.stream.Stream.of(
+        BigDecimal totalPeriodExpense = Stream.of(
                         quarry.getTotalExpense(), factory.getTotalExpense(),
                         workshop.getTotalExpense(), site.getTotalExpense())
                 .filter(Objects::nonNull)
@@ -109,7 +112,7 @@ public class CostController {
 
         BigDecimal totalSiteMarginPct;
         if (totalSiteRevenue != null && totalSiteRevenue.compareTo(BigDecimal.ZERO) > 0 && totalSiteNet != null) {
-            totalSiteMarginPct = totalSiteNet.multiply(BigDecimal.valueOf(100)).divide(totalSiteRevenue, 1, java.math.RoundingMode.HALF_UP);
+            totalSiteMarginPct = totalSiteNet.multiply(BigDecimal.valueOf(100)).divide(totalSiteRevenue, 1, RoundingMode.HALF_UP);
         } else {
             totalSiteMarginPct = null;
         }

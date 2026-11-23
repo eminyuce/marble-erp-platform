@@ -1,6 +1,7 @@
 package com.ozerler.marble.dto;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 
@@ -33,14 +34,14 @@ public class CostAnalysisDto {
         if (amount == null || productionQuantity == null || productionQuantity.compareTo(BigDecimal.ZERO) <= 0) {
             return null;
         }
-        return amount.divide(productionQuantity, 2, java.math.RoundingMode.HALF_UP);
+        return amount.divide(productionQuantity, 2, RoundingMode.HALF_UP);
     }
 
     public BigDecimal calculateCategorySharePct(BigDecimal amount) {
         if (amount == null || totalExpense == null || totalExpense.compareTo(BigDecimal.ZERO) <= 0) {
             return BigDecimal.ZERO;
         }
-        return amount.multiply(BigDecimal.valueOf(100)).divide(totalExpense, 1, java.math.RoundingMode.HALF_UP);
+        return amount.multiply(BigDecimal.valueOf(100)).divide(totalExpense, 1, RoundingMode.HALF_UP);
     }
 
     @Value

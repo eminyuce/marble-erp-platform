@@ -5,6 +5,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import com.ozerler.marble.config.ObjectStorageProperties;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FileStorageMigrationRunner implements ApplicationRunner {
 
     private final FileStorageMigrationService fileStorageMigrationService;
-    private final com.ozerler.marble.config.ObjectStorageProperties storageProperties;
+    private final ObjectStorageProperties storageProperties;
 
     @Override
     public void run(ApplicationArguments args) {

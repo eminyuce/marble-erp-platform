@@ -1,6 +1,7 @@
 package com.ozerler.marble.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -175,7 +176,7 @@ public class Block extends AuditableEntity {
             if (this.actualTonnage != null && this.actualTonnage.compareTo(BigDecimal.ZERO) > 0) {
                 this.actualWeightKg = this.actualTonnage.multiply(BigDecimal.valueOf(1000));
             } else if (this.actualWeightKg != null && this.actualWeightKg.compareTo(BigDecimal.ZERO) > 0) {
-                this.actualTonnage = this.actualWeightKg.divide(BigDecimal.valueOf(1000), 2, java.math.RoundingMode.HALF_UP);
+                this.actualTonnage = this.actualWeightKg.divide(BigDecimal.valueOf(1000), 2, RoundingMode.HALF_UP);
             }
             this.weightDeviationPct = BlockMeasurement.weightDeviationPercent(this.actualWeightKg, this.theoreticalWeightKg);
         }

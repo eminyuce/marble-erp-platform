@@ -1,7 +1,11 @@
 package com.ozerler.marble.dto.view;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
+import com.ozerler.marble.model.enums.QuarryCategory;
+import com.ozerler.marble.model.enums.StockProductType;
 import com.ozerler.marble.model.enums.SurfaceFinish;
 
 import lombok.Getter;
@@ -21,13 +25,13 @@ public class StockItemView {
     private BigDecimal quantity;
     private BigDecimal unitPrice;
     private BigDecimal actualProducedQuantity;
-    private java.time.LocalDate productionDate;
-    private java.time.LocalDateTime createdDate;
+    private LocalDate productionDate;
+    private LocalDateTime createdDate;
     private BlockRef sourceBlock;
     private BlockView.LocationView stockLocation;
     private String notes;
-    private com.ozerler.marble.model.enums.QuarryCategory quarryCategory;
-    private com.ozerler.marble.model.enums.StockProductType productType;
+    private QuarryCategory quarryCategory;
+    private StockProductType productType;
     private Boolean directExpense;
     private BigDecimal thicknessCm;
     private BigDecimal widthCm;

@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CustomerType;
 
 @Repository
@@ -34,7 +35,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             + "AND (:unit IS NULL OR c.businessUnit = :unit)")
     Page<Customer> search(@Param("search") String search,
                           @Param("type") CustomerType type,
-                          @Param("unit") com.ozerler.marble.model.enums.BusinessUnit unit,
+                          @Param("unit") BusinessUnit unit,
                           Pageable pageable);
 
     default Page<Customer> search(String search, CustomerType type, Pageable pageable) {

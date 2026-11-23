@@ -23,6 +23,7 @@ import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CariTransactionType;
 import com.ozerler.marble.model.enums.CustomerType;
 import com.ozerler.marble.service.CariTransactionService;
+import com.ozerler.marble.service.FormLookupService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CariTransactionController extends AbstractController {
 
-    private final com.ozerler.marble.service.FormLookupService formLookup;
+    private final FormLookupService formLookup;
 
     private final CariTransactionService cariTransactionService;
 

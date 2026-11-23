@@ -6,7 +6,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,6 +22,10 @@ import com.ozerler.marble.domain.FactoryProcessRouting;
 import com.ozerler.marble.domain.OperationYield;
 import com.ozerler.marble.domain.PalletCostAccumulator;
 import com.ozerler.marble.dto.FactoryWorkOrderSummaryDto;
+import com.ozerler.marble.dto.view.FactoryOperationView;
+import com.ozerler.marble.dto.view.MachineRef;
+import com.ozerler.marble.mapper.FactoryOperationMapper;
+import com.ozerler.marble.mapper.MachineMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.FactoryOperation;
 import com.ozerler.marble.model.FactoryWorkOrder;
@@ -67,8 +73,8 @@ public class FactoryProductionService {
     private static final int SEQUENCE_MODULUS = 10000;
 
     private final BlockRepository blockRepository;
-    private final com.ozerler.marble.mapper.MachineMapper machineMapper;
-    private final com.ozerler.marble.mapper.FactoryOperationMapper factoryOperationMapper;
+    private final MachineMapper machineMapper;
+    private final FactoryOperationMapper factoryOperationMapper;
     private final BlockViews blockViews;
     private final FactoryWorkOrderRepository workOrderRepository;
     private final FactoryOperationRepository operationRepository;
@@ -825,7 +831,7 @@ public class FactoryProductionService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> surfaceOperationRows() {
         return surfaceOperations().stream().map(op -> {
-            Map<String, Object> map = new java.util.HashMap<>();
+            Map<String, Object> map = new HashMap<>();
             map.put("id", op.getId());
             Object orderNo;
             if (op.getWorkOrder() != null) {
@@ -872,7 +878,7 @@ public class FactoryProductionService {
             map.put("operatorName", Objects.requireNonNullElse(op.getOperatorName(), "-"));
             Object valueValue;
             if (op.getFinishedAt() != null) {
-                valueValue = op.getFinishedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+                valueValue = op.getFinishedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
             } else {
                 valueValue = "-";
             }
@@ -907,7 +913,7 @@ public class FactoryProductionService {
      * @return the operation view
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.view.FactoryOperationView getOperationView(Long id) {
+    public FactoryOperationView getOperationView(Long id) {
         return factoryOperationMapper.toDto(getOperation(id));
     }
 
@@ -917,7 +923,7 @@ public class FactoryProductionService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.MachineRef> factoryMachineViews() {
+    public List<MachineRef> factoryMachineViews() {
         return factoryMachines().stream().map(machineMapper::toDto).toList();
     }
 
@@ -927,7 +933,7 @@ public class FactoryProductionService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.FactoryOperationView> surfaceOperationViews() {
+    public List<FactoryOperationView> surfaceOperationViews() {
         return surfaceOperations().stream().map(factoryOperationMapper::toDto).toList();
     }
 
@@ -938,9 +944,9 @@ public class FactoryProductionService {
      * @return queued operations
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.FactoryOperationView> tabletQueueViews(String operatorName) {
+    public List<FactoryOperationView> tabletQueueViews(String operatorName) {
         return tabletQueue(operatorName).stream().map(operation -> {
-            com.ozerler.marble.dto.view.FactoryOperationView view = factoryOperationMapper.toDto(operation);
+            FactoryOperationView view = factoryOperationMapper.toDto(operation);
             if (view.getWorkOrder() != null && operation.getWorkOrder().getBlock() != null) {
                 view.getWorkOrder().setBlock(blockViews.toView(operation.getWorkOrder().getBlock()));
             }

@@ -3,12 +3,24 @@ package com.ozerler.marble.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ozerler.marble.dto.MachineFuelDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.FuelPeriodSummary;
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
+import com.ozerler.marble.dto.view.MachineRef;
+import com.ozerler.marble.mapper.MachineFuelMapper;
+import com.ozerler.marble.mapper.MachineMapper;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.MachineFuelEntry;
@@ -28,8 +40,8 @@ public class MachineFuelService {
     private static final int DEFAULT_PAGE_SIZE = 25;
 
     private final MachineFuelEntryRepository fuelEntryRepository;
-    private final com.ozerler.marble.mapper.MachineMapper machineMapper;
-    private final com.ozerler.marble.mapper.MachineFuelMapper machineFuelMapper;
+    private final MachineMapper machineMapper;
+    private final MachineFuelMapper machineFuelMapper;
     private final MachineRepository machineRepository;
     private final CostCenterRepository costCenterRepository;
     private final ExpenseService expenseService;
@@ -145,7 +157,7 @@ public class MachineFuelService {
     }
 
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.TabulatorResponse<com.ozerler.marble.dto.MachineFuelDto> getFuelPaged(
+    public TabulatorResponse<MachineFuelDto> getFuelPaged(
             int page, int size, String search, String period, String unit, Long machineId, String sortField, String sortDir) {
 
         List<MachineFuelEntry> allEntries;
@@ -155,7 +167,7 @@ public class MachineFuelService {
             allEntries = listAll();
         }
 
-        java.util.stream.Stream<MachineFuelEntry> stream = allEntries.stream();
+        Stream<MachineFuelEntry> stream = allEntries.stream();
 
         if (machineId != null) {
             stream = stream.filter(e -> e.getMachine() != null && e.getMachine().getId().equals(machineId));
@@ -166,41 +178,41 @@ public class MachineFuelService {
         }
 
         if (search != null && !search.isBlank()) {
-            String s = search.trim().toLowerCase(java.util.Locale.ROOT);
+            String s = search.trim().toLowerCase(Locale.ROOT);
             stream = stream.filter(e -> {
                 String mName;
                 if (e.getMachine() != null) {
-                    mName = e.getMachine().getName().toLowerCase(java.util.Locale.ROOT);
+                    mName = e.getMachine().getName().toLowerCase(Locale.ROOT);
                 } else {
                     mName = "";
                 }
                 String mCode;
                 if (e.getMachine() != null) {
-                    mCode = e.getMachine().getCode().toLowerCase(java.util.Locale.ROOT);
+                    mCode = e.getMachine().getCode().toLowerCase(Locale.ROOT);
                 } else {
                     mCode = "";
                 }
                 String receipt;
                 if (e.getReceiptNo() != null) {
-                    receipt = e.getReceiptNo().toLowerCase(java.util.Locale.ROOT);
+                    receipt = e.getReceiptNo().toLowerCase(Locale.ROOT);
                 } else {
                     receipt = "";
                 }
                 String issued;
                 if (e.getIssuedBy() != null) {
-                    issued = e.getIssuedBy().toLowerCase(java.util.Locale.ROOT);
+                    issued = e.getIssuedBy().toLowerCase(Locale.ROOT);
                 } else {
                     issued = "";
                 }
                 String received;
                 if (e.getReceivedBy() != null) {
-                    received = e.getReceivedBy().toLowerCase(java.util.Locale.ROOT);
+                    received = e.getReceivedBy().toLowerCase(Locale.ROOT);
                 } else {
                     received = "";
                 }
                 String notes;
                 if (e.getNotes() != null) {
-                    notes = e.getNotes().toLowerCase(java.util.Locale.ROOT);
+                    notes = e.getNotes().toLowerCase(Locale.ROOT);
                 } else {
                     notes = "";
                 }
@@ -208,24 +220,24 @@ public class MachineFuelService {
             });
         }
 
-        List<com.ozerler.marble.dto.MachineFuelDto> dtos = stream
-                .map(com.ozerler.marble.dto.MachineFuelDto::fromEntity)
-                .collect(java.util.stream.Collectors.toList());
+        List<MachineFuelDto> dtos = stream
+                .map(MachineFuelDto::fromEntity)
+                .collect(Collectors.toList());
 
         // Sort
-        java.util.Comparator<com.ozerler.marble.dto.MachineFuelDto> comparator = java.util.Comparator.comparing(
+        Comparator<MachineFuelDto> comparator = Comparator.comparing(
                 dto -> dto.getEntryDate(),
-                java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())
+                Comparator.nullsLast(Comparator.reverseOrder())
         );
 
         if ("litres".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(dto -> dto.getLitres(), java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            comparator = Comparator.comparing(dto -> dto.getLitres(), Comparator.nullsLast(Comparator.naturalOrder()));
         } else if ("totalAmount".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(dto -> dto.getTotalAmount(), java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            comparator = Comparator.comparing(dto -> dto.getTotalAmount(), Comparator.nullsLast(Comparator.naturalOrder()));
         } else if ("machineName".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(dto -> dto.getMachineName(), java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+            comparator = Comparator.comparing(dto -> dto.getMachineName(), Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("workingHoursOrKm".equalsIgnoreCase(sortField)) {
-            comparator = java.util.Comparator.comparing(dto -> dto.getWorkingHoursOrKm(), java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
+            comparator = Comparator.comparing(dto -> dto.getWorkingHoursOrKm(), Comparator.nullsLast(Comparator.naturalOrder()));
         }
 
         if ("desc".equalsIgnoreCase(sortDir) && !"entryDate".equalsIgnoreCase(sortField)) {
@@ -249,18 +261,18 @@ public class MachineFuelService {
         int fromIndex = Math.min((safePage - 1) * safeSize, totalElements);
         int toIndex = Math.min(fromIndex + safeSize, totalElements);
 
-        List<com.ozerler.marble.dto.MachineFuelDto> pageData = dtos.subList(fromIndex, toIndex);
+        List<MachineFuelDto> pageData = dtos.subList(fromIndex, toIndex);
 
         BigDecimal totalLitres = dtos.stream().map(dto -> dto.getLitres()).filter(value -> value != null).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal totalAmount = dtos.stream().map(dto -> dto.getTotalAmount()).filter(value -> value != null).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
-        java.util.Map<String, Object> meta = java.util.Map.of(
+        Map<String, Object> meta = Map.of(
                 "totalLitres", totalLitres,
                 "totalAmount", totalAmount,
                 "count", totalElements
         );
 
-        return com.ozerler.marble.dto.TabulatorResponse.of(pageData, totalPages, totalElements, meta);
+        return TabulatorResponse.of(pageData, totalPages, totalElements, meta);
     }
 
     /**
@@ -278,7 +290,7 @@ public class MachineFuelService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.MachineFuelEntryView recordFuelView(Long machineId, LocalDate entryDate, BigDecimal litres,
+    public MachineFuelEntryView recordFuelView(Long machineId, LocalDate entryDate, BigDecimal litres,
                                        BigDecimal pricePerLitre, BigDecimal workingHoursOrKm, String receiptNo,
                                        String issuedBy, String receivedBy, String notes) {
         return machineFuelMapper.toDto(recordFuel(machineId, entryDate, litres, pricePerLitre, workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes));
@@ -291,7 +303,7 @@ public class MachineFuelService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.MachineFuelEntryView> listViewsByPeriod(String period) {
+    public List<MachineFuelEntryView> listViewsByPeriod(String period) {
         return listByPeriod(period).stream().map(machineFuelMapper::toDto).toList();
     }
 
@@ -301,7 +313,7 @@ public class MachineFuelService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.MachineRef> quarryAndFactoryMachineViews() {
+    public List<MachineRef> quarryAndFactoryMachineViews() {
         return quarryAndFactoryMachines().stream().map(machineMapper::toDto).toList();
     }
 
@@ -312,7 +324,7 @@ public class MachineFuelService {
      * @return litres, amount, entry and machine counts
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.view.FuelPeriodSummary periodSummary(String period) {
+    public FuelPeriodSummary periodSummary(String period) {
         List<MachineFuelEntry> entries = listByPeriod(period);
         BigDecimal totalLitres = entries.stream().map(MachineFuelEntry::getLitres)
                 .filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -320,6 +332,6 @@ public class MachineFuelService {
                 .filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
         long machineCount = entries.stream().filter(entry -> entry.getMachine() != null)
                 .map(entry -> entry.getMachine().getId()).distinct().count();
-        return new com.ozerler.marble.dto.view.FuelPeriodSummary(totalLitres, totalAmount, entries.size(), machineCount);
+        return new FuelPeriodSummary(totalLitres, totalAmount, entries.size(), machineCount);
     }
 }

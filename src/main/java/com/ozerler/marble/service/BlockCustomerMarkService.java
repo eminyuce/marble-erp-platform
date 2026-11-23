@@ -6,9 +6,14 @@ import java.time.Year;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ozerler.marble.dto.view.BlockMarkView;
+import com.ozerler.marble.dto.view.PartyView;
+import com.ozerler.marble.mapper.BlockMapper;
+import com.ozerler.marble.mapper.CustomerMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.BlockCustomerMark;
 import com.ozerler.marble.model.Customer;
@@ -32,8 +37,8 @@ public class BlockCustomerMarkService {
     private static final int ORDER_SUFFIX_MODULUS = 100000;
 
     private final BlockCustomerMarkRepository markRepository;
-    private final com.ozerler.marble.mapper.BlockMapper blockMapper;
-    private final com.ozerler.marble.mapper.CustomerMapper customerMapper;
+    private final BlockMapper blockMapper;
+    private final CustomerMapper customerMapper;
     private final BlockRepository blockRepository;
     private final CustomerRepository customerRepository;
     private final QuarryBlockService quarryBlockService;
@@ -124,7 +129,7 @@ public class BlockCustomerMarkService {
 
     @Transactional(readOnly = true)
     public List<Customer> customers() {
-        return BoundedReads.all(customerRepository, org.springframework.data.domain.Sort.by("companyName"));
+        return BoundedReads.all(customerRepository, Sort.by("companyName"));
     }
 
     /**
@@ -150,7 +155,7 @@ public class BlockCustomerMarkService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.PartyView> customerViews() {
+    public List<PartyView> customerViews() {
         return customers().stream().map(customerMapper::toDto).toList();
     }
 
@@ -161,7 +166,7 @@ public class BlockCustomerMarkService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.BlockMarkView> listViewsForBlock(Long blockId) {
+    public List<BlockMarkView> listViewsForBlock(Long blockId) {
         return listForBlock(blockId).stream().map(blockMapper::toMark).toList();
     }
 }

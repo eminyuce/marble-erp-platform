@@ -1,6 +1,7 @@
 package com.ozerler.marble.controller.erp;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,6 +31,7 @@ import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.model.enums.StockProductType;
 import com.ozerler.marble.model.enums.SurfaceFinish;
 import com.ozerler.marble.service.FactoryStockService;
+import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.service.OperationWorkOrderService;
 import com.ozerler.marble.service.WorkshopOperationService;
 import com.ozerler.marble.web.ListQuery;
@@ -47,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WorkshopOperationController extends AbstractController {
 
-    private final com.ozerler.marble.service.FormLookupService formLookup;
+    private final FormLookupService formLookup;
 
     private final OperationWorkOrderService workOrderService;
     private final FactoryStockService factoryStockService;
@@ -191,12 +193,12 @@ public class WorkshopOperationController extends AbstractController {
         var selectedSlab = formLookup.findSlabWithDetails(slabId);
         var selectedSourceItem = formLookup.findStockItemWithCustomer(sourceStockItemId);
 
-        var slabsList = new java.util.ArrayList<>(formLookup.slabsInStatus(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
+        var slabsList = new ArrayList<>(formLookup.slabsInStatus(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
         if (selectedSlab != null && slabsList.stream().noneMatch(s -> s.getId().equals(selectedSlab.getId()))) {
             slabsList.add(0, selectedSlab);
         }
 
-        var sourceSizedList = new java.util.ArrayList<>(formLookup.stockByTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
+        var sourceSizedList = new ArrayList<>(formLookup.stockByTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
         if (selectedSourceItem != null && sourceSizedList.stream().noneMatch(it -> it.getId().equals(selectedSourceItem.getId()))) {
             sourceSizedList.add(0, selectedSourceItem);
         }

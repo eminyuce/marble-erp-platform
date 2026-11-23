@@ -9,6 +9,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +33,7 @@ import com.ozerler.marble.repository.SalesOrderRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.SupplierRepository;
 import com.ozerler.marble.repository.UserRepository;
+import com.ozerler.marble.util.MessageUtils;
 import com.ozerler.marble.util.Strings;
 import com.ozerler.marble.util.Urls;
 
@@ -57,7 +60,7 @@ public class GlobalSearchService {
     private final CostCenterRepository costCenterRepository;
     private final CutItemRepository cutItemRepository;
     private final QuarryRepository quarryRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     @Qualifier(Constants.SEARCH_EXECUTOR)
     private final AsyncTaskExecutor searchTaskExecutor;
@@ -65,12 +68,12 @@ public class GlobalSearchService {
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public GlobalSearchResponse search(String rawQuery) {

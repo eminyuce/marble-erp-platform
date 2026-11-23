@@ -1,5 +1,6 @@
 package com.ozerler.marble.util;
 
+import java.time.Year;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +36,6 @@ class UniqueCodesTest {
     @DisplayName("yearly codes keep prefix and current year")
     void yearlyCodes() {
         String code = UniqueCodes.yearly("FWO", candidate -> false);
-        Assertions.assertThat(code).startsWith("FWO-" + java.time.Year.now().getValue() + "-");
+        Assertions.assertThat(code).startsWith("FWO-" + Year.now().getValue() + "-");
     }
 }

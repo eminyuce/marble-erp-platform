@@ -1,6 +1,7 @@
 package com.ozerler.marble.domain;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
 
 import com.ozerler.marble.common.Constants;
@@ -28,7 +29,7 @@ public final class WorkshopOrderCost {
                 .add(nonNegative("consumableCost", consumableCost))
                 .add(nonNegative("scrapShare", scrapShare))
                 .add(nonNegative("freightCost", freightCost))
-                .setScale(Constants.COST_SCALE, java.math.RoundingMode.HALF_UP);
+                .setScale(Constants.COST_SCALE, RoundingMode.HALF_UP);
     }
 
     private static BigDecimal nonNegative(String field, BigDecimal value) {

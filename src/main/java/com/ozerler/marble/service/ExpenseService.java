@@ -17,11 +17,16 @@ import com.ozerler.marble.domain.ExpensePeriods;
 import com.ozerler.marble.dto.ExpenseDto;
 import com.ozerler.marble.dto.ExpenseSummaryDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.CostPeriodClose;
 import com.ozerler.marble.model.CostTransaction;
+import com.ozerler.marble.model.FactoryOperation;
+import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.Quarry;
+import com.ozerler.marble.model.Slab;
+import com.ozerler.marble.model.WorkshopOperation;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseCategory;
 import com.ozerler.marble.model.enums.ExpenseType;
@@ -388,13 +393,13 @@ public class ExpenseService {
             LocalDate entryDate,
             String expensePeriod,
             String postingPeriod,
-            com.ozerler.marble.model.Block block,
+            Block block,
             Quarry quarry,
-            com.ozerler.marble.model.Slab slab,
+            Slab slab,
             Project project,
-            com.ozerler.marble.model.Machine machine,
-            com.ozerler.marble.model.FactoryOperation factoryOperation,
-            com.ozerler.marble.model.WorkshopOperation workshopOperation,
+            Machine machine,
+            FactoryOperation factoryOperation,
+            WorkshopOperation workshopOperation,
             String allocationKey,
             String description
     ) {

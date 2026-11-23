@@ -3,6 +3,7 @@ package com.ozerler.marble.validation;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -185,7 +186,7 @@ public class FileUploadValidator {
             case "webp" -> {
                 requireAsciiPrefix(header, "RIFF", "WEBP");
                 if (header.length >= WEBP_HEADER_LENGTH) {
-                    String webp = new String(header, 8, 4, java.nio.charset.StandardCharsets.US_ASCII);
+                    String webp = new String(header, 8, 4, StandardCharsets.US_ASCII);
                     if (!"WEBP".equals(webp)) {
                         throw new FileValidationException("File content does not match the WEBP type");
                     }
@@ -246,7 +247,7 @@ public class FileUploadValidator {
         if (header.length < prefix.length()) {
             throw new FileValidationException("File content does not match the " + type + " type");
         }
-        String actual = new String(header, 0, prefix.length(), java.nio.charset.StandardCharsets.US_ASCII);
+        String actual = new String(header, 0, prefix.length(), StandardCharsets.US_ASCII);
         if (!prefix.equals(actual)) {
             throw new FileValidationException("File content does not match the " + type + " type");
         }

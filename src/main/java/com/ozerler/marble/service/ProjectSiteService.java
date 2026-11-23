@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,15 +16,22 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.ProjectDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.SiteViews;
+import com.ozerler.marble.mapper.SiteMapper;
+import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.ProjectLocation;
 import com.ozerler.marble.model.SiteConsumption;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ConsumptionType;
+import com.ozerler.marble.model.enums.CustomerType;
 import com.ozerler.marble.model.enums.ProjectStatus;
+import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.ProjectLocationRepository;
 import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.SiteConsumptionRepository;
 import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,21 +42,21 @@ public class ProjectSiteService {
     private static final int CODE_SUFFIX_MODULUS = 100000;
 
     private final ProjectRepository projectRepository;
-    private final com.ozerler.marble.mapper.SiteMapper siteMapper;
+    private final SiteMapper siteMapper;
     private final ProjectLocationRepository projectLocationRepository;
     private final SiteConsumptionRepository siteConsumptionRepository;
-    private final com.ozerler.marble.repository.CustomerRepository customerRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final CustomerRepository customerRepository;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public record ProjectSummaryDto(long totalProjects, long activeProjects, long completedProjects, BigDecimal totalContractValue) {
@@ -112,7 +121,7 @@ public class ProjectSiteService {
         Objects.requireNonNull(projectCode, getMessage("error.project.code.required"));
         Objects.requireNonNull(name, getMessage("error.project.name.required"));
 
-        com.ozerler.marble.model.Customer customer = null;
+        Customer customer = null;
         if (customerId != null) {
             customer = customerRepository.findById(customerId).orElse(null);
             if (customer != null && (customerName == null || customerName.isBlank())) {
@@ -123,11 +132,11 @@ public class ProjectSiteService {
             customer = customerRepository.findByCompanyNameIgnoreCase(finalCustName)
                     .orElseGet(() -> {
                         String generatedCode = "CARI-" + (System.currentTimeMillis() % CODE_SUFFIX_MODULUS);
-                        com.ozerler.marble.model.Customer newCust = com.ozerler.marble.model.Customer.builder()
+                        Customer newCust = Customer.builder()
                                 .customerCode(generatedCode)
                                 .companyName(finalCustName)
-                                .customerType(com.ozerler.marble.model.enums.CustomerType.CONSTRUCTION)
-                                .businessUnit(com.ozerler.marble.model.enums.BusinessUnit.SITE)
+                                .customerType(CustomerType.CONSTRUCTION)
+                                .businessUnit(BusinessUnit.SITE)
                                 .build();
                         return customerRepository.save(newCust);
                     });
@@ -326,7 +335,7 @@ public class ProjectSiteService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.SiteViews.ConsumptionView> getConsumptionViewsByProject(Long projectId) {
+    public List<SiteViews.ConsumptionView> getConsumptionViewsByProject(Long projectId) {
         return getConsumptionsByProject(projectId).stream().map(siteMapper::toConsumption).toList();
     }
 
@@ -337,9 +346,9 @@ public class ProjectSiteService {
      * @return location views
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.SiteViews.LocationView> getLocationViewsByProject(Long projectId) {
+    public List<SiteViews.LocationView> getLocationViewsByProject(Long projectId) {
         return getLocationsByProject(projectId).stream().map(location -> {
-            com.ozerler.marble.dto.view.SiteViews.LocationView view = siteMapper.toDto(location);
+            SiteViews.LocationView view = siteMapper.toDto(location);
             view.setStatusLabel(location.getStatusLabel());
             view.setProgressPercentage(location.getProgressPercentage());
             return view;

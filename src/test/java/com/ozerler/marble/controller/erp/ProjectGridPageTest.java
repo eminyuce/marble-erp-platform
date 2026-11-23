@@ -2,6 +2,7 @@ package com.ozerler.marble.controller.erp;
 
 import java.util.List;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -73,12 +74,12 @@ class ProjectGridPageTest {
                         .param("sort", "name")
                         .param("dir", "asc"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.model().attribute("grid", org.hamcrest.Matchers.allOf(
-                        org.hamcrest.Matchers.instanceOf(DataGridView.class),
-                        org.hamcrest.Matchers.hasProperty("number", org.hamcrest.Matchers.is(2)),
-                        org.hamcrest.Matchers.hasProperty("size", org.hamcrest.Matchers.is(50)),
-                        org.hamcrest.Matchers.hasProperty("total", org.hamcrest.Matchers.is(336L)),
-                        org.hamcrest.Matchers.hasProperty("totalPages", org.hamcrest.Matchers.is(8))
+                .andExpect(MockMvcResultMatchers.model().attribute("grid", Matchers.allOf(
+                        Matchers.instanceOf(DataGridView.class),
+                        Matchers.hasProperty("number", Matchers.is(2)),
+                        Matchers.hasProperty("size", Matchers.is(50)),
+                        Matchers.hasProperty("total", Matchers.is(336L)),
+                        Matchers.hasProperty("totalPages", Matchers.is(8))
                 )));
     }
 
@@ -91,7 +92,7 @@ class ProjectGridPageTest {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/projects").param("size", "10"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.model().attribute("grid", org.hamcrest.Matchers.hasProperty("size", org.hamcrest.Matchers.is(20))))
-                .andExpect(MockMvcResultMatchers.model().attribute("grid", org.hamcrest.Matchers.hasProperty("total", org.hamcrest.Matchers.is(0L))));
+                .andExpect(MockMvcResultMatchers.model().attribute("grid", Matchers.hasProperty("size", Matchers.is(20))))
+                .andExpect(MockMvcResultMatchers.model().attribute("grid", Matchers.hasProperty("total", Matchers.is(0L))));
     }
 }

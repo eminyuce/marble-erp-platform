@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto.form;
 
+import com.ozerler.marble.dto.view.AuditView;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CustomerType;
 
@@ -8,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CustomerForm extends com.ozerler.marble.dto.view.AuditView {
+public class CustomerForm extends AuditView {
     private Long id;
     private String customerCode;
     private CustomerType customerType = CustomerType.CONSTRUCTION;

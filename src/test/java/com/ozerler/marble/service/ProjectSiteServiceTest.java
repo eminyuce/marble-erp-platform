@@ -1,15 +1,25 @@
 package com.ozerler.marble.service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
+import com.ozerler.marble.dto.ProjectDto;
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.Project;
+import com.ozerler.marble.model.enums.ProjectStatus;
 import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.ProjectLocationRepository;
 import com.ozerler.marble.repository.ProjectRepository;
@@ -76,32 +86,32 @@ class ProjectSiteServiceTest {
     @Test
     @DisplayName("getProjectsPaged with customerId passes filter to repository")
     void getProjectsPagedWithCustomerIdFiltersCorrectly() {
-        com.ozerler.marble.model.Customer customer = com.ozerler.marble.model.Customer.builder()
+        Customer customer = Customer.builder()
                 .id(10L)
                 .companyName("Akdeniz İnşaat")
                 .customerCode("AKD-01")
                 .build();
 
-        com.ozerler.marble.model.Project project = com.ozerler.marble.model.Project.builder()
+        Project project = Project.builder()
                 .id(1L)
                 .projectCode("PRJ-001")
                 .name("Akdeniz Plaza")
                 .customer(customer)
                 .customerName(customer.getCompanyName())
-                .status(com.ozerler.marble.model.enums.ProjectStatus.ACTIVE)
+                .status(ProjectStatus.ACTIVE)
                 .build();
 
-        org.springframework.data.domain.Page<com.ozerler.marble.model.Project> page =
-                new org.springframework.data.domain.PageImpl<>(java.util.List.of(project));
+        Page<Project> page =
+                new PageImpl<>(List.of(project));
 
-        org.mockito.Mockito.when(projectRepository.searchProjectsFiltered(
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.eq(10L),
-                org.mockito.ArgumentMatchers.any()
+        Mockito.when(projectRepository.searchProjectsFiltered(
+                ArgumentMatchers.any(),
+                ArgumentMatchers.any(),
+                ArgumentMatchers.eq(10L),
+                ArgumentMatchers.any()
         )).thenReturn(page);
 
-        com.ozerler.marble.dto.TabulatorResponse<com.ozerler.marble.dto.ProjectDto> response =
+        TabulatorResponse<ProjectDto> response =
                 projectSiteService.getProjectsPaged(1, 10, null, "ACTIVE", 10L, null, null);
 
         Assertions.assertThat(response).isNotNull();

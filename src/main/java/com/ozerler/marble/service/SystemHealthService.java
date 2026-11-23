@@ -17,6 +17,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.boot.info.BuildProperties;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,7 @@ import com.ozerler.marble.dto.DependencyHealth;
 import com.ozerler.marble.dto.HealthResponse;
 import com.ozerler.marble.storage.ObjectStorageService;
 import com.ozerler.marble.util.DateTimes;
+import com.ozerler.marble.util.MessageUtils;
 
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
@@ -47,18 +50,18 @@ public class SystemHealthService {
     private final DataSource dataSource;
     private final Environment environment;
     private final Optional<BuildProperties> buildProperties;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
     private final ObjectStorageService objectStorageService;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public Map<String, Object> collectHealthMetrics() {

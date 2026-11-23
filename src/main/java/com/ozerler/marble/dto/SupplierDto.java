@@ -3,6 +3,7 @@ package com.ozerler.marble.dto;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.Supplier;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.SupplierType;
 
 import lombok.AllArgsConstructor;
@@ -69,7 +70,7 @@ public class SupplierDto {
 
     public static SupplierDto fromEntity(Supplier supplier) {
         SupplierType type = supplier.getSupplierType();
-        com.ozerler.marble.model.enums.BusinessUnit bu = supplier.getBusinessUnit();
+        BusinessUnit bu = supplier.getBusinessUnit();
         String supplierTypeValue;
         if (type != null) {
             supplierTypeValue = type.name();

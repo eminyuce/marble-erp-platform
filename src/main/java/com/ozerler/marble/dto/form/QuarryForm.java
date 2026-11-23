@@ -2,12 +2,14 @@ package com.ozerler.marble.dto.form;
 
 import java.math.BigDecimal;
 
+import com.ozerler.marble.dto.view.AuditView;
+
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class QuarryForm extends com.ozerler.marble.dto.view.AuditView {
+public class QuarryForm extends AuditView {
     private Long id;
     private String code;
     private String name;

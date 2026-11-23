@@ -17,6 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 import com.ozerler.marble.model.enums.QualityGrade;
+import com.ozerler.marble.model.enums.QuarryCategory;
 import com.ozerler.marble.model.enums.StockProductType;
 import com.ozerler.marble.model.enums.SurfaceFinish;
 
@@ -50,7 +51,7 @@ public class StockItem extends AuditableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "quarry_category", length = 30)
-    private com.ozerler.marble.model.enums.QuarryCategory quarryCategory;
+    private QuarryCategory quarryCategory;
 
     @Column(name = "direct_expense")
     @Builder.Default

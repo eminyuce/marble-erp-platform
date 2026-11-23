@@ -3,6 +3,7 @@ package com.ozerler.marble.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.BlockView;
+import com.ozerler.marble.dto.view.SlabView;
+import com.ozerler.marble.dto.view.StockItemView;
+import com.ozerler.marble.mapper.SlabMapper;
+import com.ozerler.marble.mapper.StockItemMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.ProductionOrder;
@@ -52,8 +58,8 @@ public class FactoryStockService {
 
     private final BlockRepository blockRepository;
     private final BlockViews blockViews;
-    private final com.ozerler.marble.mapper.StockItemMapper stockItemMapper;
-    private final com.ozerler.marble.mapper.SlabMapper slabMapper;
+    private final StockItemMapper stockItemMapper;
+    private final SlabMapper slabMapper;
     private final SlabRepository slabRepository;
     private final StockItemRepository stockItemRepository;
     private final StockLocationRepository stockLocationRepository;
@@ -365,7 +371,7 @@ public class FactoryStockService {
                 .block(block)
                 .machineName("ST / Katrak")
                 .processType(ProcessType.ST)
-                .startTime(java.time.LocalDateTime.now())
+                .startTime(LocalDateTime.now())
                 .status("COMPLETED")
                 .operatorName("Operatör")
                 .build());
@@ -420,7 +426,7 @@ public class FactoryStockService {
                 .block(block)
                 .machineName("ST / Katrak")
                 .processType(ProcessType.ST)
-                .startTime(java.time.LocalDateTime.now())
+                .startTime(LocalDateTime.now())
                 .status("COMPLETED")
                 .operatorName("Operatör")
                 .build());
@@ -753,7 +759,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.SlabView createSlabDirectView(Long blockId, BigDecimal thicknessCm, BigDecimal widthCm, BigDecimal lengthCm,
+    public SlabView createSlabDirectView(Long blockId, BigDecimal thicknessCm, BigDecimal widthCm, BigDecimal lengthCm,
                                 QualityGrade qualityGrade, SurfaceFinish surfaceFinish, Long customerId, String notes) {
         return slabMapper.toDto(createSlabDirect(blockId, thicknessCm, widthCm, lengthCm, qualityGrade, surfaceFinish, customerId, notes));
     }
@@ -766,7 +772,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.SlabView assignCustomerToSlabView(Long slabId, Long customerId) {
+    public SlabView assignCustomerToSlabView(Long slabId, Long customerId) {
         return slabMapper.toDto(assignCustomerToSlab(slabId, customerId));
     }
 
@@ -789,7 +795,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.StockItemView createSizedItemView(Long blockId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
+    public StockItemView createSizedItemView(Long blockId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
                                      BigDecimal lengthCm, BigDecimal quantity, int pieceCount,
                                      BigDecimal actualProducedQuantity, Long customerId, String qualityGradeStr,
                                      String surfaceFinishStr, String edgeFinish, String notes) {
@@ -816,7 +822,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.StockItemView createSizedItemView(Long blockId, Long slabId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
+    public StockItemView createSizedItemView(Long blockId, Long slabId, String description, BigDecimal thicknessCm, BigDecimal widthCm,
                                      BigDecimal lengthCm, BigDecimal quantity, int pieceCount,
                                      BigDecimal actualProducedQuantity, Long customerId, String qualityGradeStr,
                                      String surfaceFinishStr, String edgeFinish, String notes) {
@@ -831,7 +837,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.StockItemView assignCustomerToStockItemView(Long itemId, Long customerId) {
+    public StockItemView assignCustomerToStockItemView(Long itemId, Long customerId) {
         return stockItemMapper.toDto(assignCustomerToStockItem(itemId, customerId));
     }
 
@@ -851,7 +857,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public List<com.ozerler.marble.dto.view.SlabView> createSlabsBatchViews(Long blockId, BigDecimal commonThicknessCm,
+    public List<SlabView> createSlabsBatchViews(Long blockId, BigDecimal commonThicknessCm,
                                        QualityGrade qualityGrade, SurfaceFinish surfaceFinish,
                                        Long customerId, String notes,
                                        List<BigDecimal> thicknesses, List<BigDecimal> widths,
@@ -878,7 +884,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public List<com.ozerler.marble.dto.view.StockItemView> createSizedItemsBatchViews(Long blockId, Long customerId, String defaultDescription,
+    public List<StockItemView> createSizedItemsBatchViews(Long blockId, Long customerId, String defaultDescription,
                                                  String qualityGradeStr, String surfaceFinishStr, String edgeFinish,
                                                  String notes,
                                                  List<String> descriptions, List<BigDecimal> thicknesses,
@@ -909,7 +915,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional
-    public List<com.ozerler.marble.dto.view.StockItemView> createSizedItemsBatchViews(Long blockId, Long slabId, Long customerId, String defaultDescription,
+    public List<StockItemView> createSizedItemsBatchViews(Long blockId, Long slabId, Long customerId, String defaultDescription,
                                                  String qualityGradeStr, String surfaceFinishStr, String edgeFinish,
                                                  String notes,
                                                  List<String> descriptions, List<BigDecimal> thicknesses,
@@ -931,7 +937,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.view.SlabView> getFactorySlabViewsPaged(SlabStatus status, Long customerId, boolean generalStockOnly, String search, int page, int size) {
+    public Page<SlabView> getFactorySlabViewsPaged(SlabStatus status, Long customerId, boolean generalStockOnly, String search, int page, int size) {
         return getFactorySlabsPaged(status, customerId, generalStockOnly, search, page, size).map(slabMapper::toDto);
     }
 
@@ -947,7 +953,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.view.StockItemView> getSizedStockItemViewsPaged(Long customerId, boolean generalStockOnly, boolean customerOnly, String search, int page, int size) {
+    public Page<StockItemView> getSizedStockItemViewsPaged(Long customerId, boolean generalStockOnly, boolean customerOnly, String search, int page, int size) {
         return getSizedStockItemsPaged(customerId, generalStockOnly, customerOnly, search, page, size).map(stockItemMapper::toDto);
     }
 
@@ -962,7 +968,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.view.StockItemView> getSizedStockItemViewsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+    public Page<StockItemView> getSizedStockItemViewsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
         return getSizedStockItemsPaged(customerId, generalStockOnly, search, page, size).map(stockItemMapper::toDto);
     }
 
@@ -974,7 +980,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.BlockView> getFactoryUncutBlockViews(Long customerId, boolean generalStockOnly) {
+    public List<BlockView> getFactoryUncutBlockViews(Long customerId, boolean generalStockOnly) {
         return getFactoryUncutBlocks(customerId, generalStockOnly).stream().map(blockViews::toView).toList();
     }
 
@@ -984,7 +990,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.BlockView> getIncomingBlockViewsInTransit() {
+    public List<BlockView> getIncomingBlockViewsInTransit() {
         return getIncomingBlocksInTransit().stream().map(blockViews::toView).toList();
     }
 
@@ -999,7 +1005,7 @@ public class FactoryStockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.view.BlockView> getFactoryUncutBlockViewsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
+    public Page<BlockView> getFactoryUncutBlockViewsPaged(Long customerId, boolean generalStockOnly, String search, int page, int size) {
         return getFactoryUncutBlocksPaged(customerId, generalStockOnly, search, page, size).map(blockViews::toView);
     }
 }

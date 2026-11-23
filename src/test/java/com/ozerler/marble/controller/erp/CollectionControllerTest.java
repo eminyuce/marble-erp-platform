@@ -22,6 +22,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.CheckRef;
+import com.ozerler.marble.dto.view.InvoiceView;
+import com.ozerler.marble.dto.view.PartyView;
 import com.ozerler.marble.model.CheckRecord;
 import com.ozerler.marble.model.CollectionRecord;
 import com.ozerler.marble.model.Customer;
@@ -191,7 +194,7 @@ class CollectionControllerTest {
     @Test
     @DisplayName("updateCheckStatus invokes collection service and redirects to checks list")
     void updateCheckStatusUpdatesAndRedirects() {
-        com.ozerler.marble.dto.view.CheckRef updated = new com.ozerler.marble.dto.view.CheckRef();
+        CheckRef updated = new CheckRef();
         updated.setId(50L);
         updated.setCheckNo("CHK-50");
         Mockito.when(collectionService.updateCheckStatusRef(ArgumentMatchers.eq(50L), ArgumentMatchers.eq(CheckStatus.BOUNCED), ArgumentMatchers.eq("Karşılıksız")))
@@ -222,10 +225,10 @@ class CollectionControllerTest {
     @Test
     @DisplayName("new collection form preselects the customer from the fetched invoice")
     void newCollectionFormPreselectsCustomerFromInvoice() {
-        com.ozerler.marble.dto.view.PartyView party = new com.ozerler.marble.dto.view.PartyView();
+        PartyView party = new PartyView();
         party.setId(4L);
         party.setCompanyName("Özerler");
-        com.ozerler.marble.dto.view.InvoiceView invoiceView = new com.ozerler.marble.dto.view.InvoiceView();
+        InvoiceView invoiceView = new InvoiceView();
         invoiceView.setId(9L);
         invoiceView.setCustomer(party);
         Mockito.when(formLookup.findInvoiceWithCustomer(9L)).thenReturn(invoiceView);

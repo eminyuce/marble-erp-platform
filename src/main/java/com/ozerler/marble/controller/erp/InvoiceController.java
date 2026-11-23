@@ -21,17 +21,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.InvoiceRef;
 import com.ozerler.marble.dto.view.PurchaseOrderView;
 import com.ozerler.marble.dto.view.StockItemView;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.InvoiceStatus;
 import com.ozerler.marble.model.enums.InvoiceType;
+import com.ozerler.marble.model.enums.PurchaseOrderStatus;
 import com.ozerler.marble.model.enums.QuarryCategory;
 import com.ozerler.marble.model.enums.SlabStatus;
+import com.ozerler.marble.service.FormLookupService;
+import com.ozerler.marble.service.InvoiceScreenService;
 import com.ozerler.marble.service.InvoiceService;
+import com.ozerler.marble.service.ProcurementService;
 import com.ozerler.marble.service.QuarryInventoryService;
 import com.ozerler.marble.web.InvoiceGrid;
 import com.ozerler.marble.web.ListQuery;
@@ -45,12 +51,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class InvoiceController extends AbstractController {
 
-    private final com.ozerler.marble.service.FormLookupService formLookup;
+    private final FormLookupService formLookup;
 
     private final InvoiceService invoiceService;
-    private final com.ozerler.marble.service.InvoiceScreenService invoiceScreenService;
+    private final InvoiceScreenService invoiceScreenService;
     private final QuarryInventoryService quarryInventoryService;
-    private final com.ozerler.marble.service.ProcurementService procurementService;
+    private final ProcurementService procurementService;
 
     @GetMapping
     public String index(@RequestParam(value = "type", required = false) InvoiceType invoiceType,
@@ -127,7 +133,7 @@ public class InvoiceController extends AbstractController {
                         department = po.getBusinessUnit();
                     }
                     model.addAttribute("prefillPurchaseOrder", po);
-                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    ObjectMapper mapper = new ObjectMapper();
                     List<Map<String, Object>> itemMaps = po.getItems().stream().map(it -> {
                         Map<String, Object> m = new HashMap<>();
                         m.put("itemName", it.getItemName());
@@ -285,7 +291,7 @@ public class InvoiceController extends AbstractController {
                 effectiveStatus = InvoiceStatus.ISSUED;
             }
 
-            com.ozerler.marble.dto.view.InvoiceRef invoice = invoiceService.createInvoiceRef(
+            InvoiceRef invoice = invoiceService.createInvoiceRef(
                     invoiceNo, invoiceDate, dueDate, invoiceType, department,
                     customerId, supplierId, targetDepartment, projectId, effectiveTaxRate,
                     directExpense, effectiveStatus, partyName, notes, itemForms, quarryCategory
@@ -293,7 +299,7 @@ public class InvoiceController extends AbstractController {
 
             if (purchaseOrderId != null) {
                 try {
-                    procurementService.updateStatus(purchaseOrderId, com.ozerler.marble.model.enums.PurchaseOrderStatus.DELIVERED);
+                    procurementService.updateStatus(purchaseOrderId, PurchaseOrderStatus.DELIVERED);
                 } catch (Exception ex) {
                     log.warn("Could not update purchase order status to DELIVERED: {}", purchaseOrderId, ex);
                 }
@@ -312,7 +318,7 @@ public class InvoiceController extends AbstractController {
     @PostMapping("/{id}/finalize")
     public String finalizeInvoice(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
-            com.ozerler.marble.dto.view.InvoiceRef invoice = invoiceService.finalizeInvoiceRef(id);
+            InvoiceRef invoice = invoiceService.finalizeInvoiceRef(id);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Fatura (" + invoice.getInvoiceNo() + ") başarıyla kesinleştirildi ve stok hareketleri işlendi.");
         } catch (Exception e) {
@@ -328,7 +334,7 @@ public class InvoiceController extends AbstractController {
                                 @RequestParam(value = "reason", required = false, defaultValue = "Kullanıcı talebiyle iptal edildi") String reason,
                                 RedirectAttributes redirectAttributes) {
         try {
-            com.ozerler.marble.dto.view.InvoiceRef invoice = invoiceService.cancelInvoiceRef(id, reason);
+            InvoiceRef invoice = invoiceService.cancelInvoiceRef(id, reason);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Fatura (" + invoice.getInvoiceNo() + ") iptal edildi ve stoklar depoya iade edildi.");
         } catch (Exception e) {

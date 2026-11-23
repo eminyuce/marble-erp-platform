@@ -3,8 +3,10 @@ package com.ozerler.marble.controller.erp;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
+import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -37,7 +39,7 @@ import lombok.RequiredArgsConstructor;
 public class ProcurementController {
 
     private final ProcurementService procurementService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     @GetMapping
     public String procurementIndex(@RequestParam(value = "page", required = false) Integer page,
@@ -66,7 +68,7 @@ public class ProcurementController {
     }
 
     @GetMapping("/create")
-    public String showCreateForm(Model model, java.util.Locale locale) {
+    public String showCreateForm(Model model, Locale locale) {
         populateProcurementForm(model, locale);
         return "erp/procurement/form";
     }
@@ -88,7 +90,7 @@ public class ProcurementController {
                               @RequestParam(value = "notes", required = false) String notes,
                               Model model,
                               RedirectAttributes redirectAttributes,
-                              java.util.Locale locale) {
+                              Locale locale) {
         try {
             PurchaseOrderView order = procurementService.createPurchaseOrderView(
                     poNumber, supplierId, projectId, businessUnit, costCenterId, expectedDelivery, notes);
@@ -104,7 +106,7 @@ public class ProcurementController {
     }
 
     @GetMapping("/{id}/edit")
-    public String showEditForm(@PathVariable("id") Long id, Model model, java.util.Locale locale) {
+    public String showEditForm(@PathVariable("id") Long id, Model model, Locale locale) {
         PurchaseOrderView order = procurementService.getOrder(id);
         populateProcurementForm(model, locale);
         model.addAttribute("record", order);
@@ -147,7 +149,7 @@ public class ProcurementController {
         return "redirect:/procurement/" + id;
     }
 
-    private void populateProcurementForm(Model model, java.util.Locale locale) {
+    private void populateProcurementForm(Model model, Locale locale) {
         model.addAttribute("suppliers", procurementService.getAllSuppliers());
         model.addAttribute("projects", procurementService.getAllProjects());
         model.addAttribute("businessUnits", BusinessUnit.values());

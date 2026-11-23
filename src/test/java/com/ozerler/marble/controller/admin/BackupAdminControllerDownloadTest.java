@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -115,6 +116,6 @@ class BackupAdminControllerDownloadTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/admin/settings/backups/download/backup_test.sql.gz"))
                 .andExpect(MockMvcResultMatchers.status().isBadGateway())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.success").value(false))
-                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("rustfs"))));
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.not(Matchers.containsString("rustfs"))));
     }
 }

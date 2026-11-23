@@ -15,6 +15,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.read.ListAppender;
 
@@ -138,7 +139,7 @@ class AsyncLoggingAppenderTest {
             int capacity,
             int highWaterMarkPercent,
             int batchSize,
-            ch.qos.logback.core.Appender<ILoggingEvent> nested
+            Appender<ILoggingEvent> nested
     ) {
         AsyncLoggingAppender appender = new AsyncLoggingAppender();
         appender.setContext(context);

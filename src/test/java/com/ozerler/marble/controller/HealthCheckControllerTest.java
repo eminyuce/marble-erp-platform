@@ -4,6 +4,7 @@ package com.ozerler.marble.controller;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -131,7 +132,7 @@ class HealthCheckControllerTest {
                 .getContentAsString();
 
         var tree = objectMapper.readTree(json);
-        org.assertj.core.api.Assertions.assertThat(tree.fieldNames())
+        Assertions.assertThat(tree.fieldNames())
                 .toIterable()
                 .containsExactly("status");
     }

@@ -1,6 +1,7 @@
 package com.ozerler.marble.dto;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import lombok.Builder;
 import lombok.Value;
@@ -25,6 +26,6 @@ public class SiteProfitDto {
         if (realizedRevenue == null || realizedRevenue.compareTo(BigDecimal.ZERO) <= 0 || netProfitOrLoss == null) {
             return null;
         }
-        return netProfitOrLoss.multiply(BigDecimal.valueOf(100)).divide(realizedRevenue, 1, java.math.RoundingMode.HALF_UP);
+        return netProfitOrLoss.multiply(BigDecimal.valueOf(100)).divide(realizedRevenue, 1, RoundingMode.HALF_UP);
     }
 }

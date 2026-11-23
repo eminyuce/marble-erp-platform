@@ -3,9 +3,12 @@ package com.ozerler.marble.web;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.servlet.ServletException;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -351,17 +354,17 @@ class DtoPageRenderTest {
             "/projects", "/projects/create", "/reports", "/reports/quarry", "/reports/factory", "/reports/invoices", "/reports/collections",
             "/reports/work-orders", "/operations/quarry/" + blockId + "/dispatch", "/sales", "/procurement", "/admin/users",
         };
-        java.util.List<String> failed = new java.util.ArrayList<>();
+        List<String> failed = new ArrayList<>();
         for (String url : urls) {
             try {
                 int status = mockMvc.perform(MockMvcRequestBuilders.get(url)).andReturn().getResponse().getStatus();
                 if (status != 200) {
                     failed.add(url + " -> " + status);
                 }
-            } catch (jakarta.servlet.ServletException e) {
+            } catch (ServletException e) {
                 failed.add(url + " -> " + e.getMessage());
             }
         }
-        Assertions.assertEquals(java.util.List.of(), failed);
+        Assertions.assertEquals(List.of(), failed);
     }
 }

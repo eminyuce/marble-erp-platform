@@ -4,6 +4,10 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.ozerler.marble.dto.SlabDto;
+import com.ozerler.marble.web.GridRow;
+import com.ozerler.marble.web.SlabGrid;
+
 class SlabGridActionsTest {
 
     @Test
@@ -16,14 +20,14 @@ class SlabGridActionsTest {
         }
 
         Assertions.assertThat(html).contains("fragments/data-grid :: shell");
-        com.ozerler.marble.dto.SlabDto slab = com.ozerler.marble.dto.SlabDto.builder()
+        SlabDto slab = SlabDto.builder()
                 .id(9L)
                 .slabCode("SL-9")
                 .statusLabel("Onaylı")
                 .surfaceFinishLabel("Cilalı")
                 .qualityGradeLabel("A")
                 .build();
-        com.ozerler.marble.web.GridRow row = com.ozerler.marble.web.SlabGrid.row(slab);
+        GridRow row = SlabGrid.row(slab);
         Assertions.assertThat(row.getViewUrl()).isEqualTo("/production/slabs/9");
         Assertions.assertThat(row.getEditUrl()).isEqualTo("/production/slabs/9/edit");
         Assertions.assertThat(row.getCells()).anyMatch(cell -> "Cilalı".equals(cell.getText()));

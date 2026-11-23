@@ -6,14 +6,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ozerler.marble.dto.SalesOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.PartyView;
 import com.ozerler.marble.dto.view.SalesOrderView;
 import com.ozerler.marble.exception.SalesOrderNotFoundException;
+import com.ozerler.marble.mapper.CustomerMapper;
 import com.ozerler.marble.mapper.SalesOrderMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.Customer;
@@ -26,6 +31,7 @@ import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.repository.SalesOrderRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,19 +45,19 @@ public class SalesService {
     private final CustomerRepository customerRepository;
     private final SlabRepository slabRepository;
     private final BlockRepository blockRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
     private final SalesOrderMapper salesOrderMapper;
-    private final com.ozerler.marble.mapper.CustomerMapper customerMapper;
+    private final CustomerMapper customerMapper;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public record SalesSummaryDto(long totalOrders, BigDecimal totalAmount, BigDecimal paidAmount, BigDecimal remainingBalance) {
@@ -90,8 +96,8 @@ public class SalesService {
     }
 
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.PartyView> getAllCustomers() {
-        return BoundedReads.all(customerRepository, org.springframework.data.domain.Sort.by("companyName")).stream()
+    public List<PartyView> getAllCustomers() {
+        return BoundedReads.all(customerRepository, Sort.by("companyName")).stream()
                 .map(customerMapper::toDto)
                 .toList();
     }

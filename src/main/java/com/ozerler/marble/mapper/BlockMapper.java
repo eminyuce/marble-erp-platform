@@ -4,9 +4,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
+import com.ozerler.marble.dto.view.BlockMarkView;
+import com.ozerler.marble.dto.view.BlockMovementView;
 import com.ozerler.marble.dto.view.BlockRef;
 import com.ozerler.marble.dto.view.BlockView;
 import com.ozerler.marble.model.Block;
+import com.ozerler.marble.model.BlockCustomerMark;
+import com.ozerler.marble.model.BlockLocationMovement;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR,
         uses = {QuarryMapper.class, CustomerMapper.class, StockLocationMapper.class})
@@ -29,7 +33,7 @@ public interface BlockMapper {
      * @param mark the entity
      * @return the view
      */
-    com.ozerler.marble.dto.view.BlockMarkView toMark(com.ozerler.marble.model.BlockCustomerMark mark);
+    BlockMarkView toMark(BlockCustomerMark mark);
 
     /**
      * Copies a location movement.
@@ -37,5 +41,5 @@ public interface BlockMapper {
      * @param movement the entity
      * @return the view
      */
-    com.ozerler.marble.dto.view.BlockMovementView toMovement(com.ozerler.marble.model.BlockLocationMovement movement);
+    BlockMovementView toMovement(BlockLocationMovement movement);
 }

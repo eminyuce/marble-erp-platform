@@ -1,5 +1,7 @@
 package com.ozerler.marble.logging;
 
+import java.util.function.ToDoubleFunction;
+
 import org.springframework.stereotype.Component;
 
 import io.micrometer.core.instrument.FunctionCounter;
@@ -43,7 +45,7 @@ public class AsyncLoggingMetricsBinder implements MeterBinder {
     private static void bindDropped(
             MeterRegistry registry,
             String reason,
-            java.util.function.ToDoubleFunction<Object> count
+            ToDoubleFunction<Object> count
     ) {
         FunctionCounter.builder(AsyncLoggingMetrics.DROPPED, HOLDER, count)
                 .tag(AsyncLoggingMetrics.TAG_APPENDER, "async")

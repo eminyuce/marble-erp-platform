@@ -27,19 +27,21 @@ import com.ozerler.marble.model.enums.SupplyRoute;
 import com.ozerler.marble.model.enums.SurfaceFinish;
 import com.ozerler.marble.service.ConstructionSiteService;
 import com.ozerler.marble.service.CostAnalysisService;
+import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.service.ProjectSiteService;
 import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.ProjectGrid;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/projects")
 @RequiredArgsConstructor
-@lombok.extern.slf4j.Slf4j
+@Slf4j
 public class ProjectController {
 
-    private final com.ozerler.marble.service.FormLookupService formLookup;
+    private final FormLookupService formLookup;
 
     private final ProjectSiteService projectSiteService;
     private final ConstructionSiteService constructionSiteService;

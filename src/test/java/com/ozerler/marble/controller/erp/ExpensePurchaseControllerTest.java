@@ -20,6 +20,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.ConcurrentModel;
 import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.ExpenseDto;
@@ -158,8 +159,8 @@ class ExpensePurchaseControllerTest {
         Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("erp.expense.record.success"), ArgumentMatchers.any(), ArgumentMatchers.any(Locale.class)))
                 .thenReturn("Gider kaydedildi");
 
-        org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap ra =
-                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+        RedirectAttributesModelMap ra =
+                new RedirectAttributesModelMap();
         Model model = new ConcurrentModel();
 
         String view = controller.recordExpense(
@@ -179,8 +180,8 @@ class ExpensePurchaseControllerTest {
         Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("erp.expense.update.success"), ArgumentMatchers.any(), ArgumentMatchers.any(Locale.class)))
                 .thenReturn("Gider güncellendi");
 
-        org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap ra =
-                new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+        RedirectAttributesModelMap ra =
+                new RedirectAttributesModelMap();
         Model model = new ConcurrentModel();
 
         String view = controller.updateExpense(

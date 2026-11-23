@@ -3,6 +3,7 @@ package com.ozerler.marble.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,7 +46,7 @@ class FileStorageServiceTest {
     private FileStorageRepository fileStorageRepository;
 
     @Mock
-    private org.springframework.context.MessageSource messageSource;
+    private MessageSource messageSource;
 
     @Mock
     private ObjectStorageService objectStorageService;
@@ -382,7 +384,7 @@ class FileStorageServiceTest {
 
         Assertions.assertThat(download.url()).contains("erp-files");
         Assertions.assertThat(download.expiresInSeconds()).isEqualTo(300);
-        Assertions.assertThat(download.expiresAt()).isAfter(java.time.Instant.now());
+        Assertions.assertThat(download.expiresAt()).isAfter(Instant.now());
         Mockito.verify(objectStorageService, Mockito.never()).presignedImageUrl(ArgumentMatchers.anyString());
     }
 

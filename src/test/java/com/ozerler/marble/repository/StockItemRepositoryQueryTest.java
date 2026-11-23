@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 
+import com.ozerler.marble.model.enums.StockProductType;
+
 class StockItemRepositoryQueryTest {
 
     @Test
@@ -14,7 +16,7 @@ class StockItemRepositoryQueryTest {
     void searchItemsUsesEntityGraph() throws Exception {
         EntityGraph entityGraph = StockItemRepository.class
                 .getMethod("searchItems",
-                        com.ozerler.marble.model.enums.StockProductType.class,
+                        StockProductType.class,
                         String.class,
                         Long.class,
                         boolean.class,
@@ -31,7 +33,7 @@ class StockItemRepositoryQueryTest {
     void searchItemsQueryStructure() throws Exception {
         Query query = StockItemRepository.class
                 .getMethod("searchItems",
-                        com.ozerler.marble.model.enums.StockProductType.class,
+                        StockProductType.class,
                         String.class,
                         Long.class,
                         boolean.class,

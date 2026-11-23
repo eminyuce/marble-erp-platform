@@ -1,5 +1,7 @@
 package com.ozerler.marble.mapper;
 
+import java.time.LocalDateTime;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +34,7 @@ class CustomerMapperTest {
                 .email("keep@example.com")
                 .build();
         customer.setId(4L);
-        customer.setCreatedDate(java.time.LocalDateTime.of(2026, 1, 2, 3, 4));
+        customer.setCreatedDate(LocalDateTime.of(2026, 1, 2, 3, 4));
 
         CustomerForm form = mapper.toForm(customer);
         Assertions.assertThat(form.getCompanyName()).isEqualTo("Atlas");

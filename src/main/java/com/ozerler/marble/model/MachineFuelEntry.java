@@ -1,6 +1,7 @@
 package com.ozerler.marble.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 
 import jakarta.persistence.Column;
@@ -67,7 +68,7 @@ public class MachineFuelEntry extends AuditableEntity {
 
     public void calculateTotal() {
         if (litres != null && pricePerLitre != null) {
-            this.totalAmount = litres.multiply(pricePerLitre).setScale(2, java.math.RoundingMode.HALF_UP);
+            this.totalAmount = litres.multiply(pricePerLitre).setScale(2, RoundingMode.HALF_UP);
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.ozerler.marble.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +23,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     Page<PurchaseOrder> searchPurchaseOrders(@Param("search") String search, Pageable pageable);
 
     @EntityGraph(attributePaths = {"supplier", "project", "items", "costCenter"})
-    java.util.Optional<PurchaseOrder> findWithDetailsById(@Param("id") Long id);
+    Optional<PurchaseOrder> findWithDetailsById(@Param("id") Long id);
 
     @Query("SELECT po FROM PurchaseOrder po JOIN FETCH po.supplier WHERE LOWER(po.poNumber) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<PurchaseOrder> searchByPoNumber(@Param("query") String query, Pageable pageable);

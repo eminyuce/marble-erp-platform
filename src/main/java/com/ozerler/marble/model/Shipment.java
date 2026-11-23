@@ -14,6 +14,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+import com.ozerler.marble.model.enums.ShipmentDeliveryStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -69,6 +71,6 @@ public class Shipment extends AuditableEntity {
 
     @Transient
     public String getDeliveryStatusLabel() {
-        return com.ozerler.marble.model.enums.ShipmentDeliveryStatus.labelOf(deliveryStatus);
+        return ShipmentDeliveryStatus.labelOf(deliveryStatus);
     }
 }

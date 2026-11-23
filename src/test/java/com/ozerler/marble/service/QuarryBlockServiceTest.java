@@ -1,6 +1,7 @@
 package com.ozerler.marble.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -204,7 +205,7 @@ class QuarryBlockServiceTest {
         Mockito.when(customerRepository.findById(2L)).thenReturn(Optional.of(customer));
         Mockito.when(blockRepository.save(ArgumentMatchers.any(Block.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Block sold = quarryBlockService.sellBlockExternally(4L, 2L, new BigDecimal("750000"), java.time.LocalDate.now(), "Test satış");
+        Block sold = quarryBlockService.sellBlockExternally(4L, 2L, new BigDecimal("750000"), LocalDate.now(), "Test satış");
 
         Assertions.assertThat(sold.getStatus()).isEqualTo(BlockStatus.SOLD);
         Assertions.assertThat(sold.getSoldCustomer().getCompanyName()).isEqualTo("Mermer A.Ş.");
@@ -494,7 +495,7 @@ class QuarryBlockServiceTest {
         Mockito.when(blockRepository.findById(20L)).thenReturn(Optional.of(block));
 
         Assertions.assertThatThrownBy(() -> quarryBlockService.sellBlockExternally(
-                20L, 2L, new BigDecimal("10"), java.time.LocalDate.now(), null))
+                20L, 2L, new BigDecimal("10"), LocalDate.now(), null))
                 .isInstanceOf(IllegalArgumentException.class);
         Mockito.verify(blockRepository, Mockito.never()).save(ArgumentMatchers.any());
     }
@@ -520,12 +521,12 @@ class QuarryBlockServiceTest {
         Mockito.when(blockRepository.existsByBlockCodeIgnoreCase("A-BLOK-2026-001")).thenReturn(false);
 
         String first = quarryBlockService.generateStandardBlockCode(1L, "a-blok");
-        Assertions.assertThat(first).isEqualTo("A-BLOK-" + java.time.LocalDate.now().getYear() + "-001");
+        Assertions.assertThat(first).isEqualTo("A-BLOK-" + LocalDate.now().getYear() + "-001");
 
         Mockito.when(blockRepository.countByQuarrySectionAndYear(ArgumentMatchers.eq(1L), ArgumentMatchers.eq("A-BLOK"), ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(1L);
         Mockito.when(blockRepository.existsByBlockCode(ArgumentMatchers.any())).thenReturn(false);
         Mockito.when(blockRepository.existsByBlockCodeIgnoreCase(ArgumentMatchers.any())).thenReturn(false);
         String second = quarryBlockService.generateStandardBlockCode(1L, "A-BLOK");
-        Assertions.assertThat(second).isEqualTo("A-BLOK-" + java.time.LocalDate.now().getYear() + "-002");
+        Assertions.assertThat(second).isEqualTo("A-BLOK-" + LocalDate.now().getYear() + "-002");
     }
 }

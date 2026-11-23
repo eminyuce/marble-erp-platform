@@ -21,6 +21,12 @@ import org.springframework.data.domain.Pageable;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.SupplierDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.mapper.CostCenterMapper;
+import com.ozerler.marble.mapper.CustomerMapper;
+import com.ozerler.marble.mapper.MachineMapper;
+import com.ozerler.marble.mapper.QuarryMapper;
+import com.ozerler.marble.mapper.StockLocationMapper;
+import com.ozerler.marble.mapper.SupplierMapper;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.Machine;
@@ -89,12 +95,12 @@ class MasterDataServiceTest {
                 supplierRepository, costCenterRepository, machineFuelEntryRepository, blockRepository,
                 salesOrderRepository, purchaseOrderRepository, costTransactionRepository,
                 blockCustomerMarkRepository, invoiceRepository, collectionRecordRepository,
-                Mockito.mock(com.ozerler.marble.mapper.CustomerMapper.class),
-                Mockito.mock(com.ozerler.marble.mapper.SupplierMapper.class),
-                Mockito.mock(com.ozerler.marble.mapper.MachineMapper.class),
-                Mockito.mock(com.ozerler.marble.mapper.QuarryMapper.class),
-                Mockito.mock(com.ozerler.marble.mapper.StockLocationMapper.class),
-                Mockito.mock(com.ozerler.marble.mapper.CostCenterMapper.class));
+                Mockito.mock(CustomerMapper.class),
+                Mockito.mock(SupplierMapper.class),
+                Mockito.mock(MachineMapper.class),
+                Mockito.mock(QuarryMapper.class),
+                Mockito.mock(StockLocationMapper.class),
+                Mockito.mock(CostCenterMapper.class));
     }
 
     @AfterEach

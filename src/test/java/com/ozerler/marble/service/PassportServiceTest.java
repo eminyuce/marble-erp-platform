@@ -12,6 +12,8 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ozerler.marble.dto.PassportResult;
+import com.ozerler.marble.dto.view.PalletRef;
+import com.ozerler.marble.dto.view.SlabView;
 import com.ozerler.marble.mapper.CutOrderMapper;
 import com.ozerler.marble.mapper.ProductionOrderMapper;
 import com.ozerler.marble.mapper.SlabMapper;
@@ -50,7 +52,7 @@ class PassportServiceTest {
     void getPassportByCodeResolvesPallet() {
         Pallet pallet = Pallet.builder().palletCode("PAL-2026-001").build();
         Mockito.when(palletRepository.findByPalletCode("PAL-2026-001")).thenReturn(Optional.of(pallet));
-        com.ozerler.marble.dto.view.PalletRef palletView = new com.ozerler.marble.dto.view.PalletRef();
+        PalletRef palletView = new PalletRef();
         palletView.setPalletCode("PAL-2026-001");
         Mockito.when(productionOrderMapper.toPallet(pallet)).thenReturn(palletView);
 
@@ -68,7 +70,7 @@ class PassportServiceTest {
         Slab slab = Slab.builder().slabCode("SLB-2026-002").build();
         Mockito.when(palletRepository.findByPalletCode("SLB-2026-002")).thenReturn(Optional.empty());
         Mockito.when(slabRepository.findBySlabCodeWithBlock("SLB-2026-002")).thenReturn(Optional.of(slab));
-        com.ozerler.marble.dto.view.SlabView slabView = new com.ozerler.marble.dto.view.SlabView();
+        SlabView slabView = new SlabView();
         slabView.setSlabCode("SLB-2026-002");
         Mockito.when(slabMapper.toDto(slab)).thenReturn(slabView);
 

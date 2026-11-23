@@ -2,6 +2,7 @@ package com.ozerler.marble.controller.admin;
 
 
 import java.util.List;
+import java.util.Map;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -90,7 +91,7 @@ class UserControllerTest {
 
         Assertions.assertThat(view).isEqualTo("admin/users/index");
         Assertions.assertThat(model.getAttribute("filterRoles")).isNotNull();
-        Assertions.assertThat(model.getAttribute("roleLabelMap")).isInstanceOf(java.util.Map.class);
+        Assertions.assertThat(model.getAttribute("roleLabelMap")).isInstanceOf(Map.class);
     }
 
     @Test

@@ -1,7 +1,12 @@
 package com.ozerler.marble.service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,17 +83,17 @@ public class AuditPresenter {
         if (dateTime instanceof LocalDateTime ldt) {
             return ldt.format(DATE_TIME_FORMATTER);
         }
-        if (dateTime instanceof java.time.ZonedDateTime zdt) {
+        if (dateTime instanceof ZonedDateTime zdt) {
             return zdt.format(DATE_TIME_FORMATTER);
         }
-        if (dateTime instanceof java.time.OffsetDateTime odt) {
+        if (dateTime instanceof OffsetDateTime odt) {
             return odt.format(DATE_TIME_FORMATTER);
         }
-        if (dateTime instanceof java.time.Instant inst) {
-            return LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
+        if (dateTime instanceof Instant inst) {
+            return LocalDateTime.ofInstant(inst, ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
         }
-        if (dateTime instanceof java.util.Date d) {
-            return LocalDateTime.ofInstant(d.toInstant(), java.time.ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
+        if (dateTime instanceof Date d) {
+            return LocalDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
         }
         try {
             return LocalDateTime.parse(dateTime.toString()).format(DATE_TIME_FORMATTER);

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.Pallet;
+import com.ozerler.marble.model.enums.StockLocationType;
 
 @Repository
 public interface PalletRepository extends JpaRepository<Pallet, Long> {
@@ -16,7 +17,7 @@ public interface PalletRepository extends JpaRepository<Pallet, Long> {
 
     boolean existsByPalletCode(String palletCode);
 
-    List<Pallet> findByCurrentLocationLocationType(com.ozerler.marble.model.enums.StockLocationType locationType);
+    List<Pallet> findByCurrentLocationLocationType(StockLocationType locationType);
 
     @EntityGraph(attributePaths = {"slabs", "currentLocation", "customer", "project"})
     @Query("SELECT p FROM Pallet p ORDER BY p.id DESC")

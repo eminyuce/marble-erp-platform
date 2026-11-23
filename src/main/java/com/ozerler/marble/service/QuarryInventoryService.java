@@ -10,6 +10,12 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
+import com.ozerler.marble.dto.view.MachineRef;
+import com.ozerler.marble.dto.view.StockItemView;
+import com.ozerler.marble.mapper.MachineFuelMapper;
+import com.ozerler.marble.mapper.MachineMapper;
+import com.ozerler.marble.mapper.StockItemMapper;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Invoice;
 import com.ozerler.marble.model.Machine;
@@ -46,9 +52,9 @@ public class QuarryInventoryService {
     private static final int RECENT_DAYS = 30;
 
     private final StockItemRepository stockItemRepository;
-    private final com.ozerler.marble.mapper.MachineFuelMapper machineFuelMapper;
-    private final com.ozerler.marble.mapper.MachineMapper machineMapper;
-    private final com.ozerler.marble.mapper.StockItemMapper stockItemMapper;
+    private final MachineFuelMapper machineFuelMapper;
+    private final MachineMapper machineMapper;
+    private final StockItemMapper stockItemMapper;
     private final StockLocationRepository stockLocationRepository;
     private final MachineRepository machineRepository;
     private final MachineFuelEntryRepository fuelEntryRepository;
@@ -601,7 +607,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.StockItemView getOrCreateFuelTankStockItemView() {
+    public StockItemView getOrCreateFuelTankStockItemView() {
         return stockItemMapper.toDto(getOrCreateFuelTankStockItem());
     }
 
@@ -615,7 +621,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.StockItemView addFuelStockView(BigDecimal litres, BigDecimal netUnitPrice, Invoice invoice, String notes) {
+    public StockItemView addFuelStockView(BigDecimal litres, BigDecimal netUnitPrice, Invoice invoice, String notes) {
         return stockItemMapper.toDto(addFuelStock(litres, netUnitPrice, invoice, notes));
     }
 
@@ -628,7 +634,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.StockItemView addFuelStockView(BigDecimal litres, BigDecimal netUnitPrice, String invoiceNo) {
+    public StockItemView addFuelStockView(BigDecimal litres, BigDecimal netUnitPrice, String invoiceNo) {
         return stockItemMapper.toDto(addFuelStock(litres, netUnitPrice, invoiceNo));
     }
 
@@ -642,7 +648,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.StockItemView consumeConsumableView(Long stockItemId, BigDecimal quantity, Long machineId, String notes) {
+    public StockItemView consumeConsumableView(Long stockItemId, BigDecimal quantity, Long machineId, String notes) {
         return stockItemMapper.toDto(consumeConsumable(stockItemId, quantity, machineId, notes));
     }
 
@@ -660,7 +666,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.StockItemView createStockCardView(QuarryCategory category, String description, String unit,
+    public StockItemView createStockCardView(QuarryCategory category, String description, String unit,
                                      BigDecimal initialQuantity, BigDecimal netUnitPrice,
                                      String itemCode, Boolean isExpense, String notes) {
         return stockItemMapper.toDto(createStockCard(category, description, unit, initialQuantity, netUnitPrice, itemCode, isExpense, notes));
@@ -679,7 +685,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.StockItemView createStockCardView(QuarryCategory category, String description, String unit,
+    public StockItemView createStockCardView(QuarryCategory category, String description, String unit,
                                      BigDecimal initialQuantity, BigDecimal netUnitPrice,
                                      String itemCode, String notes) {
         return stockItemMapper.toDto(createStockCard(category, description, unit, initialQuantity, netUnitPrice, itemCode, notes));
@@ -692,7 +698,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.StockItemView> getAllQuarryStockCardsViews(QuarryCategory category) {
+    public List<StockItemView> getAllQuarryStockCardsViews(QuarryCategory category) {
         return getAllQuarryStockCards(category).stream().map(stockItemMapper::toDto).toList();
     }
 
@@ -702,7 +708,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.MachineRef> getQuarryMachinesViews() {
+    public List<MachineRef> getQuarryMachinesViews() {
         return getQuarryMachines().stream().map(machineMapper::toDto).toList();
     }
 
@@ -715,7 +721,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.MachineRef createQuarryMachineView(String code, String name, String notes) {
+    public MachineRef createQuarryMachineView(String code, String name, String notes) {
         return machineMapper.toDto(createQuarryMachine(code, name, notes));
     }
 
@@ -725,7 +731,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.MachineFuelEntryView> getRecentFuelEntryViews() {
+    public List<MachineFuelEntryView> getRecentFuelEntryViews() {
         return getRecentFuelEntries().stream().map(machineFuelMapper::toDto).toList();
     }
 
@@ -743,7 +749,7 @@ public class QuarryInventoryService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.MachineFuelEntryView dispenseFuelView(Long machineId, BigDecimal litres, LocalDate entryDate,
+    public MachineFuelEntryView dispenseFuelView(Long machineId, BigDecimal litres, LocalDate entryDate,
                                          BigDecimal workingHoursOrKm, String receiptNo,
                                          String issuedBy, String receivedBy, String notes) {
         return machineFuelMapper.toDto(dispenseFuel(machineId, litres, entryDate, workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes));

@@ -2,6 +2,7 @@ package com.ozerler.marble.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
 import com.ozerler.marble.dto.view.InvoiceRef;
@@ -25,7 +26,7 @@ public interface InvoiceMapper {
      * @param invoice the entity
      * @return the header view
      */
-    @org.mapstruct.Named("row")
+    @Named("row")
     @Mapping(target = "invoiceNumber", source = "invoiceNo")
     @Mapping(target = "internalTransfer", ignore = true)
     @Mapping(target = "items", ignore = true)

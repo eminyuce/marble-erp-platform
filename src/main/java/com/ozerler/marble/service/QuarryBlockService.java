@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,12 @@ import com.ozerler.marble.domain.BlockMeasurement;
 import com.ozerler.marble.dto.BlockDto;
 import com.ozerler.marble.dto.QuarrySummaryDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.BlockDetailPage;
+import com.ozerler.marble.dto.view.BlockMovementView;
+import com.ozerler.marble.dto.view.BlockView;
+import com.ozerler.marble.dto.view.QuarryRef;
+import com.ozerler.marble.mapper.BlockMapper;
+import com.ozerler.marble.mapper.QuarryMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.BlockLocationMovement;
 import com.ozerler.marble.model.CostCenter;
@@ -46,6 +54,7 @@ import com.ozerler.marble.repository.ShipmentItemRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockLocationRepository;
 import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
 import com.ozerler.marble.util.UniqueCodes;
 
 import lombok.RequiredArgsConstructor;
@@ -58,10 +67,10 @@ public class QuarryBlockService {
     private static final int BLOCK_CODE_SEQUENCE_WIDTH = 3;
 
     private final BlockRepository blockRepository;
-    private final com.ozerler.marble.mapper.BlockMapper blockMapper;
-    private final com.ozerler.marble.mapper.QuarryMapper quarryMapper;
+    private final BlockMapper blockMapper;
+    private final QuarryMapper quarryMapper;
     private final QuarryRepository quarryRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
     private final StockLocationRepository stockLocationRepository;
     private final BlockLocationMovementRepository movementRepository;
     private final CostAnalysisService costAnalysisService;
@@ -82,12 +91,12 @@ public class QuarryBlockService {
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     @Transactional(readOnly = true)
@@ -851,7 +860,7 @@ public class QuarryBlockService {
      * @return the block view
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.view.BlockView getBlock(Long id) {
+    public BlockView getBlock(Long id) {
         return blockViews.toView(getBlockWithDetails(id));
     }
 
@@ -862,7 +871,7 @@ public class QuarryBlockService {
      * @return the detail page figures
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.view.BlockDetailPage getBlockDetailPage(Long id) {
+    public BlockDetailPage getBlockDetailPage(Long id) {
         Block block = getBlockWithDetails(id);
         Long quarryId = null;
         if (block.getQuarry() != null) {
@@ -875,7 +884,7 @@ public class QuarryBlockService {
                 expensePerTon = breakdown.getExpensePerTon();
             }
         }
-        return new com.ozerler.marble.dto.view.BlockDetailPage(
+        return new BlockDetailPage(
                 blockViews.toView(block),
                 blockCostCalculationService.calculatedExtractionCost(block, expensePerTon),
                 blockCostCalculationService.calculatedTotalCost(block, expensePerTon),
@@ -890,7 +899,7 @@ public class QuarryBlockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.QuarryRef> getAllQuarryViews() {
+    public List<QuarryRef> getAllQuarryViews() {
         return getAllQuarries().stream().map(quarryMapper::toDto).toList();
     }
 
@@ -900,7 +909,7 @@ public class QuarryBlockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.BlockView> getDispatchedBlockViews() {
+    public List<BlockView> getDispatchedBlockViews() {
         return getDispatchedBlocks().stream().map(blockViews::toView).toList();
     }
 
@@ -910,7 +919,7 @@ public class QuarryBlockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.BlockView> getAvailableBlockViewsForProduction() {
+    public List<BlockView> getAvailableBlockViewsForProduction() {
         return getAvailableBlocksForProduction().stream().map(blockViews::toView).toList();
     }
 
@@ -921,7 +930,7 @@ public class QuarryBlockService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.BlockMovementView> getMovementViews(Long blockId) {
+    public List<BlockMovementView> getMovementViews(Long blockId) {
         return getMovements(blockId).stream().map(blockMapper::toMovement).toList();
     }
 }

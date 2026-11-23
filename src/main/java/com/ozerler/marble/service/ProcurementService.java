@@ -7,14 +7,24 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.CostCenterDto;
 import com.ozerler.marble.dto.PurchaseOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.dto.option.ProjectOption;
+import com.ozerler.marble.dto.view.CostCenterRef;
+import com.ozerler.marble.dto.view.PartyView;
+import com.ozerler.marble.dto.view.PurchaseOrderView;
+import com.ozerler.marble.mapper.CostCenterMapper;
+import com.ozerler.marble.mapper.PurchaseOrderMapper;
+import com.ozerler.marble.mapper.SupplierMapper;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.PurchaseOrder;
@@ -29,6 +39,7 @@ import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.PurchaseOrderRepository;
 import com.ozerler.marble.repository.SupplierRepository;
 import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,24 +50,24 @@ public class ProcurementService {
     private static final int ORDER_NO_RANGE = 99999;
 
     private final PurchaseOrderRepository purchaseOrderRepository;
-    private final com.ozerler.marble.mapper.CostCenterMapper costCenterMapper;
-    private final com.ozerler.marble.mapper.PurchaseOrderMapper purchaseOrderMapper;
-    private final com.ozerler.marble.mapper.SupplierMapper supplierMapper;
+    private final CostCenterMapper costCenterMapper;
+    private final PurchaseOrderMapper purchaseOrderMapper;
+    private final SupplierMapper supplierMapper;
     private final SupplierRepository supplierRepository;
     private final ProjectRepository projectRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
     private final ExpenseService expenseService;
     private final CostCenterRepository costCenterRepository;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public record ProcurementSummaryDto(long totalOrders, BigDecimal totalAmount, long pendingDeliveries, long completedDeliveries) {
@@ -95,8 +106,8 @@ public class ProcurementService {
     }
 
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.PartyView> getAllSuppliers() {
-        return BoundedReads.all(supplierRepository, org.springframework.data.domain.Sort.by("companyName")).stream()
+    public List<PartyView> getAllSuppliers() {
+        return BoundedReads.all(supplierRepository, Sort.by("companyName")).stream()
                 .map(supplierMapper::toDto)
                 .toList();
     }
@@ -248,7 +259,7 @@ public class ProcurementService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.view.PurchaseOrderView getOrder(Long id) {
+    public PurchaseOrderView getOrder(Long id) {
         return purchaseOrderMapper.toDto(getOrderById(id));
     }
 
@@ -265,7 +276,7 @@ public class ProcurementService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.PurchaseOrderView createPurchaseOrderView(String poNumber, Long supplierId, Long projectId,
+    public PurchaseOrderView createPurchaseOrderView(String poNumber, Long supplierId, Long projectId,
                                              BusinessUnit businessUnit, Long costCenterId,
                                              LocalDate expectedDelivery, String notes) {
         return purchaseOrderMapper.toDto(createPurchaseOrder(poNumber, supplierId, projectId, businessUnit, costCenterId, expectedDelivery, notes));
@@ -278,7 +289,7 @@ public class ProcurementService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.CostCenterRef> getCostCenterViewsForUnit(BusinessUnit businessUnit) {
+    public List<CostCenterRef> getCostCenterViewsForUnit(BusinessUnit businessUnit) {
         return getCostCentersForUnit(businessUnit).stream().map(costCenterMapper::toDto).toList();
     }
 
@@ -289,7 +300,7 @@ public class ProcurementService {
      * @return cost center DTOs
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.CostCenterDto> getCostCenterDtosForUnit(BusinessUnit businessUnit) {
-        return getCostCentersForUnit(businessUnit).stream().map(com.ozerler.marble.dto.CostCenterDto::fromEntity).toList();
+    public List<CostCenterDto> getCostCenterDtosForUnit(BusinessUnit businessUnit) {
+        return getCostCentersForUnit(businessUnit).stream().map(CostCenterDto::fromEntity).toList();
     }
 }

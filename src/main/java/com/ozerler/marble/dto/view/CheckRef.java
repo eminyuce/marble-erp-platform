@@ -1,5 +1,11 @@
 package com.ozerler.marble.dto.view;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.CheckStatus;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,10 +17,10 @@ import lombok.Setter;
 public class CheckRef {
     private Long id;
     private String checkNo;
-    private java.math.BigDecimal amount;
+    private BigDecimal amount;
     private String bankName;
-    private java.time.LocalDate dueDate;
+    private LocalDate dueDate;
     private PartyView customer;
-    private com.ozerler.marble.model.enums.BusinessUnit effectiveBusinessUnit;
-    private com.ozerler.marble.model.enums.CheckStatus status;
+    private BusinessUnit effectiveBusinessUnit;
+    private CheckStatus status;
 }

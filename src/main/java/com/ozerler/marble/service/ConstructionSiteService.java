@@ -2,14 +2,18 @@ package com.ozerler.marble.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ozerler.marble.domain.SiteProfitAndLoss;
+import com.ozerler.marble.dto.view.SiteViews;
+import com.ozerler.marble.mapper.SiteMapper;
 import com.ozerler.marble.model.ConstructionSiteStonePlan;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.MaterialLot;
@@ -50,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ConstructionSiteService {
 
     private final ProjectRepository projectRepository;
-    private final com.ozerler.marble.mapper.SiteMapper siteMapper;
+    private final SiteMapper siteMapper;
     private final ProjectLocationRepository projectLocationRepository;
     private final ConstructionSiteStonePlanRepository stonePlanRepository;
     private final SiteSupplyAllocationRepository allocationRepository;
@@ -268,7 +272,7 @@ public class ConstructionSiteService {
     @Transactional(readOnly = true)
     public SiteProfitAndLoss.Result profitAndLoss(Long projectId) {
         Project project = projectSiteService.getProjectById(projectId);
-        Map<ExpenseCategory, BigDecimal> categories = new java.util.EnumMap<>(ExpenseCategory.class);
+        Map<ExpenseCategory, BigDecimal> categories = new EnumMap<>(ExpenseCategory.class);
         for (Object[] row : costTransactionRepository.sumCategoriesByProjectId(projectId)) {
             if (row[0] instanceof ExpenseCategory category) {
                 categories.put(category, (BigDecimal) row[1]);
@@ -286,7 +290,7 @@ public class ConstructionSiteService {
     }
 
     public List<Customer> customers() {
-        return BoundedReads.all(customerRepository, org.springframework.data.domain.Sort.by("companyName"));
+        return BoundedReads.all(customerRepository, Sort.by("companyName"));
     }
 
     /**
@@ -296,7 +300,7 @@ public class ConstructionSiteService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.SiteViews.PlanView> planViewsFor(Long projectId) {
+    public List<SiteViews.PlanView> planViewsFor(Long projectId) {
         return plansFor(projectId).stream().map(siteMapper::toPlan).toList();
     }
 
@@ -307,7 +311,7 @@ public class ConstructionSiteService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.SiteViews.InstallationView> installationViewsFor(Long projectId) {
+    public List<SiteViews.InstallationView> installationViewsFor(Long projectId) {
         return installationsFor(projectId).stream().map(siteMapper::toInstallation).toList();
     }
 }

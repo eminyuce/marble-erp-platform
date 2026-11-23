@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -79,8 +80,8 @@ class UserFacingExceptionHandlerTest {
         Assertions.assertThat(body).isInstanceOf(ResponseEntity.class);
         ResponseEntity<?> entity = (ResponseEntity<?>) body;
         Assertions.assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        Assertions.assertThat(entity.getBody()).isInstanceOf(org.springframework.http.ProblemDetail.class);
-        org.springframework.http.ProblemDetail error = (org.springframework.http.ProblemDetail) entity.getBody();
+        Assertions.assertThat(entity.getBody()).isInstanceOf(ProblemDetail.class);
+        ProblemDetail error = (ProblemDetail) entity.getBody();
         Assertions.assertThat(error.getDetail()).isEqualTo("Blok kesim için hazır değil");
         Assertions.assertThat(error.getInstance()).hasToString("/production/polish");
     }

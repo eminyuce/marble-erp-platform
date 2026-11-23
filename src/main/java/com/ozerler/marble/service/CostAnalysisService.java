@@ -21,6 +21,7 @@ import com.ozerler.marble.domain.QuarryPeriodCost;
 import com.ozerler.marble.domain.SiteProfitAndLoss;
 import com.ozerler.marble.dto.CostAnalysisDto;
 import com.ozerler.marble.dto.SiteProfitDto;
+import com.ozerler.marble.exception.ProjectNotFoundException;
 import com.ozerler.marble.model.CostTransaction;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.enums.BusinessUnit;
@@ -86,7 +87,7 @@ public class CostAnalysisService {
     @Transactional(readOnly = true)
     public SiteProfitDto profitFor(Long projectId) {
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new com.ozerler.marble.exception.ProjectNotFoundException(projectId));
+                .orElseThrow(() -> new ProjectNotFoundException(projectId));
         return profitFor(project);
     }
 

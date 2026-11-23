@@ -19,6 +19,10 @@ import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.FuelPeriodSummary;
+import com.ozerler.marble.dto.view.MachineFuelEntryView;
+import com.ozerler.marble.dto.view.MachineRef;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.service.MachineFuelService;
 
@@ -41,7 +45,7 @@ class MachineFuelControllerTest {
         Mockito.when(machineFuelService.getMonthlyReport(ArgumentMatchers.any())).thenReturn(List.of());
         Mockito.when(machineFuelService.quarryAndFactoryMachineViews()).thenReturn(List.of());
         Mockito.when(machineFuelService.periodSummary(ArgumentMatchers.any())).thenReturn(
-                new com.ozerler.marble.dto.view.FuelPeriodSummary(BigDecimal.ZERO, BigDecimal.ZERO, 0, 0L));
+                new FuelPeriodSummary(BigDecimal.ZERO, BigDecimal.ZERO, 0, 0L));
 
         String view = controller.index("2026-09", model);
 
@@ -65,11 +69,11 @@ class MachineFuelControllerTest {
 
     @Test
     void createFuelEntryWhenValidRedirectsToIndex() {
-        com.ozerler.marble.dto.view.MachineRef machine = new com.ozerler.marble.dto.view.MachineRef();
+        MachineRef machine = new MachineRef();
         machine.setId(1L);
         machine.setName("CAT 320");
         machine.setBusinessUnit(BusinessUnit.QUARRY);
-        com.ozerler.marble.dto.view.MachineFuelEntryView entry = new com.ozerler.marble.dto.view.MachineFuelEntryView();
+        MachineFuelEntryView entry = new MachineFuelEntryView();
         entry.setId(10L);
         entry.setMachine(machine);
         entry.setLitres(new BigDecimal("450"));
@@ -102,7 +106,7 @@ class MachineFuelControllerTest {
     @Test
     void getFuelDataReturnsTabulatorResponse() {
         Mockito.when(machineFuelService.getFuelPaged(1, 25, "CAT", "2026-09", "QUARRY", 1L, "entryDate", "desc"))
-                .thenReturn(com.ozerler.marble.dto.TabulatorResponse.of(List.of(), 1, 0));
+                .thenReturn(TabulatorResponse.of(List.of(), 1, 0));
 
         var response = controller.getFuelData(1, 25, "CAT", "2026-09", "QUARRY", 1L, "entryDate", "desc");
 

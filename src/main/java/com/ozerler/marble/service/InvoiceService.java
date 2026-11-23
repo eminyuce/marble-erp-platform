@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ozerler.marble.dto.option.PartyOption;
 import com.ozerler.marble.dto.view.InvoiceRef;
+import com.ozerler.marble.dto.view.InvoiceView;
+import com.ozerler.marble.exception.InvoiceNotFoundException;
 import com.ozerler.marble.mapper.InvoiceMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.BlockLocationMovement;
@@ -1263,14 +1265,14 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.view.InvoiceView getInvoice(Long id) {
+    public InvoiceView getInvoice(Long id) {
         Invoice invoice;
         try {
             invoice = getInvoiceById(id);
         } catch (IllegalArgumentException ex) {
-            throw new com.ozerler.marble.exception.InvoiceNotFoundException(id);
+            throw new InvoiceNotFoundException(id);
         }
-        com.ozerler.marble.dto.view.InvoiceView view = invoiceMapper.toDto(invoice);
+        InvoiceView view = invoiceMapper.toDto(invoice);
         view.setInternalTransfer(invoice.isInternalTransfer());
         if (view.getItems() != null && invoice.getItems() != null) {
             int count = Math.min(view.getItems().size(), invoice.getItems().size());
@@ -1377,7 +1379,7 @@ public class InvoiceService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.view.InvoiceView> searchInvoiceRows(InvoiceType type, BusinessUnit dept, InvoiceStatus status,
+    public Page<InvoiceView> searchInvoiceRows(InvoiceType type, BusinessUnit dept, InvoiceStatus status,
                                         Long customerId, LocalDate startDate, LocalDate endDate,
                                         String search, int page, int size) {
         return searchInvoices(type, dept, status, customerId, startDate, endDate, search, page, size).map(invoiceMapper::toRow);

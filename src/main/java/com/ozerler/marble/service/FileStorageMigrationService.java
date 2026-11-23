@@ -13,6 +13,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.config.ObjectStorageProperties;
 import com.ozerler.marble.model.FileStorage;
 import com.ozerler.marble.repository.FileStorageRepository;
@@ -108,7 +109,7 @@ public class FileStorageMigrationService {
 
         record.setObjectKey(objectKey);
         record.setBucketName(objectStorageService.getBucketName());
-        record.setFilePath(com.ozerler.marble.common.Constants.FILE_VIEW_URL_PREFIX + record.getId());
+        record.setFilePath(Constants.FILE_VIEW_URL_PREFIX + record.getId());
         fileStorageRepository.save(record);
         log.info("Migrated filesystem file to object storage fileId={} objectKey={} source={}",
                 record.getId(), objectKey, source);

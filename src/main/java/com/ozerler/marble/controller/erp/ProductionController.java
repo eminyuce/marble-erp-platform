@@ -1,6 +1,8 @@
 package com.ozerler.marble.controller.erp;
 
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -25,6 +27,7 @@ import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.SlabLabelDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.FactoryOperationView;
 import com.ozerler.marble.dto.view.ProductionOrderView;
 import com.ozerler.marble.dto.view.SlabView;
 import com.ozerler.marble.model.enums.BusinessUnit;
@@ -253,7 +256,7 @@ public class ProductionController {
 
     @GetMapping("/polish/{id}/edit")
     public String editPolishForm(@PathVariable("id") Long id, Model model) {
-        com.ozerler.marble.dto.view.FactoryOperationView op = factoryProductionService.getOperationView(id);
+        FactoryOperationView op = factoryProductionService.getOperationView(id);
         model.addAttribute("operation", op);
         model.addAttribute("factoryMachines", factoryProductionService.factoryMachineViews());
         model.addAttribute("chamferStatuses", ChamferStatus.values());
@@ -464,7 +467,7 @@ public class ProductionController {
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.production.plan.success", null, locale));
         if (operatorName != null && !operatorName.isBlank()) {
-            return "redirect:/production/tablet?operatorName=" + java.net.URLEncoder.encode(operatorName, java.nio.charset.StandardCharsets.UTF_8);
+            return "redirect:/production/tablet?operatorName=" + URLEncoder.encode(operatorName, StandardCharsets.UTF_8);
         }
         return "redirect:/production/tablet";
     }
@@ -479,7 +482,7 @@ public class ProductionController {
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.production.tablet.start.success", null, locale));
         if (operatorName != null && !operatorName.isBlank()) {
-            return "redirect:/production/tablet?operatorName=" + java.net.URLEncoder.encode(operatorName, java.nio.charset.StandardCharsets.UTF_8);
+            return "redirect:/production/tablet?operatorName=" + URLEncoder.encode(operatorName, StandardCharsets.UTF_8);
         }
         return "redirect:/production/tablet";
     }
@@ -499,7 +502,7 @@ public class ProductionController {
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("erp.production.tablet.finish.success", null, locale));
         if (operatorName != null && !operatorName.isBlank()) {
-            return "redirect:/production/tablet?operatorName=" + java.net.URLEncoder.encode(operatorName, java.nio.charset.StandardCharsets.UTF_8);
+            return "redirect:/production/tablet?operatorName=" + URLEncoder.encode(operatorName, StandardCharsets.UTF_8);
         }
         return "redirect:/production/tablet";
     }

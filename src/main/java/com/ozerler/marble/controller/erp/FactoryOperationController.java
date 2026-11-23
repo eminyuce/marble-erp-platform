@@ -1,6 +1,7 @@
 package com.ozerler.marble.controller.erp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,6 +34,7 @@ import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.model.enums.SurfaceFinish;
 import com.ozerler.marble.service.FactoryInventoryService;
 import com.ozerler.marble.service.FactoryStockService;
+import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.service.OperationWorkOrderService;
 import com.ozerler.marble.web.FactoryOrderGrid;
 import com.ozerler.marble.web.FactorySizedGrid;
@@ -50,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FactoryOperationController extends AbstractController {
 
-    private final com.ozerler.marble.service.FormLookupService formLookup;
+    private final FormLookupService formLookup;
 
     private final FactoryStockService factoryStockService;
     private final OperationWorkOrderService workOrderService;
@@ -443,7 +445,7 @@ public class FactoryOperationController extends AbstractController {
                                       RedirectAttributes redirectAttributes) {
         try {
             MachineFuelEntryView entry = factoryInventoryService.dispenseFuelView(
-                    machineId, litres, java.time.LocalDate.now(), workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes);
+                    machineId, litres, LocalDate.now(), workingHoursOrKm, receiptNo, issuedBy, receivedBy, notes);
             redirectAttributes.addFlashAttribute("successMessage",
                     String.format("%s aracına %s litre mazot verildi. Tutar (KDV hariç net): %s TL fabrika giderine yazıldı.",
                             entry.getMachine().getName(), litres, entry.getTotalAmount()));

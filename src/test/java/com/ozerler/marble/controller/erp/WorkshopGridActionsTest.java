@@ -4,13 +4,17 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.ozerler.marble.dto.CutOrderDto;
+import com.ozerler.marble.web.GridRow;
+import com.ozerler.marble.web.WorkshopGrid;
+
 class WorkshopGridActionsTest {
 
     @Test
     @DisplayName("Workshop grid keeps the cut-order detail and edit links")
     void gridCamelizesApiRows() throws Exception {
         String html = readWorkshopIndex();
-        com.ozerler.marble.dto.CutOrderDto order = com.ozerler.marble.dto.CutOrderDto.builder()
+        CutOrderDto order = CutOrderDto.builder()
                 .id(5L)
                 .cutOrderNo("IE-5")
                 .projectName("Ada")
@@ -19,7 +23,7 @@ class WorkshopGridActionsTest {
                 .build();
 
         Assertions.assertThat(html).contains("fragments/data-grid :: shell");
-        com.ozerler.marble.web.GridRow row = com.ozerler.marble.web.WorkshopGrid.row(order);
+        GridRow row = WorkshopGrid.row(order);
         Assertions.assertThat(row.getViewUrl()).isEqualTo("/workshop/5");
         Assertions.assertThat(row.getEditUrl()).isEqualTo("/workshop/5/edit");
         Assertions.assertThat(row.getCells()).anyMatch(cell -> "IE-5".equals(cell.getText()));

@@ -2,10 +2,15 @@ package com.ozerler.marble.service;
 
 import java.util.Optional;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ozerler.marble.dto.PassportResult;
+import com.ozerler.marble.mapper.CutOrderMapper;
+import com.ozerler.marble.mapper.ProductionOrderMapper;
+import com.ozerler.marble.mapper.SlabMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CutItem;
 import com.ozerler.marble.model.Pallet;
@@ -14,6 +19,7 @@ import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CutItemRepository;
 import com.ozerler.marble.repository.PalletRepository;
 import com.ozerler.marble.repository.SlabRepository;
+import com.ozerler.marble.util.MessageUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,21 +34,21 @@ public class PassportService {
     private final SlabRepository slabRepository;
     private final BlockRepository blockRepository;
     private final CutItemRepository cutItemRepository;
-    private final com.ozerler.marble.mapper.ProductionOrderMapper productionOrderMapper;
-    private final com.ozerler.marble.mapper.SlabMapper slabMapper;
-    private final com.ozerler.marble.mapper.CutOrderMapper cutOrderMapper;
+    private final ProductionOrderMapper productionOrderMapper;
+    private final SlabMapper slabMapper;
+    private final CutOrderMapper cutOrderMapper;
     private final BlockViews blockViews;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     @Transactional(readOnly = true)

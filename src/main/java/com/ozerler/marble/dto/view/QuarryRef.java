@@ -1,5 +1,7 @@
 package com.ozerler.marble.dto.view;
 
+import java.math.BigDecimal;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,5 +12,5 @@ public class QuarryRef {
     private String code;
     private String name;
     private String location;
-    private java.math.BigDecimal specificGravity;
+    private BigDecimal specificGravity;
 }

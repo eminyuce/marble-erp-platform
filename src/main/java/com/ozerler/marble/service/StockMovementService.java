@@ -2,8 +2,13 @@ package com.ozerler.marble.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+
+import jakarta.persistence.Persistence;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,6 +16,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.StockMovementView;
+import com.ozerler.marble.mapper.InvoiceMapper;
+import com.ozerler.marble.mapper.StockMovementMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.Invoice;
@@ -37,8 +46,8 @@ public class StockMovementService {
     private static final int RECENT_DAYS = 30;
 
     private final StockMovementRepository movementRepository;
-    private final com.ozerler.marble.mapper.StockMovementMapper stockMovementMapper;
-    private final com.ozerler.marble.mapper.InvoiceMapper invoiceMapper;
+    private final StockMovementMapper stockMovementMapper;
+    private final InvoiceMapper invoiceMapper;
 
     @Transactional
     public StockMovement recordMovement(StockMovementType type,
@@ -438,16 +447,16 @@ public class StockMovementService {
      * @return grid rows
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.TabulatorResponse<java.util.Map<String, Object>> quarryDispatchRows(int page, int size) {
+    public TabulatorResponse<Map<String, Object>> quarryDispatchRows(int page, int size) {
         int pageIndex = Math.max(0, page - 1);
         Page<StockMovement> pageData = searchMovements(
                 null, BusinessUnit.QUARRY, null, null, null, null,
                 PageRequest.of(pageIndex, size));
 
-        java.time.format.DateTimeFormatter dateFmt = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
-        List<java.util.Map<String, Object>> list = pageData.getContent().stream().map(m -> {
-            java.util.Map<String, Object> map = new java.util.HashMap<>();
+        List<Map<String, Object>> list = pageData.getContent().stream().map(m -> {
+            Map<String, Object> map = new HashMap<>();
             map.put("id", m.getId());
             Object value;
             if (m.getMovementDate() != null) {
@@ -514,7 +523,7 @@ public class StockMovementService {
             return map;
         }).toList();
 
-        return com.ozerler.marble.dto.TabulatorResponse.of(list, pageData.getTotalPages(), pageData.getTotalElements());
+        return TabulatorResponse.of(list, pageData.getTotalPages(), pageData.getTotalElements());
     }
 
     /**
@@ -524,11 +533,11 @@ public class StockMovementService {
      * @return movement views
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.view.StockMovementView> quarryDispatchViews(
+    public Page<StockMovementView> quarryDispatchViews(
             Pageable pageable) {
         return searchMovements(null, BusinessUnit.QUARRY, null, null, null, null, pageable).map(movement -> {
-            com.ozerler.marble.dto.view.StockMovementView view = stockMovementMapper.toDto(movement);
-            if (jakarta.persistence.Persistence.getPersistenceUtil().isLoaded(movement, "invoice")
+            StockMovementView view = stockMovementMapper.toDto(movement);
+            if (Persistence.getPersistenceUtil().isLoaded(movement, "invoice")
                     && movement.getInvoice() != null) {
                 view.setInvoice(invoiceMapper.toRef(movement.getInvoice()));
             }

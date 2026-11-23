@@ -2,7 +2,9 @@ package com.ozerler.marble.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.data.domain.Page;
@@ -11,6 +13,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.CheckRef;
+import com.ozerler.marble.dto.view.CollectionRef;
+import com.ozerler.marble.mapper.CollectionMapper;
 import com.ozerler.marble.model.CheckRecord;
 import com.ozerler.marble.model.CollectionRecord;
 import com.ozerler.marble.model.Customer;
@@ -36,7 +42,7 @@ public class CollectionService {
     private static final int CHECK_WARNING_DAYS = 15;
 
     private final CollectionRecordRepository collectionRepository;
-    private final com.ozerler.marble.mapper.CollectionMapper collectionMapper;
+    private final CollectionMapper collectionMapper;
     private final CheckRecordRepository checkRepository;
     private final CustomerRepository customerRepository;
     private final InvoiceRepository invoiceRepository;
@@ -221,7 +227,7 @@ public class CollectionService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.CollectionRef recordCollectionRef(Long customerId, Long invoiceId, CollectionMethod method,
+    public CollectionRef recordCollectionRef(Long customerId, Long invoiceId, CollectionMethod method,
                                             BigDecimal amount, String bankName, String notes,
                                             CheckFormData checkData) {
         return collectionMapper.toRef(recordCollection(customerId, invoiceId, method, amount, bankName, notes, checkData));
@@ -236,7 +242,7 @@ public class CollectionService {
      * @return the view
      */
     @Transactional
-    public com.ozerler.marble.dto.view.CheckRef updateCheckStatusRef(Long checkId, CheckStatus newStatus, String notes) {
+    public CheckRef updateCheckStatusRef(Long checkId, CheckStatus newStatus, String notes) {
         return collectionMapper.toRef(updateCheckStatus(checkId, newStatus, notes));
     }
 
@@ -246,12 +252,12 @@ public class CollectionService {
      * @return grid rows
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.TabulatorResponse<java.util.Map<String, Object>> collectionRows(String search, CollectionMethod method, Long customerId, int page, int size) {
+    public TabulatorResponse<Map<String, Object>> collectionRows(String search, CollectionMethod method, Long customerId, int page, int size) {
         int pageIndex = Math.max(0, page - 1);
         Page<CollectionRecord> collectionPage = searchCollections(method, customerId, null, null, search, pageIndex, size);
 
-        List<java.util.Map<String, Object>> data = collectionPage.getContent().stream().map(c -> {
-            java.util.Map<String, Object> map = new java.util.HashMap<>();
+        List<Map<String, Object>> data = collectionPage.getContent().stream().map(c -> {
+            Map<String, Object> map = new HashMap<>();
             map.put("id", c.getId());
             map.put("collectionNo", c.getCollectionNo());
             Object value;
@@ -302,7 +308,7 @@ public class CollectionService {
             return map;
         }).toList();
 
-        return com.ozerler.marble.dto.TabulatorResponse.of(data, collectionPage.getTotalPages(), collectionPage.getTotalElements());
+        return TabulatorResponse.of(data, collectionPage.getTotalPages(), collectionPage.getTotalElements());
     }
 
     /**
@@ -311,12 +317,12 @@ public class CollectionService {
      * @return grid rows
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.TabulatorResponse<java.util.Map<String, Object>> checkRows(String search, BusinessUnit unit, CheckStatus status, Long customerId, int page, int size) {
+    public TabulatorResponse<Map<String, Object>> checkRows(String search, BusinessUnit unit, CheckStatus status, Long customerId, int page, int size) {
         int pageIndex = Math.max(0, page - 1);
         Page<CheckRecord> checkPage = searchChecks(unit, status, customerId, null, null, search, pageIndex, size);
 
-        List<java.util.Map<String, Object>> data = checkPage.getContent().stream().map(ch -> {
-            java.util.Map<String, Object> map = new java.util.HashMap<>();
+        List<Map<String, Object>> data = checkPage.getContent().stream().map(ch -> {
+            Map<String, Object> map = new HashMap<>();
             map.put("id", ch.getId());
             map.put("checkNo", ch.getCheckNo());
             map.put("bankName", Objects.requireNonNullElse(ch.getBankName(), "—"));
@@ -368,7 +374,7 @@ public class CollectionService {
             return map;
         }).toList();
 
-        return com.ozerler.marble.dto.TabulatorResponse.of(data, checkPage.getTotalPages(), checkPage.getTotalElements());
+        return TabulatorResponse.of(data, checkPage.getTotalPages(), checkPage.getTotalElements());
     }
 
     /**
@@ -384,7 +390,7 @@ public class CollectionService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.view.CollectionRef> searchCollectionViews(CollectionMethod method, Long customerId,
+    public Page<CollectionRef> searchCollectionViews(CollectionMethod method, Long customerId,
                                                     LocalDate startDate, LocalDate endDate,
                                                     String search, int page, int size) {
         return searchCollections(method, customerId, startDate, endDate, search, page, size).map(collectionMapper::toRef);
@@ -404,7 +410,7 @@ public class CollectionService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.view.CheckRef> searchCheckViews(BusinessUnit unit, CheckStatus status, Long customerId,
+    public Page<CheckRef> searchCheckViews(BusinessUnit unit, CheckStatus status, Long customerId,
                                           LocalDate startDate, LocalDate endDate,
                                           String search, int page, int size) {
         return searchChecks(unit, status, customerId, startDate, endDate, search, page, size).map(collectionMapper::toRef);
@@ -417,7 +423,7 @@ public class CollectionService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.CheckRef> getApproachingCheckViews(BusinessUnit unit) {
+    public List<CheckRef> getApproachingCheckViews(BusinessUnit unit) {
         return getApproachingChecks(unit).stream().map(collectionMapper::toRef).toList();
     }
 
@@ -428,7 +434,7 @@ public class CollectionService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.CheckRef> getOverdueCheckViews(BusinessUnit unit) {
+    public List<CheckRef> getOverdueCheckViews(BusinessUnit unit) {
         return getOverdueChecks(unit).stream().map(collectionMapper::toRef).toList();
     }
 }

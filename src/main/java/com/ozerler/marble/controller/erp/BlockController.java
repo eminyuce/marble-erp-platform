@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -24,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.controller.AbstractController;
+import com.ozerler.marble.domain.StoneTypeCatalog;
 import com.ozerler.marble.dto.BlockCodeAvailabilityDto;
 import com.ozerler.marble.dto.BlockDto;
 import com.ozerler.marble.dto.FileStorageDto;
@@ -120,11 +122,11 @@ public class BlockController extends AbstractController {
 
     @GetMapping("/api/generate-code")
     @ResponseBody
-    public java.util.Map<String, String> generateBlockCode(
+    public Map<String, String> generateBlockCode(
             @RequestParam(value = "quarryId", required = false) Long quarryId,
             @RequestParam(value = "section", defaultValue = "A3") String section) {
         String code = quarryBlockService.generateStandardBlockCode(quarryId, section);
-        return java.util.Map.of("code", code);
+        return Map.of("code", code);
     }
 
     @GetMapping("/api/block-code-available")
@@ -699,10 +701,10 @@ public class BlockController extends AbstractController {
                                           @RequestParam(value = "currency", defaultValue = "TRY") String currency) {
         try {
             Long markId = blockCustomerMarkService.markBlockId(id, customerId, LocalDate.now(), null, offerPrice, currency);
-            return ResponseEntity.ok(java.util.Map.of("success", true, "markId", markId));
+            return ResponseEntity.ok(Map.of("success", true, "markId", markId));
         } catch (Exception e) {
             log.error("Failed to mark block {}", id, e);
-            return ResponseEntity.badRequest().body(java.util.Map.of("success", false, "message", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
 
@@ -737,7 +739,7 @@ public class BlockController extends AbstractController {
     private void populateBlockForm(Model model, Locale locale) {
         model.addAttribute("quarries", quarryBlockService.getAllQuarryViews());
         model.addAttribute("qualityGrades", QualityGrade.values());
-        model.addAttribute("stoneCatalog", com.ozerler.marble.domain.StoneTypeCatalog.getAll());
+        model.addAttribute("stoneCatalog", StoneTypeCatalog.getAll());
         model.addAttribute("quarryYards", quarryYards());
         model.addAttribute("pageTitle", messageSource.getMessage("erp.block.title.create", null, locale));
     }

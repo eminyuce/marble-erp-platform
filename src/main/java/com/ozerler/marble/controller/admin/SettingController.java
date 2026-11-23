@@ -31,6 +31,7 @@ import com.ozerler.marble.exception.ResourceNotFoundException;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
+import com.ozerler.marble.service.DatabaseBackupService;
 import com.ozerler.marble.service.EmailService;
 import com.ozerler.marble.service.NoticeDismissDuration;
 import com.ozerler.marble.service.SettingService;
@@ -48,7 +49,7 @@ public class SettingController extends AbstractController {
     private final SettingService settingService;
     private final EmailService emailService;
     private final MessageSource messageSource;
-    private final com.ozerler.marble.service.DatabaseBackupService backupService;
+    private final DatabaseBackupService backupService;
 
     @GetMapping
     public String index(Model model, HttpServletRequest request) {

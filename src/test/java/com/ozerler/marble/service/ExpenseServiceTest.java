@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.ozerler.marble.dto.ExpenseSummaryDto;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.CostTransaction;
 import com.ozerler.marble.model.enums.BusinessUnit;
@@ -22,6 +23,8 @@ import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.repository.CostPeriodCloseRepository;
 import com.ozerler.marble.repository.CostTransactionRepository;
+import com.ozerler.marble.repository.ProjectRepository;
+import com.ozerler.marble.repository.QuarryRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ExpenseServiceTest {
@@ -38,8 +41,8 @@ class ExpenseServiceTest {
     @BeforeEach
     void setUp() {
         expenseService = new ExpenseService(costTransactionRepository, costCenterRepository, costPeriodCloseRepository,
-                Mockito.mock(com.ozerler.marble.repository.ProjectRepository.class),
-                Mockito.mock(com.ozerler.marble.repository.QuarryRepository.class));
+                Mockito.mock(ProjectRepository.class),
+                Mockito.mock(QuarryRepository.class));
     }
 
     @Test
@@ -107,7 +110,7 @@ class ExpenseServiceTest {
         Mockito.when(costTransactionRepository.sumByUnitAndPeriod(BusinessUnit.SITE, "2026-09")).thenReturn(new BigDecimal("15000"));
         Mockito.when(costTransactionRepository.countByExpensePeriod("2026-09")).thenReturn(12L);
 
-        com.ozerler.marble.dto.ExpenseSummaryDto summary = expenseService.getExpenseSummary("2026-09");
+        ExpenseSummaryDto summary = expenseService.getExpenseSummary("2026-09");
 
         Assertions.assertThat(summary).isNotNull();
         Assertions.assertThat(summary.getPeriod()).isEqualTo("2026-09");

@@ -1,5 +1,7 @@
 package com.ozerler.marble.exception;
 
+import java.util.Map;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -60,7 +62,7 @@ class GlobalExceptionHandlerTest {
         Assertions.assertThat(body.getDetail()).isEqualTo("Validation failed");
         Assertions.assertThat(body.getInstance()).hasToString("/api/upload");
         Assertions.assertThat(body.getProperties().get("errors"))
-                .isInstanceOf(java.util.Map.class);
+                .isInstanceOf(Map.class);
     }
 
     @Test

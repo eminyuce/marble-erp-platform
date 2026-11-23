@@ -3,7 +3,11 @@ package com.ozerler.marble.repository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
+
+import com.ozerler.marble.model.enums.BlockStatus;
+import com.ozerler.marble.model.enums.StockLocationType;
 
 class BlockRepositoryQueryTest {
 
@@ -24,10 +28,10 @@ class BlockRepositoryQueryTest {
     void searchBlocksUsesLeftJoinsForOptionalAssociations() throws Exception {
         Query query = BlockRepository.class
                 .getMethod("searchBlocks", String.class,
-                        com.ozerler.marble.model.enums.StockLocationType.class,
-                        com.ozerler.marble.model.enums.BlockStatus.class,
+                        StockLocationType.class,
+                        BlockStatus.class,
                         boolean.class,
-                        org.springframework.data.domain.Pageable.class)
+                        Pageable.class)
                 .getAnnotation(Query.class);
 
         Assertions.assertThat(query).isNotNull();
@@ -42,8 +46,8 @@ class BlockRepositoryQueryTest {
     void sumGridMetricsByQuarryGroupsByQuarry() throws Exception {
         Query query = BlockRepository.class
                 .getMethod("sumGridMetricsByQuarry", String.class,
-                        com.ozerler.marble.model.enums.StockLocationType.class,
-                        com.ozerler.marble.model.enums.BlockStatus.class,
+                        StockLocationType.class,
+                        BlockStatus.class,
                         boolean.class)
                 .getAnnotation(Query.class);
 

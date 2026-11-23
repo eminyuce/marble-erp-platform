@@ -1,5 +1,10 @@
 package com.ozerler.marble.dto.view;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import com.ozerler.marble.model.enums.CollectionMethod;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,10 +16,10 @@ import lombok.Setter;
 public class CollectionRef {
     private Long id;
     private String collectionNo;
-    private java.math.BigDecimal amount;
+    private BigDecimal amount;
     private String bankName;
-    private java.time.LocalDate collectionDate;
-    private com.ozerler.marble.model.enums.CollectionMethod collectionMethod;
+    private LocalDate collectionDate;
+    private CollectionMethod collectionMethod;
     private PartyView customer;
     private InvoiceRef invoice;
     private String notes;

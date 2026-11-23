@@ -2,6 +2,8 @@ package com.ozerler.marble.security;
 
 import java.util.stream.Collectors;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ozerler.marble.model.User;
 import com.ozerler.marble.repository.UserRepository;
+import com.ozerler.marble.util.MessageUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,17 +22,17 @@ import lombok.RequiredArgsConstructor;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     @Override

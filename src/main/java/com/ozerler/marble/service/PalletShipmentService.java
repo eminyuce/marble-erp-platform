@@ -3,15 +3,19 @@ package com.ozerler.marble.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.MaterialLot;
 import com.ozerler.marble.model.Pallet;
@@ -338,7 +342,7 @@ public class PalletShipmentService {
 
     @Transactional(readOnly = true)
     public List<Customer> customers() {
-        return BoundedReads.all(customerRepository, org.springframework.data.domain.Sort.by("companyName"));
+        return BoundedReads.all(customerRepository, Sort.by("companyName"));
     }
 
     @Transactional(readOnly = true)
@@ -532,7 +536,7 @@ public class PalletShipmentService {
      * @return one page of shipment rows
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.TabulatorResponse<Map<String, Object>> shipmentRows(int page, int size, String search) {
+    public TabulatorResponse<Map<String, Object>> shipmentRows(int page, int size, String search) {
         List<Shipment> allShipments = shipments();
         if (search != null && !search.isBlank()) {
             String q = search.trim().toLowerCase();
@@ -560,9 +564,9 @@ public class PalletShipmentService {
             paged = List.of();
         }
 
-        java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         List<Map<String, Object>> list = paged.stream().map(s -> {
-            Map<String, Object> map = new java.util.HashMap<>();
+            Map<String, Object> map = new HashMap<>();
             map.put("id", s.getId());
             map.put("waybillNo", s.getWaybillNo());
             Object value;
@@ -605,6 +609,6 @@ public class PalletShipmentService {
             return map;
         }).toList();
 
-        return com.ozerler.marble.dto.TabulatorResponse.of(list, totalPages, totalElements);
+        return TabulatorResponse.of(list, totalPages, totalElements);
     }
 }

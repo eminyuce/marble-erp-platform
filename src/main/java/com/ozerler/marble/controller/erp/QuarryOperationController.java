@@ -26,7 +26,9 @@ import com.ozerler.marble.dto.view.StockMovementView;
 import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.TargetDestination;
+import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.service.QuarryOperationService;
+import com.ozerler.marble.service.StockMovementService;
 import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.OperationQuarryBlockGrid;
 import com.ozerler.marble.web.QuarryDispatchGrid;
@@ -40,8 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class QuarryOperationController extends AbstractController {
 
-    private final com.ozerler.marble.service.FormLookupService formLookup;
-    private final com.ozerler.marble.service.StockMovementService stockMovementService;
+    private final FormLookupService formLookup;
+    private final StockMovementService stockMovementService;
 
     private final QuarryOperationService quarryOperationService;
 

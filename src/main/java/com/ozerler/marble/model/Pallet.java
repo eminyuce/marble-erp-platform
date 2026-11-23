@@ -19,7 +19,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 import com.ozerler.marble.domain.PalletCostAccumulator;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.PackagingType;
+import com.ozerler.marble.model.enums.PalletStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -67,7 +69,7 @@ public class Pallet extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "department", length = 40)
     @Builder.Default
-    private com.ozerler.marble.model.enums.BusinessUnit department = com.ozerler.marble.model.enums.BusinessUnit.FACTORY;
+    private BusinessUnit department = BusinessUnit.FACTORY;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
@@ -91,7 +93,7 @@ public class Pallet extends AuditableEntity {
 
     @Transient
     public String getStatusLabel() {
-        return com.ozerler.marble.model.enums.PalletStatus.labelOf(status);
+        return PalletStatus.labelOf(status);
     }
 
     @Transient

@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,12 @@ import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.CutOrderDto;
 import com.ozerler.marble.dto.OrderChildAggregate;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.CutOrderView;
+import com.ozerler.marble.dto.view.ProjectView;
+import com.ozerler.marble.dto.view.SlabView;
+import com.ozerler.marble.mapper.CutOrderMapper;
+import com.ozerler.marble.mapper.ProjectMapper;
+import com.ozerler.marble.mapper.SlabMapper;
 import com.ozerler.marble.model.CutItem;
 import com.ozerler.marble.model.CutOrder;
 import com.ozerler.marble.model.Project;
@@ -37,6 +45,7 @@ import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.repository.ScrapLogRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
 import com.ozerler.marble.util.UniqueCodes;
 
 import lombok.RequiredArgsConstructor;
@@ -50,26 +59,26 @@ public class WorkshopCutService {
     private static final int SCRAP_SUFFIX_MODULUS = 10000;
 
     private final CutOrderRepository cutOrderRepository;
-    private final com.ozerler.marble.mapper.CutOrderMapper cutOrderMapper;
-    private final com.ozerler.marble.mapper.ProjectMapper projectMapper;
-    private final com.ozerler.marble.mapper.SlabMapper slabMapper;
+    private final CutOrderMapper cutOrderMapper;
+    private final ProjectMapper projectMapper;
+    private final SlabMapper slabMapper;
     private final CutItemRepository cutItemRepository;
     private final SlabRepository slabRepository;
     private final ProjectRepository projectRepository;
     private final ProjectLocationRepository projectLocationRepository;
     private final ScrapLogRepository scrapLogRepository;
     private final CostTransactionRepository costTransactionRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public record WorkshopSummaryDto(long totalOrders, long activeOrders, long completedOrders, long totalPieces) {
@@ -384,7 +393,7 @@ public class WorkshopCutService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.SlabView> getAvailableSlabViews() {
+    public List<SlabView> getAvailableSlabViews() {
         return getAvailableSlabs().stream().map(slabMapper::toDto).toList();
     }
 
@@ -394,7 +403,7 @@ public class WorkshopCutService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.ProjectView> getAllProjectViews() {
+    public List<ProjectView> getAllProjectViews() {
         return getAllProjects().stream().map(projectMapper::toDto).toList();
     }
 
@@ -406,9 +415,9 @@ public class WorkshopCutService {
      * @return the cut order view
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.view.CutOrderView getCutOrder(Long id) {
+    public CutOrderView getCutOrder(Long id) {
         CutOrder order = getCutOrderWithDetails(id);
-        com.ozerler.marble.dto.view.CutOrderView view = cutOrderMapper.toDto(order);
+        CutOrderView view = cutOrderMapper.toDto(order);
         view.setStatusLabel(order.getStatusLabel());
         if (view.getItems() != null && order.getItems() != null) {
             int count = Math.min(view.getItems().size(), order.getItems().size());

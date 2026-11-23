@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -62,8 +63,8 @@ public class UserCreateRequest {
     @JsonAlias("roles")
     private Set<String> roles = new HashSet<>();
 
-    private java.time.LocalDateTime createdDate;
-    private java.time.LocalDateTime updatedDate;
+    private LocalDateTime createdDate;
+    private LocalDateTime updatedDate;
     private Long addUserId;
     private Long updateUserId;
 }

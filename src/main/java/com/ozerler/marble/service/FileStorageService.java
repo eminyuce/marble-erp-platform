@@ -13,11 +13,14 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -40,6 +43,7 @@ import com.ozerler.marble.security.SecurityUtils;
 import com.ozerler.marble.storage.FileObjectKeyFactory;
 import com.ozerler.marble.storage.ObjectStorageService;
 import com.ozerler.marble.util.Filenames;
+import com.ozerler.marble.util.MessageUtils;
 import com.ozerler.marble.validation.FileUploadValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -51,7 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FileStorageService {
 
     private final FileStorageRepository fileStorageRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
     private final ObjectStorageService objectStorageService;
     private final ObjectStorageProperties storageProperties;
     private final PresignedUrlProperties presignedUrlProperties;
@@ -61,12 +65,12 @@ public class FileStorageService {
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     /**
@@ -521,7 +525,7 @@ public class FileStorageService {
      */
     @Transactional(readOnly = true)
     public List<FileStorageDto> getFileViewsForEntity(String entityType, Long entityId) {
-        List<FileStorageDto> views = new java.util.ArrayList<>();
+        List<FileStorageDto> views = new ArrayList<>();
         for (FileStorage file : getFilesForEntity(entityType, entityId)) {
             FileStorageDto dto = FileStorageDto.fromEntity(file);
             if (dto == null) {

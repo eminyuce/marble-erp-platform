@@ -21,6 +21,8 @@ import jakarta.mail.internet.MimeMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -33,13 +35,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.EmailPlaceholderSample;
 import com.ozerler.marble.dto.EmailPreviewDto;
+import com.ozerler.marble.dto.EmailTemplateDto;
 import com.ozerler.marble.dto.email.BaseEmailModel;
 import com.ozerler.marble.dto.email.EmailTemplateCatalog;
 import com.ozerler.marble.exception.ResourceNotFoundException;
+import com.ozerler.marble.mapper.EmailTemplateMapper;
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.repository.EmailTemplateRepository;
 import com.ozerler.marble.util.GridPages;
 import com.ozerler.marble.util.Ints;
+import com.ozerler.marble.util.MessageUtils;
 import com.ozerler.marble.util.Strings;
 
 import lombok.RequiredArgsConstructor;
@@ -60,19 +65,19 @@ public class EmailService {
     private static final int DEFAULT_SMTP_PORT = 587;
 
     private final EmailTemplateRepository templateRepository;
-    private final com.ozerler.marble.mapper.EmailTemplateMapper emailTemplateMapper;
+    private final EmailTemplateMapper emailTemplateMapper;
     private final SettingService settingService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     @Transactional(readOnly = true)
@@ -426,7 +431,7 @@ public class EmailService {
     /**
      * Ordered placeholder keys declared on the template, plus any tokens found in subject/body.
      */
-    public List<String> placeholderKeys(com.ozerler.marble.dto.EmailTemplateDto template) {
+    public List<String> placeholderKeys(EmailTemplateDto template) {
         LinkedHashSet<String> keys = new LinkedHashSet<>();
         if (template != null && StringUtils.isNotBlank(template.getPlaceholders())) {
             for (String part : template.getPlaceholders().split("[,;]+")) {
@@ -446,7 +451,7 @@ public class EmailService {
     /**
      * Sample values used to render the live preview, in the same order as {@link #placeholderKeys}.
      */
-    public List<EmailPlaceholderSample> placeholderSamples(com.ozerler.marble.dto.EmailTemplateDto template) {
+    public List<EmailPlaceholderSample> placeholderSamples(EmailTemplateDto template) {
         Map<String, String> samples;
         if (template != null) {
             samples = getSampleVariablesForTemplate(template.getTemplateKey());
@@ -466,7 +471,7 @@ public class EmailService {
         return result;
     }
 
-    private static String placeholderLabel(com.ozerler.marble.dto.EmailTemplateDto template, String key) {
+    private static String placeholderLabel(EmailTemplateDto template, String key) {
         if (template == null || key == null) {
             return key;
         }
@@ -667,7 +672,7 @@ public class EmailService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.EmailTemplateDto> getAllTemplateViews() {
+    public List<EmailTemplateDto> getAllTemplateViews() {
         return getAllTemplates().stream().map(emailTemplateMapper::toDto).toList();
     }
 
@@ -678,7 +683,7 @@ public class EmailService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.EmailTemplateDto> getTemplateViewsByCategory(String category) {
+    public List<EmailTemplateDto> getTemplateViewsByCategory(String category) {
         return getTemplatesByCategory(category).stream().map(emailTemplateMapper::toDto).toList();
     }
 
@@ -689,7 +694,7 @@ public class EmailService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.EmailTemplateDto getTemplate(Long id) {
+    public EmailTemplateDto getTemplate(Long id) {
         return emailTemplateMapper.toDto(getTemplateById(id));
     }
 
@@ -708,7 +713,7 @@ public class EmailService {
      */
     @CacheEvict(value = "emailTemplates", allEntries = true)
     @Transactional
-    public com.ozerler.marble.dto.EmailTemplateDto createTemplateView(String templateKey, String templateName, String category, String description,
+    public EmailTemplateDto createTemplateView(String templateKey, String templateName, String category, String description,
                                          String subject, String bodyHtml, String placeholders, boolean isActive) {
         return emailTemplateMapper.toDto(createTemplate(templateKey, templateName, category, description, subject, bodyHtml, placeholders, isActive));
     }
@@ -723,7 +728,7 @@ public class EmailService {
      * @return the page of DTOs
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.EmailTemplateDto> getTemplateViewsPaged(int page, int size, String category,
+    public Page<EmailTemplateDto> getTemplateViewsPaged(int page, int size, String category,
             String search) {
         return getTemplatesPaged(page, size, category, search).map(emailTemplateMapper::toDto);
     }
@@ -743,7 +748,7 @@ public class EmailService {
      */
     @CacheEvict(value = "emailTemplates", allEntries = true)
     @Transactional
-    public com.ozerler.marble.dto.EmailTemplateDto updateTemplateView(Long id, String templateName, String category,
+    public EmailTemplateDto updateTemplateView(Long id, String templateName, String category,
             String description, String subject, String bodyHtml, String placeholders, boolean isActive) {
         return emailTemplateMapper.toDto(updateTemplate(id, templateName, category, description, subject, bodyHtml,
                 placeholders, isActive));

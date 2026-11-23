@@ -14,6 +14,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+import com.ozerler.marble.model.enums.ReservationStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -59,6 +61,6 @@ public class StockReservation extends AuditableEntity {
 
     @Transient
     public String getStatusLabel() {
-        return com.ozerler.marble.model.enums.ReservationStatus.labelOf(status);
+        return ReservationStatus.labelOf(status);
     }
 }

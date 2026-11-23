@@ -2,6 +2,7 @@ package com.ozerler.marble.dto.form;
 
 import java.math.BigDecimal;
 
+import com.ozerler.marble.dto.view.AuditView;
 import com.ozerler.marble.model.enums.BusinessUnit;
 
 import lombok.Getter;
@@ -9,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CostCenterForm extends com.ozerler.marble.dto.view.AuditView {
+public class CostCenterForm extends AuditView {
     private Long id;
     private String code;
     private String name;

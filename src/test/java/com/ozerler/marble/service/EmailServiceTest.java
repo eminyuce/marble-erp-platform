@@ -14,6 +14,8 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ozerler.marble.dto.EmailPreviewDto;
+import com.ozerler.marble.dto.EmailTemplateDto;
+import com.ozerler.marble.mapper.EmailTemplateMapperImpl;
 import com.ozerler.marble.model.EmailTemplate;
 import com.ozerler.marble.repository.EmailTemplateRepository;
 
@@ -31,7 +33,7 @@ class EmailServiceTest {
 
     @BeforeEach
     void setUp() {
-        emailService = new EmailService(templateRepository, new com.ozerler.marble.mapper.EmailTemplateMapperImpl(), settingService, null);
+        emailService = new EmailService(templateRepository, new EmailTemplateMapperImpl(), settingService, null);
     }
 
     @Test
@@ -132,7 +134,7 @@ class EmailServiceTest {
     @Test
     @DisplayName("placeholderSamples lists declared keys with sample values")
     void placeholderSamplesUsesDeclaredKeysAndSampleValues() {
-        com.ozerler.marble.dto.EmailTemplateDto template = com.ozerler.marble.dto.EmailTemplateDto.builder()
+        EmailTemplateDto template = EmailTemplateDto.builder()
                 .id(1L)
                 .templateKey("USER_WELCOME")
                 .templateName("Hoş Geldiniz")

@@ -1,8 +1,11 @@
 package com.ozerler.marble.dto;
 
+import java.math.BigDecimal;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CustomerType;
 
 import lombok.AllArgsConstructor;
@@ -68,7 +71,7 @@ public class CustomerDto {
     private String notes;
 
     @JsonProperty("balance")
-    private java.math.BigDecimal balance;
+    private BigDecimal balance;
 
     @JsonProperty("projectCount")
     @JsonAlias("project_count")
@@ -76,7 +79,7 @@ public class CustomerDto {
 
     public static CustomerDto fromEntity(Customer customer) {
         CustomerType type = customer.getCustomerType();
-        com.ozerler.marble.model.enums.BusinessUnit bu = customer.getBusinessUnit();
+        BusinessUnit bu = customer.getBusinessUnit();
         int pCount;
         if (customer.getProjects() != null) {
             pCount = customer.getProjects().size();

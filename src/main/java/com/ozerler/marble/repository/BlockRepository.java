@@ -1,5 +1,8 @@
 package com.ozerler.marble.repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Repository;
 
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.enums.BlockStatus;
+import com.ozerler.marble.model.enums.StockLocationType;
 
 @Repository
 public interface BlockRepository extends JpaRepository<Block, Long> {
@@ -70,7 +74,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                     + "(:status IS NULL OR b.status = :status) AND "
                     + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD)")
     Page<Block> searchBlocks(@Param("search") String search,
-                             @Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
+                             @Param("locationType") StockLocationType locationType,
                              @Param("status") BlockStatus status,
                              @Param("unsoldOnly") boolean unsoldOnly,
                              Pageable pageable);
@@ -111,7 +115,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                     + " (:stockFilter = 'DISPATCHED' AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.IN_TRANSIT, com.ozerler.marble.model.enums.BlockStatus.DISPATCHED, com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY, com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK)) OR "
                     + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL))")
     Page<Block> searchBlocksWithStockFilter(@Param("search") String search,
-                                            @Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
+                                            @Param("locationType") StockLocationType locationType,
                                             @Param("status") BlockStatus status,
                                             @Param("stockFilter") String stockFilter,
                                             Pageable pageable);
@@ -126,16 +130,16 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     long getCountFactoryStock();
 
     @Query("SELECT COUNT(b) FROM Block b JOIN b.currentLocation loc WHERE loc.locationType = :locationType")
-    long countByLocationType(@Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType);
+    long countByLocationType(@Param("locationType") StockLocationType locationType);
 
     long countByCurrentLocationLocationTypeAndStatusNot(
-            com.ozerler.marble.model.enums.StockLocationType locationType,
+            StockLocationType locationType,
             BlockStatus status);
 
     @Query("SELECT COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg END), 0) "
             + "FROM Block b WHERE b.extractionDate >= :start AND b.extractionDate < :end")
-    java.math.BigDecimal sumProductionWeightKgBetween(@Param("start") java.time.LocalDate start,
-                                                      @Param("end") java.time.LocalDate end);
+    BigDecimal sumProductionWeightKgBetween(@Param("start") LocalDate start,
+                                                      @Param("end") LocalDate end);
 
     boolean existsByQuarryId(Long quarryId);
 
@@ -165,16 +169,16 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             + "b.extractionDate >= :yearStart AND b.extractionDate < :yearEnd")
     long countByQuarrySectionAndYear(@Param("quarryId") Long quarryId,
                                      @Param("section") String section,
-                                     @Param("yearStart") java.time.LocalDate yearStart,
-                                     @Param("yearEnd") java.time.LocalDate yearEnd);
+                                     @Param("yearStart") LocalDate yearStart,
+                                     @Param("yearEnd") LocalDate yearEnd);
 
     @Query("SELECT COALESCE(SUM(b.extractionCost), 0) FROM Block b WHERE b.id IN ("
             + "SELECT DISTINCT m.block.id FROM BlockLocationMovement m "
             + "WHERE m.toLocation.locationType = :locationType "
             + "AND m.createdDate >= :start AND m.createdDate < :end)")
-    java.math.BigDecimal sumExtractionCostMovedTo(@Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
-                                                  @Param("start") java.time.LocalDateTime start,
-                                                  @Param("end") java.time.LocalDateTime end);
+    BigDecimal sumExtractionCostMovedTo(@Param("locationType") StockLocationType locationType,
+                                                  @Param("start") LocalDateTime start,
+                                                  @Param("end") LocalDateTime end);
 
     @Query("SELECT b.quarry.id, "
             + "COALESCE(SUM(CASE WHEN b.actualWeightKg > 0 THEN b.actualWeightKg ELSE b.theoreticalWeightKg END), 0) / 1000.0, "
@@ -194,7 +198,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             + "(:unsoldOnly = false OR b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD) "
             + "GROUP BY b.quarry.id")
     List<Object[]> sumGridMetricsByQuarry(@Param("search") String search,
-                                          @Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
+                                          @Param("locationType") StockLocationType locationType,
                                           @Param("status") BlockStatus status,
                                           @Param("unsoldOnly") boolean unsoldOnly);
 
@@ -221,7 +225,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
             + " ((:stockFilter IS NULL OR :stockFilter = '' OR :stockFilter = 'IN_STOCK') AND b.status IN (com.ozerler.marble.model.enums.BlockStatus.PRODUCED, com.ozerler.marble.model.enums.BlockStatus.READY_FOR_DISPATCH, com.ozerler.marble.model.enums.BlockStatus.MARKED, com.ozerler.marble.model.enums.BlockStatus.QUARRY, com.ozerler.marble.model.enums.BlockStatus.EXTRACTED) AND b.status <> com.ozerler.marble.model.enums.BlockStatus.SOLD AND b.soldCustomer IS NULL AND b.dispatchInvoiceId IS NULL)) "
             + "GROUP BY b.quarry.id")
     List<Object[]> sumGridMetricsWithStockFilterByQuarry(@Param("search") String search,
-                                                         @Param("locationType") com.ozerler.marble.model.enums.StockLocationType locationType,
+                                                         @Param("locationType") StockLocationType locationType,
                                                          @Param("status") BlockStatus status,
                                                          @Param("stockFilter") String stockFilter);
 
@@ -287,14 +291,14 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
                                          Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(b.estimatedTonnage), 0) FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
-    java.math.BigDecimal sumTotalEstimatedTonnage();
+    BigDecimal sumTotalEstimatedTonnage();
 
     @Query("SELECT COALESCE(SUM(b.actualTonnage), 0) FROM Block b WHERE b.actualTonnage IS NOT NULL AND b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
-    java.math.BigDecimal sumTotalActualTonnage();
+    BigDecimal sumTotalActualTonnage();
 
     @Query("SELECT COALESCE(SUM(CASE WHEN b.actualTonnage IS NOT NULL AND b.actualTonnage > 0 THEN b.actualTonnage ELSE COALESCE(b.estimatedTonnage, 0) END), 0) "
             + "FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
-    java.math.BigDecimal sumTotalEffectiveBlockTonnage();
+    BigDecimal sumTotalEffectiveBlockTonnage();
 
     @Query("SELECT COUNT(b) FROM Block b WHERE b.status != com.ozerler.marble.model.enums.BlockStatus.SOLD")
     long countTotalStockBlocks();
@@ -329,10 +333,10 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     long countInStockBlocks();
 
     @Query("SELECT COALESCE(SUM(b.totalCost), 0) FROM Block b WHERE b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED)")
-    java.math.BigDecimal sumTotalCostInStock();
+    BigDecimal sumTotalCostInStock();
 
     @Query("SELECT COALESCE(SUM(CASE WHEN b.salePrice IS NOT NULL AND b.salePrice > 0 THEN b.salePrice "
             + "WHEN b.unitMarketValuePerTon IS NOT NULL AND b.unitMarketValuePerTon > 0 THEN (b.unitMarketValuePerTon * COALESCE(b.actualTonnage, b.estimatedTonnage, 0)) "
             + "ELSE b.totalCost END), 0) FROM Block b WHERE b.status NOT IN (com.ozerler.marble.model.enums.BlockStatus.SOLD, com.ozerler.marble.model.enums.BlockStatus.SCRAPPED)")
-    java.math.BigDecimal sumTotalMarketValueInStock();
+    BigDecimal sumTotalMarketValueInStock();
 }

@@ -2,8 +2,10 @@ package com.ozerler.marble.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
+import com.ozerler.marble.dto.view.OrderRef;
 import com.ozerler.marble.dto.view.WorkOrderView;
 import com.ozerler.marble.model.OperationWorkOrder;
 import com.ozerler.marble.model.OperationWorkOrderItem;
@@ -30,7 +32,7 @@ public interface WorkOrderMapper {
      * @param order the entity
      * @return the header view
      */
-    @org.mapstruct.Named("row")
+    @Named("row")
     @Mapping(target = "orderNumber", source = "orderNo")
     @Mapping(target = "plannedQuantity", source = "quantity")
     @Mapping(target = "customerNameForView", ignore = true)
@@ -38,7 +40,7 @@ public interface WorkOrderMapper {
     @Mapping(target = "statusHistory", ignore = true)
     WorkOrderView toRow(OperationWorkOrder order);
 
-    com.ozerler.marble.dto.view.OrderRef toRef(OperationWorkOrder order);
+    OrderRef toRef(OperationWorkOrder order);
 
     WorkOrderView.ItemView toItem(OperationWorkOrderItem item);
 

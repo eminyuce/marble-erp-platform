@@ -4,8 +4,10 @@ package com.ozerler.marble.controller;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import org.assertj.core.api.Assertions;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.dto.FileStorageDto;
 import com.ozerler.marble.dto.PresignedDownload;
 import com.ozerler.marble.exception.FileAccessDeniedException;
 import com.ozerler.marble.model.FileStorage;
@@ -49,7 +52,7 @@ class FileUploadControllerTest {
                 .entityType("BLOCK")
                 .build();
 
-        Mockito.when(fileStorageService.storeFileView(Mockito.eq(file), Mockito.eq("BLOCK"), Mockito.isNull())).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.storeFileView(Mockito.eq(file), Mockito.eq("BLOCK"), Mockito.isNull())).thenReturn(FileStorageDto.fromEntity(storage));
 
         BackEndResponse response = fileUploadController.uploadFile(file, "BLOCK", null);
 
@@ -67,14 +70,14 @@ class FileUploadControllerTest {
         FileStorage s1 = FileStorage.builder().id(10L).fileName("s1.png").originalName("img1.png").mimeType("image/png").build();
         FileStorage s2 = FileStorage.builder().id(11L).fileName("s2.pdf").originalName("doc1.pdf").mimeType("application/pdf").build();
 
-        Mockito.when(fileStorageService.storeFileView(Mockito.eq(f1), Mockito.eq("BLOCK"), Mockito.eq(100L))).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(s1));
-        Mockito.when(fileStorageService.storeFileView(Mockito.eq(f2), Mockito.eq("BLOCK"), Mockito.eq(100L))).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(s2));
+        Mockito.when(fileStorageService.storeFileView(Mockito.eq(f1), Mockito.eq("BLOCK"), Mockito.eq(100L))).thenReturn(FileStorageDto.fromEntity(s1));
+        Mockito.when(fileStorageService.storeFileView(Mockito.eq(f2), Mockito.eq("BLOCK"), Mockito.eq(100L))).thenReturn(FileStorageDto.fromEntity(s2));
 
         BackEndResponse response = fileUploadController.uploadMultipleFiles(List.of(f1, f2), "BLOCK", 100L);
 
         Assertions.assertThat(response).isNotNull();
         Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(response.getResponse().getBody()).asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.LIST).hasSize(2);
+        Assertions.assertThat(response.getResponse().getBody()).asInstanceOf(InstanceOfAssertFactories.LIST).hasSize(2);
     }
 
     @Test
@@ -132,7 +135,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("pdf-content".getBytes());
 
-        Mockito.when(fileStorageService.requireAccessibleFileView(5L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.requireAccessibleFileView(5L)).thenReturn(FileStorageDto.fromEntity(storage));
         Mockito.when(fileStorageService.loadAsResource(5L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(5L);
@@ -154,7 +157,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("fake-docx-data".getBytes());
 
-        Mockito.when(fileStorageService.requireAccessibleFileView(6L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.requireAccessibleFileView(6L)).thenReturn(FileStorageDto.fromEntity(storage));
         Mockito.when(fileStorageService.loadAsResource(6L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(6L);
@@ -179,7 +182,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("notlar...".getBytes());
 
-        Mockito.when(fileStorageService.requireAccessibleFileView(7L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.requireAccessibleFileView(7L)).thenReturn(FileStorageDto.fromEntity(storage));
         Mockito.when(fileStorageService.loadAsResource(7L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(7L);
@@ -204,7 +207,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("# Ocak notu".getBytes());
 
-        Mockito.when(fileStorageService.requireAccessibleFileView(11L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.requireAccessibleFileView(11L)).thenReturn(FileStorageDto.fromEntity(storage));
         Mockito.when(fileStorageService.loadAsResource(11L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.viewFile(11L);
@@ -228,7 +231,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("fake-xlsx-bytes".getBytes());
 
-        Mockito.when(fileStorageService.requireAccessibleFileView(8L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.requireAccessibleFileView(8L)).thenReturn(FileStorageDto.fromEntity(storage));
         Mockito.when(fileStorageService.loadAsResource(8L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(8L);
@@ -253,7 +256,7 @@ class FileUploadControllerTest {
 
         ByteArrayResource resource = new ByteArrayResource("id,code\n11,BLK-11".getBytes());
 
-        Mockito.when(fileStorageService.requireAccessibleFileView(9L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.requireAccessibleFileView(9L)).thenReturn(FileStorageDto.fromEntity(storage));
         Mockito.when(fileStorageService.loadAsResource(9L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.downloadFile(9L);
@@ -280,8 +283,8 @@ class FileUploadControllerTest {
 
         Assertions.assertThat(response.getServiceStatus().getHttpStatus()).isEqualTo(HttpStatus.OK);
         @SuppressWarnings("unchecked")
-        java.util.Map<String, Object> body =
-                (java.util.Map<String, Object>) response.getResponse().getBody();
+        Map<String, Object> body =
+                (Map<String, Object>) response.getResponse().getBody();
         Assertions.assertThat(body).containsEntry("url",
                 "http://localhost:9000/erp-files/documents/block/1/a.pdf?X-Amz-Expires=300");
         Assertions.assertThat(body).containsEntry("expiresInSeconds", 300L);
@@ -301,8 +304,8 @@ class FileUploadControllerTest {
         BackEndResponse response = fileUploadController.createDownloadUrl(4L);
 
         @SuppressWarnings("unchecked")
-        java.util.Map<String, Object> body =
-                (java.util.Map<String, Object>) response.getResponse().getBody();
+        Map<String, Object> body =
+                (Map<String, Object>) response.getResponse().getBody();
         Assertions.assertThat(body).containsEntry("expiresInSeconds", 1800L);
         Assertions.assertThat(body.get("url").toString()).contains("X-Amz-Expires=1800");
     }
@@ -328,7 +331,7 @@ class FileUploadControllerTest {
                 .fileSize(11L)
                 .build();
         ByteArrayResource resource = new ByteArrayResource("image".getBytes());
-        Mockito.when(fileStorageService.requireAccessibleFileView(5L)).thenReturn(com.ozerler.marble.dto.FileStorageDto.fromEntity(storage));
+        Mockito.when(fileStorageService.requireAccessibleFileView(5L)).thenReturn(FileStorageDto.fromEntity(storage));
         Mockito.when(fileStorageService.loadAsResource(5L)).thenReturn(resource);
 
         ResponseEntity<Resource> response = fileUploadController.viewFile(5L);

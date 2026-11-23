@@ -1,9 +1,16 @@
 package com.ozerler.marble.repository;
 
+import java.time.LocalDate;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
+
+import com.ozerler.marble.model.enums.BusinessUnit;
+import com.ozerler.marble.model.enums.InvoiceStatus;
+import com.ozerler.marble.model.enums.InvoiceType;
 
 class InvoiceRepositoryQueryTest {
 
@@ -54,14 +61,14 @@ class InvoiceRepositoryQueryTest {
     void searchInvoicesFetchesCustomerSupplierAndProject() throws Exception {
         Query query = InvoiceRepository.class
                 .getMethod("searchInvoices",
-                        com.ozerler.marble.model.enums.InvoiceType.class,
-                        com.ozerler.marble.model.enums.BusinessUnit.class,
-                        com.ozerler.marble.model.enums.InvoiceStatus.class,
+                        InvoiceType.class,
+                        BusinessUnit.class,
+                        InvoiceStatus.class,
                         Long.class,
-                        java.time.LocalDate.class,
-                        java.time.LocalDate.class,
+                        LocalDate.class,
+                        LocalDate.class,
                         String.class,
-                        org.springframework.data.domain.Pageable.class)
+                        Pageable.class)
                 .getAnnotation(Query.class);
 
         Assertions.assertThat(query).isNotNull();

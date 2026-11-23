@@ -1,6 +1,7 @@
 package com.ozerler.marble.domain;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -14,9 +15,9 @@ class BlockMeasurementTest {
         BigDecimal volume = BlockMeasurement.volumeCubicMeters(175, 285, 180);
         Assertions.assertThat(volume).isEqualByComparingTo(
                 BigDecimal.valueOf(175L * 285 * 180)
-                        .divide(BlockMeasurement.CUBIC_CENTIMETERS_PER_CUBIC_METER, 3, java.math.RoundingMode.HALF_UP));
+                        .divide(BlockMeasurement.CUBIC_CENTIMETERS_PER_CUBIC_METER, 3, RoundingMode.HALF_UP));
         BigDecimal tons = BlockMeasurement.approximateTonnage(volume, new BigDecimal("2.70"));
-        Assertions.assertThat(tons).isEqualByComparingTo(volume.multiply(new BigDecimal("2.70")).setScale(3, java.math.RoundingMode.HALF_UP));
+        Assertions.assertThat(tons).isEqualByComparingTo(volume.multiply(new BigDecimal("2.70")).setScale(3, RoundingMode.HALF_UP));
         Assertions.assertThat(BlockMeasurement.theoreticalWeightKg(tons))
                 .isEqualByComparingTo(tons.multiply(new BigDecimal("1000")).setScale(2));
     }

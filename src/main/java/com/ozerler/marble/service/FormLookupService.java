@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,9 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ozerler.marble.dto.option.ProjectOption;
 import com.ozerler.marble.dto.option.QuarryOption;
 import com.ozerler.marble.dto.view.BlockView;
+import com.ozerler.marble.dto.view.CostCenterRef;
 import com.ozerler.marble.dto.view.InvoiceView;
 import com.ozerler.marble.dto.view.PartyView;
 import com.ozerler.marble.dto.view.ProjectView;
+import com.ozerler.marble.dto.view.QuarryRef;
 import com.ozerler.marble.dto.view.SalesOrderView;
 import com.ozerler.marble.dto.view.SlabView;
 import com.ozerler.marble.dto.view.StockItemView;
@@ -22,15 +25,19 @@ import com.ozerler.marble.exception.InvoiceNotFoundException;
 import com.ozerler.marble.exception.ProjectNotFoundException;
 import com.ozerler.marble.exception.SlabNotFoundException;
 import com.ozerler.marble.mapper.BlockMapper;
+import com.ozerler.marble.mapper.CostCenterMapper;
 import com.ozerler.marble.mapper.CustomerMapper;
 import com.ozerler.marble.mapper.InvoiceMapper;
 import com.ozerler.marble.mapper.ProjectMapper;
+import com.ozerler.marble.mapper.QuarryMapper;
 import com.ozerler.marble.mapper.SalesOrderMapper;
 import com.ozerler.marble.mapper.SlabMapper;
 import com.ozerler.marble.mapper.StockItemMapper;
+import com.ozerler.marble.mapper.SupplierMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Customer;
+import com.ozerler.marble.model.Invoice;
 import com.ozerler.marble.model.SalesOrderItem;
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.StockItem;
@@ -77,9 +84,9 @@ public class FormLookupService {
     private final StockItemMapper stockItemMapper;
     private final InvoiceMapper invoiceMapper;
     private final CustomerMapper customerMapper;
-    private final com.ozerler.marble.mapper.QuarryMapper quarryMapper;
-    private final com.ozerler.marble.mapper.CostCenterMapper costCenterMapper;
-    private final com.ozerler.marble.mapper.SupplierMapper supplierMapper;
+    private final QuarryMapper quarryMapper;
+    private final CostCenterMapper costCenterMapper;
+    private final SupplierMapper supplierMapper;
     private final ProjectMapper projectMapper;
     private final SalesOrderMapper salesOrderMapper;
 
@@ -122,7 +129,7 @@ public class FormLookupService {
                 .map(projectMapper::toDto).toList();
     }
 
-    public List<com.ozerler.marble.dto.view.QuarryRef> quarries() {
+    public List<QuarryRef> quarries() {
         return BoundedReads.all(quarryRepository).stream().map(quarryMapper::toDto).toList();
     }
 
@@ -132,11 +139,11 @@ public class FormLookupService {
                 .orElseThrow(() -> new IllegalArgumentException("Ocak bulunamadı: " + id));
     }
 
-    public List<com.ozerler.marble.dto.view.CostCenterRef> costCenters() {
+    public List<CostCenterRef> costCenters() {
         return BoundedReads.all(costCenterRepository).stream().map(costCenterMapper::toDto).toList();
     }
 
-    public List<com.ozerler.marble.dto.view.CostCenterRef> costCenters(BusinessUnit unit) {
+    public List<CostCenterRef> costCenters(BusinessUnit unit) {
         return costCenterRepository.findByBusinessUnit(unit).stream().map(costCenterMapper::toDto).toList();
     }
 
@@ -171,11 +178,11 @@ public class FormLookupService {
         return blockRepository.findByStatusInOrderByBlockCodeAsc(statuses).stream().map(this::blockView).toList();
     }
 
-    public java.math.BigDecimal estimatedTonnage() {
+    public BigDecimal estimatedTonnage() {
         return blockRepository.sumTotalEstimatedTonnage();
     }
 
-    public java.math.BigDecimal actualTonnage() {
+    public BigDecimal actualTonnage() {
         return blockRepository.sumTotalActualTonnage();
     }
 
@@ -293,7 +300,7 @@ public class FormLookupService {
         return blockViews.toView(block);
     }
 
-    private InvoiceView invoiceView(com.ozerler.marble.model.Invoice invoice) {
+    private InvoiceView invoiceView(Invoice invoice) {
         InvoiceView view = invoiceMapper.toDto(invoice);
         view.setInternalTransfer(invoice.isInternalTransfer());
         if (view.getItems() != null && invoice.getItems() != null) {

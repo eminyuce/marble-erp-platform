@@ -1,5 +1,6 @@
 package com.ozerler.marble.dto.form;
 
+import com.ozerler.marble.dto.view.AuditView;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.StockLocationType;
 
@@ -8,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class StockLocationForm extends com.ozerler.marble.dto.view.AuditView {
+public class StockLocationForm extends AuditView {
     private Long id;
     private String code;
     private String name;

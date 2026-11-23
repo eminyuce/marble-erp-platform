@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -109,9 +110,9 @@ class SizedFormPrefillTest {
     void workshopSizedFormRendersPrefill() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/operations/workshop/sized/new").param("slabId", slab.getId().toString()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("SLB-SIZED")))
-                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Burdur Bej")))
-                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("E2E Mermer")));
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("SLB-SIZED")))
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("Burdur Bej")))
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("E2E Mermer")));
     }
 
     @Test
@@ -120,8 +121,8 @@ class SizedFormPrefillTest {
     void factorySizedFormRendersSlabList() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/operations/factory/sized/new"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("SLB-SIZED")))
-                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Burdur Bej")))
-                .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("E2E Mermer")));
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("SLB-SIZED")))
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("Burdur Bej")))
+                .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("E2E Mermer")));
     }
 }

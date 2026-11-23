@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.SupplierType;
 
 import lombok.AllArgsConstructor;
@@ -63,7 +64,7 @@ public class Supplier extends AuditableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "business_unit", length = 30)
-    private com.ozerler.marble.model.enums.BusinessUnit businessUnit;
+    private BusinessUnit businessUnit;
 
     @Column(columnDefinition = "TEXT")
     private String notes;

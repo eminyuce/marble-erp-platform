@@ -16,7 +16,10 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import com.ozerler.marble.mapper.InvoiceMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Customer;
@@ -89,8 +92,8 @@ class InvoiceServiceTest {
 
     @BeforeEach
     void setUp() {
-        Mockito.lenient().when(costCenterRepository.findAll(ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
-                .thenReturn(org.springframework.data.domain.Page.empty());
+        Mockito.lenient().when(costCenterRepository.findAll(ArgumentMatchers.any(Pageable.class)))
+                .thenReturn(Page.empty());
         invoiceService = new InvoiceService(
                 invoiceRepository,
                 invoiceItemRepository,
@@ -109,7 +112,7 @@ class InvoiceServiceTest {
                 factoryInventoryService,
                 blockCustomerMarkRepository,
                 cariTransactionService,
-                Mockito.mock(com.ozerler.marble.mapper.InvoiceMapper.class)
+                Mockito.mock(InvoiceMapper.class)
         );
     }
 

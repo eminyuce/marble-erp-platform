@@ -1,6 +1,7 @@
 package com.ozerler.marble.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import com.ozerler.marble.dto.view.SalesOrderView;
@@ -13,7 +14,7 @@ public interface SalesOrderMapper {
 
     SalesOrderView toDto(SalesOrder order);
 
-    @org.mapstruct.Mapping(target = "orderNo", source = "salesOrder.orderNo")
-    @org.mapstruct.Mapping(target = "customerId", source = "salesOrder.customer.id")
+    @Mapping(target = "orderNo", source = "salesOrder.orderNo")
+    @Mapping(target = "customerId", source = "salesOrder.customer.id")
     SalesOrderView.LineView toLine(SalesOrderItem item);
 }

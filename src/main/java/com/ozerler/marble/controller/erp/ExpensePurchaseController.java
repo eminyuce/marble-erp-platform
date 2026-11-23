@@ -38,6 +38,7 @@ import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
 import com.ozerler.marble.service.BlockCostCalculationService;
 import com.ozerler.marble.service.ExpenseService;
+import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.web.ExpenseGrid;
 import com.ozerler.marble.web.ListQuery;
 
@@ -50,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ExpensePurchaseController extends AbstractController {
 
-    private final com.ozerler.marble.service.FormLookupService formLookup;
+    private final FormLookupService formLookup;
 
     private final ExpenseService expenseService;
     private final BlockCostCalculationService blockCostCalculationService;

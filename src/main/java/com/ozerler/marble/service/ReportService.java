@@ -22,6 +22,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,7 @@ import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.ScrapLog;
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.StockItem;
+import com.ozerler.marble.model.enums.BlockStatus;
 import com.ozerler.marble.repository.BlockRepository;
 import com.ozerler.marble.repository.CheckRecordRepository;
 import com.ozerler.marble.repository.CollectionRecordRepository;
@@ -46,6 +49,7 @@ import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.repository.StockItemRepository;
 import com.ozerler.marble.util.Csvs;
 import com.ozerler.marble.util.DateTimes;
+import com.ozerler.marble.util.MessageUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,17 +76,17 @@ public class ReportService {
     private final CheckRecordRepository checkRecordRepository;
     private final OperationWorkOrderRepository operationWorkOrderRepository;
     private final CostAccountingService costAccountingService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public enum ReportType {
@@ -104,11 +108,11 @@ public class ReportService {
         }
 
         public String getTitle() {
-            return com.ozerler.marble.util.MessageUtils.getMessage("report." + name().toLowerCase() + ".title");
+            return MessageUtils.getMessage("report." + name().toLowerCase() + ".title");
         }
 
         public String getDescription() {
-            return com.ozerler.marble.util.MessageUtils.getMessage("report." + name().toLowerCase() + ".desc");
+            return MessageUtils.getMessage("report." + name().toLowerCase() + ".desc");
         }
 
         public String getExportFilenameStem() {
@@ -236,7 +240,7 @@ public class ReportService {
                 };
                 List<Block> factoryBlocks = BoundedReads.all(blockRepository);
                 for (Block b : factoryBlocks) {
-                    if (b.getStatus() == com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY || b.getStatus() == com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) {
+                    if (b.getStatus() == BlockStatus.AT_FACTORY || b.getStatus() == BlockStatus.FACTORY_STOCK) {
                         String ton;
                         if (b.getActualWeightKg() != null) {
                             ton = b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString();

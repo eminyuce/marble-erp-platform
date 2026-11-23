@@ -27,6 +27,7 @@ import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;
 import com.ozerler.marble.model.enums.CollectionMethod;
 import com.ozerler.marble.service.CollectionService;
+import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.web.CheckGrid;
 import com.ozerler.marble.web.CollectionGrid;
 import com.ozerler.marble.web.ListQuery;
@@ -40,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CollectionController extends AbstractController {
 
-    private final com.ozerler.marble.service.FormLookupService formLookup;
+    private final FormLookupService formLookup;
 
     private final CollectionService collectionService;
 

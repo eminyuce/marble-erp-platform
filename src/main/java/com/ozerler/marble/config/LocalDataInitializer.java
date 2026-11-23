@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -111,7 +112,7 @@ public class LocalDataInitializer implements CommandLineRunner {
     private final PalletItemRepository palletItemRepository;
     private final ShipmentRepository shipmentRepository;
     private final OperationDefinitionRepository operationDefinitionRepository;
-    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     @Transactional

@@ -23,6 +23,7 @@ import com.ozerler.marble.dto.ApplicationLogDto;
 import com.ozerler.marble.dto.ApplicationLogKpiDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.exception.ResourceNotFoundException;
+import com.ozerler.marble.logging.db.DatabaseLogQueue;
 import com.ozerler.marble.model.ApplicationLog;
 import com.ozerler.marble.repository.ApplicationLogRepository;
 
@@ -145,7 +146,7 @@ public class ApplicationLogService {
     public int cleanupOldLogs(int retentionDays) {
         if (retentionDays == 0) {
             try {
-                com.ozerler.marble.logging.db.DatabaseLogQueue.getInstance().clear();
+                DatabaseLogQueue.getInstance().clear();
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }

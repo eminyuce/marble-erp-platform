@@ -1,5 +1,6 @@
 package com.ozerler.marble.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +24,7 @@ public interface CutItemRepository extends JpaRepository<CutItem, Long> {
 
     List<CutItem> findBySourceSlabId(Long slabId);
 
-    List<CutItem> findBySourceSlabIdIn(java.util.Collection<Long> slabIds);
+    List<CutItem> findBySourceSlabIdIn(Collection<Long> slabIds);
 
     @Query("SELECT i FROM CutItem i WHERE "
             + "(:search IS NULL OR LOWER(i.itemCode) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) OR "

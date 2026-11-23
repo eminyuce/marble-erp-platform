@@ -1,6 +1,7 @@
 package com.ozerler.marble.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -10,6 +11,8 @@ import java.util.stream.Collectors;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.hibernate.Hibernate;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +22,10 @@ import com.ozerler.marble.dto.ProductionOrderDto;
 import com.ozerler.marble.dto.SlabDto;
 import com.ozerler.marble.dto.SlabLabelDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.view.ProductionOrderView;
+import com.ozerler.marble.dto.view.SlabView;
+import com.ozerler.marble.mapper.ProductionOrderMapper;
+import com.ozerler.marble.mapper.SlabMapper;
 import com.ozerler.marble.model.ProductionOrder;
 import com.ozerler.marble.model.ScrapLog;
 import com.ozerler.marble.model.Slab;
@@ -32,6 +39,7 @@ import com.ozerler.marble.repository.ProductionOrderRepository;
 import com.ozerler.marble.repository.ScrapLogRepository;
 import com.ozerler.marble.repository.SlabRepository;
 import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -40,23 +48,23 @@ import lombok.RequiredArgsConstructor;
 public class ProductionService {
 
     private final ProductionOrderRepository productionOrderRepository;
-    private final com.ozerler.marble.mapper.ProductionOrderMapper productionOrderMapper;
-    private final com.ozerler.marble.mapper.SlabMapper slabMapper;
+    private final ProductionOrderMapper productionOrderMapper;
+    private final SlabMapper slabMapper;
     private final SlabRepository slabRepository;
     private final ScrapLogRepository scrapLogRepository;
     private final BarcodeService barcodeService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
     private final FactoryProductionService factoryProductionService;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public record ProductionSummaryDto(long totalOrders, long activeOrders, long completedOrders, BigDecimal totalSlabAreaM2) {
@@ -174,7 +182,7 @@ public class ProductionService {
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal avgCost;
         if (totalArea.compareTo(BigDecimal.ZERO) > 0) {
-            avgCost = totalCost.divide(totalArea, 2, java.math.RoundingMode.HALF_UP);
+            avgCost = totalCost.divide(totalArea, 2, RoundingMode.HALF_UP);
         } else {
             avgCost = BigDecimal.ZERO;
         }
@@ -319,9 +327,9 @@ public class ProductionService {
      * @return the production order view
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.view.ProductionOrderView getOrderView(Long id) {
+    public ProductionOrderView getOrderView(Long id) {
         ProductionOrder order = getOrderWithDetails(id);
-        com.ozerler.marble.dto.view.ProductionOrderView view = productionOrderMapper.toDto(order);
+        ProductionOrderView view = productionOrderMapper.toDto(order);
         view.setStatusLabel(order.getStatusLabel());
         return view;
     }
@@ -333,7 +341,7 @@ public class ProductionService {
      * @return the slab view
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.view.SlabView getSlabView(Long id) {
+    public SlabView getSlabView(Long id) {
         return slabMapper.toDto(getSlabWithDetails(id));
     }
 }

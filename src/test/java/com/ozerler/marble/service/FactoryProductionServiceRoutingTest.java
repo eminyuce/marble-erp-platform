@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +30,7 @@ class FactoryProductionServiceRoutingTest {
 
     private FactoryProductionService service;
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void setUp() {
         service = new FactoryProductionService(
                 null, null, null, null, workOrderRepository, operationRepository, null, null, null, null,

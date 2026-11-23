@@ -1,10 +1,13 @@
 package com.ozerler.marble.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.data.domain.Page;
@@ -13,8 +16,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.dto.form.WorkOrderRequest;
 import com.ozerler.marble.dto.view.OrderRef;
+import com.ozerler.marble.dto.view.WorkOrderView;
+import com.ozerler.marble.mapper.WorkOrderMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.OperationDefinition;
@@ -48,7 +54,7 @@ public class OperationWorkOrderService {
     private static final int CM2_PER_M2 = 10000;
 
     private final OperationWorkOrderRepository workOrderRepository;
-    private final com.ozerler.marble.mapper.WorkOrderMapper workOrderMapper;
+    private final WorkOrderMapper workOrderMapper;
     private final WorkOrderStatusHistoryRepository historyRepository;
     private final CustomerRepository customerRepository;
     private final StockItemRepository stockItemRepository;
@@ -456,8 +462,8 @@ public class OperationWorkOrderService {
                     dNote = "";
                 }
 
-                BigDecimal rowM2 = w.multiply(l).multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(CM2_PER_M2), 2, java.math.RoundingMode.HALF_UP);
-                BigDecimal rowMt = l.multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+                BigDecimal rowM2 = w.multiply(l).multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(CM2_PER_M2), 2, RoundingMode.HALF_UP);
+                BigDecimal rowMt = l.multiply(BigDecimal.valueOf(pcs)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
                 sumM2 = sumM2.add(rowM2);
                 sumMt = sumMt.add(rowMt);
                 totalPieces += pcs;
@@ -576,12 +582,12 @@ public class OperationWorkOrderService {
      * @return grid rows
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.TabulatorResponse<java.util.Map<String, Object>> orderRows(String search, BusinessUnit department, OperationWorkOrderStatus status, Long customerId, int page, int size) {
+    public TabulatorResponse<Map<String, Object>> orderRows(String search, BusinessUnit department, OperationWorkOrderStatus status, Long customerId, int page, int size) {
         int pageIndex = Math.max(0, page - 1);
         Page<OperationWorkOrder> ordersPage = searchOrders(department, status, customerId, null, null, search, pageIndex, size);
 
-        List<java.util.Map<String, Object>> data = ordersPage.getContent().stream().map(ord -> {
-            java.util.Map<String, Object> map = new java.util.HashMap<>();
+        List<Map<String, Object>> data = ordersPage.getContent().stream().map(ord -> {
+            Map<String, Object> map = new HashMap<>();
             map.put("id", ord.getId());
             map.put("orderNo", ord.getOrderNo());
             Object value;
@@ -634,7 +640,7 @@ public class OperationWorkOrderService {
             return map;
         }).toList();
 
-        return com.ozerler.marble.dto.TabulatorResponse.of(data, ordersPage.getTotalPages(), ordersPage.getTotalElements());
+        return TabulatorResponse.of(data, ordersPage.getTotalPages(), ordersPage.getTotalElements());
     }
 
     /**
@@ -644,9 +650,9 @@ public class OperationWorkOrderService {
      * @return the work order view
      */
     @Transactional(readOnly = true)
-    public com.ozerler.marble.dto.view.WorkOrderView getOrderView(Long id) {
+    public WorkOrderView getOrderView(Long id) {
         OperationWorkOrder order = getOrderById(id);
-        com.ozerler.marble.dto.view.WorkOrderView view = workOrderMapper.toDto(order);
+        WorkOrderView view = workOrderMapper.toDto(order);
         view.setCustomerNameForView(order.getCustomerNameForView());
         return view;
     }
@@ -665,7 +671,7 @@ public class OperationWorkOrderService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public Page<com.ozerler.marble.dto.view.WorkOrderView> searchOrderRows(BusinessUnit dept, OperationWorkOrderStatus status,
+    public Page<WorkOrderView> searchOrderRows(BusinessUnit dept, OperationWorkOrderStatus status,
                                                 Long customerId, LocalDate startDate, LocalDate endDate,
                                                 String search, int page, int size) {
         return searchOrders(dept, status, customerId, startDate, endDate, search, page, size).map(workOrderMapper::toRow);

@@ -15,6 +15,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ozerler.marble.domain.OperationYield;
 import com.ozerler.marble.domain.WorkshopOrderCost;
 import com.ozerler.marble.dto.WorkshopReceiptDto;
+import com.ozerler.marble.dto.view.MachineRef;
+import com.ozerler.marble.dto.view.PartyView;
+import com.ozerler.marble.dto.view.StockItemView;
+import com.ozerler.marble.dto.view.WorkshopOperationView;
+import com.ozerler.marble.mapper.MachineMapper;
+import com.ozerler.marble.mapper.StockItemMapper;
+import com.ozerler.marble.mapper.SupplierMapper;
+import com.ozerler.marble.mapper.WorkshopOperationMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.CostTransaction;
@@ -69,10 +77,10 @@ import lombok.RequiredArgsConstructor;
 public class WorkshopOperationService {
 
     private final WorkshopMaterialReceiptRepository receiptRepository;
-    private final com.ozerler.marble.mapper.SupplierMapper supplierMapper;
-    private final com.ozerler.marble.mapper.MachineMapper machineMapper;
-    private final com.ozerler.marble.mapper.WorkshopOperationMapper workshopOperationMapper;
-    private final com.ozerler.marble.mapper.StockItemMapper stockItemMapper;
+    private final SupplierMapper supplierMapper;
+    private final MachineMapper machineMapper;
+    private final WorkshopOperationMapper workshopOperationMapper;
+    private final StockItemMapper stockItemMapper;
     private final WorkshopOperationRepository operationRepository;
     private final CutOrderRepository cutOrderRepository;
     private final MachineRepository machineRepository;
@@ -590,7 +598,7 @@ public class WorkshopOperationService {
      * @return the view
      */
     @Transactional
-    public List<com.ozerler.marble.dto.view.StockItemView> produceWorkshopSizedItemsBatchViews(
+    public List<StockItemView> produceWorkshopSizedItemsBatchViews(
             String sourceType, // "SLAB", "SIZED", "NONE"
             Long slabId,
             Long sourceStockItemId,
@@ -622,7 +630,7 @@ public class WorkshopOperationService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.WorkshopOperationView> operationViewsFor(Long cutOrderId) {
+    public List<WorkshopOperationView> operationViewsFor(Long cutOrderId) {
         return operationsFor(cutOrderId).stream().map(workshopOperationMapper::toDto).toList();
     }
 
@@ -632,7 +640,7 @@ public class WorkshopOperationService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.MachineRef> workshopMachineViews() {
+    public List<MachineRef> workshopMachineViews() {
         return workshopMachines().stream().map(machineMapper::toDto).toList();
     }
 
@@ -642,7 +650,7 @@ public class WorkshopOperationService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.PartyView> supplierViews() {
+    public List<PartyView> supplierViews() {
         return suppliers().stream().map(supplierMapper::toDto).toList();
     }
 }

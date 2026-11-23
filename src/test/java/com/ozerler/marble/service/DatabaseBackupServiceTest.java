@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -170,7 +171,7 @@ class DatabaseBackupServiceTest {
         backupService.writeBackup(content.body(), output, fileName);
 
         Assertions.assertThat(content.sizeBytes()).isEqualTo(output.size());
-        try (GZIPInputStream gzip = new GZIPInputStream(new java.io.ByteArrayInputStream(output.toByteArray()))) {
+        try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(output.toByteArray()))) {
             String text = new String(gzip.readAllBytes(), StandardCharsets.UTF_8);
             Assertions.assertThat(text).contains("Özerler Mermer ERP Database Backup");
         }

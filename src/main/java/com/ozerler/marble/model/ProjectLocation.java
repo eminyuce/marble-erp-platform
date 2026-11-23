@@ -18,6 +18,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+import com.ozerler.marble.model.enums.OperationStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -74,7 +76,7 @@ public class ProjectLocation extends AuditableEntity {
 
     @Transient
     public String getStatusLabel() {
-        return com.ozerler.marble.model.enums.OperationStatus.labelOf(status);
+        return OperationStatus.labelOf(status);
     }
 
     public BigDecimal getProgressPercentage() {

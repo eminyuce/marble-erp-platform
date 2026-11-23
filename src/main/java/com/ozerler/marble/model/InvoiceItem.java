@@ -2,6 +2,7 @@ package com.ozerler.marble.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Locale;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -117,7 +118,7 @@ public class InvoiceItem extends AuditableEntity {
             return "m²";
         }
         String u = unit.trim();
-        return switch (u.toLowerCase(java.util.Locale.ROOT)) {
+        return switch (u.toLowerCase(Locale.ROOT)) {
             case "m2", "m²", "square_meter", "sqm" -> "m²";
             case "m3", "m³", "cubic_meter", "cbm" -> "m³";
             case "m.t.", "mt", "m.t", "m.tül", "m.tul", "metretül", "metretul", "metre tül", "metre tul", "lineer metre", "lineer" -> "m.t.";

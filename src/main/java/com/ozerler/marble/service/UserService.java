@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,11 +23,14 @@ import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.dto.UserCreateRequest;
 import com.ozerler.marble.dto.UserDto;
 import com.ozerler.marble.dto.UserUpdateRequest;
+import com.ozerler.marble.dto.view.RoleView;
+import com.ozerler.marble.mapper.RoleMapper;
 import com.ozerler.marble.model.Role;
 import com.ozerler.marble.model.User;
 import com.ozerler.marble.repository.RoleRepository;
 import com.ozerler.marble.repository.UserRepository;
 import com.ozerler.marble.util.GridPages;
+import com.ozerler.marble.util.MessageUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,21 +44,21 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final com.ozerler.marble.mapper.RoleMapper roleMapper;
+    private final RoleMapper roleMapper;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     public record UserSummaryDto(long totalUsers, long activeUsers, long suspendedUsers, long adminCount) {
@@ -251,7 +256,7 @@ public class UserService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.RoleView> getAllRoleViews() {
+    public List<RoleView> getAllRoleViews() {
         return getAllRoles().stream().map(roleMapper::toDto).toList();
     }
 }

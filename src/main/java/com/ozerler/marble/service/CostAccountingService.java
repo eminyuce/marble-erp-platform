@@ -1,15 +1,21 @@
 package com.ozerler.marble.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ozerler.marble.common.Constants;
+import com.ozerler.marble.domain.ExpensePeriods;
 import com.ozerler.marble.dto.CostBreakdownDto;
+import com.ozerler.marble.dto.view.CostCenterRef;
+import com.ozerler.marble.mapper.CostCenterMapper;
 import com.ozerler.marble.model.Block;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.CostTransaction;
@@ -18,6 +24,7 @@ import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.repository.CostCenterRepository;
 import com.ozerler.marble.repository.CostTransactionRepository;
+import com.ozerler.marble.util.MessageUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,19 +33,19 @@ import lombok.RequiredArgsConstructor;
 public class CostAccountingService {
 
     private final CostCenterRepository costCenterRepository;
-    private final com.ozerler.marble.mapper.CostCenterMapper costCenterMapper;
+    private final CostCenterMapper costCenterMapper;
     private final CostTransactionRepository costTransactionRepository;
-    private final org.springframework.context.MessageSource messageSource;
+    private final MessageSource messageSource;
 
     private String getMessage(String code, Object... args) {
         if (messageSource != null) {
             try {
-                return messageSource.getMessage(code, args, org.springframework.context.i18n.LocaleContextHolder.getLocale());
+                return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
             } catch (Exception ignored) {
                 // best effort: fall back to the default below
             }
         }
-        return com.ozerler.marble.util.MessageUtils.getMessage(code, args);
+        return MessageUtils.getMessage(code, args);
     }
 
     @Cacheable(Constants.CACHE_COST_CENTERS)
@@ -71,7 +78,7 @@ public class CostAccountingService {
         CostCenter center = costCenterRepository.findById(centerId)
                 .orElseThrow(() -> new IllegalArgumentException(getMessage("error.cost_center.not_found", centerId)));
 
-        java.time.LocalDate today = java.time.LocalDate.now();
+        LocalDate today = LocalDate.now();
         CostTransaction tx = CostTransaction.builder()
                 .costCenter(center)
                 .block(block)
@@ -85,8 +92,8 @@ public class CostAccountingService {
                 .currency(Constants.CURRENCY_TRY)
                 .entryDate(today)
                 .invoiceDate(today)
-                .expensePeriod(com.ozerler.marble.domain.ExpensePeriods.expensePeriod(expenseType, today, today))
-                .postingPeriod(com.ozerler.marble.domain.ExpensePeriods.postingPeriod(today))
+                .expensePeriod(ExpensePeriods.expensePeriod(expenseType, today, today))
+                .postingPeriod(ExpensePeriods.postingPeriod(today))
                 .allocationKey(allocationKey)
                 .description(description)
                 .build();
@@ -140,7 +147,7 @@ public class CostAccountingService {
      * @return the view
      */
     @Transactional(readOnly = true)
-    public List<com.ozerler.marble.dto.view.CostCenterRef> getAllCostCenterViews() {
+    public List<CostCenterRef> getAllCostCenterViews() {
         return getAllCostCenters().stream().map(costCenterMapper::toDto).toList();
     }
 }
