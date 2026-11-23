@@ -330,6 +330,8 @@ Flyway `V4` created `admin@eimece.test`. `V34` disables that account when it sti
 
 ## 📜 Quality & Code Standards
 
+- **Development standards (mandatory):** [docs/DEVELOPMENT_STANDARDS.md](docs/DEVELOPMENT_STANDARDS.md) — 12 rules and the per-feature checklist. Every change must follow them.
+
 - **Google Java Style**: Clean imports (no wildcard imports, zero fully qualified names).
 - **PMD 7.x Compliance**: Proactively validated against `maven-pmd-plugin:3.28.0` with **0 failures**.
 - **Dual DTO Serialization**: Full compatibility with both `snake_case` REST clients and `camelCase` data grids.
@@ -458,7 +460,7 @@ Nginx yenilendikten sonra uygulama konteynerini veya systemd birimini yeniden ba
 
 `location /` hedefi uygulama kapısıdır. Compose üretiminde bu kapı **81**’dir. [DEPLOYMENT_LINUX.md](docs/DEPLOYMENT_LINUX.md) systemd örneği **8080**’dir. Dosya bloğu her iki kurulumda da `127.0.0.1:9000`’e gider.
 
-Derin notlar: [DEPLOYMENT_LINUX.md](docs/DEPLOYMENT_LINUX.md), [RUNNING_LOCALLY.md](docs/RUNNING_LOCALLY.md), [docs/storage.md](docs/storage.md), [docs/production-deploy.md](docs/production-deploy.md). Bu README, kurmak ve okumak için yeterlidir.
+Derin notlar: [DEPLOYMENT_LINUX.md](docs/DEPLOYMENT_LINUX.md), [RUNNING_LOCALLY.md](docs/RUNNING_LOCALLY.md), [docs/storage.md](docs/storage.md), [docs/production-deploy.md](docs/production-deploy.md), [docs/DEVELOPMENT_STANDARDS.md](docs/DEVELOPMENT_STANDARDS.md), [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md). Bu README, kurmak ve okumak için yeterlidir.
 
 ---
 
