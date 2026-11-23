@@ -266,6 +266,30 @@ public class InvoiceService {
         return saved;
     }
 
+    private record StockDemand(BigDecimal deduction, BigDecimal wasteQty) {
+    }
+
+    private StockDemand stockDemand(InvoiceItem item, StockItem st) {
+        BigDecimal deduction = getEffectiveStockQuantity(item, st);
+        if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
+            deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
+        }
+        BigDecimal wasteQty = item.getWasteQuantity() != null && item.getWasteQuantity().compareTo(BigDecimal.ZERO) > 0
+                ? item.getWasteQuantity().setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+        return new StockDemand(deduction, wasteQty);
+    }
+
+    private boolean isFuelPurchase(Invoice saved, InvoiceItem item) {
+        String pName = item.getProductName() != null ? item.getProductName().toLowerCase() : "";
+        String unit = item.getUnit() != null ? item.getUnit().toLowerCase() : "";
+        return (saved.getQuarryCategory() == QuarryCategory.MAZOT)
+                || (item.getStockItem() != null && (item.getStockItem().getQuarryCategory() == QuarryCategory.MAZOT
+                    || item.getStockItem().getProductType() == StockProductType.FUEL))
+                || pName.contains("mazot") || pName.contains("dizel") || pName.contains("diesel")
+                || unit.contains("lt") || unit.contains("litre");
+    }
+
     private BigDecimal getEffectiveStockQuantity(InvoiceItem item, StockItem st) {
         if (item == null) return BigDecimal.ZERO;
         if (item.getCalculatedM2() != null && item.getCalculatedM2().compareTo(BigDecimal.ZERO) > 0) {
@@ -312,13 +336,9 @@ public class InvoiceService {
                 }
                 if (item.getStockItem() != null) {
                     StockItem st = item.getStockItem();
-                    BigDecimal deduction = getEffectiveStockQuantity(item, st);
-                    if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
-                        deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
-                    }
-                    BigDecimal wasteQty = item.getWasteQuantity() != null && item.getWasteQuantity().compareTo(BigDecimal.ZERO) > 0
-                            ? item.getWasteQuantity().setScale(2, RoundingMode.HALF_UP)
-                            : BigDecimal.ZERO;
+                    StockDemand demand = stockDemand(item, st);
+                    BigDecimal deduction = demand.deduction();
+                    BigDecimal wasteQty = demand.wasteQty();
                     BigDecimal totalNeeded = deduction.add(wasteQty);
 
                     BigDecimal currentQty = st.getQuantity() != null
@@ -467,13 +487,9 @@ public class InvoiceService {
                     }
                     if (item.getStockItem() != null) {
                         StockItem st = item.getStockItem();
-                        BigDecimal deduction = getEffectiveStockQuantity(item, st);
-                        if (deduction == null || deduction.compareTo(BigDecimal.ZERO) <= 0) {
-                            deduction = BigDecimal.ONE.setScale(2, RoundingMode.HALF_UP);
-                        }
-                        BigDecimal wasteQty = item.getWasteQuantity() != null && item.getWasteQuantity().compareTo(BigDecimal.ZERO) > 0
-                                ? item.getWasteQuantity().setScale(2, RoundingMode.HALF_UP)
-                                : BigDecimal.ZERO;
+                        StockDemand demand = stockDemand(item, st);
+                        BigDecimal deduction = demand.deduction();
+                        BigDecimal wasteQty = demand.wasteQty();
                         BigDecimal totalDeduction = deduction.add(wasteQty).setScale(2, RoundingMode.HALF_UP);
 
                         BigDecimal currentQty = st.getQuantity() != null
@@ -622,12 +638,7 @@ public class InvoiceService {
                 // Stok Alımı (Madde 3.B & 4): Gider henüz yazılmaz; depoya/stoğa alınır
                 if (department == BusinessUnit.QUARRY) {
                     for (InvoiceItem item : saved.getItems()) {
-                        String pName = item.getProductName() != null ? item.getProductName().toLowerCase() : "";
-                        String unit = item.getUnit() != null ? item.getUnit().toLowerCase() : "";
-                        boolean isFuel = (saved.getQuarryCategory() == QuarryCategory.MAZOT)
-                                || (item.getStockItem() != null && (item.getStockItem().getQuarryCategory() == QuarryCategory.MAZOT || item.getStockItem().getProductType() == StockProductType.FUEL))
-                                || pName.contains("mazot") || pName.contains("dizel") || pName.contains("diesel") || unit.contains("lt") || unit.contains("litre");
-                        if (isFuel) {
+                        if (isFuelPurchase(saved, item)) {
                             quarryInventoryService.addFuelStock(item.getQuantity(), item.getUnitPrice(), saved, saved.getNotes());
                         } else {
                             quarryInventoryService.addConsumableStock(null, item.getProductName(), item.getQuantity(), item.getUnit(), item.getUnitPrice(), saved, saved.getNotes());
@@ -635,12 +646,7 @@ public class InvoiceService {
                     }
                 } else if (department == BusinessUnit.FACTORY) {
                     for (InvoiceItem item : saved.getItems()) {
-                        String pName = item.getProductName() != null ? item.getProductName().toLowerCase() : "";
-                        String unit = item.getUnit() != null ? item.getUnit().toLowerCase() : "";
-                        boolean isFuel = (saved.getQuarryCategory() == QuarryCategory.MAZOT)
-                                || (item.getStockItem() != null && (item.getStockItem().getQuarryCategory() == QuarryCategory.MAZOT || item.getStockItem().getProductType() == StockProductType.FUEL))
-                                || pName.contains("mazot") || pName.contains("dizel") || pName.contains("diesel") || unit.contains("lt") || unit.contains("litre");
-                        if (isFuel) {
+                        if (isFuelPurchase(saved, item)) {
                             factoryInventoryService.addFuelStock(item.getQuantity(), item.getUnitPrice(), saved, saved.getNotes());
                         } else {
                             factoryInventoryService.addConsumableStock(null, item.getProductName(), item.getQuantity(), item.getUnit(), item.getUnitPrice(), saved, saved.getNotes());

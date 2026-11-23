@@ -281,16 +281,16 @@ public class ProductionController {
     @PostMapping("/polish/{id}/edit")
     @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     public String updatePolish(@PathVariable("id") Long id,
-                               @RequestParam(value = "machineId", required = false) Long machineId,
-                               @RequestParam("operatorName") String operatorName,
-                               @RequestParam("inputM2") BigDecimal inputM2,
-                               @RequestParam("outputM2") BigDecimal outputM2,
-                               @RequestParam("wasteM2") BigDecimal wasteM2,
-                               @RequestParam(value = "chamferStatus", required = false) ChamferStatus chamferStatus,
-                               @RequestParam(value = "notes", required = false) String notes,
-                               @RequestParam(value = "laborCost", required = false) BigDecimal laborCost,
-                               @RequestParam(value = "electricityCost", required = false) BigDecimal electricityCost,
-                               @RequestParam(value = "consumableCost", required = false) BigDecimal consumableCost,
+                               @RequestParam(required = false, name = "machineId") Long machineId,
+                               @RequestParam(name = "operatorName") String operatorName,
+                               @RequestParam(name = "inputM2") BigDecimal inputM2,
+                               @RequestParam(name = "outputM2") BigDecimal outputM2,
+                               @RequestParam(name = "wasteM2") BigDecimal wasteM2,
+                               @RequestParam(required = false, name = "chamferStatus") ChamferStatus chamferStatus,
+                               @RequestParam(required = false, name = "notes") String notes,
+                               @RequestParam(required = false, name = "laborCost") BigDecimal laborCost,
+                               @RequestParam(required = false, name = "electricityCost") BigDecimal electricityCost,
+                               @RequestParam(required = false, name = "consumableCost") BigDecimal consumableCost,
                                RedirectAttributes redirectAttributes) {
         try {
             factoryProductionService.updateSurfaceOperation(id, machineId, operatorName,

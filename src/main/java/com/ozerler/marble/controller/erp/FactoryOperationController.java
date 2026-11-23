@@ -200,8 +200,8 @@ public class FactoryOperationController extends AbstractController {
                            @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly,
                            @ModelAttribute ListQuery query, Model model) {
 
-        Page<Slab> slabsPage = factoryStockService.getFactorySlabsPaged(
-                status, customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
+        Page<Slab> slabsPage = StockYardResponses.slabPage(
+                factoryStockService, status, customerId, generalStockOnly, query);
         List<Customer> customers = customerRepository.findAll();
         BigDecimal customerSlabArea = customerId != null ? factoryStockService.getCustomerSlabAreaTotal(customerId) : BigDecimal.ZERO;
 
@@ -230,35 +230,7 @@ public class FactoryOperationController extends AbstractController {
             @RequestParam(value = "status", required = false) SlabStatus status,
             @RequestParam(value = "customerId", required = false) Long customerId,
             @RequestParam(value = "generalStockOnly", defaultValue = "false") boolean generalStockOnly) {
-
-        int pageIndex = Math.max(0, page - 1);
-        Page<Slab> slabsPage = factoryStockService.getFactorySlabsPaged(status, customerId, generalStockOnly, search, pageIndex, size);
-
-        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-        List<Map<String, Object>> data = slabsPage.getContent().stream().map(s -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", s.getId());
-            map.put("slabCode", s.getSlabCode());
-            map.put("sourceBlockCode", s.getBlock() != null ? s.getBlock().getBlockCode() : "—");
-            map.put("stoneType", s.getBlock() != null && s.getBlock().getStoneType() != null ? s.getBlock().getStoneType() : "—");
-            map.put("qualityGrade", s.getQualityGrade() != null ? s.getQualityGrade().getDisplayName() : "1. Sınıf");
-            map.put("surfaceFinish", s.getSurfaceFinish() != null ? s.getSurfaceFinish().getDisplayName() : "Cilalı");
-            map.put("thicknessCm", s.getThicknessCm() != null ? s.getThicknessCm() + " cm" : "2 cm");
-            map.put("dimensions", (s.getWidthCm() != null && s.getLengthCm() != null) ? (s.getWidthCm() + "×" + s.getLengthCm() + " cm") : "—");
-            map.put("surfaceAreaM2", s.getSurfaceAreaM2());
-            map.put("pieceCount", 1);
-            map.put("customerName", s.getCustomer() != null ? s.getCustomer().getCompanyName() : null);
-            map.put("customerId", s.getCustomer() != null ? s.getCustomer().getId() : null);
-            map.put("isGeneralStock", s.getCustomer() == null);
-            map.put("status", s.getStatus() != null ? s.getStatus().name() : "AVAILABLE");
-            map.put("statusLabel", s.getStatus() != null ? s.getStatus().getDisplayName() : "Hazır");
-            map.put("createdDate", s.getCreatedDate() != null ? s.getCreatedDate().format(dateFmt) : "—");
-            map.put("notes", "");
-            return map;
-        }).collect(Collectors.toList());
-
-        return TabulatorResponse.of(data, slabsPage.getTotalPages(), slabsPage.getTotalElements());
+        return StockYardResponses.slabs(factoryStockService, page, size, search, status, customerId, generalStockOnly);
     }
 
     @GetMapping({"/slabs/new", "/slabs/create"})
@@ -358,52 +330,7 @@ public class FactoryOperationController extends AbstractController {
 
         int pageIndex = Math.max(0, page - 1);
         Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(customerId, generalStockOnly, search, pageIndex, size);
-
-        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-        List<Map<String, Object>> data = itemsPage.getContent().stream().map(it -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", it.getId());
-            map.put("itemCode", it.getItemCode());
-            String sourceBlockCode = "—";
-            if (it.getSourceBlock() != null) {
-                try {
-                    sourceBlockCode = it.getSourceBlock().getBlockCode();
-                } catch (Exception e) {
-                    sourceBlockCode = "—";
-                }
-            }
-            map.put("sourceBlockCode", sourceBlockCode != null ? sourceBlockCode : "—");
-            map.put("stoneType", it.getStoneType() != null ? it.getStoneType() : "Mermer");
-            map.put("description", it.getDescription() != null ? it.getDescription() : "Ebatlı Mermer");
-            map.put("surfaceFinish", it.getSurfaceFinish() != null ? it.getSurfaceFinish().getDisplayName() : "Cilalı");
-            map.put("edgeFinish", it.getEdgeFinish() != null ? it.getEdgeFinish() : "Düz");
-            map.put("thicknessCm", it.getThicknessCm() != null ? it.getThicknessCm() + " cm" : "2 cm");
-            map.put("dimensions", (it.getWidthCm() != null && it.getLengthCm() != null) ? (it.getWidthCm() + "×" + it.getLengthCm() + " cm") : "—");
-            map.put("quantity", it.getQuantity());
-            map.put("unit", it.getUnit() != null ? it.getUnit() : "m2");
-            map.put("pieceCount", it.getPieceCount());
-            map.put("actualProducedQuantity", it.getActualProducedQuantity());
-            String customerName = null;
-            Long custId = null;
-            if (it.getCustomer() != null) {
-                try {
-                    customerName = it.getCustomer().getCompanyName();
-                    custId = it.getCustomer().getId();
-                } catch (Exception ignored) {
-                }
-            }
-            map.put("customerName", customerName);
-            map.put("customerId", custId);
-            map.put("isGeneralStock", it.getCustomer() == null);
-            map.put("productionDate", it.getProductionDate() != null ? it.getProductionDate().format(dateFmt) : it.getCreatedDate() != null ? it.getCreatedDate().format(dateFmt) : "—");
-            map.put("status", it.getStatus() != null ? it.getStatus() : "AVAILABLE");
-            map.put("statusLabel", "Hazır / Stokta");
-            map.put("notes", it.getNotes() != null ? it.getNotes() : "");
-            return map;
-        }).collect(Collectors.toList());
-
-        return TabulatorResponse.of(data, itemsPage.getTotalPages(), itemsPage.getTotalElements());
+        return StockYardResponses.factorySized(itemsPage);
     }
 
     @GetMapping({"/sized/new", "/sized/create"})

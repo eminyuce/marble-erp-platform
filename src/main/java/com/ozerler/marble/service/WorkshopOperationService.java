@@ -262,8 +262,6 @@ public class WorkshopOperationService {
             }
         }
 
-        BigDecimal totalProducedM2 = BigDecimal.ZERO;
-
         StockLocation workshopLoc = stockLocationRepository
                 .findByLocationTypeAndActiveTrue(StockLocationType.WORKSHOP_STOCK)
                 .orElseGet(() -> stockLocationRepository.save(StockLocation.builder()
@@ -282,61 +280,60 @@ public class WorkshopOperationService {
         if (surfaceFinishStr != null) {
             try { surface = SurfaceFinish.valueOf(surfaceFinishStr); } catch (Exception ignored) {}
         }
+        QualityGrade resolvedGrade = grade;
+        SurfaceFinish resolvedSurface = surface;
+        Slab resolvedSlab = sourceSlab;
+        StockItem resolvedSourceItem = sourceStockItem;
+        Block resolvedBlock = sourceBlock;
+        String resolvedStoneType = stoneType;
 
-        for (int i = 0; i < widths.size(); i++) {
-            BigDecimal w = widths.get(i);
-            if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) continue;
-            BigDecimal l = (lengths != null && i < lengths.size() && lengths.get(i) != null) ? lengths.get(i) : w;
-            BigDecimal t = (thicknesses != null && i < thicknesses.size() && thicknesses.get(i) != null) ? thicknesses.get(i) : new BigDecimal("2.0");
-            int count = (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null) ? pieceCounts.get(i) : 1;
-            BigDecimal qty = (quantities != null && i < quantities.size() && quantities.get(i) != null)
-                    ? quantities.get(i)
-                    : w.multiply(l).multiply(BigDecimal.valueOf(count)).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
+        BigDecimal[] producedArea = { BigDecimal.ZERO };
+        RowDimensions.eachPositiveSizedRow(widths, lengths, thicknesses, pieceCounts, quantities, new BigDecimal("2.0"),
+                (index, width, length, thickness, count, quantity) -> {
+            producedArea[0] = producedArea[0].add(quantity);
 
-            totalProducedM2 = totalProducedM2.add(qty);
+            String desc = (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank())
+                    ? descriptions.get(index).trim()
+                    : defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Atölye Ebatlı " + thickness + "x" + width + "x" + length);
 
-            String desc = (descriptions != null && i < descriptions.size() && descriptions.get(i) != null && !descriptions.get(i).isBlank())
-                    ? descriptions.get(i).trim()
-                    : defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Atölye Ebatlı " + t + "x" + w + "x" + l);
-
-            String rowSurfaceStr = (rowSurfaceFinishes != null && i < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(i) != null && !rowSurfaceFinishes.get(i).isBlank())
-                    ? rowSurfaceFinishes.get(i).trim() : surfaceFinishStr;
-            SurfaceFinish rowSurface = surface;
+            String rowSurfaceStr = (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank())
+                    ? rowSurfaceFinishes.get(index).trim() : surfaceFinishStr;
+            SurfaceFinish rowSurface = resolvedSurface;
             if (rowSurfaceStr != null) {
                 try { rowSurface = SurfaceFinish.valueOf(rowSurfaceStr); } catch (Exception ignored) {}
             }
 
-            String rowEdge = (rowEdgeFinishes != null && i < rowEdgeFinishes.size() && rowEdgeFinishes.get(i) != null && !rowEdgeFinishes.get(i).isBlank())
-                    ? rowEdgeFinishes.get(i).trim() : edgeFinish != null ? edgeFinish : "DUZ";
+            String rowEdge = (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank())
+                    ? rowEdgeFinishes.get(index).trim() : edgeFinish != null ? edgeFinish : "DUZ";
 
             String itemCode = UniqueCodes.yearly("ATL-EBT", stockItemRepository::existsByItemCode);
 
             String combinedNotes = notes;
-            if (sourceSlab != null) {
-                String slabInfo = "[Kaynak Plaka: " + sourceSlab.getSlabCode() + "]";
+            if (resolvedSlab != null) {
+                String slabInfo = "[Kaynak Plaka: " + resolvedSlab.getSlabCode() + "]";
                 combinedNotes = (combinedNotes != null && !combinedNotes.isBlank()) ? combinedNotes + " " + slabInfo : slabInfo;
-            } else if (sourceStockItem != null) {
-                String srcInfo = "[Yeniden Ebatlama - Kaynak Ürün: " + sourceStockItem.getItemCode() + "]";
+            } else if (resolvedSourceItem != null) {
+                String srcInfo = "[Yeniden Ebatlama - Kaynak Ürün: " + resolvedSourceItem.getItemCode() + "]";
                 combinedNotes = (combinedNotes != null && !combinedNotes.isBlank()) ? combinedNotes + " " + srcInfo : srcInfo;
             }
 
             StockItem item = StockItem.builder()
                     .itemCode(itemCode)
                     .productType(StockProductType.SIZED)
-                    .sourceBlock(sourceBlock)
-                    .stoneType(stoneType)
+                    .sourceBlock(resolvedBlock)
+                    .stoneType(resolvedStoneType)
                     .description(desc)
-                    .thicknessCm(t)
-                    .widthCm(w)
-                    .lengthCm(l)
-                    .quantity(qty.setScale(2, RoundingMode.HALF_UP))
+                    .thicknessCm(thickness)
+                    .widthCm(width)
+                    .lengthCm(length)
+                    .quantity(quantity.setScale(2, RoundingMode.HALF_UP))
                     .unit("m2")
                     .pieceCount(count)
-                    .actualProducedQuantity(qty.setScale(2, RoundingMode.HALF_UP))
+                    .actualProducedQuantity(quantity.setScale(2, RoundingMode.HALF_UP))
                     .customer(customer)
                     .project(project)
                     .stockLocation(workshopLoc)
-                    .qualityGrade(grade)
+                    .qualityGrade(resolvedGrade)
                     .surfaceFinish(rowSurface)
                     .edgeFinish(rowEdge)
                     .status("AVAILABLE")
@@ -345,9 +342,10 @@ public class WorkshopOperationService {
                     .build();
 
             StockItem saved = stockItemRepository.save(item);
-            stockMovementService.recordWorkshopSizedProduction(saved, sourceSlab, sourceStockItem, customer);
+            stockMovementService.recordWorkshopSizedProduction(saved, resolvedSlab, resolvedSourceItem, customer);
             created.add(saved);
-        }
+        });
+        BigDecimal totalProducedM2 = producedArea[0];
 
         // Kaynak hammadde düşümü
         BigDecimal effectiveConsumed = (consumedQuantity != null && consumedQuantity.compareTo(BigDecimal.ZERO) > 0)

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -83,18 +82,7 @@ public class FactoryInventoryService {
         }
 
         StockItem tank = getOrCreateFactoryFuelTankStockItem();
-        BigDecimal oldQty = tank.getQuantity() != null ? tank.getQuantity() : BigDecimal.ZERO;
-        BigDecimal newQty = oldQty.add(litres);
-        tank.setQuantity(newQty);
-
-        if (netUnitPrice != null && netUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal oldCost = oldQty.multiply(tank.getUnitPrice() != null ? tank.getUnitPrice() : BigDecimal.ZERO);
-            BigDecimal newCost = litres.multiply(netUnitPrice);
-            BigDecimal avgPrice = newCost.add(oldCost).divide(newQty, 2, RoundingMode.HALF_UP);
-            tank.setUnitPrice(avgPrice);
-        }
-
-        StockItem saved = stockItemRepository.save(tank);
+        StockItem saved = InventoryBalances.addIncomingFuel(tank, litres, netUnitPrice, stockItemRepository);
 
         String movCode = UniqueCodes.yearly("MOV-FB-MZ", stockMovementRepository::existsByMovementCode);
         StockMovement movement = StockMovement.builder()
@@ -113,7 +101,7 @@ public class FactoryInventoryService {
                 .build();
         stockMovementRepository.save(movement);
 
-        log.info("Fabrika Mazot Deposu dolumu yapıldı: +{} L. Yeni stok: {} L", litres, newQty);
+        log.info("Fabrika Mazot Deposu dolumu yapıldı: +{} L. Yeni stok: {} L", litres, saved.getQuantity());
         return saved;
     }
 
@@ -147,21 +135,12 @@ public class FactoryInventoryService {
         BigDecimal unitPrice = tank.getUnitPrice() != null && tank.getUnitPrice().compareTo(BigDecimal.ZERO) > 0
                 ? tank.getUnitPrice()
                 : new BigDecimal("42.00");
-        BigDecimal totalNetCost = litres.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
-
-        MachineFuelEntry entry = MachineFuelEntry.builder()
-                .machine(machine)
-                .entryDate(entryDate != null ? entryDate : LocalDate.now())
-                .litres(litres)
-                .pricePerLitre(unitPrice)
-                .workingHoursOrKm(workingHoursOrKm)
-                .receiptNo(receiptNo)
-                .issuedBy(issuedBy)
-                .receivedBy(receivedBy)
-                .notes(notes)
-                .build();
-        entry.calculateTotal();
-        MachineFuelEntry savedEntry = fuelEntryRepository.save(entry);
+        InventoryBalances.SavedFuel savedFuel = InventoryBalances.recordFuelEntry(
+                fuelEntryRepository,
+                new InventoryBalances.FuelDraft(machine, entryDate, litres, unitPrice, workingHoursOrKm,
+                        receiptNo, issuedBy, receivedBy, notes));
+        MachineFuelEntry savedEntry = savedFuel.entry();
+        BigDecimal totalNetCost = savedFuel.totalNetCost();
 
         CostCenter factoryCenter = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.FACTORY)
                 .or(() -> costCenterRepository.findByCode("CC-002"))
@@ -315,27 +294,9 @@ public class FactoryInventoryService {
                 ? itemCode.trim().toUpperCase()
                 : UniqueCodes.yearly("FB-SRF", stockItemRepository::existsByItemCode);
 
-        StockItem item = stockItemRepository.findByItemCode(code)
-                .orElseGet(() -> StockItem.builder()
-                        .itemCode(code)
-                        .description(description != null ? description.trim() : "Fabrika Sarf Malzemesi")
-                        .productType(StockProductType.CONSUMABLE)
-                        .stockLocation(loc)
-                        .quantity(BigDecimal.ZERO)
-                        .unit(unit != null && !unit.isBlank() ? unit.trim() : "adet")
-                        .unitPrice(netUnitPrice != null ? netUnitPrice : BigDecimal.ZERO)
-                        .status("AVAILABLE")
-                        .productionDate(LocalDate.now())
-                        .notes(notes)
-                        .build());
-
-        BigDecimal oldQty = item.getQuantity() != null ? item.getQuantity() : BigDecimal.ZERO;
-        BigDecimal newQty = oldQty.add(quantity);
-        item.setQuantity(newQty);
-        if (netUnitPrice != null && netUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
-            item.setUnitPrice(netUnitPrice);
-        }
-        StockItem saved = stockItemRepository.save(item);
+        StockItem saved = InventoryBalances.addIncomingConsumable(
+                stockItemRepository, code, description, "Fabrika Sarf Malzemesi",
+                loc, unit, netUnitPrice, notes, quantity);
 
         String movCode = UniqueCodes.yearly("MOV-FB-SRF", stockMovementRepository::existsByMovementCode);
         StockMovement movement = StockMovement.builder()
@@ -358,31 +319,13 @@ public class FactoryInventoryService {
 
     @Transactional
     public StockItem consumeConsumable(Long stockItemId, BigDecimal quantity, Long machineId, String notes) {
-        Objects.requireNonNull(stockItemId, "Sarf malzeme seçilmelidir.");
-        Objects.requireNonNull(quantity, "Kullanılan miktar girilmelidir.");
-
-        if (quantity.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Kullanılan miktar 0'dan büyük olmalıdır.");
-        }
-
-        StockItem item = stockItemRepository.findById(stockItemId)
-                .orElseThrow(() -> new IllegalArgumentException("Sarf malzeme bulunamadı: " + stockItemId));
-
-        BigDecimal currentStock = item.getQuantity() != null ? item.getQuantity() : BigDecimal.ZERO;
-        if (currentStock.compareTo(quantity) < 0) {
-            throw new IllegalArgumentException(String.format(
-                    "Yetersiz stok! Mevcut: %s %s, talep edilen: %s %s. Stok eksiye düşürülemez.",
-                    currentStock, item.getUnit(), quantity, item.getUnit()));
-        }
-
-        BigDecimal newStock = currentStock.subtract(quantity);
-        item.setQuantity(newStock);
-        StockItem saved = stockItemRepository.save(item);
-
-        BigDecimal unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO;
-        BigDecimal netCost = quantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
-
-        Machine machine = machineId != null ? machineRepository.findById(machineId).orElse(null) : null;
+        InventoryBalances.StockWithdrawal withdrawal = InventoryBalances.withdrawConsumable(
+                stockItemRepository, machineRepository, stockItemId, quantity, machineId,
+                "Yetersiz stok! Mevcut: %s %s, talep edilen: %s %s. Stok eksiye düşürülemez.");
+        StockItem item = withdrawal.item();
+        StockItem saved = item;
+        BigDecimal netCost = withdrawal.netCost();
+        Machine machine = withdrawal.machine();
 
         CostCenter factoryCenter = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.FACTORY)
                 .or(() -> costCenterRepository.findByCode("CC-002"))

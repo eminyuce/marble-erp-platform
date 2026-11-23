@@ -189,10 +189,15 @@ public class FactoryStockService {
         if (widths == null || widths.isEmpty()) return createdSlabs;
 
         for (int i = 0; i < widths.size(); i++) {
-            BigDecimal w = widths.get(i);
-            if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) continue;
-            BigDecimal l = (lengths != null && i < lengths.size() && lengths.get(i) != null) ? lengths.get(i) : w;
-            BigDecimal t = (thicknesses != null && i < thicknesses.size() && thicknesses.get(i) != null) ? thicknesses.get(i) : commonThicknessCm != null ? commonThicknessCm : new BigDecimal("2.00");
+            RowDimensions.Row row = RowDimensions.positiveWidth(
+                    widths, lengths, thicknesses, i,
+                    commonThicknessCm != null ? commonThicknessCm : new BigDecimal("2.00"));
+            if (row == null) {
+                continue;
+            }
+            BigDecimal w = row.width();
+            BigDecimal l = row.length();
+            BigDecimal t = row.thickness();
             int count = (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null) ? pieceCounts.get(i) : 1;
             BigDecimal area = w.multiply(l).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
 
@@ -364,27 +369,20 @@ public class FactoryStockService {
         List<StockItem> created = new ArrayList<>();
         if (widths == null || widths.isEmpty()) return created;
 
-        for (int i = 0; i < widths.size(); i++) {
-            BigDecimal w = widths.get(i);
-            if (w == null || w.compareTo(BigDecimal.ZERO) <= 0) continue;
-            BigDecimal l = (lengths != null && i < lengths.size() && lengths.get(i) != null) ? lengths.get(i) : w;
-            BigDecimal t = (thicknesses != null && i < thicknesses.size() && thicknesses.get(i) != null) ? thicknesses.get(i) : new BigDecimal("2.0");
-            int count = (pieceCounts != null && i < pieceCounts.size() && pieceCounts.get(i) != null) ? pieceCounts.get(i) : 1;
-            BigDecimal qty = (quantities != null && i < quantities.size() && quantities.get(i) != null)
-                    ? quantities.get(i)
-                    : w.multiply(l).multiply(BigDecimal.valueOf(count)).divide(BigDecimal.valueOf(10000), 4, RoundingMode.HALF_UP);
-            String desc = (descriptions != null && i < descriptions.size() && descriptions.get(i) != null && !descriptions.get(i).isBlank())
-                    ? descriptions.get(i).trim()
-                    : defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Ebatlı Mermer " + t + "x" + w + "x" + l);
+        RowDimensions.eachPositiveSizedRow(widths, lengths, thicknesses, pieceCounts, quantities, new BigDecimal("2.0"),
+                (index, width, length, thickness, count, quantity) -> {
+            String desc = (descriptions != null && index < descriptions.size() && descriptions.get(index) != null && !descriptions.get(index).isBlank())
+                    ? descriptions.get(index).trim()
+                    : defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Ebatlı Mermer " + thickness + "x" + width + "x" + length);
 
-            String rowSurface = (rowSurfaceFinishes != null && i < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(i) != null && !rowSurfaceFinishes.get(i).isBlank())
-                    ? rowSurfaceFinishes.get(i).trim() : surfaceFinishStr;
-            String rowEdge = (rowEdgeFinishes != null && i < rowEdgeFinishes.size() && rowEdgeFinishes.get(i) != null && !rowEdgeFinishes.get(i).isBlank())
-                    ? rowEdgeFinishes.get(i).trim() : edgeFinish;
+            String rowSurface = (rowSurfaceFinishes != null && index < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(index) != null && !rowSurfaceFinishes.get(index).isBlank())
+                    ? rowSurfaceFinishes.get(index).trim() : surfaceFinishStr;
+            String rowEdge = (rowEdgeFinishes != null && index < rowEdgeFinishes.size() && rowEdgeFinishes.get(index) != null && !rowEdgeFinishes.get(index).isBlank())
+                    ? rowEdgeFinishes.get(index).trim() : edgeFinish;
 
-            StockItem item = createSizedItem(blockId, slabId, desc, t, w, l, qty, count, qty, customerId, qualityGradeStr, rowSurface, rowEdge, notes);
+            StockItem item = createSizedItem(blockId, slabId, desc, thickness, width, length, quantity, count, quantity, customerId, qualityGradeStr, rowSurface, rowEdge, notes);
             created.add(item);
-        }
+        });
         return created;
     }
 

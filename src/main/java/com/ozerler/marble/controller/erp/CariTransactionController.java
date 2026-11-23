@@ -69,12 +69,11 @@ public class CariTransactionController extends AbstractController {
                                  @RequestParam(value = "notes", required = false) String notes,
                                  RedirectAttributes redirectAttributes) {
         try {
-            BigDecimal debitAmount = "DEBIT".equalsIgnoreCase(direction) ? amount : BigDecimal.ZERO;
-            BigDecimal creditAmount = "CREDIT".equalsIgnoreCase(direction) ? amount : BigDecimal.ZERO;
+            CariAmounts amounts = CariAmounts.of(direction, amount);
 
             CariTransaction tx = cariTransactionService.createTransaction(
                     customerId, transactionDate != null ? transactionDate : LocalDate.now(),
-                    transactionType, documentNo, description, debitAmount, creditAmount, notes
+                    transactionType, documentNo, description, amounts.debit(), amounts.credit(), notes
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Cari hareket başarıyla kaydedildi (" + tx.getTransactionType().getLabel() + ": " + amount + " TL)");
@@ -88,21 +87,20 @@ public class CariTransactionController extends AbstractController {
     @PostMapping("/admin/definitions/customers/{customerId}/transactions/{transactionId}/edit")
     public String editTransaction(@PathVariable("customerId") Long customerId,
                                   @PathVariable("transactionId") Long transactionId,
-                                  @RequestParam(value = "transactionDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transactionDate,
-                                  @RequestParam("transactionType") CariTransactionType transactionType,
-                                  @RequestParam(value = "documentNo", required = false) String documentNo,
-                                  @RequestParam(value = "direction", defaultValue = "DEBIT") String direction,
-                                  @RequestParam("amount") BigDecimal amount,
-                                  @RequestParam(value = "description", required = false) String description,
-                                  @RequestParam(value = "notes", required = false) String notes,
+                                  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam(required = false, name = "transactionDate") LocalDate transactionDate,
+                                  @RequestParam(name = "transactionType") CariTransactionType transactionType,
+                                  @RequestParam(required = false, name = "documentNo") String documentNo,
+                                  @RequestParam(name = "direction", defaultValue = "DEBIT") String direction,
+                                  @RequestParam(name = "amount") BigDecimal amount,
+                                  @RequestParam(required = false, name = "description") String description,
+                                  @RequestParam(required = false, name = "notes") String notes,
                                   RedirectAttributes redirectAttributes) {
         try {
-            BigDecimal debitAmount = "DEBIT".equalsIgnoreCase(direction) ? amount : BigDecimal.ZERO;
-            BigDecimal creditAmount = "CREDIT".equalsIgnoreCase(direction) ? amount : BigDecimal.ZERO;
+            CariAmounts amounts = CariAmounts.of(direction, amount);
 
             cariTransactionService.updateTransaction(
                     transactionId, transactionDate, transactionType, documentNo, description,
-                    debitAmount, creditAmount, notes
+                    amounts.debit(), amounts.credit(), notes
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Cari hareket başarıyla güncellendi.");
@@ -125,6 +123,14 @@ public class CariTransactionController extends AbstractController {
             redirectAttributes.addFlashAttribute("errorMessage", "Hata: " + e.getMessage());
         }
         return "redirect:/admin/definitions/customers/" + customerId + "/transactions";
+    }
+
+    private record CariAmounts(BigDecimal debit, BigDecimal credit) {
+        private static CariAmounts of(String direction, BigDecimal amount) {
+            BigDecimal debitAmount = "DEBIT".equalsIgnoreCase(direction) ? amount : BigDecimal.ZERO;
+            BigDecimal creditAmount = "CREDIT".equalsIgnoreCase(direction) ? amount : BigDecimal.ZERO;
+            return new CariAmounts(debitAmount, creditAmount);
+        }
     }
 
     private static String labelOf(CustomerType customerType) {
