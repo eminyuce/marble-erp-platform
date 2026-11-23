@@ -25,7 +25,8 @@ public final class StockLocationGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "stock-locations-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "stock-locations-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(StockLocationDto location) {

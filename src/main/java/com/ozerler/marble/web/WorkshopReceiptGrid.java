@@ -28,7 +28,7 @@ public final class WorkshopReceiptGrid {
             rows.add(row(receipt));
         }
         return GridAssembler.from(page, size, GridWindow.pageCount(matched.size(), size), matched.size(),
-                null, null, "workshop-receipts-table", 4, columns(), rows);
+                null, null, "workshop-receipts-table", GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     private static GridRow row(WorkshopReceiptDto receipt) {

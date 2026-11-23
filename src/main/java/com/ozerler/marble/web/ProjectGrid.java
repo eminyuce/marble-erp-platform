@@ -23,7 +23,8 @@ public final class ProjectGrid {
                 rows.add(row(project));
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "projects-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "projects-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(ProjectDto project) {

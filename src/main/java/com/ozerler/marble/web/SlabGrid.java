@@ -23,7 +23,8 @@ public final class SlabGrid {
                 rows.add(row(slab));
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "slabs-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "slabs-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(SlabDto slab) {
@@ -42,7 +43,7 @@ public final class SlabGrid {
         } else {
             passport = "/passport/" + code;
         }
-        return GridRow.of(viewUrl, editUrl, null, code, List.of(
+        return new GridRow(viewUrl, editUrl, "", code, slabActions(viewUrl, editUrl, passport), List.of(
                 GridCell.badge(slab.getStatusLabel()),
                 GridCell.chip(slab.getId()),
                 GridCell.link(code, viewUrl),
@@ -96,5 +97,16 @@ public final class SlabGrid {
             return GridWindow.clean(fallback);
         }
         return text;
+    }
+
+    private static List<GridAction> slabActions(String viewUrl, String editUrl, String passport) {
+        List<GridAction> items = new ArrayList<>();
+        items.add(GridAction.link("Detay", "eye", viewUrl));
+        items.add(GridAction.link("Düzenle", "edit-3", editUrl));
+        if (!passport.isBlank()) {
+            items.add(GridAction.link("Pasaport", "qr-code", passport, "_blank"));
+        }
+        items.add(GridAction.link("Barkod Yazdır", "printer", viewUrl + "/label", "_blank"));
+        return items;
     }
 }

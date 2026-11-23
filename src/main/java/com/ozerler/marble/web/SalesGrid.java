@@ -23,7 +23,8 @@ public final class SalesGrid {
                 rows.add(row(order));
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "sales-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "sales-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(SalesOrderDto order) {

@@ -78,6 +78,7 @@ class ProjectGridPageTest {
                         Matchers.instanceOf(DataGridView.class),
                         Matchers.hasProperty("number", Matchers.is(2)),
                         Matchers.hasProperty("size", Matchers.is(50)),
+                        Matchers.hasProperty("frozenCount", Matchers.is(0)),
                         Matchers.hasProperty("total", Matchers.is(336L)),
                         Matchers.hasProperty("totalPages", Matchers.is(8))
                 )));

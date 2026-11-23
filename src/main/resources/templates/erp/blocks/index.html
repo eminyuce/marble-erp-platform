@@ -328,6 +328,8 @@
     </dialog>
 </div>
 
-<th:block layout:fragment="scripts"></th:block>
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/blocks-page-actions.js(v=${assetVersion})}"></script>
+</th:block>
 </body>
 </html>

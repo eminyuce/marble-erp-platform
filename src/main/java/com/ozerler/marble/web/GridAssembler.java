@@ -9,6 +9,8 @@ import com.ozerler.marble.dto.TabulatorResponse;
  */
 public final class GridAssembler {
 
+    public static final int NO_FROZEN_COLUMNS = DataGridView.NO_FROZEN_COLUMNS;
+
     private GridAssembler() {
     }
 

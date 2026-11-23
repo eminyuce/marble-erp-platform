@@ -32,7 +32,8 @@ final class OperationGridSupport {
         } else {
             total = page.getTotalElements();
         }
-        return GridAssembler.from(number, size, totalPages, total, sort, direction, tableId, 4, columns, rows);
+        return GridAssembler.from(number, size, totalPages, total, sort, direction, tableId,
+                GridAssembler.NO_FROZEN_COLUMNS, columns, rows);
     }
 
     static <T> DataGridView pageOf(Page<T> page, int number, int size, String sort, String direction,

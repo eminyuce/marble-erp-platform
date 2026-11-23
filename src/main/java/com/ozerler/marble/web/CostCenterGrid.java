@@ -25,7 +25,8 @@ public final class CostCenterGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "cost-centers-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "cost-centers-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(CostCenterDto center) {

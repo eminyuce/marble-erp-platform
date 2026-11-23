@@ -31,7 +31,7 @@ public final class ReportGrid {
             rows.add(row(headers, cells));
         }
         return GridAssembler.from(page, size, GridWindow.pageCount(all.size(), size), all.size(),
-                null, null, "reports-table", 4, columns(headers), rows);
+                null, null, "reports-table", GridAssembler.NO_FROZEN_COLUMNS, columns(headers), rows);
     }
 
     private static GridRow row(String[] headers, String[] cells) {

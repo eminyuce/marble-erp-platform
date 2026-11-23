@@ -24,7 +24,8 @@ public final class BlockGrid {
                 rows.add(row(block));
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "blocks-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "blocks-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(BlockDto block) {
@@ -54,7 +55,14 @@ public final class BlockGrid {
         } else {
             link = "";
         }
-        return GridRow.of(viewUrl, editUrl, deleteId, block.getBlockCode(), List.of(
+        String deleteKey;
+        if (deleteId == null) {
+            deleteKey = "";
+        } else {
+            deleteKey = String.valueOf(deleteId);
+        }
+        return new GridRow(viewUrl, editUrl, deleteKey, block.getBlockCode(),
+                actions(block, viewUrl, editUrl, deleteId), List.of(
                 GridCell.badge(block.getStatusLabel()),
                 GridCell.chip(block.getId()),
                 GridCell.link(block.getBlockCode(), viewUrl),
@@ -146,5 +154,73 @@ public final class BlockGrid {
             return GridTexts.money(block.getUnitMarketValuePerTon()) + "/ton";
         }
         return "";
+    }
+
+    private static List<GridAction> actions(BlockDto block, String viewUrl, String editUrl, Object deleteId) {
+        List<GridAction> items = new ArrayList<>();
+        items.add(GridAction.link("Detay ve işlemler", "eye", viewUrl));
+        items.add(GridAction.link("Düzenle", "edit-3", editUrl));
+        if (atQuarry(block)) {
+            Object tonnage = block.getApproximateTonnage();
+            if (tonnage == null) {
+                tonnage = 0;
+            }
+            items.add(GridAction.command(
+                    "Kantar Tartımı Gir",
+                    "scale",
+                    GridAction.jsCall("openActualTonnageModal", block.getId(), block.getBlockCode(), tonnage)));
+            if (!"PRODUCTION_YARD".equals(block.getLocationType())) {
+                items.add(GridAction.link(
+                        "Üretim Sahasına taşı",
+                        "pickaxe",
+                        viewUrl + "/move?targetType=PRODUCTION_YARD"));
+            }
+            if (!"DISPATCH_YARD".equals(block.getLocationType())) {
+                items.add(GridAction.link(
+                        "Stok Sahasına taşı",
+                        "warehouse",
+                        viewUrl + "/move?targetType=DISPATCH_YARD"));
+            }
+            Object price = block.getSalePrice();
+            if (price == null) {
+                price = block.getMarketValue();
+            }
+            if (price == null) {
+                price = 0;
+            }
+            items.add(GridAction.command(
+                    "Markala (Rezerve Et)",
+                    "bookmark",
+                    GridAction.jsCall(
+                            "openMarkBlockModal",
+                            block.getId(),
+                            block.getBlockCode(),
+                            price,
+                            block.getAssignedCustomerId())));
+            if ("DISPATCH_YARD".equals(block.getLocationType())) {
+                items.add(GridAction.link("Fabrikaya sevk", "truck", viewUrl + "/transfer-to-factory"));
+            }
+            items.add(GridAction.link("Sat (Fatura Kes)", "receipt", viewUrl + "/sell"));
+        }
+        if (deleteId != null) {
+            items.add(GridAction.delete("Bloğu Sil", deleteId, block.getBlockCode()));
+        }
+        return items;
+    }
+
+    private static boolean atQuarry(BlockDto block) {
+        String canonical = block.getCanonicalStatus();
+        String status = block.getStatus();
+        boolean sold = "SOLD".equals(canonical) || "SOLD".equals(status);
+        if (sold) {
+            return false;
+        }
+        return "PRODUCED".equals(canonical)
+                || "READY_FOR_DISPATCH".equals(canonical)
+                || "MARKED".equals(canonical)
+                || "QUARRY".equals(status)
+                || "PRODUCED".equals(status)
+                || "READY_FOR_DISPATCH".equals(status)
+                || "MARKED".equals(status);
     }
 }

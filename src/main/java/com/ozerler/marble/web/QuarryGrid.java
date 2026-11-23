@@ -24,7 +24,8 @@ public final class QuarryGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "quarries-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "quarries-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(QuarryDto quarry) {

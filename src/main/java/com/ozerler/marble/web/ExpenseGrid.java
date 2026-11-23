@@ -23,7 +23,8 @@ public final class ExpenseGrid {
                 rows.add(row(expense));
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "expenses-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "expenses-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(ExpenseDto expense) {

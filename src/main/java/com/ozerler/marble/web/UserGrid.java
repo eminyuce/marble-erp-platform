@@ -27,7 +27,8 @@ public final class UserGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "users-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "users-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(UserDto user) {
@@ -59,7 +60,7 @@ public final class UserGrid {
         } else {
             badge = "Askıda";
         }
-        return GridRow.of(viewUrl, editUrl, user.getId(), deleteName, List.of(
+        return new GridRow(viewUrl, editUrl, id, deleteName, userActions(viewUrl, editUrl, user, deleteName), List.of(
                 GridCell.badge(badge),
                 GridCell.chip(user.getId()),
                 GridCell.link(user.getUsername(), viewUrl),
@@ -119,5 +120,23 @@ public final class UserGrid {
             return "";
         }
         return GridTexts.date(created.toLocalDate());
+    }
+
+    private static List<GridAction> userActions(String viewUrl, String editUrl,
+                                                UserDto user, String deleteName) {
+        List<GridAction> items = new ArrayList<>();
+        if (!viewUrl.isBlank()) {
+            items.add(GridAction.link("Detay", "eye", viewUrl));
+        }
+        if (!editUrl.isBlank()) {
+            items.add(GridAction.link("Düzenle", "edit-3", editUrl));
+        }
+        if (!viewUrl.isBlank()) {
+            items.add(GridAction.link("Şifre Sıfırla", "key", viewUrl + "/reset-password"));
+        }
+        if (user.getId() != null) {
+            items.add(GridAction.delete("Sil", user.getId(), deleteName));
+        }
+        return items;
     }
 }

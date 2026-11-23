@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * One page of an enterprise grid: frozen leading columns, body rows, and a stable footer.
+ * One page of an enterprise grid: optional frozen leading columns, body rows, and a stable footer.
+ * A frozen count of {@link #NO_FROZEN_COLUMNS} keeps every column, including İşlem, scrollable.
  */
 public final class DataGridView {
+
+    public static final int NO_FROZEN_COLUMNS = 0;
 
     private final int number;
     private final int size;
@@ -55,7 +58,7 @@ public final class DataGridView {
         } else {
             columnCount = columns.size();
         }
-        int requested = Math.max(1, frozenCount);
+        int requested = Math.max(NO_FROZEN_COLUMNS, frozenCount);
         this.frozenCount = Math.min(requested, columnCount + 1);
         if (columns == null) {
             this.columns = List.of();

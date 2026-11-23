@@ -26,7 +26,8 @@ public final class SupplierGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "suppliers-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "suppliers-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(SupplierDto supplier) {

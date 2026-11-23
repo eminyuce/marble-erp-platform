@@ -84,15 +84,26 @@ function erpDataGrid(el) {
 function erpGridDelete(button) {
     var id = button.getAttribute("data-delete-id");
     var name = button.getAttribute("data-delete-name") || "";
-    var node = button.parentElement;
+    var portal = document.getElementById("grid-actions-portal");
+    var start = button;
+    if (portal && portal.contains(button) && portal._triggerBtn) {
+        start = portal._triggerBtn;
+    }
+    var node = start;
     while (node) {
         if (node._x_dataStack && node._x_dataStack.length) {
             var data = node._x_dataStack[0];
             if (typeof data.confirmDelete === "function") {
+                if (typeof closeGridActionsMenu === "function") {
+                    closeGridActionsMenu(false);
+                }
                 data.confirmDelete(id, name);
                 return;
             }
             if (typeof data.confirmDeleteProject === "function") {
+                if (typeof closeGridActionsMenu === "function") {
+                    closeGridActionsMenu(false);
+                }
                 data.confirmDeleteProject(id, name);
                 return;
             }

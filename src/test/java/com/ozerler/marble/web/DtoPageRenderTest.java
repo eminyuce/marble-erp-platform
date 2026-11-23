@@ -395,4 +395,42 @@ class DtoPageRenderTest {
         }
         Assertions.assertEquals(List.of(), failed);
     }
+
+    @Test
+    @DisplayName("list grids render the İşlemler dropdown and do not freeze leading columns")
+    void listGridsRenderIslemlerDropdownWithoutStickyColumns() throws Exception {
+        String[] urls = {
+            "/blocks",
+            "/projects",
+            "/sales",
+            "/procurement",
+            "/production",
+            "/production/slabs",
+            "/workshop",
+            "/expenses",
+            "/admin/users",
+            "/invoices"
+        };
+        for (String url : urls) {
+            String html = mockMvc.perform(MockMvcRequestBuilders.get(url))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString();
+            Assertions.assertTrue(html.contains("İşlemler"), url + " missing İşlemler column");
+            Assertions.assertFalse(html.contains("is-frozen"), url + " still has sticky columns");
+            Assertions.assertTrue(
+                    html.contains("data-frozen=\"0\"") || html.contains("data-frozen=0"),
+                    url + " should advertise zero frozen columns");
+        }
+        String blocks = mockMvc.perform(MockMvcRequestBuilders.get("/blocks").param("stockFilter", "ALL"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        Assertions.assertTrue(blocks.contains("grid-actions-btn"), "blocks grid missing dropdown trigger");
+        Assertions.assertTrue(blocks.contains("Detay ve işlemler"), "blocks grid missing historical view action");
+        Assertions.assertTrue(blocks.contains("Düzenle"), "blocks grid missing edit action");
+    }
+
 }

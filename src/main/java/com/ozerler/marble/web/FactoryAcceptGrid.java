@@ -28,7 +28,7 @@ public final class FactoryAcceptGrid {
             rows.add(row(order));
         }
         return GridAssembler.from(page, size, GridWindow.pageCount(matched.size(), size), matched.size(),
-                null, null, "factory-accept-table", 4, columns(), rows);
+                null, null, "factory-accept-table", GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     private static GridRow row(FactoryWorkOrderSummaryDto order) {

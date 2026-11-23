@@ -8,7 +8,7 @@
         <table class="erp-data-grid__table">
             <thead>
             <tr>
-                <th th:class="${'erp-data-grid__op' + (grid.frozenCount > 0 ? ' is-frozen' : '') + (grid.frozenCount == 1 ? ' is-frozen-last' : '')}">İşlem</th>
+                <th th:class="${'erp-data-grid__op' + (grid.frozenCount > 0 ? ' is-frozen' : '') + (grid.frozenCount == 1 ? ' is-frozen-last' : '')}">İşlemler</th>
                 <th th:each="column, stat : ${grid.columns}"
                     th:class="${(stat.count < grid.frozenCount ? 'is-frozen' : '') + (stat.count == grid.frozenCount - 1 ? ' is-frozen-last' : '')}"
                     th:style="${'min-width:' + column.minWidth + 'px'}">
@@ -36,15 +36,42 @@
             </tr>
             <tr th:each="row : ${grid.rows}">
                 <td th:class="${'erp-data-grid__op' + (grid.frozenCount > 0 ? ' is-frozen' : '') + (grid.frozenCount == 1 ? ' is-frozen-last' : '')}">
-                    <a th:if="${row.viewable}" th:href="${row.viewUrl}" class="erp-data-grid__view" title="Görüntüle" aria-label="Görüntüle">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
-                    </a>
-                    <a th:if="${row.editable}" th:href="${row.editUrl}" class="erp-data-grid__view" title="Düzenle" aria-label="Düzenle">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 7l4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
-                    </a>
-                    <button th:if="${row.deletable}" type="button" class="erp-data-grid__view"
-                            th:attr="data-delete-id=${row.deleteId},data-delete-name=${row.deleteName}"
-                            onclick="erpGridDelete(this)" title="Sil" aria-label="Sil">×</button>
+                    <div class="grid-actions" th:if="${row.actionable}">
+                        <button type="button" class="grid-actions-btn"
+                                onclick="toggleGridActions(event, this)"
+                                aria-haspopup="menu" aria-expanded="false" aria-label="İşlemler">
+                            <i data-lucide="settings" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                            <span>İşlemler</span>
+                            <i data-lucide="chevron-down" class="w-3 h-3" aria-hidden="true"></i>
+                        </button>
+                        <template class="grid-actions-tpl">
+                            <th:block th:each="action : ${row.actions}">
+                                <hr th:if="${action.divider}" class="grid-actions-divider">
+                                <a th:if="${action.link}" th:href="${action.href}"
+                                   class="grid-actions-item" role="menuitem"
+                                   th:classappend="${action.danger} ? ' grid-actions-item--danger'"
+                                   th:attr="target=${action.target}">
+                                    <i th:attr="data-lucide=${action.icon}" class="w-4 h-4" aria-hidden="true"></i>
+                                    <span th:text="${action.label}">İşlem</span>
+                                </a>
+                                <button th:if="${action.deletable}" type="button" role="menuitem"
+                                        class="grid-actions-item grid-actions-item--danger"
+                                        th:attr="data-delete-id=${action.deleteId},data-delete-name=${action.deleteName}"
+                                        onclick="erpGridDelete(this)">
+                                    <i data-lucide="trash-2" class="w-4 h-4" aria-hidden="true"></i>
+                                    <span th:text="${action.label}">Sil</span>
+                                </button>
+                                <button th:if="${action.command}" type="button" role="menuitem"
+                                        class="grid-actions-item"
+                                        th:classappend="${action.danger} ? ' grid-actions-item--danger'"
+                                        th:attr="data-grid-onclick=${action.onclick}"
+                                        onclick="invokeGridAction(event, this)">
+                                    <i th:attr="data-lucide=${action.icon}" class="w-4 h-4" aria-hidden="true"></i>
+                                    <span th:text="${action.label}">İşlem</span>
+                                </button>
+                            </th:block>
+                        </template>
+                    </div>
                 </td>
                 <td th:each="cell, stat : ${row.cells}"
                     th:class="${(stat.count < grid.frozenCount ? 'is-frozen' : '') + (stat.count == grid.frozenCount - 1 ? ' is-frozen-last' : '')}">

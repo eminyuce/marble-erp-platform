@@ -45,7 +45,7 @@ public final class EmailTemplateGrid {
             total = result.getTotalElements();
         }
         return GridAssembler.from(page, size, totalPages, total, null, null,
-                "email-templates-table", 4, columns(), rows);
+                "email-templates-table", GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(EmailTemplateDto template, int placeholderCount) {

@@ -38,7 +38,7 @@ public final class PolishGrid {
             rows.add(row(operation));
         }
         return GridAssembler.from(page, size, GridWindow.pageCount(matched.size(), size), matched.size(),
-                null, null, "polish-operations-grid", 4, columns(), rows);
+                null, null, "polish-operations-grid", GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     private static GridRow row(OperationView operation) {

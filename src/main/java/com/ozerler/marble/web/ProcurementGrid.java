@@ -23,7 +23,8 @@ public final class ProcurementGrid {
                 rows.add(row(order));
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "procurement-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "procurement-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(PurchaseOrderDto order) {
@@ -35,11 +36,14 @@ public final class ProcurementGrid {
         }
         String viewUrl = "/procurement/" + id;
         String invoiceUrl = "/invoices/new?type=PURCHASE&purchaseOrderId=" + id;
-        return GridRow.of(
+        return new GridRow(
                 viewUrl,
-                viewUrl,
-                null,
+                "",
+                "",
                 order.getPoNumber(),
+                List.of(
+                        GridAction.link("Faturalaştır", "receipt", invoiceUrl),
+                        GridAction.link("Detay", "eye", viewUrl)),
                 List.of(
                         GridCell.badge(order.getStatusLabel()),
                         GridCell.chip(order.getId()),

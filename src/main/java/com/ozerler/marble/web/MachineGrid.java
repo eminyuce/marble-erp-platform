@@ -25,7 +25,8 @@ public final class MachineGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "machines-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "machines-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(MachineDto machine) {

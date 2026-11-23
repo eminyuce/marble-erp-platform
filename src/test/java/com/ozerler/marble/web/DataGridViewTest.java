@@ -35,6 +35,29 @@ class DataGridViewTest {
         Assertions.assertThat(GridCell.text(" ").isEmpty()).isTrue();
     }
 
+    @Test
+    @DisplayName("A frozen count of zero stays zero when the grid has data columns")
+    void zeroFrozenCountLeavesColumnsScrollable() {
+        List<GridColumn> columns = List.of(
+                GridColumn.text("a", "A", true, 100),
+                GridColumn.text("b", "B", true, 100),
+                GridColumn.text("c", "C", true, 100),
+                GridColumn.text("d", "D", true, 100));
+        DataGridView grid = new DataGridView(
+                1, 20, 1, 1, "", "", "sample", DataGridView.NO_FROZEN_COLUMNS, columns, List.of());
+
+        Assertions.assertThat(grid.getFrozenCount()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("A negative frozen count is treated as no frozen columns")
+    void negativeFrozenCountIsZero() {
+        List<GridColumn> columns = List.of(GridColumn.text("a", "A", true, 100));
+        DataGridView grid = new DataGridView(1, 20, 1, 1, "", "", "sample", -3, columns, List.of());
+
+        Assertions.assertThat(grid.getFrozenCount()).isEqualTo(0);
+    }
+
     private static List<String> labels(List<PageMarker> markers) {
         return markers.stream()
                 .map(marker -> {

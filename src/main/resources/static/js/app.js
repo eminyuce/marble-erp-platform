@@ -505,22 +505,45 @@ function gridActionsHtml(items) {
         '</div>';
 }
 
+function closeGridActionsMenu(restoreFocus) {
+    var portal = document.getElementById('grid-actions-portal');
+    if (!portal) {
+        return;
+    }
+    var trigger = portal._triggerBtn;
+    portal.remove();
+    if (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) {
+            trigger.focus();
+        }
+    }
+}
+
 function toggleGridActions(event, btn) {
     event.stopPropagation();
     event.preventDefault();
     var portal = document.getElementById('grid-actions-portal');
     var wasOpen = portal && portal._triggerBtn === btn;
-    if (portal) portal.remove();
-    if (wasOpen) return;
+    closeGridActionsMenu(false);
+    if (wasOpen) {
+        btn.setAttribute('aria-expanded', 'false');
+        return;
+    }
 
     var tpl = btn.parentElement.querySelector('.grid-actions-tpl');
-    if (!tpl) return;
+    if (!tpl) {
+        return;
+    }
 
     var menu = document.createElement('div');
     menu.id = 'grid-actions-portal';
     menu.className = 'grid-actions-portal';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', 'İşlemler');
     menu.innerHTML = tpl.innerHTML;
     menu._triggerBtn = btn;
+    btn.setAttribute('aria-expanded', 'true');
 
     var isCompact = window.matchMedia('(max-width: 640px)').matches;
     if (isCompact) {
@@ -538,18 +561,70 @@ function toggleGridActions(event, btn) {
     document.body.appendChild(menu);
     if (window.lucide) lucide.createIcons({nodes: [menu]});
     if (window.htmx) htmx.process(menu);
+
+    var items = menu.querySelectorAll('a.grid-actions-item, button.grid-actions-item');
+    if (items.length) {
+        items[0].focus();
+    }
+    menu.addEventListener('keydown', function (keyEvent) {
+        gridActionsMenuKeydown(keyEvent, items);
+    });
+}
+
+function gridActionsMenuKeydown(event, items) {
+    var list = Array.prototype.slice.call(items);
+    var index = list.indexOf(document.activeElement);
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        closeGridActionsMenu(true);
+        return;
+    }
+    if (event.key === 'Tab') {
+        closeGridActionsMenu(false);
+        return;
+    }
+    if (!list.length) {
+        return;
+    }
+    if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        list[(index + 1) % list.length].focus();
+    } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        list[(index - 1 + list.length) % list.length].focus();
+    } else if (event.key === 'Home') {
+        event.preventDefault();
+        list[0].focus();
+    } else if (event.key === 'End') {
+        event.preventDefault();
+        list[list.length - 1].focus();
+    }
+}
+
+function invokeGridAction(event, button) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    var code = button.getAttribute('data-grid-onclick');
+    closeGridActionsMenu(false);
+    if (!code) {
+        return;
+    }
+    // Server-rendered, escaped calls such as openActualTonnageModal(...)
+    var fn = new Function(code);
+    fn();
 }
 
 document.addEventListener('click', function (e) {
     var portal = document.getElementById('grid-actions-portal');
     if (portal && !portal.contains(e.target) && !e.target.closest('.grid-actions-btn')) {
-        portal.remove();
+        closeGridActionsMenu(false);
     }
 });
 
 document.addEventListener('scroll', function () {
-    var portal = document.getElementById('grid-actions-portal');
-    if (portal) portal.remove();
+    closeGridActionsMenu(false);
 }, true);
 
 function bindGridSearch(table, inputId) {
@@ -588,6 +663,9 @@ window.erpStatusBadge = erpStatusBadge;
 window.erpResponsiveCollapseColumn = erpResponsiveCollapseColumn;
 window.erpIndexColumn = erpIndexColumn;
 window.gridActionsHtml = gridActionsHtml;
+window.toggleGridActions = toggleGridActions;
+window.closeGridActionsMenu = closeGridActionsMenu;
+window.invokeGridAction = invokeGridAction;
 window.bindGridSearch = bindGridSearch;
 window.buildExportFilename = buildExportFilename;
 window.downloadTable = downloadTable;

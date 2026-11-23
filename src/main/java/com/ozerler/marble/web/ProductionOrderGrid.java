@@ -23,7 +23,8 @@ public final class ProductionOrderGrid {
                 rows.add(row(order));
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "production-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "production-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(ProductionOrderDto order) {

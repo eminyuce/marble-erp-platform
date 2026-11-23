@@ -29,7 +29,8 @@ public final class CustomerGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "customers-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "customers-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(CustomerDto customer) {
@@ -52,11 +53,18 @@ public final class CustomerGrid {
             editUrl = "/admin/definitions/customers/" + id + "/edit";
         }
         String unit = unitText(customer.getBusinessUnitLabel());
-        return GridRow.of(
+        String deleteKey;
+        if (customer.getId() == null) {
+            deleteKey = "";
+        } else {
+            deleteKey = customer.getId().toString();
+        }
+        return new GridRow(
                 transactions,
                 editUrl,
-                customer.getId(),
+                deleteKey,
                 customer.getCompanyName(),
+                customerActions(transactions, editUrl, customer),
                 List.of(
                         GridCell.chip(customer.getId()),
                         GridCell.link(customer.getCustomerCode(), transactions),
@@ -178,5 +186,20 @@ public final class CustomerGrid {
             choices.add(new GridColumn.FilterChoice(type.name(), type.getLabel()));
         }
         return choices;
+    }
+
+    private static List<GridAction> customerActions(String transactions, String editUrl,
+                                                    CustomerDto customer) {
+        List<GridAction> items = new ArrayList<>();
+        if (!transactions.isBlank()) {
+            items.add(GridAction.link("Hesap Hareketleri", "file-text", transactions));
+        }
+        if (!editUrl.isBlank()) {
+            items.add(GridAction.link("Düzenle", "edit-3", editUrl));
+        }
+        if (customer.getId() != null) {
+            items.add(GridAction.delete("Sil", customer.getId(), customer.getCompanyName()));
+        }
+        return items;
     }
 }

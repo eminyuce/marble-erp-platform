@@ -25,7 +25,8 @@ public final class ApplicationLogGrid {
                 }
             }
         }
-        return GridAssembler.from(response, page, size, sort, direction, "logs-table", 4, columns(), rows);
+        return GridAssembler.from(response, page, size, sort, direction, "logs-table",
+                GridAssembler.NO_FROZEN_COLUMNS, columns(), rows);
     }
 
     public static GridRow row(ApplicationLogDto log) {
