@@ -1,5 +1,7 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.common.Constants;
+
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.CariSummaryDto;
 import com.ozerler.marble.dto.CariTransactionDto;
@@ -8,11 +10,11 @@ import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CariTransactionType;
 import com.ozerler.marble.model.enums.CustomerType;
-import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.service.CariTransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -28,18 +30,18 @@ import java.util.List;
 @Slf4j
 public class CariTransactionController extends AbstractController {
 
+    private final com.ozerler.marble.service.FormLookupService formLookup;
+
     private final CariTransactionService cariTransactionService;
-    private final CustomerRepository customerRepository;
-    private final com.ozerler.marble.repository.ProjectRepository projectRepository;
 
     @GetMapping("/admin/definitions/customers/{customerId}/transactions")
     public String viewTransactions(@PathVariable("customerId") Long customerId, Model model) {
-        Customer customer = customerRepository.findById(customerId)
+        Customer customer = formLookup.customer(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Cari kart bulunamadı: " + customerId));
 
         List<CariTransactionDto> transactions = cariTransactionService.getTransactionsForCustomer(customerId);
         CariSummaryDto summary = cariTransactionService.getCustomerSummary(customerId);
-        List<com.ozerler.marble.model.Project> projects = projectRepository.findByCustomerIdOrderByStartDateDesc(customerId);
+        List<com.ozerler.marble.model.Project> projects = formLookup.projectsForCustomer(customerId);
 
         model.addAttribute("customer", customer);
         model.addAttribute("customerTypeLabel", labelOf(customer.getCustomerType()));
@@ -58,6 +60,7 @@ public class CariTransactionController extends AbstractController {
         return "redirect:/admin/definitions/customers/" + customerId + "/transactions";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/admin/definitions/customers/{customerId}/transactions")
     public String addTransaction(@PathVariable("customerId") Long customerId,
                                  @RequestParam(value = "transactionDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transactionDate,
@@ -84,6 +87,7 @@ public class CariTransactionController extends AbstractController {
         return "redirect:/admin/definitions/customers/" + customerId + "/transactions";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/admin/definitions/customers/{customerId}/transactions/{transactionId}/edit")
     public String editTransaction(@PathVariable("customerId") Long customerId,
                                   @PathVariable("transactionId") Long transactionId,
@@ -111,6 +115,7 @@ public class CariTransactionController extends AbstractController {
         return "redirect:/admin/definitions/customers/" + customerId + "/transactions";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/admin/definitions/customers/{customerId}/transactions/{transactionId}/delete")
     public String deleteTransaction(@PathVariable("customerId") Long customerId,
                                     @PathVariable("transactionId") Long transactionId,

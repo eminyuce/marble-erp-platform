@@ -1,15 +1,17 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.common.Constants;
+
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
-import com.ozerler.marble.repository.*;
 import com.ozerler.marble.service.OperationWorkOrderService;
 import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.WorkOrderGrid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +32,9 @@ import java.util.Map;
 @Slf4j
 public class OperationWorkOrderController extends AbstractController {
 
+    private final com.ozerler.marble.service.FormLookupService formLookup;
+
     private final OperationWorkOrderService workOrderService;
-    private final CustomerRepository customerRepository;
-    private final SlabRepository slabRepository;
-    private final StockItemRepository stockItemRepository;
-    private final BlockRepository blockRepository;
-    private final SalesOrderItemRepository salesOrderItemRepository;
 
     @GetMapping
     public String index(@RequestParam(value = "department", required = false) BusinessUnit department,
@@ -49,7 +48,7 @@ public class OperationWorkOrderController extends AbstractController {
         model.addAttribute("selectedDepartment", department != null ? department.name() : "");
         model.addAttribute("selectedStatus", status != null ? status.name() : "");
         model.addAttribute("selectedCustomerId", customerId);
-        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("customers", formLookup.customers());
         model.addAttribute("departments", List.of(BusinessUnit.FACTORY, BusinessUnit.WORKSHOP, BusinessUnit.SITE));
         model.addAttribute("statuses", OperationWorkOrderStatus.values());
         model.addAttribute("activeNav", "work-orders");
@@ -101,7 +100,7 @@ public class OperationWorkOrderController extends AbstractController {
                                Model model) {
 
         SalesOrderItem orderItem = orderItemId != null
-                ? salesOrderItemRepository.findByIdWithDetails(orderItemId).orElse(null)
+                ? formLookup.salesOrderItem(orderItemId).orElse(null)
                 : null;
 
         BigDecimal prefillCount = null;
@@ -131,11 +130,11 @@ public class OperationWorkOrderController extends AbstractController {
             }
         }
 
-        Slab selectedSlab = slabId != null ? slabRepository.findById(slabId).orElse(null) : null;
-        StockItem selectedStockItem = stockItemId != null ? stockItemRepository.findById(stockItemId).orElse(null) : null;
-        Block selectedBlock = blockId != null ? blockRepository.findById(blockId).orElse(null) : null;
+        Slab selectedSlab = slabId != null ? formLookup.slab(slabId).orElse(null) : null;
+        StockItem selectedStockItem = stockItemId != null ? formLookup.stockItem(stockItemId).orElse(null) : null;
+        Block selectedBlock = blockId != null ? formLookup.block(blockId).orElse(null) : null;
 
-        List<Block> availableBlocks = blockRepository.findByStatusInOrderByBlockCodeAsc(
+        List<Block> availableBlocks = formLookup.blocksInStatus(
                 List.of(BlockStatus.AT_FACTORY, BlockStatus.FACTORY_STOCK, BlockStatus.PRODUCED, BlockStatus.QUARRY, BlockStatus.EXTRACTED, BlockStatus.MARKED)
         );
         if (selectedBlock != null && !availableBlocks.contains(selectedBlock)) {
@@ -151,11 +150,11 @@ public class OperationWorkOrderController extends AbstractController {
         model.addAttribute("prefillStoneType", prefillStoneType);
         model.addAttribute("prefillNotes", prefillNotes);
         model.addAttribute("prefillCount", prefillCount != null ? prefillCount.intValue() : 1);
-        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("customers", formLookup.customers());
         model.addAttribute("departments", List.of(BusinessUnit.FACTORY, BusinessUnit.WORKSHOP, BusinessUnit.SITE));
         model.addAttribute("availableBlocks", availableBlocks);
-        model.addAttribute("availableSlabs", slabRepository.findByStatus(SlabStatus.AVAILABLE));
-        model.addAttribute("availableStockItems", stockItemRepository.findByProductTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
+        model.addAttribute("availableSlabs", formLookup.slabsByStatus(SlabStatus.AVAILABLE));
+        model.addAttribute("availableStockItems", formLookup.stockByTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
         model.addAttribute("surfaceOperations", workOrderService.getSurfaceOperations());
         model.addAttribute("edgeOperations", workOrderService.getEdgeOperations());
         model.addAttribute("units", workOrderService.getUnits());
@@ -164,6 +163,7 @@ public class OperationWorkOrderController extends AbstractController {
         return "workorders/form";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_OPERATOR_WRITE)
     @PostMapping({"", "/", "/new", "/create"})
     public String createOrder(@RequestParam(value = "orderNo", required = false) String orderNo,
                               @RequestParam(value = "customerId", required = false) Long customerId,
@@ -308,6 +308,7 @@ public class OperationWorkOrderController extends AbstractController {
         return "workorders/detail";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_OPERATOR_WRITE)
     @PostMapping("/{id}/status")
     public String updateStatus(@PathVariable("id") Long id,
                                @RequestParam("status") OperationWorkOrderStatus status,

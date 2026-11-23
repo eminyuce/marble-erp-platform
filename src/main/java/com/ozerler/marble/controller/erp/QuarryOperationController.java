@@ -1,9 +1,10 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.common.Constants;
+
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
-import com.ozerler.marble.repository.*;
 import com.ozerler.marble.service.QuarryOperationService;
 import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.OperationQuarryBlockGrid;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -32,19 +34,17 @@ import java.util.Map;
 @Slf4j
 public class QuarryOperationController extends AbstractController {
 
+    private final com.ozerler.marble.service.FormLookupService formLookup;
+    private final com.ozerler.marble.service.StockMovementService stockMovementService;
+
     private final QuarryOperationService quarryOperationService;
-    private final BlockRepository blockRepository;
-    private final StockLocationRepository stockLocationRepository;
-    private final CustomerRepository customerRepository;
-    private final InvoiceRepository invoiceRepository;
-    private final StockMovementRepository movementRepository;
 
     @GetMapping
     public String index(@RequestParam(value = "status", required = false) BlockStatus status,
                         @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("status", status == null ? "" : status.name());
-        model.addAttribute("totalEstTon", blockRepository.sumTotalEstimatedTonnage());
-        model.addAttribute("totalActTon", blockRepository.sumTotalActualTonnage());
+        model.addAttribute("totalEstTon", formLookup.estimatedTonnage());
+        model.addAttribute("totalActTon", formLookup.actualTonnage());
         model.addAttribute("grid", OperationQuarryBlockGrid.view(
                 quarryOperationService.searchQuarryBlocks(query.getSearch(), status, query.pageNumber() - 1, query.pageSize()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
@@ -92,6 +92,7 @@ public class QuarryOperationController extends AbstractController {
         return "operations/quarry/form";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     @PostMapping({"/new", "/create"})
     public String createBlock(@RequestParam("quarryId") Long quarryId,
                               @RequestParam(value = "blockCode", required = false) String blockCode,
@@ -123,6 +124,7 @@ public class QuarryOperationController extends AbstractController {
         }
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     @PostMapping("/{id}/actual-tonnage")
     public String updateActualTonnage(@PathVariable("id") Long id,
                                       @RequestParam("actualTonnage") BigDecimal actualTonnage,
@@ -138,17 +140,18 @@ public class QuarryOperationController extends AbstractController {
 
     @GetMapping("/{id}/dispatch")
     public String dispatchForm(@PathVariable("id") Long id, Model model) {
-        Block block = blockRepository.findById(id)
+        Block block = formLookup.block(id)
                 .orElseThrow(() -> new IllegalArgumentException("Blok bulunamadı: " + id));
 
         model.addAttribute("block", block);
-        model.addAttribute("customers", customerRepository.findAll());
-        model.addAttribute("invoices", invoiceRepository.findAll());
+        model.addAttribute("customers", formLookup.customers());
+        model.addAttribute("invoices", formLookup.invoices());
         model.addAttribute("destinations", TargetDestination.values());
         model.addAttribute("activeSection", "quarry");
         return "operations/quarry/dispatch";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     @PostMapping("/{id}/dispatch")
     public String dispatchBlock(@PathVariable("id") Long id,
                                 @RequestParam("targetDestination") TargetDestination targetDestination,
@@ -169,7 +172,7 @@ public class QuarryOperationController extends AbstractController {
     @GetMapping("/dispatches")
     public String dispatchesReport(@RequestParam(value = "page", required = false) Integer page,
                                    @ModelAttribute ListQuery query, Model model) {
-        Page<StockMovement> pageData = movementRepository.searchMovements(
+        Page<StockMovement> pageData = stockMovementService.searchMovements(
                 null, BusinessUnit.QUARRY, null, null, null, null, PageRequest.of(query.pageNumber() - 1, query.pageSize()));
         model.addAttribute("grid", QuarryDispatchGrid.view(
                 pageData, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
@@ -184,7 +187,7 @@ public class QuarryOperationController extends AbstractController {
             @RequestParam(value = "size", defaultValue = "25") int size) {
 
         int pageIndex = Math.max(0, page - 1);
-        Page<StockMovement> pageData = movementRepository.searchMovements(
+        Page<StockMovement> pageData = stockMovementService.searchMovements(
                 null, BusinessUnit.QUARRY, null, null, null, null,
                 PageRequest.of(pageIndex, size));
 

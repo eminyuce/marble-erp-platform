@@ -1,6 +1,7 @@
 package com.ozerler.marble.service;
 
 import com.ozerler.marble.dto.SalesOrderDto;
+import com.ozerler.marble.dto.option.PartyOption;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.SalesOrderStatus;
@@ -44,7 +45,7 @@ public class SalesService {
 
     @Transactional(readOnly = true)
     public SalesSummaryDto getSalesSummary() {
-        List<SalesOrder> all = salesOrderRepository.findAll();
+        List<SalesOrder> all = BoundedReads.all(salesOrderRepository);
         long total = all.size();
         BigDecimal totalAmt = all.stream().map(order -> order.getTotalAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal paidAmt = all.stream().map(order -> order.getPaidAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
@@ -75,8 +76,10 @@ public class SalesService {
     }
 
     @Transactional(readOnly = true)
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAllByOrderByCompanyNameAsc();
+    public List<PartyOption> getAllCustomers() {
+        return BoundedReads.all(customerRepository, org.springframework.data.domain.Sort.by("companyName")).stream()
+                .map(customer -> new PartyOption(customer.getId(), customer.getCompanyName()))
+                .toList();
     }
 
     @Transactional(readOnly = true)

@@ -1,11 +1,10 @@
-package com.ozerler.marble.controller.erp;
+package com.ozerler.marble.web;
 
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.StockItem;
 import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.service.FactoryStockService;
-import com.ozerler.marble.web.ListQuery;
 import org.springframework.data.domain.Page;
 
 import java.time.format.DateTimeFormatter;
@@ -18,20 +17,20 @@ import java.util.stream.Collectors;
 /**
  * Tabulator rows shared by the factory and workshop stock yards.
  */
-final class StockYardResponses {
+public final class StockYardResponses {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private StockYardResponses() {
     }
 
-    static Page<Slab> slabPage(FactoryStockService factoryStockService, SlabStatus status, Long customerId,
+    public static Page<Slab> slabPage(FactoryStockService factoryStockService, SlabStatus status, Long customerId,
                                boolean generalStockOnly, ListQuery query) {
         return factoryStockService.getFactorySlabsPaged(
                 status, customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
     }
 
-    static TabulatorResponse<Map<String, Object>> slabs(FactoryStockService factoryStockService, int page, int size,
+    public static TabulatorResponse<Map<String, Object>> slabs(FactoryStockService factoryStockService, int page, int size,
                                                         String search, SlabStatus status, Long customerId,
                                                         boolean generalStockOnly) {
         int pageIndex = Math.max(0, page - 1);
@@ -61,11 +60,11 @@ final class StockYardResponses {
         return TabulatorResponse.of(data, slabsPage.getTotalPages(), slabsPage.getTotalElements());
     }
 
-    static TabulatorResponse<Map<String, Object>> factorySized(Page<StockItem> itemsPage) {
+    public static TabulatorResponse<Map<String, Object>> factorySized(Page<StockItem> itemsPage) {
         return respond(itemsPage, item -> factorySizedRow(item));
     }
 
-    static TabulatorResponse<Map<String, Object>> workshopSized(Page<StockItem> itemsPage) {
+    public static TabulatorResponse<Map<String, Object>> workshopSized(Page<StockItem> itemsPage) {
         return respond(itemsPage, item -> workshopSizedRow(item));
     }
 

@@ -2,6 +2,8 @@ package com.ozerler.marble.service;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.dto.PurchaseOrderDto;
+import com.ozerler.marble.dto.option.PartyOption;
+import com.ozerler.marble.dto.option.ProjectOption;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.Project;
@@ -54,7 +56,7 @@ public class ProcurementService {
 
     @Transactional(readOnly = true)
     public ProcurementSummaryDto getProcurementSummary() {
-        List<PurchaseOrder> all = purchaseOrderRepository.findAll();
+        List<PurchaseOrder> all = BoundedReads.all(purchaseOrderRepository);
         long total = all.size();
         BigDecimal totalAmt = all.stream().map(order -> order.getTotalAmount()).filter(Objects::nonNull).reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         long pending = all.stream().filter(p -> p.getStatus() != null && ("DRAFT".equalsIgnoreCase(p.getStatus().name()) || "SENT".equalsIgnoreCase(p.getStatus().name()) || "CONFIRMED".equalsIgnoreCase(p.getStatus().name()))).count();
@@ -85,13 +87,17 @@ public class ProcurementService {
     }
 
     @Transactional(readOnly = true)
-    public List<Supplier> getAllSuppliers() {
-        return supplierRepository.findAllByOrderByCompanyNameAsc();
+    public List<PartyOption> getAllSuppliers() {
+        return BoundedReads.all(supplierRepository, org.springframework.data.domain.Sort.by("companyName")).stream()
+                .map(supplier -> new PartyOption(supplier.getId(), supplier.getCompanyName()))
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+    public List<ProjectOption> getAllProjects() {
+        return BoundedReads.all(projectRepository).stream()
+                .map(project -> new ProjectOption(project.getId(), project.getName(), project.getProjectCode()))
+                .toList();
     }
 
     @Transactional(readOnly = true)

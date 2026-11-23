@@ -5,8 +5,8 @@ import com.ozerler.marble.dto.SiteProfitDto;
 import com.ozerler.marble.model.CostCenter;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseCategory;
-import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.service.CostAccountingService;
+import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.service.CostAnalysisService;
 import com.ozerler.marble.service.ExpenseService;
 import com.ozerler.marble.service.PricingService;
@@ -41,7 +41,7 @@ class CostControllerTest {
     @Mock
     private PricingService pricingService;
     @Mock
-    private ProjectRepository projectRepository;
+    private FormLookupService formLookup;
     @Mock
     private MessageSource messageSource;
 

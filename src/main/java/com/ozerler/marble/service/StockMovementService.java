@@ -288,9 +288,16 @@ public class StockMovementService {
 
     @Transactional(readOnly = true)
     public Page<StockMovement> searchMovements(StockMovementType type, BusinessUnit sourceDept, BusinessUnit targetDept,
+                                              Long customerId, LocalDateTime fromDate, LocalDateTime toDate,
+                                              Pageable pageable) {
+        return movementRepository.searchMovements(type, sourceDept, targetDept, customerId, fromDate, toDate, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<StockMovement> searchMovements(StockMovementType type, BusinessUnit sourceDept, BusinessUnit targetDept,
                                               Long customerId, LocalDateTime fromDate, LocalDateTime toDate, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
-        return movementRepository.searchMovements(type, sourceDept, targetDept, customerId, fromDate, toDate, pageable);
+        return searchMovements(type, sourceDept, targetDept, customerId, fromDate, toDate, pageable);
     }
 
     @Transactional(readOnly = true)

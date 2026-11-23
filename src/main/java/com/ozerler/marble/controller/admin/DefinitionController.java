@@ -8,7 +8,12 @@ import com.ozerler.marble.dto.QuarryDto;
 import com.ozerler.marble.dto.StockLocationDto;
 import com.ozerler.marble.dto.SupplierDto;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.*;
+import com.ozerler.marble.dto.form.CostCenterForm;
+import com.ozerler.marble.dto.form.CustomerForm;
+import com.ozerler.marble.dto.form.MachineForm;
+import com.ozerler.marble.dto.form.QuarryForm;
+import com.ozerler.marble.dto.form.StockLocationForm;
+import com.ozerler.marble.dto.form.SupplierForm;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.service.MasterDataService;
 import com.ozerler.marble.web.CostCenterGrid;
@@ -27,8 +32,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.math.BigDecimal;
 
 @Controller
 @RequestMapping("/admin/definitions")
@@ -92,14 +95,14 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/machines/create")
     public String createMachineForm(Model model) {
-        populateMachineForm(model, newMachine(), false);
+        populateMachineForm(model, new MachineForm(), false);
         return "admin/definitions/machine-form";
     }
 
     @GetMapping("/machines/{id}/edit")
     public String editMachineForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            populateMachineForm(model, masterDataService.getMachineById(id), true);
+            populateMachineForm(model, masterDataService.machineForm(id), true);
             return "admin/definitions/machine-form";
         } catch (IllegalArgumentException e) {
             addErrorFlash(redirectAttributes, e.getMessage());
@@ -120,9 +123,9 @@ public class DefinitionController extends AbstractController {
     }
 
     @PostMapping("/machines/save")
-    public String saveMachine(@ModelAttribute Machine machine, Model model, RedirectAttributes redirectAttributes) {
+    public String saveMachine(@ModelAttribute MachineForm machine, Model model, RedirectAttributes redirectAttributes) {
         try {
-            masterDataService.saveMachine(machine);
+            masterDataService.saveMachineForm(machine);
             addSuccessFlash(redirectAttributes, "Makine (" + machine.getCode() + ") başarıyla kaydedildi.");
             return "redirect:/admin/definitions/machines";
         } catch (Exception e) {
@@ -136,7 +139,7 @@ public class DefinitionController extends AbstractController {
     @PostMapping("/machines/{id}/toggle")
     public String toggleMachine(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
-            Machine machine = masterDataService.toggleMachineActive(id);
+            MachineForm machine = masterDataService.toggleMachineForm(id);
             String statusText = machine.isActive() ? "aktif edildi" : "pasife alındı";
             addSuccessFlash(redirectAttributes, "Makine (" + machine.getCode() + ") " + statusText + ".");
         } catch (Exception e) {
@@ -176,14 +179,14 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/stock-locations/create")
     public String createStockLocationForm(Model model) {
-        populateStockLocationForm(model, newStockLocation(), false);
+        populateStockLocationForm(model, new StockLocationForm(), false);
         return "admin/definitions/stock-location-form";
     }
 
     @GetMapping("/stock-locations/{id}/edit")
     public String editStockLocationForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            populateStockLocationForm(model, masterDataService.getStockLocationById(id), true);
+            populateStockLocationForm(model, masterDataService.stockLocationForm(id), true);
             return "admin/definitions/stock-location-form";
         } catch (IllegalArgumentException e) {
             addErrorFlash(redirectAttributes, e.getMessage());
@@ -204,10 +207,10 @@ public class DefinitionController extends AbstractController {
     }
 
     @PostMapping("/stock-locations/save")
-    public String saveStockLocation(@ModelAttribute StockLocation location, Model model,
+    public String saveStockLocation(@ModelAttribute StockLocationForm location, Model model,
                                     RedirectAttributes redirectAttributes) {
         try {
-            masterDataService.saveStockLocation(location);
+            masterDataService.saveStockLocationForm(location);
             addSuccessFlash(redirectAttributes, "Stok sahası (" + location.getCode() + ") başarıyla kaydedildi.");
             return "redirect:/admin/definitions/stock-locations";
         } catch (Exception e) {
@@ -221,7 +224,7 @@ public class DefinitionController extends AbstractController {
     @PostMapping("/stock-locations/{id}/toggle")
     public String toggleStockLocation(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
-            StockLocation loc = masterDataService.toggleStockLocationActive(id);
+            StockLocationForm loc = masterDataService.toggleStockLocationForm(id);
             String statusText = loc.isActive() ? "aktif edildi" : "pasife alındı";
             addSuccessFlash(redirectAttributes, "Stok sahası (" + loc.getCode() + ") " + statusText + ".");
         } catch (Exception e) {
@@ -257,14 +260,14 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/quarries/create")
     public String createQuarryForm(Model model) {
-        populateQuarryForm(model, newQuarry(), false);
+        populateQuarryForm(model, new QuarryForm(), false);
         return "admin/definitions/quarry-form";
     }
 
     @GetMapping("/quarries/{id}/edit")
     public String editQuarryForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            populateQuarryForm(model, masterDataService.getQuarryById(id), true);
+            populateQuarryForm(model, masterDataService.quarryForm(id), true);
             return "admin/definitions/quarry-form";
         } catch (IllegalArgumentException e) {
             addErrorFlash(redirectAttributes, e.getMessage());
@@ -284,9 +287,9 @@ public class DefinitionController extends AbstractController {
     }
 
     @PostMapping("/quarries/save")
-    public String saveQuarry(@ModelAttribute Quarry quarry, Model model, RedirectAttributes redirectAttributes) {
+    public String saveQuarry(@ModelAttribute QuarryForm quarry, Model model, RedirectAttributes redirectAttributes) {
         try {
-            masterDataService.saveQuarry(quarry);
+            masterDataService.saveQuarryForm(quarry);
             addSuccessFlash(redirectAttributes, "Ocak (" + quarry.getName() + ") başarıyla kaydedildi.");
             return "redirect:/admin/definitions/quarries";
         } catch (Exception e) {
@@ -330,7 +333,7 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/customers/create")
     public String createCustomerForm(@RequestParam(value = "unit", required = false) BusinessUnit unit, Model model) {
-        Customer customer = newCustomer();
+        CustomerForm customer = new CustomerForm();
         if (unit != null) {
             customer.setBusinessUnit(unit);
             if (unit == BusinessUnit.SITE) {
@@ -344,7 +347,7 @@ public class DefinitionController extends AbstractController {
     @GetMapping("/customers/{id}/edit")
     public String editCustomerForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            populateCustomerForm(model, masterDataService.getCustomerById(id), true);
+            populateCustomerForm(model, masterDataService.customerForm(id), true);
             return "admin/definitions/customer-form";
         } catch (IllegalArgumentException e) {
             addErrorFlash(redirectAttributes, e.getMessage());
@@ -366,9 +369,9 @@ public class DefinitionController extends AbstractController {
     }
 
     @PostMapping("/customers/save")
-    public String saveCustomer(@ModelAttribute Customer customer, Model model, RedirectAttributes redirectAttributes) {
+    public String saveCustomer(@ModelAttribute CustomerForm customer, Model model, RedirectAttributes redirectAttributes) {
         try {
-            masterDataService.saveCustomer(customer);
+            masterDataService.saveCustomerForm(customer);
             addSuccessFlash(redirectAttributes, "Müşteri (" + customer.getCompanyName() + ") başarıyla kaydedildi.");
             String redirectUrl = "redirect:/admin/definitions/customers";
             if (customer.getBusinessUnit() != null) {
@@ -415,14 +418,14 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/suppliers/create")
     public String createSupplierForm(Model model) {
-        populateSupplierForm(model, newSupplier(), false);
+        populateSupplierForm(model, new SupplierForm(), false);
         return "admin/definitions/supplier-form";
     }
 
     @GetMapping("/suppliers/{id}/edit")
     public String editSupplierForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            populateSupplierForm(model, masterDataService.getSupplierById(id), true);
+            populateSupplierForm(model, masterDataService.supplierForm(id), true);
             return "admin/definitions/supplier-form";
         } catch (IllegalArgumentException e) {
             addErrorFlash(redirectAttributes, e.getMessage());
@@ -444,9 +447,9 @@ public class DefinitionController extends AbstractController {
     }
 
     @PostMapping("/suppliers/save")
-    public String saveSupplier(@ModelAttribute Supplier supplier, Model model, RedirectAttributes redirectAttributes) {
+    public String saveSupplier(@ModelAttribute SupplierForm supplier, Model model, RedirectAttributes redirectAttributes) {
         try {
-            masterDataService.saveSupplier(supplier);
+            masterDataService.saveSupplierForm(supplier);
             addSuccessFlash(redirectAttributes, "Tedarikçi (" + supplier.getCompanyName() + ") başarıyla kaydedildi.");
             return "redirect:/admin/definitions/suppliers";
         } catch (Exception e) {
@@ -487,14 +490,14 @@ public class DefinitionController extends AbstractController {
 
     @GetMapping("/cost-centers/create")
     public String createCostCenterForm(Model model) {
-        populateCostCenterForm(model, newCostCenter(), false);
+        populateCostCenterForm(model, new CostCenterForm(), false);
         return "admin/definitions/cost-center-form";
     }
 
     @GetMapping("/cost-centers/{id}/edit")
     public String editCostCenterForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            populateCostCenterForm(model, masterDataService.getCostCenterById(id), true);
+            populateCostCenterForm(model, masterDataService.costCenterForm(id), true);
             return "admin/definitions/cost-center-form";
         } catch (IllegalArgumentException e) {
             addErrorFlash(redirectAttributes, e.getMessage());
@@ -515,10 +518,10 @@ public class DefinitionController extends AbstractController {
     }
 
     @PostMapping("/cost-centers/save")
-    public String saveCostCenter(@ModelAttribute CostCenter costCenter, Model model,
+    public String saveCostCenter(@ModelAttribute CostCenterForm costCenter, Model model,
                                  RedirectAttributes redirectAttributes) {
         try {
-            masterDataService.saveCostCenter(costCenter);
+            masterDataService.saveCostCenterForm(costCenter);
             addSuccessFlash(redirectAttributes, "Masraf merkezi (" + costCenter.getName() + ") başarıyla kaydedildi.");
             return "redirect:/admin/definitions/cost-centers";
         } catch (Exception e) {
@@ -540,7 +543,7 @@ public class DefinitionController extends AbstractController {
         return "redirect:/admin/definitions/cost-centers";
     }
 
-    private void populateMachineForm(Model model, Machine machine, boolean isEdit) {
+    private void populateMachineForm(Model model, MachineForm machine, boolean isEdit) {
         model.addAttribute("machine", machine);
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("businessUnits", BusinessUnit.values());
@@ -548,7 +551,7 @@ public class DefinitionController extends AbstractController {
         model.addAttribute("currentSection", "definitions-machines");
     }
 
-    private void populateStockLocationForm(Model model, StockLocation location, boolean isEdit) {
+    private void populateStockLocationForm(Model model, StockLocationForm location, boolean isEdit) {
         model.addAttribute("location", location);
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("businessUnits", BusinessUnit.values());
@@ -556,13 +559,13 @@ public class DefinitionController extends AbstractController {
         model.addAttribute("currentSection", "definitions-locations");
     }
 
-    private void populateQuarryForm(Model model, Quarry quarry, boolean isEdit) {
+    private void populateQuarryForm(Model model, QuarryForm quarry, boolean isEdit) {
         model.addAttribute("quarry", quarry);
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("currentSection", "definitions-quarries");
     }
 
-    private void populateCustomerForm(Model model, Customer customer, boolean isEdit) {
+    private void populateCustomerForm(Model model, CustomerForm customer, boolean isEdit) {
         model.addAttribute("customer", customer);
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("customerTypes", CustomerType.values());
@@ -570,7 +573,7 @@ public class DefinitionController extends AbstractController {
         model.addAttribute("currentSection", "definitions-customers");
     }
 
-    private void populateSupplierForm(Model model, Supplier supplier, boolean isEdit) {
+    private void populateSupplierForm(Model model, SupplierForm supplier, boolean isEdit) {
         model.addAttribute("supplier", supplier);
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("supplierTypes", SupplierType.values());
@@ -578,52 +581,11 @@ public class DefinitionController extends AbstractController {
         model.addAttribute("currentSection", "definitions-suppliers");
     }
 
-    private void populateCostCenterForm(Model model, CostCenter costCenter, boolean isEdit) {
+    private void populateCostCenterForm(Model model, CostCenterForm costCenter, boolean isEdit) {
         model.addAttribute("costCenter", costCenter);
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("businessUnits", BusinessUnit.values());
         model.addAttribute("currentSection", "definitions-cost-centers");
-    }
-
-    private static Machine newMachine() {
-        Machine machine = new Machine();
-        machine.setActive(true);
-        machine.setBusinessUnit(BusinessUnit.FACTORY);
-        machine.setMachineType(MachineType.GANGSAW);
-        return machine;
-    }
-
-    private static StockLocation newStockLocation() {
-        StockLocation location = new StockLocation();
-        location.setActive(true);
-        location.setBusinessUnit(BusinessUnit.FACTORY);
-        location.setLocationType(StockLocationType.FACTORY_BLOCK_YARD);
-        return location;
-    }
-
-    private static Quarry newQuarry() {
-        Quarry quarry = new Quarry();
-        quarry.setSpecificGravity(new BigDecimal("2.70"));
-        return quarry;
-    }
-
-    private static Customer newCustomer() {
-        Customer customer = new Customer();
-        customer.setCustomerType(CustomerType.CONSTRUCTION);
-        return customer;
-    }
-
-    private static Supplier newSupplier() {
-        Supplier supplier = new Supplier();
-        supplier.setSupplierType(SupplierType.CONSUMABLE);
-        return supplier;
-    }
-
-    private static CostCenter newCostCenter() {
-        CostCenter costCenter = new CostCenter();
-        costCenter.setBusinessUnit(BusinessUnit.FACTORY);
-        costCenter.setMonthlyBudget(BigDecimal.ZERO);
-        return costCenter;
     }
 
     private void addSuccessFlash(RedirectAttributes redirectAttributes, String message) {

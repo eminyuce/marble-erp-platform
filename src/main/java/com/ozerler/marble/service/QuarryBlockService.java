@@ -598,7 +598,7 @@ public class QuarryBlockService {
     @Cacheable(Constants.CACHE_QUARRIES)
     @Transactional(readOnly = true)
     public List<Quarry> getAllQuarries() {
-        return quarryRepository.findAll();
+        return BoundedReads.all(quarryRepository);
     }
 
     @CacheEvict(value = Constants.CACHE_QUARRIES, allEntries = true)

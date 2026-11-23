@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.repository.StockItemRepository;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -50,7 +49,6 @@ public class ProductionController {
     private final FactoryProductionService factoryProductionService;
     private final PalletShipmentService palletShipmentService;
     private final QuarryBlockService quarryBlockService;
-    private final StockItemRepository stockItemRepository;
     private final MessageSource messageSource;
 
     @GetMapping

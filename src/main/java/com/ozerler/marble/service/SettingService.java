@@ -24,7 +24,7 @@ public class SettingService {
     @Cacheable(value = "settings", key = "'allSettingsMap'")
     @Transactional(readOnly = true)
     public Map<String, String> getAllSettingsAsMap() {
-        List<SystemSetting> all = settingRepository.findAll();
+        List<SystemSetting> all = BoundedReads.all(settingRepository);
         Map<String, String> map = new HashMap<>();
         for (SystemSetting s : all) {
             map.put(s.getKey(), s.getValue());
@@ -34,7 +34,7 @@ public class SettingService {
 
     @Transactional(readOnly = true)
     public List<SystemSetting> getAllSettings() {
-        return settingRepository.findAll();
+        return BoundedReads.all(settingRepository);
     }
 
     @Cacheable(value = "settings", key = "#key")

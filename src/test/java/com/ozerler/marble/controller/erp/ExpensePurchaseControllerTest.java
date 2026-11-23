@@ -7,11 +7,9 @@ import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.model.response.BackEndResponse;
-import com.ozerler.marble.repository.CostCenterRepository;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.repository.QuarryRepository;
 import com.ozerler.marble.service.BlockCostCalculationService;
 import com.ozerler.marble.service.ExpenseService;
+import com.ozerler.marble.service.FormLookupService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,13 +38,9 @@ import static org.mockito.Mockito.when;
 class ExpensePurchaseControllerTest {
 
     @Mock
+    private FormLookupService formLookup;
+    @Mock
     private ExpenseService expenseService;
-    @Mock
-    private CostCenterRepository costCenterRepository;
-    @Mock
-    private QuarryRepository quarryRepository;
-    @Mock
-    private ProjectRepository projectRepository;
     @Mock
     private BlockCostCalculationService blockCostCalculationService;
     @Mock
@@ -62,9 +56,9 @@ class ExpensePurchaseControllerTest {
                 .period("2026-09")
                 .totalExpensesThisMonth(new BigDecimal("1000"))
                 .build());
-        when(costCenterRepository.findAll()).thenReturn(Collections.emptyList());
-        when(quarryRepository.findAll()).thenReturn(Collections.emptyList());
-        when(projectRepository.findAll()).thenReturn(Collections.emptyList());
+        when(formLookup.costCenters()).thenReturn(Collections.emptyList());
+        when(formLookup.quarries()).thenReturn(Collections.emptyList());
+        when(formLookup.projects()).thenReturn(Collections.emptyList());
 
         Model model = new ConcurrentModel();
         String view = controller.index(BusinessUnit.QUARRY, null, "2026-09", model);
@@ -92,7 +86,7 @@ class ExpensePurchaseControllerTest {
     @Test
     @DisplayName("getUnitOptions returns types and centers for unit")
     void getUnitOptions_ReturnsMap() {
-        when(costCenterRepository.findByBusinessUnit(BusinessUnit.QUARRY)).thenReturn(Collections.emptyList());
+        when(formLookup.costCenters(BusinessUnit.QUARRY)).thenReturn(Collections.emptyList());
 
         Map<String, Object> options = controller.getUnitOptions(BusinessUnit.QUARRY);
 
@@ -117,9 +111,9 @@ class ExpensePurchaseControllerTest {
     @Test
     @DisplayName("createForm populates lookups and returns form view")
     void createForm_ReturnsFormView() {
-        when(costCenterRepository.findAll()).thenReturn(Collections.emptyList());
-        when(quarryRepository.findAll()).thenReturn(Collections.emptyList());
-        when(projectRepository.findAll()).thenReturn(Collections.emptyList());
+        when(formLookup.costCenters()).thenReturn(Collections.emptyList());
+        when(formLookup.quarries()).thenReturn(Collections.emptyList());
+        when(formLookup.projects()).thenReturn(Collections.emptyList());
 
         Model model = new ConcurrentModel();
         String view = controller.createForm(model);
@@ -135,9 +129,9 @@ class ExpensePurchaseControllerTest {
     void editForm_ReturnsFormView() {
         ExpenseDto dto = ExpenseDto.builder().id(99L).build();
         when(expenseService.getExpenseDto(99L)).thenReturn(dto);
-        when(costCenterRepository.findAll()).thenReturn(Collections.emptyList());
-        when(quarryRepository.findAll()).thenReturn(Collections.emptyList());
-        when(projectRepository.findAll()).thenReturn(Collections.emptyList());
+        when(formLookup.costCenters()).thenReturn(Collections.emptyList());
+        when(formLookup.quarries()).thenReturn(Collections.emptyList());
+        when(formLookup.projects()).thenReturn(Collections.emptyList());
 
         Model model = new ConcurrentModel();
         String view = controller.editForm(99L, model);

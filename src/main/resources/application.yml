@@ -4,6 +4,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   profiles:
     active: dev
   messages:

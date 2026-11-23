@@ -22,6 +22,7 @@ public final class Constants {
      * Header name for tracing requests across distributed layers.
      */
     public static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
+    public static final String TRACE_ID_HEADER = "X-Trace-Id";
 
     /**
      * Default application name used in logs and health reports.
@@ -153,6 +154,7 @@ public final class Constants {
      * MDC key storing correlation id.
      */
     public static final String MDC_CORRELATION_ID = "correlationId";
+    public static final String MDC_TRACE_ID = "traceId";
 
     /**
      * MDC key storing authenticated username or anonymous indicator.

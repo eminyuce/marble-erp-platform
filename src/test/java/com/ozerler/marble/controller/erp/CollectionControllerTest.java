@@ -7,9 +7,8 @@ import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.Invoice;
 import com.ozerler.marble.model.enums.CheckStatus;
 import com.ozerler.marble.model.enums.CollectionMethod;
-import com.ozerler.marble.repository.CustomerRepository;
-import com.ozerler.marble.repository.InvoiceRepository;
 import com.ozerler.marble.service.CollectionService;
+import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.web.ListQuery;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,13 +39,10 @@ import static org.mockito.Mockito.when;
 class CollectionControllerTest {
 
     @Mock
+    private FormLookupService formLookup;
+
+    @Mock
     private CollectionService collectionService;
-
-    @Mock
-    private CustomerRepository customerRepository;
-
-    @Mock
-    private InvoiceRepository invoiceRepository;
 
     @InjectMocks
     private CollectionController controller;
@@ -57,7 +53,7 @@ class CollectionControllerTest {
         when(collectionService.getMonthlyTotal()).thenReturn(BigDecimal.valueOf(10000));
         when(collectionService.getApproachingChecksCount()).thenReturn(3L);
         when(collectionService.searchCollections(null, null, null, null, null, 0, 20)).thenReturn(Page.empty());
-        when(customerRepository.findAll()).thenReturn(List.of());
+        when(formLookup.customers()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
         String view = controller.index(null, null, new ListQuery(), model);
@@ -74,7 +70,7 @@ class CollectionControllerTest {
         when(collectionService.getMonthlyTotal()).thenReturn(BigDecimal.valueOf(10000));
         when(collectionService.getApproachingChecksCount()).thenReturn(3L);
         when(collectionService.searchCollections(CollectionMethod.CASH, null, null, null, null, 0, 20)).thenReturn(Page.empty());
-        when(customerRepository.findAll()).thenReturn(List.of());
+        when(formLookup.customers()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
         String view = controller.index(CollectionMethod.CASH, null, new ListQuery(), model);
@@ -204,15 +200,15 @@ class CollectionControllerTest {
     @Test
     @DisplayName("new collection form loads invoices with their customers")
     void newCollectionForm_LoadsInvoicesWithCustomer() {
-        when(customerRepository.findAll()).thenReturn(List.of());
-        when(invoiceRepository.findAllWithCustomer()).thenReturn(List.of());
+        when(formLookup.customers()).thenReturn(List.of());
+        when(formLookup.invoicesWithCustomer()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
         String view = controller.newCollectionForm(null, null, model);
 
         assertThat(view).isEqualTo("collections/form");
         assertThat(model.getAttribute("invoices")).isEqualTo(List.of());
-        verify(invoiceRepository).findAllWithCustomer();
+        verify(formLookup).invoicesWithCustomer();
     }
 
     @Test
@@ -223,9 +219,9 @@ class CollectionControllerTest {
         Invoice invoice = Invoice.builder().invoiceNo("FTR-1").customer(customer).build();
         invoice.setId(9L);
 
-        when(invoiceRepository.findByIdWithCustomer(9L)).thenReturn(Optional.of(invoice));
-        when(invoiceRepository.findAllWithCustomer()).thenReturn(List.of(invoice));
-        when(customerRepository.findAll()).thenReturn(List.of(customer));
+        when(formLookup.invoiceWithCustomer(9L)).thenReturn(Optional.of(invoice));
+        when(formLookup.invoicesWithCustomer()).thenReturn(List.of(invoice));
+        when(formLookup.customers()).thenReturn(List.of());
 
         Model model = new ConcurrentModel();
         String view = controller.newCollectionForm(9L, null, model);

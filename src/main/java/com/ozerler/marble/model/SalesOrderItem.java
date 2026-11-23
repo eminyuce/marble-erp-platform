@@ -35,7 +35,7 @@ public class SalesOrderItem extends AuditableEntity {
     @Column(nullable = false, length = 300)
     private String description;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false, precision = 14, scale = 4)
     @Builder.Default
     private BigDecimal quantity = BigDecimal.ONE;
 

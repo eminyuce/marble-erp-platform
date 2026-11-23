@@ -246,6 +246,6 @@ public class ConstructionSiteService {
     }
 
     public List<Customer> customers() {
-        return customerRepository.findAllByOrderByCompanyNameAsc();
+        return BoundedReads.all(customerRepository, org.springframework.data.domain.Sort.by("companyName"));
     }
 }

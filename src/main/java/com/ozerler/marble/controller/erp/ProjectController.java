@@ -32,11 +32,11 @@ import java.util.Locale;
 @lombok.extern.slf4j.Slf4j
 public class ProjectController {
 
+    private final com.ozerler.marble.service.FormLookupService formLookup;
+
     private final ProjectSiteService projectSiteService;
     private final ConstructionSiteService constructionSiteService;
     private final CostAnalysisService costAnalysisService;
-    private final com.ozerler.marble.repository.CustomerRepository customerRepository;
-    private final com.ozerler.marble.repository.StockItemRepository stockItemRepository;
     private final MessageSource messageSource;
 
     @GetMapping("/customers")
@@ -56,12 +56,12 @@ public class ProjectController {
                                 @ModelAttribute ListQuery query, Model model) {
         model.addAttribute("summary", projectSiteService.getProjectSummary());
         model.addAttribute("selectedCustomerId", customerId);
-        model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
+        model.addAttribute("customers", formLookup.customersByCompanyName());
         model.addAttribute("grid", ProjectGrid.view(
                 projectSiteService.getProjectsPaged(query.pageNumber(), query.pageSize(), query.getSearch(), status, customerId, query.sortKey(), query.sortDirection()),
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         if (customerId != null) {
-            customerRepository.findById(customerId).ifPresent(c -> model.addAttribute("selectedCustomerName", c.getCompanyName()));
+            formLookup.customer(customerId).ifPresent(c -> model.addAttribute("selectedCustomerName", c.getCompanyName()));
         }
         return "erp/projects/index";
     }
@@ -83,7 +83,7 @@ public class ProjectController {
     @GetMapping("/create")
     public String showCreateForm(@RequestParam(value = "customerId", required = false) Long customerId,
                                  Locale locale, Model model) {
-        model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
+        model.addAttribute("customers", formLookup.customersByCompanyName());
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("pageTitle", messageSource.getMessage("erp.project.title.create", null, locale));
         return "erp/projects/form";
@@ -110,7 +110,7 @@ public class ProjectController {
                     messageSource.getMessage("erp.project.create.success", null, locale));
             return "redirect:/projects";
         } catch (Exception e) {
-            model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
+            model.addAttribute("customers", formLookup.customersByCompanyName());
             model.addAttribute("errorMessage",
                     messageSource.getMessage("common.error.prefix", new Object[]{e.getMessage()}, locale));
             model.addAttribute("pageTitle", messageSource.getMessage("erp.project.title.create", null, locale));
@@ -121,7 +121,7 @@ public class ProjectController {
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Long id, Locale locale, Model model) {
         Project project = projectSiteService.getProjectById(id);
-        model.addAttribute("customers", customerRepository.findAllByOrderByCompanyNameAsc());
+        model.addAttribute("customers", formLookup.customersByCompanyName());
         model.addAttribute("project", project);
         model.addAttribute("record", project);
         model.addAttribute("isEdit", true);
@@ -164,7 +164,7 @@ public class ProjectController {
         model.addAttribute("profit", costAnalysisService.profitFor(project));
         model.addAttribute("supplyRoutes", SupplyRoute.values());
         model.addAttribute("surfaceFinishes", SurfaceFinish.values());
-        model.addAttribute("siteStockItems", stockItemRepository.findByProjectId(id));
+        model.addAttribute("siteStockItems", formLookup.stockForProject(id));
         return "erp/projects/detail";
     }
 

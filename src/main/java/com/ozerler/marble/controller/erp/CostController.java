@@ -4,7 +4,6 @@ import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.model.Project;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.ExpenseType;
-import com.ozerler.marble.repository.ProjectRepository;
 import com.ozerler.marble.service.CostAccountingService;
 import com.ozerler.marble.service.CostAnalysisService;
 import com.ozerler.marble.service.ExpenseService;
@@ -32,11 +31,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CostController {
 
+    private final com.ozerler.marble.service.FormLookupService formLookup;
+
     private final CostAccountingService costAccountingService;
     private final CostAnalysisService costAnalysisService;
     private final ExpenseService expenseService;
     private final PricingService pricingService;
-    private final ProjectRepository projectRepository;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -57,7 +57,7 @@ public class CostController {
         model.addAttribute("costCenters", costAccountingService.getAllCostCenters());
         model.addAttribute("expenseTypes", ExpenseType.values());
         model.addAttribute("businessUnits", BusinessUnit.values());
-        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("projects", formLookup.projects());
         model.addAttribute("totalExpenses", costAccountingService.getTotalExpenses());
 
         BigDecimal totalPeriodExpense = java.util.stream.Stream.of(
@@ -114,6 +114,7 @@ public class CostController {
         return "erp/costs/index";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/simulate-pricing")
     public String simulatePricing(@RequestParam("unitCost") BigDecimal unitCost,
                                   @RequestParam("targetMarginPct") BigDecimal targetMarginPct,
@@ -141,7 +142,7 @@ public class CostController {
         try {
             Project project = null;
             if (projectId != null) {
-                project = projectRepository.findById(projectId)
+                project = formLookup.project(projectId)
                         .orElseThrow(() -> new IllegalArgumentException(
                                 messageSource.getMessage("error.project.not_found", new Object[]{projectId}, locale)));
             }

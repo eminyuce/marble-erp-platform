@@ -315,7 +315,7 @@ public class GenealogyService {
 
     @Transactional(readOnly = true)
     public List<Block> getAllBlocks() {
-        return blockRepository.findAll();
+        return BoundedReads.all(blockRepository);
     }
 
     @Transactional(readOnly = true)

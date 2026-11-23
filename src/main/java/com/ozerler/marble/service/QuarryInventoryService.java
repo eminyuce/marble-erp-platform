@@ -153,7 +153,7 @@ public class QuarryInventoryService {
         // 4. Maliyet / Gider Oluşturma (Yalnızca tüketildiğinde ve KDV HARİÇ)
         CostCenter quarryCenter = costCenterRepository.findByCode("CC-001")
                 .or(() -> costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.QUARRY))
-                .or(() -> costCenterRepository.findAll().stream().findFirst())
+                .or(() -> BoundedReads.all(costCenterRepository).stream().findFirst())
                 .orElse(null);
 
         if (quarryCenter != null) {
@@ -412,7 +412,7 @@ public class QuarryInventoryService {
         // Maliyet / Gider Kaydı
         CostCenter quarryCenter = costCenterRepository.findByCode("CC-001")
                 .or(() -> costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.QUARRY))
-                .or(() -> costCenterRepository.findAll().stream().findFirst())
+                .or(() -> BoundedReads.all(costCenterRepository).stream().findFirst())
                 .orElse(null);
 
         if (quarryCenter != null && netCost.compareTo(BigDecimal.ZERO) > 0) {

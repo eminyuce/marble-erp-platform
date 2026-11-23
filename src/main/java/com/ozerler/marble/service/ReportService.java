@@ -173,7 +173,7 @@ public class ReportService {
                         "Müşteri / Tahsis",
                         "Durum"
                 };
-                List<Block> factoryBlocks = blockRepository.findAll();
+                List<Block> factoryBlocks = BoundedReads.all(blockRepository);
                 for (Block b : factoryBlocks) {
                     if (b.getStatus() == com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY || b.getStatus() == com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) {
                         String ton = b.getActualWeightKg() != null
@@ -194,7 +194,7 @@ public class ReportService {
                         });
                     }
                 }
-                List<Slab> slabs = slabRepository.findAll();
+                List<Slab> slabs = BoundedReads.all(slabRepository);
                 for (Slab sl : slabs) {
                     String cust = sl.getCustomer() != null ? sl.getCustomer().getCompanyName() : "Genel Stok";
                     String dims = (sl.getWidthCm() != null ? sl.getWidthCm() : 0) + "x" + (sl.getLengthCm() != null ? sl.getLengthCm() : 0) + " (" + (sl.getThicknessCm() != null ? sl.getThicknessCm() : 2) + "cm)";
@@ -212,7 +212,7 @@ public class ReportService {
                             sl.getStatus() != null ? sl.getStatus().getLabel() : "-"
                     });
                 }
-                List<StockItem> sizedItems = stockItemRepository.findAll();
+                List<StockItem> sizedItems = BoundedReads.all(stockItemRepository);
                 for (StockItem si : sizedItems) {
                     String cust = si.getCustomer() != null ? si.getCustomer().getCompanyName() : "Genel Stok";
                     String dims = (si.getWidthCm() != null ? si.getWidthCm() : 0) + "x" + (si.getLengthCm() != null ? si.getLengthCm() : 0) + " (" + (si.getThicknessCm() != null ? si.getThicknessCm() : 2) + "cm)";
@@ -242,7 +242,7 @@ public class ReportService {
                         "Durum",
                         "Açıklama"
                 };
-                List<Invoice> invoices = invoiceRepository.findAll();
+                List<Invoice> invoices = BoundedReads.all(invoiceRepository);
                 for (Invoice inv : invoices) {
                     String cust = inv.getCustomer() != null ? inv.getCustomer().getCompanyName() : "-";
                     String amt = inv.getTotalAmount() != null ? String.format("%,.2f TL", inv.getTotalAmount().doubleValue()) : "0,00 TL";
@@ -269,7 +269,7 @@ public class ReportService {
                         "Vade Tarihi",
                         "Durum / Açıklama"
                 };
-                List<CollectionRecord> collections = collectionRecordRepository.findAll();
+                List<CollectionRecord> collections = BoundedReads.all(collectionRecordRepository);
                 for (CollectionRecord col : collections) {
                     String cust = col.getCustomer() != null ? col.getCustomer().getCompanyName() : "-";
                     String amt = col.getAmount() != null ? String.format("%,.2f TL", col.getAmount().doubleValue()) : "0,00 TL";
@@ -301,7 +301,7 @@ public class ReportService {
                         "Termin Tarihi",
                         "Durum"
                 };
-                List<OperationWorkOrder> workOrders = operationWorkOrderRepository.findAll();
+                List<OperationWorkOrder> workOrders = BoundedReads.all(operationWorkOrderRepository);
                 for (OperationWorkOrder wo : workOrders) {
                     String cust = wo.getCustomer() != null ? wo.getCustomer().getCompanyName() : "-";
                     String stone = (wo.getStoneType() != null ? wo.getStoneType() : "-") + (wo.getStoneColorQuality() != null ? " / " + wo.getStoneColorQuality() : "");
@@ -379,7 +379,7 @@ public class ReportService {
                         getMessage("report.header.delivery_date"),
                         getMessage("report.header.status")
                 };
-                List<Project> projects = projectRepository.findAll();
+                List<Project> projects = BoundedReads.all(projectRepository);
                 for (Project p : projects) {
                     data.rows.add(new String[]{
                             p.getProjectCode() != null ? p.getProjectCode() : "",

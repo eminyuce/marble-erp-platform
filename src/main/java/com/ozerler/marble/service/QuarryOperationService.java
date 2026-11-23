@@ -166,6 +166,6 @@ public class QuarryOperationService {
 
     @Transactional(readOnly = true)
     public List<Quarry> getAllQuarries() {
-        return quarryRepository.findAll();
+        return BoundedReads.all(quarryRepository);
     }
 }

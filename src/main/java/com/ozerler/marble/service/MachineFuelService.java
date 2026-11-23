@@ -113,7 +113,7 @@ public class MachineFuelService {
 
     @Transactional(readOnly = true)
     public List<Machine> quarryAndFactoryMachines() {
-        return machineRepository.findAll().stream()
+        return BoundedReads.all(machineRepository).stream()
                 .filter(m -> m.isActive() && (m.getBusinessUnit() == BusinessUnit.QUARRY || m.getBusinessUnit() == BusinessUnit.FACTORY))
                 .filter(m -> m.getMachineType() == null || !m.getMachineType().isElectric())
                 .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))

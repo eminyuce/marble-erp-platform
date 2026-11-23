@@ -48,7 +48,7 @@ public class ProjectSiteService {
 
     @Transactional(readOnly = true)
     public ProjectSummaryDto getProjectSummary() {
-        List<Project> all = projectRepository.findAll();
+        List<Project> all = BoundedReads.all(projectRepository);
         long total = all.size();
         long active = all.stream().filter(p -> p.getStatus() != null && "IN_PROGRESS".equalsIgnoreCase(p.getStatus().name())).count();
         long completed = all.stream().filter(p -> p.getStatus() != null && "COMPLETED".equalsIgnoreCase(p.getStatus().name())).count();

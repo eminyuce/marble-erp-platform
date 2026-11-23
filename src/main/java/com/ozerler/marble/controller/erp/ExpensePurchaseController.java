@@ -16,9 +16,6 @@ import com.ozerler.marble.model.enums.ExpenseType;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
-import com.ozerler.marble.repository.CostCenterRepository;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.repository.QuarryRepository;
 import com.ozerler.marble.service.BlockCostCalculationService;
 import com.ozerler.marble.service.ExpenseService;
 import com.ozerler.marble.web.ExpenseGrid;
@@ -48,10 +45,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ExpensePurchaseController extends AbstractController {
 
+    private final com.ozerler.marble.service.FormLookupService formLookup;
+
     private final ExpenseService expenseService;
-    private final CostCenterRepository costCenterRepository;
-    private final QuarryRepository quarryRepository;
-    private final ProjectRepository projectRepository;
     private final BlockCostCalculationService blockCostCalculationService;
     private final MessageSource messageSource;
 
@@ -74,9 +70,9 @@ public class ExpensePurchaseController extends AbstractController {
         model.addAttribute("selectedUnit", unit);
         model.addAttribute("period", currentPeriod);
         model.addAttribute("businessUnits", BusinessUnit.values());
-        model.addAttribute("costCenters", costCenterRepository.findAll());
-        model.addAttribute("quarries", quarryRepository.findAll());
-        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("costCenters", formLookup.costCenters());
+        model.addAttribute("quarries", formLookup.quarries());
+        model.addAttribute("projects", formLookup.projects());
         model.addAttribute("expenseTypes", ExpenseType.values());
         model.addAttribute("selectedQuarryId", quarryId);
         model.addAttribute("selectedExpenseType", expenseType == null ? "" : expenseType.name());
@@ -125,7 +121,7 @@ public class ExpensePurchaseController extends AbstractController {
             List<Map<String, String>> types = List.of(ExpenseType.values()).stream()
                     .map(t -> Map.of("name", t.name(), "label", t.getLabel()))
                     .toList();
-            List<Map<String, Object>> centers = costCenterRepository.findAll().stream()
+            List<Map<String, Object>> centers = formLookup.costCenters().stream()
                     .map(c -> Map.<String, Object>of("id", c.getId(), "code", c.getCode(), "name", c.getName()))
                     .toList();
             return Map.of("types", types, "centers", centers);
@@ -133,7 +129,7 @@ public class ExpensePurchaseController extends AbstractController {
         List<Map<String, String>> types = ExpenseLineItems.forUnit(unit).stream()
                 .map(t -> Map.of("name", t.name(), "label", t.getLabel()))
                 .toList();
-        List<Map<String, Object>> centers = costCenterRepository.findByBusinessUnit(unit).stream()
+        List<Map<String, Object>> centers = formLookup.costCenters(unit).stream()
                 .map(c -> Map.<String, Object>of("id", c.getId(), "code", c.getCode(), "name", c.getName()))
                 .toList();
         return Map.of("types", types, "centers", centers);
@@ -301,9 +297,9 @@ public class ExpensePurchaseController extends AbstractController {
 
     private void populateFormLookups(Model model) {
         model.addAttribute("businessUnits", BusinessUnit.values());
-        model.addAttribute("costCenters", costCenterRepository.findAll());
-        model.addAttribute("quarries", quarryRepository.findAll());
-        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("costCenters", formLookup.costCenters());
+        model.addAttribute("quarries", formLookup.quarries());
+        model.addAttribute("projects", formLookup.projects());
         model.addAttribute("expenseTypes", ExpenseType.values());
     }
 
@@ -311,17 +307,16 @@ public class ExpensePurchaseController extends AbstractController {
         if (centerId != null) {
             return centerId;
         }
-        return costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
-                .or(() -> costCenterRepository.findAll().stream().findFirst())
+        return formLookup.firstCostCenter(unit)
                 .map(CostCenter::getId)
-                .orElse(null);
+                .orElseGet(() -> formLookup.anyCostCenter().map(CostCenter::getId).orElse(null));
     }
 
     private Project resolveProject(BusinessUnit unit, Long projectId, Locale locale) {
         if (unit != BusinessUnit.SITE || projectId == null) {
             return null;
         }
-        return projectRepository.findById(projectId)
+        return formLookup.project(projectId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         messageSource.getMessage("error.project.not_found", new Object[]{projectId}, locale)));
     }
@@ -394,7 +389,7 @@ public class ExpensePurchaseController extends AbstractController {
         if (unit != BusinessUnit.QUARRY || quarryId == null) {
             return null;
         }
-        return quarryRepository.findById(quarryId)
+        return formLookup.quarry(quarryId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         messageSource.getMessage("error.quarry.not_found", new Object[]{quarryId}, locale)));
     }

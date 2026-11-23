@@ -57,7 +57,7 @@ public class WorkshopCutService {
 
     @Transactional(readOnly = true)
     public WorkshopSummaryDto getWorkshopSummary() {
-        List<CutOrder> all = cutOrderRepository.findAll();
+        List<CutOrder> all = BoundedReads.all(cutOrderRepository);
         long total = all.size();
         long active = all.stream().filter(o -> o.getStatus() != null && "IN_PROGRESS".equalsIgnoreCase(o.getStatus())).count();
         long completed = all.stream().filter(o -> o.getStatus() != null && "COMPLETED".equalsIgnoreCase(o.getStatus())).count();
@@ -318,6 +318,6 @@ public class WorkshopCutService {
 
     @Transactional(readOnly = true)
     public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+        return BoundedReads.all(projectRepository);
     }
 }

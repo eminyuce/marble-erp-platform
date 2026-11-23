@@ -1,5 +1,6 @@
 package com.ozerler.marble.config;
 
+import com.ozerler.marble.service.BoundedReads;
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
@@ -338,7 +339,7 @@ public class LocalDataInitializer implements CommandLineRunner {
 
         machineRepository.saveAll(List.of(m1, m2, m3, m4));
 
-        List<Block> blocks = blockRepository.findAll();
+        List<Block> blocks = BoundedReads.all(blockRepository);
         if (blocks.isEmpty()) {
             return;
         }

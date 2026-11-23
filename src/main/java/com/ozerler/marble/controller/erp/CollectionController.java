@@ -1,5 +1,7 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.common.Constants;
+
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.CheckRecord;
@@ -8,8 +10,6 @@ import com.ozerler.marble.model.Invoice;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CheckStatus;
 import com.ozerler.marble.model.enums.CollectionMethod;
-import com.ozerler.marble.repository.CustomerRepository;
-import com.ozerler.marble.repository.InvoiceRepository;
 import com.ozerler.marble.service.CollectionService;
 import com.ozerler.marble.web.CheckGrid;
 import com.ozerler.marble.web.CollectionGrid;
@@ -17,6 +17,7 @@ import com.ozerler.marble.web.ListQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,9 +41,9 @@ import java.util.Map;
 @Slf4j
 public class CollectionController extends AbstractController {
 
+    private final com.ozerler.marble.service.FormLookupService formLookup;
+
     private final CollectionService collectionService;
-    private final CustomerRepository customerRepository;
-    private final InvoiceRepository invoiceRepository;
 
     @GetMapping
     public String index(@RequestParam(value = "method", required = false) CollectionMethod method,
@@ -57,7 +58,7 @@ public class CollectionController extends AbstractController {
                 query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
         model.addAttribute("selectedMethod", method != null ? method.name() : "");
         model.addAttribute("selectedCustomerId", customerId);
-        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("customers", formLookup.customers());
         model.addAttribute("methods", CollectionMethod.values());
         model.addAttribute("monthlyTotal", monthlyTotal);
         model.addAttribute("approachingChecksCount", approachingChecksCount);
@@ -102,21 +103,22 @@ public class CollectionController extends AbstractController {
                                     @RequestParam(value = "customerId", required = false) Long customerId,
                                     Model model) {
 
-        Invoice invoice = invoiceId != null ? invoiceRepository.findByIdWithCustomer(invoiceId).orElse(null) : null;
+        Invoice invoice = invoiceId != null ? formLookup.invoiceWithCustomer(invoiceId).orElse(null) : null;
         if (invoice != null && invoice.getCustomer() != null && customerId == null) {
             customerId = invoice.getCustomer().getId();
         }
 
         model.addAttribute("selectedInvoice", invoice);
         model.addAttribute("selectedCustomerId", customerId);
-        model.addAttribute("customers", customerRepository.findAll());
-        model.addAttribute("invoices", invoiceRepository.findAllWithCustomer());
+        model.addAttribute("customers", formLookup.customers());
+        model.addAttribute("invoices", formLookup.invoicesWithCustomer());
         model.addAttribute("methods", CollectionMethod.values());
         model.addAttribute("activeNav", "collections");
 
         return "collections/form";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping({"/new", "/create"})
     public String createCollection(@RequestParam("customerId") Long customerId,
                                    @RequestParam(value = "invoiceId", required = false) Long invoiceId,
@@ -167,7 +169,7 @@ public class CollectionController extends AbstractController {
         model.addAttribute("selectedCustomerId", customerId);
         model.addAttribute("selectedUnit", unit != null ? unit.name() : "");
         model.addAttribute("businessUnits", BusinessUnit.values());
-        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("customers", formLookup.customers());
         model.addAttribute("checkStatuses", CheckStatus.values());
         model.addAttribute("grid", CheckGrid.view(
                 checkPage, query.pageNumber(), query.pageSize(), query.sortKey(), query.sortDirection()));
@@ -209,6 +211,7 @@ public class CollectionController extends AbstractController {
         return TabulatorResponse.of(data, checkPage.getTotalPages(), checkPage.getTotalElements());
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FINANCE_WRITE)
     @PostMapping("/checks/{id}/status")
     public String updateCheckStatus(@PathVariable("id") Long id,
                                     @RequestParam("status") CheckStatus status,

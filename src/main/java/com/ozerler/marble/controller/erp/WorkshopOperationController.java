@@ -1,20 +1,23 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.web.StockYardResponses;
+
+import com.ozerler.marble.common.Constants;
+
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.dto.TabulatorResponse;
-import com.ozerler.marble.model.Customer;
 import com.ozerler.marble.model.OperationWorkOrder;
 import com.ozerler.marble.model.Slab;
 import com.ozerler.marble.model.StockItem;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.OperationWorkOrderStatus;
 import com.ozerler.marble.model.enums.SlabStatus;
-import com.ozerler.marble.repository.CustomerRepository;
 import com.ozerler.marble.service.FactoryStockService;
 import com.ozerler.marble.service.OperationWorkOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,9 +29,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.ozerler.marble.model.enums.QualityGrade;
 import com.ozerler.marble.model.enums.StockProductType;
 import com.ozerler.marble.model.enums.SurfaceFinish;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.repository.SlabRepository;
-import com.ozerler.marble.repository.StockItemRepository;
 import com.ozerler.marble.service.WorkshopOperationService;
 import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.WorkshopOrderGrid;
@@ -48,13 +48,11 @@ import java.util.Objects;
 @Slf4j
 public class WorkshopOperationController extends AbstractController {
 
+    private final com.ozerler.marble.service.FormLookupService formLookup;
+
     private final OperationWorkOrderService workOrderService;
     private final FactoryStockService factoryStockService;
-    private final CustomerRepository customerRepository;
     private final WorkshopOperationService workshopOperationService;
-    private final SlabRepository slabRepository;
-    private final StockItemRepository stockItemRepository;
-    private final ProjectRepository projectRepository;
 
     @GetMapping("/customers")
     public String workshopCustomers() {
@@ -101,7 +99,7 @@ public class WorkshopOperationController extends AbstractController {
 
         Page<Slab> slabsPage = StockYardResponses.slabPage(
                 factoryStockService, status, customerId, generalStockOnly, query);
-        List<Customer> customers = customerRepository.findAll();
+        var customers = formLookup.customers();
 
         BigDecimal totalAvailableM2 = slabsPage.getContent().stream()
                 .map(Slab::getSurfaceAreaM2).filter(Objects::nonNull)
@@ -145,7 +143,7 @@ public class WorkshopOperationController extends AbstractController {
 
         Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(
                 customerId, generalStockOnly, customerOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
-        List<Customer> customers = customerRepository.findAll();
+        var customers = formLookup.customers();
 
         BigDecimal totalStockM2 = itemsPage.getContent().stream()
                 .map(StockItem::getQuantity).filter(Objects::nonNull)
@@ -191,25 +189,25 @@ public class WorkshopOperationController extends AbstractController {
             @RequestParam(value = "slabId", required = false) Long slabId,
             @RequestParam(value = "sourceStockItemId", required = false) Long sourceStockItemId,
             Model model) {
-        Slab selectedSlab = slabId != null ? slabRepository.findWithDetailsById(slabId).orElse(null) : null;
+        Slab selectedSlab = slabId != null ? formLookup.slabWithDetails(slabId).orElse(null) : null;
         StockItem selectedSourceItem = sourceStockItemId != null
-                ? stockItemRepository.findByIdWithCustomer(sourceStockItemId).orElse(null)
+                ? formLookup.stockItemWithCustomer(sourceStockItemId).orElse(null)
                 : null;
 
-        List<Slab> slabsList = new java.util.ArrayList<>(slabRepository.findByStatusIn(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
+        List<Slab> slabsList = new java.util.ArrayList<>(formLookup.slabsInStatus(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
         if (selectedSlab != null && slabsList.stream().noneMatch(s -> s.getId().equals(selectedSlab.getId()))) {
             slabsList.add(0, selectedSlab);
         }
 
-        List<StockItem> sourceSizedList = new java.util.ArrayList<>(stockItemRepository.findByProductTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
+        List<StockItem> sourceSizedList = new java.util.ArrayList<>(formLookup.stockByTypeAndStatus(StockProductType.SIZED, "AVAILABLE"));
         if (selectedSourceItem != null && sourceSizedList.stream().noneMatch(it -> it.getId().equals(selectedSourceItem.getId()))) {
             sourceSizedList.add(0, selectedSourceItem);
         }
 
         model.addAttribute("slabs", slabsList);
         model.addAttribute("sourceSizedItems", sourceSizedList);
-        model.addAttribute("customers", customerRepository.findAll());
-        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("customers", formLookup.customers());
+        model.addAttribute("projects", formLookup.projects());
         model.addAttribute("qualityGrades", QualityGrade.values());
         model.addAttribute("surfaceFinishes", SurfaceFinish.values());
         model.addAttribute("prefillSlabId", slabId);
@@ -221,6 +219,7 @@ public class WorkshopOperationController extends AbstractController {
         return "operations/workshop/sized-form";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_WORKSHOP_WRITE)
     @PostMapping({"/sized/new", "/sized/create"})
     public String createWorkshopSizedItem(
             @RequestParam(value = "sourceType", defaultValue = "SLAB") String sourceType,

@@ -36,7 +36,7 @@ public class CostAccountingService {
     @Cacheable(Constants.CACHE_COST_CENTERS)
     @Transactional(readOnly = true)
     public List<CostCenter> getAllCostCenters() {
-        return costCenterRepository.findAll();
+        return BoundedReads.all(costCenterRepository);
     }
 
     @Transactional

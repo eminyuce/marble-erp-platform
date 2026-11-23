@@ -43,11 +43,11 @@ public class ProjectLocation extends AuditableEntity {
     @Column(name = "stone_spec", length = 150)
     private String stoneSpec;
 
-    @Column(name = "planned_area_m2", nullable = false, precision = 12, scale = 2)
+    @Column(name = "planned_area_m2", nullable = false, precision = 14, scale = 4)
     @Builder.Default
     private BigDecimal plannedAreaM2 = BigDecimal.ZERO;
 
-    @Column(name = "installed_area_m2", nullable = false, precision = 12, scale = 2)
+    @Column(name = "installed_area_m2", nullable = false, precision = 14, scale = 4)
     @Builder.Default
     private BigDecimal installedAreaM2 = BigDecimal.ZERO;
 

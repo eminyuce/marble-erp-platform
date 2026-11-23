@@ -190,7 +190,7 @@ public class FactoryInventoryService {
 
     @Transactional(readOnly = true)
     public List<Machine> getFactoryVehicles() {
-        return machineRepository.findAll().stream()
+        return BoundedReads.all(machineRepository).stream()
                 .filter(m -> m.isActive() && m.getBusinessUnit() == BusinessUnit.FACTORY)
                 .filter(m -> m.getMachineType() == null || !m.getMachineType().isElectric())
                 .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))

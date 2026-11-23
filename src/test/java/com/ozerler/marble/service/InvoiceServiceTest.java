@@ -63,6 +63,8 @@ class InvoiceServiceTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient().when(costCenterRepository.findAll(org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(org.springframework.data.domain.Page.empty());
         invoiceService = new InvoiceService(
                 invoiceRepository,
                 invoiceItemRepository,
@@ -80,7 +82,8 @@ class InvoiceServiceTest {
                 quarryInventoryService,
                 factoryInventoryService,
                 blockCustomerMarkRepository,
-                cariTransactionService
+                cariTransactionService,
+                org.mockito.Mockito.mock(com.ozerler.marble.mapper.ErpViewMapper.class)
         );
     }
 

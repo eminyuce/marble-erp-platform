@@ -33,7 +33,7 @@ public class PurchaseOrderItem extends AuditableEntity {
     @Builder.Default
     private PurchaseItemType itemType = PurchaseItemType.CONSUMABLE;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false, precision = 14, scale = 4)
     @Builder.Default
     private BigDecimal quantity = BigDecimal.ONE;
 

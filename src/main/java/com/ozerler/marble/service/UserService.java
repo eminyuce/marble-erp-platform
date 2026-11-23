@@ -47,7 +47,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserSummaryDto getUserSummary() {
-        List<User> all = userRepository.findAll();
+        List<User> all = BoundedReads.all(userRepository);
         long total = all.size();
         long active = all.stream().filter(user -> user.isEnabled()).count();
         long suspended = total - active;
@@ -206,7 +206,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<Role> getAllRoles() {
-        return roleRepository.findAll();
+        return BoundedReads.all(roleRepository);
     }
 
     private List<String> normalizeRoleNames(Collection<String> roleNames) {

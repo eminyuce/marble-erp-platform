@@ -8,6 +8,13 @@ import com.ozerler.marble.dto.QuarryDto;
 import com.ozerler.marble.dto.StockLocationDto;
 import com.ozerler.marble.dto.SupplierDto;
 import com.ozerler.marble.dto.TabulatorResponse;
+import com.ozerler.marble.dto.form.CostCenterForm;
+import com.ozerler.marble.dto.form.CustomerForm;
+import com.ozerler.marble.dto.form.MachineForm;
+import com.ozerler.marble.dto.form.QuarryForm;
+import com.ozerler.marble.dto.form.StockLocationForm;
+import com.ozerler.marble.dto.form.SupplierForm;
+import com.ozerler.marble.mapper.ErpViewMapper;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.BusinessUnit;
 import com.ozerler.marble.model.enums.CustomerType;
@@ -17,6 +24,7 @@ import com.ozerler.marble.util.GridPages;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,13 +66,14 @@ public class MasterDataService {
     private final BlockCustomerMarkRepository blockCustomerMarkRepository;
     private final InvoiceRepository invoiceRepository;
     private final CollectionRecordRepository collectionRecordRepository;
+    private final ErpViewMapper viewMapper;
 
     // =========================================================================
     // MACHINES
     // =========================================================================
 
     public List<Machine> getAllMachines() {
-        return machineRepository.findAllByOrderByCodeAsc();
+        return BoundedReads.all(machineRepository, Sort.by("code"));
     }
 
     public TabulatorResponse<MachineDto> getMachinesPaged(int page, int size, String search, BusinessUnit unit,
@@ -125,7 +134,7 @@ public class MasterDataService {
     // =========================================================================
 
     public List<StockLocation> getAllStockLocations() {
-        return stockLocationRepository.findAllByOrderByCodeAsc();
+        return BoundedReads.all(stockLocationRepository, Sort.by("code"));
     }
 
     public TabulatorResponse<StockLocationDto> getStockLocationsPaged(int page, int size, String search,
@@ -199,7 +208,7 @@ public class MasterDataService {
     // =========================================================================
 
     public List<Quarry> getAllQuarries() {
-        return quarryRepository.findAllByOrderByCodeAsc();
+        return BoundedReads.all(quarryRepository, Sort.by("code"));
     }
 
     public TabulatorResponse<QuarryDto> getQuarriesPaged(int page, int size, String search,
@@ -252,7 +261,7 @@ public class MasterDataService {
     // =========================================================================
 
     public List<Customer> getAllCustomers() {
-        return customerRepository.findAllByOrderByCompanyNameAsc();
+        return BoundedReads.all(customerRepository, Sort.by("companyName"));
     }
 
     public TabulatorResponse<CustomerDto> getCustomersPaged(int page, int size, String search, CustomerType type,
@@ -349,7 +358,7 @@ public class MasterDataService {
     // =========================================================================
 
     public List<Supplier> getAllSuppliers() {
-        return supplierRepository.findAllByOrderByCompanyNameAsc();
+        return BoundedReads.all(supplierRepository, Sort.by("companyName"));
     }
 
     public TabulatorResponse<SupplierDto> getSuppliersPaged(int page, int size, String search, SupplierType type,
@@ -409,7 +418,7 @@ public class MasterDataService {
     // =========================================================================
 
     public List<CostCenter> getAllCostCenters() {
-        return costCenterRepository.findAllByOrderByCodeAsc();
+        return BoundedReads.all(costCenterRepository, Sort.by("code"));
     }
 
     public TabulatorResponse<CostCenterDto> getCostCentersPaged(int page, int size, String search, BusinessUnit unit,
@@ -455,6 +464,82 @@ public class MasterDataService {
         }
         costCenterRepository.delete(costCenter);
         log.info("Cost center deleted successfully. ID: {}, Code: {}", id, costCenter.getCode());
+    }
+
+    public CustomerForm customerForm(Long id) {
+        return viewMapper.toForm(getCustomerById(id));
+    }
+
+    @Transactional
+    public Customer saveCustomerForm(CustomerForm form) {
+        Customer customer = form.getId() == null ? new Customer() : getCustomerById(form.getId());
+        viewMapper.update(form, customer);
+        return saveCustomer(customer);
+    }
+
+    public SupplierForm supplierForm(Long id) {
+        return viewMapper.toForm(getSupplierById(id));
+    }
+
+    @Transactional
+    public Supplier saveSupplierForm(SupplierForm form) {
+        Supplier supplier = form.getId() == null ? new Supplier() : getSupplierById(form.getId());
+        viewMapper.update(form, supplier);
+        return saveSupplier(supplier);
+    }
+
+    public MachineForm machineForm(Long id) {
+        return viewMapper.toForm(getMachineById(id));
+    }
+
+    @Transactional
+    public MachineForm toggleMachineForm(Long id) {
+        return viewMapper.toForm(toggleMachineActive(id));
+    }
+
+    @Transactional
+    public Machine saveMachineForm(MachineForm form) {
+        Machine machine = form.getId() == null ? new Machine() : getMachineById(form.getId());
+        viewMapper.update(form, machine);
+        return saveMachine(machine);
+    }
+
+    public QuarryForm quarryForm(Long id) {
+        return viewMapper.toForm(getQuarryById(id));
+    }
+
+    @Transactional
+    public Quarry saveQuarryForm(QuarryForm form) {
+        Quarry quarry = form.getId() == null ? new Quarry() : getQuarryById(form.getId());
+        viewMapper.update(form, quarry);
+        return saveQuarry(quarry);
+    }
+
+    public StockLocationForm stockLocationForm(Long id) {
+        return viewMapper.toForm(getStockLocationById(id));
+    }
+
+    @Transactional
+    public StockLocationForm toggleStockLocationForm(Long id) {
+        return viewMapper.toForm(toggleStockLocationActive(id));
+    }
+
+    @Transactional
+    public StockLocation saveStockLocationForm(StockLocationForm form) {
+        StockLocation location = form.getId() == null ? new StockLocation() : getStockLocationById(form.getId());
+        viewMapper.update(form, location);
+        return saveStockLocation(location);
+    }
+
+    public CostCenterForm costCenterForm(Long id) {
+        return viewMapper.toForm(getCostCenterById(id));
+    }
+
+    @Transactional
+    public CostCenter saveCostCenterForm(CostCenterForm form) {
+        CostCenter costCenter = form.getId() == null ? new CostCenter() : getCostCenterById(form.getId());
+        viewMapper.update(form, costCenter);
+        return saveCostCenter(costCenter);
     }
 
     static String normalizeCode(String raw) {

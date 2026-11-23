@@ -56,7 +56,7 @@ public class ProductionService {
         long totalOrders = productionOrderRepository.count();
         long activeOrders = productionOrderRepository.countActiveOrders();
         long completedOrders = Math.max(0, totalOrders - activeOrders);
-        BigDecimal totalSlabArea = slabRepository.findAll().stream()
+        BigDecimal totalSlabArea = BoundedReads.all(slabRepository).stream()
                 .map(slab -> slab.getSurfaceAreaM2())
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
@@ -146,7 +146,7 @@ public class ProductionService {
 
     @Transactional(readOnly = true)
     public SlabSummaryDto getSlabSummary() {
-        List<Slab> all = slabRepository.findAll();
+        List<Slab> all = BoundedReads.all(slabRepository);
         long totalSlabs = all.size();
         BigDecimal totalArea = all.stream()
                 .map(slab -> slab.getSurfaceAreaM2())
@@ -186,7 +186,7 @@ public class ProductionService {
 
     @Transactional(readOnly = true)
     public List<ScrapLog> getAllScrapLogs() {
-        return scrapLogRepository.findAll();
+        return BoundedReads.all(scrapLogRepository);
     }
 
     @Transactional(readOnly = true)

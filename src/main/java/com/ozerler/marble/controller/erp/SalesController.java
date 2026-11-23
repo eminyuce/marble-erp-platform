@@ -1,5 +1,7 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.common.Constants;
+
 import com.ozerler.marble.dto.SalesOrderDto;
 import com.ozerler.marble.dto.TabulatorResponse;
 import com.ozerler.marble.model.SalesOrder;
@@ -10,6 +12,7 @@ import com.ozerler.marble.web.SalesGrid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -59,6 +62,7 @@ public class SalesController {
         return "erp/sales/form";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     @PostMapping("/create")
     public String createOrder(@RequestParam("orderNo") String orderNo,
                               @RequestParam("customerId") Long customerId,
@@ -97,6 +101,7 @@ public class SalesController {
         return "erp/sales/detail";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     @PostMapping("/{id}/items")
     public String addItem(@PathVariable("id") Long id,
                           @RequestParam("description") String description,
@@ -109,6 +114,7 @@ public class SalesController {
         return "redirect:/sales/" + id;
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_SALES_WRITE)
     @PostMapping("/{id}/confirm")
     public String confirmOrder(@PathVariable("id") Long id) {
         salesService.confirmOrder(id);

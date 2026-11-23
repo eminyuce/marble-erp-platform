@@ -1,5 +1,8 @@
 package com.ozerler.marble.service;
 
+import com.ozerler.marble.dto.option.PartyOption;
+import com.ozerler.marble.dto.view.InvoiceRef;
+import com.ozerler.marble.mapper.ErpViewMapper;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.repository.*;
@@ -43,6 +46,7 @@ public class InvoiceService {
     private final FactoryInventoryService factoryInventoryService;
     private final BlockCustomerMarkRepository blockCustomerMarkRepository;
     private final CariTransactionService cariTransactionService;
+    private final ErpViewMapper viewMapper;
 
     public record InvoiceItemForm(String productName, String description, BigDecimal quantity, String unit,
                                   BigDecimal unitPrice, Long blockId, Long slabId, Long stockItemId,
@@ -579,9 +583,9 @@ public class InvoiceService {
             // Dahili Transfer Faturası: Hedef birime (Fabrika, Şantiye vb.) hammadde gideri/maliyeti olarak yansıt
             if (targetDepartment != null && subtotal.compareTo(BigDecimal.ZERO) > 0) {
                 CostCenter targetCc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(targetDepartment)
-                        .or(() -> costCenterRepository.findAll().stream().filter(c -> targetDepartment.equals(c.getBusinessUnit())).findFirst())
+                        .or(() -> BoundedReads.all(costCenterRepository).stream().filter(c -> targetDepartment.equals(c.getBusinessUnit())).findFirst())
                         .or(() -> costCenterRepository.findByCode("CC-001"))
-                        .or(() -> costCenterRepository.findAll().stream().findFirst())
+                        .or(() -> BoundedReads.all(costCenterRepository).stream().findFirst())
                         .orElse(null);
                 if (targetCc != null) {
                     CostTransaction tx = CostTransaction.builder()
@@ -615,7 +619,7 @@ public class InvoiceService {
                 if (subtotal.compareTo(BigDecimal.ZERO) > 0) {
                     CostCenter cc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(department)
                             .or(() -> costCenterRepository.findByCode("CC-001"))
-                            .or(() -> costCenterRepository.findAll().stream().findFirst())
+                            .or(() -> BoundedReads.all(costCenterRepository).stream().findFirst())
                             .orElse(null);
                     if (cc != null) {
                         CostTransaction tx = CostTransaction.builder()
@@ -677,7 +681,7 @@ public class InvoiceService {
         if (project != null && subtotal.compareTo(BigDecimal.ZERO) > 0 && targetDepartment == null) {
             CostCenter cc = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(BusinessUnit.SITE)
                     .or(() -> costCenterRepository.findByCode("CC-005"))
-                    .or(() -> costCenterRepository.findAll().stream().findFirst())
+                    .or(() -> BoundedReads.all(costCenterRepository).stream().findFirst())
                     .orElse(null);
             if (cc != null) {
                 CostTransaction tx = CostTransaction.builder()
@@ -994,13 +998,17 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+    public List<PartyOption> getAllCustomers() {
+        return BoundedReads.all(customerRepository).stream()
+                .map(customer -> new PartyOption(customer.getId(), customer.getCompanyName()))
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<Supplier> getAllSuppliers() {
-        return supplierRepository.findAll();
+    public List<PartyOption> getAllSuppliers() {
+        return BoundedReads.all(supplierRepository).stream()
+                .map(supplier -> new PartyOption(supplier.getId(), supplier.getCompanyName()))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -1008,5 +1016,28 @@ public class InvoiceService {
         LocalDate start = LocalDate.now().withDayOfMonth(1);
         LocalDate end = LocalDate.now().plusMonths(1).withDayOfMonth(1).minusDays(1);
         return invoiceRepository.sumAmountByTypeThisMonth(type, start, end);
+    }
+
+    @Transactional
+    public InvoiceRef createInvoiceRef(String invoiceNo, LocalDate invoiceDate, LocalDate dueDate,
+                                       InvoiceType invoiceType, BusinessUnit department, Long customerId,
+                                       Long supplierId, BusinessUnit targetDepartment, Long projectId,
+                                       BigDecimal taxRate, Boolean directExpense, InvoiceStatus status,
+                                       String partyName, String notes,
+                                       List<InvoiceItemForm> itemForms,
+                                       QuarryCategory quarryCategory) {
+        return viewMapper.toRef(createInvoice(invoiceNo, invoiceDate, dueDate, invoiceType, department, customerId,
+                supplierId, targetDepartment, projectId, taxRate, directExpense, status, partyName, notes, itemForms,
+                quarryCategory));
+    }
+
+    @Transactional
+    public InvoiceRef finalizeInvoiceRef(Long invoiceId) {
+        return viewMapper.toRef(finalizeInvoice(invoiceId));
+    }
+
+    @Transactional
+    public InvoiceRef cancelInvoiceRef(Long invoiceId, String reason) {
+        return viewMapper.toRef(cancelInvoice(invoiceId, reason));
     }
 }

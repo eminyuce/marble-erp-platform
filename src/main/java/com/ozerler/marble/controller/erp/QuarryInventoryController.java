@@ -1,5 +1,7 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.common.Constants;
+
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.model.Machine;
 import com.ozerler.marble.model.MachineFuelEntry;
@@ -8,6 +10,7 @@ import com.ozerler.marble.model.enums.QuarryCategory;
 import com.ozerler.marble.service.QuarryInventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +54,7 @@ public class QuarryInventoryController extends AbstractController {
         return "redirect:/quarry/fuel?action=dispense";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     @PostMapping("/fuel/dispense")
     public String dispenseFuel(@RequestParam("machineId") Long machineId,
                                @RequestParam("litres") BigDecimal litres,
@@ -78,6 +82,7 @@ public class QuarryInventoryController extends AbstractController {
         return "redirect:/quarry/fuel?action=add";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     @PostMapping("/fuel/add")
     public String addFuelStock(@RequestParam("litres") BigDecimal litres,
                                @RequestParam(value = "netUnitPrice", required = false) BigDecimal netUnitPrice,
@@ -127,6 +132,7 @@ public class QuarryInventoryController extends AbstractController {
         return "quarry/consumables";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     @PostMapping("/consumables/consume")
     public String consumeConsumable(@RequestParam("stockItemId") Long stockItemId,
                                     @RequestParam("quantity") BigDecimal quantity,
@@ -145,6 +151,7 @@ public class QuarryInventoryController extends AbstractController {
         return "redirect:/quarry/consumables";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     @PostMapping("/consumables/add")
     public String addConsumableStock(@RequestParam(value = "category", required = false) QuarryCategory category,
                                      @RequestParam(value = "itemCode", required = false) String itemCode,
@@ -168,6 +175,7 @@ public class QuarryInventoryController extends AbstractController {
         return "redirect:/quarry/consumables" + (category != null ? "?category=" + category.name() : "");
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     @PostMapping("/stock-cards/new")
     public String createStockCard(@RequestParam("category") QuarryCategory category,
                                   @RequestParam("description") String description,
@@ -202,6 +210,7 @@ public class QuarryInventoryController extends AbstractController {
         return "quarry/machines";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_QUARRY_WRITE)
     @PostMapping("/machines/create")
     public String createMachine(@RequestParam(value = "code", required = false) String code,
                                 @RequestParam("name") String name,

@@ -92,7 +92,8 @@ class MasterDataServiceTest {
                 machineRepository, stockLocationRepository, quarryRepository, customerRepository,
                 supplierRepository, costCenterRepository, machineFuelEntryRepository, blockRepository,
                 salesOrderRepository, purchaseOrderRepository, costTransactionRepository,
-                blockCustomerMarkRepository, invoiceRepository, collectionRecordRepository);
+                blockCustomerMarkRepository, invoiceRepository, collectionRecordRepository,
+                org.mockito.Mockito.mock(com.ozerler.marble.mapper.ErpViewMapper.class));
     }
 
     @AfterEach

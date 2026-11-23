@@ -177,7 +177,7 @@ public class WorkshopOperationService {
 
     @Transactional(readOnly = true)
     public List<Supplier> suppliers() {
-        return supplierRepository.findAll();
+        return BoundedReads.all(supplierRepository);
     }
 
     @Transactional(readOnly = true)

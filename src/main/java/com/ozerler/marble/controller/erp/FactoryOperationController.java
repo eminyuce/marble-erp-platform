@@ -1,9 +1,12 @@
 package com.ozerler.marble.controller.erp;
 
+import com.ozerler.marble.web.StockYardResponses;
+
+import com.ozerler.marble.common.Constants;
+
 import com.ozerler.marble.controller.AbstractController;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
-import com.ozerler.marble.repository.*;
 import com.ozerler.marble.service.FactoryInventoryService;
 import com.ozerler.marble.service.FactoryStockService;
 import com.ozerler.marble.service.OperationWorkOrderService;
@@ -15,6 +18,7 @@ import com.ozerler.marble.web.OperationFactoryBlockGrid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -35,12 +39,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class FactoryOperationController extends AbstractController {
 
+    private final com.ozerler.marble.service.FormLookupService formLookup;
+
     private final FactoryStockService factoryStockService;
     private final OperationWorkOrderService workOrderService;
-    private final CustomerRepository customerRepository;
-    private final BlockRepository blockRepository;
-    private final SlabRepository slabRepository;
-    private final StockItemRepository stockItemRepository;
     private final FactoryInventoryService factoryInventoryService;
 
     @GetMapping
@@ -66,7 +68,7 @@ public class FactoryOperationController extends AbstractController {
 
         List<Block> blocks = factoryStockService.getFactoryUncutBlocks(customerId, generalStockOnly);
         List<Block> incomingBlocks = factoryStockService.getIncomingBlocksInTransit();
-        List<Customer> customers = customerRepository.findAll();
+        var customers = formLookup.customers();
 
         BigDecimal totalWeightTon = blocks.stream()
                 .map(b -> b.getActualTonnage() != null ? b.getActualTonnage() : b.getApproximateTonnage())
@@ -155,6 +157,7 @@ public class FactoryOperationController extends AbstractController {
         return TabulatorResponse.of(data, blocksPage.getTotalPages(), blocksPage.getTotalElements());
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/blocks/{id}/assign-customer")
     public String assignCustomerToBlock(@PathVariable("id") Long id,
                                         @RequestParam(value = "customerId", required = false) Long customerId,
@@ -169,6 +172,7 @@ public class FactoryOperationController extends AbstractController {
         return "redirect:/operations/factory/blocks";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/blocks/{id}/dispatch-cutting")
     public String dispatchBlockToCutting(@PathVariable("id") Long id,
                                          @RequestParam(value = "notes", required = false) String notes,
@@ -182,6 +186,7 @@ public class FactoryOperationController extends AbstractController {
         return "redirect:/operations/factory/blocks";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/blocks/{id}/receive")
     public String receiveBlock(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -202,7 +207,7 @@ public class FactoryOperationController extends AbstractController {
 
         Page<Slab> slabsPage = StockYardResponses.slabPage(
                 factoryStockService, status, customerId, generalStockOnly, query);
-        List<Customer> customers = customerRepository.findAll();
+        var customers = formLookup.customers();
         BigDecimal customerSlabArea = customerId != null ? factoryStockService.getCustomerSlabAreaTotal(customerId) : BigDecimal.ZERO;
 
         model.addAttribute("slabs", slabsPage.getContent());
@@ -235,8 +240,8 @@ public class FactoryOperationController extends AbstractController {
 
     @GetMapping({"/slabs/new", "/slabs/create"})
     public String newSlabForm(Model model) {
-        model.addAttribute("blocks", blockRepository.findAllWithQuarry());
-        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("blocks", formLookup.blocksWithQuarry());
+        model.addAttribute("customers", formLookup.customers());
         model.addAttribute("qualityGrades", QualityGrade.values());
         model.addAttribute("surfaceFinishes", SurfaceFinish.values());
         model.addAttribute("activeSection", "factory");
@@ -244,6 +249,7 @@ public class FactoryOperationController extends AbstractController {
         return "operations/factory/slab-form";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping({"/slabs/new", "/slabs/create"})
     public String createSlab(@RequestParam("blockId") Long blockId,
                              @RequestParam(value = "thicknessCm", required = false) BigDecimal thicknessCm,
@@ -281,6 +287,7 @@ public class FactoryOperationController extends AbstractController {
         }
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/slabs/{id}/assign-customer")
     public String assignCustomerToSlab(@PathVariable("id") Long id,
                                        @RequestParam(value = "customerId", required = false) Long customerId,
@@ -303,7 +310,7 @@ public class FactoryOperationController extends AbstractController {
 
         Page<StockItem> itemsPage = factoryStockService.getSizedStockItemsPaged(
                 customerId, generalStockOnly, query.getSearch(), query.pageNumber() - 1, query.pageSize());
-        List<Customer> customers = customerRepository.findAll();
+        var customers = formLookup.customers();
 
         model.addAttribute("items", itemsPage.getContent());
         model.addAttribute("page", itemsPage);
@@ -335,9 +342,9 @@ public class FactoryOperationController extends AbstractController {
 
     @GetMapping({"/sized/new", "/sized/create"})
     public String newSizedForm(Model model) {
-        model.addAttribute("blocks", blockRepository.findAllWithQuarry());
-        model.addAttribute("slabs", slabRepository.findByStatusIn(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
-        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("blocks", formLookup.blocksWithQuarry());
+        model.addAttribute("slabs", formLookup.slabsInStatus(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
+        model.addAttribute("customers", formLookup.customers());
         model.addAttribute("qualityGrades", QualityGrade.values());
         model.addAttribute("surfaceFinishes", SurfaceFinish.values());
         model.addAttribute("activeSection", "factory");
@@ -345,6 +352,7 @@ public class FactoryOperationController extends AbstractController {
         return "operations/factory/sized-form";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping({"/sized/new", "/sized/create"})
     public String createSizedItem(@RequestParam(value = "blockId", required = false) Long blockId,
                                   @RequestParam(value = "slabId", required = false) Long slabId,
@@ -394,6 +402,7 @@ public class FactoryOperationController extends AbstractController {
         }
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/sized/{id}/assign-customer")
     public String assignCustomerToStockItem(@PathVariable("id") Long id,
                                             @RequestParam(value = "customerId", required = false) Long customerId,
@@ -443,6 +452,7 @@ public class FactoryOperationController extends AbstractController {
         return "operations/factory/fuel";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/fuel/dispense")
     public String dispenseFactoryFuel(@RequestParam("machineId") Long machineId,
                                       @RequestParam("litres") BigDecimal litres,
@@ -465,6 +475,7 @@ public class FactoryOperationController extends AbstractController {
         return "redirect:/operations/factory/fuel";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/fuel/add")
     public String addFactoryFuelStock(@RequestParam("litres") BigDecimal litres,
                                       @RequestParam(value = "netUnitPrice", required = false) BigDecimal netUnitPrice,
@@ -502,6 +513,7 @@ public class FactoryOperationController extends AbstractController {
         return "operations/factory/consumables";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/consumables/consume")
     public String consumeFactoryConsumable(@RequestParam("stockItemId") Long stockItemId,
                                            @RequestParam("quantity") BigDecimal quantity,
@@ -520,6 +532,7 @@ public class FactoryOperationController extends AbstractController {
         return "redirect:/operations/factory/consumables";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/consumables/add")
     public String addFactoryConsumableStock(@RequestParam(value = "itemCode", required = false) String itemCode,
                                             @RequestParam("description") String description,
@@ -541,6 +554,7 @@ public class FactoryOperationController extends AbstractController {
         return "redirect:/operations/factory/consumables";
     }
 
+    @PreAuthorize(Constants.PRE_AUTH_FACTORY_WRITE)
     @PostMapping("/stock-cards/new")
     public String createFactoryStockCard(@RequestParam("description") String description,
                                          @RequestParam(value = "unit", defaultValue = "adet") String unit,

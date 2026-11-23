@@ -59,7 +59,7 @@ public class ExpenseService {
                             MessageUtils.getMessage("error.cost_center.not_found", draft.centerId())));
         } else {
             center = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
-                    .or(() -> costCenterRepository.findAll().stream().findFirst())
+                    .or(() -> BoundedReads.all(costCenterRepository).stream().findFirst())
                     .orElseThrow(() -> new IllegalArgumentException("Masraf merkezi tanımlı değil."));
         }
         String postingPeriod = ExpensePeriods.normalize(
@@ -222,7 +222,7 @@ public class ExpenseService {
             center = tx.getCostCenter();
         } else {
             center = costCenterRepository.findFirstByBusinessUnitOrderByCodeAsc(unit)
-                    .or(() -> costCenterRepository.findAll().stream().findFirst())
+                    .or(() -> BoundedReads.all(costCenterRepository).stream().findFirst())
                     .orElseThrow(() -> new IllegalArgumentException("Masraf merkezi tanımlı değil."));
         }
 

@@ -100,6 +100,11 @@ services:
     mem_limit: 2g
     cpus: 2
     stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2g
     restart: unless-stopped
     group_add:
       - "${DOCKER_GID:-999}"

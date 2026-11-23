@@ -69,7 +69,7 @@ public class CostAnalysisService {
             }
         }
         List<SiteProfitDto> rows = new ArrayList<>();
-        for (Project project : projectRepository.findAll()) {
+        for (Project project : BoundedReads.all(projectRepository)) {
             rows.add(profitFor(project, categoriesByProject.getOrDefault(project.getId(), Map.of())));
         }
         return rows;

@@ -3,12 +3,8 @@ package com.ozerler.marble.controller.erp;
 import com.ozerler.marble.model.StockItem;
 import com.ozerler.marble.model.StockLocation;
 import com.ozerler.marble.model.enums.BusinessUnit;
-import com.ozerler.marble.repository.BlockRepository;
-import com.ozerler.marble.repository.CustomerRepository;
-import com.ozerler.marble.repository.ProjectRepository;
-import com.ozerler.marble.repository.SlabRepository;
-import com.ozerler.marble.repository.StockItemRepository;
-import com.ozerler.marble.repository.SupplierRepository;
+import com.ozerler.marble.service.FormLookupService;
+import com.ozerler.marble.service.InvoiceScreenService;
 import com.ozerler.marble.service.InvoiceService;
 import com.ozerler.marble.service.QuarryInventoryService;
 import org.junit.jupiter.api.DisplayName;
@@ -29,34 +25,16 @@ import static org.mockito.Mockito.when;
 class InvoiceControllerAvailableStockTest {
 
     @Mock
+    private FormLookupService formLookup;
+
+    @Mock
     private InvoiceService invoiceService;
-
-    @Mock
-    private CustomerRepository customerRepository;
-
-    @Mock
-    private SupplierRepository supplierRepository;
-
-    @Mock
-    private BlockRepository blockRepository;
-
-    @Mock
-    private StockItemRepository stockItemRepository;
-
-    @Mock
-    private SlabRepository slabRepository;
-
-    @Mock
-    private ProjectRepository projectRepository;
 
     @Mock
     private QuarryInventoryService quarryInventoryService;
 
-    @Mock
-    private com.ozerler.marble.service.ProcurementService procurementService;
-
     @InjectMocks
-    private InvoiceController controller;
+    private InvoiceScreenService screen;
 
     @Test
     @DisplayName("sized stock is filtered by the already loaded stock location business unit")
@@ -69,10 +47,10 @@ class InvoiceControllerAvailableStockTest {
                 .stoneType("Traverten")
                 .build();
 
-        when(stockItemRepository.findPositiveQuantityWithLocation())
+        when(formLookup.positiveStock())
                 .thenReturn(List.of(factoryItem, workshopItem, unlocatedItem));
 
-        List<Map<String, Object>> result = controller.getAvailableStock(
+        List<Map<String, Object>> result = screen.availableStock(
                 BusinessUnit.FACTORY, "SIZED", null, null, false);
 
         assertThat(result).extracting(row -> row.get("code"))

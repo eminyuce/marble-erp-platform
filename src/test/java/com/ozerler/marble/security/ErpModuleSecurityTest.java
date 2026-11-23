@@ -95,6 +95,17 @@ class ErpModuleSecurityTest {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
+    @DisplayName("a plain user cannot create an invoice")
+    void userCannotCreateInvoice() throws Exception {
+        mockMvc.perform(post("/invoices/new").with(csrf())
+                        .param("invoiceDate", "2026-11-23")
+                        .param("invoiceType", "SALES")
+                        .param("department", "FACTORY"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(roles = "QUARRY_CHIEF")
     @DisplayName("quarry chief cannot open factory tablet planning writes")
     void quarryChiefCannotPlanFactory() throws Exception {
