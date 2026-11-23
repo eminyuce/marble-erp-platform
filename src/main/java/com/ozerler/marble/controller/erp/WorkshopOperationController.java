@@ -256,8 +256,10 @@ public class WorkshopOperationController extends AbstractController {
             @RequestParam(value = "slabId", required = false) Long slabId,
             @RequestParam(value = "sourceStockItemId", required = false) Long sourceStockItemId,
             Model model) {
-        Slab selectedSlab = slabId != null ? slabRepository.findById(slabId).orElse(null) : null;
-        StockItem selectedSourceItem = sourceStockItemId != null ? stockItemRepository.findById(sourceStockItemId).orElse(null) : null;
+        Slab selectedSlab = slabId != null ? slabRepository.findWithDetailsById(slabId).orElse(null) : null;
+        StockItem selectedSourceItem = sourceStockItemId != null
+                ? stockItemRepository.findByIdWithCustomer(sourceStockItemId).orElse(null)
+                : null;
 
         List<Slab> slabsList = new java.util.ArrayList<>(slabRepository.findByStatusIn(List.of(SlabStatus.AVAILABLE, SlabStatus.RESERVED)));
         if (selectedSlab != null && slabsList.stream().noneMatch(s -> s.getId().equals(selectedSlab.getId()))) {

@@ -26,7 +26,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -216,6 +218,14 @@ class SecurityConfigTest {
                 .andExpect(header().string("Content-Disposition",
                         matchesPattern(".*filename=\"ocak_bloklari_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}\\.xlsx\".*")))
                 .andExpect(header().string("Content-Disposition", not(containsString(":"))));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@eimece.test", roles = {"ADMIN"})
+    @DisplayName("A POST with a bad CSRF token is forbidden instead of method not allowed")
+    void wrongCsrfReturnsForbidden() throws Exception {
+        mockMvc.perform(post("/projects/create").with(csrf().useInvalidToken()))
+                .andExpect(status().isForbidden());
     }
 
     @Test

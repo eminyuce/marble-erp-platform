@@ -24,7 +24,7 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
     @Query("SELECT s FROM Slab s JOIN FETCH s.block WHERE s.slabCode = :slabCode")
     Optional<Slab> findBySlabCodeWithBlock(@Param("slabCode") String slabCode);
 
-    @EntityGraph(attributePaths = {"block", "block.quarry", "productionOrder", "pallet"})
+    @EntityGraph(attributePaths = {"block", "block.quarry", "customer", "productionOrder", "pallet"})
     Optional<Slab> findWithDetailsById(Long id);
 
     List<Slab> findByBlockId(Long blockId);
@@ -35,7 +35,7 @@ public interface SlabRepository extends JpaRepository<Slab, Long> {
 
     List<Slab> findByStatus(SlabStatus status);
 
-    @EntityGraph(attributePaths = {"block"})
+    @EntityGraph(attributePaths = {"block", "customer"})
     List<Slab> findByStatusIn(List<SlabStatus> statuses);
 
     @Query("SELECT s FROM Slab s JOIN FETCH s.block b JOIN FETCH b.quarry WHERE s.id = :id")
