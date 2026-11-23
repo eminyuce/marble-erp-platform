@@ -76,7 +76,7 @@ public class OperationWorkOrderService {
         Objects.requireNonNull(form.department(), "Departman seçilmelidir.");
 
         String prefix = form.department() == BusinessUnit.FACTORY ? "FWO"
-                : (form.department() == BusinessUnit.WORKSHOP ? "AWO" : "SWO");
+                : form.department() == BusinessUnit.WORKSHOP ? "AWO" : "SWO";
         String code = (form.orderNo() != null && !form.orderNo().isBlank())
                 ? form.orderNo().trim().toUpperCase()
                 : UniqueCodes.yearly(prefix, workOrderRepository::existsByOrderNo);
@@ -231,10 +231,10 @@ public class OperationWorkOrderService {
             order.getSourceStockItem().getItemCode();
         }
         if (order.getItems() != null) {
-            order.getItems().size();
+            log.trace("Initialized {} work order items", order.getItems().size());
         }
         if (order.getStatusHistory() != null) {
-            order.getStatusHistory().size();
+            log.trace("Initialized {} work order status rows", order.getStatusHistory().size());
         }
     }
 

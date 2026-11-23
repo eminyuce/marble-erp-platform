@@ -90,7 +90,7 @@ public class FactoryInventoryService {
         if (netUnitPrice != null && netUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal oldCost = oldQty.multiply(tank.getUnitPrice() != null ? tank.getUnitPrice() : BigDecimal.ZERO);
             BigDecimal newCost = litres.multiply(netUnitPrice);
-            BigDecimal avgPrice = (newCost.add(oldCost)).divide(newQty, 2, RoundingMode.HALF_UP);
+            BigDecimal avgPrice = newCost.add(oldCost).divide(newQty, 2, RoundingMode.HALF_UP);
             tank.setUnitPrice(avgPrice);
         }
 
@@ -109,7 +109,7 @@ public class FactoryInventoryService {
                 .quantity(litres)
                 .quantityUnit("litre")
                 .invoice(invoice)
-                .notes(notes != null ? notes : (invoice != null ? "Fatura: " + invoice.getInvoiceNo() : "Fabrika Mazot Alımı"))
+                .notes(notes != null ? notes : invoice != null ? "Fatura: " + invoice.getInvoiceNo() : "Fabrika Mazot Alımı")
                 .build();
         stockMovementRepository.save(movement);
 
@@ -420,7 +420,7 @@ public class FactoryInventoryService {
                 .itemDescription("Fabrika Sarf Tüketimi: " + item.getDescription())
                 .quantity(quantity)
                 .quantityUnit(item.getUnit())
-                .notes(notes != null ? notes : (machine != null ? machine.getName() + " için kullanıldı." : "Fabrikada kullanıldı."))
+                .notes(notes != null ? notes : machine != null ? machine.getName() + " için kullanıldı." : "Fabrikada kullanıldı.")
                 .build();
         stockMovementRepository.save(movement);
 

@@ -1,9 +1,12 @@
 # Production stack for the server. The image is built by GitHub Actions
 # and pulled from Docker Hub. This file does not compile the application.
 #
-#   cp .env.example .env
 #   docker compose -f docker-compose.prod.yml pull
 #   docker compose -f docker-compose.prod.yml up -d
+#
+# No .env file is required. Defaults live in application-prod.yml and in the
+# environment entries below. Override a secret by exporting it before compose
+# (for example DB_PASSWORD) or by injecting a Docker secret into that variable.
 #
 # The live server already stores Postgres in the external volume
 # docker_postgres_data and RustFS files in /opt/rustfs/data.
@@ -128,7 +131,8 @@ services:
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:81}
       SESSION_STORE_TYPE: ${SESSION_STORE_TYPE:-jdbc}
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
-      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      # Session cookie Secure=true comes from application-prod.yml.
+      # Export SESSION_COOKIE_SECURE=false only for an HTTP exception.
       SESSION_CLEANUP_CRON: "${SESSION_CLEANUP_CRON:-0 * * * * *}"
       PG_DUMP_PATH: pg_dump
     ports:

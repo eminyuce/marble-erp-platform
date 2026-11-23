@@ -28,6 +28,17 @@ docker ps
 
 ## 2. Quick Start Options
 
+### Which profile to use
+
+| Profile | Config file | When |
+| :--- | :--- | :--- |
+| `dev` | `application-dev.yml` | Default for `./mvnw spring-boot:run` and `scripts/run_local.sh`. PostgreSQL on `localhost:5432`. Session cookie is not Secure. |
+| `local` | `application-local.yml` | No Docker. H2 file at `./data/marble_local_db`. Start with `SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run`. |
+| `prod` | `application-prod.yml` | Production HTTPS and the Compose stacks. Session cookie defaults to Secure. The local HTTP Compose file sets `SESSION_COOKIE_SECURE=false` so a browser on `http://localhost` still stores the cookie. |
+| `test` | `src/test/resources/application-test.yml` | JUnit only. In-memory H2. |
+
+Shared settings (session store, Flyway locations, cookie name) stay in `application.yml`. There is no `.env` file. Export a variable only when you need to override a default.
+
 ### Option A: Hybrid Run (Docker PostgreSQL + Spring Boot Local) *(Recommended)*
 
 This setup runs PostgreSQL and RustFS in Docker and executes the Spring Boot backend directly on your host machine, enabling hot reload and fast debugging.
@@ -320,7 +331,7 @@ $env:SERVER_PORT="8085"
 
 Tomcat no longer keeps the login in memory. Spring Session JDBC writes it to PostgreSQL (`SPRING_SESSION` / `SPRING_SESSION_ATTRIBUTES`). Flyway migration `V33` creates those tables. `spring.session.jdbc.initialize-schema` stays `never` so production does not create them beside Flyway.
 
-The browser cookie is `SESSION` (HttpOnly, SameSite=Lax). Leave `SESSION_COOKIE_SECURE=false` for HTTP on localhost. Set `SESSION_COOKIE_SECURE=true` only when the site is served over HTTPS. Idle timeout is `SESSION_TIMEOUT` (default `30m`). Expired rows are deleted every minute (`SESSION_CLEANUP_CRON`, default `0 * * * * *`).
+The browser cookie is `SESSION` (HttpOnly, SameSite=Lax). `dev` and `local` default `server.servlet.session.cookie.secure` to `false` so HTTP on localhost works. `application-prod.yml` defaults it to `true` because production is HTTPS; that does not require `SESSION_COOKIE_SECURE` in the environment. Set `SESSION_COOKIE_SECURE=false` only for an explicit HTTP exception. Idle timeout is `SESSION_TIMEOUT` (default `30m`). Expired rows are deleted every minute (`SESSION_CLEANUP_CRON`, default `0 * * * * *`).
 
 `SESSION_STORE_TYPE` is kept for operators. Spring Boot 4 no longer reads `spring.session.store-type`; the JDBC starter on the classpath is what selects the store.
 
@@ -336,7 +347,7 @@ export DB_USERNAME=marbleuser
 export DB_PASSWORD=marblepass
 export SESSION_STORE_TYPE=jdbc
 export SESSION_TIMEOUT=30m
-export SESSION_COOKIE_SECURE=false
+# dev profile already leaves the session cookie non-Secure. Do not export SESSION_COOKIE_SECURE.
 
 SERVER_PORT=8080 ./mvnw spring-boot:run
 # second terminal, same exports

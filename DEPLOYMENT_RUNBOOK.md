@@ -67,7 +67,9 @@ Executing [`scripts/deploy_production.sh`](file:///home/eyuce/marble-erp-platfor
 | `marble-erp-postgres` | Docker container | PostgreSQL 16 on port `5432` (`restart: always`) |
 | `marble-rustfs` | Docker container | RustFS S3 API `9000`, console `9001` |
 
-### Active Environment Variables (`/opt/marble-erp/marble-erp.env`)
+### Active environment variables
+
+Compose production (`docker-compose.prod.yml`) does not read a `.env` file. The prod profile supplies defaults, including a Secure session cookie. Override secrets by exporting them before `docker compose up` or by injecting Docker secrets into the same variable names. The native systemd unit may still load `/opt/marble-erp/marble-erp.env` via `EnvironmentFile` when `scripts/deploy_production.sh` created that file. That file is not a Compose `.env` and is not in git.
 
 ```ini
 SPRING_PROFILES_ACTIVE=prod

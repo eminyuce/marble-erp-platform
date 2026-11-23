@@ -83,7 +83,7 @@ Artifact: `target/marble-erp-platform-1.0.0.jar`.
 
 ## Environment / `prod` profile
 
-`application-prod.yml` is activated only when `SPRING_PROFILES_ACTIVE=prod`. Important bindings:
+`application-prod.yml` is activated only when `SPRING_PROFILES_ACTIVE=prod`. The session cookie is Secure by default (`server.servlet.session.cookie.secure: ${SESSION_COOKIE_SECURE:true}`). Compose does not need a `.env` file. Important bindings:
 
 | Variable | Purpose | Notes |
 | :--- | :--- | :--- |
@@ -92,11 +92,12 @@ Artifact: `target/marble-erp-platform-1.0.0.jar`.
 | `DB_URL` | JDBC URL | Preferred. Example: `jdbc:postgresql://127.0.0.1:5432/marble_erp` |
 | `DB_HOST` / `DB_PORT` / `DB_NAME` | Used if `DB_URL` is unset | Prod default host is **`postgres`** (Docker Compose DNS). Native installs **must** set `DB_HOST=127.0.0.1` or a full `DB_URL`. |
 | `DB_USERNAME` | DB user | Default in YAML: `marbleuser` |
-| `DB_PASSWORD` | DB password | Default in YAML is a local placeholder — set a real password in `marble-erp.env` |
+| `DB_PASSWORD` | DB password | YAML default is the local placeholder `marblepass`. Production must override it in the process environment. |
 | `APP_UPLOAD_DIR` | Legacy upload directory | `/opt/marble-erp/uploads` (migration only) |
 | `APP_MEDIA_DIR` | Legacy media directory | `/opt/marble-erp/media` (migration only) |
 | `RUSTFS_ENDPOINT` | RustFS S3 API | `http://127.0.0.1:9000` for the native JAR |
-| `RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY` | RustFS credentials | Set in `marble-erp.env`; never commit |
+| `RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY` | RustFS credentials | Override in the process environment; never commit |
+| `SESSION_COOKIE_SECURE` | Optional | Prod profile defaults the session cookie to Secure. Do not set this for HTTPS. |
 | `RUSTFS_BUCKET` | Private bucket | `erp-files` |
 | `RUSTFS_DATA_DIR` | Persistent RustFS data | `/opt/rustfs/data` |
 | `CORS_ALLOWED_ORIGIN` | Allowed browser origin | e.g. `https://erp.example.com` |
@@ -255,7 +256,7 @@ GitHub Actions (`.github/workflows/docker-publish.yml`) and GitLab CI (`.gitlab-
 
 - Every push to `main` publishes both an immutable Git commit SHA tag (e.g., `guvenulu/marble-erp-platform:<short-sha>`) and `latest`.
 - Git tags matching `v*` publish immutable semantic version tags (e.g., `1.0.0`, `1.0`).
-- Every built image embeds `APP_GIT_SHA`, `APP_VERSION`, and OCI image labels (`org.opencontainers.image.revision`), plus bundled stack templates under `/stack/docker-compose.prod.yml`, `/stack/docker-compose.yml`, `/stack/.env.example`, and `/stack/scripts/*`.
+- Every built image embeds `APP_GIT_SHA`, `APP_VERSION`, and OCI image labels (`org.opencontainers.image.revision`), plus bundled stack templates under `/stack/docker-compose.prod.yml`, `/stack/docker-compose.yml`, and `/stack/scripts/*`. Compose does not need a `.env` file.
 - Repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` are the Docker Hub account and an access token. The token is not the Docker Hub password.
 
 ### Production Data Preservation Rules

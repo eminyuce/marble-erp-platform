@@ -49,7 +49,7 @@ public class ProductionController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public String productionIndex(org.springframework.ui.Model model) {
+    public String productionIndex(Model model) {
         model.addAttribute("summary", productionService.getProductionSummary());
         return "erp/production/index";
     }
@@ -216,7 +216,7 @@ public class ProductionController {
             map.put("processTypeLabel", op.getProcessType() != null ? op.getProcessType().getLabel() : "-");
             map.put("machineName", op.getMachine() != null ? op.getMachine().getName() : "-");
             map.put("operatorName", op.getOperatorName() != null ? op.getOperatorName() : "-");
-            map.put("finishedAt", op.getFinishedAt() != null ? op.getFinishedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) : "-");
+            map.put("finishedAt", op.getFinishedAt() != null ? op.getFinishedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) : "-");
             map.put("inputQuantity", op.getInputQuantity());
             map.put("outputQuantity", op.getOutputQuantity());
             map.put("wasteQuantity", op.getWasteQuantity());
@@ -325,7 +325,7 @@ public class ProductionController {
             map.put("customerName", s.getCustomer() != null ? s.getCustomer().getCompanyName() : "-");
             map.put("projectName", s.getProject() != null ? s.getProject().getName() : "-");
             map.put("target", s.getCustomer() != null ? s.getCustomer().getCompanyName()
-                    : (s.getProject() != null ? s.getProject().getName() : "-"));
+                    : s.getProject() != null ? s.getProject().getName() : "-");
             map.put("vehiclePlate", s.getVehiclePlate());
             map.put("driverName", s.getDriverName());
             map.put("freightCost", s.getFreightCost());
@@ -516,7 +516,7 @@ public class ProductionController {
     }
 
     @GetMapping("/slabs")
-    public String slabsView(org.springframework.ui.Model model) {
+    public String slabsView(Model model) {
         model.addAttribute("summary", productionService.getSlabSummary());
         return "erp/production/slabs";
     }

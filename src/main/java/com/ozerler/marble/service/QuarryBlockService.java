@@ -123,7 +123,7 @@ public class QuarryBlockService {
         if (section == null || section.isBlank()) {
             return DEFAULT_QUARRY_SECTION;
         }
-        return section.trim().toUpperCase(java.util.Locale.ROOT).replace(' ', '-');
+        return section.trim().toUpperCase(Locale.ROOT).replace(' ', '-');
     }
 
     private static String optionalQuarrySection(String quarrySection) {
@@ -141,12 +141,6 @@ public class QuarryBlockService {
         BigDecimal m2 = blockCostCalculationService.blockFootprintM2(block);
         BigDecimal market = blockCostCalculationService.blockMarketValue(block);
         return BlockDto.fromEntity(block, canDeleteBlock(block), extraction, total, m2, market);
-    }
-
-    private Map<String, Object> gridMetricsMeta(String search, StockLocationType locationType,
-                                                BlockStatus status, boolean unsoldOnly,
-                                                Map<Long, BigDecimal> expensePerTonByQuarry) {
-        return gridMetricsMetaWithStockFilter(search, locationType, status, unsoldOnly ? "IN_STOCK" : "ALL", expensePerTonByQuarry);
     }
 
     private Map<String, Object> gridMetricsMetaWithStockFilter(String search, StockLocationType locationType,

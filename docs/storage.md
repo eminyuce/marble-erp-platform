@@ -12,7 +12,7 @@ RustFS runs as a Docker container. The Spring Boot process talks to it with the 
 docker compose -f docker/docker-compose.yml up -d rustfs postgres
 ```
 
-2. Configure environment variables (see [`.env.example`](../.env.example)):
+2. Defaults live in `application-dev.yml` (host) and in the Compose `environment:` block (container). Override by exporting the variable. There is no `.env` file:
 
 | Variable | Purpose | Local default |
 | :--- | :--- | :--- |
@@ -40,7 +40,7 @@ The application creates the configured bucket on startup if it is missing. The b
 
 Do not hardcode either value in Java. Use environment variables.
 
-The `dev` profile defaults to the local Docker RustFS placeholders (`marblerustfs` / `marblerustfs_change_me`) so developers can start quickly. Production must set real keys in the host environment file. Do not use the well-known `rustfsadmin` credential.
+The `dev` profile defaults to the local Docker RustFS placeholders (`marblerustfs` / `marblerustfs_change_me`) so developers can start quickly. Production must set real keys in the process environment (Compose `environment:`, a Docker secret, or the systemd environment). Do not use the well-known `rustfsadmin` credential.
 
 ## Production (Ubuntu)
 

@@ -3,7 +3,6 @@ package com.ozerler.marble.service;
 import com.ozerler.marble.model.*;
 import com.ozerler.marble.model.enums.*;
 import com.ozerler.marble.repository.*;
-import com.ozerler.marble.util.MessageUtils;
 import com.ozerler.marble.util.UniqueCodes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,6 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -93,7 +91,7 @@ public class QuarryInventoryService {
             // Ağırlıklı ortalama birim fiyat (KDV HARİÇ)
             BigDecimal oldCost = oldQty.multiply(tank.getUnitPrice() != null ? tank.getUnitPrice() : BigDecimal.ZERO);
             BigDecimal newCost = litres.multiply(netUnitPrice);
-            BigDecimal avgPrice = (newCost.add(oldCost)).divide(newQty, 2, RoundingMode.HALF_UP);
+            BigDecimal avgPrice = newCost.add(oldCost).divide(newQty, 2, RoundingMode.HALF_UP);
             tank.setUnitPrice(avgPrice);
         }
 
@@ -113,7 +111,7 @@ public class QuarryInventoryService {
                 .quantity(litres)
                 .quantityUnit("litre")
                 .invoice(invoice)
-                .notes(notes != null ? notes : (invoice != null ? "Fatura: " + invoice.getInvoiceNo() : "Mazot alımı"))
+                .notes(notes != null ? notes : invoice != null ? "Fatura: " + invoice.getInvoiceNo() : "Mazot alımı")
                 .build();
         stockMovementRepository.save(movement);
 
@@ -464,9 +462,7 @@ public class QuarryInventoryService {
 
         BigDecimal newStock = currentStock.subtract(quantity);
         item.setQuantity(newStock);
-        if (newStock.compareTo(BigDecimal.ZERO) == 0) {
-            // Tamamen bittiğinde de listede görünsün ama sıfır adet olarak kalsın
-        }
+        // Sıfır adet kart listede kalır; kayıt silinmez.
         StockItem saved = stockItemRepository.save(item);
 
         // Kullanım Maliyeti (KDV HARİÇ)
@@ -514,7 +510,7 @@ public class QuarryInventoryService {
                 .itemDescription("Sarf Malzeme Tüketimi: " + item.getDescription())
                 .quantity(quantity)
                 .quantityUnit(item.getUnit())
-                .notes(notes != null ? notes : (machine != null ? machine.getName() + " için kullanıldı." : "Ocak sahasında kullanıldı."))
+                .notes(notes != null ? notes : machine != null ? machine.getName() + " için kullanıldı." : "Ocak sahasında kullanıldı.")
                 .build();
         stockMovementRepository.save(movement);
 

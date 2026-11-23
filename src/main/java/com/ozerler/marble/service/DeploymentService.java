@@ -6,6 +6,7 @@ import com.ozerler.marble.dto.DeploymentStartResult;
 import com.ozerler.marble.dto.DeploymentState;
 import com.ozerler.marble.dto.DeploymentStatusDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DeploymentService {
 
     static final String PING_TOKEN = "READY";
@@ -293,7 +295,7 @@ public class DeploymentService {
                 values.put(line.substring(0, separator).trim(), line.substring(separator + 1).trim());
             }
         } catch (IOException ex) {
-            // Deploy status file read ignored
+            log.debug("Deploy status file could not be read: {}", path, ex);
         }
         return values;
     }

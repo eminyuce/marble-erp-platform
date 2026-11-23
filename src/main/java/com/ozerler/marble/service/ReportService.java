@@ -178,7 +178,7 @@ public class ReportService {
                     if (b.getStatus() == com.ozerler.marble.model.enums.BlockStatus.AT_FACTORY || b.getStatus() == com.ozerler.marble.model.enums.BlockStatus.FACTORY_STOCK) {
                         String ton = b.getActualWeightKg() != null
                                 ? b.getActualWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString()
-                                : (b.getTheoreticalWeightKg() != null ? b.getTheoreticalWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString() : "0.00");
+                                : b.getTheoreticalWeightKg() != null ? b.getTheoreticalWeightKg().divide(new BigDecimal("1000"), 2, RoundingMode.HALF_UP).toString() : "0.00";
                         String cust = b.getCustomer() != null ? b.getCustomer().getCompanyName() : "Genel Stok";
                         data.rows.add(new String[]{
                                 "Blok Stok",
@@ -273,9 +273,9 @@ public class ReportService {
                 for (CollectionRecord col : collections) {
                     String cust = col.getCustomer() != null ? col.getCustomer().getCompanyName() : "-";
                     String amt = col.getAmount() != null ? String.format("%,.2f TL", col.getAmount().doubleValue()) : "0,00 TL";
-                    String checkNo = col.getCheckRecord() != null && col.getCheckRecord().getCheckNumber() != null ? col.getCheckRecord().getCheckNumber() : (col.getCollectionNo() != null ? col.getCollectionNo() : ("COL-" + col.getId()));
+                    String checkNo = col.getCheckRecord() != null && col.getCheckRecord().getCheckNumber() != null ? col.getCheckRecord().getCheckNumber() : col.getCollectionNo() != null ? col.getCollectionNo() : ("COL-" + col.getId());
                     String dueDate = col.getCheckRecord() != null && col.getCheckRecord().getDueDate() != null ? col.getCheckRecord().getDueDate().toString() : "-";
-                    String statDesc = col.getCheckRecord() != null && col.getCheckRecord().getStatus() != null ? col.getCheckRecord().getStatus().getDisplayName() : (col.getNotes() != null ? col.getNotes() : "-");
+                    String statDesc = col.getCheckRecord() != null && col.getCheckRecord().getStatus() != null ? col.getCheckRecord().getStatus().getDisplayName() : col.getNotes() != null ? col.getNotes() : "-";
                     data.rows.add(new String[]{
                             checkNo,
                             col.getCollectionDate() != null ? col.getCollectionDate().toString() : "-",

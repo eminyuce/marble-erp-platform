@@ -20,7 +20,6 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         default_batch_fetch_size: 50
         jdbc:
           batch_size: 50
@@ -28,7 +27,15 @@ spring:
         order_updates: true
 
 server:
-  forward-headers-strategy: framework
+  request:
+    header:
+      forwarded:
+        strategy: framework
+  servlet:
+    session:
+      cookie:
+        # Dev is plain HTTP on localhost. Prod defaults the same flag to true.
+        secure: ${SESSION_COOKIE_SECURE:false}
 
 app:
   cors:

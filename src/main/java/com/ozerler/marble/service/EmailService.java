@@ -217,7 +217,7 @@ public class EmailService {
 
         while (matcher.find()) {
             boolean isRaw = matcher.group(1) != null;
-            String key = isRaw ? matcher.group(2) : (matcher.group(4) != null ? matcher.group(4) : matcher.group(6));
+            String key = isRaw ? matcher.group(2) : matcher.group(4) != null ? matcher.group(4) : matcher.group(6);
             String value = Strings.resolveVariable(key, variables);
 
             if (value != null) {
@@ -429,7 +429,7 @@ public class EmailService {
         sampleVars.put("companyName", getMessage("common.company_name"));
         sampleVars.put("loginUrl", "http://localhost:81/account/adminlogin/");
         sampleVars.put("loginTime", "2026-09-12 10:15");
-        sampleVars.put("ipAddress", "192.168.1.105");
+        sampleVars.put("ipAddress", "192.168.1.105"); // NOPMD AvoidUsingHardCodedIP sample preview only
         sampleVars.put("otpCode", "694125");
 
         // Factory, Quarry & Blocks

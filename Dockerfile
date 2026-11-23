@@ -68,7 +68,6 @@ COPY --chmod=755 scripts/deploy_from_app.sh /usr/local/sbin/marble-erp-inapp-dep
 COPY --chmod=755 scripts/deploy_from_app.sh scripts/backup_production.sh scripts/restore_production.sh scripts/rollback_production.sh scripts/init_fresh_install.sh /stack/scripts/
 COPY docker-compose.prod.yml /stack/docker-compose.prod.yml
 COPY docker/docker-compose.yml /stack/docker-compose.yml
-COPY .env.example /stack/.env.example
 COPY --from=build --chown=1001:1001 --link /build/target/marble-erp-platform-*.jar /app/app.jar
 
 ARG APP_VERSION=1.0.0

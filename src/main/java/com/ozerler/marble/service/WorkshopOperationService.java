@@ -80,8 +80,8 @@ public class WorkshopOperationService {
                 .stockLocation(stockLocationRepository.findByLocationTypeAndActiveTrue(StockLocationType.WORKSHOP_STOCK).orElse(null))
                 .status(MaterialLotStatus.AVAILABLE)
                 .unitCost(areaM2 != null && areaM2.compareTo(BigDecimal.ZERO) > 0 && purchaseCost != null
-                        ? purchaseCost.divide(areaM2, 2, java.math.RoundingMode.HALF_UP)
-                        : (purchaseCost != null ? purchaseCost : BigDecimal.ZERO))
+                        ? purchaseCost.divide(areaM2, 2, RoundingMode.HALF_UP)
+                        : purchaseCost != null ? purchaseCost : BigDecimal.ZERO)
                 .totalCost(purchaseCost != null ? purchaseCost : BigDecimal.ZERO)
                 .build());
         WorkshopMaterialReceipt receipt = receiptRepository.save(WorkshopMaterialReceipt.builder()
@@ -297,7 +297,7 @@ public class WorkshopOperationService {
 
             String desc = (descriptions != null && i < descriptions.size() && descriptions.get(i) != null && !descriptions.get(i).isBlank())
                     ? descriptions.get(i).trim()
-                    : (defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Atölye Ebatlı " + t + "x" + w + "x" + l));
+                    : defaultDescription != null && !defaultDescription.isBlank() ? defaultDescription : ("Atölye Ebatlı " + t + "x" + w + "x" + l);
 
             String rowSurfaceStr = (rowSurfaceFinishes != null && i < rowSurfaceFinishes.size() && rowSurfaceFinishes.get(i) != null && !rowSurfaceFinishes.get(i).isBlank())
                     ? rowSurfaceFinishes.get(i).trim() : surfaceFinishStr;
@@ -307,7 +307,7 @@ public class WorkshopOperationService {
             }
 
             String rowEdge = (rowEdgeFinishes != null && i < rowEdgeFinishes.size() && rowEdgeFinishes.get(i) != null && !rowEdgeFinishes.get(i).isBlank())
-                    ? rowEdgeFinishes.get(i).trim() : (edgeFinish != null ? edgeFinish : "DUZ");
+                    ? rowEdgeFinishes.get(i).trim() : edgeFinish != null ? edgeFinish : "DUZ";
 
             String itemCode = UniqueCodes.yearly("ATL-EBT", stockItemRepository::existsByItemCode);
 

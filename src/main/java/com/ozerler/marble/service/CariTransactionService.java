@@ -118,7 +118,7 @@ public class CariTransactionService {
                 .transactionDate(date != null ? date : LocalDate.now())
                 .transactionType(type != null ? type : CariTransactionType.BORC_DEKONTU)
                 .documentNo(documentNo != null ? documentNo.trim() : null)
-                .description(description != null ? description.trim() : (type != null ? type.getLabel() : "Cari Hareket"))
+                .description(description != null ? description.trim() : type != null ? type.getLabel() : "Cari Hareket")
                 .debitAmount(finalDebit)
                 .creditAmount(finalCredit)
                 .notes(notes != null ? notes.trim() : null)

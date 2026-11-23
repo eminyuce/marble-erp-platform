@@ -3,7 +3,7 @@
 > **Enterprise-grade, end-to-end physical traceability, 10-code scrap management, and dynamic Activity-Based Costing (ABC) platform for the natural stone industry.**
 
 [![Java](https://img.shields.io/badge/Java-24-orange.svg)](https://openjdk.org/projects/jdk/24/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.7-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Port](https://img.shields.io/badge/Port-81-blue.svg)](http://localhost:81)
 [![PMD](https://img.shields.io/badge/PMD-7.17.0%20(0%20Violations)-blueviolet.svg)](https://pmd.github.io/)
 [![JaCoCo](https://img.shields.io/badge/Coverage-JaCoCo%200.8.13-success.svg)](https://www.jacoco.org/)
@@ -69,27 +69,37 @@ The platform adheres to **Layered Clean Architecture** and **Domain-Driven Desig
 - **Docker & Docker Compose** (for containerized setup)
 - **Node.js 22+ & npm** (only if rebuilding frontend assets)
 
-### Environment Variables
+### Profiles and environment variables
 
-Copy [`.env.example`](.env.example) for a full local template. Do not commit production secrets.
+There is no `.env` file. Shared defaults are in `application.yml`. Profile files override them:
 
-| Variable | Description | Default (Local) |
+| Profile | File | Use |
 | :--- | :--- | :--- |
-| `SERVER_PORT` | Application HTTP port | `81` |
+| `dev` (default) | `application-dev.yml` | `./mvnw spring-boot:run` against PostgreSQL on localhost. Session cookie is not Secure. |
+| `local` | `application-local.yml` | H2 file database, no Docker. `SPRING_PROFILES_ACTIVE=local`. |
+| `prod` | `application-prod.yml` | HTTPS. Session cookie defaults to Secure. |
+| `test` | `application-test.yml` | JUnit. In-memory H2. |
+
+Override a placeholder by exporting the variable before startup. Do not commit production secrets.
+
+| Variable | Description | Default (dev / local HTTP) |
+| :--- | :--- | :--- |
+| `SERVER_PORT` | Application HTTP port | `8080` (`10000` only if prod has neither `PORT` nor `SERVER_PORT`) |
 | `SPRING_PROFILES_ACTIVE` | Active Spring profile | `dev` |
-| `DB_HOST` | PostgreSQL hostname | `localhost` |
+| `DB_HOST` | PostgreSQL hostname | `localhost` in dev; `postgres` in the prod profile |
 | `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_NAME` | Database schema name | `marble_erp` |
+| `DB_NAME` | Database name | `marble_erp` |
 | `DB_USERNAME` | Database username | `marbleuser` |
-| `DB_PASSWORD` | Database password | `marblepass` |
+| `DB_PASSWORD` | Database password | `marblepass` (change this in production) |
 | `RUSTFS_ENDPOINT` | RustFS S3 API used by Spring Boot | `http://localhost:9000` (IDE) / `http://rustfs:9000` (Compose app) |
 | `RUSTFS_PUBLIC_ENDPOINT` | Browser-facing endpoint for presigned URLs | `http://localhost:9000` |
-| `RUSTFS_ACCESS_KEY` | RustFS access key | set locally (see `.env.example`) |
-| `RUSTFS_SECRET_KEY` | RustFS secret key | set locally (see `.env.example`) |
+| `RUSTFS_ACCESS_KEY` | RustFS access key | `marblerustfs` in dev; empty in the shared file |
+| `RUSTFS_SECRET_KEY` | RustFS secret key | `marblerustfs_change_me` in dev; empty in the shared file |
 | `RUSTFS_BUCKET` | Private bucket name | `erp-files` |
 | `RUSTFS_REGION` | S3 region string | `us-east-1` |
 | `APP_MEDIA_DIR` | Legacy local media dir (migration only) | `media` |
 | `APP_UPLOAD_DIR` | Legacy local upload dir (migration only) | `media` |
+| `SESSION_COOKIE_SECURE` | Optional cookie override | `false` in dev/local, `true` in prod |
 
 ### Step-by-Step Local Setup
 
@@ -130,7 +140,7 @@ Full object-storage, backup, and filesystem-migration notes: [docs/storage.md](d
 
 ## 🐳 Docker Hub Deployment & Zero-Data-Loss Production Operations
 
-The application image (`guvenulu/marble-erp-platform`) follows a single-responsibility container architecture (PostgreSQL and RustFS run in their own dedicated containers), while bundling all required Compose definitions (`/stack/docker-compose.yml`, `/stack/docker-compose.prod.yml`, `/stack/.env.example`), operational scripts (`/stack/scripts/*`), and the `docker compose` v2 CLI plugin inside the image.
+The application image (`guvenulu/marble-erp-platform`) follows a single-responsibility container architecture (PostgreSQL and RustFS run in their own dedicated containers), while bundling all required Compose definitions (`/stack/docker-compose.yml`, `/stack/docker-compose.prod.yml`), operational scripts (`/stack/scripts/*`), and the `docker compose` v2 CLI plugin inside the image. No `.env` file is bundled or required.
 
 ### 1. Run Full Stack from Docker Hub on Any Machine (PostgreSQL + RustFS + App)
 
@@ -143,7 +153,6 @@ docker compose up -d
 
 **Option B — From a cloned Git repository:**
 ```bash
-cp .env.example .env
 docker compose -f docker/docker-compose.yml up -d
 ```
 
