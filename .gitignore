@@ -42,8 +42,14 @@ frontend/.npm
 .pnp.js
 
 ### Secrets & Backups ###
+/secrets/
+*.secret
+*.secrets
 .env
 .env.*
+!.env.example
+secret-backups/
+*.tar.gz.enc
 backups/
 *.dump
 *.sql.gz

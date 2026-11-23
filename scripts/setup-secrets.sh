@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Create file-backed secrets outside the git checkout.
+# Never prints secret values. Does not overwrite existing files unless --regenerate.
+set -euo pipefail
+
+DEPLOY_DIR="${DEPLOY_DIR:-/opt/marble-erp}"
+SECRETS_DIR="${SECRETS_DIR:-$DEPLOY_DIR/secrets}"
+REGENERATE=0
+NONINTERACTIVE=0
+
+usage() {
+    echo "Usage: DEPLOY_DIR=/opt/marble-erp $0 [--non-interactive] [--regenerate]" >&2
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --regenerate) REGENERATE=1 ;;
+        --non-interactive) NONINTERACTIVE=1 ;;
+        -h|--help) usage; exit 0 ;;
+        *) echo "Unknown argument." >&2; usage; exit 1 ;;
+    esac
+    shift
+done
+
+if [ "$REGENERATE" -eq 1 ] && [ "$NONINTERACTIVE" -eq 0 ]; then
+    echo "Regenerate replaces existing secret files. Database password must still match the live Postgres role." >&2
+    printf "Type REGENERATE to continue: " >&2
+    read -r confirm
+    if [ "$confirm" != "REGENERATE" ]; then
+        echo "Aborted." >&2
+        exit 1
+    fi
+fi
+
+mkdir -p "$SECRETS_DIR"
+chmod 700 "$SECRETS_DIR"
+
+write_secret() {
+    name="$1"
+    min_length="$2"
+    target="$SECRETS_DIR/$name.txt"
+    if [ -f "$target" ] && [ "$REGENERATE" -eq 0 ]; then
+        return 0
+    fi
+    value="$(openssl rand -base64 48 | tr -d '\n' | cut -c1-48)"
+    if [ "${#value}" -lt "$min_length" ]; then
+        echo "Generated value for $name is too short." >&2
+        exit 1
+    fi
+    umask 077
+    printf '%s\n' "$value" > "$target"
+    chmod 600 "$target"
+}
+
+write_secret db_password 24
+write_secret remember_me_key 32
+write_secret rustfs_access_key 16
+write_secret rustfs_secret_key 24
+
+echo "Secret files are in $SECRETS_DIR (mode 600). Values were not printed." >&2
+if [ "$REGENERATE" -eq 1 ]; then
+    echo "Regenerated files do not change an existing Postgres password until you ALTER ROLE with the same value." >&2
+fi
