@@ -39,4 +39,40 @@ public class StockItemView {
     private Integer pieceCount;
     private SurfaceFinish surfaceFinish;
     private PartyView customer;
+
+    public String getCustomerName() {
+        return ViewLabels.customerName(customer);
+    }
+
+    public String getWorkshopSizedOptionLabel() {
+        String pieces = "1";
+        if (pieceCount != null) {
+            pieces = String.valueOf(pieceCount);
+        }
+        return nullSafe(itemCode)
+                + " | "
+                + nullSafe(description)
+                + " | "
+                + nullSafe(thicknessCm)
+                + "x"
+                + nullSafe(widthCm)
+                + "x"
+                + nullSafe(lengthCm)
+                + " cm | Stok: "
+                + nullSafe(quantity)
+                + " "
+                + nullSafe(unit)
+                + " ("
+                + pieces
+                + " adet) | "
+                + getCustomerName();
+    }
+
+    private static String nullSafe(Object value) {
+        if (value == null) {
+            return "";
+        }
+        return String.valueOf(value);
+    }
 }
+

@@ -1,11 +1,15 @@
 package com.ozerler.marble.storage;
 
 import java.io.InputStream;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 import jakarta.annotation.PostConstruct;
 
@@ -46,11 +50,20 @@ public class S3ObjectStorageService implements ObjectStorageService {
 
     private static final String HEALTH_PROBE_PREFIX = ".health-probe/";
     private static final int HTTP_NOT_FOUND = 404;
+    private static final Duration DEFAULT_HEALTH_FAILURE_LOG_INTERVAL = Duration.ofMinutes(5);
+    private static final Pattern SENSITIVE_VALUE = Pattern.compile(
+            "(?i)(secret|password|passwd|pwd|token|credential|signature|awsaccesskeyid|"
+                    + "access[_-]?key|x-amz-credential|x-amz-signature)\s*([=:]\s*)([^\s&;]+)");
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final ObjectStorageProperties storageProperties;
     private final PresignedUrlProperties presignedUrlProperties;
+
+    private Clock clock = Clock.systemUTC();
+    private Duration healthFailureLogInterval = DEFAULT_HEALTH_FAILURE_LOG_INTERVAL;
+    private final AtomicBoolean lastHealthOk = new AtomicBoolean(true);
+    private final AtomicLong lastFailureLogMillis = new AtomicLong(0);
 
     @PostConstruct
     public void initialize() {
@@ -234,11 +247,62 @@ public class S3ObjectStorageService implements ObjectStorageService {
                     PutObjectRequest.builder().bucket(bucket).key(probeKey).contentLength((long) probe.length).build(),
                     RequestBody.fromBytes(probe));
             s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(probeKey).build());
+            markHealthRecovered(bucket);
             return DependencyHealth.up();
         } catch (Exception e) {
-            log.error("Object storage health check failed bucket={}", bucket, e);
+            logHealthFailure(bucket, e);
             return DependencyHealth.down("RustFS erişilemiyor");
         }
+    }
+
+    void setClock(Clock healthClock) {
+        this.clock = healthClock;
+    }
+
+    void setHealthFailureLogInterval(Duration interval) {
+        this.healthFailureLogInterval = interval;
+    }
+
+    private void markHealthRecovered(String bucket) {
+        if (lastHealthOk.compareAndSet(false, true)) {
+            log.info("Object storage health check recovered bucket={}", bucket);
+        }
+    }
+
+    private void logHealthFailure(String bucket, Exception exception) {
+        String exceptionType = exception.getClass().getName();
+        String safeMessage = sanitizeHealthMessage(exception.getMessage());
+        boolean firstFailure = lastHealthOk.compareAndSet(true, false);
+        long now = clock.millis();
+        if (shouldLogFailure(firstFailure, now)) {
+            lastFailureLogMillis.set(now);
+            log.error(
+                    "Object storage health check failed bucket={} cause={}: {}",
+                    bucket,
+                    exceptionType,
+                    safeMessage,
+                    exception);
+            return;
+        }
+        log.debug(
+                "Object storage health check still failing bucket={} cause={}: {}",
+                bucket,
+                exceptionType,
+                safeMessage);
+    }
+
+    private boolean shouldLogFailure(boolean firstFailure, long now) {
+        if (firstFailure) {
+            return true;
+        }
+        return now - lastFailureLogMillis.get() >= healthFailureLogInterval.toMillis();
+    }
+
+    static String sanitizeHealthMessage(String message) {
+        if (message == null || message.isBlank()) {
+            return "";
+        }
+        return SENSITIVE_VALUE.matcher(message).replaceAll("$1$2***");
     }
 
     @Override

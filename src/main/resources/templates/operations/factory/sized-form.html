@@ -107,7 +107,7 @@
                     <select name="blockId" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                         <option value="">-- Blok Seçiniz --</option>
                         <option th:each="b : ${blocks}" th:value="${b.id}"
-                                th:text="${b.blockCode} + ' | ' + ${b.stoneType != null ? b.stoneType : 'Taş'} + ' | ' + ${b.quarry != null ? b.quarry.name : ''}"></option>
+                                th:text="${b.factorySizedOptionLabel}"></option>
                     </select>
                 </div>
 
@@ -117,7 +117,7 @@
                     <select name="slabId" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                         <option value="">-- Plaka Seçiniz --</option>
                         <option th:each="s : ${slabs}" th:value="${s.id}"
-                                th:text="${s.slabCode} + ' | ' + (${s.stoneType != null ? s.stoneType : (s.block != null ? s.block.stoneType : 'Mermer')}) + ' | ' + ${s.thicknessCm} + ' cm (' + ${s.widthCm} + 'x' + ${s.lengthCm} + ' cm) | ' + (${s.customer != null ? s.customer.companyName : 'Genel Stok'})"></option>
+                                th:text="${s.factorySizedOptionLabel}"></option>
                     </select>
                 </div>
             </div>

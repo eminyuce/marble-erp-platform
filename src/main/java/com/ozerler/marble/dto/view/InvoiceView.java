@@ -64,4 +64,8 @@ public class InvoiceView {
         private BigDecimal amount;
         private LocalDate collectionDate;
     }
+
+    public String getCustomerName() {
+        return ViewLabels.companyName(customer, "");
+    }
 }

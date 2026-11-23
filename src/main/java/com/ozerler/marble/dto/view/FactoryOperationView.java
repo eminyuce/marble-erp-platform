@@ -43,5 +43,13 @@ public class FactoryOperationView {
         private Long id;
         private String orderNo;
         private BlockView block;
+
+        public String getBlockStoneType() {
+            if (block != null && ViewLabels.hasText(block.getStoneType())) {
+                return block.getStoneType();
+            }
+            return "Taş cinsi belirtilmedi";
+        }
     }
 }
+

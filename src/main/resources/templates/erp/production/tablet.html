@@ -240,7 +240,7 @@
                         <div class="text-lg font-black text-indigo-900 font-mono"
                              th:text="${op.workOrder != null && op.workOrder.block != null ? op.workOrder.block.blockCode : 'Blok Belirtilmedi'}">BLK-2026-001</div>
                         <p class="text-xs text-indigo-700 font-semibold"
-                           th:text="${op.workOrder != null && op.workOrder.block != null && op.workOrder.block.stoneType != null ? op.workOrder.block.stoneType : 'Taş cinsi belirtilmedi'}">Afyon Beyaz</p>
+                           th:text="${op.workOrder != null ? op.workOrder.blockStoneType : 'Taş cinsi belirtilmedi'}">Afyon Beyaz</p>
                     </div>
 
                     <!-- 3. Kantar Tonajı / Giriş Kütlesi -->

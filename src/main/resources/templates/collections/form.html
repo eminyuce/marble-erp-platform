@@ -95,7 +95,7 @@
                 <select name="invoiceId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:outline-none">
                     <option value="">-- Faturasız / Cari Hesaba --</option>
                     <option th:each="inv : ${invoices}" th:value="${inv.id}"
-                            th:text="${inv.invoiceNumber} + ' | ' + ${inv.customer != null ? inv.customer.companyName : ''} + ' | ' + ${#numbers.formatDecimal(inv.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' TL'"
+                            th:text="${inv.invoiceNumber} + ' | ' + ${inv.customerName} + ' | ' + ${#numbers.formatDecimal(inv.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' TL'"
                             th:selected="${selectedInvoice != null and selectedInvoice.id == inv.id}"></option>
                 </select>
             </div>

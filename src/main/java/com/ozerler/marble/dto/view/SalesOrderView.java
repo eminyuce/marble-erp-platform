@@ -37,4 +37,8 @@ public class SalesOrderView extends AuditView {
         private String orderNo;
         private Long customerId;
     }
+
+    public String getCustomerName() {
+        return ViewLabels.companyName(customer, "");
+    }
 }
