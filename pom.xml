@@ -389,24 +389,27 @@
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>10.21.4</version>
+                        <version>10.26.0</version>
                     </dependency>
                 </dependencies>
-                <configuration>
-                    <configLocation>config/checkstyle/checkstyle.xml</configLocation>
-                    <consoleOutput>true</consoleOutput>
-                    <failOnViolation>true</failOnViolation>
-                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                </configuration>
                 <executions>
                     <execution>
-                        <id>checkstyle</id>
-                        <phase>verify</phase>
+                        <id>validate</id>
+                        <phase>validate</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <configLocation>config/checkstyle/checkstyle.xml</configLocation>
+                    <suppressionsLocation>config/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
+                    <propertyExpansion>config_loc=${project.basedir}/config/checkstyle</propertyExpansion>
+                    <inputEncoding>UTF-8</inputEncoding>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

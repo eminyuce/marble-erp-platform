@@ -4,7 +4,158 @@
         "https://checkstyle.org/dtds/configuration_1_3.dtd">
 <module name="Checker">
     <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java, properties, xml"/>
+    <property name="haltOnException" value="false"/>
+
+    <!-- target/ ve generated-sources/ kontrol edilmesin -->
+    <module name="BeforeExecutionExclusionFileFilter">
+        <property name="fileNamePattern" value="[/\\]target[/\\].*$"/>
+    </module>
+
+    <!-- Dosya seviyesi -->
     <module name="FileTabCharacter">
         <property name="eachLine" value="true"/>
+    </module>
+    <module name="NewlineAtEndOfFile"/>
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^(package|import|.*https?://.*|.*@JsonProperty.*|.*@Mapping.*)$"/>
+    </module>
+    <module name="UniqueProperties"/>
+
+    <module name="TreeWalker">
+        <!-- Javadoc: başta warning, takım alışınca error yap -->
+        <module name="JavadocMethod">
+            <property name="severity" value="warning"/>
+            <property name="accessModifiers" value="public"/>
+        </module>
+        <module name="JavadocType">
+            <property name="severity" value="warning"/>
+            <property name="scope" value="public"/>
+        </module>
+        <module name="MissingJavadocMethod">
+            <property name="severity" value="warning"/>
+            <property name="scope" value="public"/>
+            <property name="allowMissingPropertyJavadoc" value="true"/>
+        </module>
+
+        <!-- İsimlendirme -->
+        <module name="TypeName"/>
+        <module name="MethodName"/>
+        <module name="ParameterName"/>
+        <module name="MemberName"/>
+        <module name="ConstantName"/>
+        <module name="PackageName"/>
+        <module name="LocalVariableName"/>
+        <module name="LocalFinalVariableName"/>
+        <module name="AbbreviationAsWordInName">
+            <property name="allowedAbbreviationLength" value="3"/>
+            <property name="ignoreFinal" value="false"/>
+        </module>
+        <module name="RecordComponentName"/>
+        <module name="MethodTypeParameterName"/>
+
+        <!-- Importlar: Spring Boot için en kritik kısım -->
+        <module name="AvoidStarImport"/>
+        <module name="UnusedImports"/>
+        <module name="RedundantImport"/>
+        <module name="AvoidStaticImport"/>
+        <!-- Sıra: STATIC, java, jakarta, org, com; gruplar arasında boş satır -->
+        <module name="ImportOrder">
+            <property name="option" value="top"/>
+            <property name="groups" value="java,jakarta,org,com"/>
+            <property name="ordered" value="true"/>
+            <property name="separated" value="true"/>
+            <property name="sortStaticImportsAlphabetically" value="true"/>
+        </module>
+
+        <!-- Yapı -->
+        <module name="OneTopLevelClass"/>
+        <module name="NeedBraces"/>
+        <module name="LeftCurly"/>
+        <module name="RightCurly"/>
+        <module name="EmptyBlock">
+            <property name="option" value="TEXT"/>
+        </module>
+        <module name="EmptyCatchBlock">
+            <property name="commentFormat" value=".*"/>
+        </module>
+        <module name="FallThrough"/>
+        <module name="DeclarationOrder"/>
+        <module name="Indentation">
+            <property name="basicOffset" value="4"/>
+            <property name="braceAdjustment" value="0"/>
+            <property name="caseIndent" value="4"/>
+            <property name="throwsIndent" value="8"/>
+            <property name="lineWrappingIndentation" value="8"/>
+        </module>
+        <module name="OneStatementPerLine"/>
+        <module name="ArrayTypeStyle"/>
+        <module name="UpperEll"/>
+
+        <!-- Boşluklar -->
+        <module name="WhitespaceAround"/>
+        <module name="WhitespaceAfter"/>
+        <module name="NoWhitespaceBefore"/>
+        <module name="NoWhitespaceAfter"/>
+        <module name="OperatorWrap"/>
+        <module name="ParenPad"/>
+        <module name="MethodParamPad"/>
+
+        <!-- Erişim: field'lar private olmalı -->
+        <module name="VisibilityModifier">
+            <property name="packageAllowed" value="false"/>
+            <property name="protectedAllowed" value="false"/>
+            <property name="publicMemberPattern" value="^serialVersionUID$"/>
+        </module>
+        <!-- Constructor injection için zorunlu: parametre = field ismi -->
+        <module name="HiddenField">
+            <property name="ignoreConstructorParameter" value="true"/>
+            <property name="ignoreSetter" value="true"/>
+        </module>
+
+        <!-- Kod kalitesi -->
+        <module name="EqualsHashCode"/>
+        <module name="StringLiteralEquality"/>
+        <module name="NoFinalizer"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="AvoidInlineConditionals"/>
+        <module name="AvoidNestedBlocks"/>
+        <module name="IllegalCatch">
+            <property name="illegalClassNames" value="java.lang.Throwable, java.lang.Error"/>
+        </module>
+        <module name="IllegalThrows">
+            <property name="illegalClassNames" value="java.lang.Throwable, java.lang.Error"/>
+        </module>
+
+        <!-- MagicNumber: testlerde ve annotationlarda serbest -->
+        <module name="MagicNumber">
+            <property name="ignoreNumbers" value="-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000"/>
+            <property name="ignoreAnnotation" value="true"/>
+            <property name="ignoreHashCodeMethod" value="true"/>
+        </module>
+
+        <!-- Karmaşıklık: başta warning, 15 üstü methodları tek tek böl -->
+        <module name="CyclomaticComplexity">
+            <property name="severity" value="warning"/>
+            <property name="max" value="15"/>
+        </module>
+        <module name="NPathComplexity">
+            <property name="severity" value="warning"/>
+            <property name="max" value="200"/>
+        </module>
+
+        <!-- Yasaklı kullanımlar -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="System\.out\.println|System\.err\.println|printStackTrace\(\)"/>
+            <property name="message" value="System.out / printStackTrace yasak, SLF4J kullan"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+    </module>
+
+    <!-- Test dosyalarında MagicNumber ve Javadoc aranmasın -->
+    <module name="SuppressionFilter">
+        <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
     </module>
 </module>
