@@ -475,7 +475,7 @@ class TwoFactorLoginFlowTest {
     @Test
     @DisplayName("Admin settings form saves mode and enforcement without a restart")
     void adminSettingsForm() throws Exception {
-        var admin = user("admin@eimece.test", "ADMIN");
+        var admin = user("settings-admin@ozerler.test", "ADMIN");
         mockMvc.perform(post("/admin/settings/two-factor").with(csrf()).with(admin)
                         .param("mode", "AUTHENTICATOR").param("enforced", "true"))
                 .andExpect(redirectedUrl("/admin/settings?tab=security"));
