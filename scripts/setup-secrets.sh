@@ -38,6 +38,13 @@ chmod 700 "$SECRETS_DIR"
 APP_UID="${APP_UID:-1001}"
 APP_GID="${APP_GID:-1001}"
 
+require_content() {
+    if ! grep -q '[^[:space:]]' "$1"; then
+        echo "$1 exists but is empty. It was not overwritten; fill it or delete it." >&2
+        exit 1
+    fi
+}
+
 own_secret() {
     target="$1"
     chown "$APP_UID:$APP_GID" "$target"
@@ -49,6 +56,7 @@ write_secret() {
     min_length="$2"
     target="$SECRETS_DIR/$name.txt"
     if [ -f "$target" ] && [ "$REGENERATE" -eq 0 ]; then
+        require_content "$target"
         own_secret "$target"
         return 0
     fi
@@ -68,6 +76,7 @@ write_aes_key() {
     name="$1"
     target="$SECRETS_DIR/$name.txt"
     if [ -f "$target" ]; then
+        require_content "$target"
         own_secret "$target"
         return 0
     fi

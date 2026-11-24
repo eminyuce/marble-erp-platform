@@ -47,9 +47,19 @@ Uygulama açılınca Flyway `V34` bilinen yönetici özetini kilitler, `V35` yer
 
 Yerel `docker/docker-compose.yml` geliştirici kolaylığı için parola varsayılanı tutabilir. Üretim dosyası tutmaz. Yerel Spring `REMEMBER_ME_KEY` boşsa `application.yml` içindeki yerel anahtarı kullanır. Bu anahtar üretimde geçersizdir.
 
-## TOTP şifreleme anahtarı (1.0.11)
+## TOTP şifreleme anahtarı (1.0.11, 1.0.12'den itibaren otomatik)
 
-`totp_encryption_key.txt`, 32 rastgele baytın base64 hâlidir (44 karakter). Kullanıcıların Authenticator sırları veritabanında bu anahtarla AES-256-GCM ile şifreli durur. Dosya yoksa üretim uygulaması açılmaz (`TOTP_ENCRYPTION_KEY_FILE is required`). Compose da dosya yoksa `up` adımında durur. 1.0.11 yayınından **önce** bir kez oluşturun:
+`totp_encryption_key.txt`, 32 rastgele baytın base64 hâlidir (44 karakter). Kullanıcıların Authenticator sırları veritabanında bu anahtarla AES-256-GCM ile şifreli durur.
+
+1.0.12'den itibaren sunucuda komut çalıştırmak gerekmez:
+
+- TOTP anahtarı artık bir compose `secret` değildir (eksik compose gizli dosyası `up` adımını konteyner oluşmadan durdurur). Uygulama konteynerinin giriş betiği, docker soketi üzerinden tek seferlik bir `alpine` yardımcı konteyneri çalıştırır. Bu konteyner `/opt/marble-erp/secrets` klasörünü bağlar, dosya yoksa üretir (geçici dosya + hard link, sahip `1001:1001`, kip `400`) ve içeriği konteynerin özel `/tmp/marble-secrets/` yoluna kopyalar. Değer hiçbir zaman loglanmaz.
+- Uygulama içi yayın (`/admin/deployment`), yeni imajdaki `scripts/ensure_secrets.sh` betiğini `docker compose pull/up` adımından **önce** aynı yöntemle çalıştırır. Betik compose dosyasındaki `secrets:` ve `x-marble-host-secrets:` yollarını okur.
+  - Eksikse otomatik üretilir: `totp_encryption_key.txt`, `remember_me_key.txt`.
+  - Eksikse yayın durur (otomatik üretilmez, mevcut veriyle eşleşmeli): `db_password.txt`, `rustfs_access_key.txt`, `rustfs_secret_key.txt` ve diğer tüm dosyalar.
+  - Var ama boş/yalnız boşluk olan dosyanın üzerine yazılmaz; yayın durur.
+
+Elle oluşturmak isterseniz:
 
 ```bash
 sudo sh -c 'umask 077; openssl rand -base64 32 > /opt/marble-erp/secrets/totp_encryption_key.txt'

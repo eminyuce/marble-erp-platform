@@ -45,4 +45,53 @@ if [ "${MARBLE_IN_CONTAINER:-}" != "true" ] && [ -z "${DB_URL:-}" ]; then
     fi
 fi
 
+# Production: make sure the TOTP key file exists before the JVM starts.
+# The key is not a compose secret (a missing compose secret file stops "docker compose up"
+# before the container exists, and the in-app deploy has no other way to reach the host).
+# A one-shot helper container creates it on the host when missing (atomic, never
+# overwrites, aborts on empty files) and its content is copied into a private file.
+# The value never reaches stdout, stderr or the logs.
+ensure_totp_key() {
+    host_dir="${MARBLE_HOST_SECRETS_DIR:-}"
+    target="${TOTP_ENCRYPTION_KEY_FILE:-}"
+    if [ -z "$host_dir" ] || [ -z "$target" ]; then
+        return 0
+    fi
+    if [ -s "$target" ]; then
+        return 0
+    fi
+    helper="${MARBLE_SECRETS_HELPER_IMAGE:-alpine:3.24.1}"
+    if ! command -v docker >/dev/null 2>&1; then
+        echo "[HATA] TOTP anahtarı hazırlanamadı: imajda docker istemcisi yok." >&2
+        exit 1
+    fi
+    echo "[INFO] TOTP anahtar dosyası kontrol ediliyor (totp_encryption_key.txt)."
+    if ! docker run --rm -i --network none --user 0:0 \
+            -e APP_UID="$(id -u)" -e APP_GID="$(id -g)" \
+            -v "${host_dir}:/s" "$helper" \
+            sh -s -- --dir /s --host-dir "$host_dir" --name totp_encryption_key.txt \
+            < /stack/scripts/ensure_secrets.sh; then
+        echo "[HATA] TOTP anahtarı hazırlanamadı. Ayrıntı yukarıda; uygulama başlatılmadı." >&2
+        exit 1
+    fi
+    old_umask=$(umask)
+    umask 077
+    mkdir -p "$(dirname "$target")"
+    if ! docker run --rm --network none --user 0:0 -v "${host_dir}:/s:ro" "$helper" \
+            cat /s/totp_encryption_key.txt > "$target.tmp" 2>/dev/null || [ ! -s "$target.tmp" ]; then
+        rm -f "$target.tmp"
+        umask "$old_umask"
+        echo "[HATA] TOTP anahtar dosyası okunamadı (totp_encryption_key.txt)." >&2
+        exit 1
+    fi
+    mv -f "$target.tmp" "$target"
+    chmod 400 "$target"
+    umask "$old_umask"
+    echo "[OK] TOTP anahtar dosyası hazır (totp_encryption_key.txt)."
+}
+
+if [ "${MARBLE_IN_CONTAINER:-}" = "true" ]; then
+    ensure_totp_key
+fi
+
 exec java ${JAVA_OPTS:-} -Dserver.shutdown=graceful -jar /app/app.jar "$@"

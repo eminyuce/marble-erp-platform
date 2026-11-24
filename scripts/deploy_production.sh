@@ -192,7 +192,11 @@ ensure_secret() {
     local file="${SECRETS_DIR}/${name}.txt"
     sudo_cmd mkdir -p "$SECRETS_DIR"
     sudo_cmd chmod 700 "$SECRETS_DIR"
-    if sudo_cmd test -s "$file"; then
+    if sudo_cmd test -e "$file"; then
+        # Never overwrite an existing file, not even an empty one.
+        if ! sudo_cmd grep -q '[^[:space:]]' "$file"; then
+            die "${file} var ama boş. Üzerine yazılmadı; dosyayı doldurun veya silin."
+        fi
         sudo_cmd chown "${APP_UID:-1001}:${APP_GID:-1001}" "$file"
         sudo_cmd chmod 400 "$file"
         return 0
