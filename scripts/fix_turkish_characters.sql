@@ -26,8 +26,7 @@ UPDATE users SET first_name = 'Burcu', last_name = 'Çelik' WHERE id = 7;
 UPDATE users SET first_name = 'Deniz', last_name = 'Arslan' WHERE id = 8;
 
 -- System settings descriptions (V4 seed)
-UPDATE system_settings SET description = 'Tüm kullanıcılar için İki Adımlı Doğrulama (2FA) zorunluluğu' WHERE setting_key = 'security.2fa.enabled';
-UPDATE system_settings SET description = 'Giriş ekranında Google reCAPTCHA koruması' WHERE setting_key = 'security.recaptcha.enabled';
+UPDATE system_settings SET description = 'Tüm kullanıcılar için Authenticator kurulumu zorunlu mu' WHERE setting_key = 'security.2fa.enforced';
 UPDATE system_settings SET description = 'SMTP Port Numarası (587 TLS veya 465 SSL)' WHERE setting_key = 'mail.smtp.port';
 UPDATE system_settings SET description = 'SMTP Kullanıcı Adı / Hesap' WHERE setting_key = 'mail.smtp.username';
 UPDATE system_settings SET description = 'SMTP Şifresi' WHERE setting_key = 'mail.smtp.password';

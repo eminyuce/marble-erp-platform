@@ -5,7 +5,7 @@ set -euo pipefail
 
 DEPLOY_DIR="${DEPLOY_DIR:-/opt/marble-erp}"
 SECRETS_DIR="${SECRETS_DIR:-$DEPLOY_DIR/secrets}"
-names="db_password remember_me_key rustfs_access_key rustfs_secret_key"
+names="db_password remember_me_key rustfs_access_key rustfs_secret_key totp_encryption_key"
 
 if [ ! -d "$SECRETS_DIR" ]; then
     echo "Secrets directory is missing." >&2

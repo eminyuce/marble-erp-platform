@@ -216,6 +216,8 @@ read_secret() {
 write_env_template() {
     ensure_secret db_password "${DB_PASSWORD:-}" DB_PASSWORD
     ensure_secret remember_me_key "${REMEMBER_ME_KEY:-}" REMEMBER_ME_KEY
+    # Created once if missing. Never regenerate: enrolled authenticators depend on it.
+    ensure_secret totp_encryption_key "${TOTP_ENCRYPTION_KEY:-$(openssl rand -base64 32)}"
     ensure_secret rustfs_access_key "${RUSTFS_ACCESS_KEY:-}" RUSTFS_ACCESS_KEY
     ensure_secret rustfs_secret_key "${RUSTFS_SECRET_KEY:-}" RUSTFS_SECRET_KEY
     sudo_cmd tee "$ENV_FILE" >/dev/null <<EOF
@@ -253,6 +255,7 @@ RUSTFS_PUBLIC_ENDPOINT=https://ozerler.naklink.com
 PRESIGNED_IMAGE_EXPIRY_MINUTES=30
 PRESIGNED_DOCUMENT_EXPIRY_MINUTES=5
 REMEMBER_ME_KEY_FILE=${SECRETS_DIR}/remember_me_key.txt
+TOTP_ENCRYPTION_KEY_FILE=${SECRETS_DIR}/totp_encryption_key.txt
 RUSTFS_ACCESS_KEY_FILE=${SECRETS_DIR}/rustfs_access_key.txt
 RUSTFS_SECRET_KEY_FILE=${SECRETS_DIR}/rustfs_secret_key.txt
 RUSTFS_BUCKET=erp-files
@@ -420,10 +423,13 @@ if [ ! -f "$ENV_FILE" ]; then
 else
     ensure_secret db_password "${DB_PASSWORD:-}" DB_PASSWORD
     ensure_secret remember_me_key "${REMEMBER_ME_KEY:-}" REMEMBER_ME_KEY
+    # Created once if missing. Never regenerate: enrolled authenticators depend on it.
+    ensure_secret totp_encryption_key "${TOTP_ENCRYPTION_KEY:-$(openssl rand -base64 32)}"
     ensure_secret rustfs_access_key "${RUSTFS_ACCESS_KEY:-}" RUSTFS_ACCESS_KEY
     ensure_secret rustfs_secret_key "${RUSTFS_SECRET_KEY:-}" RUSTFS_SECRET_KEY
     point_secret DB_PASSWORD DB_PASSWORD_FILE db_password
     point_secret REMEMBER_ME_KEY REMEMBER_ME_KEY_FILE remember_me_key
+    point_secret TOTP_ENCRYPTION_KEY TOTP_ENCRYPTION_KEY_FILE totp_encryption_key
     point_secret RUSTFS_ACCESS_KEY RUSTFS_ACCESS_KEY_FILE rustfs_access_key
     point_secret RUSTFS_SECRET_KEY RUSTFS_SECRET_KEY_FILE rustfs_secret_key
     ensure_rustfs_env_keys

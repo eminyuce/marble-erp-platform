@@ -1,5 +1,6 @@
 package com.ozerler.marble.model;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -67,6 +68,30 @@ public class User extends AuditableEntity {
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
+    /** AES-256-GCM ciphertext of the Base32 TOTP secret. Never stored or logged in plain text. */
+    @Column(name = "totp_secret_encrypted", length = 512)
+    private String totpSecretEncrypted;
+
+    @Column(name = "totp_enabled", nullable = false)
+    @Builder.Default
+    private boolean totpEnabled = false;
+
+    @Column(name = "totp_setup_completed", nullable = false)
+    @Builder.Default
+    private boolean totpSetupCompleted = false;
+
+    /** Last accepted TOTP time step; a code from this step or earlier is a replay. */
+    @Column(name = "totp_last_used_step")
+    private Long totpLastUsedStep;
+
+    /** Consecutive failed password or TOTP attempts since the last full login. */
+    @Column(name = "failed_login_attempts", nullable = false)
+    @Builder.Default
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
+
 
     public String getFullName() {
         return firstName + " " + lastName;
@@ -74,5 +99,9 @@ public class User extends AuditableEntity {
 
     public boolean hasRole(String roleName) {
         return roles != null && roles.stream().anyMatch(r -> r.getName().equals(roleName));
+    }
+
+    public boolean isLockedAt(LocalDateTime now) {
+        return lockedUntil != null && lockedUntil.isAfter(now);
     }
 }

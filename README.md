@@ -25,7 +25,7 @@
 - **10-Reason Scrap Management**: Granular root-cause tracking from `FR-01` (Saw Dust) through `FR-10` (Site Installation Breakage) with real-time financial impact calculation.
 - **Genealogy & Digital Stone Passport**: Bidirectional lineage trees mapping final installation tiles back to source slabs, production orders, and extraction quarries via public QR-code URLs.
 - **Smart Pricing & Margin Guardrails**: Real-time margin simulation calculating standard cost, suggested selling price, and minimum floor price warnings.
-- **Enterprise System Settings & Security**: Database-backed dynamic controls for Two-Factor Authentication (2FA), Google reCAPTCHA v2/v3, dynamic SMTP dispatch, and customizable HTML email templates.
+- **Enterprise System Settings & Security**: Database-backed dynamic controls for offline TOTP Two-Factor Authentication (Google Authenticator compatible, no Google service), Google-free login protection (IP limit, account lock, math question), dynamic SMTP dispatch, and customizable HTML email templates.
 - **Operational Report Center**: Multi-tab live reporting engine exporting 6 domain datasets to auto-formatted Excel (`.xlsx`) and UTF-8 BOM CSV (`.csv`).
 - **Structured JSON Observability**: Production-grade Logstash JSON logging over Logback with MDC diagnostic correlation (`traceId`, `userId`) and a dedicated `/admin/dashboard/systemhealth/` metric cockpit.
 - **Object File Storage**: Block photos, SVG, PDF, Excel, Word, CSV, TXT, and Markdown attachments stored in private RustFS buckets (S3 API), with metadata in PostgreSQL. MinIO is not used.
@@ -309,7 +309,7 @@ Flyway `V4` created `admin@eimece.test`. `V34` disables that account when it sti
 | `/admin/dashboard` | `GET` | `ROLE_ADMIN` | Executive operational cockpit and KPI summaries |
 | `/admin/dashboard/systemhealth/` | `GET` | `ROLE_ADMIN` | Live visual system telemetry (JVM Heap, DB ping, uptime) |
 | `/admin/dashboard/oursitefeatures/`| `GET` | Authenticated | Interactive user guide and ERP pipeline visual tour |
-| `/admin/settings` | `GET`/`POST` | `ROLE_ADMIN` | 2FA, reCAPTCHA, SMTP server, and Email template manager |
+| `/admin/settings` | `GET`/`POST` | `ROLE_ADMIN` | 2FA (TOTP), SMTP server, and Email template manager |
 | `/blocks` | `GET` | Authenticated | Tabulator-powered Quarry & Block management grid |
 | `/blocks/api/data` | `GET` | Authenticated | Remote paginated JSON feed for quarry blocks |
 | `/production` | `GET` | Authenticated | Factory gangsaw orders and scrap registry |

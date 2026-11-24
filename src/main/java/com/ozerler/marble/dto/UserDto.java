@@ -54,6 +54,10 @@ public class UserDto {
     @JsonAlias("roles")
     private Set<String> roles;
 
+    @JsonProperty("two_factor_enabled")
+    @JsonAlias("twoFactorEnabled")
+    private boolean twoFactorEnabled;
+
     @JsonProperty("created_at")
     @JsonAlias("createdAt")
     private LocalDateTime createdAt;
@@ -87,6 +91,7 @@ public class UserDto {
                 .lastName(user.getLastName())
                 .fullName(user.getFullName())
                 .enabled(user.isEnabled())
+                .twoFactorEnabled(user.isTotpEnabled())
                 .roles(user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet()))
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

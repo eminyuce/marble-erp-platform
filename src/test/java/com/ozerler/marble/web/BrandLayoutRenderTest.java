@@ -54,7 +54,7 @@ class BrandLayoutRenderTest {
 
         Assertions.assertEquals(1, count(topbar, BRAND), "top bar should show the brand once:\n" + topbar);
         Assertions.assertTrue(topbar.contains("admin-topbar-version"), topbar);
-        Assertions.assertTrue(topbar.contains("1.0.10") || footer.contains("1.0.10"), html);
+        Assertions.assertTrue(topbar.contains("1.0.11") || footer.contains("1.0.11"), html);
         Assertions.assertEquals(0, count(footer, BRAND), "footer should not repeat the brand:\n" + footer);
         Assertions.assertTrue(footer.contains("Sürüm"), footer);
         Assertions.assertEquals(1, count(stripTitle(html), BRAND),
@@ -83,7 +83,7 @@ class BrandLayoutRenderTest {
                 "login guide eyebrow should not repeat the brand");
         Assertions.assertTrue(html.contains("admin-login__brand"), html);
         Assertions.assertTrue(html.contains("Sürüm"), html);
-        Assertions.assertTrue(html.contains("1.0.10"), html);
+        Assertions.assertTrue(html.contains("1.0.11"), html);
         Assertions.assertTrue(html.contains("/brand/logo-ozerler.png"), html);
         Assertions.assertTrue(html.contains("name=\"robots\""), html);
         Assertions.assertTrue(html.contains("noindex, nofollow"), html);

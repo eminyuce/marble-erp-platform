@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <th:block th:replace="~{fragments/head-icons :: tags}"></th:block>
+    <title th:text="${title} + ' | Özerler Mermer ERP'">İki Faktörlü Doğrulama | Özerler Mermer ERP</title>
+    <link rel="stylesheet" th:href="@{/css/app.css(v=${assetVersion})}">
+    <script th:src="@{/vendor/lucide.min.js}"></script>
+    <style>
+        .tfa-qr { width: 100%; max-width: 280px; height: auto; image-rendering: pixelated; margin: 0 auto; display: block;
+                  border: 1px solid #e2e8f0; border-radius: .75rem; background: #fff; padding: .5rem; }
+        .tfa-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; letter-spacing: .02em;
+                   text-align: center; }
+        .tfa-code-input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.5rem;
+                          letter-spacing: .4em; text-align: center; }
+        .tfa-backup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+        .tfa-backup-grid li { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700;
+                              background: #f8fafc; border: 1px solid #e2e8f0; border-radius: .5rem;
+                              padding: .5rem; text-align: center; letter-spacing: .08em; }
+    </style>
+</head>
+<body>
+<aside th:fragment="guide(active)" class="admin-login__guide">
+    <div class="admin-login__badge">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+        İki Faktörlü Doğrulama
+    </div>
+    <h1 class="admin-login__brand">
+        <img class="admin-login__wordmark"
+             th:src="@{/brand/logo-ozerler.png(v=${assetVersion})}"
+             th:attr="srcset=|@{/brand/logo-ozerler.png(v=${assetVersion})} 1x, @{/brand/logo-ozerler@2x.png(v=${assetVersion})} 2x|"
+             src="/brand/logo-ozerler.png"
+             width="800" height="276" alt="">
+        <span class="sr-only">Özerler Mermer ERP</span>
+    </h1>
+    <p class="admin-login__lead">
+        Kullanıcılar şifre ile giriş yaptıktan sonra Google Authenticator uygulamasındaki 6 haneli tek kullanımlık
+        kodu girmek zorunda kalır.
+    </p>
+    <ol class="admin-login__steps">
+        <li>
+            <span class="admin-login__step-num">1</span>
+            <div>
+                <span class="admin-login__step-title">Şifre</span>
+                <span class="admin-login__step-text">E-posta ve şifreniz doğrulandı.</span>
+            </div>
+        </li>
+        <li>
+            <span class="admin-login__step-num">2</span>
+            <div>
+                <span class="admin-login__step-title" th:text="${active == 'setup'} ? 'Authenticator kurulumu' : 'Doğrulama kodu'">Doğrulama kodu</span>
+                <span class="admin-login__step-text">Kod telefonunuzda üretilir; internet bağlantısı gerekmez.</span>
+            </div>
+        </li>
+        <li>
+            <span class="admin-login__step-num">3</span>
+            <div>
+                <span class="admin-login__step-title">Yönetim paneli</span>
+                <span class="admin-login__step-text">Doğrulama sonrası ERP kokpitine yönlendirilirsiniz.</span>
+            </div>
+        </li>
+    </ol>
+    <p class="admin-login__guide-note">Telefonunuza erişemiyorsanız yedek kodlarınızdan birini kullanın veya yöneticinize başvurun.</p>
+</aside>
+</body>
+</html>

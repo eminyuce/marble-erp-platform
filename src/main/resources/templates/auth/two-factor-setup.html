@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{auth/two-factor-fragments :: head('Authenticator kurulumu')}"></head>
+<body class="admin-login-page">
+<div class="admin-login">
+    <div class="admin-login__shell">
+        <aside th:replace="~{auth/two-factor-fragments :: guide('setup')}"></aside>
+        <section class="admin-login__panel">
+            <h2 class="admin-login__panel-title">Authenticator kurulumu</h2>
+            <p class="admin-login__panel-sub">
+                Google Authenticator ile QR kodu okutun, sonra uygulamadaki 6 haneli kodu girin.
+            </p>
+
+            <div class="admin-login__alert admin-login__alert--error" th:if="${errorMessage}" role="alert" id="tfaError">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                <div th:text="${errorMessage}">Hata</div>
+            </div>
+
+            <img class="tfa-qr" id="tfaQr" th:src="'data:image/png;base64,' + ${setup.qrCodeBase64}"
+                 width="280" height="280" alt="Authenticator için QR kod">
+            <p class="text-xs text-slate-500 text-center mt-2" th:text="${setup.accountName}">kullanici@ozerler</p>
+
+            <div class="mt-4">
+                <label for="manualKey" class="form-label">QR okutamıyorsanız bu anahtarı elle girin</label>
+                <div class="flex flex-col items-stretch gap-2">
+                    <input type="text" id="manualKey" readonly th:value="${setup.manualKey}"
+                           class="erp-form-input tfa-key w-full" aria-label="Manuel anahtar">
+                    <button type="button" class="erp-btn-secondary self-end" id="copyKey"
+                            onclick="(function(b){var i=document.getElementById('manualKey');i.select();
+                                     (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.resolve(document.execCommand('copy')))
+                                     .then(function(){b.querySelector('span').textContent='Kopyalandı';});})(this)">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                        <span>Kopyala</span>
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Tür: Zamana dayalı (TOTP), 6 hane, 30 saniye.</p>
+            </div>
+
+            <form th:action="@{/auth/2fa/setup/verify}" method="post" class="admin-login__form mt-4" id="twoFactorSetupForm">
+                <div class="mb-3">
+                    <label for="code" class="form-label">Uygulamadaki 6 haneli kod</label>
+                    <input type="text" id="code" name="code" required maxlength="6" minlength="6"
+                           inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code"
+                           placeholder="123456" class="erp-form-input tfa-code-input"
+                           title="6 rakam girin">
+                </div>
+                <button type="submit" class="admin-login__submit">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    Kodu Doğrula ve Etkinleştir
+                </button>
+            </form>
+            <p class="mt-3 text-center" th:if="${!pendingLogin}">
+                <a th:href="@{/account/2fa}" class="text-xs text-slate-500 underline">Vazgeç</a>
+            </p>
+            <form th:action="@{/logout}" method="post" class="mt-3 text-center" th:if="${pendingLogin}">
+                <button type="submit" class="text-xs text-slate-500 underline cursor-pointer">Vazgeç ve giriş ekranına dön</button>
+            </form>
+        </section>
+    </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

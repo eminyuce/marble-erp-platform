@@ -1,5 +1,6 @@
 package com.ozerler.marble.repository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -7,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -54,4 +56,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                           Pageable pageable);
 
     long countByDeletedFalse();
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE User u SET u.failedLoginAttempts = u.failedLoginAttempts + 1 WHERE u.id = :id")
+    int incrementFailedLoginAttempts(@Param("id") Long id);
+
+    @Query("SELECT u.failedLoginAttempts FROM User u WHERE u.id = :id")
+    Integer findFailedLoginAttempts(@Param("id") Long id);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE User u SET u.failedLoginAttempts = 0, u.lockedUntil = :until WHERE u.id = :id")
+    int lockAccount(@Param("id") Long id, @Param("until") LocalDateTime until);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE User u SET u.failedLoginAttempts = 0, u.lockedUntil = NULL WHERE u.id = :id")
+    int resetLoginFailures(@Param("id") Long id);
 }

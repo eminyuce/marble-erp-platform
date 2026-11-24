@@ -30,7 +30,8 @@ public class SecretFileEnvironmentPostProcessor implements EnvironmentPostProces
             "DB_PASSWORD_FILE",
             "REMEMBER_ME_KEY_FILE",
             "RUSTFS_ACCESS_KEY_FILE",
-            "RUSTFS_SECRET_KEY_FILE");
+            "RUSTFS_SECRET_KEY_FILE",
+            "TOTP_ENCRYPTION_KEY_FILE");
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
