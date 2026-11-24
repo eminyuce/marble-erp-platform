@@ -158,9 +158,25 @@ app:
       cleanup-cron: ${BACKUP_CLEANUP_CRON:0 0 3 * * ?}
   security:
     remember-me-key: ${REMEMBER_ME_KEY:local-dev-remember-me-not-for-production}
+    two-factor:
+      # Base64 32-byte AES-256 key for TOTP secrets. Production reads it from
+      # TOTP_ENCRYPTION_KEY_FILE (see docs/DOCKER_SECRETS.md). Blank here means a
+      # temporary key per start: enrolments do not survive a restart. Never commit a key.
+      encryption-key: ${TOTP_ENCRYPTION_KEY:}
+      key-required: false
+      issuer: "Ozerler Mermer ERP"
+      # Google-free bot protection on the login form.
+      ip-max-failures: 5
+      ip-window: 1m
+      account-max-failures: 5
+      account-lock-duration: 15m
+      pending-timeout: 10m
+      # Server-side math question after this many failed logins in one session.
+      captcha-after-failures: 2
+      captcha-ttl: 3m
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
-  version: "1.0.10"
+  version: "1.0.11"
   # Query-string cache buster for static assets (?v=). Keep in lockstep with app.version.
   asset-version: ${app.version}
   deployment:

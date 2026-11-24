@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{auth/two-factor-fragments :: head('Yedek kodlar')}"></head>
+<body class="admin-login-page">
+<div class="admin-login">
+    <div class="admin-login__shell">
+        <aside th:replace="~{auth/two-factor-fragments :: guide('setup')}"></aside>
+        <section class="admin-login__panel">
+            <h2 class="admin-login__panel-title">Yedek kodlarınız</h2>
+            <p class="admin-login__panel-sub">
+                Bu kodlar yalnızca şimdi gösterilir. Telefonunuzu kaybederseniz her biri bir kez giriş yapmanızı sağlar.
+                Güvenli bir yere yazın veya yazdırın.
+            </p>
+
+            <div class="admin-login__alert admin-login__alert--error" th:if="${errorMessage}" role="alert">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                <div th:text="${errorMessage}">Hata</div>
+            </div>
+
+            <ul class="tfa-backup-grid my-4" id="backupCodes" aria-label="Yedek kodlar">
+                <li th:each="code : ${backupCodes}" th:text="${#strings.substring(code, 0, 4)} + '-' + ${#strings.substring(code, 4)}">ABCD-EFGH</li>
+            </ul>
+            <button type="button" class="erp-btn-secondary mb-4" onclick="window.print()">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span>Yazdır</span>
+            </button>
+
+            <form th:action="@{/auth/2fa/setup/backup-codes}" method="post" class="admin-login__form" id="backupCodesForm">
+                <label class="flex items-center gap-2 text-sm text-slate-700 mb-4 cursor-pointer">
+                    <input type="checkbox" name="confirmed" value="true" id="confirmed" required>
+                    <span>Yedek kodları kaydettim</span>
+                </label>
+                <button type="submit" class="admin-login__submit">
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    Devam Et
+                </button>
+            </form>
+        </section>
+    </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

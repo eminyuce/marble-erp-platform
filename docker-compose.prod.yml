@@ -139,6 +139,7 @@ services:
       REMEMBER_ME_KEY_FILE: /run/secrets/remember_me_key
       RUSTFS_ACCESS_KEY_FILE: /run/secrets/rustfs_access_key
       RUSTFS_SECRET_KEY_FILE: /run/secrets/rustfs_secret_key
+      TOTP_ENCRYPTION_KEY_FILE: /run/secrets/totp_encryption_key
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-marble_erp}
       APP_UPLOAD_DIR: /app/uploads
       APP_MEDIA_DIR: /app/media
@@ -175,6 +176,7 @@ services:
       - remember_me_key
       - rustfs_access_key
       - rustfs_secret_key
+      - totp_encryption_key
     networks:
       - marble-network
 
@@ -187,6 +189,8 @@ secrets:
     file: ${SECRETS_DIR:-/opt/marble-erp/secrets}/rustfs_access_key.txt
   rustfs_secret_key:
     file: ${SECRETS_DIR:-/opt/marble-erp/secrets}/rustfs_secret_key.txt
+  totp_encryption_key:
+    file: ${SECRETS_DIR:-/opt/marble-erp/secrets}/totp_encryption_key.txt
 
 networks:
   marble-network:

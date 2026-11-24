@@ -62,10 +62,26 @@ write_secret() {
     own_secret "$target"
 }
 
+# AES-256 key for TOTP secrets: exactly 32 random bytes, base64 encoded (44 characters).
+# Never regenerate it on a live system: enrolled authenticators would stop working.
+write_aes_key() {
+    name="$1"
+    target="$SECRETS_DIR/$name.txt"
+    if [ -f "$target" ]; then
+        own_secret "$target"
+        return 0
+    fi
+    umask 077
+    openssl rand -base64 32 | tr -d '\n' > "$target"
+    printf '\n' >> "$target"
+    own_secret "$target"
+}
+
 write_secret db_password 24
 write_secret remember_me_key 32
 write_secret rustfs_access_key 16
 write_secret rustfs_secret_key 24
+write_aes_key totp_encryption_key
 
 echo "Secret files are in $SECRETS_DIR (owner ${APP_UID}:${APP_GID}, mode 400). Values were not printed." >&2
 if [ "$REGENERATE" -eq 1 ]; then

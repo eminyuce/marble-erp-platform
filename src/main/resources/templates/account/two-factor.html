@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>İki Faktörlü Doğrulama | Özerler Mermer ERP</title>
+</head>
+<body>
+<div layout:fragment="content" class="erp-form-page">
+
+    <div th:replace="~{fragments/form-page :: breadcrumb('Hesabım', @{/account/change-password}, 'İki faktörlü doğrulama')}"></div>
+    <div th:replace="~{fragments/form-page :: heading(
+        'İki faktörlü doğrulama',
+        'Kullanıcılar şifre ile giriş yaptıktan sonra Google Authenticator uygulamasındaki 6 haneli tek kullanımlık kodu girmek zorunda kalır.',
+        ${userEmail},
+        @{/admin/dashboard})}"></div>
+
+    <div class="erp-form-card">
+        <div class="erp-form-body">
+            <section class="erp-form-section">
+                <div th:replace="~{fragments/form-page :: section('Durum', null)}"></div>
+                <div class="flex flex-wrap items-center gap-2 text-sm" id="twoFactorStatus">
+                    <span class="px-2.5 py-1 text-[11px] font-bold rounded-full"
+                          th:classappend="${status.enabled} ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'"
+                          th:text="${status.enabled} ? 'AKTİF' : 'PASİF'">PASİF</span>
+                    <span th:if="${status.enabled}" class="text-slate-600"
+                          th:text="'Kalan yedek kod: ' + ${status.remainingBackupCodes}">Kalan yedek kod: 10</span>
+                    <span th:if="${status.enforced}" class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">
+                        Yönetici tarafından zorunlu</span>
+                    <span th:unless="${status.available}" class="text-slate-500">
+                        Yönetici 2FA'yı kapattı; girişte kod istenmez.</span>
+                </div>
+                <div class="mt-4" th:if="${status.available and !status.enabled}">
+                    <a th:href="@{/auth/2fa/setup}" class="erp-btn-primary" id="startSetup">
+                        <i data-lucide="qr-code"></i>
+                        <span>Authenticator kurulumunu başlat</span>
+                    </a>
+                </div>
+            </section>
+
+            <section class="erp-form-section" th:if="${status.enabled}">
+                <div th:replace="~{fragments/form-page :: section('Yedek kodları yeniden üret', 'Eski yedek kodların hepsi geçersiz olur. Uygulamadaki güncel kodu girin.')}"></div>
+                <form th:action="@{/account/2fa/backup-codes/regenerate}" method="post" class="flex flex-col sm:flex-row gap-2 sm:items-end">
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="regenCode">6 haneli kod <span class="req">*</span></label>
+                        <input type="text" id="regenCode" name="code" required maxlength="6" minlength="6"
+                               inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" class="erp-form-input"
+                               title="6 rakam girin">
+                    </div>
+                    <button type="submit" class="erp-btn-secondary">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>Yeni yedek kodlar üret</span>
+                    </button>
+                </form>
+            </section>
+
+            <section class="erp-form-section" th:if="${status.enabled}" x-data>
+                <div th:replace="~{fragments/form-page :: section('İki Faktörlü Doğrulamayı Kapat', 'Mevcut şifreniz ve uygulamadaki güncel kod gerekir.')}"></div>
+                <p th:if="${status.enforced}" class="text-xs text-amber-700">
+                    Yönetici 2FA'yı zorunlu tuttuğu için kapatamazsınız. Telefon değiştiyse yöneticinizden sıfırlama isteyin.
+                </p>
+                <form th:unless="${status.enforced}" th:action="@{/account/2fa/disable}" method="post" id="disableTwoFactorForm"
+                      class="erp-form-grid"
+                      @submit="if (!confirm('İki faktörlü doğrulama kapatılacak ve yedek kodlar silinecek. Emin misiniz?')) $event.preventDefault()">
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="currentPassword">Mevcut şifre <span class="req">*</span></label>
+                        <input type="password" id="currentPassword" name="currentPassword" required
+                               autocomplete="current-password" class="erp-form-input">
+                    </div>
+                    <div class="erp-form-field">
+                        <label class="erp-form-label" for="disableCode">6 haneli kod <span class="req">*</span></label>
+                        <input type="text" id="disableCode" name="code" required maxlength="6" minlength="6"
+                               inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" class="erp-form-input"
+                               title="6 rakam girin">
+                    </div>
+                    <div>
+                        <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                            <i data-lucide="shield-off" class="w-4 h-4"></i>
+                            <span>İki Faktörlü Doğrulamayı Kapat</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -13,12 +13,25 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.DelegatingSecurityContextRepository;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.security.CustomUserDetailsService;
+import com.ozerler.marble.security.LoginFailureHandler;
+import com.ozerler.marble.security.LoginGuardFilter;
+import com.ozerler.marble.security.MathCaptchaService;
+import com.ozerler.marble.security.TwoFactorAuthenticationSuccessHandler;
+import com.ozerler.marble.security.TwoFactorEnforcementFilter;
+import com.ozerler.marble.security.TwoFactorRememberMeServices;
+import com.ozerler.marble.service.LoginAttemptService;
+import com.ozerler.marble.service.TwoFactorService;
 
 @Configuration
 @EnableWebSecurity
@@ -64,8 +77,42 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
+    /**
+     * Same storage as Spring Security's default, shared with the 2FA completion step.
+     *
+     * @return the repository
+     */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityContextRepository securityContextRepository() {
+        return new DelegatingSecurityContextRepository(
+                new RequestAttributeSecurityContextRepository(), new HttpSessionSecurityContextRepository());
+    }
+
+    /**
+     * Remember-me that is issued only after the second factor.
+     *
+     * @param twoFactorService 2FA decisions
+     * @return the services
+     */
+    @Bean
+    public TwoFactorRememberMeServices rememberMeServices(TwoFactorService twoFactorService) {
+        TwoFactorRememberMeServices services =
+                new TwoFactorRememberMeServices(rememberMeKey, customUserDetailsService, twoFactorService);
+        services.setTokenValiditySeconds(REMEMBER_ME_SECONDS);
+        return services;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           SecurityContextRepository securityContextRepository,
+                                           TwoFactorRememberMeServices rememberMeServices,
+                                           TwoFactorService twoFactorService,
+                                           LoginAttemptService loginAttemptService,
+                                           MathCaptchaService captchaService) throws Exception {
+        http.securityContext(context -> context.securityContextRepository(securityContextRepository))
+                .addFilterBefore(new LoginGuardFilter(loginAttemptService, captchaService),
+                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new TwoFactorEnforcementFilter(twoFactorService), AuthorizationFilter.class);
         http.cors(Customizer.withDefaults())
                 .headers(headers -> headers.addHeaderWriter(
                         new StaticHeadersWriter(
@@ -101,6 +148,7 @@ public class SecurityConfig {
                                                 "/login",
                                                 "/account/adminlogin/**",
                                                 "/account/adminlogin",
+                                                "/auth/2fa/**",
                                                 "/access-denied",
                                                 "/passport/**",
                                                 "/health/**",
@@ -152,8 +200,10 @@ public class SecurityConfig {
                         form ->
                                 form.loginPage("/account/adminlogin/")
                                         .loginProcessingUrl("/account/adminlogin/")
-                                        .defaultSuccessUrl("/admin/dashboard", true)
-                                        .failureUrl("/account/adminlogin/?error=true")
+                                        .successHandler(new TwoFactorAuthenticationSuccessHandler(
+                                                twoFactorService, loginAttemptService, captchaService,
+                                                securityContextRepository))
+                                        .failureHandler(new LoginFailureHandler(loginAttemptService, captchaService))
                                         .usernameParameter("username")
                                         .passwordParameter("password")
                                         .permitAll())
@@ -170,8 +220,7 @@ public class SecurityConfig {
                 .rememberMe(
                         remember ->
                                 remember.key(rememberMeKey)
-                                        .tokenValiditySeconds(REMEMBER_ME_SECONDS)
-                                        .userDetailsService(customUserDetailsService))
+                                        .rememberMeServices(rememberMeServices))
                 .exceptionHandling(ex -> ex.accessDeniedPage("/access-denied"));
 
         return http.build();

@@ -31,6 +31,11 @@
                 <i data-lucide="key"></i>
                 <span>Şifre Sıfırla</span>
             </a>
+            <button type="button" class="erp-btn-secondary" id="reset-2fa-open"
+                    onclick="document.getElementById('reset-2fa-dialog').showModal()">
+                <i data-lucide="shield-off"></i>
+                <span>2FA'yı Sıfırla</span>
+            </button>
         </div>
     </div>
 
@@ -52,6 +57,10 @@
                 <dd th:text="${user.fullName}">Ahmet Yılmaz</dd>
             </div>
             <div>
+                <dt class="text-xs font-semibold text-slate-500">İki faktörlü doğrulama</dt>
+                <dd id="user-2fa-status" th:text="${user.twoFactorEnabled} ? 'Açık (Authenticator)' : 'Kapalı'">Kapalı</dd>
+            </div>
+            <div>
                 <dt class="text-xs font-semibold text-slate-500">Roller</dt>
                 <dd>
                     <span th:if="${user.roles == null or user.roles.isEmpty()}" class="text-slate-400">Rol yok</span>
@@ -63,6 +72,29 @@
             </div>
         </dl>
     </div>
+
+    <dialog id="reset-2fa-dialog" class="erp-dialog-panel">
+        <form th:action="@{'/admin/users/' + ${user.id} + '/reset-2fa'}" method="post" class="erp-dialog-body">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="erp-dialog-title mb-0">İki faktörlü doğrulamayı sıfırla</h3>
+                    <p class="text-xs text-slate-500 font-mono" th:text="${user.email}">admin@eimece.test</p>
+                </div>
+            </div>
+            <p class="erp-dialog-lead text-slate-600 mt-2">Kullanıcının Authenticator kaydı ve tüm yedek kodları silinir,
+                giriş kilidi kalkar. 2FA zorunluysa kullanıcı bir sonraki girişte yeniden kurulum yapar. İşlem log'a yazılır.</p>
+            <div class="erp-dialog-actions">
+                <button type="button" class="erp-btn-secondary" onclick="this.closest('dialog').close()">Vazgeç</button>
+                <button type="submit" id="confirm-reset-2fa" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="shield-off" class="w-4 h-4"></i>
+                    <span>Evet, 2FA'yı Sıfırla</span>
+                </button>
+            </div>
+        </form>
+    </dialog>
 
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
         <div th:replace="~{fragments/audit :: auditInfo(${user?.createdDate}, ${user?.updatedDate}, ${user?.addUserId}, ${user?.updateUserId})}"></div>

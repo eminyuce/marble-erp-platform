@@ -36,6 +36,7 @@ import com.ozerler.marble.service.EmailService;
 import com.ozerler.marble.service.NoticeDismissDuration;
 import com.ozerler.marble.service.RateLimitSettingsService;
 import com.ozerler.marble.service.SettingService;
+import com.ozerler.marble.service.TwoFactorSettingsService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,12 +76,6 @@ public class SettingController extends AbstractController {
                                RedirectAttributes redirectAttributes) {
         // Handle boolean checkboxes that are absent when unchecked
         Map<String, String> toUpdate = new HashMap<>(params);
-        if (!toUpdate.containsKey("auth.2fa.enabled")) {
-            toUpdate.put("auth.2fa.enabled", "false");
-        }
-        if (!toUpdate.containsKey("security.recaptcha.enabled")) {
-            toUpdate.put("security.recaptcha.enabled", "false");
-        }
         if (!toUpdate.containsKey("smtp.auth")) {
             toUpdate.put("smtp.auth", "false");
         }
@@ -98,6 +93,9 @@ public class SettingController extends AbstractController {
         toUpdate.remove(Constants.SETTING_KEY_RATE_LIMIT_FORM_WINDOW);
         toUpdate.remove(Constants.SETTING_KEY_RATE_LIMIT_GENERAL_MAX);
         toUpdate.remove(Constants.SETTING_KEY_RATE_LIMIT_GENERAL_WINDOW);
+        // 2FA mode and enforcement are saved only through /admin/settings/two-factor.
+        toUpdate.remove(TwoFactorSettingsService.KEY_MODE);
+        toUpdate.remove(TwoFactorSettingsService.KEY_ENFORCED);
 
         if (toUpdate.containsKey(NoticeDismissDuration.SETTING_KEY)) {
             String duration = toUpdate.get(NoticeDismissDuration.SETTING_KEY);

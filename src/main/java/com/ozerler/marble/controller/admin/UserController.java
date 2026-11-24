@@ -11,6 +11,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -35,6 +37,8 @@ import com.ozerler.marble.model.enums.UserRole;
 import com.ozerler.marble.model.response.BackEndResponse;
 import com.ozerler.marble.model.response.ServiceStatus;
 import com.ozerler.marble.model.response.Status;
+import com.ozerler.marble.service.TwoFactorException;
+import com.ozerler.marble.service.TwoFactorService;
 import com.ozerler.marble.service.UserService;
 import com.ozerler.marble.web.GridRequests;
 import com.ozerler.marble.web.UserGrid;
@@ -52,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserController extends AbstractController {
 
     private final UserService userService;
+    private final TwoFactorService twoFactorService;
     private final MessageSource messageSource;
 
     @Getter
@@ -260,6 +265,31 @@ public class UserController extends AbstractController {
         }
 
         return ber;
+    }
+
+    /**
+     * Removes a user's authenticator and backup codes and clears any login lock. Audit-logged.
+     *
+     * @param id target user
+     * @param currentUser acting admin
+     * @param locale locale
+     * @param redirectAttributes flash messages
+     * @return redirect to the user page
+     */
+    @PostMapping("/{id}/reset-2fa")
+    public String resetTwoFactor(@PathVariable("id") Long id,
+                                 @AuthenticationPrincipal UserDetails currentUser,
+                                 Locale locale,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            twoFactorService.adminReset(id, currentUser.getUsername());
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("twofactor.admin.reset.success", null, locale));
+        } catch (TwoFactorException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    messageSource.getMessage(ex.getMessageCode(), null, locale));
+        }
+        return "redirect:/admin/users/" + id;
     }
 
     @GetMapping("/{id}/reset-password")

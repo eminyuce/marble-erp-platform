@@ -17,7 +17,7 @@ class SettingsPageTitlesTest {
         Assertions.assertThat(settings)
                 .contains("pageTitle()")
                 .contains("Genel Ayarlar")
-                .contains("2FA ve reCAPTCHA")
+                .contains("İki Faktörlü Doğrulama")
                 .contains("İstek Sınırlandırma")
                 .contains("SMTP Posta Sunucusu")
                 .contains("E-Posta Şablonları")

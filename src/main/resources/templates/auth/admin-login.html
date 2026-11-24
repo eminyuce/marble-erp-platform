@@ -44,7 +44,7 @@
                     <span class="admin-login__step-num">2</span>
                     <div>
                         <span class="admin-login__step-title">Güvenlik doğrulaması</span>
-                        <span class="admin-login__step-text">Bu ortamda ekstra captcha adımı kapalıdır; doğrudan giriş yapabilirsiniz.</span>
+                        <span class="admin-login__step-text">Hatalı denemelerden sonra basit bir matematik sorusu sorulur.</span>
                     </div>
                 </li>
                 <li>
@@ -106,6 +106,24 @@
                         </button>
                     </div>
                 </div>
+                <div class="mb-3" th:if="${captchaQuestion != null}">
+                    <label for="captcha" class="form-label">Güvenlik sorusu:
+                        <strong id="captchaQuestion" th:text="${captchaQuestion}">3 + 4 = ?</strong></label>
+                    <div class="flex items-center gap-2">
+                        <div class="admin-login__input-wrap flex-1">
+                            <i data-lucide="calculator" class="admin-login__field-icon"></i>
+                            <input type="text" id="captcha" name="captcha" required maxlength="3"
+                                   inputmode="numeric" pattern="[0-9]*" autocomplete="off"
+                                   placeholder="Cevap" aria-describedby="captchaHelp">
+                        </div>
+                        <a th:href="@{/account/adminlogin/}" class="erp-btn-secondary" id="captchaRefresh"
+                           title="Yeni soru getir">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            <span>Yenile</span>
+                        </a>
+                    </div>
+                    <p id="captchaHelp" class="text-xs text-slate-500 mt-1">Hatalı denemeler nedeniyle sorulur. Sonucu rakamla yazın.</p>
+                </div>
                 <label class="flex items-center gap-2 text-xs text-slate-600 mb-4 cursor-pointer">
                     <input type="checkbox" name="remember-me">
                     <span>Beni hatırla</span>
@@ -126,7 +144,7 @@
                     IP Adresiniz : <strong th:text="${clientIp}">—</strong>
                 </span>
                 <span>
-                    Sürüm : <strong th:text="${appVersion}">1.0.10</strong>
+                    Sürüm : <strong th:text="${appVersion}">1.0.11</strong>
                 </span>
             </div>
         </section>

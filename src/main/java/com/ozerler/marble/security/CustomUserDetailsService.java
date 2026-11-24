@@ -1,5 +1,6 @@
 package com.ozerler.marble.security;
 
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 import org.springframework.context.MessageSource;
@@ -54,6 +55,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .username(user.getEmail())
                 .password(user.getPassword())
                 .disabled(!user.isEnabled())
+                .accountLocked(user.isLockedAt(LocalDateTime.now()))
                 .authorities(authorities)
                 .build();
     }
