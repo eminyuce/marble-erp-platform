@@ -1,7 +1,5 @@
 package com.ozerler.marble.architecture;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -10,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +51,7 @@ class RecaptchaRemovedTest {
                                     || text.contains("gstatic.com/recaptcha");
                         })
                         .toList();
-                assertThat(offenders).as("files still mentioning reCAPTCHA under " + root).isEmpty();
+                Assertions.assertThat(offenders).as("files still mentioning reCAPTCHA under " + root).isEmpty();
             }
         }
     }
@@ -62,6 +61,8 @@ class RecaptchaRemovedTest {
     void migrationDeletesSettings() throws IOException {
         String sql = Files.readString(
                 Path.of("src/main/resources/db/migration/V39__totp_two_factor_and_remove_recaptcha.sql"));
-        assertThat(sql.toLowerCase(Locale.ROOT)).contains("delete from system_settings").contains("recaptcha");
+        Assertions.assertThat(sql.toLowerCase(Locale.ROOT))
+                .contains("delete from system_settings")
+                .contains("recaptcha");
     }
 }

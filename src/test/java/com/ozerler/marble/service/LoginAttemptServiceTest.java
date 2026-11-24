@@ -1,13 +1,5 @@
 package com.ozerler.marble.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -15,9 +7,12 @@ import java.time.ZoneId;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 
 import com.ozerler.marble.config.TwoFactorProperties;
 import com.ozerler.marble.model.User;
@@ -34,20 +29,20 @@ class LoginAttemptServiceTest {
 
     @BeforeEach
     void setUp() {
-        userRepository = mock(UserRepository.class);
+        userRepository = Mockito.mock(UserRepository.class);
         service = new LoginAttemptService(userRepository, new TwoFactorProperties());
         clock = new MutableClock(Instant.parse("2026-11-24T07:00:00Z"));
         service.setClock(clock);
         User user = User.builder().email("ali@ozerler.com").username("ali").build();
         user.setId(7L);
-        when(userRepository.findByEmail("ali@ozerler.com")).thenReturn(Optional.of(user));
-        when(userRepository.findByUsername(any())).thenReturn(Optional.empty());
-        when(userRepository.findByEmail("nobody@ozerler.com")).thenReturn(Optional.empty());
-        when(userRepository.incrementFailedLoginAttempts(7L)).thenAnswer(inv -> {
+        Mockito.when(userRepository.findByEmail("ali@ozerler.com")).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.findByUsername(ArgumentMatchers.any())).thenReturn(Optional.empty());
+        Mockito.when(userRepository.findByEmail("nobody@ozerler.com")).thenReturn(Optional.empty());
+        Mockito.when(userRepository.incrementFailedLoginAttempts(7L)).thenAnswer(inv -> {
             counter.incrementAndGet();
             return 1;
         });
-        when(userRepository.findFailedLoginAttempts(7L)).thenAnswer(inv -> counter.get());
+        Mockito.when(userRepository.findFailedLoginAttempts(7L)).thenAnswer(inv -> counter.get());
     }
 
     @Test
@@ -56,10 +51,10 @@ class LoginAttemptServiceTest {
         for (int i = 0; i < 4; i++) {
             service.recordIpFailure("10.0.0.1");
         }
-        assertThat(service.isIpBlocked("10.0.0.1")).isFalse();
+        Assertions.assertThat(service.isIpBlocked("10.0.0.1")).isFalse();
         service.recordIpFailure("10.0.0.1");
-        assertThat(service.isIpBlocked("10.0.0.1")).isTrue();
-        assertThat(service.isIpBlocked("10.0.0.2")).isFalse();
+        Assertions.assertThat(service.isIpBlocked("10.0.0.1")).isTrue();
+        Assertions.assertThat(service.isIpBlocked("10.0.0.2")).isFalse();
     }
 
     @Test
@@ -68,32 +63,33 @@ class LoginAttemptServiceTest {
         for (int i = 0; i < 5; i++) {
             service.recordIpFailure("10.0.0.3");
         }
-        assertThat(service.isIpBlocked("10.0.0.3")).isTrue();
+        Assertions.assertThat(service.isIpBlocked("10.0.0.3")).isTrue();
         clock.advanceSeconds(61);
-        assertThat(service.isIpBlocked("10.0.0.3")).isFalse();
+        Assertions.assertThat(service.isIpBlocked("10.0.0.3")).isFalse();
     }
 
     @Test
     @DisplayName("Fifth consecutive wrong password locks the account for 15 minutes")
     void accountLocksAfterFive() {
         for (int i = 0; i < 4; i++) {
-            assertThat(service.recordPasswordFailure("ali@ozerler.com", "10.0.1." + i))
+            Assertions.assertThat(service.recordPasswordFailure("ali@ozerler.com", "10.0.1." + i))
                     .isEqualTo(LoginAttemptService.Outcome.FAILED);
         }
-        assertThat(service.recordPasswordFailure("ali@ozerler.com", "10.0.1.9"))
+        Assertions.assertThat(service.recordPasswordFailure("ali@ozerler.com", "10.0.1.9"))
                 .isEqualTo(LoginAttemptService.Outcome.LOCKED);
-        verify(userRepository).lockAccount(eq(7L), eq(LocalDateTime.now(clock).plusMinutes(15)));
+        LocalDateTime until = LocalDateTime.now(clock).plusMinutes(15);
+        Mockito.verify(userRepository).lockAccount(ArgumentMatchers.eq(7L), ArgumentMatchers.eq(until));
     }
 
     @Test
     @DisplayName("Unknown user names count against the IP but lock nothing")
     void unknownUserOnlyCountsIp() {
         for (int i = 0; i < 5; i++) {
-            assertThat(service.recordPasswordFailure("nobody@ozerler.com", "10.0.2.1"))
+            Assertions.assertThat(service.recordPasswordFailure("nobody@ozerler.com", "10.0.2.1"))
                     .isEqualTo(LoginAttemptService.Outcome.FAILED);
         }
-        assertThat(service.isIpBlocked("10.0.2.1")).isTrue();
-        verify(userRepository, never()).lockAccount(any(), any());
+        Assertions.assertThat(service.isIpBlocked("10.0.2.1")).isTrue();
+        Mockito.verify(userRepository, Mockito.never()).lockAccount(ArgumentMatchers.any(), ArgumentMatchers.any());
     }
 
     @Test
@@ -102,17 +98,17 @@ class LoginAttemptServiceTest {
         for (int i = 0; i < 4; i++) {
             service.recordSecondFactorFailure(7L, "10.0.3." + i);
         }
-        assertThat(service.remainingAttempts(7L)).isEqualTo(1);
-        assertThat(service.recordSecondFactorFailure(7L, "10.0.3.9"))
+        Assertions.assertThat(service.remainingAttempts(7L)).isEqualTo(1);
+        Assertions.assertThat(service.recordSecondFactorFailure(7L, "10.0.3.9"))
                 .isEqualTo(LoginAttemptService.Outcome.LOCKED);
-        verify(userRepository).lockAccount(eq(7L), any());
+        Mockito.verify(userRepository).lockAccount(ArgumentMatchers.eq(7L), ArgumentMatchers.any());
     }
 
     @Test
     @DisplayName("A full login resets the account counter")
     void resetClears() {
         service.resetAccount(7L);
-        verify(userRepository).resetLoginFailures(7L);
+        Mockito.verify(userRepository).resetLoginFailures(7L);
     }
 
     private static final class MutableClock extends Clock {

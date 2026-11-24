@@ -10,7 +10,8 @@
     <style>
         .tfa-qr { width: 100%; max-width: 280px; height: auto; image-rendering: pixelated; margin: 0 auto; display: block;
                   border: 1px solid #e2e8f0; border-radius: .75rem; background: #fff; padding: .5rem; }
-        .tfa-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; word-break: break-all; }
+        .tfa-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; letter-spacing: .02em;
+                   text-align: center; }
         .tfa-code-input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.5rem;
                           letter-spacing: .4em; text-align: center; }
         .tfa-backup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
@@ -25,7 +26,14 @@
         <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
         İki Faktörlü Doğrulama
     </div>
-    <h1 class="admin-login__brand">Özerler Mermer ERP</h1>
+    <h1 class="admin-login__brand">
+        <img class="admin-login__wordmark"
+             th:src="@{/brand/logo-ozerler.png(v=${assetVersion})}"
+             th:attr="srcset=|@{/brand/logo-ozerler.png(v=${assetVersion})} 1x, @{/brand/logo-ozerler@2x.png(v=${assetVersion})} 2x|"
+             src="/brand/logo-ozerler.png"
+             width="800" height="276" alt="">
+        <span class="sr-only">Özerler Mermer ERP</span>
+    </h1>
     <p class="admin-login__lead">
         Kullanıcılar şifre ile giriş yaptıktan sonra Google Authenticator uygulamasındaki 6 haneli tek kullanımlık
         kodu girmek zorunda kalır.

@@ -22,10 +22,10 @@
 
             <div class="mt-4">
                 <label for="manualKey" class="form-label">QR okutamıyorsanız bu anahtarı elle girin</label>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-col items-stretch gap-2">
                     <input type="text" id="manualKey" readonly th:value="${setup.manualKey}"
-                           class="erp-form-input tfa-key flex-1" aria-label="Manuel anahtar">
-                    <button type="button" class="erp-btn-secondary" id="copyKey"
+                           class="erp-form-input tfa-key w-full" aria-label="Manuel anahtar">
+                    <button type="button" class="erp-btn-secondary self-end" id="copyKey"
                             onclick="(function(b){var i=document.getElementById('manualKey');i.select();
                                      (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.resolve(document.execCommand('copy')))
                                      .then(function(){b.querySelector('span').textContent='Kopyalandı';});})(this)">

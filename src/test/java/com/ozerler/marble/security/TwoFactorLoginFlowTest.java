@@ -1,21 +1,12 @@
 package com.ozerler.marble.security;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,13 +15,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.result.ModelResultMatchers;
+import org.springframework.test.web.servlet.result.StatusResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -87,6 +84,50 @@ class TwoFactorLoginFlowTest {
     @AfterEach
     void tearDown() {
         settingsService.update(TwoFactorMode.DISABLED, false, "test");
+    }
+
+    private static MockHttpServletRequestBuilder get(String url) {
+        return MockMvcRequestBuilders.get(url);
+    }
+
+    private static MockHttpServletRequestBuilder post(String url) {
+        return MockMvcRequestBuilders.post(url);
+    }
+
+    private static RequestPostProcessor csrf() {
+        return SecurityMockMvcRequestPostProcessors.csrf();
+    }
+
+    private static RequestPostProcessor user(String name, String... roles) {
+        return SecurityMockMvcRequestPostProcessors.user(name).roles(roles);
+    }
+
+    private static ResultMatcher redirectedUrl(String url) {
+        return MockMvcResultMatchers.redirectedUrl(url);
+    }
+
+    private static StatusResultMatchers status() {
+        return MockMvcResultMatchers.status();
+    }
+
+    private static ResultMatcher view(String name) {
+        return MockMvcResultMatchers.view().name(name);
+    }
+
+    private static ModelResultMatchers model() {
+        return MockMvcResultMatchers.model();
+    }
+
+    private static ResultMatcher authenticated() {
+        return SecurityMockMvcResultMatchers.authenticated();
+    }
+
+    private static ResultMatcher unauthenticated() {
+        return SecurityMockMvcResultMatchers.unauthenticated();
+    }
+
+    private static String redirectOf(MvcResult result) {
+        return result.getResponse().getRedirectedUrl();
     }
 
     private static RequestPostProcessor freshIp() {
@@ -163,7 +204,7 @@ class TwoFactorLoginFlowTest {
         User user = newUser();
         mockMvc.perform(loginRequest(new MockHttpSession(), user.getEmail(), PASSWORD))
                 .andExpect(redirectedUrl("/admin/dashboard"))
-                .andExpect(SecurityMockMvcResultMatchers.authenticated());
+                .andExpect(authenticated());
     }
 
     @Test
@@ -174,19 +215,19 @@ class TwoFactorLoginFlowTest {
         MockHttpSession session = new MockHttpSession();
         mockMvc.perform(loginRequest(session, user.getEmail(), PASSWORD))
                 .andExpect(redirectedUrl("/auth/2fa/verify"))
-                .andExpect(SecurityMockMvcResultMatchers.unauthenticated());
+                .andExpect(unauthenticated());
         mockMvc.perform(get("/admin/dashboard").session(session))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl(LOGIN));
         mockMvc.perform(get("/auth/2fa/verify").session(session))
                 .andExpect(status().isOk())
-                .andExpect(view().name("auth/two-factor-verify"));
+                .andExpect(view("auth/two-factor-verify"));
 
         MvcResult result = verify(session, code(user, 0));
-        assertThat(result.getResponse().getRedirectedUrl()).isEqualTo("/admin/dashboard");
+        Assertions.assertThat(result.getResponse().getRedirectedUrl()).isEqualTo("/admin/dashboard");
         mockMvc.perform(get("/account/2fa").session(session)).andExpect(status().isOk());
         User reloaded = userRepository.findById(user.getId()).orElseThrow();
-        assertThat(reloaded.getFailedLoginAttempts()).isZero();
+        Assertions.assertThat(reloaded.getFailedLoginAttempts()).isZero();
     }
 
     @Test
@@ -198,11 +239,11 @@ class TwoFactorLoginFlowTest {
 
         MockHttpSession first = new MockHttpSession();
         mockMvc.perform(loginRequest(first, user.getEmail(), PASSWORD));
-        assertThat(verify(first, current).getResponse().getRedirectedUrl()).isEqualTo("/admin/dashboard");
+        Assertions.assertThat(verify(first, current).getResponse().getRedirectedUrl()).isEqualTo("/admin/dashboard");
 
         MockHttpSession second = new MockHttpSession();
         mockMvc.perform(loginRequest(second, user.getEmail(), PASSWORD));
-        assertThat(verify(second, current).getResponse().getRedirectedUrl()).isEqualTo("/auth/2fa/verify");
+        Assertions.assertThat(verify(second, current).getResponse().getRedirectedUrl()).isEqualTo("/auth/2fa/verify");
         mockMvc.perform(get("/admin/dashboard").session(second)).andExpect(redirectedUrl(LOGIN));
     }
 
@@ -224,15 +265,15 @@ class TwoFactorLoginFlowTest {
         mockMvc.perform(loginRequest(session, user.getEmail(), PASSWORD));
         String wrong = String.format("%06d", (Integer.parseInt(code(user, 0)) + 500_000) % 1_000_000);
         for (int i = 0; i < 4; i++) {
-            assertThat(verify(session, wrong).getResponse().getRedirectedUrl()).isEqualTo("/auth/2fa/verify");
+            Assertions.assertThat(redirectOf(verify(session, wrong))).isEqualTo("/auth/2fa/verify");
         }
-        assertThat(verify(session, wrong).getResponse().getRedirectedUrl()).isEqualTo(LOGIN + "?locked=true");
+        Assertions.assertThat(redirectOf(verify(session, wrong))).isEqualTo(LOGIN + "?locked=true");
         User locked = userRepository.findById(user.getId()).orElseThrow();
-        assertThat(locked.getLockedUntil()).isAfter(java.time.LocalDateTime.now().plusMinutes(14));
+        Assertions.assertThat(locked.getLockedUntil()).isAfter(java.time.LocalDateTime.now().plusMinutes(14));
 
         mockMvc.perform(loginRequest(new MockHttpSession(), user.getEmail(), PASSWORD))
                 .andExpect(redirectedUrl(LOGIN + "?locked=true"))
-                .andExpect(SecurityMockMvcResultMatchers.unauthenticated());
+                .andExpect(unauthenticated());
         mockMvc.perform(get("/auth/2fa/verify").session(session)).andExpect(redirectedUrl(LOGIN));
     }
 
@@ -243,7 +284,7 @@ class TwoFactorLoginFlowTest {
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(loginRequest(new MockHttpSession(), user.getEmail(), "wrong-" + i));
         }
-        assertThat(userRepository.findById(user.getId()).orElseThrow().getLockedUntil()).isNotNull();
+        Assertions.assertThat(userRepository.findById(user.getId()).orElseThrow().getLockedUntil()).isNotNull();
         mockMvc.perform(loginRequest(new MockHttpSession(), user.getEmail(), PASSWORD))
                 .andExpect(redirectedUrl(LOGIN + "?locked=true"));
     }
@@ -263,7 +304,7 @@ class TwoFactorLoginFlowTest {
         mockMvc.perform(post(LOGIN).with(csrf()).with(sameIp)
                         .param("username", user.getEmail()).param("password", PASSWORD))
                 .andExpect(redirectedUrl(LOGIN + "?blocked=true"))
-                .andExpect(SecurityMockMvcResultMatchers.unauthenticated());
+                .andExpect(unauthenticated());
     }
 
     @Test
@@ -287,16 +328,16 @@ class TwoFactorLoginFlowTest {
     void backupCodeSingleUse() throws Exception {
         User user = newUser();
         List<String> codes = enrol(user);
-        assertThat(codes).hasSize(10);
+        Assertions.assertThat(codes).hasSize(10);
 
         MockHttpSession first = new MockHttpSession();
         mockMvc.perform(loginRequest(first, user.getEmail(), PASSWORD));
-        assertThat(verify(first, codes.get(0)).getResponse().getRedirectedUrl()).isEqualTo("/admin/dashboard");
-        assertThat(backupCodeRepository.countByUserIdAndUsedAtIsNull(user.getId())).isEqualTo(9);
+        Assertions.assertThat(redirectOf(verify(first, codes.get(0)))).isEqualTo("/admin/dashboard");
+        Assertions.assertThat(backupCodeRepository.countByUserIdAndUsedAtIsNull(user.getId())).isEqualTo(9);
 
         MockHttpSession second = new MockHttpSession();
         mockMvc.perform(loginRequest(second, user.getEmail(), PASSWORD));
-        assertThat(verify(second, codes.get(0)).getResponse().getRedirectedUrl()).isEqualTo("/auth/2fa/verify");
+        Assertions.assertThat(redirectOf(verify(second, codes.get(0)))).isEqualTo("/auth/2fa/verify");
     }
 
     @Test
@@ -307,11 +348,11 @@ class TwoFactorLoginFlowTest {
         MockHttpSession session = new MockHttpSession();
         MvcResult password = mockMvc.perform(loginRequest(session, user.getEmail(), PASSWORD)
                 .param("remember-me", "true")).andReturn();
-        assertThat(password.getResponse().getCookie("remember-me")).isNull();
+        Assertions.assertThat(password.getResponse().getCookie("remember-me")).isNull();
         MvcResult second = verify(session, code(user, 0));
-        assertThat(second.getResponse().getRedirectedUrl()).isEqualTo("/admin/dashboard");
-        assertThat(second.getResponse().getCookie("remember-me")).isNotNull();
-        assertThat(second.getResponse().getCookie("remember-me").getValue()).isNotBlank();
+        Assertions.assertThat(second.getResponse().getRedirectedUrl()).isEqualTo("/admin/dashboard");
+        Assertions.assertThat(second.getResponse().getCookie("remember-me")).isNotNull();
+        Assertions.assertThat(second.getResponse().getCookie("remember-me").getValue()).isNotBlank();
     }
 
     @Test
@@ -322,10 +363,10 @@ class TwoFactorLoginFlowTest {
         MockHttpSession session = new MockHttpSession();
         mockMvc.perform(loginRequest(session, user.getEmail(), PASSWORD))
                 .andExpect(redirectedUrl("/auth/2fa/setup"))
-                .andExpect(SecurityMockMvcResultMatchers.unauthenticated());
+                .andExpect(unauthenticated());
         mockMvc.perform(get("/auth/2fa/setup").session(session))
                 .andExpect(status().isOk())
-                .andExpect(view().name("auth/two-factor-setup"))
+                .andExpect(view("auth/two-factor-setup"))
                 .andExpect(model().attributeExists("setup"));
         mockMvc.perform(get("/admin/dashboard").session(session)).andExpect(redirectedUrl(LOGIN));
 
@@ -347,10 +388,12 @@ class TwoFactorLoginFlowTest {
         mockMvc.perform(get("/account/2fa").session(session)).andExpect(status().isOk());
 
         User enrolled = userRepository.findById(user.getId()).orElseThrow();
-        assertThat(enrolled.isTotpEnabled()).isTrue();
-        assertThat(enrolled.isTotpSetupCompleted()).isTrue();
-        assertThat(enrolled.getTotpSecretEncrypted()).startsWith("v1:").doesNotContain(secretOf(user.getId()));
-        assertThat(backupCodeRepository.countByUserIdAndUsedAtIsNull(user.getId())).isEqualTo(10);
+        Assertions.assertThat(enrolled.isTotpEnabled()).isTrue();
+        Assertions.assertThat(enrolled.isTotpSetupCompleted()).isTrue();
+        Assertions.assertThat(enrolled.getTotpSecretEncrypted())
+                .startsWith("v1:")
+                .doesNotContain(secretOf(user.getId()));
+        Assertions.assertThat(backupCodeRepository.countByUserIdAndUsedAtIsNull(user.getId())).isEqualTo(10);
         mockMvc.perform(get("/auth/2fa/setup/backup-codes").session(session))
                 .andExpect(status().is3xxRedirection());
     }
@@ -361,13 +404,13 @@ class TwoFactorLoginFlowTest {
         User user = newUser();
         enrol(user);
         mockMvc.perform(post("/admin/users/" + user.getId() + "/reset-2fa").with(csrf())
-                        .with(user("admin@eimece.test").roles("ADMIN")))
+                        .with(user("admin@eimece.test", "ADMIN")))
                 .andExpect(redirectedUrl("/admin/users/" + user.getId()));
         User reset = userRepository.findById(user.getId()).orElseThrow();
-        assertThat(reset.isTotpEnabled()).isFalse();
-        assertThat(reset.isTotpSetupCompleted()).isFalse();
-        assertThat(reset.getTotpSecretEncrypted()).isNull();
-        assertThat(backupCodeRepository.countByUserIdAndUsedAtIsNull(user.getId())).isZero();
+        Assertions.assertThat(reset.isTotpEnabled()).isFalse();
+        Assertions.assertThat(reset.isTotpSetupCompleted()).isFalse();
+        Assertions.assertThat(reset.getTotpSecretEncrypted()).isNull();
+        Assertions.assertThat(backupCodeRepository.countByUserIdAndUsedAtIsNull(user.getId())).isZero();
         mockMvc.perform(loginRequest(new MockHttpSession(), user.getEmail(), PASSWORD))
                 .andExpect(redirectedUrl("/admin/dashboard"));
     }
@@ -378,9 +421,9 @@ class TwoFactorLoginFlowTest {
         User user = newUser();
         enrol(user);
         mockMvc.perform(post("/admin/users/" + user.getId() + "/reset-2fa").with(csrf())
-                        .with(user("plain@ozerler.test").roles("USER")))
+                        .with(user("plain@ozerler.test", "USER")))
                 .andExpect(status().is4xxClientError());
-        assertThat(userRepository.findById(user.getId()).orElseThrow().isTotpEnabled()).isTrue();
+        Assertions.assertThat(userRepository.findById(user.getId()).orElseThrow().isTotpEnabled()).isTrue();
     }
 
     @Test
@@ -388,15 +431,15 @@ class TwoFactorLoginFlowTest {
     void userDisable() throws Exception {
         User user = newUser();
         enrol(user);
-        var principal = user(user.getEmail()).roles("ADMIN", "USER");
+        var principal = user(user.getEmail(), "ADMIN", "USER");
         mockMvc.perform(post("/account/2fa/disable").with(csrf()).with(principal)
                         .param("currentPassword", "wrong").param("code", code(user, 0)))
                 .andExpect(redirectedUrl("/account/2fa"));
-        assertThat(userRepository.findById(user.getId()).orElseThrow().isTotpEnabled()).isTrue();
+        Assertions.assertThat(userRepository.findById(user.getId()).orElseThrow().isTotpEnabled()).isTrue();
         mockMvc.perform(post("/account/2fa/disable").with(csrf()).with(principal)
                         .param("currentPassword", PASSWORD).param("code", code(user, 0)))
                 .andExpect(redirectedUrl("/account/2fa"));
-        assertThat(userRepository.findById(user.getId()).orElseThrow().isTotpEnabled()).isFalse();
+        Assertions.assertThat(userRepository.findById(user.getId()).orElseThrow().isTotpEnabled()).isFalse();
     }
 
     @Test
@@ -411,40 +454,40 @@ class TwoFactorLoginFlowTest {
         mockMvc.perform(get(LOGIN).session(session))
                 .andExpect(model().attributeExists("captchaQuestion"));
         Integer answer = (Integer) session.getAttribute(MathCaptchaService.ANSWER);
-        assertThat(answer).isBetween(0, 100);
-        assertThat(session.getAttribute(MathCaptchaService.ISSUED_AT)).isInstanceOf(Long.class);
+        Assertions.assertThat(answer).isBetween(0, 100);
+        Assertions.assertThat(session.getAttribute(MathCaptchaService.ISSUED_AT)).isInstanceOf(Long.class);
 
         mockMvc.perform(loginRequest(session, user.getEmail(), PASSWORD).param("captcha", String.valueOf(answer + 1)))
                 .andExpect(redirectedUrl(LOGIN + "?captcha=true"))
-                .andExpect(SecurityMockMvcResultMatchers.unauthenticated());
-        assertThat(session.getAttribute(MathCaptchaService.ANSWER)).isNull();
+                .andExpect(unauthenticated());
+        Assertions.assertThat(session.getAttribute(MathCaptchaService.ANSWER)).isNull();
 
         mockMvc.perform(get(LOGIN + "?captcha=true").session(session))
                 .andExpect(model().attributeExists("captchaQuestion"));
         Integer fresh = (Integer) session.getAttribute(MathCaptchaService.ANSWER);
         mockMvc.perform(loginRequest(session, user.getEmail(), PASSWORD).param("captcha", String.valueOf(fresh)))
                 .andExpect(redirectedUrl("/admin/dashboard"))
-                .andExpect(SecurityMockMvcResultMatchers.authenticated());
-        assertThat(session.getAttribute(MathCaptchaService.FAILED_COUNT)).isNull();
-        assertThat(session.getAttribute(MathCaptchaService.ANSWER)).isNull();
+                .andExpect(authenticated());
+        Assertions.assertThat(session.getAttribute(MathCaptchaService.FAILED_COUNT)).isNull();
+        Assertions.assertThat(session.getAttribute(MathCaptchaService.ANSWER)).isNull();
     }
 
     @Test
     @DisplayName("Admin settings form saves mode and enforcement without a restart")
     void adminSettingsForm() throws Exception {
-        var admin = user("admin@eimece.test").roles("ADMIN");
+        var admin = user("admin@eimece.test", "ADMIN");
         mockMvc.perform(post("/admin/settings/two-factor").with(csrf()).with(admin)
                         .param("mode", "AUTHENTICATOR").param("enforced", "true"))
                 .andExpect(redirectedUrl("/admin/settings?tab=security"));
-        assertThat(settingsService.mode()).isEqualTo(TwoFactorMode.AUTHENTICATOR);
-        assertThat(settingsService.enforced()).isTrue();
+        Assertions.assertThat(settingsService.mode()).isEqualTo(TwoFactorMode.AUTHENTICATOR);
+        Assertions.assertThat(settingsService.enforced()).isTrue();
         mockMvc.perform(post("/admin/settings/two-factor").with(csrf()).with(admin)
                         .param("mode", "DISABLED"))
                 .andExpect(redirectedUrl("/admin/settings?tab=security"));
-        assertThat(settingsService.mode()).isEqualTo(TwoFactorMode.DISABLED);
-        assertThat(settingsService.enforced()).isFalse();
+        Assertions.assertThat(settingsService.mode()).isEqualTo(TwoFactorMode.DISABLED);
+        Assertions.assertThat(settingsService.enforced()).isFalse();
         mockMvc.perform(post("/admin/settings/two-factor").with(csrf())
-                        .with(user("plain@ozerler.test").roles("USER")).param("mode", "AUTHENTICATOR"))
+                        .with(user("plain@ozerler.test", "USER")).param("mode", "AUTHENTICATOR"))
                 .andExpect(status().is4xxClientError());
     }
 }
