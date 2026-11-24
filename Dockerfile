@@ -70,7 +70,7 @@ RUN arch="x86_64" \
 
 COPY --chmod=755 scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY --chmod=755 scripts/deploy_from_app.sh /usr/local/sbin/marble-erp-inapp-deploy
-COPY --chmod=755 scripts/deploy_from_app.sh scripts/backup_production.sh scripts/restore_production.sh scripts/rollback_production.sh scripts/init_fresh_install.sh /stack/scripts/
+COPY --chmod=755 scripts/deploy_from_app.sh scripts/backup_production.sh scripts/restore_production.sh scripts/rollback_production.sh scripts/init_fresh_install.sh scripts/ensure_secrets.sh /stack/scripts/
 COPY docker-compose.prod.yml /stack/docker-compose.prod.yml
 COPY docker/docker-compose.yml /stack/docker-compose.yml
 COPY --from=build --chown=1001:1001 --link /build/target/marble-erp-platform-*.jar /app/app.jar

@@ -64,7 +64,7 @@ app:
   security:
     remember-me-key: ${REMEMBER_ME_KEY}
     two-factor:
-      # Required. From TOTP_ENCRYPTION_KEY_FILE=/run/secrets/totp_encryption_key. Startup fails without it.
+      # Required. From TOTP_ENCRYPTION_KEY_FILE (Docker: written by the entrypoint from the host secret dir). Startup fails without it.
       encryption-key: ${TOTP_ENCRYPTION_KEY}
       key-required: true
   deployment:

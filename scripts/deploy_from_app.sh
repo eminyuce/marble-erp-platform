@@ -310,6 +310,27 @@ print_release_summary() {
 write_status RUNNING ""
 code=0
 STACK='${host_stack}'
+SECRETS_HELPER_IMAGE='alpine:3.24.1'
+# Runs scripts/ensure_secrets.sh (copied from the NEW image) in a one-shot helper
+# container that mounts the host secret directory. It creates only the safe files
+# (TOTP key, remember-me key) when missing and aborts on any other missing or empty
+# file, before "docker compose up" can recreate the app container.
+preflight_secrets() {
+    secrets_dir=\$(sed -n 's/^SECRETS_DIR=//p' "\$STACK/.env" 2>/dev/null | tail -n 1 | tr -d '"' | tr -d "'")
+    secrets_dir=\${secrets_dir:-/opt/marble-erp/secrets}
+    script="\$STACK/scripts/ensure_secrets.sh"
+    if [ ! -s "\$script" ]; then
+        echo "[WARN] Yeni imajda ensure_secrets.sh yok; gizli dosya ön kontrolü atlandı."
+        return 0
+    fi
+    echo "\$ gizli dosya ön kontrolü (\$secrets_dir)"
+    docker run --rm -i --network none --user 0:0 \\
+        -e SECRETS_DIR="\$secrets_dir" \\
+        -v "\$secrets_dir:/s" \\
+        -v "\$STACK/docker-compose.prod.yml:/compose.yml:ro" \\
+        "\$SECRETS_HELPER_IMAGE" \\
+        sh -s -- --dir /s --host-dir "\$secrets_dir" --compose /compose.yml < "\$script"
+}
 {
     if [ -d "\$STACK/.env" ]; then
         rmdir "\$STACK/.env" 2>/dev/null || true
@@ -343,7 +364,20 @@ GOOD_EOF
             else
                 rm -f "\$STACK/docker-compose.prod.yml.tmp"
             fi
+            mkdir -p "\$STACK/scripts"
+            if docker cp "\$cid:/stack/scripts/ensure_secrets.sh" "\$STACK/scripts/ensure_secrets.sh.tmp" 2>/dev/null && [ -s "\$STACK/scripts/ensure_secrets.sh.tmp" ]; then
+                mv -f "\$STACK/scripts/ensure_secrets.sh.tmp" "\$STACK/scripts/ensure_secrets.sh"
+                chmod 644 "\$STACK/scripts/ensure_secrets.sh" 2>/dev/null || true
+            else
+                rm -f "\$STACK/scripts/ensure_secrets.sh.tmp"
+            fi
             docker rm -f "\$cid" >/dev/null 2>&1 || true
+        fi
+    fi
+    if [ "\$code" -eq 0 ] && [ -f "\$STACK/docker-compose.prod.yml" ]; then
+        if ! preflight_secrets; then
+            echo "[FAIL] Gizli dosya ön kontrolü başarısız. Konteyner yeniden oluşturulmadı; çalışan sürüm yayında kalıyor."
+            code=1
         fi
     fi
     if [ "\$code" -eq 0 ] && [ ! -f "\$STACK/docker-compose.prod.yml" ]; then
@@ -497,6 +531,20 @@ echo
 
 cd "$REPO_ROOT"
 compose_args=(-f "$(compose_file)")
+
+# Preflight: fail before anything is pulled or recreated.
+host_secrets_dir="${SECRETS_DIR:-$(sed -n 's/^SECRETS_DIR=//p' "$REPO_ROOT/.env" 2>/dev/null | tail -n 1 | tr -d "\"'")}"
+host_secrets_dir="${host_secrets_dir:-/opt/marble-erp/secrets}"
+if [ -f "$REPO_ROOT/scripts/ensure_secrets.sh" ]; then
+    echo "\$ gizli dosya ön kontrolü (${host_secrets_dir})"
+    if ! SECRETS_DIR="$host_secrets_dir" sh "$REPO_ROOT/scripts/ensure_secrets.sh" \
+            --dir "$host_secrets_dir" --host-dir "$host_secrets_dir" --compose "$(compose_file)"; then
+        echo "[FAIL] Gizli dosya ön kontrolü başarısız. Konteyner yeniden oluşturulmadı."
+        exit 1
+    fi
+else
+    echo "[WARN] scripts/ensure_secrets.sh yok; gizli dosya ön kontrolü atlandı."
+fi
 
 echo "\$ docker compose -f docker-compose.prod.yml pull app"
 docker compose "${compose_args[@]}" pull app

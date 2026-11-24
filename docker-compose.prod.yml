@@ -139,7 +139,12 @@ services:
       REMEMBER_ME_KEY_FILE: /run/secrets/remember_me_key
       RUSTFS_ACCESS_KEY_FILE: /run/secrets/rustfs_access_key
       RUSTFS_SECRET_KEY_FILE: /run/secrets/rustfs_secret_key
-      TOTP_ENCRYPTION_KEY_FILE: /run/secrets/totp_encryption_key
+      # The TOTP key is not a compose secret: a missing file would stop "up" before the
+      # container exists. The entrypoint creates it on the host when missing (through the
+      # docker socket, never overwriting) and copies it into this private path.
+      TOTP_ENCRYPTION_KEY_FILE: /tmp/marble-secrets/totp_encryption_key
+      MARBLE_HOST_SECRETS_DIR: ${SECRETS_DIR:-/opt/marble-erp/secrets}
+      MARBLE_SECRETS_HELPER_IMAGE: alpine:3.24.1
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-marble_erp}
       APP_UPLOAD_DIR: /app/uploads
       APP_MEDIA_DIR: /app/media
@@ -176,7 +181,6 @@ services:
       - remember_me_key
       - rustfs_access_key
       - rustfs_secret_key
-      - totp_encryption_key
     networks:
       - marble-network
 
@@ -189,8 +193,11 @@ secrets:
     file: ${SECRETS_DIR:-/opt/marble-erp/secrets}/rustfs_access_key.txt
   rustfs_secret_key:
     file: ${SECRETS_DIR:-/opt/marble-erp/secrets}/rustfs_secret_key.txt
-  totp_encryption_key:
-    file: ${SECRETS_DIR:-/opt/marble-erp/secrets}/totp_encryption_key.txt
+
+# Host secret files that are not compose secrets but are still checked by
+# scripts/ensure_secrets.sh before every in-app deploy.
+x-marble-host-secrets:
+  totp_encryption_key: ${SECRETS_DIR:-/opt/marble-erp/secrets}/totp_encryption_key.txt
 
 networks:
   marble-network:

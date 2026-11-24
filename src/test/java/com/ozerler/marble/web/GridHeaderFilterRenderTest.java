@@ -88,9 +88,9 @@ class GridHeaderFilterRenderTest {
         Assertions.assertTrue(html.contains("type=\"date\""), "missing date input");
         Assertions.assertTrue(html.contains("name=\"cf.totalCost\""), "missing numeric filter field");
         Assertions.assertTrue(html.contains("/grid-filter-values?grid=blocks-table"), "missing distinct-values URL");
-        Assertions.assertTrue(html.contains("/js/app.js?v=1.0.11"),
+        Assertions.assertTrue(html.contains("/js/app.js?v=1.0.12"),
                 "app.js should be cache-busted with the app version");
-        Assertions.assertTrue(html.contains("admin-topbar-version") && html.contains("1.0.11"),
+        Assertions.assertTrue(html.contains("admin-topbar-version") && html.contains("1.0.12"),
                 "header should show the application version");
         Assertions.assertTrue(html.contains("admin-app-footer") && html.contains("Sürüm"),
                 "footer should show the application version");
