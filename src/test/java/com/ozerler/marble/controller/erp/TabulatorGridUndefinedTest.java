@@ -174,14 +174,14 @@ class TabulatorGridUndefinedTest {
     void assetVersionIsConfiguredAndConsistent() throws Exception {
         String appYml = readResource("/application.yml");
         Assertions.assertThat(appYml).contains("asset-version: ${app.version}");
-        Assertions.assertThat(appYml).contains("version: \"1.0.12\"");
+        Assertions.assertThat(appYml).contains("version: \"1.0.13\"");
 
         String layout = readResource("/templates/layout/base.html");
         Assertions.assertThat(layout).contains("@{/css/app.css(v=${assetVersion})}");
         Assertions.assertThat(layout).contains("@{/js/app.js(v=${assetVersion})}");
         Assertions.assertThat(layout).contains("admin-app-footer");
-        Assertions.assertThat(readResource("/templates/layout/navbar.html"))
-                .contains("admin-topbar-version")
+        Assertions.assertThat(readResource("/templates/layout/mega-menu.html"))
+                .contains("admin-mega-brand-version")
                 .contains("th:text=\"${appVersion}\"");
         Assertions.assertThat(readResource("/templates/auth/admin-login.html"))
                 .contains("@{/css/app.css(v=${assetVersion})}");

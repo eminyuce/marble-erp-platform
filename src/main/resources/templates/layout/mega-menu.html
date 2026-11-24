@@ -35,6 +35,16 @@
                 </div>
             </header>
 
+            <div class="admin-mega-brand">
+                <img class="admin-mega-brand-mark"
+                     th:src="@{/icons/android-chrome-48x48.png(v=${assetVersion})}"
+                     src="/icons/android-chrome-48x48.png"
+                     width="48" height="48" alt="" aria-hidden="true">
+                <span class="admin-mega-brand-name">Özerler Mermer ERP</span>
+                <span class="admin-mega-brand-version" th:text="${appVersion}" title="Uygulama sürümü"
+                      aria-label="Uygulama sürümü">1.0.13</span>
+            </div>
+
             <div class="admin-mega-search" id="adminSidebarSearchContainer">
                 <div class="admin-mega-search-inner">
                     <i data-lucide="search" class="admin-mega-search-icon" aria-hidden="true"></i>

@@ -20,9 +20,6 @@
                  th:src="@{/icons/android-chrome-48x48.png(v=${assetVersion})}"
                  src="/icons/android-chrome-48x48.png"
                  width="48" height="48" alt="" aria-hidden="true">
-            <span class="admin-topbar-panel">Özerler Mermer ERP</span>
-            <span class="admin-topbar-version" th:text="${appVersion}" title="Uygulama sürümü"
-                  aria-label="Uygulama sürümü">1.0.12</span>
             <span class="admin-topbar-page" id="adminTopbarPage">Yönetim</span>
         </div>
         <nav class="hidden xl:flex items-center gap-1 ml-3" aria-label="Hızlı Modül Menüsü">
@@ -301,9 +298,10 @@
     <style>
         .admin-topbar-title {
             display: flex;
+            flex-direction: row;
             align-items: center;
             min-width: 0;
-            gap: 0.4rem;
+            gap: 0.5rem;
         }
         .admin-topbar-mark {
             width: 28px;
@@ -311,34 +309,14 @@
             flex-shrink: 0;
             object-fit: contain;
         }
-        .admin-topbar-panel {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            min-width: 0;
-        }
-        @media (max-width: 640px) {
+        @media (max-width: 720px) {
             .admin-topbar-mark {
                 width: 24px;
                 height: 24px;
             }
-        }
-        .admin-topbar-version {
-            display: inline-flex;
-            align-items: center;
-            margin-left: 0.35rem;
-            padding: 0 0.45rem;
-            height: 1.25rem;
-            border: 1px solid #d7dee8;
-            border-radius: 999px;
-            background: #f8fafc;
-            color: #475569;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-            line-height: 1;
+            .admin-topbar-page {
+                display: none;
+            }
         }
         .admin-topbar-health {
             display: inline-flex;
