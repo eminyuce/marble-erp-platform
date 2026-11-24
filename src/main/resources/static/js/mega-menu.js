@@ -43,7 +43,9 @@
             return;
         }
         const raw = (document.title || "").split("|")[0].split("•")[0].trim();
-        pageLabel.textContent = raw || "Yönetim";
+        // When a page has no specific title the document title is only the
+        // product name; keep that name in the mega menu, not in the top bar.
+        pageLabel.textContent = (!raw || raw === "Özerler Mermer ERP") ? "Yönetim" : raw;
     }
 
     function scoreUrlMatch(itemHref) {

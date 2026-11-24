@@ -17,8 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 /**
- * The product name should appear once in the application chrome (top bar), with the
- * version kept visible. The footer must not repeat the brand name.
+ * The product name should appear once in the mega menu brand row (above the search
+ * field, below the dark user header), with the version kept visible there. The top
+ * bar and footer must not repeat the brand name.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -41,7 +42,7 @@ class BrandLayoutRenderTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("dashboard chrome shows the brand once in the top bar and keeps the version in the footer")
+    @DisplayName("dashboard chrome shows the brand once in the mega menu and keeps the version")
     void dashboardShowsBrandOnceAndKeepsVersion() throws Exception {
         String html = mockMvc.perform(MockMvcRequestBuilders.get("/admin/dashboard"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -49,12 +50,21 @@ class BrandLayoutRenderTest {
                 .getResponse()
                 .getContentAsString();
 
-        String topbar = extract(html, "<header", "</header>");
+        String topbar = extract(html, "class=\"admin-topbar\"", "</header>");
+        String megaHeader = extract(html, "<header class=\"admin-mega-header\">", "</header>");
+        String megaBrand = extract(html, "class=\"admin-mega-brand\"", "id=\"adminSidebarSearchContainer\"");
         String footer = extract(html, "<footer class=\"admin-app-footer\">", "</footer>");
 
-        Assertions.assertEquals(1, count(topbar, BRAND), "top bar should show the brand once:\n" + topbar);
-        Assertions.assertTrue(topbar.contains("admin-topbar-version"), topbar);
-        Assertions.assertTrue(topbar.contains("1.0.12") || footer.contains("1.0.12"), html);
+        Assertions.assertEquals(0, count(topbar, BRAND), "top bar should not show the brand name:\n" + topbar);
+        Assertions.assertFalse(topbar.contains("admin-topbar-version"), topbar);
+        Assertions.assertTrue(topbar.contains("admin-topbar-mark"), topbar);
+        Assertions.assertEquals(0, count(megaHeader, BRAND),
+                "dark mega header should not contain the brand:\n" + megaHeader);
+        Assertions.assertEquals(1, count(megaBrand, BRAND),
+                "mega menu body should show the brand once above search:\n" + megaBrand);
+        Assertions.assertTrue(megaBrand.contains("admin-mega-brand-version"), megaBrand);
+        Assertions.assertTrue(megaBrand.contains("1.0.13"), megaBrand);
+        Assertions.assertTrue(footer.contains("1.0.13"), footer);
         Assertions.assertEquals(0, count(footer, BRAND), "footer should not repeat the brand:\n" + footer);
         Assertions.assertTrue(footer.contains("Sürüm"), footer);
         Assertions.assertEquals(1, count(stripTitle(html), BRAND),
@@ -83,7 +93,7 @@ class BrandLayoutRenderTest {
                 "login guide eyebrow should not repeat the brand");
         Assertions.assertTrue(html.contains("admin-login__brand"), html);
         Assertions.assertTrue(html.contains("Sürüm"), html);
-        Assertions.assertTrue(html.contains("1.0.12"), html);
+        Assertions.assertTrue(html.contains("1.0.13"), html);
         Assertions.assertTrue(html.contains("/brand/logo-ozerler.png"), html);
         Assertions.assertTrue(html.contains("name=\"robots\""), html);
         Assertions.assertTrue(html.contains("noindex, nofollow"), html);
