@@ -26,7 +26,8 @@ public class CacheConfig {
                 Constants.CACHE_SETTINGS,
                 Constants.CACHE_EMAIL_TEMPLATES,
                 Constants.CACHE_QUARRIES,
-                Constants.CACHE_COST_CENTERS
+                Constants.CACHE_COST_CENTERS,
+                Constants.CACHE_RATE_LIMIT_SETTINGS
         ));
         return cacheManager;
     }

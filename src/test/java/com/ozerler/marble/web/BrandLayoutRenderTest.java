@@ -54,11 +54,20 @@ class BrandLayoutRenderTest {
 
         Assertions.assertEquals(1, count(topbar, BRAND), "top bar should show the brand once:\n" + topbar);
         Assertions.assertTrue(topbar.contains("admin-topbar-version"), topbar);
-        Assertions.assertTrue(topbar.contains("1.0.9") || footer.contains("1.0.9"), html);
+        Assertions.assertTrue(topbar.contains("1.0.10") || footer.contains("1.0.10"), html);
         Assertions.assertEquals(0, count(footer, BRAND), "footer should not repeat the brand:\n" + footer);
         Assertions.assertTrue(footer.contains("Sürüm"), footer);
         Assertions.assertEquals(1, count(stripTitle(html), BRAND),
                 "visible page chrome should contain the brand once");
+        Assertions.assertTrue(html.contains("name=\"robots\""), html);
+        Assertions.assertTrue(html.contains("noindex, nofollow"), html);
+        Assertions.assertTrue(html.contains("/favicon.ico?v="), html);
+        Assertions.assertTrue(html.contains("/apple-touch-icon.png?v="), html);
+        Assertions.assertTrue(html.contains("/site.webmanifest?v="), html);
+        Assertions.assertTrue(html.contains("theme-color"), html);
+        Assertions.assertTrue(html.contains("#5A0048"), html);
+        Assertions.assertTrue(html.contains("/icons/android-chrome-48x48.png"), html);
+        Assertions.assertTrue(html.contains("/brand/logo-ozerler.png"), html);
     }
 
     @Test
@@ -74,7 +83,14 @@ class BrandLayoutRenderTest {
                 "login guide eyebrow should not repeat the brand");
         Assertions.assertTrue(html.contains("admin-login__brand"), html);
         Assertions.assertTrue(html.contains("Sürüm"), html);
-        Assertions.assertTrue(html.contains("1.0.9"), html);
+        Assertions.assertTrue(html.contains("1.0.10"), html);
+        Assertions.assertTrue(html.contains("/brand/logo-ozerler.png"), html);
+        Assertions.assertTrue(html.contains("name=\"robots\""), html);
+        Assertions.assertTrue(html.contains("noindex, nofollow"), html);
+        Assertions.assertTrue(html.contains("/apple-touch-icon.png?v="), html);
+        Assertions.assertTrue(html.contains("/site.webmanifest?v="), html);
+        Assertions.assertFalse(html.contains("admin-login__panel-product"),
+                "login panel should not repeat the brand name");
     }
 
     private static String stripTitle(String html) {

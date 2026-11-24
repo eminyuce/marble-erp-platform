@@ -16,10 +16,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.service.RateLimitService;
 import com.ozerler.marble.service.RateLimitService.Tier;
-import com.ozerler.marble.service.SettingService;
+import com.ozerler.marble.service.RateLimitSettingsService;
 import com.ozerler.marble.util.ClientIps;
 import com.ozerler.marble.util.HttpRequests;
 
@@ -37,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimitService rateLimitService;
-    private final SettingService settingService;
+    private final RateLimitSettingsService rateLimitSettingsService;
     private final MessageSource messageSource;
 
     private String buildJsonResponse(Locale locale) {
@@ -89,7 +88,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         // Rate limiting devre dışıysa doğrudan geç
-        if (!settingService.getBooleanSetting(Constants.SETTING_KEY_RATE_LIMITING, true)) {
+        if (!rateLimitSettingsService.effective().isEnabled()) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -110,7 +109,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                     clientIp, request.getMethod(), request.getRequestURI(), tier.name());
 
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setHeader("Retry-After", "60");
+            response.setHeader("Retry-After", String.valueOf(rateLimitService.windowSeconds(tier)));
 
             Locale locale = LocaleContextHolder.getLocale();
             if (locale == null) {
@@ -145,6 +144,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 || path.startsWith("/media/")
                 || path.startsWith("/api/upload/view/")
                 || path.startsWith("/favicon.ico")
+                || path.startsWith("/apple-touch-icon.png")
+                || path.startsWith("/site.webmanifest")
+                || path.startsWith("/robots.txt")
+                || path.startsWith("/icons/")
+                || path.startsWith("/brand/")
                 || path.startsWith("/error")
                 || path.startsWith("/actuator")
                 || path.startsWith("/health")

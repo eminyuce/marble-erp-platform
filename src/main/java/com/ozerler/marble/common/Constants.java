@@ -108,6 +108,39 @@ public final class Constants {
      */
     public static final String SETTING_KEY_RATE_LIMITING = "security.rate_limiting.enabled";
 
+    /** Database override for the login-tier max-requests value. */
+    public static final String SETTING_KEY_RATE_LIMIT_LOGIN_MAX = "rate-limiting.login.max-requests";
+
+    /** Database override for the login-tier window, in seconds. */
+    public static final String SETTING_KEY_RATE_LIMIT_LOGIN_WINDOW = "rate-limiting.login.window-seconds";
+
+    /** Database override for the form-tier max-requests value. */
+    public static final String SETTING_KEY_RATE_LIMIT_FORM_MAX = "rate-limiting.form.max-requests";
+
+    /** Database override for the form-tier window, in seconds. */
+    public static final String SETTING_KEY_RATE_LIMIT_FORM_WINDOW = "rate-limiting.form.window-seconds";
+
+    /** Database override for the general-tier max-requests value. */
+    public static final String SETTING_KEY_RATE_LIMIT_GENERAL_MAX = "rate-limiting.general.max-requests";
+
+    /** Database override for the general-tier window, in seconds. */
+    public static final String SETTING_KEY_RATE_LIMIT_GENERAL_WINDOW = "rate-limiting.general.window-seconds";
+
+    /** Category stored on system_settings rows that hold security overrides. */
+    public static final String SETTING_CATEGORY_SECURITY = "SECURITY";
+
+    /** Inclusive lower bound for a rate-limit max-requests value. */
+    public static final int RATE_LIMIT_MAX_REQUESTS_MIN = 1;
+
+    /** Inclusive upper bound for a rate-limit max-requests value. */
+    public static final int RATE_LIMIT_MAX_REQUESTS_MAX = 10_000;
+
+    /** Inclusive lower bound for a rate-limit window, in seconds. */
+    public static final int RATE_LIMIT_WINDOW_SECONDS_MIN = 1;
+
+    /** Inclusive upper bound for a rate-limit window, in seconds. */
+    public static final int RATE_LIMIT_WINDOW_SECONDS_MAX = 3_600;
+
 
     // =========================================================================
     // 3. HTTP Headers & Request Attributes
@@ -195,6 +228,11 @@ public final class Constants {
      * Cache name for cost center lookup records.
      */
     public static final String CACHE_COST_CENTERS = "costCenters";
+
+    /**
+     * Cache name for the effective rate-limit configuration (YAML defaults plus DB overrides).
+     */
+    public static final String CACHE_RATE_LIMIT_SETTINGS = "rateLimitSettings";
 
 
     // =========================================================================
@@ -618,6 +656,46 @@ public final class Constants {
     public static final String[] ALLOWED_CORS_METHODS = {
             "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
     };
+
+
+    // =========================================================================
+    // 21. Robots / Indexing
+    // =========================================================================
+    /**
+     * HTTP header that instructs crawlers not to index or follow a response.
+     */
+    public static final String HEADER_X_ROBOTS_TAG = "X-Robots-Tag";
+
+    /**
+     * Value sent on every response via X-Robots-Tag (and mirrored in the robots meta tag).
+     */
+    public static final String X_ROBOTS_TAG_VALUE = "noindex, nofollow, noarchive";
+
+    /**
+     * Value of the HTML robots meta tag.
+     */
+    public static final String META_ROBOTS_VALUE = "noindex, nofollow";
+
+    /**
+     * Brand purple used as the theme / tile color (sampled from the wordmark).
+     */
+    public static final String THEME_COLOR = "#5A0048";
+
+    /**
+     * Exact body of /robots.txt (UTF-8, LF, trailing newline). Crawling is allowed so
+     * that crawlers can see noindex / X-Robots-Tag; indexing is blocked by those signals.
+     */
+    public static final String ROBOTS_TXT_BODY = """
+            User-agent: *
+            Allow: /
+
+            # Indexing is blocked via noindex and the X-Robots-Tag header.
+            """;
+
+    /**
+     * Cache-Control for /robots.txt (one day).
+     */
+    public static final String ROBOTS_TXT_CACHE_CONTROL = "public, max-age=86400";
 
     private Constants() {
         // Prevent instantiation

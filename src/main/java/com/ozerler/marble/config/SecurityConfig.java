@@ -15,7 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
+import com.ozerler.marble.common.Constants;
 import com.ozerler.marble.security.CustomUserDetailsService;
 
 @Configuration
@@ -65,6 +67,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
+                .headers(headers -> headers.addHeaderWriter(
+                        new StaticHeadersWriter(
+                                Constants.HEADER_X_ROBOTS_TAG, Constants.X_ROBOTS_TAG_VALUE)))
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .authenticationProvider(authenticationProvider())
                 .csrf(
@@ -87,6 +92,11 @@ public class SecurityConfig {
                                                 "/fonts/**",
                                                 "/images/**",
                                                 "/favicon.ico",
+                                                "/apple-touch-icon.png",
+                                                "/site.webmanifest",
+                                                "/robots.txt",
+                                                "/icons/**",
+                                                "/brand/**",
                                                 "/error",
                                                 "/login",
                                                 "/account/adminlogin/**",
