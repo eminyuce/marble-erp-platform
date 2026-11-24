@@ -34,6 +34,7 @@ import com.ozerler.marble.model.response.Status;
 import com.ozerler.marble.service.DatabaseBackupService;
 import com.ozerler.marble.service.EmailService;
 import com.ozerler.marble.service.NoticeDismissDuration;
+import com.ozerler.marble.service.RateLimitSettingsService;
 import com.ozerler.marble.service.SettingService;
 
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SettingController extends AbstractController {
 
     private final SettingService settingService;
+    private final RateLimitSettingsService rateLimitSettingsService;
     private final EmailService emailService;
     private final MessageSource messageSource;
     private final DatabaseBackupService backupService;
@@ -57,6 +59,9 @@ public class SettingController extends AbstractController {
         List<EmailTemplateDto> templates = emailService.getAllTemplateViews();
 
         model.addAttribute("settings", settings);
+        model.addAttribute("rateLimitSettings", rateLimitSettingsService.effective());
+        model.addAttribute("rateLimitDefaults", rateLimitSettingsService.yamlDefaults());
+        model.addAttribute("rateLimitOverridden", rateLimitSettingsService.hasOverride());
         model.addAttribute("templates", templates);
         model.addAttribute("backups", backupService.listBackups(request.getServerName()));
         model.addAttribute("backupStatus", backupService.getStatus());
@@ -76,9 +81,6 @@ public class SettingController extends AbstractController {
         if (!toUpdate.containsKey("security.recaptcha.enabled")) {
             toUpdate.put("security.recaptcha.enabled", "false");
         }
-        if (!toUpdate.containsKey("security.rate_limiting.enabled")) {
-            toUpdate.put("security.rate_limiting.enabled", "false");
-        }
         if (!toUpdate.containsKey("smtp.auth")) {
             toUpdate.put("smtp.auth", "false");
         }
@@ -86,8 +88,16 @@ public class SettingController extends AbstractController {
             toUpdate.put("smtp.starttls.enable", "false");
         }
 
-        // Remove CSRF or other non-setting parameters
+        // Remove CSRF or other non-setting parameters, and rate-limit keys
+        // (those are saved only through the dedicated validated endpoint).
         toUpdate.remove("_csrf");
+        toUpdate.remove(Constants.SETTING_KEY_RATE_LIMITING);
+        toUpdate.remove(Constants.SETTING_KEY_RATE_LIMIT_LOGIN_MAX);
+        toUpdate.remove(Constants.SETTING_KEY_RATE_LIMIT_LOGIN_WINDOW);
+        toUpdate.remove(Constants.SETTING_KEY_RATE_LIMIT_FORM_MAX);
+        toUpdate.remove(Constants.SETTING_KEY_RATE_LIMIT_FORM_WINDOW);
+        toUpdate.remove(Constants.SETTING_KEY_RATE_LIMIT_GENERAL_MAX);
+        toUpdate.remove(Constants.SETTING_KEY_RATE_LIMIT_GENERAL_WINDOW);
 
         if (toUpdate.containsKey(NoticeDismissDuration.SETTING_KEY)) {
             String duration = toUpdate.get(NoticeDismissDuration.SETTING_KEY);
@@ -112,6 +122,58 @@ public class SettingController extends AbstractController {
         redirectAttributes.addFlashAttribute("successMessage",
                 messageSource.getMessage("admin.settings.save.success", null, locale));
         return "redirect:/admin/settings";
+    }
+
+    /**
+     * Saves rate-limit overrides from the admin form. Changes apply immediately.
+     *
+     * @param enabled whether rate limiting is active
+     * @param loginMax login-tier max requests
+     * @param loginWindow login-tier window in seconds
+     * @param formMax form-tier max requests
+     * @param formWindow form-tier window in seconds
+     * @param generalMax general-tier max requests
+     * @param generalWindow general-tier window in seconds
+     * @param locale request locale
+     * @param redirectAttributes flash attributes
+     * @return redirect to the rate-limiting settings tab
+     */
+    @PostMapping("/rate-limiting")
+    public String saveRateLimiting(
+            @RequestParam(value = "security.rate_limiting.enabled", defaultValue = "false")
+            boolean enabled,
+            @RequestParam(value = "rate-limiting.login.max-requests") String loginMax,
+            @RequestParam(value = "rate-limiting.login.window-seconds") String loginWindow,
+            @RequestParam(value = "rate-limiting.form.max-requests") String formMax,
+            @RequestParam(value = "rate-limiting.form.window-seconds") String formWindow,
+            @RequestParam(value = "rate-limiting.general.max-requests") String generalMax,
+            @RequestParam(value = "rate-limiting.general.window-seconds") String generalWindow,
+            Locale locale,
+            RedirectAttributes redirectAttributes) {
+        try {
+            rateLimitSettingsService.save(
+                    enabled, loginMax, loginWindow, formMax, formWindow, generalMax, generalWindow);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("admin.settings.rate-limit.save.success", null, locale));
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/settings?tab=rate-limiting";
+    }
+
+    /**
+     * Clears database overrides so YAML defaults apply again.
+     *
+     * @param locale request locale
+     * @param redirectAttributes flash attributes
+     * @return redirect to the rate-limiting settings tab
+     */
+    @PostMapping("/rate-limiting/reset")
+    public String resetRateLimiting(Locale locale, RedirectAttributes redirectAttributes) {
+        rateLimitSettingsService.resetToDefaults();
+        redirectAttributes.addFlashAttribute("successMessage",
+                messageSource.getMessage("admin.settings.rate-limit.reset.success", null, locale));
+        return "redirect:/admin/settings?tab=rate-limiting";
     }
 
     @PostMapping("/email-test")

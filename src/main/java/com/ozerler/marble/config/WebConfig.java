@@ -3,6 +3,10 @@ package com.ozerler.marble.config;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.springframework.boot.web.server.MimeMappings;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -45,5 +49,19 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addFormatters(FormatterRegistry registry) {
         registry.addConverter(new LenientIntegerConverter());
+    }
+
+    /**
+     * Registers the standard MIME type for site.webmanifest.
+     *
+     * @return servlet container customizer
+     */
+    @Bean
+    public WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> webManifestMimeMapping() {
+        return factory -> {
+            MimeMappings mappings = new MimeMappings(MimeMappings.DEFAULT);
+            mappings.add("webmanifest", "application/manifest+json");
+            factory.setMimeMappings(mappings);
+        };
     }
 }

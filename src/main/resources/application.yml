@@ -160,7 +160,7 @@ app:
     remember-me-key: ${REMEMBER_ME_KEY:local-dev-remember-me-not-for-production}
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
-  version: "1.0.9"
+  version: "1.0.10"
   # Query-string cache buster for static assets (?v=). Keep in lockstep with app.version.
   asset-version: ${app.version}
   deployment:

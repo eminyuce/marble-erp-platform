@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.ozerler.marble.config.RateLimitProperties;
+import com.ozerler.marble.dto.RateLimitSettings;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,14 @@ public class RateLimitService {
         LOGIN, FORM, GENERAL
     }
 
-    private final RateLimitProperties properties;
+    private final RateLimitSettingsService rateLimitSettingsService;
+
+    /**
+     * Last snapshot applied to the in-memory windows. When the effective
+     * configuration changes, existing buckets are cleared so a tighter or
+     * shorter window cannot be under- or over-counted.
+     */
+    private volatile RateLimitSettings lastApplied;
 
     /**
      * Anahtar: "IP|TIER", Değer: istek zaman damgaları (epoch millis).
@@ -44,10 +51,12 @@ public class RateLimitService {
      * @return true ise istek geçebilir, false ise limit aşılmış
      */
     public boolean isAllowed(String clientIp, Tier tier) {
-        RateLimitProperties.TierConfig config = getTierConfig(tier);
+        RateLimitSettings settings = currentSettings();
+        int maxRequests = maxRequests(settings, tier);
+        int windowSeconds = windowSeconds(settings, tier);
         String key = clientIp + "|" + tier.name();
         long now = System.currentTimeMillis();
-        long windowStart = now - (config.getWindowSeconds() * 1000L);
+        long windowStart = now - (windowSeconds * 1000L);
 
         Deque<Long> timestamps = requestLog.computeIfAbsent(key, k -> new ConcurrentLinkedDeque<>());
 
@@ -56,9 +65,9 @@ public class RateLimitService {
             timestamps.pollFirst();
         }
 
-        if (timestamps.size() >= config.getMaxRequests()) {
+        if (timestamps.size() >= maxRequests) {
             log.warn("Rate limit exceeded — IP: {}, Tier: {}, Limit: {}/{} s",
-                    clientIp, tier.name(), config.getMaxRequests(), config.getWindowSeconds());
+                    clientIp, tier.name(), maxRequests, windowSeconds);
             return false;
         }
 
@@ -98,19 +107,48 @@ public class RateLimitService {
         }
     }
 
-    private RateLimitProperties.TierConfig getTierConfig(Tier tier) {
+    private RateLimitSettings currentSettings() {
+        RateLimitSettings now = rateLimitSettingsService.effective();
+        RateLimitSettings previous = lastApplied;
+        if (previous == null || !previous.equals(now)) {
+            requestLog.clear();
+            lastApplied = now;
+        }
+        return now;
+    }
+
+    private static int maxRequests(RateLimitSettings settings, Tier tier) {
         return switch (tier) {
-            case LOGIN -> properties.getLogin();
-            case FORM -> properties.getForm();
-            case GENERAL -> properties.getGeneral();
+            case LOGIN -> settings.getLoginMaxRequests();
+            case FORM -> settings.getFormMaxRequests();
+            case GENERAL -> settings.getGeneralMaxRequests();
+        };
+    }
+
+    private static int windowSeconds(RateLimitSettings settings, Tier tier) {
+        return switch (tier) {
+            case LOGIN -> settings.getLoginWindowSeconds();
+            case FORM -> settings.getFormWindowSeconds();
+            case GENERAL -> settings.getGeneralWindowSeconds();
         };
     }
 
     private long getMaxWindowMillis() {
+        RateLimitSettings settings = rateLimitSettingsService.effective();
         long maxSeconds = Math.max(
-                properties.getLogin().getWindowSeconds(),
-                Math.max(properties.getForm().getWindowSeconds(),
-                        properties.getGeneral().getWindowSeconds()));
+                settings.getLoginWindowSeconds(),
+                Math.max(settings.getFormWindowSeconds(),
+                        settings.getGeneralWindowSeconds()));
         return maxSeconds * 1000L;
+    }
+
+    /**
+     * Window seconds currently applied to the given tier, used for Retry-After.
+     *
+     * @param tier the request tier
+     * @return window length in seconds
+     */
+    public int windowSeconds(Tier tier) {
+        return windowSeconds(currentSettings(), tier);
     }
 }

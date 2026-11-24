@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="tags">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#5A0048">
+    <meta name="msapplication-TileColor" content="#5A0048">
+    <link rel="icon" th:href="@{/favicon.ico(v=${assetVersion})}" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" th:href="@{/icons/favicon-32x32.png(v=${assetVersion})}">
+    <link rel="icon" type="image/png" sizes="16x16" th:href="@{/icons/favicon-16x16.png(v=${assetVersion})}">
+    <link rel="apple-touch-icon" sizes="180x180" th:href="@{/apple-touch-icon.png(v=${assetVersion})}">
+    <link rel="manifest" th:href="@{/site.webmanifest(v=${assetVersion})}">
+</th:block>
+</body>
+</html>

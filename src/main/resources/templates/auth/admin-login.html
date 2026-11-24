@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Yönetici Paneli Girişi | Özerler Mermer ERP</title>
+    <th:block th:replace="~{fragments/head-icons :: tags}"></th:block>
     <link rel="preload" th:href="@{/fonts/inter-latin-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" th:href="@{/fonts/inter-latin-ext-wght-normal.woff2}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" th:href="@{/css/app.css(v=${assetVersion})}">
     <script th:src="@{/vendor/lucide.min.js}"></script>
+    <style>
+        .admin-login__wordmark { height: 52px; width: auto; display: block; max-width: 100%; }
+    </style>
 </head>
 <body class="admin-login-page">
 <div class="admin-login">
@@ -17,7 +21,14 @@
                 <i data-lucide="shield" class="w-3.5 h-3.5"></i>
                 Güvenli Yönetici Girişi
             </div>
-            <h1 class="admin-login__brand">Özerler Mermer ERP</h1>
+            <h1 class="admin-login__brand">
+                <img class="admin-login__wordmark"
+                     th:src="@{/brand/logo-ozerler.png(v=${assetVersion})}"
+                     th:attr="srcset=|@{/brand/logo-ozerler.png(v=${assetVersion})} 1x, @{/brand/logo-ozerler@2x.png(v=${assetVersion})} 2x|"
+                     src="/brand/logo-ozerler.png"
+                     width="800" height="276" alt="">
+                <span class="sr-only">Özerler Mermer ERP</span>
+            </h1>
             <p class="admin-login__lead">
                 Yönetici paneli girişi. Ocaktan şantiyeye mermer operasyonlarını buradan yönetirsiniz.
             </p>
@@ -57,7 +68,6 @@
         </aside>
 
         <section class="admin-login__panel">
-            <p class="admin-login__panel-product">Özerler Mermer ERP</p>
             <h2 class="admin-login__panel-title">Oturum açın</h2>
             <p class="admin-login__panel-sub">Yönetici hesabınızla devam edin.</p>
 
@@ -116,7 +126,7 @@
                     IP Adresiniz : <strong th:text="${clientIp}">—</strong>
                 </span>
                 <span>
-                    Sürüm : <strong th:text="${appVersion}">1.0.9</strong>
+                    Sürüm : <strong th:text="${appVersion}">1.0.10</strong>
                 </span>
             </div>
         </section>

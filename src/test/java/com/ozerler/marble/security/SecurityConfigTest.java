@@ -317,4 +317,46 @@ class SecurityConfigTest {
                         MockMvcResultMatchers.content()
                                 .string(Matchers.containsString("/admin/dashboard/systemhealth/")));
     }
+
+    @Test
+    @DisplayName("favicon, manifest and robots.txt are public and robots.txt has the exact Allow body")
+    void anonymousBrandAssetsAndRobotsArePublic() throws Exception {
+        String expectedRobots = "User-agent: *\n"
+                + "Allow: /\n"
+                + "\n"
+                + "# Indexing is blocked via noindex and the X-Robots-Tag header.\n";
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/favicon.ico"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/apple-touch-icon.png"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/icons/favicon-32x32.png"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        mockMvc.perform(MockMvcRequestBuilders.get("/site.webmanifest"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("application/manifest+json"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("Özerler Mermer ERP"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.short_name").value("Özerler ERP"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.theme_color").value("#5A0048"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.icons[2].purpose").value("maskable"));
+
+        String body = mockMvc.perform(MockMvcRequestBuilders.get("/robots.txt"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("text/plain"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        org.junit.jupiter.api.Assertions.assertEquals(expectedRobots, body);
+    }
+
+    @Test
+    @DisplayName("X-Robots-Tag is present on the login page and a regular application page")
+    void xRobotsTagPresentOnPages() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/account/adminlogin/"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.header().string("X-Robots-Tag", "noindex, nofollow, noarchive"));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/access-denied"))
+                .andExpect(MockMvcResultMatchers.header().string("X-Robots-Tag", "noindex, nofollow, noarchive"));
+    }
 }

@@ -83,6 +83,18 @@ public class SettingService {
         log.info("System setting saved: {} = {}", key, SettingValueMask.display(key, value));
     }
 
+    /**
+     * Removes a setting row if it exists and evicts the settings cache.
+     *
+     * @param key setting key to delete
+     */
+    @CacheEvict(value = "settings", allEntries = true)
+    @Transactional
+    public void deleteSetting(String key) {
+        settingRepository.findByKey(key).ifPresent(settingRepository::delete);
+        log.info("System setting deleted: {}", key);
+    }
+
     @CacheEvict(value = "settings", allEntries = true)
     @Transactional
     public void updateSettings(Map<String, String> settings) {

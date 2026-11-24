@@ -64,11 +64,12 @@
     <!-- Welcome Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl px-5 py-4">
         <div class="flex items-center gap-4 min-w-0">
-            <img th:src="@{/brand/ozerler-logo.png(v=${assetVersion})}"
-                 src="/brand/ozerler-logo.png"
+            <img th:src="@{/brand/logo-ozerler.png(v=${assetVersion})}"
+                 th:attr="srcset=|@{/brand/logo-ozerler.png(v=${assetVersion})} 1x, @{/brand/logo-ozerler@2x.png(v=${assetVersion})} 2x|"
+                 src="/brand/logo-ozerler.png"
                  alt="Özerler"
-                 width="218"
-                 height="122"
+                 width="800"
+                 height="276"
                  class="h-14 sm:h-16 w-auto shrink-0 object-contain object-left">
             <div class="min-w-0 border-l border-slate-200 pl-4">
                 <h1 class="text-xl sm:text-2xl font-black text-slate-900">Yönetici Paneline Hoş Geldiniz</h1>

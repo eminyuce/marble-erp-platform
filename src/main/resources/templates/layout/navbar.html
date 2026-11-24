@@ -16,9 +16,13 @@
             <span class="admin-menu-trigger-label">Menü</span>
         </button>
         <div class="admin-topbar-title">
+            <img class="admin-topbar-mark"
+                 th:src="@{/icons/android-chrome-48x48.png(v=${assetVersion})}"
+                 src="/icons/android-chrome-48x48.png"
+                 width="48" height="48" alt="" aria-hidden="true">
             <span class="admin-topbar-panel">Özerler Mermer ERP</span>
             <span class="admin-topbar-version" th:text="${appVersion}" title="Uygulama sürümü"
-                  aria-label="Uygulama sürümü">1.0.9</span>
+                  aria-label="Uygulama sürümü">1.0.10</span>
             <span class="admin-topbar-page" id="adminTopbarPage">Yönetim</span>
         </div>
         <nav class="hidden xl:flex items-center gap-1 ml-3" aria-label="Hızlı Modül Menüsü">
@@ -295,6 +299,30 @@
     </div>
 
     <style>
+        .admin-topbar-title {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            gap: 0.4rem;
+        }
+        .admin-topbar-mark {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            object-fit: contain;
+        }
+        .admin-topbar-panel {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+        }
+        @media (max-width: 640px) {
+            .admin-topbar-mark {
+                width: 24px;
+                height: 24px;
+            }
+        }
         .admin-topbar-version {
             display: inline-flex;
             align-items: center;
