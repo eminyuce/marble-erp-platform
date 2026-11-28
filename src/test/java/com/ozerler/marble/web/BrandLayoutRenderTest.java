@@ -63,8 +63,8 @@ class BrandLayoutRenderTest {
         Assertions.assertEquals(1, count(megaBrand, BRAND),
                 "mega menu body should show the brand once above search:\n" + megaBrand);
         Assertions.assertTrue(megaBrand.contains("admin-mega-brand-version"), megaBrand);
-        Assertions.assertTrue(megaBrand.contains("1.0.13"), megaBrand);
-        Assertions.assertTrue(footer.contains("1.0.13"), footer);
+        Assertions.assertTrue(megaBrand.contains("1.0.14"), megaBrand);
+        Assertions.assertTrue(footer.contains("1.0.14"), footer);
         Assertions.assertEquals(0, count(footer, BRAND), "footer should not repeat the brand:\n" + footer);
         Assertions.assertTrue(footer.contains("Sürüm"), footer);
         Assertions.assertEquals(1, count(stripTitle(html), BRAND),
@@ -78,6 +78,10 @@ class BrandLayoutRenderTest {
         Assertions.assertTrue(html.contains("#5A0048"), html);
         Assertions.assertTrue(html.contains("/icons/android-chrome-48x48.png"), html);
         Assertions.assertTrue(html.contains("/brand/logo-ozerler.png"), html);
+        Assertions.assertTrue(html.contains("dashboard-mega-search-pill"), html);
+        Assertions.assertTrue(html.contains("dashboard-mega-search-submit"), html);
+        Assertions.assertTrue(
+                html.contains("Malzeme kodu, proje, envanter, talep, belge arasında arayın"), html);
     }
 
     @Test
@@ -93,7 +97,7 @@ class BrandLayoutRenderTest {
                 "login guide eyebrow should not repeat the brand");
         Assertions.assertTrue(html.contains("admin-login__brand"), html);
         Assertions.assertTrue(html.contains("Sürüm"), html);
-        Assertions.assertTrue(html.contains("1.0.13"), html);
+        Assertions.assertTrue(html.contains("1.0.14"), html);
         Assertions.assertTrue(html.contains("/brand/logo-ozerler.png"), html);
         Assertions.assertTrue(html.contains("name=\"robots\""), html);
         Assertions.assertTrue(html.contains("noindex, nofollow"), html);

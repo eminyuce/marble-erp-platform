@@ -85,31 +85,26 @@
 
     <!-- Search Bar -->
     <div class="space-y-2">
-        <form class="flex flex-col sm:flex-row items-stretch gap-2" @submit.prevent="runSearch()">
-            <div class="relative flex-1">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-                </div>
+        <form class="dashboard-mega-search" role="search" @submit.prevent="runSearch()">
+            <div class="dashboard-mega-search-pill">
+                <i data-lucide="search" class="dashboard-mega-search-icon" aria-hidden="true"></i>
                 <input type="search"
                        x-model="search"
                        @input="onInput()"
-                       placeholder="Blok kodu, proje, sipariş no, müşteri veya kullanıcı ara…"
-                       class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-[#2b6cb0]/20 focus:border-[#2b6cb0] outline-none transition placeholder:text-slate-400"
+                       placeholder="Malzeme kodu, proje, envanter, talep, belge arasında arayın"
+                       class="dashboard-mega-search-input"
+                       aria-label="Malzeme kodu, proje, envanter, talep, belge arasında arayın"
                        autocomplete="off"/>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-                <button type="submit"
-                        class="px-4 py-2.5 bg-[#2b6cb0] hover:bg-[#1e4e8c] text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 transition cursor-pointer">
-                    <i data-lucide="search" class="w-3.5 h-3.5"></i>
-                    Ara
-                </button>
                 <button type="button"
                         x-show="search.length > 0"
+                        x-cloak
                         @click="clear()"
-                        class="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-semibold rounded-lg flex items-center gap-1.5 transition cursor-pointer">
-                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                    Temizle
+                        class="dashboard-mega-search-clear"
+                        title="Aramayı temizle"
+                        aria-label="Aramayı temizle">
+                    <i data-lucide="x" aria-hidden="true"></i>
                 </button>
+                <button type="submit" class="dashboard-mega-search-submit">Ara</button>
             </div>
         </form>
         <p class="flex items-start gap-2 text-xs text-slate-500">

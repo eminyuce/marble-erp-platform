@@ -86,31 +86,24 @@
         </button>
     </div>
 
-    <!-- Operational Filter Chips -->
+    <!-- Operational Filter Chips: values come from OperationWorkOrderStatus -->
     <div class="erp-yard-filters">
         <button type="button" class="erp-yard-chip"
                 :class="statusFilter === '' ? 'erp-yard-chip--active' : ''"
                 @click="setStatusFilter('')">Tüm Durumlar</button>
         <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'DRAFT' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('DRAFT')">Taslak</button>
-        <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'IN_PRODUCTION' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('IN_PRODUCTION')">
-            <i data-lucide="play" class="w-3.5 h-3.5 inline mr-1 text-blue-600"></i>
-            Üretimde
-        </button>
-        <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'READY_FOR_SHIPMENT' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('READY_FOR_SHIPMENT')">
-            <i data-lucide="package-check" class="w-3.5 h-3.5 inline mr-1 text-amber-600"></i>
-            Sevke Hazır
-        </button>
-        <button type="button" class="erp-yard-chip"
-                :class="statusFilter === 'COMPLETED' ? 'erp-yard-chip--active' : ''"
-                @click="setStatusFilter('COMPLETED')">
-            <i data-lucide="check" class="w-3.5 h-3.5 inline mr-1 text-emerald-600"></i>
-            Tamamlandı
+                th:each="st : ${statuses}"
+                th:attr="data-status=${st.name()}"
+                :class="statusFilter === $el.dataset.status ? 'erp-yard-chip--active' : ''"
+                @click="setStatusFilter($el.dataset.status)">
+            <i th:if="${st.name() == 'NEW'}" data-lucide="file-plus" class="w-3.5 h-3.5 inline mr-1 text-slate-600"></i>
+            <i th:if="${st.name() == 'APPROVED'}" data-lucide="badge-check" class="w-3.5 h-3.5 inline mr-1 text-sky-600"></i>
+            <i th:if="${st.name() == 'IN_PRODUCTION'}" data-lucide="play" class="w-3.5 h-3.5 inline mr-1 text-blue-600"></i>
+            <i th:if="${st.name() == 'ON_HOLD'}" data-lucide="pause" class="w-3.5 h-3.5 inline mr-1 text-amber-600"></i>
+            <i th:if="${st.name() == 'COMPLETED'}" data-lucide="check" class="w-3.5 h-3.5 inline mr-1 text-emerald-600"></i>
+            <i th:if="${st.name() == 'DISPATCHED'}" data-lucide="truck" class="w-3.5 h-3.5 inline mr-1 text-indigo-600"></i>
+            <i th:if="${st.name() == 'CANCELLED'}" data-lucide="x" class="w-3.5 h-3.5 inline mr-1 text-rose-600"></i>
+            <span th:text="${st.displayName}">Yeni</span>
         </button>
     </div>
 

@@ -1,7 +1,10 @@
 package com.ozerler.marble.service;
 
+import java.net.SocketTimeoutException;
 import java.util.Map;
 import java.util.Optional;
+
+import jakarta.mail.AuthenticationFailedException;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +15,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.MailAuthenticationException;
 
 import com.ozerler.marble.dto.EmailPreviewDto;
 import com.ozerler.marble.dto.EmailTemplateDto;
@@ -179,5 +183,19 @@ class EmailServiceTest {
 
         Assertions.assertThat(updated.getSubject()).isEqualTo("Yeni Şifreniz: {{temporaryPassword}}");
         Assertions.assertThat(updated.getBodyHtml()).isEqualTo("<p>Geçici şifreniz: {{temporaryPassword}}</p>");
+    }
+
+    @Test
+    @DisplayName("SMTP authentication failures are recognized even when wrapped")
+    void detectsWrappedSmtpAuthenticationFailure() {
+        AuthenticationFailedException root = new AuthenticationFailedException("Authentication failed");
+        MailAuthenticationException wrapped = new MailAuthenticationException("Mail auth failed", root);
+        Assertions.assertThat(EmailService.isSmtpAuthenticationFailure(wrapped)).isTrue();
+        Assertions.assertThat(EmailService.isSmtpAuthenticationFailure(
+                new IllegalStateException("Authentication failed"))).isTrue();
+        Assertions.assertThat(EmailService.isSmtpAuthenticationFailure(
+                new SocketTimeoutException("Read timed out"))).isFalse();
+        Assertions.assertThat(EmailService.isSmtpTimeout(new SocketTimeoutException("Read timed out"))).isTrue();
+        Assertions.assertThat(EmailService.isSmtpTimeout(root)).isFalse();
     }
 }
