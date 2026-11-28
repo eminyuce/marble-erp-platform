@@ -176,7 +176,7 @@ app:
       captcha-ttl: 3m
   name: "Özerler Mermer ERP"
   company: "Özerler Mermer A.Ş."
-  version: "1.0.13"
+  version: "1.0.14"
   # Query-string cache buster for static assets (?v=). Keep in lockstep with app.version.
   asset-version: ${app.version}
   deployment:

@@ -1,5 +1,6 @@
 package com.ozerler.marble.service;
 
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -7,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -16,6 +18,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jakarta.mail.AuthenticationFailedException;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +29,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -65,6 +69,7 @@ public class EmailService {
             "\\{\\{\\s*([A-Za-z0-9_]+)\\s*\\}\\}|\\$\\{\\s*([A-Za-z0-9_]+)\\s*\\}");
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int DEFAULT_SMTP_PORT = 587;
+    private static final int MAX_SMTP_ERROR_LENGTH = 200;
 
     private final EmailTemplateRepository templateRepository;
     private final EmailTemplateMapper emailTemplateMapper;
@@ -567,25 +572,86 @@ public class EmailService {
 
     /**
      * Sends a test email to verify SMTP configuration and template rendering.
+     * Authentication failures surface as a clear administrator message instead of a
+     * generic timeout warning.
      */
     public boolean sendTestEmail(String testEmail, String templateKey) {
         if (StringUtils.isNotBlank(templateKey)) {
+            Optional<EmailTemplate> templateOpt = getTemplateByKey(templateKey.trim());
+            if (templateOpt.isEmpty()) {
+                log.warn("Template '{}' not found in database.", templateKey.trim());
+                return false;
+            }
+            EmailTemplate template = templateOpt.get();
+            if (!Boolean.TRUE.equals(template.getIsActive())) {
+                log.info(
+                        "Template '{}' is marked inactive. Skipping email dispatch to '{}'.",
+                        templateKey.trim(),
+                        testEmail);
+                return false;
+            }
             Map<String, String> sampleVars = getDefaultSampleVariables();
-            return sendTemplatedEmail(testEmail, templateKey.trim(), sampleVars);
-        } else {
-            String defaultSubject = getMessage("admin.settings.email.test.subject");
-            String defaultHtml =
-                    "<h2 style='color:#0284c7;'>"
-                            + getMessage("admin.settings.email.test.heading")
-                            + "</h2>"
-                            + "<p>"
-                            + getMessage("admin.settings.email.test.body")
-                            + "</p>"
-                            + "<p style='color:#64748b; font-size:12px;'>"
-                            + getMessage("admin.settings.email.test.timestamp", LocalDateTime.now())
-                            + "</p>";
-            return sendEmail(testEmail, defaultSubject, defaultHtml);
+            String subject = renderSubject(template.getSubject(), sampleVars);
+            String html = renderHtml(template.getBodyHtml(), sampleVars);
+            return sendEmailInternal(testEmail, subject, html, true);
         }
+        String defaultSubject = getMessage("admin.settings.email.test.subject");
+        String defaultHtml =
+                "<h2 style='color:#0284c7;'>"
+                        + getMessage("admin.settings.email.test.heading")
+                        + "</h2>"
+                        + "<p>"
+                        + getMessage("admin.settings.email.test.body")
+                        + "</p>"
+                        + "<p style='color:#64748b; font-size:12px;'>"
+                        + getMessage("admin.settings.email.test.timestamp", LocalDateTime.now())
+                        + "</p>";
+        return sendEmailInternal(testEmail, defaultSubject, defaultHtml, true);
+    }
+
+    static boolean isSmtpAuthenticationFailure(Throwable error) {
+        Throwable current = error;
+        while (current != null) {
+            if (current instanceof AuthenticationFailedException
+                    || current instanceof MailAuthenticationException) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message != null && message.toLowerCase(Locale.ROOT).contains("authentication failed")) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    static boolean isSmtpTimeout(Throwable error) {
+        Throwable current = error;
+        while (current != null) {
+            if (current instanceof SocketTimeoutException) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message != null) {
+                String lower = message.toLowerCase(Locale.ROOT);
+                if (lower.contains("timed out") || lower.contains("timeout")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    static String safeSmtpError(Throwable error) {
+        if (error == null || error.getMessage() == null || error.getMessage().isBlank()) {
+            return "SMTP error";
+        }
+        String message = error.getMessage().trim();
+        if (message.length() > MAX_SMTP_ERROR_LENGTH) {
+            return message.substring(0, MAX_SMTP_ERROR_LENGTH);
+        }
+        return message;
     }
 
     /**
@@ -635,6 +701,10 @@ public class EmailService {
      * Sends an HTML email with dynamic SMTP settings. Gracefully logs network/auth timeouts.
      */
     public boolean sendEmail(String to, String subject, String bodyHtml) {
+        return sendEmailInternal(to, subject, bodyHtml, false);
+    }
+
+    private boolean sendEmailInternal(String to, String subject, String bodyHtml, boolean throwOnFailure) {
         String from =
                 settingService.getSetting(
                         "smtp.from_address",
@@ -662,6 +732,16 @@ public class EmailService {
             return true;
         } catch (Exception ex) {
             log.warn("Failed to dispatch live email (will be logged to audit): to={}, error={}", to, ex.getMessage());
+            if (throwOnFailure) {
+                if (isSmtpAuthenticationFailure(ex)) {
+                    throw new IllegalArgumentException(getMessage("admin.settings.email.test.auth_failed"));
+                }
+                if (isSmtpTimeout(ex)) {
+                    return false;
+                }
+                throw new IllegalArgumentException(
+                        getMessage("admin.settings.email.test.error", safeSmtpError(ex)));
+            }
             return false;
         }
     }

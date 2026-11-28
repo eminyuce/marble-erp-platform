@@ -32,6 +32,7 @@ import com.ozerler.marble.model.enums.SlabStatus;
 import com.ozerler.marble.model.enums.StockProductType;
 import com.ozerler.marble.service.FormLookupService;
 import com.ozerler.marble.service.OperationWorkOrderService;
+import com.ozerler.marble.util.Enums;
 import com.ozerler.marble.web.ListQuery;
 import com.ozerler.marble.web.WorkOrderGrid;
 
@@ -51,10 +52,13 @@ public class OperationWorkOrderController extends AbstractController {
     private final OperationWorkOrderService workOrderService;
 
     @GetMapping
-    public String index(@RequestParam(value = "department", required = false) BusinessUnit department,
-                        @RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
+    public String index(@RequestParam(value = "department", required = false) String departmentRaw,
+                        @RequestParam(value = "status", required = false) String statusRaw,
                         @RequestParam(value = "customerId", required = false) Long customerId,
                         @ModelAttribute ListQuery query, Model model) {
+
+        BusinessUnit department = Enums.parseOrNull(BusinessUnit.class, departmentRaw);
+        OperationWorkOrderStatus status = Enums.parseOrNull(OperationWorkOrderStatus.class, statusRaw);
 
         model.addAttribute(
                 "grid",
@@ -101,10 +105,12 @@ public class OperationWorkOrderController extends AbstractController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "25") int size,
             @RequestParam(value = "search", required = false) String search,
-            @RequestParam(value = "department", required = false) BusinessUnit department,
-            @RequestParam(value = "status", required = false) OperationWorkOrderStatus status,
+            @RequestParam(value = "department", required = false) String departmentRaw,
+            @RequestParam(value = "status", required = false) String statusRaw,
             @RequestParam(value = "customerId", required = false) Long customerId) {
 
+        BusinessUnit department = Enums.parseOrNull(BusinessUnit.class, departmentRaw);
+        OperationWorkOrderStatus status = Enums.parseOrNull(OperationWorkOrderStatus.class, statusRaw);
         return workOrderService.orderRows(search, department, status, customerId, page, size);
     }
 
