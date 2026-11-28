@@ -2,7 +2,7 @@
 
 Bu belge, uygulamanın **mevcut** arayüz mimarisinin denetimidir ve bundan sonra her sayfa, form ve liste için zorunlu tek tasarım sistemidir. Varsayım yoktur; kurallar `src/main/resources/templates`, `frontend/src/input.css`, `src/main/java/com/ozerler/marble/web` ve ilgili JS dosyalarındaki gerçek uygulamaya dayanır.
 
-İlgili zorunlu belgeler: `AGENTS.md`, `docs/DEVELOPMENT_STANDARDS.md`, `.cursor/rules/architecture.mdc`. Yığın değişmez: Java 24, Spring Boot 4.2.x, Thymeleaf, Tailwind CSS 4, Alpine.js, isteğe bağlı HTMX. React, Vue, Angular veya ikinci bir stil sistemi eklenmez. Yeni bir ızgara (grid) kütüphanesi, mevcut paylaşılmış DataGrid değerlendirilmeden ve bu belgede gerekçe yazılmadan eklenmez.
+İlgili zorunlu belgeler: `AGENTS.md`, `docs/DEVELOPMENT_STANDARDS.md`, `docs/ARCHITECTURE.md`. Yığın değişmez: Java 24, Spring Boot 4.2.x, Thymeleaf, Tailwind CSS 4, Alpine.js, isteğe bağlı HTMX. React, Vue, Angular veya ikinci bir stil sistemi eklenmez. Yeni bir ızgara (grid) kütüphanesi, mevcut paylaşılmış DataGrid değerlendirilmeden ve bu belgede gerekçe yazılmadan eklenmez.
 
 Tüm kullanıcıya görünen metin Türkçedir.
 

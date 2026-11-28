@@ -5,15 +5,4 @@ alwaysApply: true
 
 # Version bump on every change
 
-`pom.xml` `<version>` is the only application version. It is `major.minor.patch` (currently `1.0.x`).
-
-On every branch that will become a pull request, before the PR is opened or updated:
-
-1. Read the `pom.xml` `<version>` on the PR's base branch (`main` unless the user named another base).
-2. Increase the patch component by exactly one. `1.0.5` becomes `1.0.6`. Do not skip numbers and do not bump major or minor unless the user explicitly asks for a breaking or feature release.
-3. Set `<project><version>` in `pom.xml` to that new value. Do not change the Spring Boot parent version for this rule.
-4. Set `app.version` in `src/main/resources/application.yml` to the same value.
-5. Do not hardcode the new version anywhere else. Docker and GitLab image tags read the version from `pom.xml`. `/actuator/info` and the deployment console read Spring Boot `build-info`, which the `spring-boot-maven-plugin` `build-info` goal generates from `pom.xml`.
-6. If this branch already bumped the version once for its PR, do not bump it again on later commits to the same PR.
-
-A pull request whose `pom.xml` version is not greater than `main` fails `.github/workflows/version-bump.yml`.
+See the Version bump section in [AGENTS.md](../../AGENTS.md). That is the canonical rule. Do not treat this file as a second copy.
